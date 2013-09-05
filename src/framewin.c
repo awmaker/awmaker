@@ -588,6 +588,11 @@ static void updateTitlebar(WFrameWindow *fwin)
 			x += fwin->language_button->width;
 			w -= fwin->language_button->width;
 		}
+
+		if (!fwin->flags.hide_right_button && fwin->right_button && !fwin->flags.rbutton_dont_fit)
+			w -= fwin->right_button->width;
+
+		fwin->flags.need_texture_remake = 1;
 	} else {
 		if (fwin->flags.hide_left_button || !fwin->left_button || fwin->flags.lbutton_dont_fit) {
 			if (fwin->language_button)
@@ -599,15 +604,10 @@ static void updateTitlebar(WFrameWindow *fwin)
 					       6 + fwin->left_button->width, 4,
 					       fwin->language_button->width, fwin->language_button->width);
 		}
-	}
 
-	if (wPreferences.new_style == TS_NEW) {
-		if (!fwin->flags.hide_right_button && fwin->right_button && !fwin->flags.rbutton_dont_fit)
-			w -= fwin->right_button->width;
+		if (fwin->titlebar->width != w)
+			fwin->flags.need_texture_remake = 1;
 	}
-
-	if (wPreferences.new_style == TS_NEW || fwin->titlebar->width != w)
-		fwin->flags.need_texture_remake = 1;
 
 	wCoreConfigure(fwin->titlebar, x, 0, w, theight);
 }
