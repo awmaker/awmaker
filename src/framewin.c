@@ -554,7 +554,8 @@ void wFrameWindowChangeState(WFrameWindow * fwin, int state)
 	wFrameWindowPaint(fwin);
 }
 
-static void updateTitlebar(WFrameWindow * fwin)
+static void updateTitlebar(WFrameWindow *fwin)
+#ifdef XKB_BUTTON_HINT
 {
 	int x, w;
 	int theight;
@@ -573,30 +574,23 @@ static void updateTitlebar(WFrameWindow * fwin)
 	if (wPreferences.new_style == TS_NEW) {
 		if (fwin->flags.hide_left_button || !fwin->left_button || fwin->flags.lbutton_dont_fit) {
 			x = 0;
-#ifdef XKB_BUTTON_HINT
 			if (fwin->language_button)
 				wCoreConfigure(fwin->language_button, 0, 0,
 					       fwin->language_button->width, fwin->language_button->width);
-#endif
 		} else {
-#ifdef XKB_BUTTON_HINT
 			if (fwin->language_button)
 				wCoreConfigure(fwin->language_button, fwin->left_button->width, 0,
 					       fwin->language_button->width, fwin->language_button->width);
-#endif
 			x = fwin->left_button->width;
 			w -= fwin->left_button->width;
 		}
-#ifdef XKB_BUTTON_HINT
 		if (fwin->flags.hide_language_button || !fwin->language_button
 		    || fwin->flags.languagebutton_dont_fit) {
 		} else {
 			x += fwin->language_button->width;
 			w -= fwin->language_button->width;
 		}
-#endif
 	}
-#ifdef XKB_BUTTON_HINT
 	else {
 		int bsize = theight - 7;
 		if (fwin->flags.hide_left_button || !fwin->left_button || fwin->flags.lbutton_dont_fit) {
@@ -610,7 +604,6 @@ static void updateTitlebar(WFrameWindow * fwin)
 					       fwin->language_button->width, fwin->language_button->width);
 		}
 	}
-#endif
 
 	if (wPreferences.new_style == TS_NEW) {
 		if (!fwin->flags.hide_right_button && fwin->right_button && !fwin->flags.rbutton_dont_fit)
@@ -622,6 +615,42 @@ static void updateTitlebar(WFrameWindow * fwin)
 
 	wCoreConfigure(fwin->titlebar, x, 0, w, theight);
 }
+#else /* XKB_BUTTON_HINT */
+{
+	int x, w;
+	int theight;
+
+	theight = WMFontHeight(*fwin->font) + (*fwin->title_clearance + TITLEBAR_EXTEND_SPACE) * 2;
+
+	if (theight > *fwin->title_max_height)
+		theight = *fwin->title_max_height;
+
+	if (theight < *fwin->title_min_height)
+		theight = *fwin->title_min_height;
+
+	x = 0;
+	w = fwin->core->width + 1;
+
+	if (wPreferences.new_style == TS_NEW) {
+		if (fwin->flags.hide_left_button || !fwin->left_button || fwin->flags.lbutton_dont_fit) {
+			x = 0;
+		} else {
+			x = fwin->left_button->width;
+			w -= fwin->left_button->width;
+		}
+	}
+
+	if (wPreferences.new_style == TS_NEW) {
+		if (!fwin->flags.hide_right_button && fwin->right_button && !fwin->flags.rbutton_dont_fit)
+			w -= fwin->right_button->width;
+	}
+
+	if (wPreferences.new_style == TS_NEW || fwin->titlebar->width != w)
+		fwin->flags.need_texture_remake = 1;
+
+	wCoreConfigure(fwin->titlebar, x, 0, w, theight);
+}
+#endif /* XKB_BUTTON_HINT */
 
 void wFrameWindowHideButton(WFrameWindow * fwin, int flags)
 {
