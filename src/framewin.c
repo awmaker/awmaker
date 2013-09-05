@@ -557,10 +557,8 @@ void wFrameWindowChangeState(WFrameWindow * fwin, int state)
 static void updateTitlebar(WFrameWindow *fwin)
 #ifdef XKB_BUTTON_HINT
 {
-	int x, w;
-	int theight;
-
-	theight = WMFontHeight(*fwin->font) + (*fwin->title_clearance + TITLEBAR_EXTEND_SPACE) * 2;
+	int w, x = 0;
+	int theight = WMFontHeight(*fwin->font) + (*fwin->title_clearance + TITLEBAR_EXTEND_SPACE) * 2;
 
 	if (theight > *fwin->title_max_height)
 		theight = *fwin->title_max_height;
@@ -568,39 +566,37 @@ static void updateTitlebar(WFrameWindow *fwin)
 	if (theight < *fwin->title_min_height)
 		theight = *fwin->title_min_height;
 
-	x = 0;
 	w = fwin->core->width + 1;
 
 	if (wPreferences.new_style == TS_NEW) {
-		if (fwin->flags.hide_left_button || !fwin->left_button || fwin->flags.lbutton_dont_fit) {
-			x = 0;
-			if (fwin->language_button)
+		if (fwin->language_button) {
+			if (fwin->flags.hide_left_button || !fwin->left_button || fwin->flags.lbutton_dont_fit) {
 				wCoreConfigure(fwin->language_button, 0, 0,
 					       fwin->language_button->width, fwin->language_button->width);
-		} else {
-			if (fwin->language_button)
+			} else {
 				wCoreConfigure(fwin->language_button, fwin->left_button->width, 0,
 					       fwin->language_button->width, fwin->language_button->width);
+			}
+		}
+
+		if (!fwin->flags.hide_left_button && fwin->left_button && !fwin->flags.lbutton_dont_fit) {
 			x = fwin->left_button->width;
 			w -= fwin->left_button->width;
 		}
-		if (fwin->flags.hide_language_button || !fwin->language_button
-		    || fwin->flags.languagebutton_dont_fit) {
-		} else {
+
+		if (!fwin->flags.hide_language_button && fwin->language_button && !fwin->flags.languagebutton_dont_fit) {
 			x += fwin->language_button->width;
 			w -= fwin->language_button->width;
 		}
-	}
-	else {
-		int bsize = theight - 7;
+	} else {
 		if (fwin->flags.hide_left_button || !fwin->left_button || fwin->flags.lbutton_dont_fit) {
 			if (fwin->language_button)
-				wCoreConfigure(fwin->language_button, 3, (theight - bsize) / 2,
+				wCoreConfigure(fwin->language_button, 3, 4,
 					       fwin->language_button->width, fwin->language_button->width);
 		} else {
 			if (fwin->language_button)
 				wCoreConfigure(fwin->language_button,
-					       6 + fwin->left_button->width, (theight - bsize) / 2,
+					       6 + fwin->left_button->width, 4,
 					       fwin->language_button->width, fwin->language_button->width);
 		}
 	}
@@ -617,10 +613,8 @@ static void updateTitlebar(WFrameWindow *fwin)
 }
 #else /* XKB_BUTTON_HINT */
 {
-	int x, w;
-	int theight;
-
-	theight = WMFontHeight(*fwin->font) + (*fwin->title_clearance + TITLEBAR_EXTEND_SPACE) * 2;
+	int w, x = 0;
+	int theight = WMFontHeight(*fwin->font) + (*fwin->title_clearance + TITLEBAR_EXTEND_SPACE) * 2;
 
 	if (theight > *fwin->title_max_height)
 		theight = *fwin->title_max_height;
@@ -628,7 +622,6 @@ static void updateTitlebar(WFrameWindow *fwin)
 	if (theight < *fwin->title_min_height)
 		theight = *fwin->title_min_height;
 
-	x = 0;
 	w = fwin->core->width + 1;
 
 	if (wPreferences.new_style == TS_NEW) {
