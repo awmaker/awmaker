@@ -558,7 +558,7 @@ static void updateTitlebar(WFrameWindow *fwin)
 #ifdef XKB_BUTTON_HINT
 {
 	int w, x = 0;
-	int language_button_pos_width = 0, language_button_pos_height = 0;
+	int language_button_pos_width, language_button_pos_height;
 	int theight = WMFontHeight(*fwin->font) + (*fwin->title_clearance + TITLEBAR_EXTEND_SPACE) * 2;
 
 	if (theight > *fwin->title_max_height)
@@ -570,16 +570,22 @@ static void updateTitlebar(WFrameWindow *fwin)
 	w = fwin->core->width + 1;
 
 	if (fwin->language_button) {
-		if (wPreferences.new_style == TS_NEW) {
-			if (!fwin->flags.hide_left_button && fwin->left_button && !fwin->flags.lbutton_dont_fit)
+		if (!fwin->flags.hide_left_button && fwin->left_button && !fwin->flags.lbutton_dont_fit) {
+			if (wPreferences.new_style == TS_NEW) {
 				language_button_pos_width = fwin->left_button->width;
-		} else {
-			if (!fwin->flags.hide_left_button && fwin->left_button && !fwin->flags.lbutton_dont_fit)
+				language_button_pos_height = 0;
+			} else {
 				language_button_pos_width = fwin->left_button->width + 6;
-			else
+				language_button_pos_height = 4;
+			}
+		} else {
+			if (wPreferences.new_style == TS_NEW) {
+				language_button_pos_width = 0;
+				language_button_pos_height = 0;
+			} else {
 				language_button_pos_width = 3;
-
-			language_button_pos_height = 4;
+				language_button_pos_height = 4;
+			}
 		}
 
 		wCoreConfigure(fwin->language_button, language_button_pos_width, language_button_pos_height,
