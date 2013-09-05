@@ -629,9 +629,7 @@ static void updateTitlebar(WFrameWindow *fwin)
 			x = fwin->left_button->width;
 			w -= fwin->left_button->width;
 		}
-	}
 
-	if (wPreferences.new_style == TS_NEW) {
 		if (!fwin->flags.hide_right_button && fwin->right_button && !fwin->flags.rbutton_dont_fit)
 			w -= fwin->right_button->width;
 	}
