@@ -632,10 +632,12 @@ static void updateTitlebar(WFrameWindow *fwin)
 
 		if (!fwin->flags.hide_right_button && fwin->right_button && !fwin->flags.rbutton_dont_fit)
 			w -= fwin->right_button->width;
-	}
 
-	if (wPreferences.new_style == TS_NEW || fwin->titlebar->width != w)
 		fwin->flags.need_texture_remake = 1;
+	} else {
+		if (fwin->titlebar->width != w)
+			fwin->flags.need_texture_remake = 1;
+	}
 
 	wCoreConfigure(fwin->titlebar, x, 0, w, theight);
 }
