@@ -594,15 +594,15 @@ static void updateTitlebar(WFrameWindow *fwin)
 
 		fwin->flags.need_texture_remake = 1;
 	} else {
-		if (fwin->flags.hide_left_button || !fwin->left_button || fwin->flags.lbutton_dont_fit) {
-			if (fwin->language_button)
+		if (fwin->language_button) {
+			if (fwin->flags.hide_left_button || !fwin->left_button || fwin->flags.lbutton_dont_fit) {
 				wCoreConfigure(fwin->language_button, 3, 4,
 					       fwin->language_button->width, fwin->language_button->width);
-		} else {
-			if (fwin->language_button)
+			} else {
 				wCoreConfigure(fwin->language_button,
 					       6 + fwin->left_button->width, 4,
 					       fwin->language_button->width, fwin->language_button->width);
+			}
 		}
 
 		if (fwin->titlebar->width != w)
