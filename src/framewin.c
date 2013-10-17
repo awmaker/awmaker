@@ -268,8 +268,9 @@ void wFrameWindowUpdateBorders(WFrameWindow * fwin, int flags)
 
 			if (flags & WFF_LEFT_BUTTON) {
 				fwin->flags.left_button = 1;
+				fwin->left_button = wcore_create(bsize, bsize);
+
 				if (wPreferences.new_style == TS_NEW) {
-					fwin->left_button = wcore_create(bsize, bsize);
 					wcore_map(fwin->left_button, fwin->core,
 						  fwin->core->screen_ptr,
 						  0, 0, 0,
@@ -283,7 +284,6 @@ void wFrameWindowUpdateBorders(WFrameWindow * fwin, int flags)
 						XMapRaised(dpy, fwin->left_button->window);
 
 				} else if (wPreferences.new_style == TS_OLD) {
-					fwin->left_button = wcore_create(bsize, bsize);
 					wcore_map(fwin->left_button, fwin->titlebar,
 						  fwin->titlebar->screen_ptr,
 						  3, (theight - bsize) / 2, 0,
@@ -300,7 +300,6 @@ void wFrameWindowUpdateBorders(WFrameWindow * fwin, int flags)
 						XMapRaised(dpy, fwin->left_button->window);
 
 				} else {
-					fwin->left_button = wcore_create(bsize, bsize);
 					wcore_map(fwin->left_button, fwin->titlebar,
 						  fwin->titlebar->screen_ptr,
 						  3, (theight-bsize) / 2, 0,
@@ -315,14 +314,14 @@ void wFrameWindowUpdateBorders(WFrameWindow * fwin, int flags)
 						fwin->flags.lbutton_dont_fit = 1;
 					else
 						XMapRaised(dpy, fwin->left_button->window);
-
 				}
 			}
 #ifdef XKB_BUTTON_HINT
 			if (flags & WFF_LANGUAGE_BUTTON) {
 				fwin->flags.language_button = 1;
+				fwin->language_button = wcore_create(bsize, bsize);
+
 				if (wPreferences.new_style == TS_NEW) {
-					fwin->language_button = wcore_create(bsize, bsize);
 					wcore_map(fwin->language_button, fwin->core,
 						  fwin->core->screen_ptr,
 						  bsize, 0, 0,
@@ -335,7 +334,6 @@ void wFrameWindowUpdateBorders(WFrameWindow * fwin, int flags)
 					else
 						XMapRaised(dpy, fwin->language_button->window);
 				} else {
-					fwin->language_button = wcore_create(bsize, bsize);
 					wcore_map(fwin->language_button, fwin->titlebar,
 						  fwin->titlebar->screen_ptr,
 						  bsize + 6, (theight - bsize) / 2, 0,
@@ -356,8 +354,9 @@ void wFrameWindowUpdateBorders(WFrameWindow * fwin, int flags)
 
 			if (flags & WFF_RIGHT_BUTTON) {
 				fwin->flags.right_button = 1;
+				fwin->right_button = wcore_create(bsize, bsize);
+
 				if (wPreferences.new_style == TS_NEW) {
-					fwin->right_button = wcore_create(bsize, bsize);
 					wcore_map(fwin->right_button, fwin->core,
 						  fwin->core->screen_ptr,
 						  width - bsize + 1, 0, 0,
@@ -365,7 +364,6 @@ void wFrameWindowUpdateBorders(WFrameWindow * fwin, int flags)
 						  fwin->core->screen_ptr->w_visual,
 						  fwin->core->screen_ptr->w_colormap);
 				} else if (wPreferences.new_style == TS_OLD) {
-					fwin->right_button = wcore_create(bsize, bsize);
 					wcore_map(fwin->right_button, fwin->titlebar,
 						  fwin->titlebar->screen_ptr,
 						  width - bsize - 3, (theight - bsize) / 2, 0,
@@ -376,7 +374,6 @@ void wFrameWindowUpdateBorders(WFrameWindow * fwin, int flags)
 					XSetWindowBackground(dpy, fwin->right_button->window,
 							     scr->widget_texture->normal.pixel);
 				} else {
-					fwin->right_button = wcore_create(bsize, bsize);
 					wcore_map(fwin->right_button, fwin->titlebar,
 						  fwin->titlebar->screen_ptr,
 						  width - bsize - 3, (theight - bsize) / 2, 0,
