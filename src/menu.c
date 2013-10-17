@@ -152,14 +152,15 @@ WMenu *wMenuCreate(WScreen *screen, const char *title, int main_menu)
 		flags |= WFF_TITLEBAR | WFF_RIGHT_BUTTON;
 		menu->flags.titled = 1;
 	}
-	menu->frame =
-	    wFrameWindowCreate(screen, tmp, 8, 2, 1, 1, &wPreferences.menu_title_clearance,
-			       &wPreferences.menu_title_min_height,
-			       &wPreferences.menu_title_max_height,
-			       flags,
-			       screen->menu_title_texture, NULL,
-			       screen->menu_title_color, &screen->menu_title_font,
-			       screen->w_depth, screen->w_visual, screen->w_colormap);
+
+	menu->frame = wframewindow_create(1, 1);
+	wframewindow_map(menu->frame, screen, tmp, 8, 2,
+			 &wPreferences.menu_title_clearance,
+			 &wPreferences.menu_title_min_height,
+			 &wPreferences.menu_title_max_height, flags,
+			 screen->menu_title_texture, NULL,
+			 screen->menu_title_color, &screen->menu_title_font,
+			 screen->w_depth, screen->w_visual, screen->w_colormap);
 
 	menu->frame->core->descriptor.parent = menu;
 	menu->frame->core->descriptor.parent_type = WCLASS_MENU;
