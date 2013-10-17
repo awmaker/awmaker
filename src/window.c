@@ -1066,15 +1066,16 @@ WWindow *wManageWindow(WScreen *scr, Window window)
 	if (HAS_BORDER(wwin))
 		foo |= WFF_BORDER;
 
-	wwin->frame = wFrameWindowCreate(scr, window_level,
-					 x, y, width, height,
-					 &wPreferences.window_title_clearance,
-					 &wPreferences.window_title_min_height,
-					 &wPreferences.window_title_max_height,
-					 foo,
-					 scr->window_title_texture,
-					 scr->resizebar_texture, scr->window_title_color, &scr->title_font,
-					 wattribs.depth, wattribs.visual, wattribs.colormap);
+	wwin->frame = wframewindow_create(width, height);
+	wframewindow_map(wwin->frame, scr, window_level, x, y,
+		      &wPreferences.window_title_clearance,
+		      &wPreferences.window_title_min_height,
+		      &wPreferences.window_title_max_height,
+		      foo,
+		      scr->window_title_texture,
+		      scr->resizebar_texture, scr->window_title_color,
+		      &scr->title_font,
+		      wattribs.depth, wattribs.visual, wattribs.colormap);
 
 	wwin->frame->flags.is_client_window_frame = 1;
 	wwin->frame->flags.justification = wPreferences.title_justification;
@@ -1341,16 +1342,16 @@ WWindow *wManageInternalWindow(WScreen *scr, Window window, Window owner,
 	foo |= WFF_LANGUAGE_BUTTON;
 #endif
 
-	wwin->frame = wFrameWindowCreate(scr, WMFloatingLevel,
-					 wwin->frame_x, wwin->frame_y,
-					 width, height,
-					 &wPreferences.window_title_clearance,
-					 &wPreferences.window_title_min_height,
-					 &wPreferences.window_title_max_height,
-					 foo,
-					 scr->window_title_texture,
-					 scr->resizebar_texture, scr->window_title_color, &scr->title_font,
-					 scr->w_depth, scr->w_visual, scr->w_colormap);
+	wwin->frame = wframewindow_create(width, height);
+	wframewindow_map(wwin->frame, scr, WMFloatingLevel,
+			 wwin->frame_x, wwin->frame_y,
+			 &wPreferences.window_title_clearance,
+			 &wPreferences.window_title_min_height,
+			 &wPreferences.window_title_max_height,
+			 foo,
+			 scr->window_title_texture,
+			 scr->resizebar_texture, scr->window_title_color, &scr->title_font,
+			 scr->w_depth, scr->w_visual, scr->w_colormap);
 
 	XSaveContext(dpy, window, w_global.context.client_win, (XPointer) & wwin->client_descriptor);
 
