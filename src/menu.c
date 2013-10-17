@@ -196,7 +196,13 @@ WMenu *wMenuCreate(WScreen *screen, const char *title, int main_menu)
 
 	menu->frame->on_click_right = menuCloseClick;
 
-	menu->menu = wCoreCreate(menu->frame->core, 0, menu->frame->top_width, menu->frame->core->width, 10);
+	menu->menu = wcore_create(menu->frame->core->width, 10);
+	wcore_map(menu->menu, menu->frame->core,
+		  menu->frame->core->screen_ptr, 0,
+		  menu->frame->top_width, 0,
+		  menu->frame->core->screen_ptr->w_depth,
+		  menu->frame->core->screen_ptr->w_visual,
+		  menu->frame->core->screen_ptr->w_colormap);
 
 	menu->menu->descriptor.parent = menu;
 	menu->menu->descriptor.parent_type = WCLASS_MENU;
