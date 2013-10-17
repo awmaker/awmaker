@@ -172,13 +172,9 @@ static WIcon *icon_create_core(WScreen *scr, int coord_x, int coord_y)
 	WIcon *icon;
 
 	icon = wmalloc(sizeof(WIcon));
-	icon->core = wCoreCreateTopLevel(scr,
-					 coord_x,
-					 coord_y,
-					 wPreferences.icon_size,
-					 wPreferences.icon_size,
-					 0, scr->w_depth, scr->w_visual, scr->w_colormap,
-					 scr->white_pixel);
+	icon->core = wcore_create(wPreferences.icon_size, wPreferences.icon_size);
+	wcore_map_toplevel(icon->core, scr, coord_x, coord_y, 0, scr->w_depth,
+			   scr->w_visual, scr->w_colormap, scr->white_pixel);
 
 	/* will be overriden if this is a application icon */
 	icon->core->descriptor.handle_mousedown = miniwindowMouseDown;
