@@ -52,4 +52,6 @@ WCoreWindow *wCoreCreate(WCoreWindow *parent, int x, int y,
 void wCoreDestroy(WCoreWindow *core);
 void wCoreConfigure(WCoreWindow *core, int req_x, int req_y,
 		    int req_w, int req_h);
+
+WCoreWindow *wcore_create(int width, int height);
 #endif

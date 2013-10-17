@@ -29,6 +29,16 @@
 #include "WindowMaker.h"
 #include "wcore.h"
 
+WCoreWindow *wcore_create(int width, int height)
+{
+	WCoreWindow *core;
+
+	core = wmalloc(sizeof(WCoreWindow));
+	core->width = width;
+	core->height = height;
+
+	return core;
+}
 
 /*----------------------------------------------------------------------
  * wCoreCreateTopLevel--
@@ -43,7 +53,7 @@ WCoreWindow *wCoreCreateTopLevel(WScreen *screen, int x, int y, int width, int h
 	int vmask;
 	XSetWindowAttributes attribs;
 
-	core = wmalloc(sizeof(WCoreWindow));
+	core = wcore_create(width, height);
 
 	vmask = CWBorderPixel | CWCursor | CWEventMask | CWOverrideRedirect | CWColormap;
 	attribs.override_redirect = True;
@@ -62,10 +72,8 @@ WCoreWindow *wCoreCreateTopLevel(WScreen *screen, int x, int y, int width, int h
 		attribs.save_under = True;
 	}
 
-	core->window = XCreateWindow(dpy, screen->root_win, x, y, width, height,
+	core->window = XCreateWindow(dpy, screen->root_win, x, y, core->width, core->height,
 				     bwidth, depth, CopyFromParent, visual, vmask, &attribs);
-	core->width = width;
-	core->height = height;
 	core->screen_ptr = screen;
 	core->descriptor.self = core;
 
@@ -95,7 +103,7 @@ WCoreWindow *wCoreCreate(WCoreWindow *parent, int x, int y, int width, int heigh
 	int vmask;
 	XSetWindowAttributes attribs;
 
-	core = wmalloc(sizeof(WCoreWindow));
+	core = wcore_create(width, height);
 
 	vmask = CWBorderPixel | CWCursor | CWEventMask | CWColormap;
 	attribs.cursor = wPreferences.cursor[WCUR_NORMAL];
@@ -105,16 +113,15 @@ WCoreWindow *wCoreCreate(WCoreWindow *parent, int x, int y, int width, int heigh
 			     ButtonReleaseMask | ButtonMotionMask |
 			     ExposureMask | EnterWindowMask | LeaveWindowMask;
 	attribs.colormap = parent->screen_ptr->w_colormap;
-	core->window = XCreateWindow(dpy, parent->window, x, y, width, height, 0,
+	core->window = XCreateWindow(dpy, parent->window, x, y, core->width, core->height, 0,
 			  parent->screen_ptr->w_depth, CopyFromParent,
 			  parent->screen_ptr->w_visual, vmask, &attribs);
 
-	core->width = width;
-	core->height = height;
 	core->screen_ptr = parent->screen_ptr;
 	core->descriptor.self = core;
 
 	XSaveContext(dpy, core->window, w_global.context.client_win, (XPointer) & core->descriptor);
+
 	return core;
 }
 
