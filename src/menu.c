@@ -120,26 +120,53 @@ static void appearanceObserver(void *self, WMNotification * notif)
 }
 
 /************************************/
-
-/*
- *----------------------------------------------------------------------
- * wMenuCreate--
- * 	Creates a new empty menu with the specified title. If main_menu
- * is True, the created menu will be a main menu, which has some special
- * properties such as being placed over other normal menus.
- * 	If title is NULL, the menu will have no titlebar.
- *
- * Returns:
- * 	The created menu.
- *----------------------------------------------------------------------
- */
-WMenu *wMenuCreate(WScreen *screen, const char *title, int main_menu)
+WMenu *menu_create(const char *title, int main_menu)
 {
 	WMenu *menu;
 	static int brother = 0;
-	int tmp, flags;
+	int width = 1;
 
 	menu = wmalloc(sizeof(WMenu));
+
+	menu->frame = wframewindow_create(width, 1);
+	menu->menu = wcore_create(width, 10);
+
+	if (title) {
+		menu->frame->title = wstrdup(title);
+		menu->flags.titled = 1;
+	}
+
+	menu->frame->flags.justification = WTJ_LEFT;
+	menu->entry_no = 0;
+	menu->alloced_entries = 0;
+	menu->selected_entry = -1;
+	menu->entries = NULL;
+	menu->frame->child = menu;
+	menu->flags.lowered = 0;
+
+	/* create borders */
+	if (title) {
+		/* setup object descriptors */
+		menu->frame->on_mousedown_titlebar = menuTitleMouseDown;
+		menu->frame->on_dblclick_titlebar = menuTitleDoubleClick;
+	}
+
+	menu->frame->on_click_right = menuCloseClick;
+
+	if (!brother) {
+		brother = 1;
+		menu->brother = menu_create(title, main_menu);
+		brother = 0;
+		menu->brother->flags.brother = 1;
+		menu->brother->brother = menu;
+	}
+
+	return menu;
+}
+
+void menu_map(WMenu *menu, WScreen *screen)
+{
+	int tmp, flags;
 
 #ifdef SINGLE_MENULEVEL
 	tmp = WMSubmenuLevel;
@@ -148,12 +175,9 @@ WMenu *wMenuCreate(WScreen *screen, const char *title, int main_menu)
 #endif
 
 	flags = WFF_SINGLE_STATE | WFF_BORDER;
-	if (title) {
+	if (menu->flags.titled)
 		flags |= WFF_TITLEBAR | WFF_RIGHT_BUTTON;
-		menu->flags.titled = 1;
-	}
 
-	menu->frame = wframewindow_create(1, 1);
 	wframewindow_map(menu->frame, screen, tmp, 8, 2,
 			 &wPreferences.menu_title_clearance,
 			 &wPreferences.menu_title_min_height,
@@ -168,36 +192,11 @@ WMenu *wMenuCreate(WScreen *screen, const char *title, int main_menu)
 
 	wFrameWindowHideButton(menu->frame, WFF_RIGHT_BUTTON);
 
-	if (title) {
-		menu->frame->title = wstrdup(title);
-	}
-
-	menu->frame->flags.justification = WTJ_LEFT;
-
 	menu->frame->rbutton_image = screen->b_pixmaps[WBUT_CLOSE];
-
-	menu->entry_no = 0;
-	menu->alloced_entries = 0;
-	menu->selected_entry = -1;
-	menu->entries = NULL;
 
 	menu->frame_x = screen->app_menu_x;
 	menu->frame_y = screen->app_menu_y;
 
-	menu->frame->child = menu;
-
-	menu->flags.lowered = 0;
-
-	/* create borders */
-	if (title) {
-		/* setup object descriptors */
-		menu->frame->on_mousedown_titlebar = menuTitleMouseDown;
-		menu->frame->on_dblclick_titlebar = menuTitleDoubleClick;
-	}
-
-	menu->frame->on_click_right = menuCloseClick;
-
-	menu->menu = wcore_create(menu->frame->core->width, 10);
 	wcore_map(menu->menu, menu->frame->core,
 		  menu->frame->core->screen_ptr, 0,
 		  menu->frame->top_width, 0,
@@ -216,16 +215,31 @@ WMenu *wMenuCreate(WScreen *screen, const char *title, int main_menu)
 
 	XFlush(dpy);
 
-	if (!brother) {
-		brother = 1;
-		menu->brother = wMenuCreate(screen, title, main_menu);
-		brother = 0;
-		menu->brother->flags.brother = 1;
-		menu->brother->brother = menu;
-	}
-	WMAddNotificationObserver(appearanceObserver, menu, WNMenuAppearanceSettingsChanged, menu);
+	if (menu->brother && menu->brother->flags.brother)
+		menu_map(menu->brother, screen);
 
+	WMAddNotificationObserver(appearanceObserver, menu, WNMenuAppearanceSettingsChanged, menu);
 	WMAddNotificationObserver(appearanceObserver, menu, WNMenuTitleAppearanceSettingsChanged, menu);
+}
+
+/*
+ *----------------------------------------------------------------------
+ * wMenuCreate--
+ * 	Creates a new empty menu with the specified title. If main_menu
+ * is True, the created menu will be a main menu, which has some special
+ * properties such as being placed over other normal menus.
+ * 	If title is NULL, the menu will have no titlebar.
+ *
+ * Returns:
+ * 	The created menu.
+ *----------------------------------------------------------------------
+ */
+WMenu *wMenuCreate(WScreen *screen, const char *title, int main_menu)
+{
+	WMenu *menu;
+
+	menu = menu_create(title, main_menu);
+	menu_map(menu, screen);
 
 	return menu;
 }

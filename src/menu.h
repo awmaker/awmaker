@@ -133,5 +133,7 @@ WMenu *wMenuUnderPointer(WScreen *screen);
 void wMenuSaveState(WScreen *scr);
 void wMenuRestoreState(WScreen *scr);
 
+WMenu *menu_create(const char *title, int main_menu);
+void menu_map(WMenu *menu, WScreen *screen);
 
 #endif
