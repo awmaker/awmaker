@@ -50,10 +50,17 @@ WCoreWindow *wcore_create(int width, int height)
 WCoreWindow *wCoreCreateTopLevel(WScreen *screen, int x, int y, int width, int height, int bwidth, int depth, Visual *visual, Colormap colormap, WMPixel border_pixel)
 {
 	WCoreWindow *core;
-	int vmask;
-	XSetWindowAttributes attribs;
 
 	core = wcore_create(width, height);
+	wcore_map_toplevel(core, screen, x, y, bwidth, depth, visual, colormap, border_pixel);
+
+	return core;
+}
+
+void wcore_map_toplevel(WCoreWindow *core, WScreen *screen, int x, int y, int bwidth, int depth, Visual *visual, Colormap colormap, WMPixel border_pixel)
+{
+	int vmask;
+	XSetWindowAttributes attribs;
 
 	vmask = CWBorderPixel | CWCursor | CWEventMask | CWOverrideRedirect | CWColormap;
 	attribs.override_redirect = True;
@@ -79,8 +86,6 @@ WCoreWindow *wCoreCreateTopLevel(WScreen *screen, int x, int y, int width, int h
 
 	XClearWindow(dpy, core->window);
 	XSaveContext(dpy, core->window, w_global.context.client_win, (XPointer) & core->descriptor);
-
-	return core;
 }
 
 /*----------------------------------------------------------------------
@@ -100,10 +105,17 @@ WCoreWindow *wCoreCreateTopLevel(WScreen *screen, int x, int y, int width, int h
 WCoreWindow *wCoreCreate(WCoreWindow *parent, int x, int y, int width, int height)
 {
 	WCoreWindow *core;
-	int vmask;
-	XSetWindowAttributes attribs;
 
 	core = wcore_create(width, height);
+	wcore_map(core, parent, parent->screen_ptr, x, y, 0, parent->screen_ptr->w_depth, parent->screen_ptr->w_visual, parent->screen_ptr->w_colormap);
+
+	return core;
+}
+
+void wcore_map(WCoreWindow *core, WCoreWindow *parent, WScreen *screen, int x, int y, int bwidth, int depth, Visual *visual, Colormap colormap)
+{
+	int vmask;
+	XSetWindowAttributes attribs;
 
 	vmask = CWBorderPixel | CWCursor | CWEventMask | CWColormap;
 	attribs.cursor = wPreferences.cursor[WCUR_NORMAL];
@@ -112,17 +124,14 @@ WCoreWindow *wCoreCreate(WCoreWindow *parent, int x, int y, int width, int heigh
 	attribs.event_mask = KeyPressMask | KeyReleaseMask | ButtonPressMask |
 			     ButtonReleaseMask | ButtonMotionMask |
 			     ExposureMask | EnterWindowMask | LeaveWindowMask;
-	attribs.colormap = parent->screen_ptr->w_colormap;
-	core->window = XCreateWindow(dpy, parent->window, x, y, core->width, core->height, 0,
-			  parent->screen_ptr->w_depth, CopyFromParent,
-			  parent->screen_ptr->w_visual, vmask, &attribs);
+	attribs.colormap = colormap;
+	core->window = XCreateWindow(dpy, parent->window, x, y, core->width, core->height, bwidth,
+				     depth, CopyFromParent, visual, vmask, &attribs);
 
-	core->screen_ptr = parent->screen_ptr;
+	core->screen_ptr = screen;
 	core->descriptor.self = core;
 
 	XSaveContext(dpy, core->window, w_global.context.client_win, (XPointer) & core->descriptor);
-
-	return core;
 }
 
 void wCoreDestroy(WCoreWindow * core)
