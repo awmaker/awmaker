@@ -40,23 +40,6 @@ WCoreWindow *wcore_create(int width, int height)
 	return core;
 }
 
-/*----------------------------------------------------------------------
- * wCoreCreateTopLevel--
- * 	Creates a toplevel window used for icons, menus and dialogs.
- *
- * Returns:
- * 	The created window.
- *--------------------------------------------------------------------- */
-WCoreWindow *wCoreCreateTopLevel(WScreen *screen, int x, int y, int width, int height, int bwidth, int depth, Visual *visual, Colormap colormap, WMPixel border_pixel)
-{
-	WCoreWindow *core;
-
-	core = wcore_create(width, height);
-	wcore_map_toplevel(core, screen, x, y, bwidth, depth, visual, colormap, border_pixel);
-
-	return core;
-}
-
 void wcore_map_toplevel(WCoreWindow *core, WScreen *screen, int x, int y, int bwidth, int depth, Visual *visual, Colormap colormap, WMPixel border_pixel)
 {
 	int vmask;

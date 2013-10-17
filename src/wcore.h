@@ -41,11 +41,6 @@ typedef struct _WCoreWindow {
 	WStacking *stacking;		/* window stacking information */
 } WCoreWindow;
 
-WCoreWindow *wCoreCreateTopLevel(WScreen *screen, int x, int y, int width,
-				 int height, int bwidth,
-				 int depth, Visual *visual, Colormap colormap,
-				 WMPixel border_pixel);
-
 WCoreWindow *wCoreCreate(WCoreWindow *parent, int x, int y,
 			 int width, int height);
 
