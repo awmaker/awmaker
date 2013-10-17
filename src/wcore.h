@@ -41,9 +41,6 @@ typedef struct _WCoreWindow {
 	WStacking *stacking;		/* window stacking information */
 } WCoreWindow;
 
-WCoreWindow *wCoreCreate(WCoreWindow *parent, int x, int y,
-			 int width, int height);
-
 void wCoreDestroy(WCoreWindow *core);
 void wCoreConfigure(WCoreWindow *core, int req_x, int req_y,
 		    int req_w, int req_h);

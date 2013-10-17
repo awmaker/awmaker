@@ -71,30 +71,6 @@ void wcore_map_toplevel(WCoreWindow *core, WScreen *screen, int x, int y, int bw
 	XSaveContext(dpy, core->window, w_global.context.client_win, (XPointer) & core->descriptor);
 }
 
-/*----------------------------------------------------------------------
- * wCoreCreate--
- * 	Creates a brand new child window.
- * 	The window will have a border width of 0 and color is black.
- *
- * Returns:
- * 	A initialized core window structure.
- *
- * Side effects:
- * 	A window context for the created window is saved.
- *
- * Notes:
- * 	The event mask is initialized to a default value.
- *--------------------------------------------------------------------- */
-WCoreWindow *wCoreCreate(WCoreWindow *parent, int x, int y, int width, int height)
-{
-	WCoreWindow *core;
-
-	core = wcore_create(width, height);
-	wcore_map(core, parent, parent->screen_ptr, x, y, 0, parent->screen_ptr->w_depth, parent->screen_ptr->w_visual, parent->screen_ptr->w_colormap);
-
-	return core;
-}
-
 void wcore_map(WCoreWindow *core, WCoreWindow *parent, WScreen *screen, int x, int y, int bwidth, int depth, Visual *visual, Colormap colormap)
 {
 	int vmask;
