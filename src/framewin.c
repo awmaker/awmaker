@@ -75,17 +75,23 @@ static void allocFrameBorderPixel(Colormap colormap, const char *color_name, uns
 		**pixel = xcol.pixel;
 }
 
-WFrameWindow *wFrameWindowCreate(WScreen * scr, int wlevel, int x, int y,
-				 int width, int height, int *clearance,
-				 int *title_min, int *title_max, int flags,
-				 WTexture ** title_texture, WTexture ** resize_texture,
-				 WMColor ** color, WMFont ** font,
-				 int depth, Visual *visual, Colormap colormap)
+WFrameWindow *wframewindow_create(int width, int height)
 {
 	WFrameWindow *fwin;
 
 	fwin = wmalloc(sizeof(WFrameWindow));
+	fwin->core = wcore_create(width, height);
 
+	return fwin;
+}
+
+void wframewindow_map(WFrameWindow *fwin, WScreen *scr, int wlevel,
+		      int x, int y, int *clearance,
+		      int *title_min, int *title_max, int flags,
+		      WTexture **title_texture, WTexture **resize_texture,
+		      WMColor **color, WMFont **font, int depth,
+		      Visual *visual, Colormap colormap)
+{
 	fwin->screen_ptr = scr;
 
 	fwin->flags.single_texture = (flags & WFF_SINGLE_STATE) ? 1 : 0;
@@ -106,8 +112,10 @@ WFrameWindow *wFrameWindowCreate(WScreen * scr, int wlevel, int x, int y,
 	fwin->visual = visual;
 	fwin->colormap = colormap;
 
-	fwin->core = wCoreCreateTopLevel(scr, x, y, width, height, (flags & WFF_BORDER)
-					 ? scr->frame_border_width : 0, fwin->depth, fwin->visual, fwin->colormap, scr->frame_border_pixel);
+	wcore_map_toplevel(fwin->core, scr, x, y,
+			   (flags & WFF_BORDER) ? scr->frame_border_width : 0,
+			   fwin->depth, fwin->visual,
+			   fwin->colormap, scr->frame_border_pixel);
 
 	/* setup stacking information */
 	fwin->core->stacking = wmalloc(sizeof(WStacking));
@@ -119,6 +127,23 @@ WFrameWindow *wFrameWindowCreate(WScreen * scr, int wlevel, int x, int y,
 	AddToStackList(fwin->core);
 
 	wFrameWindowUpdateBorders(fwin, flags);
+}
+
+
+WFrameWindow *wFrameWindowCreate(WScreen *scr, int wlevel, int x, int y,
+				 int width, int height, int *clearance,
+				 int *title_min, int *title_max, int flags,
+				 WTexture **title_texture, WTexture **resize_texture,
+				 WMColor **color, WMFont **font,
+				 int depth, Visual *visual, Colormap colormap)
+{
+	WFrameWindow *fwin;
+
+	fwin = wframewindow_create(width, height);
+	wframewindow_map(fwin, scr, wlevel, x, y, clearance,
+			 title_min, title_max, flags,
+			 title_texture, resize_texture, color, font,
+			 depth, visual, colormap);
 
 	return fwin;
 }

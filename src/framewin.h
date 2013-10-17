@@ -23,6 +23,7 @@
 
 #include "wcore.h"
 #include "pixmap.h"
+#include "texture.h"
 
 #define BORDER_TOP	1
 #define BORDER_BOTTOM	2
@@ -188,4 +189,11 @@ int wFrameWindowChangeTitle(WFrameWindow *fwin, const char *new_title);
 void wFrameWindowUpdateLanguageButton(WFrameWindow *fwin);
 #endif
 
+WFrameWindow *wframewindow_create(int width, int height);
+void wframewindow_map(WFrameWindow *fwin, WScreen *scr, int wlevel,
+                      int x, int y, int *clearance,
+                      int *title_min, int *title_max, int flags,
+                      WTexture **title_texture, WTexture **resize_texture,
+                      WMColor **color, WMFont **font, int depth,
+                      Visual *visual, Colormap colormap);
 #endif
