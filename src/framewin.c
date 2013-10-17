@@ -129,25 +129,6 @@ void wframewindow_map(WFrameWindow *fwin, WScreen *scr, int wlevel,
 	wFrameWindowUpdateBorders(fwin, flags);
 }
 
-
-WFrameWindow *wFrameWindowCreate(WScreen *scr, int wlevel, int x, int y,
-				 int width, int height, int *clearance,
-				 int *title_min, int *title_max, int flags,
-				 WTexture **title_texture, WTexture **resize_texture,
-				 WMColor **color, WMFont **font,
-				 int depth, Visual *visual, Colormap colormap)
-{
-	WFrameWindow *fwin;
-
-	fwin = wframewindow_create(width, height);
-	wframewindow_map(fwin, scr, wlevel, x, y, clearance,
-			 title_min, title_max, flags,
-			 title_texture, resize_texture, color, font,
-			 depth, visual, colormap);
-
-	return fwin;
-}
-
 void wFrameWindowUpdateBorders(WFrameWindow * fwin, int flags)
 {
 	int theight;

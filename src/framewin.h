@@ -157,16 +157,6 @@ typedef struct WFrameWindow {
     unsigned long *selected_border_pixel;
 } WFrameWindow;
 
-
-WFrameWindow*
-wFrameWindowCreate(WScreen *scr, int wlevel, int x, int y,
-                   int width, int height, int *clearance,
-                   int *title_min, int *title_max, int flags,
-                   union WTexture **title_texture,
-                   union WTexture **resize_texture,
-                   WMColor **color, WMFont **font,
-                   int depth, Visual *visual, Colormap colormap);
-
 void wFrameWindowUpdateBorders(WFrameWindow *fwin, int flags);
 
 void wFrameWindowDestroy(WFrameWindow *fwin);
