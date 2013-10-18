@@ -244,13 +244,14 @@ WMenu *wMenuCreate(WScreen *screen, const char *title, int main_menu)
 	return menu;
 }
 
-WMenu *wMenuCreateForApp(WScreen *screen, const char *title, int main_menu)
+WMenu *wMenuCreateForApp(const char *title, int main_menu)
 {
 	WMenu *menu;
 
-	menu = wMenuCreate(screen, title, main_menu);
+	menu = menu_create(title, main_menu);
 	if (!menu)
 		return NULL;
+
 	menu->flags.app_menu = 1;
 	menu->brother->flags.app_menu = 1;
 

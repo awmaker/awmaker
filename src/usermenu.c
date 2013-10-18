@@ -196,7 +196,7 @@ static WUserMenuData *convertShortcuts(WScreen * scr, WMPropList * shortcut)
 	return data;
 }
 
-static WMenu *configureUserMenu(WScreen * scr, WMPropList * plum)
+static WMenu *configureUserMenu(WScreen *scr, WMPropList *plum)
 {
 	char *mtitle;
 	WMenu *menu = NULL;
@@ -220,7 +220,9 @@ static WMenu *configureUserMenu(WScreen * scr, WMPropList * plum)
 
 	mtitle = WMGetFromPLString(elem);
 
-	menu = wMenuCreateForApp(scr, mtitle, True);
+	menu = wMenuCreateForApp(mtitle, True);
+	if (menu)
+		menu_map(menu, scr);
 
 	for (i = 1; i < count; i++) {
 		elem = WMGetFromPLArray(plum, i);

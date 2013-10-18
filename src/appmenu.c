@@ -82,7 +82,7 @@ static void notifyClient(WMenu * menu, WMenuEntry * entry)
 	sendMessage(data->window, wmSelectItem, data->tag);
 }
 
-static WMenu *parseMenuCommand(WScreen * scr, Window win, char **slist, int count, int *index)
+static WMenu *parseMenuCommand(WScreen *scr, Window win, char **slist, int count, int *index)
 {
 	WMenu *menu;
 	int command;
@@ -94,14 +94,19 @@ static WMenu *parseMenuCommand(WScreen * scr, Window win, char **slist, int coun
 		wwarning("appmenu: menu command size exceeded in window %lx", win);
 		return NULL;
 	}
+
 	if (sscanf(slist[*index], "%i %i %n", &command, &code, &pos) < 2 || command != wmBeginMenu) {
 		wwarning("appmenu: bad menu entry \"%s\" in window %lx", slist[*index], win);
 		return NULL;
 	}
+
 	strcpy(title, &slist[*index][pos]);
-	menu = wMenuCreateForApp(scr, title, *index == 1);
+	menu = wMenuCreateForApp(title, *index == 1);
 	if (!menu)
 		return NULL;
+
+	menu_map(menu, scr);
+
 	*index += 1;
 	while (*index < count) {
 		int ecode, etag, enab;
