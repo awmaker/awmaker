@@ -597,11 +597,12 @@ static void killCallback(WMenu * menu, WMenuEntry * entry)
 	WCHANGE_STATE(WSTATE_NORMAL);
 }
 
-static WMenu *createApplicationMenu(WScreen *scr)
+static WMenu *createApplicationMenu(void)
 {
 	WMenu *menu;
 
-	menu = wMenuCreate(scr, NULL, False);
+	menu = menu_create(NULL, False);
+
 	wMenuAddCallback(menu, _("Unhide Here"), unhideHereCallback, NULL);
 	wMenuAddCallback(menu, _("Hide"), hideCallback, NULL);
 	wMenuAddCallback(menu, _("Launch"), relaunchCallback, NULL);
@@ -611,14 +612,15 @@ static WMenu *createApplicationMenu(WScreen *scr)
 	return menu;
 }
 
-static void openApplicationMenu(WApplication * wapp, int x, int y)
+static void openApplicationMenu(WApplication *wapp, int x, int y)
 {
 	WMenu *menu;
 	WScreen *scr = wapp->main_window_desc->screen_ptr;
 	int i;
 
 	if (!scr->icon_menu) {
-		scr->icon_menu = createApplicationMenu(scr);
+		scr->icon_menu = createApplicationMenu();
+		menu_map(scr->icon_menu, scr);
 		wfree(scr->icon_menu->entries[1]->text);
 	}
 
