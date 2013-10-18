@@ -982,10 +982,11 @@ static WMenu *makeWorkspaceMenu(WScreen *scr)
 {
 	WMenu *menu;
 
-	menu = wMenuCreate(scr, NULL, False);
+	menu = menu_create(NULL, False);
 	if (!menu)
 		wwarning(_("could not create workspace submenu for Clip menu"));
 
+	menu_map(menu, scr);
 	wMenuAddCallback(menu, "", switchWSCommand, (void *)w_global.clip.icon);
 
 	menu->flags.realized = 0;
@@ -1039,11 +1040,13 @@ static WMenu *makeClipOptionsMenu(WScreen *scr)
 	WMenu *menu;
 	WMenuEntry *entry;
 
-	menu = wMenuCreate(scr, NULL, False);
+	menu = menu_create(NULL, False);
 	if (!menu) {
 		wwarning(_("could not create options submenu for Clip menu"));
 		return NULL;
 	}
+
+	menu_map(menu, scr);
 
 	entry = wMenuAddCallback(menu, _("Keep on Top"), toggleLoweredCallback, NULL);
 	entry->flags.indicator = 1;
@@ -1178,11 +1181,13 @@ static WMenu *makeDockPositionMenu(WScreen *scr)
 	WMenu *menu;
 	WMenuEntry *entry;
 
-	menu = wMenuCreate(scr, NULL, False);
+	menu = menu_create(NULL, False);
 	if (!menu) {
 		wwarning(_("could not create options submenu for dock position menu"));
 		return NULL;
 	}
+
+	menu_map(menu, scr);
 
 	entry = wMenuAddCallback(menu, _("Normal"), setDockPositionNormalCallback, NULL);
 	entry->flags.indicator = 1;
@@ -1214,7 +1219,8 @@ static WMenu *dockMenuCreate(WScreen *scr, int type)
 	if (type == WM_DRAWER && w_global.dock.drawer_menu)
 		return w_global.dock.drawer_menu;
 
-	menu = wMenuCreate(scr, NULL, False);
+	menu = menu_create(NULL, False);
+	menu_map(menu, scr);
 	if (type == WM_DOCK) {
 		entry = wMenuAddCallback(menu, _("Dock position"), NULL, NULL);
 		if (w_global.dock.pos_menu == NULL)
