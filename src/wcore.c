@@ -40,6 +40,11 @@ WCoreWindow *wcore_create(int width, int height)
 	return core;
 }
 
+void wcore_destroy(WCoreWindow *core)
+{
+	wfree(core);
+}
+
 void wcore_map_toplevel(WCoreWindow *core, WScreen *screen, int x, int y, int bwidth, int depth, Visual *visual, Colormap colormap, WMPixel border_pixel)
 {
 	int vmask;
@@ -93,14 +98,15 @@ void wcore_map(WCoreWindow *core, WCoreWindow *parent, WScreen *screen, int x, i
 	XSaveContext(dpy, core->window, w_global.context.client_win, (XPointer) & core->descriptor);
 }
 
-void wCoreDestroy(WCoreWindow * core)
+void wCoreDestroy(WCoreWindow *core)
 {
 	if (core->stacking)
 		wfree(core->stacking);
 
 	XDeleteContext(dpy, core->window, w_global.context.client_win);
 	XDestroyWindow(dpy, core->window);
-	wfree(core);
+
+	wcore_destroy(core);
 }
 
 void wCoreConfigure(WCoreWindow * core, int req_x, int req_y, int req_w, int req_h)

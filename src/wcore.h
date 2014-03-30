@@ -46,6 +46,7 @@ void wCoreConfigure(WCoreWindow *core, int req_x, int req_y,
 		    int req_w, int req_h);
 
 WCoreWindow *wcore_create(int width, int height);
+void wcore_destroy(WCoreWindow *core);
 
 void wcore_map_toplevel(WCoreWindow *core, WScreen *screen, int x, int y,
 			int bwidth, int depth, Visual *visual,
