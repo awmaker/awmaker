@@ -43,8 +43,7 @@
 #include "misc.h"
 #include "event.h"
 
-#define DBLCLICK_TIME wPreferences.dblclick_time
-
+#define FREE_PIXMAP(p) if ((p)!=None) XFreePixmap(dpy, (p)), (p)=None
 
 static void handleExpose(WObjDescriptor * desc, XEvent * event);
 static void handleButtonExpose(WObjDescriptor * desc, XEvent * event);
@@ -145,12 +144,32 @@ void wframewindow_map(WFrameWindow *fwin, WScreen *scr, int wlevel,
 	wFrameWindowUpdateBorders(fwin, flags);
 }
 
+
+static void destroy_framewin_button(WFrameWindow *fwin, int state)
+{
+	FREE_PIXMAP(fwin->title_back[state]);
+	if (wPreferences.new_style == TS_NEW) {
+		FREE_PIXMAP(fwin->lbutton_back[state]);
+		FREE_PIXMAP(fwin->rbutton_back[state]);
+#ifdef XKB_BUTTON_HINT
+		FREE_PIXMAP(fwin->languagebutton_back[state]);
+#endif
+	}
+}
+
+static void destroy_framewin_buttons(WFrameWindow *fwin)
+{
+	int state;
+
+	for (state = 0; state < (fwin->flags.single_texture ? 1 : 3); state++)
+		destroy_framewin_button(fwin, state);
+}
+
 void wFrameWindowUpdateBorders(WFrameWindow * fwin, int flags)
 {
 	int theight;
 	int bsize;
 	int width, height;
-	int i;
 	WScreen *scr = fwin->screen_ptr;
 
 	width = fwin->core->width;
@@ -219,16 +238,7 @@ void wFrameWindowUpdateBorders(WFrameWindow * fwin, int flags)
 			updateTitlebar(fwin);
 		} else {
 			/* we had a titlebar, but now we don't need it anymore */
-			for (i = 0; i < (fwin->flags.single_texture ? 1 : 3); i++) {
-				FREE_PIXMAP(fwin->title_back[i]);
-				if (wPreferences.new_style == TS_NEW) {
-					FREE_PIXMAP(fwin->lbutton_back[i]);
-					FREE_PIXMAP(fwin->rbutton_back[i]);
-#ifdef XKB_BUTTON_HINT
-					FREE_PIXMAP(fwin->languagebutton_back[i]);
-#endif
-				}
-			}
+			destroy_framewin_buttons(fwin);
 
 			wframewindow_unmap_wcorewindow(fwin->left_button);
 			wframewindow_destroy_wcorewindow(fwin->left_button);
@@ -510,8 +520,6 @@ void framewindow_unmap(WFrameWindow *fwin)
 
 void wFrameWindowDestroy(WFrameWindow *fwin)
 {
-	int i;
-
 	wframewindow_destroy_wcorewindow(fwin->left_button);
 #ifdef XKB_BUTTON_HINT
 	wframewindow_destroy_wcorewindow(fwin->language_button);
@@ -528,16 +536,7 @@ void wFrameWindowDestroy(WFrameWindow *fwin)
 	if (fwin->title)
 		wfree(fwin->title);
 
-	for (i = 0; i < (fwin->flags.single_texture ? 1 : 3); i++) {
-		FREE_PIXMAP(fwin->title_back[i]);
-		if (wPreferences.new_style == TS_NEW) {
-			FREE_PIXMAP(fwin->lbutton_back[i]);
-#ifdef XKB_BUTTON_HINT
-			FREE_PIXMAP(fwin->languagebutton_back[i]);
-#endif
-			FREE_PIXMAP(fwin->rbutton_back[i]);
-		}
-	}
+	destroy_framewin_buttons(fwin);
 
 	wfree(fwin);
 }
@@ -914,14 +913,7 @@ static void remakeTexture(WFrameWindow * fwin, int state)
 #endif
 
 	if (fwin->title_texture[state] && fwin->titlebar) {
-		FREE_PIXMAP(fwin->title_back[state]);
-		if (wPreferences.new_style == TS_NEW) {
-			FREE_PIXMAP(fwin->lbutton_back[state]);
-			FREE_PIXMAP(fwin->rbutton_back[state]);
-#ifdef XKB_BUTTON_HINT
-			FREE_PIXMAP(fwin->languagebutton_back[state]);
-#endif
-		}
+		destroy_framewin_button(fwin, state);
 
 		if (fwin->title_texture[state]->any.type != WTEX_SOLID) {
 			int left, right;

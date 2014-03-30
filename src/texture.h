@@ -174,9 +174,6 @@ struct RImage *wTextureRenderImage(WTexture*, int, int, int);
 void wTexturePaintTitlebar(struct WWindow *wwin, WTexture *texture, Pixmap *tdata,
                            int repaint);
 
-
-#define FREE_PIXMAP(p) if ((p)!=None) XFreePixmap(dpy, (p)), (p)=None
-
 void wDrawBevel(Drawable d, unsigned width, unsigned height,
                 WTexSolid *texture, int relief);
 
