@@ -186,4 +186,5 @@ void wframewindow_map(WFrameWindow *fwin, WScreen *scr, int wlevel,
                       WTexture **title_texture, WTexture **resize_texture,
                       WMColor **color, WMFont **font, int depth,
                       Visual *visual, Colormap colormap);
+void framewindow_unmap(WFrameWindow *fwin);
 #endif

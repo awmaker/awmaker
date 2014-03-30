@@ -219,8 +219,10 @@ void wWindowDestroy(WWindow *wwin)
 
 	XDeleteContext(dpy, wwin->client_win, w_global.context.client_win);
 
-	if (wwin->frame)
+	if (wwin->frame) {
+		framewindow_unmap(wwin->frame);
 		wFrameWindowDestroy(wwin->frame);
+	}
 
 	if (wwin->icon) {
 		RemoveFromStackList(wwin->icon->core);

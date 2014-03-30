@@ -179,6 +179,7 @@ void menu_destroy(WMenu *menu)
 
         wcore_destroy(menu->menu);
 
+	framewindow_unmap(menu->frame);
 	wFrameWindowDestroy(menu->frame);
 
 	/* destroy copy of this menu */

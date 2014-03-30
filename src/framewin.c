@@ -497,22 +497,27 @@ void wFrameWindowUpdateBorders(WFrameWindow * fwin, int flags)
 	}
 }
 
+void framewindow_unmap(WFrameWindow *fwin)
+{
+	wframewindow_unmap_wcorewindow(fwin->left_button);
+#ifdef XKB_BUTTON_HINT
+	wframewindow_unmap_wcorewindow(fwin->language_button);
+#endif
+	wframewindow_unmap_wcorewindow(fwin->right_button);
+	wframewindow_unmap_wcorewindow(fwin->resizebar);
+	wframewindow_unmap_wcorewindow(fwin->titlebar);
+}
+
 void wFrameWindowDestroy(WFrameWindow *fwin)
 {
 	int i;
 
-	wframewindow_unmap_wcorewindow(fwin->left_button);
 	wframewindow_destroy_wcorewindow(fwin->left_button);
-
 #ifdef XKB_BUTTON_HINT
-	wframewindow_unmap_wcorewindow(fwin->language_button);
 	wframewindow_destroy_wcorewindow(fwin->language_button);
 #endif
-	wframewindow_unmap_wcorewindow(fwin->right_button);
 	wframewindow_destroy_wcorewindow(fwin->right_button);
-	wframewindow_unmap_wcorewindow(fwin->resizebar);
 	wframewindow_destroy_wcorewindow(fwin->resizebar);
-	wframewindow_unmap_wcorewindow(fwin->titlebar);
 	wframewindow_destroy_wcorewindow(fwin->titlebar);
 
 	RemoveFromStackList(fwin->core);
