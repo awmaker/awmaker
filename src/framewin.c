@@ -85,6 +85,19 @@ WFrameWindow *wframewindow_create(int width, int height)
 	return fwin;
 }
 
+void wframewindow_destroy_wcorewindow(WCoreWindow *core)
+{
+	if (core) {
+		if (core->stacking)
+			wfree(core->stacking);
+
+		XDeleteContext(dpy, core->window, w_global.context.client_win);
+		XDestroyWindow(dpy, core->window);
+
+		wcore_destroy(core);
+	}
+}
+
 void wframewindow_map(WFrameWindow *fwin, WScreen *scr, int wlevel,
 		      int x, int y, int *clearance,
 		      int *title_min, int *title_max, int flags,
@@ -213,22 +226,13 @@ void wFrameWindowUpdateBorders(WFrameWindow * fwin, int flags)
 #endif
 				}
 			}
-			if (fwin->left_button)
-				wCoreDestroy(fwin->left_button);
-			fwin->left_button = NULL;
 
+			wframewindow_destroy_wcorewindow(fwin->left_button);
 #ifdef XKB_BUTTON_HINT
-			if (fwin->language_button)
-				wCoreDestroy(fwin->language_button);
-			fwin->language_button = NULL;
+			wframewindow_destroy_wcorewindow(fwin->language_button);
 #endif
-
-			if (fwin->right_button)
-				wCoreDestroy(fwin->right_button);
-			fwin->right_button = NULL;
-
-			wCoreDestroy(fwin->titlebar);
-			fwin->titlebar = NULL;
+			wframewindow_destroy_wcorewindow(fwin->right_button);
+			wframewindow_destroy_wcorewindow(fwin->titlebar);
 
 			fwin->top_width = 0;
 		}
@@ -415,12 +419,7 @@ void wFrameWindowUpdateBorders(WFrameWindow * fwin, int flags)
 		}
 	} else {
 		fwin->bottom_width = 0;
-
-		if (fwin->resizebar) {
-			fwin->bottom_width = 0;
-			wCoreDestroy(fwin->resizebar);
-			fwin->resizebar = NULL;
-		}
+		wframewindow_destroy_wcorewindow(fwin->resizebar);
 	}
 
 	if (height + fwin->top_width + fwin->bottom_width != fwin->core->height && !(flags & WFF_IS_SHADED))
@@ -490,30 +489,22 @@ void wFrameWindowUpdateBorders(WFrameWindow * fwin, int flags)
 	}
 }
 
-void wFrameWindowDestroy(WFrameWindow * fwin)
+void wFrameWindowDestroy(WFrameWindow *fwin)
 {
 	int i;
 
-	if (fwin->left_button)
-		wCoreDestroy(fwin->left_button);
+	wframewindow_destroy_wcorewindow(fwin->left_button);
 
 #ifdef XKB_BUTTON_HINT
-	if (fwin->language_button)
-		wCoreDestroy(fwin->language_button);
+	wframewindow_destroy_wcorewindow(fwin->language_button);
 #endif
-
-	if (fwin->right_button)
-		wCoreDestroy(fwin->right_button);
-
-	if (fwin->resizebar)
-		wCoreDestroy(fwin->resizebar);
-
-	if (fwin->titlebar)
-		wCoreDestroy(fwin->titlebar);
+	wframewindow_destroy_wcorewindow(fwin->right_button);
+	wframewindow_destroy_wcorewindow(fwin->resizebar);
+	wframewindow_destroy_wcorewindow(fwin->titlebar);
 
 	RemoveFromStackList(fwin->core);
 
-	wCoreDestroy(fwin->core);
+	wframewindow_destroy_wcorewindow(fwin->core);
 
 	if (fwin->title)
 		wfree(fwin->title);
