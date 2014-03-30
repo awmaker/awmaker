@@ -164,6 +164,30 @@ WMenu *menu_create(const char *title, int main_menu)
 	return menu;
 }
 
+void menu_destroy(WMenu *menu)
+{
+	FREE_PIXMAP(menu->menu_texture_data);
+
+	if (menu->cascades)
+		wfree(menu->cascades);
+
+        if (menu->menu->stacking)
+                wfree(menu->menu->stacking);
+
+        XDeleteContext(dpy, menu->menu->window, w_global.context.client_win);
+        XDestroyWindow(dpy, menu->menu->window);
+
+        wcore_destroy(menu->menu);
+
+	wFrameWindowDestroy(menu->frame);
+
+	/* destroy copy of this menu */
+	if (!menu->flags.brother && menu->brother)
+		wMenuDestroy(menu->brother, False);
+
+	wfree(menu);
+}
+
 void menu_map(WMenu *menu, WScreen *screen)
 {
 	int tmp, flags;
@@ -618,19 +642,7 @@ void wMenuDestroy(WMenu * menu, int recurse)
 
 	}
 
-	FREE_PIXMAP(menu->menu_texture_data);
-
-	if (menu->cascades)
-		wfree(menu->cascades);
-
-	wCoreDestroy(menu->menu);
-	wFrameWindowDestroy(menu->frame);
-
-	/* destroy copy of this menu */
-	if (!menu->flags.brother && menu->brother)
-		wMenuDestroy(menu->brother, False);
-
-	wfree(menu);
+	menu_destroy(menu);
 }
 
 #define F_NORMAL	0
