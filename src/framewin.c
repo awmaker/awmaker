@@ -85,7 +85,7 @@ WFrameWindow *wframewindow_create(int width, int height)
 	return fwin;
 }
 
-void wframewindow_destroy_wcorewindow(WCoreWindow *core)
+void wframewindow_unmap_wcorewindow(WCoreWindow *core)
 {
 	if (core) {
 		if (core->stacking)
@@ -93,9 +93,12 @@ void wframewindow_destroy_wcorewindow(WCoreWindow *core)
 
 		XDeleteContext(dpy, core->window, w_global.context.client_win);
 		XDestroyWindow(dpy, core->window);
-
-		wcore_destroy(core);
 	}
+}
+
+void wframewindow_destroy_wcorewindow(WCoreWindow *core)
+{
+	wcore_destroy(core);
 }
 
 void wframewindow_map(WFrameWindow *fwin, WScreen *scr, int wlevel,
@@ -227,11 +230,15 @@ void wFrameWindowUpdateBorders(WFrameWindow * fwin, int flags)
 				}
 			}
 
+			wframewindow_unmap_wcorewindow(fwin->left_button);
 			wframewindow_destroy_wcorewindow(fwin->left_button);
 #ifdef XKB_BUTTON_HINT
+			wframewindow_unmap_wcorewindow(fwin->language_button);
 			wframewindow_destroy_wcorewindow(fwin->language_button);
 #endif
+			wframewindow_unmap_wcorewindow(fwin->right_button);
 			wframewindow_destroy_wcorewindow(fwin->right_button);
+			wframewindow_unmap_wcorewindow(fwin->titlebar);
 			wframewindow_destroy_wcorewindow(fwin->titlebar);
 
 			fwin->top_width = 0;
@@ -419,6 +426,7 @@ void wFrameWindowUpdateBorders(WFrameWindow * fwin, int flags)
 		}
 	} else {
 		fwin->bottom_width = 0;
+		wframewindow_unmap_wcorewindow(fwin->resizebar);
 		wframewindow_destroy_wcorewindow(fwin->resizebar);
 	}
 
@@ -493,17 +501,23 @@ void wFrameWindowDestroy(WFrameWindow *fwin)
 {
 	int i;
 
+	wframewindow_unmap_wcorewindow(fwin->left_button);
 	wframewindow_destroy_wcorewindow(fwin->left_button);
 
 #ifdef XKB_BUTTON_HINT
+	wframewindow_unmap_wcorewindow(fwin->language_button);
 	wframewindow_destroy_wcorewindow(fwin->language_button);
 #endif
+	wframewindow_unmap_wcorewindow(fwin->right_button);
 	wframewindow_destroy_wcorewindow(fwin->right_button);
+	wframewindow_unmap_wcorewindow(fwin->resizebar);
 	wframewindow_destroy_wcorewindow(fwin->resizebar);
+	wframewindow_unmap_wcorewindow(fwin->titlebar);
 	wframewindow_destroy_wcorewindow(fwin->titlebar);
 
 	RemoveFromStackList(fwin->core);
 
+	wframewindow_unmap_wcorewindow(fwin->core);
 	wframewindow_destroy_wcorewindow(fwin->core);
 
 	if (fwin->title)
