@@ -98,17 +98,6 @@ void wcore_map(WCoreWindow *core, WCoreWindow *parent, WScreen *screen, int x, i
 	XSaveContext(dpy, core->window, w_global.context.client_win, (XPointer) & core->descriptor);
 }
 
-void wCoreDestroy(WCoreWindow *core)
-{
-	if (core->stacking)
-		wfree(core->stacking);
-
-	XDeleteContext(dpy, core->window, w_global.context.client_win);
-	XDestroyWindow(dpy, core->window);
-
-	wcore_destroy(core);
-}
-
 void wCoreConfigure(WCoreWindow * core, int req_x, int req_y, int req_w, int req_h)
 {
 	XWindowChanges xwc;
