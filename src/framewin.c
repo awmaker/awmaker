@@ -55,7 +55,7 @@ static void checkTitleSize(WFrameWindow * fwin);
 static void paintButton(WCoreWindow * button, WTexture * texture,
 			unsigned long color, WPixmap * image, int pushed);
 
-static void updateTitlebar(WFrameWindow * fwin);
+static void updateTitlebar(WFrameWindow *fwin);
 
 static void allocFrameBorderPixel(Colormap colormap, const char *color_name, unsigned long **pixel);
 
@@ -603,17 +603,6 @@ static void updateTitlebar(WFrameWindow *fwin)
 			w -= fwin->language_button->width;
 		}
 
-		if (!fwin->flags.hide_right_button && fwin->right_button && !fwin->flags.rbutton_dont_fit)
-			w -= fwin->right_button->width;
-
-		fwin->flags.need_texture_remake = 1;
-	} else {
-		if (fwin->titlebar->width != w)
-			fwin->flags.need_texture_remake = 1;
-	}
-
-	wCoreConfigure(fwin->titlebar, x, 0, w, theight);
-}
 #else /* XKB_BUTTON_HINT */
 {
 	int w, x = 0;
@@ -633,6 +622,7 @@ static void updateTitlebar(WFrameWindow *fwin)
 			w -= fwin->left_button->width;
 		}
 
+#endif /* XKB_BUTTON_HINT */
 		if (!fwin->flags.hide_right_button && fwin->right_button && !fwin->flags.rbutton_dont_fit)
 			w -= fwin->right_button->width;
 
@@ -644,7 +634,6 @@ static void updateTitlebar(WFrameWindow *fwin)
 
 	wCoreConfigure(fwin->titlebar, x, 0, w, theight);
 }
-#endif /* XKB_BUTTON_HINT */
 
 void wFrameWindowHideButton(WFrameWindow * fwin, int flags)
 {
