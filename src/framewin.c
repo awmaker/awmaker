@@ -209,49 +209,39 @@ void wFrameWindowUpdateBorders(WFrameWindow * fwin, int flags)
 			fwin->flags.need_texture_remake = 1;
 
 			if (wPreferences.new_style == TS_NEW) {
-				if (fwin->left_button) {
-					left_button_pos_width = 0;
-					left_button_pos_height = 0;
-					wCoreConfigure(fwin->left_button, left_button_pos_width, left_button_pos_height, bsize, bsize);
-				}
+				left_button_pos_width = 0;
+				left_button_pos_height = 0;
 #ifdef XKB_BUTTON_HINT
-				if (fwin->language_button) {
-					if (fwin->flags.hide_left_button || !fwin->left_button || fwin->flags.lbutton_dont_fit) {
-						language_button_pos_width = 0;
-						language_button_pos_height = 0;
-					} else {
-						language_button_pos_width = bsize;
-						language_button_pos_height = 0;
-					}
-					wCoreConfigure(fwin->language_button, language_button_pos_width, language_button_pos_height, bsize, bsize);
+				if (fwin->flags.hide_left_button || !fwin->left_button || fwin->flags.lbutton_dont_fit) {
+					language_button_pos_width = 0;
+					language_button_pos_height = 0;
+				} else {
+					language_button_pos_width = bsize;
+					language_button_pos_height = 0;
 				}
 #endif
-
-				if (fwin->right_button) {
-					right_button_pos_width = width - bsize + 1;
-					right_button_pos_height = 0;
-					wCoreConfigure(fwin->right_button, right_button_pos_width, right_button_pos_height, bsize, bsize);
-				}
-
+				right_button_pos_width = width - bsize + 1;
+				right_button_pos_height = 0;
 			} else {	/* !new_style */
-				if (fwin->left_button) {
-					left_button_pos_width = 3;
-					left_button_pos_height = (theight - bsize) / 2;
-					wCoreConfigure(fwin->left_button, left_button_pos_width, left_button_pos_height, bsize, bsize);
-				}
+				left_button_pos_width = 3;
+				left_button_pos_height = (theight - bsize) / 2;
 #ifdef XKB_BUTTON_HINT
-				if (fwin->language_button) {
-					language_button_pos_width = bsize + 6;
-					language_button_pos_height = (theight - bsize) / 2;
-					wCoreConfigure(fwin->language_button, language_button_pos_width, language_button_pos_height, bsize, bsize);
-				}
+				language_button_pos_width = bsize + 6;
+				language_button_pos_height = (theight - bsize) / 2;
 #endif
-				if (fwin->right_button) {
-					right_button_pos_width = width - bsize - 3;
-					right_button_pos_height = (theight - bsize) / 2;
-					wCoreConfigure(fwin->right_button, right_button_pos_width, right_button_pos_height, bsize, bsize);
-				}
+				right_button_pos_width = width - bsize - 3;
+				right_button_pos_height = (theight - bsize) / 2;
 			}
+
+			if (fwin->left_button)
+				wCoreConfigure(fwin->left_button, left_button_pos_width, left_button_pos_height, bsize, bsize);
+#ifdef XKB_BUTTON_HINT
+			if (fwin->language_button)
+				wCoreConfigure(fwin->language_button, language_button_pos_width, language_button_pos_height, bsize, bsize);
+#endif
+			if (fwin->right_button)
+				wCoreConfigure(fwin->right_button, right_button_pos_width, right_button_pos_height, bsize, bsize);
+
 			updateTitlebar(fwin);
 		} else {
 			/* we had a titlebar, but now we don't need it anymore */
