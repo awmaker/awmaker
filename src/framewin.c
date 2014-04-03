@@ -555,7 +555,6 @@ void wFrameWindowChangeState(WFrameWindow * fwin, int state)
 }
 
 static void updateTitlebar(WFrameWindow *fwin)
-#ifdef XKB_BUTTON_HINT
 {
 	int w, x = 0;
 	int language_button_pos_width, language_button_pos_height;
@@ -569,6 +568,7 @@ static void updateTitlebar(WFrameWindow *fwin)
 
 	w = fwin->core->width + 1;
 
+#ifdef XKB_BUTTON_HINT
 	if (fwin->language_button) {
 		if (!fwin->flags.hide_left_button && fwin->left_button && !fwin->flags.lbutton_dont_fit) {
 			if (wPreferences.new_style == TS_NEW) {
@@ -604,18 +604,6 @@ static void updateTitlebar(WFrameWindow *fwin)
 		}
 
 #else /* XKB_BUTTON_HINT */
-{
-	int w, x = 0;
-	int theight = WMFontHeight(*fwin->font) + (*fwin->title_clearance + TITLEBAR_EXTEND_SPACE) * 2;
-
-	if (theight > *fwin->title_max_height)
-		theight = *fwin->title_max_height;
-
-	if (theight < *fwin->title_min_height)
-		theight = *fwin->title_min_height;
-
-	w = fwin->core->width + 1;
-
 	if (wPreferences.new_style == TS_NEW) {
 		if (!fwin->flags.hide_left_button && fwin->left_button && !fwin->flags.lbutton_dont_fit) {
 			x = fwin->left_button->width;
