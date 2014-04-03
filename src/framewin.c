@@ -219,12 +219,11 @@ void wFrameWindowUpdateBorders(WFrameWindow * fwin, int flags)
 					if (fwin->flags.hide_left_button || !fwin->left_button || fwin->flags.lbutton_dont_fit) {
 						language_button_pos_width = 0;
 						language_button_pos_height = 0;
-						wCoreConfigure(fwin->language_button, language_button_pos_width, language_button_pos_height, bsize, bsize);
 					} else {
 						language_button_pos_width = bsize;
 						language_button_pos_height = 0;
-						wCoreConfigure(fwin->language_button, language_button_pos_width, language_button_pos_height, bsize, bsize);
 					}
+					wCoreConfigure(fwin->language_button, language_button_pos_width, language_button_pos_height, bsize, bsize);
 				}
 #endif
 
