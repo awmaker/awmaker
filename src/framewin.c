@@ -280,9 +280,11 @@ void wFrameWindowUpdateBorders(WFrameWindow * fwin, int flags)
 				fwin->left_button = wcore_create(bsize, bsize);
 
 				if (wPreferences.new_style == TS_NEW) {
+					left_button_pos_width = 0;
+					left_button_pos_height = 0;
 					wcore_map(fwin->left_button, fwin->core,
 						  fwin->core->screen_ptr,
-						  0, 0, 0,
+						  left_button_pos_width, left_button_pos_height, 0,
 						  fwin->core->screen_ptr->w_depth,
 						  fwin->core->screen_ptr->w_visual,
 						  fwin->core->screen_ptr->w_colormap);
@@ -293,9 +295,11 @@ void wFrameWindowUpdateBorders(WFrameWindow * fwin, int flags)
 						XMapRaised(dpy, fwin->left_button->window);
 
 				} else if (wPreferences.new_style == TS_OLD) {
+					left_button_pos_width = 3;
+					left_button_pos_height = (theight - bsize) / 2;
 					wcore_map(fwin->left_button, fwin->titlebar,
 						  fwin->titlebar->screen_ptr,
-						  3, (theight - bsize) / 2, 0,
+						  left_button_pos_width, left_button_pos_height, 0,
 						  fwin->titlebar->screen_ptr->w_depth,
 						  fwin->titlebar->screen_ptr->w_visual,
 						  fwin->titlebar->screen_ptr->w_colormap);
@@ -309,9 +313,11 @@ void wFrameWindowUpdateBorders(WFrameWindow * fwin, int flags)
 						XMapRaised(dpy, fwin->left_button->window);
 
 				} else {
+					left_button_pos_width = 3;
+					left_button_pos_height = (theight - bsize) / 2;
 					wcore_map(fwin->left_button, fwin->titlebar,
 						  fwin->titlebar->screen_ptr,
-						  3, (theight-bsize) / 2, 0,
+						  left_button_pos_width, left_button_pos_height, 0,
 						  fwin->titlebar->screen_ptr->w_depth,
 						  fwin->titlebar->screen_ptr->w_visual,
 						  fwin->titlebar->screen_ptr->w_colormap);
