@@ -294,27 +294,10 @@ void wFrameWindowUpdateBorders(WFrameWindow * fwin, int flags)
 					else
 						XMapRaised(dpy, fwin->left_button->window);
 
-				} else if (wPreferences.new_style == TS_OLD) {
-					left_button_pos_width = 3;
-					left_button_pos_height = (theight - bsize) / 2;
-					wcore_map(fwin->left_button, fwin->titlebar,
-						  fwin->titlebar->screen_ptr,
-						  left_button_pos_width, left_button_pos_height, 0,
-						  fwin->titlebar->screen_ptr->w_depth,
-						  fwin->titlebar->screen_ptr->w_visual,
-						  fwin->titlebar->screen_ptr->w_colormap);
-
-					XSetWindowBackground(dpy, fwin->left_button->window,
-							     scr->widget_texture->normal.pixel);
-
-					if (width < theight * 3)
-						fwin->flags.lbutton_dont_fit = 1;
-					else
-						XMapRaised(dpy, fwin->left_button->window);
-
 				} else {
 					left_button_pos_width = 3;
 					left_button_pos_height = (theight - bsize) / 2;
+
 					wcore_map(fwin->left_button, fwin->titlebar,
 						  fwin->titlebar->screen_ptr,
 						  left_button_pos_width, left_button_pos_height, 0,
@@ -322,8 +305,12 @@ void wFrameWindowUpdateBorders(WFrameWindow * fwin, int flags)
 						  fwin->titlebar->screen_ptr->w_visual,
 						  fwin->titlebar->screen_ptr->w_colormap);
 
-					XSetWindowBackground(dpy, fwin->left_button->window,
-							     scr->widget_texture->dark.pixel);
+					if (wPreferences.new_style == TS_OLD)
+						XSetWindowBackground(dpy, fwin->left_button->window,
+								     scr->widget_texture->normal.pixel);
+					else
+						XSetWindowBackground(dpy, fwin->left_button->window,
+								     scr->widget_texture->dark.pixel);
 
 					if (width < theight * 3)
 						fwin->flags.lbutton_dont_fit = 1;
