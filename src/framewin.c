@@ -367,18 +367,6 @@ void wFrameWindowUpdateBorders(WFrameWindow * fwin, int flags)
 						  fwin->core->screen_ptr->w_depth,
 						  fwin->core->screen_ptr->w_visual,
 						  fwin->core->screen_ptr->w_colormap);
-				} else if (wPreferences.new_style == TS_OLD) {
-					right_button_pos_width = width - bsize - 3;
-					right_button_pos_height = (theight - bsize) / 2;
-					wcore_map(fwin->right_button, fwin->titlebar,
-						  fwin->titlebar->screen_ptr,
-						  right_button_pos_width, right_button_pos_height, 0,
-						  fwin->titlebar->screen_ptr->w_depth,
-						  fwin->titlebar->screen_ptr->w_visual,
-						  fwin->titlebar->screen_ptr->w_colormap);
-
-					XSetWindowBackground(dpy, fwin->right_button->window,
-							     scr->widget_texture->normal.pixel);
 				} else {
 					right_button_pos_width = width - bsize - 3;
 					right_button_pos_height = (theight - bsize) / 2;
@@ -389,8 +377,12 @@ void wFrameWindowUpdateBorders(WFrameWindow * fwin, int flags)
 						  fwin->titlebar->screen_ptr->w_visual,
 						  fwin->titlebar->screen_ptr->w_colormap);
 
-					XSetWindowBackground(dpy, fwin->right_button->window,
-							     scr->widget_texture->dark.pixel);
+					if (wPreferences.new_style == TS_OLD)
+						XSetWindowBackground(dpy, fwin->right_button->window,
+								     scr->widget_texture->normal.pixel);
+					else
+						XSetWindowBackground(dpy, fwin->right_button->window,
+								     scr->widget_texture->dark.pixel);
 				}
 
 				if (width < theight * 2)
