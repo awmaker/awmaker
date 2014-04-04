@@ -359,16 +359,20 @@ void wFrameWindowUpdateBorders(WFrameWindow * fwin, int flags)
 				fwin->right_button = wcore_create(bsize, bsize);
 
 				if (wPreferences.new_style == TS_NEW) {
+				right_button_pos_width = width - bsize + 1;
+				right_button_pos_height = 0;
 					wcore_map(fwin->right_button, fwin->core,
 						  fwin->core->screen_ptr,
-						  width - bsize + 1, 0, 0,
+						  right_button_pos_width, right_button_pos_height, 0,
 						  fwin->core->screen_ptr->w_depth,
 						  fwin->core->screen_ptr->w_visual,
 						  fwin->core->screen_ptr->w_colormap);
 				} else if (wPreferences.new_style == TS_OLD) {
+					right_button_pos_width = width - bsize - 3;
+					right_button_pos_height = (theight - bsize) / 2;
 					wcore_map(fwin->right_button, fwin->titlebar,
 						  fwin->titlebar->screen_ptr,
-						  width - bsize - 3, (theight - bsize) / 2, 0,
+						  right_button_pos_width, right_button_pos_height, 0,
 						  fwin->titlebar->screen_ptr->w_depth,
 						  fwin->titlebar->screen_ptr->w_visual,
 						  fwin->titlebar->screen_ptr->w_colormap);
@@ -376,9 +380,11 @@ void wFrameWindowUpdateBorders(WFrameWindow * fwin, int flags)
 					XSetWindowBackground(dpy, fwin->right_button->window,
 							     scr->widget_texture->normal.pixel);
 				} else {
+					right_button_pos_width = width - bsize - 3;
+					right_button_pos_height = (theight - bsize) / 2;
 					wcore_map(fwin->right_button, fwin->titlebar,
 						  fwin->titlebar->screen_ptr,
-						  width - bsize - 3, (theight - bsize) / 2, 0,
+						  right_button_pos_width, right_button_pos_height, 0,
 						  fwin->titlebar->screen_ptr->w_depth,
 						  fwin->titlebar->screen_ptr->w_visual,
 						  fwin->titlebar->screen_ptr->w_colormap);
