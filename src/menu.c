@@ -64,16 +64,16 @@ static struct {
 	MENU_SCROLL_STEPS_S, MENU_SCROLL_DELAY_S}, {
 MENU_SCROLL_STEPS_US, MENU_SCROLL_DELAY_US}};
 
-static void menuMouseDown(WObjDescriptor * desc, XEvent * event);
-static void menuExpose(WObjDescriptor * desc, XEvent * event);
-static void menuTitleDoubleClick(WCoreWindow * sender, void *data, XEvent * event);
-static void menuTitleMouseDown(WCoreWindow * sender, void *data, XEvent * event);
-static void menuCloseClick(WCoreWindow * sender, void *data, XEvent * event);
-static void updateTexture(WMenu * menu);
-static int saveMenuRecurs(WMPropList * menus, WScreen * scr, WMenu * menu);
+static void menuMouseDown(WObjDescriptor *desc, XEvent *event);
+static void menuExpose(WObjDescriptor *desc, XEvent *event);
+static void menuTitleDoubleClick(WCoreWindow *sender, void *data, XEvent *event);
+static void menuTitleMouseDown(WCoreWindow *sender, void *data, XEvent *event);
+static void menuCloseClick(WCoreWindow *sender, void *data, XEvent *event);
+static void updateTexture(WMenu *menu);
+static void selectEntry(WMenu *menu, int entry_no);
+static void closeCascade(WMenu *menu);
+static int saveMenuRecurs(WMPropList *menus, WScreen *scr, WMenu *menu);
 static int restoreMenuRecurs(WScreen *scr, WMPropList *menus, WMenu *menu, const char *path);
-static void selectEntry(WMenu * menu, int entry_no);
-static void closeCascade(WMenu * menu);
 
 /****** Notification Observers ******/
 
