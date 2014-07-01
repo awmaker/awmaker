@@ -58,7 +58,7 @@ static void miniwindowExpose(WObjDescriptor *desc, XEvent *event);
 static void miniwindowMouseDown(WObjDescriptor *desc, XEvent *event);
 static void miniwindowDblClick(WObjDescriptor *desc, XEvent *event);
 
-static WIcon *icon_create_core(WScreen *scr, int coord_x, int coord_y);
+static WIcon *icon_create_core(void);
 
 static void set_dockapp_in_icon(WIcon *icon);
 static void get_rimage_icon_from_icon_win(WIcon *icon);
@@ -117,7 +117,9 @@ WIcon *icon_create_for_wwindow(WWindow *wwin)
 	WScreen *scr = wwin->screen_ptr;
 	WIcon *icon;
 
-	icon = icon_create_core(scr, wwin->icon_x, wwin->icon_y);
+	icon = icon_create_core();
+	wcore_map_toplevel(icon->core, scr, wwin->icon_x, wwin->icon_y, 0, scr->w_depth,
+			   scr->w_visual, scr->w_colormap, scr->white_pixel);
 
 	icon->owner = wwin;
 	if (wwin->wm_hints && (wwin->wm_hints->flags & IconWindowHint)) {
@@ -154,7 +156,10 @@ WIcon *icon_create_for_dock(WScreen *scr, const char *command, const char *wm_in
 {
 	WIcon *icon;
 
-	icon = icon_create_core(scr, 0, 0);
+	icon = icon_create_core();
+	wcore_map_toplevel(icon->core, scr, 0, 0, 0, scr->w_depth,
+			   scr->w_visual, scr->w_colormap, scr->white_pixel);
+
 	icon->tile_type = tile;
 
 	set_icon_image_from_database(icon, wm_instance, wm_class, command);
@@ -167,14 +172,12 @@ WIcon *icon_create_for_dock(WScreen *scr, const char *command, const char *wm_in
 	return icon;
 }
 
-static WIcon *icon_create_core(WScreen *scr, int coord_x, int coord_y)
+static WIcon *icon_create_core(void)
 {
 	WIcon *icon;
 
 	icon = wmalloc(sizeof(WIcon));
 	icon->core = wcore_create(wPreferences.icon_size, wPreferences.icon_size);
-	wcore_map_toplevel(icon->core, scr, coord_x, coord_y, 0, scr->w_depth,
-			   scr->w_visual, scr->w_colormap, scr->white_pixel);
 
 	/* will be overriden if this is a application icon */
 	icon->core->descriptor.handle_mousedown = miniwindowMouseDown;
