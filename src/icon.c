@@ -198,6 +198,18 @@ static WIcon *icon_create_core(void)
 	return icon;
 }
 
+static void icon_destroy_core(WIcon *icon)
+{
+	if (icon->core->stacking)
+		wfree(icon->core->stacking);
+
+	XDeleteContext(dpy, icon->core->window, w_global.context.client_win);
+	XDestroyWindow(dpy, icon->core->window);
+
+	wcore_destroy(icon->core);
+	wfree(icon);
+}
+
 void wIconDestroy(WIcon *icon)
 {
 	WCoreWindow *core = icon->core;
@@ -226,8 +238,7 @@ void wIconDestroy(WIcon *icon)
 
 	unset_icon_image(icon);
 
-	wCoreDestroy(icon->core);
-	wfree(icon);
+	icon_destroy_core(icon);
 }
 
 static void drawIconTitleBackground(WScreen *scr, Pixmap pixmap, int height)
