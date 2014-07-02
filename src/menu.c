@@ -166,7 +166,7 @@ WMenu *menu_create(const char *title, int main_menu)
 
 void menu_destroy(WMenu *menu)
 {
-	FREE_PIXMAP(menu->menu_texture_data);
+	destroy_pixmap(menu->menu_texture_data);
 
 	if (menu->cascades)
 		wfree(menu->cascades);
@@ -493,7 +493,7 @@ static void updateTexture(WMenu * menu)
 	/* setup background texture */
 	if (scr->menu_item_texture->any.type != WTEX_SOLID) {
 		if (!menu->flags.brother) {
-			FREE_PIXMAP(menu->menu_texture_data);
+			destroy_pixmap(menu->menu_texture_data);
 
 			menu->menu_texture_data = renderTexture(menu);
 
