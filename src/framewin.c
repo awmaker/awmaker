@@ -43,8 +43,6 @@
 #include "misc.h"
 #include "event.h"
 
-#define FREE_PIXMAP(p) if ((p)!=None) XFreePixmap(dpy, (p)), (p)=None
-
 static void handleExpose(WObjDescriptor * desc, XEvent * event);
 static void handleButtonExpose(WObjDescriptor * desc, XEvent * event);
 
@@ -147,12 +145,12 @@ void wframewindow_map(WFrameWindow *fwin, WScreen *scr, int wlevel,
 
 static void destroy_framewin_button(WFrameWindow *fwin, int state)
 {
-	FREE_PIXMAP(fwin->title_back[state]);
+	destroy_pixmap(fwin->title_back[state]);
 	if (wPreferences.new_style == TS_NEW) {
-		FREE_PIXMAP(fwin->lbutton_back[state]);
-		FREE_PIXMAP(fwin->rbutton_back[state]);
+		destroy_pixmap(fwin->lbutton_back[state]);
+		destroy_pixmap(fwin->rbutton_back[state]);
 #ifdef XKB_BUTTON_HINT
-		FREE_PIXMAP(fwin->languagebutton_back[state]);
+		destroy_pixmap(fwin->languagebutton_back[state]);
 #endif
 	}
 }
@@ -958,7 +956,7 @@ static void remakeTexture(WFrameWindow * fwin, int state)
 	if (fwin->resizebar_texture && fwin->resizebar_texture[0]
 	    && fwin->resizebar && state == 0) {
 
-		FREE_PIXMAP(fwin->resizebar_back[0]);
+		destroy_pixmap(fwin->resizebar_back[0]);
 
 		if (fwin->resizebar_texture[0]->any.type != WTEX_SOLID) {
 
