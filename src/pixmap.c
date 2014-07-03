@@ -141,3 +141,11 @@ void wPixmapDestroy(WPixmap * pix)
 	}
 	wfree(pix);
 }
+
+void destroy_pixmap(Pixmap pix)
+{
+	if ((pix) != None) {
+		XFreePixmap(dpy, pix);
+		pix = None;
+	}
+}
