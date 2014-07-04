@@ -766,7 +766,7 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 	WDock *lastDock = originalDock;
 	WDock *allDocks[w_global.drawer.drawer_count + 2]; /* clip, dock and drawers (order determined at runtime) */
 	WDrawerChain *dc;
-	Bool done = False, dockable, ondock;
+	Bool dockable, ondock;
 	Bool grabbed = False;
 	Bool collapsed = False; /* Stores the collapsed state of lastDock, before the moving appicon entered it */
 	int superfluous = wPreferences.superfluous; /* we cache it to avoid problems */
@@ -856,7 +856,7 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 	if (ondock)
 		XMapWindow(dpy, scr->dock_shadow);
 
-	while (!done) {
+	while (1) {
 		WMMaskEvent(dpy, PointerMotionMask | ButtonReleaseMask | ButtonPressMask
 			    | ButtonMotionMask | ExposureMask | EnterWindowMask, &ev);
 		switch (ev.type) {
@@ -1106,7 +1106,6 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 			return hasMoved;
 		}
 	}
-	return False; /* Never reached */
 }
 
 /* This function save the application icon and store the path in the Dictionary */
