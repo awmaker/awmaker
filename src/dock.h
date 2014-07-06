@@ -73,7 +73,7 @@ void wDockShowIcons(WDock *dock);
 void wDockLower(WDock *dock);
 void wDockRaise(WDock *dock);
 void wDockRaiseLower(WDock *dock);
-void wDockSaveState(WScreen *scr, WMPropList *old_state);
+void wDockSaveState(WMPropList *old_state);
 
 Bool wDockAttachIcon(WDock *dock, WAppIcon *icon, int x, int y, Bool update_icon);
 Bool wDockSnapIcon(WDock *dock, WAppIcon *icon, int req_x, int req_y,
@@ -109,7 +109,7 @@ int wIsADrawer(WAppIcon *aicon);
 void wClipUpdateForWorkspaceChange(WScreen *scr, int workspace);
 
 RImage *wClipMakeTile(RImage *normalTile);
-RImage* wDrawerMakeTile(WScreen *scr, RImage *normalTile);
+RImage *wDrawerMakeTile(RImage *normalTile);
 
 #define WO_FAILED          0
 #define WO_NOT_APPLICABLE  1

@@ -1581,7 +1581,7 @@ static WMPropList *dockSaveState(WDock *dock)
 	return dock_state;
 }
 
-void wDockSaveState(WScreen *scr, WMPropList *old_state)
+void wDockSaveState(WMPropList *old_state)
 {
 	WMPropList *dock_state;
 	WMPropList *keys;
@@ -4032,7 +4032,6 @@ static void clipEnterNotify(WObjDescriptor *desc, XEvent *event)
 {
 	WAppIcon *btn = (WAppIcon *) desc->parent;
 	WDock *dock, *tmp;
-	WScreen *scr;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) event;
@@ -4042,7 +4041,6 @@ static void clipEnterNotify(WObjDescriptor *desc, XEvent *event)
 	if (desc->parent_type != WCLASS_DOCK_ICON)
 		return;
 
-	scr = btn->icon->core->screen_ptr;
 	dock = btn->dock;
 
 	if (dock == NULL)
@@ -4521,7 +4519,7 @@ void wDrawerIconPaint(WAppIcon *dicon)
 }
 
 
-RImage* wDrawerMakeTile(WScreen *scr, RImage *normalTile)
+RImage *wDrawerMakeTile(RImage *normalTile)
 {
 	RImage *tile = RCloneImage(normalTile);
 	RColor dark;
@@ -4585,7 +4583,7 @@ static void swapDrawers(WScreen *scr, int new_x)
 	if (scr->drawer_tile)
 		RReleaseImage(scr->drawer_tile);
 
-	scr->drawer_tile = wDrawerMakeTile(scr, scr->icon_tile);
+	scr->drawer_tile = wDrawerMakeTile(scr->icon_tile);
 
 	for (dc = scr->drawers; dc != NULL; dc = dc->next)
 		swapDrawer(dc->adrawer, new_x);

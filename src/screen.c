@@ -805,7 +805,7 @@ void wScreenRestoreState(WScreen * scr)
 			 * the right side. If we aren't, redo it now. */
 			assert(scr->drawer_tile);
 			RReleaseImage(scr->drawer_tile);
-			scr->drawer_tile = wDrawerMakeTile(scr, scr->icon_tile);
+			scr->drawer_tile = wDrawerMakeTile(scr->icon_tile);
 		}
 		wDrawersRestoreState(scr);
 	}
@@ -839,7 +839,7 @@ void wScreenSaveState(WScreen * scr)
 
 	/* save dock state to file */
 	if (!wPreferences.flags.nodock) {
-		wDockSaveState(scr, old_state);
+		wDockSaveState(old_state);
 	} else {
 		if ((foo = WMGetFromPLDictionary(old_state, dDock)) != NULL) {
 			WMPutInPLDictionary(w_global.session_state, dDock, foo);

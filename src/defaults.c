@@ -2569,7 +2569,7 @@ static int setIconTile(WScreen * scr, WDefaultEntry * entry, void *tdata, void *
 		if (scr->drawer_tile) {
 			RReleaseImage(scr->drawer_tile);
 		}
-		scr->drawer_tile = wDrawerMakeTile(scr, img);
+		scr->drawer_tile = wDrawerMakeTile(img);
 	}
 
 	scr->icon_tile_pixmap = pixmap;
