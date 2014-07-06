@@ -511,6 +511,11 @@ extern struct wmaker_global_variables {
 		/* Menus */
 		struct WMenu *menu;	/* workspace operation */
 		struct WMenu *submenu;	/* workspace list for window_menu */
+		/* TODO kix: WDock should be here, in workspace
+		 * but I am creating the WDock inside "w_global.dock.dock"
+		 * to move it from WScreen. In w_global.dock.dock we can
+		 * have only one dock, but in w_global.workspace.dock
+		 * we can have multiple docks */
 	} workspace;
 
 	/* Clip related */
@@ -525,6 +530,7 @@ extern struct wmaker_global_variables {
 
 	/* Dock related */
 	struct {
+		struct WDock *dock;	/* Window Maker Dock. Future array for multi-screen? */
 		struct WMenu *pos_menu;	/* menu for position of the dock */
 		struct WMenu *drawer_menu;	/* menu for the drawers */
 	} dock;

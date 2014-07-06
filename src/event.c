@@ -1758,7 +1758,7 @@ static void handleKeyPress(XEvent * event)
 		break;
 	case WKBD_DOCKRAISELOWER:
 		if (!wPreferences.flags.nodock)
-			wDockRaiseLower(scr->dock);
+			wDockRaiseLower(w_global.dock.dock);
 		break;
 #ifdef KEEP_XKB_LOCK_STATUS
 	case WKBD_TOGGLE:

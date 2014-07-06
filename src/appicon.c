@@ -814,8 +814,8 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 		if (dc->adrawer != originalDock)
 			allDocks[ i++ ] = dc->adrawer;
 	}
-	if (!wPreferences.flags.nodock && scr->dock != originalDock)
-		allDocks[ i++ ] = scr->dock;
+	if (!wPreferences.flags.nodock && w_global.dock.dock != originalDock)
+		allDocks[i++] = w_global.dock.dock;
 
 	if (!wPreferences.flags.noclip &&
 	    originalDock != w_global.workspace.array[w_global.workspace.current]->clip)
@@ -1153,8 +1153,8 @@ static void create_appicon_from_dock(WWindow *wwin, WApplication *wapp, Window m
 		wapp->app_icon = findDockIconFor(scr->last_dock, main_window);
 
 	/* check main dock if we did not find it in last dock */
-	if (!wapp->app_icon && scr->dock)
-		wapp->app_icon = findDockIconFor(scr->dock, main_window);
+	if (!wapp->app_icon && w_global.dock.dock)
+		wapp->app_icon = findDockIconFor(w_global.dock.dock, main_window);
 
 	/* check clips */
 	if (!wapp->app_icon) {

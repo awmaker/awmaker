@@ -1336,7 +1336,7 @@ WDock *wDockCreate(WScreen *scr, int type, const char *name)
 	dock->type = type;
 	dock->icon_count = 1;
 	if (type == WM_DRAWER)
-		dock->on_right_side = scr->dock->on_right_side;
+		dock->on_right_side = w_global.dock.dock->on_right_side;
 	else
 		dock->on_right_side = 1;
 	dock->collapsed = 0;
@@ -1501,7 +1501,7 @@ static WMPropList *make_icon_state(WAppIcon *btn)
 		WMReleasePropList(position);
 
 		omnipresent = btn->omnipresent ? dYes : dNo;
-		if (btn->dock != btn->icon->core->screen_ptr->dock && (btn->xindex != 0 || btn->yindex != 0))
+		if (btn->dock != w_global.dock.dock && (btn->xindex != 0 || btn->yindex != 0))
 			WMPutInPLDictionary(node, dOmnipresent, omnipresent);
 
 #ifdef XDND			/* was OFFIX */
@@ -1586,7 +1586,7 @@ void wDockSaveState(WScreen *scr, WMPropList *old_state)
 	WMPropList *dock_state;
 	WMPropList *keys;
 
-	dock_state = dockSaveState(scr->dock);
+	dock_state = dockSaveState(w_global.dock.dock);
 
 	/*
 	 * Copy saved states of docks with different sizes.
@@ -2744,9 +2744,8 @@ Bool wDockFindFreeSlot(WDock *dock, int *x_pos, int *y_pos)
 	if (dock->icon_count + extra_count >= dock->max_icons)
 		return False;
 
-	if (!wPreferences.flags.nodock && scr->dock && scr->dock->on_right_side) {
+	if (!wPreferences.flags.nodock && w_global.dock.dock && w_global.dock.dock->on_right_side)
 		ex -= ICON_SIZE + DOCK_EXTRA_SPACE;
-	}
 
 	if (ex < dock->x_pos)
 		ex = dock->x_pos;
@@ -3086,7 +3085,7 @@ static pid_t execCommand(WAppIcon *btn, const char *command, WSavedState *state)
 			state->hidden = -1;
 			state->miniaturized = -1;
 			state->shaded = -1;
-			if (btn->dock == scr->dock || btn->dock->type == WM_DRAWER || btn->omnipresent)
+			if (btn->dock == w_global.dock.dock || btn->dock->type == WM_DRAWER || btn->omnipresent)
 				state->workspace = -1;
 			else
 				state->workspace = w_global.workspace.current;
@@ -3811,7 +3810,7 @@ static void handleDockMove(WDock *dock, WAppIcon *aicon, XEvent *event)
 				break;
 			case WM_DRAWER:
 			{
-				WDock *real_dock = dock->screen_ptr->dock;
+				WDock *real_dock = w_global.dock.dock;
 				Bool snapped;
 				int ix, iy;
 				x = ev.xmotion.x_root - ofs_x;
@@ -4050,7 +4049,7 @@ static void clipEnterNotify(WObjDescriptor *desc, XEvent *event)
 		return;
 
 	/* The auto raise/lower code */
-	tmp = (dock->type == WM_DRAWER ? scr->dock : dock);
+	tmp = (dock->type == WM_DRAWER ? w_global.dock.dock : dock);
 	if (tmp->auto_lower_magic) {
 		WMDeleteTimerHandler(tmp->auto_lower_magic);
 		tmp->auto_lower_magic = NULL;
@@ -4095,7 +4094,7 @@ static void clipLeave(WDock *dock)
 		return;
 	}
 
-	tmp = (dock->type == WM_DRAWER ? dock->screen_ptr->dock : dock);
+	tmp = (dock->type == WM_DRAWER ? w_global.dock.dock : dock);
 	if (tmp->auto_raise_magic) {
 		WMDeleteTimerHandler(tmp->auto_raise_magic);
 		tmp->auto_raise_magic = NULL;
@@ -4209,7 +4208,7 @@ int wClipMakeIconOmnipresent(WAppIcon *aicon, int omnipresent)
 	WAppIconChain *new_entry, *tmp, *tmp1;
 	int status = WO_SUCCESS;
 
-	if ((scr->dock && aicon->dock == scr->dock) || aicon == w_global.clip.icon)
+	if ((w_global.dock.dock && aicon->dock == w_global.dock.dock) || aicon == w_global.clip.icon)
 		return WO_NOT_APPLICABLE;
 
 	if (aicon->omnipresent == omnipresent)
@@ -4335,7 +4334,7 @@ static void drawerIconExpose(WObjDescriptor *desc, XEvent *event)
 static int addADrawer(WScreen *scr)
 {
 	int i, y, sig, found_y;
-	WDock *drawer, *dock = scr->dock;
+	WDock *drawer, *dock = w_global.dock.dock;
 	WDrawerChain *dc;
 	char can_be_here[2 * dock->max_icons - 1];
 
@@ -4375,12 +4374,12 @@ static int addADrawer(WScreen *scr)
 		return -1;
 
 	drawer = wDockCreate(scr, WM_DRAWER, NULL);
-	drawer->lowered = scr->dock->lowered;
+	drawer->lowered = w_global.dock.dock->lowered;
 	if (!drawer->lowered)
 		ChangeStackingLevel(drawer->icon_array[0]->icon->core, WMDockLevel);
 	else
 		ChangeStackingLevel(drawer->icon_array[0]->icon->core, WMNormalLevel);
-	drawer->auto_raise_lower = scr->dock->auto_raise_lower;
+	drawer->auto_raise_lower = w_global.dock.dock->auto_raise_lower;
 	drawer->x_pos = dock->x_pos;
 	drawer->y_pos = dock->y_pos + ICON_SIZE * y;
 	drawer->icon_array[0]->xindex = 0;
@@ -4429,8 +4428,8 @@ static void drawerDestroy(WDock *drawer)
 				break;
 		}
 
-		wDockMoveIconBetweenDocks(drawer, scr->dock, aicon,
-					0, (drawer->y_pos - scr->dock->y_pos) / ICON_SIZE);
+		wDockMoveIconBetweenDocks(drawer, w_global.dock.dock, aicon,
+					0, (drawer->y_pos - w_global.dock.dock->y_pos) / ICON_SIZE);
 		XMoveWindow(dpy, aicon->icon->core->window, drawer->x_pos, drawer->y_pos);
 		XMapWindow(dpy, aicon->icon->core->window);
 	} else if (drawer->icon_count > 2) {
@@ -4535,7 +4534,7 @@ RImage* wDrawerMakeTile(WScreen *scr, RImage *normalTile)
 	light.red = light.green = light.blue = 80;
 
 	/* arrow bevel */
-	if (!scr->dock || scr->dock->on_right_side) {
+	if (!w_global.dock.dock || w_global.dock.dock->on_right_side) {
 		ROperateLine(tile, RSubtractOperation, 11, ICON_SIZE / 2 - 7,
 			4, ICON_SIZE / 2, &dark);       /* / */
 		ROperateLine(tile, RSubtractOperation, 11, ICON_SIZE / 2 + 7,
@@ -4605,7 +4604,7 @@ static WDock* getDrawer(WScreen *scr, int y_index)
 	WDrawerChain *dc;
 
 	for (dc = scr->drawers; dc != NULL; dc = dc->next) {
-		if (dc->adrawer->y_pos - scr->dock->y_pos == y_index * ICON_SIZE)
+		if (dc->adrawer->y_pos - w_global.dock.dock->y_pos == y_index * ICON_SIZE)
 			return dc->adrawer;
 	}
 	return NULL;
@@ -4795,17 +4794,17 @@ static WDock * drawerRestoreState(WScreen *scr, WMPropList *drawer_state)
 			COMPLAIN("Position");
 
 		/* check position sanity */
-		if (x != scr->dock->x_pos) {
-			x = scr->dock->x_pos;
+		if (x != w_global.dock.dock->x_pos) {
+			x = w_global.dock.dock->x_pos;
 		}
-		y_index = (y - scr->dock->y_pos) / ICON_SIZE;
-		if (y_index >= scr->dock->max_icons) {
+		y_index = (y - w_global.dock.dock->y_pos) / ICON_SIZE;
+		if (y_index >= w_global.dock.dock->max_icons) {
 			/* Here we should do something more intelligent, since it
 			 * can happen even if the user hasn't hand-edited his
 			 * G/D/State file (but uses a lower resolution). */
-			y_index = scr->dock->max_icons - 1;
+			y_index = w_global.dock.dock->max_icons - 1;
 		}
-		y = scr->dock->y_pos + y_index * ICON_SIZE;
+		y = w_global.dock.dock->y_pos + y_index * ICON_SIZE;
 		moveDock(drawer, x, y);
 	}
 
@@ -4813,7 +4812,7 @@ static WDock * drawerRestoreState(WScreen *scr, WMPropList *drawer_state)
 	dock_state = WMGetFromPLDictionary(drawer_state, dDock);
 
 	/* restore lowered/raised state: same as scr->dock, no matter what */
-	drawer->lowered = scr->dock->lowered;
+	drawer->lowered = w_global.dock.dock->lowered;
 	if (!drawer->lowered)
 		ChangeStackingLevel(drawer->icon_array[0]->icon->core, WMDockLevel);
 	else
@@ -4836,7 +4835,7 @@ static WDock * drawerRestoreState(WScreen *scr, WMPropList *drawer_state)
 	}
 
 	/* restore auto-raise/lower state: same as scr->dock, no matter what */
-	drawer->auto_raise_lower = scr->dock->auto_raise_lower;
+	drawer->auto_raise_lower = w_global.dock.dock->auto_raise_lower;
 
 	/* restore attract icons state */
 	drawer->attract_icons = 0;

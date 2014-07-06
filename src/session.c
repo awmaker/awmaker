@@ -232,7 +232,7 @@ static WMPropList *makeWindowState(WWindow * wwin, WApplication * wapp)
 		if (wapp && wapp->app_icon && wapp->app_icon->dock) {
 			int i;
 			char *name = NULL;
-			if (wapp->app_icon->dock == scr->dock)
+			if (wapp->app_icon->dock == w_global.dock.dock)
 				name = "Dock";
 
 			/* Try the clips */
@@ -468,7 +468,7 @@ void wSessionRestoreState(WScreen *scr)
 		if (value && WMIsPLString(value) && (tmp = WMGetFromPLString(value)) != NULL) {
 			if (sscanf(tmp, "%i", &n) != 1) {
 				if (!strcasecmp(tmp, "DOCK"))
-					dock = scr->dock;
+					dock = w_global.dock.dock;
 
 				/* Try the clips */
 				if (dock == NULL) {
@@ -493,7 +493,7 @@ void wSessionRestoreState(WScreen *scr)
 				}
 			} else {
 				if (n == 0) {
-					dock = scr->dock;
+					dock = w_global.dock.dock;
 				} else if (n > 0 && n <= w_global.workspace.count) {
 					dock = w_global.workspace.array[n - 1]->clip;
 				}

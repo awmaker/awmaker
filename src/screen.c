@@ -790,7 +790,7 @@ void wScreenRestoreState(WScreen * scr)
 
 	if (!wPreferences.flags.nodock) {
 		state = WMGetFromPLDictionary(w_global.session_state, dDock);
-		scr->dock = wDockRestoreState(scr, state, WM_DOCK);
+		w_global.dock.dock = wDockRestoreState(scr, state, WM_DOCK);
 	}
 
 	if (!wPreferences.flags.noclip) {
@@ -799,7 +799,7 @@ void wScreenRestoreState(WScreen * scr)
 	}
 	
 	if (!wPreferences.flags.nodrawer) {
-		if (!scr->dock->on_right_side) {
+		if (!w_global.dock.dock->on_right_side) {
 			/* Drawer tile was created early in wScreenInit() -> wReadDefaults(). At
 			 * that time, scr->dock was NULL and the tile was created as if we were on
 			 * the right side. If we aren't, redo it now. */

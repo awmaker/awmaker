@@ -619,8 +619,8 @@ void wWorkspaceForceChange(WScreen * scr, int workspace)
 	if (!wPreferences.sticky_icons)
 		wArrangeIcons(scr, False);
 
-	if (scr->dock)
-		wAppIconPaint(scr->dock->icon_array[0]);
+	if (w_global.dock.dock)
+		wAppIconPaint(w_global.dock.dock->icon_array[0]);
 
 	if (!wPreferences.flags.noclip && (w_global.workspace.array[workspace]->clip->auto_collapse ||
 					   w_global.workspace.array[workspace]->clip->auto_raise_lower)) {

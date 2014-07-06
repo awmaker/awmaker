@@ -653,8 +653,8 @@ void StartUp(Bool defaultScreenOnly)
 		wScreenRestoreState(wScreen[j]);
 
 		/* manage all windows that were already here before us */
-		if (!wPreferences.flags.nodock && wScreen[j]->dock)
-			wScreen[j]->last_dock = wScreen[j]->dock;
+		if (!wPreferences.flags.nodock && w_global.dock.dock)
+			wScreen[j]->last_dock = w_global.dock.dock;
 
 		manageAllWindows(wScreen[j], wPreferences.flags.restarting == 2);
 
@@ -667,9 +667,9 @@ void StartUp(Bool defaultScreenOnly)
 
 		if (!wPreferences.flags.noautolaunch) {
 			/* auto-launch apps */
-			if (!wPreferences.flags.nodock && wScreen[j]->dock) {
-				wScreen[j]->last_dock = wScreen[j]->dock;
-				wDockDoAutoLaunch(wScreen[j]->dock, 0);
+			if (!wPreferences.flags.nodock && w_global.dock.dock) {
+				wScreen[j]->last_dock = w_global.dock.dock;
+				wDockDoAutoLaunch(w_global.dock.dock, 0);
 			}
 			/* auto-launch apps in clip */
 			if (!wPreferences.flags.noclip) {

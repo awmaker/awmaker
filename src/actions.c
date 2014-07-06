@@ -1733,10 +1733,10 @@ void wArrangeIcons(WScreen *scr, Bool arrangeAll)
 		WArea area = wGetUsableAreaForHead(scr, head, NULL, False);
 		WMRect rect;
 
-		if (scr->dock) {
+		if (w_global.dock.dock) {
 			int offset = wPreferences.icon_size + DOCK_EXTRA_SPACE;
 
-			if (scr->dock->on_right_side)
+			if (w_global.dock.dock->on_right_side)
 				area.x2 -= offset;
 			else
 				area.x1 += offset;
