@@ -1208,47 +1208,46 @@ static void selectEntry(WMenu *menu, int entry_no)
 			submenu = menu->cascades[entry->cascade];
 
 			/* map cascade */
-			if (!submenu->flags.mapped) {
-				if (!submenu->flags.realized)
-					wMenuRealize(submenu);
+			if (submenu->flags.mapped)
+				return;
 
-				if (wPreferences.wrap_menus) {
-					if (menu->flags.open_to_left)
-						submenu->flags.open_to_left = 1;
+			if (!submenu->flags.realized)
+				wMenuRealize(submenu);
 
-					if (submenu->flags.open_to_left) {
-						x = menu->frame_x - MENUW(submenu);
-						if (x < 0) {
-							x = 0;
-							submenu->flags.open_to_left = 0;
-						}
-					} else {
-						x = menu->frame_x + MENUW(menu);
-						if (x + MENUW(submenu) >= menu->frame->screen_ptr->scr_width) {
-							x = menu->frame_x - MENUW(submenu);
-							submenu->flags.open_to_left = 1;
-						}
+			if (wPreferences.wrap_menus) {
+				if (menu->flags.open_to_left)
+					submenu->flags.open_to_left = 1;
+
+				if (submenu->flags.open_to_left) {
+					x = menu->frame_x - MENUW(submenu);
+					if (x < 0) {
+						x = 0;
+						submenu->flags.open_to_left = 0;
 					}
 				} else {
 					x = menu->frame_x + MENUW(menu);
+					if (x + MENUW(submenu) >= menu->frame->screen_ptr->scr_width) {
+						x = menu->frame_x - MENUW(submenu);
+						submenu->flags.open_to_left = 1;
+					}
 				}
-
-				if (wPreferences.align_menus) {
-					y = menu->frame_y;
-				} else {
-					y = menu->frame_y + menu->entry_height * entry_no;
-					if (menu->flags.titled)
-						y += menu->frame->top_width;
-
-					if (menu->cascades[entry->cascade]->flags.titled)
-						y -= menu->cascades[entry->cascade]->frame->top_width;
-				}
-
-				wMenuMapAt(menu->cascades[entry->cascade], x, y, False);
-				menu->cascades[entry->cascade]->parent = menu;
 			} else {
-				return;
+				x = menu->frame_x + MENUW(menu);
 			}
+
+			if (wPreferences.align_menus) {
+				y = menu->frame_y;
+			} else {
+				y = menu->frame_y + menu->entry_height * entry_no;
+				if (menu->flags.titled)
+					y += menu->frame->top_width;
+
+				if (menu->cascades[entry->cascade]->flags.titled)
+					y -= menu->cascades[entry->cascade]->frame->top_width;
+			}
+
+			wMenuMapAt(menu->cascades[entry->cascade], x, y, False);
+			menu->cascades[entry->cascade]->parent = menu;
 		}
 		paintEntry(menu, entry_no, True);
 	}
