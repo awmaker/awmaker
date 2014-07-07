@@ -1254,7 +1254,7 @@ static void selectEntry(WMenu *menu, int entry_no)
 	}
 }
 
-static WMenu *findMenu(WScreen * scr, int *x_ret, int *y_ret)
+static WMenu *findMenu(WScreen *scr, int *x_ret, int *y_ret)
 {
 	WMenu *menu;
 	WObjDescriptor *desc;
@@ -1270,12 +1270,12 @@ static WMenu *findMenu(WScreen * scr, int *x_ret, int *y_ret)
 	if (XFindContext(dpy, win, w_global.context.client_win, (XPointer *) & desc) == XCNOENT)
 		return NULL;
 
-	if (desc->parent_type == WCLASS_MENU) {
-		menu = (WMenu *) desc->parent;
-		XTranslateCoordinates(dpy, root_ret, menu->menu->window, wx, wy, x_ret, y_ret, &junk_win);
-		return menu;
-	}
-	return NULL;
+	if (desc->parent_type != WCLASS_MENU)
+		return NULL;
+
+	menu = (WMenu *) desc->parent;
+	XTranslateCoordinates(dpy, root_ret, menu->menu->window, wx, wy, x_ret, y_ret, &junk_win);
+	return menu;
 }
 
 static void closeCascade(WMenu * menu)
