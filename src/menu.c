@@ -45,9 +45,6 @@
 #include "rootmenu.h"
 #include "switchmenu.h"
 
-
-#define MOD_MASK wPreferences.modifier_mask
-
 #define MENU_SCROLL_STEP  menuScrollParameters[(int)wPreferences.menu_scroll_speed].steps
 #define MENU_SCROLL_DELAY menuScrollParameters[(int)wPreferences.menu_scroll_speed].delay
 
@@ -55,9 +52,6 @@
 #define MENUH(m)	((m)->frame->core->height+2*(m)->frame->screen_ptr->frame_border_width)
 
 /***** Local Stuff ******/
-
-#define WSS_ROOTMENU	(1<<0)
-#define WSS_WSMENU	(1<<2)
 
 static struct {
 	int steps;
@@ -2131,7 +2125,7 @@ static void menuTitleDoubleClick(WCoreWindow * sender, void *data, XEvent * even
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) sender;
 
-	if (event->xbutton.state & MOD_MASK) {
+	if (event->xbutton.state & wPreferences.modifier_mask) {
 		if (menu->flags.lowered) {
 			lower = 0;
 		} else {
@@ -2161,7 +2155,7 @@ static void menuTitleMouseDown(WCoreWindow * sender, void *data, XEvent * event)
 	if (event->xbutton.button != Button1 && event->xbutton.button != Button2)
 		return;
 
-	if (event->xbutton.state & MOD_MASK) {
+	if (event->xbutton.state & wPreferences.modifier_mask) {
 		wLowerFrame(menu->frame->core);
 		lower = 1;
 	} else {
