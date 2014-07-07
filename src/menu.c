@@ -1685,12 +1685,11 @@ static void delaySelection(void *data)
 		*(d->delayed_select) = 0;
 }
 
-static void menuMouseDown(WObjDescriptor * desc, XEvent * event)
+static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
 {
 	WWindow *wwin;
 	XButtonEvent *bev = &event->xbutton;
-	WMenu *menu = desc->parent;
-	WMenu *smenu;
+	WMenu *smenu, *menu = desc->parent;
 	WScreen *scr = menu->frame->screen_ptr;
 	WMenuEntry *entry = NULL;
 	XEvent ev;
@@ -1698,21 +1697,10 @@ static void menuMouseDown(WObjDescriptor * desc, XEvent * event)
 	int done = 0;
 	int delayed_select = 0;
 	int entry_no;
-	int x, y;
-	int prevx, prevy;
-	int old_frame_x = 0;
-	int old_frame_y = 0;
+	int x, y, prevx, prevy;
+	int old_frame_x = 0, old_frame_y = 0;
 	delay_data d_data = { NULL, NULL, NULL };
 
-	/* Doesn't seem to be needed anymore (if delayed selection handler is
-	 * added only if not present). there seem to be no other side effects
-	 * from removing this and it is also possible that it was only added
-	 * to avoid problems with adding the delayed selection timer handler
-	 * multiple times
-	 */
-	/*if (menu->flags.inside_handler) {
-	   return;
-	   } */
 	menu->flags.inside_handler = 1;
 
 	if (!wPreferences.wrap_menus) {
@@ -1741,9 +1729,9 @@ static void menuMouseDown(WObjDescriptor * desc, XEvent * event)
 		menu = smenu;
 	}
 
-	if (menu->flags.editing) {
+	if (menu->flags.editing)
 		goto byebye;
-	}
+
 	entry_no = getEntryAt(menu, x, y);
 	if (entry_no >= 0) {
 		entry = menu->entries[entry_no];
@@ -1772,9 +1760,9 @@ static void menuMouseDown(WObjDescriptor * desc, XEvent * event)
 		if (entry->flags.enabled && entry->cascade >= 0 && menu->cascades) {
 			WMenu *submenu = menu->cascades[entry->cascade];
 			/* map cascade */
-			if (submenu->flags.mapped && !submenu->flags.buttoned && menu->selected_entry != entry_no) {
+			if (submenu->flags.mapped && !submenu->flags.buttoned && menu->selected_entry != entry_no)
 				wMenuUnmap(submenu);
-			}
+
 			if (!submenu->flags.mapped && !delayed_select) {
 				selectEntry(menu, entry_no);
 			} else if (!submenu->flags.buttoned) {
@@ -1820,11 +1808,11 @@ static void menuMouseDown(WObjDescriptor * desc, XEvent * event)
 
 			if (smenu == NULL) {
 				/* moved mouse out of menu */
-
 				if (!delayed_select && d_data.magic) {
 					WMDeleteTimerHandler(d_data.magic);
 					d_data.magic = NULL;
 				}
+
 				if (menu == NULL
 				    || (menu->selected_entry >= 0
 					&& menu->entries[menu->selected_entry]->cascade >= 0)) {
@@ -1833,6 +1821,7 @@ static void menuMouseDown(WObjDescriptor * desc, XEvent * event)
 
 					break;
 				}
+
 				selectEntry(menu, -1);
 				menu = smenu;
 				prevx = ev.xmotion.x_root;
@@ -1989,9 +1978,8 @@ static void menuMouseDown(WObjDescriptor * desc, XEvent * event)
 		} else if (entry->callback != NULL && entry->cascade < 0) {
 			selectEntry(menu, -1);
 		} else {
-			if (entry->cascade >= 0 && menu->cascades && menu->cascades[entry->cascade]->flags.brother) {
+			if (entry->cascade >= 0 && menu->cascades && menu->cascades[entry->cascade]->flags.brother)
 				selectEntry(menu, -1);
-			}
 		}
 	}
 
@@ -2018,7 +2006,7 @@ static void menuMouseDown(WObjDescriptor * desc, XEvent * event)
 	((WMenu *) desc->parent)->flags.inside_handler = 0;
 }
 
-void wMenuMove(WMenu * menu, int x, int y, int submenus)
+void wMenuMove(WMenu *menu, int x, int y, int submenus)
 {
 	WMenu *submenu;
 	int i;
@@ -2036,26 +2024,25 @@ void wMenuMove(WMenu * menu, int x, int y, int submenus)
 		if (i >= 0 && menu->cascades) {
 			submenu = menu->cascades[i];
 			if (submenu->flags.mapped && !submenu->flags.buttoned) {
-				if (wPreferences.align_menus) {
+				if (wPreferences.align_menus)
 					wMenuMove(submenu, x + MENUW(menu), y, submenus);
-				} else {
+				else
 					wMenuMove(submenu, x + MENUW(menu),
 						  y + submenu->entry_height * menu->selected_entry, submenus);
-				}
 			}
 		}
 	}
+
 	if (submenus < 0 && menu->parent != NULL && menu->parent->flags.mapped && !menu->parent->flags.buttoned) {
-		if (wPreferences.align_menus) {
+		if (wPreferences.align_menus)
 			wMenuMove(menu->parent, x - MENUW(menu->parent), y, submenus);
-		} else {
+		else
 			wMenuMove(menu->parent, x - MENUW(menu->parent), menu->frame_y
 				  - menu->parent->entry_height * menu->parent->selected_entry, submenus);
-		}
 	}
 }
 
-static void changeMenuLevels(WMenu * menu, int lower)
+static void changeMenuLevels(WMenu *menu, int lower)
 {
 	int i;
 
@@ -2068,11 +2055,12 @@ static void changeMenuLevels(WMenu * menu, int lower)
 		wLowerFrame(menu->frame->core);
 		menu->flags.lowered = 1;
 	}
+
 	for (i = 0; i < menu->cascade_no; i++) {
-		if (menu->cascades[i]
-		    && !menu->cascades[i]->flags.buttoned && menu->cascades[i]->flags.lowered != lower) {
+		if (menu->cascades[i] &&
+		    !menu->cascades[i]->flags.buttoned &&
+		    menu->cascades[i]->flags.lowered != lower)
 			changeMenuLevels(menu->cascades[i], lower);
-		}
 	}
 }
 
@@ -2085,19 +2073,18 @@ static void menuTitleDoubleClick(WCoreWindow * sender, void *data, XEvent * even
 	(void) sender;
 
 	if (event->xbutton.state & wPreferences.modifier_mask) {
-		if (menu->flags.lowered) {
+		if (menu->flags.lowered)
 			lower = 0;
-		} else {
+		else
 			lower = 1;
-		}
+
 		changeMenuLevels(menu, lower);
 	}
 }
 
 static void menuTitleMouseDown(WCoreWindow * sender, void *data, XEvent * event)
 {
-	WMenu *menu = data;
-	WMenu *tmp;
+	WMenu *tmp, *menu = data;
 	XEvent ev;
 	int x = menu->frame_x, y = menu->frame_y;
 	int dx = event->xbutton.x_root, dy = event->xbutton.y_root;
@@ -2121,6 +2108,7 @@ static void menuTitleMouseDown(WCoreWindow * sender, void *data, XEvent * event)
 		wRaiseFrame(menu->frame->core);
 		lower = 0;
 	}
+
 	tmp = menu;
 
 	/* lower/raise all submenus */
@@ -2129,6 +2117,7 @@ static void menuTitleMouseDown(WCoreWindow * sender, void *data, XEvent * event)
 			tmp = tmp->cascades[tmp->entries[tmp->selected_entry]->cascade];
 			if (!tmp || !tmp->flags.mapped)
 				break;
+
 			if (lower)
 				wLowerFrame(tmp->frame->core);
 			else
@@ -2169,8 +2158,8 @@ static void menuTitleMouseDown(WCoreWindow * sender, void *data, XEvent * event)
 				dy = ev.xmotion.y_root;
 				wMenuMove(menu, x, y, True);
 			} else {
-				if (abs(ev.xmotion.x_root - dx) > MOVE_THRESHOLD
-				    || abs(ev.xmotion.y_root - dy) > MOVE_THRESHOLD) {
+				if (abs(ev.xmotion.x_root - dx) > MOVE_THRESHOLD ||
+				    abs(ev.xmotion.y_root - dy) > MOVE_THRESHOLD) {
 					started = True;
 					XGrabPointer(dpy, menu->frame->titlebar->window, False,
 						     ButtonMotionMask | ButtonReleaseMask
@@ -2187,6 +2176,7 @@ static void menuTitleMouseDown(WCoreWindow * sender, void *data, XEvent * event)
 		case ButtonRelease:
 			if (ev.xbutton.button != event->xbutton.button)
 				break;
+
 			XUngrabPointer(dpy, CurrentTime);
 			return;
 
@@ -2208,7 +2198,7 @@ static void menuTitleMouseDown(WCoreWindow * sender, void *data, XEvent * event)
  * cascade list.
  *----------------------------------------------------------------------
  */
-static void menuCloseClick(WCoreWindow * sender, void *data, XEvent * event)
+static void menuCloseClick(WCoreWindow *sender, void *data, XEvent *event)
 {
 	WMenu *menu = (WMenu *) data;
 	WMenu *parent = menu->parent;
@@ -2232,7 +2222,7 @@ static void menuCloseClick(WCoreWindow * sender, void *data, XEvent * event)
 	wMenuUnmap(menu);
 }
 
-static void saveMenuInfo(WMPropList * dict, WMenu * menu, WMPropList * key)
+static void saveMenuInfo(WMPropList *dict, WMenu *menu, WMPropList *key)
 {
 	WMPropList *value, *list;
 	char buffer[256];
@@ -2242,12 +2232,13 @@ static void saveMenuInfo(WMPropList * dict, WMenu * menu, WMPropList * key)
 	list = WMCreatePLArray(value, NULL);
 	if (menu->flags.lowered)
 		WMAddToPLArray(list, WMCreatePLString("lowered"));
+
 	WMPutInPLDictionary(dict, key, list);
 	WMReleasePropList(value);
 	WMReleasePropList(list);
 }
 
-void wMenuSaveState(WScreen * scr)
+void wMenuSaveState(WScreen *scr)
 {
 	WMPropList *menus, *key;
 	int save_menus = 0;
@@ -2276,10 +2267,11 @@ void wMenuSaveState(WScreen * scr)
 		WMPutInPLDictionary(w_global.session_state, key, menus);
 		WMReleasePropList(key);
 	}
+
 	WMReleasePropList(menus);
 }
 
-static Bool getMenuPath(WMenu * menu, char *buffer, int bufSize)
+static Bool getMenuPath(WMenu *menu, char *buffer, int bufSize)
 {
 	Bool ok = True;
 	int len = 0;
@@ -2303,7 +2295,7 @@ static Bool getMenuPath(WMenu * menu, char *buffer, int bufSize)
 	return True;
 }
 
-static Bool saveMenuRecurs(WMPropList * menus, WScreen * scr, WMenu * menu)
+static Bool saveMenuRecurs(WMPropList *menus, WScreen *scr, WMenu *menu)
 {
 	WMPropList *key;
 	int save_menus = 0, i;
@@ -2314,7 +2306,6 @@ static Bool saveMenuRecurs(WMPropList * menus, WScreen * scr, WMenu * menu)
 		menu = menu->brother;
 
 	if (menu->flags.buttoned && menu != scr->switch_menu) {
-
 		buffer[0] = '\0';
 		ok = getMenuPath(menu, buffer, 510);
 
@@ -2335,7 +2326,7 @@ static Bool saveMenuRecurs(WMPropList * menus, WScreen * scr, WMenu * menu)
 	return save_menus;
 }
 
-static Bool getMenuInfo(WMPropList * info, int *x, int *y, Bool * lowered)
+static Bool getMenuInfo(WMPropList *info, int *x, int *y, Bool *lowered)
 {
 	WMPropList *pos;
 
@@ -2345,10 +2336,11 @@ static Bool getMenuInfo(WMPropList * info, int *x, int *y, Bool * lowered)
 		WMPropList *flags;
 		pos = WMGetFromPLArray(info, 0);
 		flags = WMGetFromPLArray(info, 1);
-		if (flags != NULL && WMIsPLString(flags) && WMGetFromPLString(flags) != NULL
-		    && strcmp(WMGetFromPLString(flags), "lowered") == 0) {
+		if (flags != NULL &&
+		    WMIsPLString(flags) &&
+		    WMGetFromPLString(flags) != NULL &&
+		    strcmp(WMGetFromPLString(flags), "lowered") == 0)
 			*lowered = True;
-		}
 	} else {
 		pos = info;
 	}
@@ -2366,7 +2358,7 @@ static Bool getMenuInfo(WMPropList * info, int *x, int *y, Bool * lowered)
 
 static int restoreMenu(WScreen *scr, WMPropList *menu)
 {
-	int x, y;
+	int x, y, width, height;
 	Bool lowered = False;
 	WMenu *pmenu = NULL;
 
@@ -2378,22 +2370,23 @@ static int restoreMenu(WScreen *scr, WMPropList *menu)
 
 	OpenSwitchMenu(scr, x, y, False);
 	pmenu = scr->switch_menu;
-
 	if (pmenu) {
-		int width = MENUW(pmenu);
-		int height = MENUH(pmenu);
+		width = MENUW(pmenu);
+		height = MENUH(pmenu);
 		WMRect rect = wGetRectForHead(scr, wGetHeadForPointerLocation(scr));
 
-		if (lowered) {
+		if (lowered)
 			changeMenuLevels(pmenu, True);
-		}
 
 		if (x < rect.pos.x - width)
 			x = rect.pos.x;
+
 		if (x > rect.pos.x + rect.size.width)
 			x = rect.pos.x + rect.size.width - width;
+
 		if (y < rect.pos.y)
 			y = rect.pos.y;
+
 		if (y > rect.pos.y + rect.size.height)
 			y = rect.pos.y + rect.size.height - height;
 
@@ -2402,6 +2395,7 @@ static int restoreMenu(WScreen *scr, WMPropList *menu)
 		wFrameWindowShowButton(pmenu->frame, WFF_RIGHT_BUTTON);
 		return True;
 	}
+
 	return False;
 }
 
@@ -2409,7 +2403,7 @@ static int restoreMenuRecurs(WScreen *scr, WMPropList *menus, WMenu *menu, const
 {
 	WMPropList *key, *entry;
 	char buffer[512];
-	int i, x, y, res;
+	int i, x, y, res, width, height;
 	Bool lowered;
 
 	if (strlen(path) + strlen(menu->frame->title) > 510)
@@ -2421,10 +2415,9 @@ static int restoreMenuRecurs(WScreen *scr, WMPropList *menus, WMenu *menu, const
 	res = False;
 
 	if (entry && getMenuInfo(entry, &x, &y, &lowered)) {
-
 		if (!menu->flags.mapped) {
-			int width = MENUW(menu);
-			int height = MENUH(menu);
+			width = MENUW(menu);
+			height = MENUH(menu);
 			WMRect rect = wGetRectForHead(scr, wGetHeadForPointerLocation(scr));
 
 			wMenuMapAt(menu, x, y, False);
@@ -2438,16 +2431,18 @@ static int restoreMenuRecurs(WScreen *scr, WMPropList *menus, WMenu *menu, const
 					}
 				}
 			}
-			if (lowered) {
+			if (lowered)
 				changeMenuLevels(menu, True);
-			}
 
 			if (x < rect.pos.x - width)
 				x = rect.pos.x;
+
 			if (x > rect.pos.x + rect.size.width)
 				x = rect.pos.x + rect.size.width - width;
+
 			if (y < rect.pos.y)
 				y = rect.pos.y;
+
 			if (y > rect.pos.y + rect.size.height)
 				y = rect.pos.y + rect.size.height - height;
 
@@ -2468,7 +2463,7 @@ static int restoreMenuRecurs(WScreen *scr, WMPropList *menus, WMenu *menu, const
 	return res;
 }
 
-void wMenuRestoreState(WScreen * scr)
+void wMenuRestoreState(WScreen *scr)
 {
 	WMPropList *menus, *menu, *key, *skey;
 
@@ -2483,7 +2478,6 @@ void wMenuRestoreState(WScreen * scr)
 		return;
 
 	/* restore menus */
-
 	skey = WMCreatePLString("SwitchMenu");
 	menu = WMGetFromPLDictionary(menus, skey);
 	WMReleasePropList(skey);
