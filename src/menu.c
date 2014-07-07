@@ -1278,12 +1278,11 @@ static WMenu *findMenu(WScreen *scr, int *x_ret, int *y_ret)
 	return menu;
 }
 
-static void closeCascade(WMenu * menu)
+static void closeCascade(WMenu *menu)
 {
 	WMenu *parent = menu->parent;
 
 	if (menu->flags.brother || (!menu->flags.buttoned && (!menu->flags.app_menu || menu->parent != NULL))) {
-
 		selectEntry(menu, -1);
 		XSync(dpy, 0);
 #if (MENU_BLINK_DELAY > 2)
@@ -1297,22 +1296,23 @@ static void closeCascade(WMenu * menu)
 			wMenuUnmap(parent);
 			parent = parent->parent;
 		}
+
 		if (parent)
 			selectEntry(parent, -1);
 	}
 }
 
-static void closeBrotherCascadesOf(WMenu * menu)
+static void closeBrotherCascadesOf(WMenu *menu)
 {
 	WMenu *tmp;
 	int i;
 
 	for (i = 0; i < menu->cascade_no; i++) {
-		if (menu->cascades[i]->flags.brother) {
+		if (menu->cascades[i]->flags.brother)
 			tmp = menu->cascades[i];
-		} else {
+		else
 			tmp = menu->cascades[i]->brother;
-		}
+
 		if (tmp->flags.mapped) {
 			selectEntry(tmp->parent, -1);
 			closeBrotherCascadesOf(tmp);
@@ -1323,7 +1323,7 @@ static void closeBrotherCascadesOf(WMenu * menu)
 
 #define getEntryAt(menu, x, y)   ((y)<0 ? -1 : (y)/(menu->entry_height))
 
-static WMenu *parentMenu(WMenu * menu)
+static WMenu *parentMenu(WMenu *menu)
 {
 	WMenu *parent;
 	WMenuEntry *entry;
@@ -1335,10 +1335,12 @@ static WMenu *parentMenu(WMenu * menu)
 		parent = menu->parent;
 		if (parent->selected_entry < 0)
 			break;
+
 		entry = parent->entries[parent->selected_entry];
 		if (!entry->flags.enabled || entry->cascade < 0 || !parent->cascades ||
 		    parent->cascades[entry->cascade] != menu)
 			break;
+
 		menu = parent;
 		if (menu->flags.buttoned)
 			break;
