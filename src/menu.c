@@ -45,14 +45,24 @@
 #include "rootmenu.h"
 #include "switchmenu.h"
 
+#define F_NORMAL	0
+#define F_TOP		1
+#define F_BOTTOM	2
+#define F_NONE		3
+
+#define MENU_SCROLL_BORDER   5
+
 #define MENU_SCROLL_STEP  menuScrollParameters[(int)wPreferences.menu_scroll_speed].steps
 #define MENU_SCROLL_DELAY menuScrollParameters[(int)wPreferences.menu_scroll_speed].delay
 
 #define MENUW(m)	((m)->frame->core->width+2*(m)->frame->screen_ptr->frame_border_width)
 #define MENUH(m)	((m)->frame->core->height+2*(m)->frame->screen_ptr->frame_border_width)
 
-/***** Local Stuff ******/
+#define getEntryAt(menu, x, y)   ((y)<0 ? -1 : (y)/(menu->entry_height))
 
+#define COMPLAIN(key) wwarning(_("bad value in menus state info: %s"), key)
+
+/***** Local Stuff ******/
 static struct {
 	int steps;
 	int delay;
@@ -63,6 +73,17 @@ static struct {
 	MENU_SCROLL_STEPS_M, MENU_SCROLL_DELAY_M}, {
 	MENU_SCROLL_STEPS_S, MENU_SCROLL_DELAY_S}, {
 MENU_SCROLL_STEPS_US, MENU_SCROLL_DELAY_US}};
+
+typedef struct _delay {
+	WMenu *menu;
+	int ox, oy;
+} _delay;
+
+typedef struct {
+	int *delayed_select;
+	WMenu *menu;
+	WMHandlerID magic;
+} delay_data;
 
 static void menuMouseDown(WObjDescriptor *desc, XEvent *event);
 static void menuExpose(WObjDescriptor *desc, XEvent *event);
@@ -627,11 +648,6 @@ void wMenuDestroy(WMenu *menu, int recurse)
 
 	menu_destroy(menu);
 }
-
-#define F_NORMAL	0
-#define F_TOP		1
-#define F_BOTTOM	2
-#define F_NONE		3
 
 static void drawFrame(WScreen *scr, Drawable win, int y, int w, int h, int type)
 {
@@ -1319,7 +1335,6 @@ static void closeBrotherCascadesOf(WMenu *menu)
 	}
 }
 
-#define getEntryAt(menu, x, y)   ((y)<0 ? -1 : (y)/(menu->entry_height))
 
 static WMenu *parentMenu(WMenu *menu)
 {
@@ -1502,8 +1517,6 @@ static void scrollMenuCallback(void *data)
 	}
 }
 
-#define MENU_SCROLL_BORDER   5
-
 static int isPointNearBoder(WMenu *menu, int x, int y)
 {
 	int menuX1 = menu->frame_x;
@@ -1525,11 +1538,6 @@ static int isPointNearBoder(WMenu *menu, int x, int y)
 
 	return flag;
 }
-
-typedef struct _delay {
-	WMenu *menu;
-	int ox, oy;
-} _delay;
 
 static void leaving(_delay *dl)
 {
@@ -1660,12 +1668,6 @@ static void menuExpose(WObjDescriptor * desc, XEvent * event)
 
 	wMenuPaint(desc->parent);
 }
-
-typedef struct {
-	int *delayed_select;
-	WMenu *menu;
-	WMHandlerID magic;
-} delay_data;
 
 static void delaySelection(void *data)
 {
@@ -2335,8 +2337,6 @@ static Bool saveMenuRecurs(WMPropList * menus, WScreen * scr, WMenu * menu)
 	}
 	return save_menus;
 }
-
-#define COMPLAIN(key) wwarning(_("bad value in menus state info: %s"), key)
 
 static Bool getMenuInfo(WMPropList * info, int *x, int *y, Bool * lowered)
 {
