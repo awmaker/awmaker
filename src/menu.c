@@ -392,7 +392,7 @@ void wMenuEntryRemoveCascade(WMenu *menu, WMenuEntry *entry)
 	entry->cascade = -1;
 }
 
-void wMenuRemoveItem(WMenu * menu, int index)
+void wMenuRemoveItem(WMenu *menu, int index)
 {
 	int i;
 
@@ -424,29 +424,27 @@ void wMenuRemoveItem(WMenu * menu, int index)
 		menu->entries[i + 1]->order--;
 		menu->entries[i] = menu->entries[i + 1];
 	}
+
 	menu->entry_no--;
 	menu->brother->entry_no--;
 }
 
-static Pixmap renderTexture(WMenu * menu)
+static Pixmap renderTexture(WMenu *menu)
 {
 	RImage *img;
 	Pixmap pix;
 	int i;
-	RColor light;
-	RColor dark;
-	RColor mid;
+	RColor light, dark, mid;
 	WScreen *scr = menu->menu->screen_ptr;
 	WTexture *texture = scr->menu_item_texture;
 
-	if (wPreferences.menu_style == MS_NORMAL) {
+	if (wPreferences.menu_style == MS_NORMAL)
 		img = wTextureRenderImage(texture, menu->menu->width, menu->entry_height, WREL_MENUENTRY);
-	} else {
+	else
 		img = wTextureRenderImage(texture, menu->menu->width, menu->menu->height + 1, WREL_MENUENTRY);
-	}
+
 	if (!img) {
 		wwarning(_("could not render texture: %s"), RMessageForError(RErrorCode));
-
 		return None;
 	}
 
@@ -471,15 +469,16 @@ static Pixmap renderTexture(WMenu * menu)
 				     menu->menu->width - 1, i * menu->entry_height, &light);
 		}
 	}
-	if (!RConvertImage(scr->rcontext, img, &pix)) {
+
+	if (!RConvertImage(scr->rcontext, img, &pix))
 		wwarning(_("error rendering image:%s"), RMessageForError(RErrorCode));
-	}
+
 	RReleaseImage(img);
 
 	return pix;
 }
 
-static void updateTexture(WMenu * menu)
+static void updateTexture(WMenu *menu)
 {
 	WScreen *scr = menu->menu->screen_ptr;
 
@@ -502,14 +501,14 @@ static void updateTexture(WMenu * menu)
 	}
 }
 
-void wMenuRealize(WMenu * menu)
+void wMenuRealize(WMenu *menu)
 {
-	int i;
-	int width, rwidth, mrwidth, mwidth;
-	int theight, twidth, eheight;
+	int i, flags;
+	int width, rwidth, mrwidth = 0, mwidth = 0;
+	int theight = 0, twidth = 0, eheight;
+	char *text;
 	WScreen *scr = menu->frame->screen_ptr;
 	static int brother_done = 0;
-	int flags;
 
 	if (!brother_done) {
 		brother_done = 1;
@@ -527,24 +526,18 @@ void wMenuRealize(WMenu * menu)
 		twidth = WMWidthOfString(scr->menu_title_font, menu->frame->title, strlen(menu->frame->title));
 		theight = menu->frame->top_width;
 		twidth += theight + (wPreferences.new_style == TS_NEW ? 16 : 8);
-	} else {
-		twidth = 0;
-		theight = 0;
 	}
+
 	eheight = WMFontHeight(scr->menu_entry_font) + 6 + wPreferences.menu_text_clearance * 2;
 	menu->entry_height = eheight;
-	mrwidth = 0;
-	mwidth = 0;
-	for (i = 0; i < menu->entry_no; i++) {
-		char *text;
 
+	for (i = 0; i < menu->entry_no; i++) {
 		/* search widest text */
 		text = menu->entries[i]->text;
 		width = WMWidthOfString(scr->menu_entry_font, text, strlen(text)) + 10;
 
-		if (menu->entries[i]->flags.indicator) {
+		if (menu->entries[i]->flags.indicator)
 			width += MENU_INDICATOR_SPACE;
-		}
 
 		if (width > mwidth)
 			mwidth = width;
@@ -552,8 +545,7 @@ void wMenuRealize(WMenu * menu)
 		/* search widest text on right */
 		text = menu->entries[i]->rtext;
 		if (text)
-			rwidth = WMWidthOfString(scr->menu_entry_font, text, strlen(text))
-			    + 10;
+			rwidth = WMWidthOfString(scr->menu_entry_font, text, strlen(text)) + 10;
 		else if (menu->entries[i]->cascade >= 0)
 			rwidth = 16;
 		else
@@ -562,8 +554,8 @@ void wMenuRealize(WMenu * menu)
 		if (rwidth > mrwidth)
 			mrwidth = rwidth;
 	}
-	mwidth += mrwidth;
 
+	mwidth += mrwidth;
 	if (mwidth < twidth)
 		mwidth = twidth;
 
@@ -578,6 +570,7 @@ void wMenuRealize(WMenu * menu)
 
 	if (menu->flags.mapped)
 		wMenuPaint(menu);
+
 	if (menu->brother->flags.mapped)
 		wMenuPaint(menu->brother);
 }
