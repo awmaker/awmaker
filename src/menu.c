@@ -575,7 +575,7 @@ void wMenuRealize(WMenu *menu)
 		wMenuPaint(menu->brother);
 }
 
-void wMenuDestroy(WMenu * menu, int recurse)
+void wMenuDestroy(WMenu *menu, int recurse)
 {
 	int i;
 
@@ -584,6 +584,7 @@ void wMenuDestroy(WMenu * menu, int recurse)
 	/* remove any pending timers */
 	if (menu->timer)
 		WMDeleteTimerHandler(menu->timer);
+
 	menu->timer = NULL;
 
 	/* call destroy handler */
@@ -595,21 +596,17 @@ void wMenuDestroy(WMenu * menu, int recurse)
 	 */
 	if (!menu->flags.brother) {
 		for (i = 0; i < menu->entry_no; i++) {
-
 			wfree(menu->entries[i]->text);
 
 			if (menu->entries[i]->rtext)
 				wfree(menu->entries[i]->rtext);
 #ifdef USER_MENU
-
-			if (menu->entries[i]->instances) {
+			if (menu->entries[i]->instances)
 				WMReleasePropList(menu->entries[i]->instances);
-			}
-#endif				/* USER_MENU */
-
-			if (menu->entries[i]->free_cdata && menu->entries[i]->clientdata) {
+#endif
+			if (menu->entries[i]->free_cdata && menu->entries[i]->clientdata)
 				(*menu->entries[i]->free_cdata) (menu->entries[i]->clientdata);
-			}
+
 			wfree(menu->entries[i]);
 		}
 
@@ -626,7 +623,6 @@ void wMenuDestroy(WMenu * menu, int recurse)
 
 		if (menu->entries)
 			wfree(menu->entries);
-
 	}
 
 	menu_destroy(menu);
@@ -637,7 +633,7 @@ void wMenuDestroy(WMenu * menu, int recurse)
 #define F_BOTTOM	2
 #define F_NONE		3
 
-static void drawFrame(WScreen * scr, Drawable win, int y, int w, int h, int type)
+static void drawFrame(WScreen *scr, Drawable win, int y, int w, int h, int type)
 {
 	XSegment segs[2];
 	int i;
@@ -674,18 +670,20 @@ static void drawFrame(WScreen * scr, Drawable win, int y, int w, int h, int type
 		XDrawLine(dpy, win, scr->menu_item_auxtexture->dark_gc, 0, y + h - 1, w - 1, y + h - 1);
 }
 
-static void paintEntry(WMenu * menu, int index, int selected)
+static void paintEntry(WMenu *menu, int index, int selected)
 {
 	WScreen *scr = menu->frame->screen_ptr;
 	Window win = menu->menu->window;
 	WMenuEntry *entry = menu->entries[index];
 	GC light, dim, dark;
 	WMColor *color;
-	int x, y, w, h, tw;
-	int type;
+	int x, y, w, h, tw, iw, ih;
+	int type = F_NORMAL;
+	WPixmap *indicator;
 
 	if (!menu->flags.realized)
 		return;
+
 	h = menu->entry_height;
 	w = menu->menu->width;
 	y = index * h;
@@ -701,8 +699,6 @@ static void paintEntry(WMenu * menu, int index, int selected)
 			type = F_BOTTOM;
 		else
 			type = F_NONE;
-	} else {
-		type = F_NORMAL;
 	}
 
 	/* paint background */
@@ -730,6 +726,7 @@ static void paintEntry(WMenu * menu, int index, int selected)
 	} else {
 		color = scr->mtext_color;
 	}
+
 	/* draw text */
 	x = 5;
 	if (entry->flags.indicator)
@@ -747,9 +744,6 @@ static void paintEntry(WMenu * menu, int index, int selected)
 
 	/* draw indicator */
 	if (entry->flags.indicator && entry->flags.indicator_on) {
-		int iw, ih;
-		WPixmap *indicator;
-
 		switch (entry->flags.indicator_type) {
 		case MI_CHECK:
 			indicator = scr->menu_check_indicator;
@@ -774,28 +768,22 @@ static void paintEntry(WMenu * menu, int index, int selected)
 		XSetClipMask(dpy, scr->copy_gc, indicator->mask);
 		XSetClipOrigin(dpy, scr->copy_gc, 5, y + (h - ih) / 2);
 		if (selected) {
-			if (entry->flags.enabled) {
+			if (entry->flags.enabled)
 				XSetForeground(dpy, scr->copy_gc, WMColorPixel(scr->select_text_color));
-			} else {
+			else
 				XSetForeground(dpy, scr->copy_gc, WMColorPixel(scr->dtext_color));
-			}
 		} else {
-			if (entry->flags.enabled) {
+			if (entry->flags.enabled)
 				XSetForeground(dpy, scr->copy_gc, WMColorPixel(scr->mtext_color));
-			} else {
+			else
 				XSetForeground(dpy, scr->copy_gc, WMColorPixel(scr->dtext_color));
-			}
 		}
+
 		XFillRectangle(dpy, win, scr->copy_gc, 5, y + (h - ih) / 2, iw, ih);
-		/*
-		   XCopyArea(dpy, indicator->image, win, scr->copy_gc, 0, 0,
-		   iw, ih, 5, y+(h-ih)/2);
-		 */
 		XSetClipOrigin(dpy, scr->copy_gc, 0, 0);
 	}
 
 	/* draw right text */
-
 	if (entry->rtext && entry->cascade < 0) {
 		tw = WMWidthOfString(scr->menu_entry_font, entry->rtext, strlen(entry->rtext));
 
