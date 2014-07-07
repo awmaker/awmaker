@@ -844,19 +844,17 @@ static int check_key(WMenu *menu, XKeyEvent *event)
 		return -1;
 
 	ch = toupper(buffer[0]);
-
 	s = (menu->selected_entry >= 0 ? menu->selected_entry + 1 : 0);
 
- again:
 	for (i = s; i < menu->entry_no; i++)
 		if (ch == toupper(menu->entries[i]->text[0]))
 			return i;
 
 	/* no match. Retry from start, if previous started from a selected entry */
-	if (s != 0) {
-		s = 0;
-		goto again;
-	}
+	if (s != 0)
+		for (i = 0; i < menu->entry_no; i++)
+			if (ch == toupper(menu->entries[i]->text[0]))
+				return i;
 
 	return -1;
 }
