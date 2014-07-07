@@ -859,12 +859,11 @@ static int check_key(WMenu *menu, XKeyEvent *event)
 	return -1;
 }
 
-static int keyboardMenu(WMenu * menu)
+static int keyboardMenu(WMenu *menu)
 {
 	XEvent event;
 	KeySym ksym = NoSymbol;
-	int done = 0;
-	int index;
+	int index, done = 0;
 	WMenuEntry *entry;
 	int old_pos_x = menu->frame_x;
 	int old_pos_y = menu->frame_y;
@@ -913,6 +912,7 @@ static int keyboardMenu(WMenu * menu)
 
 				}
 			}
+
 			switch (ksym) {
 			case XK_Escape:
 				done = 1;
@@ -1001,12 +1001,10 @@ static int keyboardMenu(WMenu * menu)
 
 			default:
 				index = check_key(menu, &event.xkey);
-				if (index >= 0) {
+				if (index >= 0)
 					selectEntry(menu, index);
-				}
 			}
 			break;
-
 		default:
 			if (event.type == ButtonPress)
 				done = 1;
@@ -1017,11 +1015,10 @@ static int keyboardMenu(WMenu * menu)
 
 	XUngrabKeyboard(dpy, CurrentTime);
 
-	if (done == 2 && menu->selected_entry >= 0) {
+	if (done == 2 && menu->selected_entry >= 0)
 		entry = menu->entries[menu->selected_entry];
-	} else {
+	else
 		entry = NULL;
-	}
 
 	if (entry && entry->callback != NULL && entry->flags.enabled && entry->cascade < 0) {
 #if (MENU_BLINK_COUNT > 0)
@@ -1059,7 +1056,7 @@ static int keyboardMenu(WMenu * menu)
 	return False;
 }
 
-void wMenuMapAt(WMenu * menu, int x, int y, int keyboard)
+void wMenuMapAt(WMenu *menu, int x, int y, int keyboard)
 {
 	if (!menu->flags.realized) {
 		menu->flags.realized = 1;
@@ -1095,41 +1092,42 @@ void wMenuMapAt(WMenu * menu, int x, int y, int keyboard)
 		keyboardMenu(menu);
 }
 
-void wMenuMap(WMenu * menu)
+void wMenuMap(WMenu *menu)
 {
 	if (!menu->flags.realized) {
 		menu->flags.realized = 1;
 		wMenuRealize(menu);
 	}
+
 	if (menu->flags.app_menu && menu->parent == NULL) {
 		menu->frame_x = menu->frame->screen_ptr->app_menu_x;
 		menu->frame_y = menu->frame->screen_ptr->app_menu_y;
 		XMoveWindow(dpy, menu->frame->core->window, menu->frame_x, menu->frame_y);
 	}
+
 	XMapWindow(dpy, menu->frame->core->window);
 	wRaiseFrame(menu->frame->core);
 	menu->flags.mapped = 1;
 }
 
-void wMenuUnmap(WMenu * menu)
+void wMenuUnmap(WMenu *menu)
 {
 	int i;
 
 	XUnmapWindow(dpy, menu->frame->core->window);
-	if (menu->flags.titled && menu->flags.buttoned) {
+	if (menu->flags.titled && menu->flags.buttoned)
 		wFrameWindowHideButton(menu->frame, WFF_RIGHT_BUTTON);
-	}
+
 	menu->flags.buttoned = 0;
 	menu->flags.mapped = 0;
 	menu->flags.open_to_left = 0;
 
-	for (i = 0; i < menu->cascade_no; i++) {
-		if (menu->cascades[i] != NULL
-		    && menu->cascades[i]->flags.mapped && !menu->cascades[i]->flags.buttoned) {
-
+	for (i = 0; i < menu->cascade_no; i++)
+		if (menu->cascades[i] != NULL &&
+		    menu->cascades[i]->flags.mapped &&
+		    !menu->cascades[i]->flags.buttoned)
 			wMenuUnmap(menu->cascades[i]);
-		}
-	}
+
 	menu->selected_entry = -1;
 }
 
