@@ -1131,35 +1131,34 @@ void wMenuUnmap(WMenu *menu)
 	menu->selected_entry = -1;
 }
 
-void wMenuPaint(WMenu * menu)
+void wMenuPaint(WMenu *menu)
 {
 	int i;
 
-	if (!menu->flags.mapped) {
+	if (!menu->flags.mapped)
 		return;
-	}
 
 	/* paint entries */
-	for (i = 0; i < menu->entry_no; i++) {
+	for (i = 0; i < menu->entry_no; i++)
 		paintEntry(menu, i, i == menu->selected_entry);
-	}
 }
 
-void wMenuSetEnabled(WMenu * menu, int index, int enable)
+void wMenuSetEnabled(WMenu *menu, int index, int enable)
 {
 	if (index >= menu->entry_no)
 		return;
+
 	menu->entries[index]->flags.enabled = enable;
 	paintEntry(menu, index, index == menu->selected_entry);
 	paintEntry(menu->brother, index, index == menu->selected_entry);
 }
 
 
-static void selectEntry(WMenu * menu, int entry_no)
+static void selectEntry(WMenu *menu, int entry_no)
 {
 	WMenuEntry *entry;
 	WMenu *submenu;
-	int old_entry;
+	int old_entry, x, y;
 
 	if (menu->entries == NULL)
 		return;
@@ -1171,36 +1170,31 @@ static void selectEntry(WMenu * menu, int entry_no)
 	menu->selected_entry = entry_no;
 
 	if (old_entry != entry_no) {
-
 		/* unselect previous entry */
 		if (old_entry >= 0) {
 			paintEntry(menu, old_entry, False);
 			entry = menu->entries[old_entry];
 
 			/* unmap cascade */
-			if (entry->cascade >= 0 && menu->cascades) {
-				if (!menu->cascades[entry->cascade]->flags.buttoned) {
+			if (entry->cascade >= 0 && menu->cascades)
+				if (!menu->cascades[entry->cascade]->flags.buttoned)
 					wMenuUnmap(menu->cascades[entry->cascade]);
-				}
-			}
 		}
 
 		if (entry_no < 0) {
 			menu->selected_entry = -1;
 			return;
 		}
-		entry = menu->entries[entry_no];
 
+		entry = menu->entries[entry_no];
 		if (entry->cascade >= 0 && menu->cascades && entry->flags.enabled) {
-			/* Callback for when the submenu is opened.
-			 */
+			/* Callback for when the submenu is opened. */
 			submenu = menu->cascades[entry->cascade];
 			if (submenu && submenu->flags.brother)
 				submenu = submenu->brother;
 
 			if (entry->callback) {
-				/* Only call the callback if the submenu is not yet mapped.
-				 */
+				/* Only call the callback if the submenu is not yet mapped. */
 				if (menu->flags.brother) {
 					if (!submenu || !submenu->flags.mapped)
 						(*entry->callback) (menu->brother, entry);
@@ -1215,10 +1209,9 @@ static void selectEntry(WMenu * menu, int entry_no)
 
 			/* map cascade */
 			if (!submenu->flags.mapped) {
-				int x, y;
-
 				if (!submenu->flags.realized)
 					wMenuRealize(submenu);
+
 				if (wPreferences.wrap_menus) {
 					if (menu->flags.open_to_left)
 						submenu->flags.open_to_left = 1;
@@ -1231,10 +1224,7 @@ static void selectEntry(WMenu * menu, int entry_no)
 						}
 					} else {
 						x = menu->frame_x + MENUW(menu);
-
-						if (x + MENUW(submenu)
-						    >= menu->frame->screen_ptr->scr_width) {
-
+						if (x + MENUW(submenu) >= menu->frame->screen_ptr->scr_width) {
 							x = menu->frame_x - MENUW(submenu);
 							submenu->flags.open_to_left = 1;
 						}
@@ -1249,6 +1239,7 @@ static void selectEntry(WMenu * menu, int entry_no)
 					y = menu->frame_y + menu->entry_height * entry_no;
 					if (menu->flags.titled)
 						y += menu->frame->top_width;
+
 					if (menu->cascades[entry->cascade]->flags.titled)
 						y -= menu->cascades[entry->cascade]->frame->top_width;
 				}
