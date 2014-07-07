@@ -77,7 +77,7 @@ static int restoreMenuRecurs(WScreen *scr, WMPropList *menus, WMenu *menu, const
 
 /****** Notification Observers ******/
 
-static void appearanceObserver(void *self, WMNotification * notif)
+static void appearanceObserver(void *self, WMNotification *notif)
 {
 	WMenu *menu = (WMenu *) self;
 	uintptr_t flags = (uintptr_t)WMGetNotificationClientData(notif);
@@ -90,25 +90,26 @@ static void appearanceObserver(void *self, WMNotification * notif)
 			menu->flags.realized = 0;
 			wMenuRealize(menu);
 		}
+
 		if (flags & WTextureSettings) {
 			if (!menu->flags.brother)
 				updateTexture(menu);
 		}
-		if (flags & (WTextureSettings | WColorSettings)) {
-			wMenuPaint(menu);
-		}
-	} else if (menu->flags.titled) {
 
+		if (flags & (WTextureSettings | WColorSettings))
+			wMenuPaint(menu);
+
+	} else if (menu->flags.titled) {
 		if (flags & WFontSettings) {
 			menu->flags.realized = 0;
 			wMenuRealize(menu);
 		}
-		if (flags & WTextureSettings) {
+
+		if (flags & WTextureSettings)
 			menu->frame->flags.need_texture_remake = 1;
-		}
-		if (flags & (WColorSettings | WTextureSettings)) {
+
+		if (flags & (WColorSettings | WTextureSettings))
 			wFrameWindowPaint(menu->frame);
-		}
 	}
 }
 
@@ -276,7 +277,7 @@ WMenu *wMenuCreateForApp(const char *title, int main_menu)
 	return menu;
 }
 
-static void insertEntry(WMenu * menu, WMenuEntry * entry, int index)
+static void insertEntry(WMenu *menu, WMenuEntry *entry, int index)
 {
 	int i;
 
@@ -284,6 +285,7 @@ static void insertEntry(WMenu * menu, WMenuEntry * entry, int index)
 		menu->entries[i]->order++;
 		menu->entries[i + 1] = menu->entries[i];
 	}
+
 	menu->entries[index] = entry;
 }
 
@@ -291,14 +293,13 @@ WMenuEntry *wMenuInsertCallback(WMenu *menu, int index, const char *text,
 				void (*callback) (WMenu * menu, WMenuEntry * entry), void *clientdata)
 {
 	WMenuEntry *entry;
+	void *tmp;
 
 	menu->flags.realized = 0;
 	menu->brother->flags.realized = 0;
 
 	/* reallocate array if it's too small */
 	if (menu->entry_no >= menu->alloced_entries) {
-		void *tmp;
-
 		tmp = wrealloc(menu->entries, sizeof(WMenuEntry) * (menu->alloced_entries + 5));
 
 		menu->entries = tmp;
@@ -327,10 +328,10 @@ WMenuEntry *wMenuInsertCallback(WMenu *menu, int index, const char *text,
 	return entry;
 }
 
-void wMenuEntrySetCascade(WMenu * menu, WMenuEntry * entry, WMenu * cascade)
+void wMenuEntrySetCascade(WMenu *menu, WMenuEntry *entry, WMenu *cascade)
 {
 	WMenu *brother = menu->brother;
-	int i, done;
+	int i, done = 0;
 
 	assert(menu->flags.brother == 0);
 
@@ -340,10 +341,8 @@ void wMenuEntrySetCascade(WMenu * menu, WMenuEntry * entry, WMenu * cascade)
 	}
 
 	cascade->parent = menu;
-
 	cascade->brother->parent = brother;
 
-	done = 0;
 	for (i = 0; i < menu->cascade_no; i++) {
 		if (menu->cascades[i] == NULL) {
 			menu->cascades[i] = cascade;
@@ -353,6 +352,7 @@ void wMenuEntrySetCascade(WMenu * menu, WMenuEntry * entry, WMenu * cascade)
 			break;
 		}
 	}
+
 	if (!done) {
 		entry->cascade = menu->cascade_no;
 
@@ -364,7 +364,6 @@ void wMenuEntrySetCascade(WMenu * menu, WMenuEntry * entry, WMenu * cascade)
 	}
 
 	if (menu->flags.lowered) {
-
 		cascade->flags.lowered = 1;
 		ChangeStackingLevel(cascade->frame->core, WMNormalLevel);
 
