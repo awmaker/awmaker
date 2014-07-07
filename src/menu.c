@@ -909,7 +909,6 @@ static int keyboardMenu(WMenu *menu)
 				case XK_l:
 					ksym = XK_Right;
 					break;
-
 				}
 			}
 
@@ -1356,7 +1355,7 @@ static WMenu *parentMenu(WMenu *menu)
  * until the first buttoned one
  */
 
-static void raiseMenus(WMenu * menu, int submenus)
+static void raiseMenus(WMenu *menu, int submenus)
 {
 	WMenu *submenu;
 	int i;
@@ -1374,11 +1373,12 @@ static void raiseMenus(WMenu * menu, int submenus)
 				raiseMenus(submenu, submenus);
 		}
 	}
+
 	if (submenus < 0 && !menu->flags.buttoned && menu->parent && menu->parent->flags.mapped)
 		raiseMenus(menu->parent, submenus);
 }
 
-WMenu *wMenuUnderPointer(WScreen * screen)
+WMenu *wMenuUnderPointer(WScreen *screen)
 {
 	WObjDescriptor *desc;
 	Window root_ret, win;
@@ -1393,12 +1393,13 @@ WMenu *wMenuUnderPointer(WScreen * screen)
 	if (XFindContext(dpy, win, w_global.context.client_win, (XPointer *) & desc) == XCNOENT)
 		return NULL;
 
-	if (desc->parent_type == WCLASS_MENU)
-		return (WMenu *) desc->parent;
-	return NULL;
+	if (desc->parent_type != WCLASS_MENU)
+		return NULL;
+
+	return (WMenu *) desc->parent;
 }
 
-static void getPointerPosition(WScreen * scr, int *x, int *y)
+static void getPointerPosition(WScreen *scr, int *x, int *y)
 {
 	Window root_ret, win;
 	int wx, wy;
@@ -1407,7 +1408,7 @@ static void getPointerPosition(WScreen * scr, int *x, int *y)
 	XQueryPointer(dpy, scr->root_win, &root_ret, &win, x, y, &wx, &wy, &mask);
 }
 
-static void getScrollAmount(WMenu * menu, int *hamount, int *vamount)
+static void getScrollAmount(WMenu *menu, int *hamount, int *vamount)
 {
 	WScreen *scr = menu->menu->screen_ptr;
 	int menuX1 = menu->frame_x;
@@ -1425,11 +1426,9 @@ static void getScrollAmount(WMenu * menu, int *hamount, int *vamount)
 	if (xroot <= (rect.pos.x + 1) && menuX1 < rect.pos.x) {
 		/* scroll to the right */
 		*hamount = WMIN(MENU_SCROLL_STEP, abs(menuX1));
-
 	} else if (xroot >= (rect.pos.x + rect.size.width - 2) && menuX2 > (rect.pos.x + rect.size.width - 1)) {
 		/* scroll to the left */
 		*hamount = WMIN(MENU_SCROLL_STEP, abs(menuX2 - rect.pos.x - rect.size.width - 1));
-
 		if (*hamount == 0)
 			*hamount = 1;
 
@@ -1439,11 +1438,9 @@ static void getScrollAmount(WMenu * menu, int *hamount, int *vamount)
 	if (yroot <= (rect.pos.y + 1) && menuY1 < rect.pos.y) {
 		/* scroll down */
 		*vamount = WMIN(MENU_SCROLL_STEP, abs(menuY1));
-
 	} else if (yroot >= (rect.pos.y + rect.size.height - 2) && menuY2 > (rect.pos.y + rect.size.height - 1)) {
 		/* scroll up */
 		*vamount = WMIN(MENU_SCROLL_STEP, abs(menuY2 - rect.pos.y - rect.size.height - 2));
-
 		*vamount = -*vamount;
 	}
 }
@@ -1451,11 +1448,10 @@ static void getScrollAmount(WMenu * menu, int *hamount, int *vamount)
 static void dragScrollMenuCallback(void *data)
 {
 	WMenu *menu = (WMenu *) data;
-	WScreen *scr = menu->menu->screen_ptr;
 	WMenu *parent = parentMenu(menu);
+	WScreen *scr = menu->menu->screen_ptr;
 	int hamount, vamount;
-	int x, y;
-	int newSelectedEntry;
+	int x, y, newSelectedEntry;
 
 	getScrollAmount(menu, &hamount, &vamount);
 
@@ -1473,12 +1469,9 @@ static void dragScrollMenuCallback(void *data)
 		}
 
 		/* paranoid check */
-		if (newSelectedEntry >= 0) {
-			/* keep scrolling */
+		menu->timer = NULL;
+		if (newSelectedEntry >= 0) /* keep scrolling */
 			menu->timer = WMAddTimerHandler(MENU_SCROLL_DELAY, dragScrollMenuCallback, menu);
-		} else {
-			menu->timer = NULL;
-		}
 	} else {
 		/* don't need to scroll anymore */
 		menu->timer = NULL;
@@ -1511,7 +1504,7 @@ static void scrollMenuCallback(void *data)
 
 #define MENU_SCROLL_BORDER   5
 
-static int isPointNearBoder(WMenu * menu, int x, int y)
+static int isPointNearBoder(WMenu *menu, int x, int y)
 {
 	int menuX1 = menu->frame_x;
 	int menuY1 = menu->frame_y;
@@ -1538,7 +1531,7 @@ typedef struct _delay {
 	int ox, oy;
 } _delay;
 
-static void leaving(_delay * dl)
+static void leaving(_delay *dl)
 {
 	wMenuMove(dl->menu, dl->ox, dl->oy, True);
 	dl->menu->jump_back = NULL;
