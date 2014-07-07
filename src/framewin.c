@@ -1269,12 +1269,11 @@ int wFrameWindowChangeTitle(WFrameWindow *fwin, const char *new_title)
 		wfree(fwin->title);
 
 	fwin->title = wstrdup(new_title);
-
 	if (fwin->titlebar) {
 		XClearWindow(dpy, fwin->titlebar->window);
-
 		wFrameWindowPaint(fwin);
 	}
+
 	checkTitleSize(fwin);
 
 	return 1;
@@ -1296,14 +1295,16 @@ static void handleExpose(WObjDescriptor * desc, XEvent * event)
 
 	if (fwin->titlebar && fwin->titlebar->window == event->xexpose.window)
 		fwin->flags.repaint_only_titlebar = 1;
+
 	if (fwin->resizebar && fwin->resizebar->window == event->xexpose.window)
 		fwin->flags.repaint_only_resizebar = 1;
+
 	wFrameWindowPaint(fwin);
 	fwin->flags.repaint_only_titlebar = 0;
 	fwin->flags.repaint_only_resizebar = 0;
 }
 
-static void checkTitleSize(WFrameWindow * fwin)
+static void checkTitleSize(WFrameWindow *fwin)
 {
 	int width;
 
@@ -1315,17 +1316,16 @@ static void checkTitleSize(WFrameWindow * fwin)
 	if (!fwin->titlebar) {
 		fwin->flags.incomplete_title = 1;
 		return;
-	} else {
-		width = fwin->titlebar->width - 6 - 6;
 	}
+
+	width = fwin->titlebar->width - 6 - 6;
 
 	if (!wPreferences.new_style == TS_NEW) {
 		if (fwin->left_button && !fwin->flags.hide_left_button && !fwin->flags.lbutton_dont_fit)
 			width -= fwin->left_button->width + 3;
 
 #ifdef XKB_BUTTON_HINT
-		if (fwin->language_button && !fwin->flags.hide_language_button
-		    && !fwin->flags.languagebutton_dont_fit)
+		if (fwin->language_button && !fwin->flags.hide_language_button && !fwin->flags.languagebutton_dont_fit)
 			width -= fwin->language_button->width + 3;
 #endif
 
@@ -1374,9 +1374,9 @@ static void paintButton(WCoreWindow * button, WTexture * texture, unsigned long 
 			XSetForeground(dpy, copy_gc, scr->black_pixel);
 			XDrawRectangle(dpy, button->window, copy_gc, 0, 0, button->width, button->height);
 		} else {
-			XFillRectangle(dpy, button->window, copy_gc, 0, 0, button->width-3, button->height-3);
+			XFillRectangle(dpy, button->window, copy_gc, 0, 0, button->width - 3, button->height - 3);
 			XSetForeground(dpy, copy_gc, scr->black_pixel);
-			XDrawRectangle(dpy, button->window, copy_gc, 0, 0, button->width-3, button->height-3);
+			XDrawRectangle(dpy, button->window, copy_gc, 0, 0, button->width - 3, button->height - 3);
 		}
 	} else {
 		XClearWindow(dpy, button->window);
@@ -1437,7 +1437,7 @@ static void paintButton(WCoreWindow * button, WTexture * texture, unsigned long 
 	}
 }
 
-static void handleButtonExpose(WObjDescriptor * desc, XEvent * event)
+static void handleButtonExpose(WObjDescriptor *desc, XEvent *event)
 {
 	WFrameWindow *fwin = (WFrameWindow *) desc->parent;
 	WCoreWindow *button = (WCoreWindow *) desc->self;
@@ -1484,7 +1484,7 @@ static void resizebarMouseDown(WObjDescriptor * desc, XEvent * event)
 		(*fwin->on_mousedown_resizebar) (resizebar, fwin->child, event);
 }
 
-static void buttonMouseDown(WObjDescriptor * desc, XEvent * event)
+static void buttonMouseDown(WObjDescriptor *desc, XEvent *event)
 {
 	WFrameWindow *fwin = desc->parent;
 	WCoreWindow *button = desc->self;
