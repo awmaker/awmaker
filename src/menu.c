@@ -1073,6 +1073,9 @@ static int keyboardMenu(WMenu *menu)
 
 void wMenuMapAt(WMenu *menu, int x, int y, int keyboard)
 {
+	WScreen *scr;
+	WMRect rect;
+
 	if (!menu->flags.realized) {
 		menu->flags.realized = 1;
 		wMenuRealize(menu);
@@ -1080,8 +1083,8 @@ void wMenuMapAt(WMenu *menu, int x, int y, int keyboard)
 
 	if (!menu->flags.mapped) {
 		if (wPreferences.wrap_menus) {
-			WScreen *scr = menu->frame->screen_ptr;
-			WMRect rect = wGetRectForHead(scr, wGetHeadForPointerLocation(scr));
+			scr = menu->frame->screen_ptr;
+			rect = wGetRectForHead(scr, wGetHeadForPointerLocation(scr));
 
 			if (x < rect.pos.x)
 				x = rect.pos.x;
@@ -1528,7 +1531,6 @@ static int isPointNearBoder(WMenu *menu, int x, int y)
 	WMRect rect = wGetRectForHead(menu->frame->screen_ptr, head);
 
 	/* XXX: handle screen joins properly !! */
-
 	if (x >= menuX1 && x <= menuX2 &&
 	    (y < rect.pos.y + MENU_SCROLL_BORDER || y >= rect.pos.y + rect.size.height - MENU_SCROLL_BORDER))
 		flag = 1;
@@ -1549,22 +1551,21 @@ static void leaving(_delay *dl)
 
 void wMenuScroll(WMenu *menu)
 {
-	WMenu *smenu;
-	WMenu *omenu = parentMenu(menu);
+	WMenu *smenu, *omenu = parentMenu(menu);
 	WScreen *scr = menu->frame->screen_ptr;
-	int done = 0;
-	int jump_back = 0;
+	int done = 0, jump_back = 0;
 	int old_frame_x = omenu->frame_x;
 	int old_frame_y = omenu->frame_y;
+	int x, y, on_border, on_x_edge, on_y_edge, on_title;
 	XEvent ev;
+	WMRect rect;
+	_delay *delayer;
 
 	if (omenu->jump_back)
 		WMDeleteTimerWithClientData(omenu->jump_back);
 
-	if (( /*omenu->flags.buttoned && */ !wPreferences.wrap_menus)
-	    || omenu->flags.app_menu) {
+	if ((!wPreferences.wrap_menus) || omenu->flags.app_menu)
 		jump_back = 1;
-	}
 
 	if (!wPreferences.wrap_menus)
 		raiseMenus(omenu, True);
@@ -1575,9 +1576,6 @@ void wMenuScroll(WMenu *menu)
 		scrollMenuCallback(menu);
 
 	while (!done) {
-		int x, y, on_border, on_x_edge, on_y_edge, on_title;
-		WMRect rect;
-
 		WMNextEvent(dpy, &ev);
 		switch (ev.type) {
 		case EnterNotify:
@@ -1591,7 +1589,6 @@ void wMenuScroll(WMenu *menu)
 			on_border = isPointNearBoder(menu, x, y);
 
 			smenu = wMenuUnderPointer(scr);
-
 			if ((smenu == NULL && !on_border) || (smenu && parentMenu(smenu) != omenu)) {
 				done = 1;
 				break;
@@ -1647,7 +1644,6 @@ void wMenuScroll(WMenu *menu)
 	}
 
 	if (jump_back) {
-		_delay *delayer;
 		if (!omenu->jump_back) {
 			delayer = wmalloc(sizeof(_delay));
 			delayer->menu = omenu;
@@ -1655,13 +1651,15 @@ void wMenuScroll(WMenu *menu)
 			delayer->oy = old_frame_y;
 			omenu->jump_back = delayer;
 			scr->flags.jump_back_pending = 1;
-		} else
+		} else {
 			delayer = omenu->jump_back;
+		}
+
 		WMAddTimerHandler(MENU_JUMP_BACK_DELAY, (WMCallback *) leaving, delayer);
 	}
 }
 
-static void menuExpose(WObjDescriptor * desc, XEvent * event)
+static void menuExpose(WObjDescriptor *desc, XEvent *event)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) event;
@@ -1682,6 +1680,7 @@ static void delaySelection(void *data)
 		entry_no = getEntryAt(menu, x, y);
 		selectEntry(menu, entry_no);
 	}
+
 	if (d->delayed_select)
 		*(d->delayed_select) = 0;
 }
@@ -1849,9 +1848,7 @@ static void menuMouseDown(WObjDescriptor * desc, XEvent * event)
 					d_data.magic = NULL;
 				}
 			} else {
-
 				/* hysteresis for item selection */
-
 				/* check if the motion was to the side, indicating that
 				 * the user may want to cross to a submenu */
 				if (!delayed_select && menu) {
@@ -1977,11 +1974,11 @@ static void menuMouseDown(WObjDescriptor * desc, XEvent * event)
 			}
 #endif
 			/* unmap the menu, it's parents and call the callback */
-			if (!menu->flags.buttoned && (!menu->flags.app_menu || menu->parent != NULL)) {
+			if (!menu->flags.buttoned && (!menu->flags.app_menu || menu->parent != NULL))
 				closeCascade(menu);
-			} else {
+			else
 				selectEntry(menu, -1);
-			}
+
 			(*entry->callback) (menu, entry);
 
 			/* If the user double clicks an entry, the entry will
