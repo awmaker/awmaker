@@ -375,20 +375,21 @@ void wMenuEntrySetCascade(WMenu *menu, WMenuEntry *entry, WMenu *cascade)
 		wMenuRealize(menu);
 }
 
-void wMenuEntryRemoveCascade(WMenu * menu, WMenuEntry * entry)
+void wMenuEntryRemoveCascade(WMenu *menu, WMenuEntry *entry)
 {
 	assert(menu->flags.brother == 0);
 
 	/* destroy cascade menu */
-	if (entry->cascade >= 0 && menu->cascades && menu->cascades[entry->cascade] != NULL) {
+	if (entry->cascade < 0 || !menu->cascades ||
+	    menu->cascades[entry->cascade] == NULL)
+		return;
 
-		wMenuDestroy(menu->cascades[entry->cascade], True);
+	wMenuDestroy(menu->cascades[entry->cascade], True);
 
-		menu->cascades[entry->cascade] = NULL;
-		menu->brother->cascades[entry->cascade] = NULL;
+	menu->cascades[entry->cascade] = NULL;
+	menu->brother->cascades[entry->cascade] = NULL;
 
-		entry->cascade = -1;
-	}
+	entry->cascade = -1;
 }
 
 void wMenuRemoveItem(WMenu * menu, int index)
