@@ -792,19 +792,19 @@ static void paintEntry(WMenu *menu, int index, int selected)
 	}
 }
 
-static void move_menus(WMenu * menu, int x, int y)
+static void move_menus(WMenu *menu, int x, int y)
 {
 	while (menu->parent) {
 		menu = menu->parent;
 		x -= MENUW(menu);
-		if (!wPreferences.align_menus && menu->selected_entry >= 0) {
+		if (!wPreferences.align_menus && menu->selected_entry >= 0)
 			y -= menu->selected_entry * menu->entry_height;
-		}
 	}
+
 	wMenuMove(menu, x, y, True);
 }
 
-static void makeVisible(WMenu * menu)
+static void makeVisible(WMenu *menu)
 {
 	WScreen *scr = menu->frame->screen_ptr;
 	int x1, y1, x2, y2, new_x, new_y;
@@ -821,23 +821,21 @@ static void makeVisible(WMenu * menu)
 	new_x = x1;
 	new_y = y1;
 
-	if (x1 < rect.pos.x) {
+	if (x1 < rect.pos.x)
 		new_x = rect.pos.x;
-	} else if (x2 >= rect.pos.x + rect.size.width) {
+	else if (x2 >= rect.pos.x + rect.size.width)
 		new_x = rect.pos.x + rect.size.width - MENUW(menu) - 1;
-	}
 
-	if (y1 < rect.pos.y) {
+	if (y1 < rect.pos.y)
 		new_y = rect.pos.y;
-	} else if (y2 >= rect.pos.y + rect.size.height) {
+	else if (y2 >= rect.pos.y + rect.size.height)
 		new_y = rect.pos.y + rect.size.height - menu->entry_height - 1;
-	}
 
 	new_y = new_y - menu->frame->top_width - menu->selected_entry * menu->entry_height;
 	move_menus(menu, new_x, new_y);
 }
 
-static int check_key(WMenu * menu, XKeyEvent * event)
+static int check_key(WMenu *menu, XKeyEvent *event)
 {
 	int i, ch, s;
 	char buffer[32];
@@ -850,16 +848,16 @@ static int check_key(WMenu * menu, XKeyEvent * event)
 	s = (menu->selected_entry >= 0 ? menu->selected_entry + 1 : 0);
 
  again:
-	for (i = s; i < menu->entry_no; i++) {
-		if (ch == toupper(menu->entries[i]->text[0])) {
+	for (i = s; i < menu->entry_no; i++)
+		if (ch == toupper(menu->entries[i]->text[0]))
 			return i;
-		}
-	}
+
 	/* no match. Retry from start, if previous started from a selected entry */
 	if (s != 0) {
 		s = 0;
 		goto again;
 	}
+
 	return -1;
 }
 
