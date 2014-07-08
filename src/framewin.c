@@ -163,6 +163,16 @@ static void destroy_framewin_buttons(WFrameWindow *fwin)
 		destroy_framewin_button(fwin, state);
 }
 
+static void set_framewin_descriptors(WCoreWindow *wcore, void *handle_expose,
+				     void *parent, WClassType parent_type,
+				     void *handle_mousedown)
+{
+	wcore->descriptor.handle_expose = handle_expose;
+	wcore->descriptor.parent = parent;
+	wcore->descriptor.parent_type = parent_type;
+	wcore->descriptor.handle_mousedown = handle_mousedown;
+}
+
 void wFrameWindowUpdateBorders(WFrameWindow * fwin, int flags)
 {
 	int theight, bsize, width, height;
@@ -444,43 +454,22 @@ void wFrameWindowUpdateBorders(WFrameWindow * fwin, int flags)
 		XSetWindowBorderWidth(dpy, fwin->core->window, 0);
 
 	/* setup object descriptors */
-	if (fwin->titlebar) {
-		fwin->titlebar->descriptor.handle_expose = handleExpose;
-		fwin->titlebar->descriptor.parent = fwin;
-		fwin->titlebar->descriptor.parent_type = WCLASS_FRAME;
-		fwin->titlebar->descriptor.handle_mousedown = titlebarMouseDown;
-	}
+	if (fwin->titlebar)
+		set_framewin_descriptors(fwin->titlebar, handleExpose, fwin, WCLASS_FRAME, titlebarMouseDown);
 
-	if (fwin->resizebar) {
-		fwin->resizebar->descriptor.handle_expose = handleExpose;
-		fwin->resizebar->descriptor.parent = fwin;
-		fwin->resizebar->descriptor.parent_type = WCLASS_FRAME;
-		fwin->resizebar->descriptor.handle_mousedown = resizebarMouseDown;
-	}
+	if (fwin->resizebar)
+		set_framewin_descriptors(fwin->resizebar, handleExpose, fwin, WCLASS_FRAME, resizebarMouseDown);
 
-	if (fwin->left_button) {
-		fwin->left_button->descriptor.handle_expose = handleButtonExpose;
-		fwin->left_button->descriptor.parent = fwin;
-		fwin->left_button->descriptor.parent_type = WCLASS_FRAME;
-		fwin->left_button->descriptor.handle_mousedown = buttonMouseDown;
-	}
+	if (fwin->left_button)
+		set_framewin_descriptors(fwin->left_button, handleButtonExpose, fwin, WCLASS_FRAME, buttonMouseDown);
+
+	if (fwin->right_button)
+		set_framewin_descriptors(fwin->right_button, handleButtonExpose, fwin, WCLASS_FRAME, buttonMouseDown);
 
 #ifdef XKB_BUTTON_HINT
-	if (fwin->language_button) {
-		fwin->language_button->descriptor.handle_expose = handleButtonExpose;
-		fwin->language_button->descriptor.parent = fwin;
-		fwin->language_button->descriptor.parent_type = WCLASS_FRAME;
-		fwin->language_button->descriptor.handle_mousedown = buttonMouseDown;
-	}
+	if (fwin->language_button)
+		set_framewin_descriptors(fwin->language_button, handleButtonExpose, fwin, WCLASS_FRAME, buttonMouseDown);
 #endif
-
-	if (fwin->right_button) {
-		fwin->right_button->descriptor.parent = fwin;
-		fwin->right_button->descriptor.parent_type = WCLASS_FRAME;
-		fwin->right_button->descriptor.handle_expose = handleButtonExpose;
-		fwin->right_button->descriptor.handle_mousedown = buttonMouseDown;
-	}
-
 	checkTitleSize(fwin);
 
 	allocFrameBorderPixel(fwin->colormap, WMGetColorRGBDescription(scr->frame_border_color), &fwin->border_pixel);
