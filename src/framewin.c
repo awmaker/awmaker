@@ -820,12 +820,11 @@ renderResizebarTexture(WScreen * scr, WTexture * texture, int width, int height,
 	RReleaseImage(img);
 }
 
-static void updateTexture(WFrameWindow * fwin)
+static void updateTexture(WFrameWindow *fwin)
 {
-	int i;
 	unsigned long pixel;
+	int i = fwin->flags.state;
 
-	i = fwin->flags.state;
 	if (fwin->titlebar) {
 		if (fwin->title_texture[i]->any.type != WTEX_SOLID) {
 			XSetWindowBackgroundPixmap(dpy, fwin->titlebar->window, fwin->title_back[i]);
@@ -833,13 +832,11 @@ static void updateTexture(WFrameWindow * fwin)
 				if (fwin->left_button && fwin->lbutton_back[i])
 					XSetWindowBackgroundPixmap(dpy, fwin->left_button->window,
 								   fwin->lbutton_back[i]);
-
 #ifdef XKB_BUTTON_HINT
 				if (fwin->language_button && fwin->languagebutton_back[i])
 					XSetWindowBackgroundPixmap(dpy, fwin->language_button->window,
 								   fwin->languagebutton_back[i]);
 #endif
-
 				if (fwin->right_button && fwin->rbutton_back[i])
 					XSetWindowBackgroundPixmap(dpy, fwin->right_button->window,
 								   fwin->rbutton_back[i]);
@@ -877,7 +874,7 @@ static void updateTexture(WFrameWindow * fwin)
 	}
 }
 
-static void remakeTexture(WFrameWindow * fwin, int state)
+static void remakeTexture_titlebar(WFrameWindow *fwin, int state)
 {
 	Pixmap pmap, lpmap, rpmap;
 #ifdef XKB_BUTTON_HINT
@@ -925,6 +922,12 @@ static void remakeTexture(WFrameWindow * fwin, int state)
 			}
 		}
 	}
+}
+
+static void remakeTexture_resizebar(WFrameWindow *fwin, int state)
+{
+	Pixmap pmap;
+
 	if (fwin->resizebar_texture && fwin->resizebar_texture[0]
 	    && fwin->resizebar && state == 0) {
 
@@ -968,17 +971,21 @@ void wFrameWindowPaint(WFrameWindow * fwin)
 		fwin->flags.need_texture_change = 0;
 
 		if (fwin->flags.single_texture) {
-			remakeTexture(fwin, 0);
+			remakeTexture_titlebar(fwin, 0);
+			remakeTexture_resizebar(fwin, 0);
 			updateTexture(fwin);
 		} else {
 			/* first render the texture for the current state... */
-			remakeTexture(fwin, state);
+			remakeTexture_titlebar(fwin, state);
+			remakeTexture_resizebar(fwin, state);
 			/* ... and paint it */
 			updateTexture(fwin);
 
 			for (i = 0; i < 3; i++) {
-				if (i != state)
-					remakeTexture(fwin, i);
+				if (i != state) {
+					remakeTexture_titlebar(fwin, i);
+					remakeTexture_resizebar(fwin, i);
+				}
 			}
 		}
 	}
