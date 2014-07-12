@@ -820,7 +820,7 @@ renderResizebarTexture(WScreen * scr, WTexture * texture, int width, int height,
 	RReleaseImage(img);
 }
 
-static void updateTexture(WFrameWindow *fwin)
+static void updateTexture_titlebar(WFrameWindow *fwin)
 {
 	unsigned long pixel;
 	int i = fwin->flags.state;
@@ -872,6 +872,10 @@ static void updateTexture(WFrameWindow *fwin)
 			handleButtonExpose(&fwin->right_button->descriptor, NULL);
 		}
 	}
+}
+
+static void updateTexture_resizebar(WFrameWindow *fwin)
+{
 }
 
 static void remakeTexture_titlebar(WFrameWindow *fwin, int state)
@@ -973,13 +977,15 @@ void wFrameWindowPaint(WFrameWindow * fwin)
 		if (fwin->flags.single_texture) {
 			remakeTexture_titlebar(fwin, 0);
 			remakeTexture_resizebar(fwin, 0);
-			updateTexture(fwin);
+			updateTexture_titlebar(fwin);
+			updateTexture_resizebar(fwin);
 		} else {
 			/* first render the texture for the current state... */
 			remakeTexture_titlebar(fwin, state);
 			remakeTexture_resizebar(fwin, state);
 			/* ... and paint it */
-			updateTexture(fwin);
+			updateTexture_titlebar(fwin);
+			updateTexture_resizebar(fwin);
 
 			for (i = 0; i < 3; i++) {
 				if (i != state) {
@@ -992,8 +998,8 @@ void wFrameWindowPaint(WFrameWindow * fwin)
 
 	if (fwin->flags.need_texture_change) {
 		fwin->flags.need_texture_change = 0;
-
-		updateTexture(fwin);
+		updateTexture_titlebar(fwin);
+		updateTexture_resizebar(fwin);
 	}
 
 	if (fwin->titlebar && !fwin->flags.repaint_only_resizebar
