@@ -680,15 +680,15 @@ void wFrameWindowShowButton(WFrameWindow * fwin, int flags)
 	}
 }
 
-static void
+static void renderTexture(WScreen *scr, WTexture *texture,
+			 int width, int height,
+			 int bwidth, int bheight,
+			 Pixmap *title,
+			 int left, Pixmap *lbutton,
 #ifdef XKB_BUTTON_HINT
-renderTexture(WScreen * scr, WTexture * texture, int width, int height,
-	      int bwidth, int bheight, int left, int language, int right,
-	      Pixmap * title, Pixmap * lbutton, Pixmap * languagebutton, Pixmap * rbutton)
-#else
-renderTexture(WScreen * scr, WTexture * texture, int width, int height,
-	      int bwidth, int bheight, int left, int right, Pixmap * title, Pixmap * lbutton, Pixmap * rbutton)
+			 int language, Pixmap *languagebutton,
 #endif
+			 int right, Pixmap *rbutton)
 {
 	RImage *img;
 	RImage *limg, *rimg, *mimg;
@@ -914,17 +914,15 @@ static void remakeTexture(WFrameWindow * fwin, int state)
 
 			width = fwin->core->width + 1;
 
+			renderTexture(fwin->screen_ptr, fwin->title_texture[state],
+				      width, fwin->titlebar->height,
+				      fwin->titlebar->height, fwin->titlebar->height,
+				      &pmap,
+				      left, &lpmap,
 #ifdef XKB_BUTTON_HINT
-			renderTexture(fwin->screen_ptr, fwin->title_texture[state],
-				      width, fwin->titlebar->height,
-				      fwin->titlebar->height, fwin->titlebar->height,
-				      left, language, right, &pmap, &lpmap, &tpmap, &rpmap);
-#else
-			renderTexture(fwin->screen_ptr, fwin->title_texture[state],
-				      width, fwin->titlebar->height,
-				      fwin->titlebar->height, fwin->titlebar->height,
-				      left, right, &pmap, &lpmap, &rpmap);
+				      language, &tpmap,
 #endif
+				      right, &rpmap);
 
 			fwin->title_back[state] = pmap;
 			if (wPreferences.new_style == TS_NEW) {
