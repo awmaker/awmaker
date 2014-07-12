@@ -359,6 +359,32 @@ static void titlebar_create(WFrameWindow *fwin, int theight, int bsize, int flag
 	}
 }
 
+static void titlebar_unmap(WFrameWindow *fwin)
+{
+	wframewindow_unmap_wcorewindow(fwin->left_button);
+#ifdef XKB_BUTTON_HINT
+	wframewindow_unmap_wcorewindow(fwin->language_button);
+#endif
+	wframewindow_unmap_wcorewindow(fwin->right_button);
+	wframewindow_unmap_wcorewindow(fwin->titlebar);
+
+	fwin->top_width = 0;
+	fwin->flags.titlebar = 0;
+}
+
+static void titlebar_destroy(WFrameWindow *fwin)
+{
+	/* we had a titlebar, but now we don't need it anymore */
+	destroy_framewin_buttons(fwin);
+
+	wframewindow_destroy_wcorewindow(fwin->left_button);
+#ifdef XKB_BUTTON_HINT
+	wframewindow_destroy_wcorewindow(fwin->language_button);
+#endif
+	wframewindow_destroy_wcorewindow(fwin->right_button);
+	wframewindow_destroy_wcorewindow(fwin->titlebar);
+}
+
 static void resizebar_create(WFrameWindow *fwin, int width)
 {
 	fwin->resizebar = wcore_create(width, RESIZEBAR_HEIGHT);
@@ -488,21 +514,8 @@ void wFrameWindowUpdateBorders(WFrameWindow * fwin, int flags)
 
 			updateTitlebar(fwin);
 		} else {
-			/* we had a titlebar, but now we don't need it anymore */
-			destroy_framewin_buttons(fwin);
-
-			wframewindow_unmap_wcorewindow(fwin->left_button);
-			wframewindow_destroy_wcorewindow(fwin->left_button);
-#ifdef XKB_BUTTON_HINT
-			wframewindow_unmap_wcorewindow(fwin->language_button);
-			wframewindow_destroy_wcorewindow(fwin->language_button);
-#endif
-			wframewindow_unmap_wcorewindow(fwin->right_button);
-			wframewindow_destroy_wcorewindow(fwin->right_button);
-			wframewindow_unmap_wcorewindow(fwin->titlebar);
-			wframewindow_destroy_wcorewindow(fwin->titlebar);
-
-			fwin->top_width = 0;
+			titlebar_unmap(fwin);
+			titlebar_destroy(fwin);
 		}
 	} else {
 		titlebar_create(fwin, theight, bsize, flags);
