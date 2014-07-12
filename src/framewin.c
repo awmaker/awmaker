@@ -589,12 +589,7 @@ void framewindow_unmap(WFrameWindow *fwin)
 
 void wFrameWindowDestroy(WFrameWindow *fwin)
 {
-	wframewindow_destroy_wcorewindow(fwin->left_button);
-#ifdef XKB_BUTTON_HINT
-	wframewindow_destroy_wcorewindow(fwin->language_button);
-#endif
-	wframewindow_destroy_wcorewindow(fwin->right_button);
-	wframewindow_destroy_wcorewindow(fwin->titlebar);
+	titlebar_destroy(fwin);
 	resizebar_destroy(fwin);
 
 	RemoveFromStackList(fwin->core);
