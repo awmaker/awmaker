@@ -1008,38 +1008,11 @@ void wFrameWindowPaint(WFrameWindow * fwin)
 			   fwin->titlebar->height, (WTexSolid *) fwin->title_texture[state], WREL_RAISED);
 	}
 
-	if (fwin->resizebar && !fwin->flags.repaint_only_titlebar
-	    && fwin->resizebar_texture[0]->any.type == WTEX_SOLID) {
-		Window win;
-		int w, h;
-		int cw;
-		GC light_gc, dim_gc;
-		WTexSolid *texture = (WTexSolid *) fwin->resizebar_texture[0];
-
-		w = fwin->resizebar->width;
-		h = fwin->resizebar->height;
-		cw = fwin->resizebar_corner_width;
-		light_gc = texture->light_gc;
-		dim_gc = texture->dim_gc;
-		win = fwin->resizebar->window;
-
-		XDrawLine(dpy, win, dim_gc, 0, 0, w, 0);
-		XDrawLine(dpy, win, light_gc, 0, 1, w, 1);
-
-		XDrawLine(dpy, win, dim_gc, cw, 2, cw, h);
-		XDrawLine(dpy, win, light_gc, cw + 1, 2, cw + 1, h);
-
-		XDrawLine(dpy, win, dim_gc, w - cw - 2, 2, w - cw - 2, h);
-		XDrawLine(dpy, win, light_gc, w - cw - 1, 2, w - cw - 1, h);
-
-#ifdef SHADOW_RESIZEBAR
-		XDrawLine(dpy, win, light_gc, 0, 1, 0, h - 1);
-		XDrawLine(dpy, win, dim_gc, w - 1, 2, w - 1, h - 1);
-		XDrawLine(dpy, win, dim_gc, 1, h - 1, cw, h - 1);
-		XDrawLine(dpy, win, dim_gc, cw + 2, h - 1, w - cw - 2, h - 1);
-		XDrawLine(dpy, win, dim_gc, w - cw, h - 1, w - 1, h - 1);
-#endif				/* SHADOW_RESIZEBAR */
-	}
+	if (fwin->resizebar && !fwin->flags.repaint_only_titlebar &&
+	    fwin->resizebar_texture[0]->any.type == WTEX_SOLID)
+		wDrawBevel_resizebar(fwin->resizebar->window, fwin->resizebar->width,
+				     fwin->resizebar->height, (WTexSolid *) fwin->resizebar_texture[0],
+				     fwin->resizebar_corner_width);
 
 	if (fwin->titlebar && !fwin->flags.repaint_only_resizebar) {
 		int x, y, w, h;

@@ -590,3 +590,23 @@ void wDrawBevel(Drawable d, unsigned width, unsigned height, WTexSolid * texture
 		break;
 	}
 }
+
+void wDrawBevel_resizebar(Drawable d, unsigned width, unsigned height, WTexSolid *texture, int corner_width)
+{
+	XDrawLine(dpy, d, texture->dim_gc, 0, 0, width, 0);
+	XDrawLine(dpy, d, texture->light_gc, 0, 1, width, 1);
+
+	XDrawLine(dpy, d, texture->dim_gc, corner_width, 2, corner_width, height);
+	XDrawLine(dpy, d, texture->light_gc, corner_width + 1, 2, corner_width + 1, height);
+
+	XDrawLine(dpy, d, texture->dim_gc, width - corner_width - 2, 2, width - corner_width - 2, height);
+	XDrawLine(dpy, d, texture->light_gc, width - corner_width - 1, 2, width - corner_width - 1, height);
+
+#ifdef SHADOW_RESIZEBAR
+	XDrawLine(dpy, d, texture->light_gc, 0, 1, 0, height - 1);
+	XDrawLine(dpy, d, texture->dim_gc, width - 1, 2, width - 1, height - 1);
+	XDrawLine(dpy, d, texture->dim_gc, 1, height - 1, corner_width, height - 1);
+	XDrawLine(dpy, d, texture->dim_gc, corner_width + 2, height - 1, width - corner_width - 2, height - 1);
+	XDrawLine(dpy, d, texture->dim_gc, width - corner_width, height - 1, width - 1, height - 1);
+#endif
+}

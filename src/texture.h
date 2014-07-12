@@ -171,10 +171,9 @@ void wTextureRender(WScreen*, WTexture*, Pixmap*, int, int, int);
 struct RImage *wTextureRenderImage(WTexture*, int, int, int);
 
 
-void wTexturePaintTitlebar(struct WWindow *wwin, WTexture *texture, Pixmap *tdata,
-                           int repaint);
+void wTexturePaintTitlebar(struct WWindow *wwin, WTexture *texture, Pixmap *tdata, int repaint);
 
-void wDrawBevel(Drawable d, unsigned width, unsigned height,
-                WTexSolid *texture, int relief);
+void wDrawBevel(Drawable d, unsigned width, unsigned height, WTexSolid *texture, int relief);
+void wDrawBevel_resizebar(Drawable d, unsigned width, unsigned height, WTexSolid *texture, int corner_width);
 
 #endif
