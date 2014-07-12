@@ -876,6 +876,15 @@ static void updateTexture_titlebar(WFrameWindow *fwin)
 
 static void updateTexture_resizebar(WFrameWindow *fwin)
 {
+	if (fwin->resizebar_texture && fwin->resizebar_texture[0] && fwin->resizebar) {
+		if (fwin->resizebar_texture[0]->any.type != WTEX_SOLID)
+			XSetWindowBackgroundPixmap(dpy, fwin->resizebar->window, fwin->resizebar_back[0]);
+		else
+			XSetWindowBackground(dpy, fwin->resizebar->window,
+					     fwin->resizebar_texture[0]->solid.normal.pixel);
+
+		XClearWindow(dpy, fwin->resizebar->window);
+	}
 }
 
 static void remakeTexture_titlebar(WFrameWindow *fwin, int state)
@@ -934,9 +943,7 @@ static void remakeTexture_resizebar(WFrameWindow *fwin, int state)
 
 	if (fwin->resizebar_texture && fwin->resizebar_texture[0]
 	    && fwin->resizebar && state == 0) {
-
 		destroy_pixmap(fwin->resizebar_back[0]);
-
 		if (fwin->resizebar_texture[0]->any.type != WTEX_SOLID) {
 
 			renderResizebarTexture(fwin->screen_ptr,
@@ -946,15 +953,6 @@ static void remakeTexture_resizebar(WFrameWindow *fwin, int state)
 
 			fwin->resizebar_back[0] = pmap;
 		}
-
-		/* this part should be in updateTexture() */
-		if (fwin->resizebar_texture[0]->any.type != WTEX_SOLID)
-			XSetWindowBackgroundPixmap(dpy, fwin->resizebar->window, fwin->resizebar_back[0]);
-		else
-			XSetWindowBackground(dpy, fwin->resizebar->window,
-					     fwin->resizebar_texture[0]->solid.normal.pixel);
-
-		XClearWindow(dpy, fwin->resizebar->window);
 	}
 }
 
@@ -991,6 +989,8 @@ void wFrameWindowPaint(WFrameWindow * fwin)
 				if (i != state) {
 					remakeTexture_titlebar(fwin, i);
 					remakeTexture_resizebar(fwin, i);
+					if (i == 0)
+						updateTexture_resizebar(fwin);
 				}
 			}
 		}
