@@ -357,6 +357,21 @@ static void titlebar_create(WFrameWindow *fwin, int theight, int bsize, int flag
 
 		fwin->flags.need_texture_remake = 1;
 	}
+
+	/* setup object descriptors */
+	if (fwin->titlebar)
+		set_framewin_descriptors(fwin->titlebar, handleExpose, fwin, WCLASS_FRAME, titlebarMouseDown);
+
+	if (fwin->left_button)
+		set_framewin_descriptors(fwin->left_button, handleButtonExpose, fwin, WCLASS_FRAME, buttonMouseDown);
+
+	if (fwin->right_button)
+		set_framewin_descriptors(fwin->right_button, handleButtonExpose, fwin, WCLASS_FRAME, buttonMouseDown);
+
+#ifdef XKB_BUTTON_HINT
+	if (fwin->language_button)
+		set_framewin_descriptors(fwin->language_button, handleButtonExpose, fwin, WCLASS_FRAME, buttonMouseDown);
+#endif
 }
 
 static void titlebar_unmap(WFrameWindow *fwin)
@@ -541,20 +556,6 @@ void wFrameWindowUpdateBorders(WFrameWindow * fwin, int flags)
 	else
 		XSetWindowBorderWidth(dpy, fwin->core->window, 0);
 
-	/* setup object descriptors */
-	if (fwin->titlebar)
-		set_framewin_descriptors(fwin->titlebar, handleExpose, fwin, WCLASS_FRAME, titlebarMouseDown);
-
-	if (fwin->left_button)
-		set_framewin_descriptors(fwin->left_button, handleButtonExpose, fwin, WCLASS_FRAME, buttonMouseDown);
-
-	if (fwin->right_button)
-		set_framewin_descriptors(fwin->right_button, handleButtonExpose, fwin, WCLASS_FRAME, buttonMouseDown);
-
-#ifdef XKB_BUTTON_HINT
-	if (fwin->language_button)
-		set_framewin_descriptors(fwin->language_button, handleButtonExpose, fwin, WCLASS_FRAME, buttonMouseDown);
-#endif
 	checkTitleSize(fwin);
 
 	allocFrameBorderPixel(fwin->colormap, WMGetColorRGBDescription(scr->frame_border_color), &fwin->border_pixel);
