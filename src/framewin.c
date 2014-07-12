@@ -690,12 +690,11 @@ static void renderTexture(WScreen *scr, WTexture *texture,
 #endif
 			 int right, Pixmap *rbutton)
 {
-	RImage *img;
-	RImage *limg, *rimg, *mimg;
+	RImage *img, *limg = NULL, *rimg = NULL, *mimg;
 #ifdef XKB_BUTTON_HINT
-	RImage *timg;
+	RImage *timg = NULL;
 #endif
-	int x, w;
+	int x = 0, w;
 
 	*title = None;
 	*lbutton = None;
@@ -713,23 +712,17 @@ static void renderTexture(WScreen *scr, WTexture *texture,
 	if (wPreferences.new_style == TS_NEW) {
 		if (left)
 			limg = RGetSubImage(img, 0, 0, bwidth, bheight);
-		else
-			limg = NULL;
 
-		x = 0;
 		w = img->width;
 
 #ifdef XKB_BUTTON_HINT
 		if (language)
 			timg = RGetSubImage(img, bwidth * left, 0, bwidth, bheight);
-		else
-			timg = NULL;
 #endif
-
 		if (limg) {
 			RBevelImage(limg, RBEV_RAISED2);
 			if (!RConvertImage(scr->rcontext, limg, lbutton))
-				wwarning(_("error rendering image:%s"), RMessageForError(RErrorCode));
+				wwarning(_("error rendering image: %s"), RMessageForError(RErrorCode));
 
 			x += limg->width;
 			w -= limg->width;
@@ -739,7 +732,7 @@ static void renderTexture(WScreen *scr, WTexture *texture,
 		if (timg) {
 			RBevelImage(timg, RBEV_RAISED2);
 			if (!RConvertImage(scr->rcontext, timg, languagebutton))
-				wwarning(_("error rendering image:%s"), RMessageForError(RErrorCode));
+				wwarning(_("error rendering image: %s"), RMessageForError(RErrorCode));
 
 			x += timg->width;
 			w -= timg->width;
@@ -749,13 +742,11 @@ static void renderTexture(WScreen *scr, WTexture *texture,
 
 		if (right)
 			rimg = RGetSubImage(img, width - bwidth, 0, bwidth, bheight);
-		else
-			rimg = NULL;
 
 		if (rimg) {
 			RBevelImage(rimg, RBEV_RAISED2);
 			if (!RConvertImage(scr->rcontext, rimg, rbutton))
-				wwarning(_("error rendering image:%s"), RMessageForError(RErrorCode));
+				wwarning(_("error rendering image: %s"), RMessageForError(RErrorCode));
 
 			w -= rimg->width;
 			RReleaseImage(rimg);
@@ -766,20 +757,20 @@ static void renderTexture(WScreen *scr, WTexture *texture,
 			RBevelImage(mimg, RBEV_RAISED2);
 
 			if (!RConvertImage(scr->rcontext, mimg, title))
-				wwarning(_("error rendering image:%s"), RMessageForError(RErrorCode));
+				wwarning(_("error rendering image: %s"), RMessageForError(RErrorCode));
 
 			RReleaseImage(mimg);
 		} else {
 			RBevelImage(img, RBEV_RAISED2);
 
 			if (!RConvertImage(scr->rcontext, img, title))
-				wwarning(_("error rendering image:%s"), RMessageForError(RErrorCode));
+				wwarning(_("error rendering image: %s"), RMessageForError(RErrorCode));
 		}
 	} else {
 		RBevelImage(img, RBEV_RAISED2);
 
 		if (!RConvertImage(scr->rcontext, img, title))
-			wwarning(_("error rendering image:%s"), RMessageForError(RErrorCode));
+			wwarning(_("error rendering image: %s"), RMessageForError(RErrorCode));
 	}
 
 	RReleaseImage(img);
