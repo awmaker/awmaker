@@ -173,6 +173,54 @@ static void set_framewin_descriptors(WCoreWindow *wcore, void *handle_expose,
 	wcore->descriptor.handle_mousedown = handle_mousedown;
 }
 
+static void resizebar_create(WFrameWindow *fwin, int width)
+{
+	fwin->resizebar = wcore_create(width, RESIZEBAR_HEIGHT);
+	set_framewin_descriptors(fwin->resizebar, handleExpose, fwin, WCLASS_FRAME, resizebarMouseDown);
+}
+
+static void resizebar_destroy(WFrameWindow *fwin)
+{
+	wframewindow_destroy_wcorewindow(fwin->resizebar);
+}
+
+static void resizebar_map(WFrameWindow *fwin, int width, int height)
+{
+	fwin->bottom_width = RESIZEBAR_HEIGHT;
+	wcore_map(fwin->resizebar, fwin->core, fwin->core->screen_ptr,
+		  0, height + fwin->top_width, 0,
+		  fwin->core->screen_ptr->w_depth,
+		  fwin->core->screen_ptr->w_visual,
+		  fwin->core->screen_ptr->w_colormap);
+
+	fwin->resizebar_corner_width = RESIZEBAR_CORNER_WIDTH;
+	if (width < RESIZEBAR_CORNER_WIDTH * 2 + RESIZEBAR_MIN_WIDTH) {
+		fwin->resizebar_corner_width = (width - RESIZEBAR_MIN_WIDTH) / 2;
+		if (fwin->resizebar_corner_width < 0)
+			fwin->resizebar_corner_width = 0;
+	}
+
+	XMapWindow(dpy, fwin->resizebar->window);
+	XLowerWindow(dpy, fwin->resizebar->window);
+
+	fwin->flags.need_texture_remake = 1;
+	fwin->flags.resizebar = 1;
+}
+
+static void resizebar_update(WFrameWindow *fwin, int width, int height)
+{
+	if (height + fwin->top_width + fwin->bottom_width != fwin->core->height)
+		wCoreConfigure(fwin->resizebar, 0, height + fwin->top_width,
+			       width, RESIZEBAR_HEIGHT);
+}
+
+static void resizebar_unmap(WFrameWindow *fwin)
+{
+	fwin->bottom_width = 0;
+	fwin->flags.resizebar = 0;
+	wframewindow_unmap_wcorewindow(fwin->resizebar);
+}
+
 void wFrameWindowUpdateBorders(WFrameWindow * fwin, int flags)
 {
 	int theight, bsize, width, height;
@@ -411,38 +459,15 @@ void wFrameWindowUpdateBorders(WFrameWindow * fwin, int flags)
 	}
 	checkTitleSize(fwin);
 
-	if (flags & WFF_RESIZEBAR) {
-		fwin->bottom_width = RESIZEBAR_HEIGHT;
-
-		if (!fwin->resizebar) {
-			fwin->flags.resizebar = 1;
-			fwin->resizebar = wcore_create(width, RESIZEBAR_HEIGHT);
-			wcore_map(fwin->resizebar, fwin->core, fwin->core->screen_ptr,
-				  0, height + fwin->top_width, 0,
-				  fwin->core->screen_ptr->w_depth,
-				  fwin->core->screen_ptr->w_visual,
-				  fwin->core->screen_ptr->w_colormap);
-
-			fwin->resizebar_corner_width = RESIZEBAR_CORNER_WIDTH;
-			if (width < RESIZEBAR_CORNER_WIDTH * 2 + RESIZEBAR_MIN_WIDTH) {
-				fwin->resizebar_corner_width = (width - RESIZEBAR_MIN_WIDTH) / 2;
-				if (fwin->resizebar_corner_width < 0)
-					fwin->resizebar_corner_width = 0;
-			}
-
-			XMapWindow(dpy, fwin->resizebar->window);
-			XLowerWindow(dpy, fwin->resizebar->window);
-
-			fwin->flags.need_texture_remake = 1;
-		} else {
-			if (height + fwin->top_width + fwin->bottom_width != fwin->core->height)
-				wCoreConfigure(fwin->resizebar, 0, height + fwin->top_width,
-					       width, RESIZEBAR_HEIGHT);
+	if (fwin->resizebar) {
+		resizebar_unmap(fwin);
+		if (flags & WFF_RESIZEBAR) {
+			resizebar_map(fwin, width, height);
+			resizebar_update(fwin, width, height);
 		}
 	} else {
-		fwin->bottom_width = 0;
-		wframewindow_unmap_wcorewindow(fwin->resizebar);
-		wframewindow_destroy_wcorewindow(fwin->resizebar);
+		resizebar_create(fwin, width);
+		resizebar_map(fwin, width, height);
 	}
 
 	if (height + fwin->top_width + fwin->bottom_width != fwin->core->height && !(flags & WFF_IS_SHADED))
@@ -456,9 +481,6 @@ void wFrameWindowUpdateBorders(WFrameWindow * fwin, int flags)
 	/* setup object descriptors */
 	if (fwin->titlebar)
 		set_framewin_descriptors(fwin->titlebar, handleExpose, fwin, WCLASS_FRAME, titlebarMouseDown);
-
-	if (fwin->resizebar)
-		set_framewin_descriptors(fwin->resizebar, handleExpose, fwin, WCLASS_FRAME, resizebarMouseDown);
 
 	if (fwin->left_button)
 		set_framewin_descriptors(fwin->left_button, handleButtonExpose, fwin, WCLASS_FRAME, buttonMouseDown);
@@ -509,8 +531,8 @@ void wFrameWindowDestroy(WFrameWindow *fwin)
 	wframewindow_destroy_wcorewindow(fwin->language_button);
 #endif
 	wframewindow_destroy_wcorewindow(fwin->right_button);
-	wframewindow_destroy_wcorewindow(fwin->resizebar);
 	wframewindow_destroy_wcorewindow(fwin->titlebar);
+	resizebar_destroy(fwin);
 
 	RemoveFromStackList(fwin->core);
 
