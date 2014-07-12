@@ -942,10 +942,9 @@ static void remakeTexture_resizebar(WFrameWindow *fwin, int state)
 	Pixmap pmap;
 
 	if (fwin->resizebar_texture && fwin->resizebar_texture[0]
-	    && fwin->resizebar && state == 0) {
+	    && fwin->resizebar && fwin->flags.resizebar && state == 0) {
 		destroy_pixmap(fwin->resizebar_back[0]);
 		if (fwin->resizebar_texture[0]->any.type != WTEX_SOLID) {
-
 			renderResizebarTexture(fwin->screen_ptr,
 					       fwin->resizebar_texture[0],
 					       fwin->resizebar->width,
@@ -1073,7 +1072,8 @@ void wFrameWindowPaint(WFrameWindow * fwin)
 			   fwin->titlebar->height, (WTexSolid *) fwin->title_texture[state], WREL_RAISED);
 	}
 
-	if (fwin->resizebar && !fwin->flags.repaint_only_titlebar &&
+	if (fwin->resizebar && fwin->flags.resizebar &&
+	    !fwin->flags.repaint_only_titlebar &&
 	    fwin->resizebar_texture[0]->any.type == WTEX_SOLID)
 		wDrawBevel_resizebar(fwin->resizebar->window, fwin->resizebar->width,
 				     fwin->resizebar->height, (WTexSolid *) fwin->resizebar_texture[0],
@@ -1200,7 +1200,7 @@ static void reconfigure(WFrameWindow * fwin, int x, int y, int width, int height
 		checkTitleSize(fwin);
 	}
 
-	if (fwin->resizebar) {
+	if (fwin->resizebar && fwin->flags.resizebar) {
 		wCoreConfigure(fwin->resizebar, 0,
 			       fwin->core->height - fwin->resizebar->height,
 			       fwin->core->width, fwin->resizebar->height);
