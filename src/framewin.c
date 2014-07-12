@@ -956,9 +956,74 @@ static void remakeTexture_resizebar(WFrameWindow *fwin, int state)
 	}
 }
 
+static void paint_title(WFrameWindow *fwin, int all_buttons, int lofs, int rofs, int state)
+{
+	Drawable buf;
+	WScreen *scr = fwin->screen_ptr;
+	char *title;
+	int w, h, x, y;
+	int titlelen;
+
+	title = ShrinkString(*fwin->font, fwin->title, fwin->titlebar->width - lofs - rofs);
+	titlelen = strlen(title);
+	w = WMWidthOfString(*fwin->font, title, titlelen);
+
+	switch (fwin->flags.justification) {
+	case WTJ_LEFT:
+		x = lofs;
+		break;
+
+	case WTJ_RIGHT:
+		x = fwin->titlebar->width - w - rofs;
+		break;
+
+	default:
+		if (!all_buttons)
+			x = lofs + (fwin->titlebar->width - w - lofs - rofs) / 2;
+		else
+			x = (fwin->titlebar->width - w) / 2;
+		break;
+	}
+
+	y = *fwin->title_clearance + TITLEBAR_EXTEND_SPACE;
+	h = WMFontHeight(*fwin->font);
+
+	if (y * 2 + h > *fwin->title_max_height)
+		y = (*fwin->title_max_height - h) / 2;
+
+	if (y * 2 + h < *fwin->title_min_height)
+		y = (*fwin->title_min_height - h) / 2;
+
+	/* We use a w+2 buffer to have an extra pixel on the left and
+	 * another one on the right. This is because for some odd reason,
+	 * sometimes when using AA fonts (when libfreetype2 is compiled
+	 * with bytecode interpreter turned off), some fonts are drawn
+	 * starting from x = -1 not from 0 as requested. Observed with
+	 * capital A letter on the bold 'trebuchet ms' font. -Dan
+	 */
+	buf = XCreatePixmap(dpy, fwin->titlebar->window, w + 2, h, scr->w_depth);
+
+	XSetClipMask(dpy, scr->copy_gc, None);
+
+	if (fwin->title_texture[state]->any.type != WTEX_SOLID) {
+		XCopyArea(dpy, fwin->title_back[state], buf, scr->copy_gc,
+			  x - 1, y, w + 2, h, 0, 0);
+	} else {
+		XSetForeground(dpy, scr->copy_gc, fwin->title_texture[state]->solid.normal.pixel);
+		XFillRectangle(dpy, buf, scr->copy_gc, 0, 0, w + 2, h);
+	}
+
+	WMDrawString(scr->wmscreen, buf, fwin->title_color[state],
+		     *fwin->font, 1, 0, title, titlelen);
+
+	XCopyArea(dpy, buf, fwin->titlebar->window, scr->copy_gc, 0, 0, w + 2, h, x - 1, y);
+	XFreePixmap(dpy, buf);
+
+	wfree(title);
+}
+
 void wFrameWindowPaint(WFrameWindow * fwin)
 {
-	WScreen *scr = fwin->screen_ptr;
 	int state;
 
 	state = fwin->flags.state;
@@ -1015,9 +1080,7 @@ void wFrameWindowPaint(WFrameWindow * fwin)
 				     fwin->resizebar_corner_width);
 
 	if (fwin->titlebar && !fwin->flags.repaint_only_resizebar) {
-		int x, y, w, h;
 		int lofs = 6, rofs = 6;
-		int titlelen;
 		int allButtons = 1;
 
 		if (!wPreferences.new_style == TS_NEW) {
@@ -1040,75 +1103,15 @@ void wFrameWindowPaint(WFrameWindow * fwin)
 				allButtons = 0;
 		}
 #ifdef XKB_BUTTON_HINT
-		fwin->languagebutton_image = scr->b_pixmaps[WBUT_XKBGROUP1 + fwin->languagemode];
+		fwin->languagebutton_image = fwin->screen_ptr->b_pixmaps[WBUT_XKBGROUP1 + fwin->languagemode];
 #endif
 
-		if (fwin->title) {
-			Drawable buf;
-			char *title;
-
-			title = ShrinkString(*fwin->font, fwin->title, fwin->titlebar->width - lofs - rofs);
-			titlelen = strlen(title);
-			w = WMWidthOfString(*fwin->font, title, titlelen);
-
-			switch (fwin->flags.justification) {
-			case WTJ_LEFT:
-				x = lofs;
-				break;
-
-			case WTJ_RIGHT:
-				x = fwin->titlebar->width - w - rofs;
-				break;
-
-			default:
-				if (!allButtons)
-					x = lofs + (fwin->titlebar->width - w - lofs - rofs) / 2;
-				else
-					x = (fwin->titlebar->width - w) / 2;
-				break;
-			}
-
-			y = *fwin->title_clearance + TITLEBAR_EXTEND_SPACE;
-			h = WMFontHeight(*fwin->font);
-
-			if (y*2 + h > *fwin->title_max_height)
-				y = (*fwin->title_max_height - h) / 2;
-
-			if (y*2 + h < *fwin->title_min_height)
-				y = (*fwin->title_min_height - h) / 2;
-
-			/* We use a w+2 buffer to have an extra pixel on the left and
-			 * another one on the right. This is because for some odd reason,
-			 * sometimes when using AA fonts (when libfreetype2 is compiled
-			 * with bytecode interpreter turned off), some fonts are drawn
-			 * starting from x = -1 not from 0 as requested. Observed with
-			 * capital A letter on the bold 'trebuchet ms' font. -Dan
-			 */
-			buf = XCreatePixmap(dpy, fwin->titlebar->window, w + 2, h, scr->w_depth);
-
-			XSetClipMask(dpy, scr->copy_gc, None);
-
-			if (fwin->title_texture[state]->any.type != WTEX_SOLID) {
-				XCopyArea(dpy, fwin->title_back[state], buf, scr->copy_gc,
-					  x - 1, y, w + 2, h, 0, 0);
-			} else {
-				XSetForeground(dpy, scr->copy_gc, fwin->title_texture[state]->solid.normal.pixel);
-				XFillRectangle(dpy, buf, scr->copy_gc, 0, 0, w + 2, h);
-			}
-
-			/*XDrawRectangle(dpy, buf, WMColorGC(scr->white),1,0,w,h-1); */
-			WMDrawString(scr->wmscreen, buf, fwin->title_color[state],
-				     *fwin->font, 1, 0, title, titlelen);
-
-			XCopyArea(dpy, buf, fwin->titlebar->window, scr->copy_gc, 0, 0, w + 2, h, x - 1, y);
-
-			XFreePixmap(dpy, buf);
-
-			wfree(title);
-		}
+		if (fwin->title)
+			paint_title(fwin, allButtons, lofs, rofs, state);
 
 		if (fwin->left_button)
 			handleButtonExpose(&fwin->left_button->descriptor, NULL);
+
 		if (fwin->right_button)
 			handleButtonExpose(&fwin->right_button->descriptor, NULL);
 #ifdef XKB_BUTTON_HINT
