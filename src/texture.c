@@ -502,7 +502,7 @@ RImage *wTextureRenderImage(WTexture * texture, int width, int height, int relie
 	return image;
 }
 
-static void bevelImage(RImage * image, int relief)
+static void bevelImage(RImage *image, int relief)
 {
 	int width = image->width;
 	int height = image->height;
@@ -512,40 +512,35 @@ static void bevelImage(RImage * image, int relief)
 	case WREL_MENUENTRY:
 		color.red = color.green = color.blue = 80;
 		color.alpha = 0;
-		 /**/ ROperateLine(image, RAddOperation, 1, 0, width - 2, 0, &color);
-		 /**/ ROperateLine(image, RAddOperation, 0, 0, 0, height - 1, &color);
+		ROperateLine(image, RAddOperation, 1, 0, width - 2, 0, &color);
+		ROperateLine(image, RAddOperation, 0, 0, 0, height - 1, &color);
 
 		color.red = color.green = color.blue = 40;
 		color.alpha = 0;
 		ROperateLine(image, RSubtractOperation, width - 1, 0, width - 1, height - 1, &color);
-
-		 /**/ ROperateLine(image, RSubtractOperation, 1, height - 2, width - 2, height - 2, &color);
+		ROperateLine(image, RSubtractOperation, 1, height - 2, width - 2, height - 2, &color);
 
 		color.red = color.green = color.blue = 0;
 		color.alpha = 255;
 		RDrawLine(image, 0, height - 1, width - 1, height - 1, &color);
-		 /**/ break;
-
 	}
 }
 
-void wDrawBevel(Drawable d, unsigned width, unsigned height, WTexSolid * texture, int relief)
+void wDrawBevel(Drawable d, unsigned width, unsigned height, WTexSolid *texture, int relief)
 {
 	GC light, dim, dark;
 	XSegment segs[4];
 
-	if (relief == WREL_FLAT)
-		return;
-
-	light = texture->light_gc;
-	dim = texture->dim_gc;
-	dark = texture->dark_gc;
 	switch (relief) {
 	case WREL_FLAT:
 		return;
 	case WREL_MENUENTRY:
 	case WREL_RAISED:
 	case WREL_ICON:
+		light = texture->light_gc;
+		dim = texture->dim_gc;
+		dark = texture->dark_gc;
+
 		segs[0].x1 = 1;
 		segs[0].x2 = width - 2;
 		segs[0].y2 = segs[0].y1 = height - 2;
@@ -553,32 +548,32 @@ void wDrawBevel(Drawable d, unsigned width, unsigned height, WTexSolid * texture
 		segs[1].y1 = 1;
 		segs[1].x2 = width - 2;
 		segs[1].y2 = height - 2;
-		if (wPreferences.new_style == TS_NEXT) {
+		if (wPreferences.new_style == TS_NEXT)
 			XDrawSegments(dpy, d, dark, segs, 2);
-		} else {
+		else
 			XDrawSegments(dpy, d, dim, segs, 2);
-		}
+
 		segs[0].x1 = 0;
 		segs[0].x2 = width - 1;
 		segs[0].y2 = segs[0].y1 = height - 1;
 		segs[1].x1 = segs[1].x2 = width - 1;
 		segs[1].y1 = 0;
 		segs[1].y2 = height - 1;
-		if (wPreferences.new_style == TS_NEXT) {
+		if (wPreferences.new_style == TS_NEXT)
 			XDrawSegments(dpy, d, light, segs, 2);
-		} else {
+		else
 			XDrawSegments(dpy, d, dark, segs, 2);
-		}
+
 		segs[0].x1 = segs[0].y1 = segs[0].y2 = 0;
 		segs[0].x2 = width - 2;
 		segs[1].x1 = segs[1].y1 = 0;
 		segs[1].x2 = 0;
 		segs[1].y2 = height - 2;
-		if (wPreferences.new_style == TS_NEXT) {
+		if (wPreferences.new_style == TS_NEXT)
 			XDrawSegments(dpy, d, dark, segs, 2);
-		} else {
+		else
 			XDrawSegments(dpy, d, light, segs, 2);
-		}
+
 		if (relief == WREL_ICON) {
 			segs[0].x1 = segs[0].y1 = segs[0].y2 = 1;
 			segs[0].x2 = width - 2;
@@ -587,7 +582,6 @@ void wDrawBevel(Drawable d, unsigned width, unsigned height, WTexSolid * texture
 			segs[1].y2 = height - 2;
 			XDrawSegments(dpy, d, light, segs, 2);
 		}
-		break;
 	}
 }
 
