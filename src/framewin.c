@@ -327,35 +327,16 @@ static void titlebar_create(WFrameWindow *fwin, int theight, int bsize, int flag
 
 		fwin->flags.titlebar = 1;
 		fwin->titlebar = wcore_create(width + 1, theight);
-		wcore_map(fwin->titlebar, fwin->core,
-			  fwin->core->screen_ptr,
-			  0, 0, 0,
-			  fwin->core->screen_ptr->w_depth,
-			  fwin->core->screen_ptr->w_visual,
-			  fwin->core->screen_ptr->w_colormap);
 
-		if (flags & WFF_LEFT_BUTTON) {
+		if (flags & WFF_LEFT_BUTTON)
 			left_button_create(fwin, bsize);
-			left_button_map(fwin, theight, bsize);
-		}
 
 #ifdef XKB_BUTTON_HINT
-		if (flags & WFF_LANGUAGE_BUTTON) {
+		if (flags & WFF_LANGUAGE_BUTTON)
 			language_button_create(fwin, bsize);
-			language_button_map(fwin, theight, bsize);
-		}
 #endif
-		if (flags & WFF_RIGHT_BUTTON) {
+		if (flags & WFF_RIGHT_BUTTON)
 			right_button_create(fwin, bsize);
-			right_button_map(fwin, theight, bsize);
-		}
-
-		if (wPreferences.new_style == TS_NEW)
-			updateTitlebar(fwin);
-
-		XMapRaised(dpy, fwin->titlebar->window);
-
-		fwin->flags.need_texture_remake = 1;
 	}
 
 	/* setup object descriptors */
@@ -372,6 +353,39 @@ static void titlebar_create(WFrameWindow *fwin, int theight, int bsize, int flag
 	if (fwin->language_button)
 		set_framewin_descriptors(fwin->language_button, handleButtonExpose, fwin, WCLASS_FRAME, buttonMouseDown);
 #endif
+}
+
+static void titlebar_map(WFrameWindow *fwin, int theight, int bsize, int flags)
+{
+	/* if we didn't have a titlebar and are being requested for
+	 * one, create it */
+	if (flags & WFF_TITLEBAR) {
+		fwin->top_width = theight;
+
+		wcore_map(fwin->titlebar, fwin->core,
+			  fwin->core->screen_ptr,
+			  0, 0, 0,
+			  fwin->core->screen_ptr->w_depth,
+			  fwin->core->screen_ptr->w_visual,
+			  fwin->core->screen_ptr->w_colormap);
+
+		if (flags & WFF_LEFT_BUTTON)
+			left_button_map(fwin, theight, bsize);
+
+#ifdef XKB_BUTTON_HINT
+		if (flags & WFF_LANGUAGE_BUTTON)
+			language_button_map(fwin, theight, bsize);
+#endif
+		if (flags & WFF_RIGHT_BUTTON)
+			right_button_map(fwin, theight, bsize);
+
+		if (wPreferences.new_style == TS_NEW)
+			updateTitlebar(fwin);
+
+		XMapRaised(dpy, fwin->titlebar->window);
+
+		fwin->flags.need_texture_remake = 1;
+	}
 }
 
 static void titlebar_unmap(WFrameWindow *fwin)
@@ -534,6 +548,7 @@ void wFrameWindowUpdateBorders(WFrameWindow * fwin, int flags)
 		}
 	} else {
 		titlebar_create(fwin, theight, bsize, flags);
+		titlebar_map(fwin, theight, bsize, flags);
 	}
 	checkTitleSize(fwin);
 
