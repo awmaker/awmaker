@@ -600,13 +600,8 @@ void wFrameWindowUpdateBorders(WFrameWindow * fwin, int flags)
 
 void framewindow_unmap(WFrameWindow *fwin)
 {
-	wframewindow_unmap_wcorewindow(fwin->left_button);
-#ifdef XKB_BUTTON_HINT
-	wframewindow_unmap_wcorewindow(fwin->language_button);
-#endif
-	wframewindow_unmap_wcorewindow(fwin->right_button);
-	wframewindow_unmap_wcorewindow(fwin->resizebar);
-	wframewindow_unmap_wcorewindow(fwin->titlebar);
+	titlebar_unmap(fwin);
+	resizebar_unmap(fwin);
 }
 
 void wFrameWindowDestroy(WFrameWindow *fwin)
