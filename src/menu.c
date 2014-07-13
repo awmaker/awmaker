@@ -1585,6 +1585,24 @@ static void delaySelection(void *data)
 		*(d->delayed_select) = 0;
 }
 
+static void menu_rename_workspace(WScreen *scr, int entry_no)
+{
+	char buffer[128];
+	char *name;
+	int number = entry_no - 3; /* Entries "New", "Destroy Last" and "Last Used" appear before workspaces */
+
+	name = wstrdup(w_global.workspace.array[number]->name);
+	snprintf(buffer, sizeof(buffer), _("Type the name for workspace %i:"), number + 1);
+
+	wMenuUnmap(scr->root_menu);
+
+	if (wInputDialog(scr, _("Rename Workspace"), buffer, &name))
+		wWorkspaceRename(scr, number, name);
+
+	if (name)
+		wfree(name);
+}
+
 static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
 {
 	WWindow *wwin;
@@ -1637,21 +1655,7 @@ static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
 		entry = menu->entries[entry_no];
 
 		if (!close_on_exit && (bev->state & ControlMask) && smenu && entry->flags.editable) {
-			char buffer[128];
-			char *name;
-			int number = entry_no - 3; /* Entries "New", "Destroy Last" and "Last Used" appear before workspaces */
-
-			name = wstrdup(w_global.workspace.array[number]->name);
-			snprintf(buffer, sizeof(buffer), _("Type the name for workspace %i:"), number + 1);
-
-			wMenuUnmap(scr->root_menu);
-
-			if (wInputDialog(scr, _("Rename Workspace"), buffer, &name))
-				wWorkspaceRename(scr, number, name);
-
-			if (name)
-				wfree(name);
-
+			menu_rename_workspace(scr, entry_no);
 			goto byebye;
 		} else if (bev->state & ControlMask) {
 			goto byebye;
