@@ -467,7 +467,7 @@ static WMenu *makeWorkspaceMenu(WScreen * scr)
 {
 	WMenu *menu;
 
-	menu = wMenuCreate(scr, NULL, False);
+	menu = wMenuCreate(scr, NULL);
 	if (!menu) {
 		wwarning(_("could not create submenu for window menu"));
 		return NULL;
@@ -497,7 +497,7 @@ static WMenu *makeOptionsMenu(WScreen * scr)
 	WMenu *menu;
 	WMenuEntry *entry;
 
-	menu = wMenuCreate(scr, NULL, False);
+	menu = wMenuCreate(scr, NULL);
 	if (!menu) {
 		wwarning(_("could not create submenu for window menu"));
 		return NULL;
@@ -523,7 +523,7 @@ static WMenu *makeMaximizeMenu(WScreen * scr)
 	WMenu *menu;
 	int i;
 
-	menu = wMenuCreate(scr, NULL, False);
+	menu = wMenuCreate(scr, NULL);
 	if (!menu) {
 		wwarning(_("could not create submenu for window menu"));
 		return NULL;
@@ -540,7 +540,7 @@ static WMenu *createWindowMenu(WScreen * scr)
 	WMenu *menu;
 	WMenuEntry *entry;
 
-	menu = wMenuCreate(scr, NULL, False);
+	menu = wMenuCreate(scr, NULL);
 	/*
 	 * Warning: If you make some change that affects the order of the
 	 * entries, you must update the command enum in the top of

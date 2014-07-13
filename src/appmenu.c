@@ -101,7 +101,7 @@ static WMenu *parseMenuCommand(WScreen *scr, Window win, char **slist, int count
 	}
 
 	strcpy(title, &slist[*index][pos]);
-	menu = wMenuCreateForApp(title, *index == 1);
+	menu = wMenuCreateForApp(title);
 	if (!menu)
 		return NULL;
 
@@ -248,8 +248,7 @@ static void mapmenus(WMenu * menu)
 
 	if (menu->flags.mapped)
 		XMapWindow(dpy, menu->frame->core->window);
-	if (menu->brother->flags.mapped)
-		XMapWindow(dpy, menu->brother->frame->core->window);
+
 	for (i = 0; i < menu->cascade_no; i++) {
 		if (menu->cascades[i])
 			mapmenus(menu->cascades[i]);
@@ -286,8 +285,7 @@ static void unmapmenus(WMenu * menu)
 
 	if (menu->flags.mapped)
 		XUnmapWindow(dpy, menu->frame->core->window);
-	if (menu->brother->flags.mapped)
-		XUnmapWindow(dpy, menu->brother->frame->core->window);
+
 	for (i = 0; i < menu->cascade_no; i++) {
 		if (menu->cascades[i])
 			unmapmenus(menu->cascades[i]);

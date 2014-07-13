@@ -121,8 +121,6 @@ void OpenSwitchMenu(WScreen * scr, int x, int y, int keyboard)
 
 				if (keyboard)
 					wMenuMapAt(switchmenu, 0, 0, True);
-				else
-					wMenuMapCopyAt(switchmenu, x - switchmenu->frame->core->width / 2, y);
 			}
 		} else {
 			if (keyboard && x == scr->scr_width / 2 && y == scr->scr_height / 2) {
@@ -132,7 +130,7 @@ void OpenSwitchMenu(WScreen * scr, int x, int y, int keyboard)
 		}
 		return;
 	}
-	switchmenu = wMenuCreate(scr, _("Windows"), True);
+	switchmenu = wMenuCreate(scr, _("Windows"));
 	scr->switch_menu = switchmenu;
 
 	wwin = scr->focused_window;

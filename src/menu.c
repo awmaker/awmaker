@@ -112,10 +112,8 @@ static void appearanceObserver(void *self, WMNotification *notif)
 			wMenuRealize(menu);
 		}
 
-		if (flags & WTextureSettings) {
-			if (!menu->flags.brother)
-				updateTexture(menu);
-		}
+		if (flags & WTextureSettings)
+			updateTexture(menu);
 
 		if (flags & (WTextureSettings | WColorSettings))
 			wMenuPaint(menu);
@@ -135,10 +133,9 @@ static void appearanceObserver(void *self, WMNotification *notif)
 }
 
 /************************************/
-WMenu *menu_create(const char *title, int main_menu)
+WMenu *menu_create(const char *title)
 {
 	WMenu *menu;
-	static int brother = 0;
 	int width = 1;
 
 	menu = wmalloc(sizeof(WMenu));
@@ -168,14 +165,6 @@ WMenu *menu_create(const char *title, int main_menu)
 
 	menu->frame->on_click_right = menuCloseClick;
 
-	if (!brother) {
-		brother = 1;
-		menu->brother = menu_create(title, main_menu);
-		brother = 0;
-		menu->brother->flags.brother = 1;
-		menu->brother->brother = menu;
-	}
-
 	return menu;
 }
 
@@ -196,10 +185,6 @@ void menu_destroy(WMenu *menu)
 
 	framewindow_unmap(menu->frame);
 	wFrameWindowDestroy(menu->frame);
-
-	/* destroy copy of this menu */
-	if (!menu->flags.brother && menu->brother)
-		wMenuDestroy(menu->brother, False);
 
 	wfree(menu);
 }
@@ -255,9 +240,6 @@ void menu_map(WMenu *menu, WScreen *screen)
 
 	XFlush(dpy);
 
-	if (menu->brother && menu->brother->flags.brother)
-		menu_map(menu->brother, screen);
-
 	WMAddNotificationObserver(appearanceObserver, menu, WNMenuAppearanceSettingsChanged, menu);
 	WMAddNotificationObserver(appearanceObserver, menu, WNMenuTitleAppearanceSettingsChanged, menu);
 }
@@ -274,26 +256,25 @@ void menu_map(WMenu *menu, WScreen *screen)
  * 	The created menu.
  *----------------------------------------------------------------------
  */
-WMenu *wMenuCreate(WScreen *screen, const char *title, int main_menu)
+WMenu *wMenuCreate(WScreen *screen, const char *title)
 {
 	WMenu *menu;
 
-	menu = menu_create(title, main_menu);
+	menu = menu_create(title);
 	menu_map(menu, screen);
 
 	return menu;
 }
 
-WMenu *wMenuCreateForApp(const char *title, int main_menu)
+WMenu *wMenuCreateForApp(const char *title)
 {
 	WMenu *menu;
 
-	menu = menu_create(title, main_menu);
+	menu = menu_create(title);
 	if (!menu)
 		return NULL;
 
 	menu->flags.app_menu = 1;
-	menu->brother->flags.app_menu = 1;
 
 	return menu;
 }
@@ -317,7 +298,6 @@ WMenuEntry *wMenuInsertCallback(WMenu *menu, int index, const char *text,
 	void *tmp;
 
 	menu->flags.realized = 0;
-	menu->brother->flags.realized = 0;
 
 	/* reallocate array if it's too small */
 	if (menu->entry_no >= menu->alloced_entries) {
@@ -325,9 +305,6 @@ WMenuEntry *wMenuInsertCallback(WMenu *menu, int index, const char *text,
 
 		menu->entries = tmp;
 		menu->alloced_entries += 5;
-
-		menu->brother->entries = tmp;
-		menu->brother->alloced_entries = menu->alloced_entries;
 	}
 	entry = wmalloc(sizeof(WMenuEntry));
 	entry->flags.enabled = 1;
@@ -344,30 +321,22 @@ WMenuEntry *wMenuInsertCallback(WMenu *menu, int index, const char *text,
 	}
 
 	menu->entry_no++;
-	menu->brother->entry_no = menu->entry_no;
 
 	return entry;
 }
 
 void wMenuEntrySetCascade(WMenu *menu, WMenuEntry *entry, WMenu *cascade)
 {
-	WMenu *brother = menu->brother;
 	int i, done = 0;
 
-	assert(menu->flags.brother == 0);
-
-	if (entry->cascade >= 0) {
+	if (entry->cascade >= 0)
 		menu->flags.realized = 0;
-		brother->flags.realized = 0;
-	}
 
 	cascade->parent = menu;
-	cascade->brother->parent = brother;
 
 	for (i = 0; i < menu->cascade_no; i++) {
 		if (menu->cascades[i] == NULL) {
 			menu->cascades[i] = cascade;
-			brother->cascades[i] = cascade->brother;
 			done = 1;
 			entry->cascade = i;
 			break;
@@ -376,20 +345,13 @@ void wMenuEntrySetCascade(WMenu *menu, WMenuEntry *entry, WMenu *cascade)
 
 	if (!done) {
 		entry->cascade = menu->cascade_no;
-
 		menu->cascades = wrealloc(menu->cascades, sizeof(WMenu) * (menu->cascade_no + 1));
 		menu->cascades[menu->cascade_no++] = cascade;
-
-		brother->cascades = wrealloc(brother->cascades, sizeof(WMenu) * (brother->cascade_no + 1));
-		brother->cascades[brother->cascade_no++] = cascade->brother;
 	}
 
 	if (menu->flags.lowered) {
 		cascade->flags.lowered = 1;
 		ChangeStackingLevel(cascade->frame->core, WMNormalLevel);
-
-		cascade->brother->flags.lowered = 1;
-		ChangeStackingLevel(cascade->brother->frame->core, WMNormalLevel);
 	}
 
 	if (!menu->flags.realized)
@@ -398,29 +360,19 @@ void wMenuEntrySetCascade(WMenu *menu, WMenuEntry *entry, WMenu *cascade)
 
 void wMenuEntryRemoveCascade(WMenu *menu, WMenuEntry *entry)
 {
-	assert(menu->flags.brother == 0);
-
 	/* destroy cascade menu */
 	if (entry->cascade < 0 || !menu->cascades ||
 	    menu->cascades[entry->cascade] == NULL)
 		return;
 
 	wMenuDestroy(menu->cascades[entry->cascade], True);
-
 	menu->cascades[entry->cascade] = NULL;
-	menu->brother->cascades[entry->cascade] = NULL;
-
 	entry->cascade = -1;
 }
 
 void wMenuRemoveItem(WMenu *menu, int index)
 {
 	int i;
-
-	if (menu->flags.brother) {
-		wMenuRemoveItem(menu->brother, index);
-		return;
-	}
 
 	if (index >= menu->entry_no)
 		return;
@@ -447,7 +399,6 @@ void wMenuRemoveItem(WMenu *menu, int index)
 	}
 
 	menu->entry_no--;
-	menu->brother->entry_no--;
 }
 
 static Pixmap renderTexture(WMenu *menu)
@@ -505,17 +456,12 @@ static void updateTexture(WMenu *menu)
 
 	/* setup background texture */
 	if (scr->menu_item_texture->any.type != WTEX_SOLID) {
-		if (!menu->flags.brother) {
-			destroy_pixmap(menu->menu_texture_data);
+		destroy_pixmap(menu->menu_texture_data);
 
-			menu->menu_texture_data = renderTexture(menu);
+		menu->menu_texture_data = renderTexture(menu);
 
-			XSetWindowBackgroundPixmap(dpy, menu->menu->window, menu->menu_texture_data);
-			XClearWindow(dpy, menu->menu->window);
-
-			XSetWindowBackgroundPixmap(dpy, menu->brother->menu->window, menu->menu_texture_data);
-			XClearWindow(dpy, menu->brother->menu->window);
-		}
+		XSetWindowBackgroundPixmap(dpy, menu->menu->window, menu->menu_texture_data);
+		XClearWindow(dpy, menu->menu->window);
 	} else {
 		XSetWindowBackground(dpy, menu->menu->window, scr->menu_item_texture->any.color.pixel);
 		XClearWindow(dpy, menu->menu->window);
@@ -529,13 +475,6 @@ void wMenuRealize(WMenu *menu)
 	int theight = 0, twidth = 0, eheight;
 	char *text;
 	WScreen *scr = menu->frame->screen_ptr;
-	static int brother_done = 0;
-
-	if (!brother_done) {
-		brother_done = 1;
-		wMenuRealize(menu->brother);
-		brother_done = 0;
-	}
 
 	flags = WFF_SINGLE_STATE | WFF_BORDER;
 	if (menu->flags.titled)
@@ -591,9 +530,6 @@ void wMenuRealize(WMenu *menu)
 
 	if (menu->flags.mapped)
 		wMenuPaint(menu);
-
-	if (menu->brother->flags.mapped)
-		wMenuPaint(menu->brother);
 }
 
 void wMenuDestroy(WMenu *menu, int recurse)
@@ -612,39 +548,30 @@ void wMenuDestroy(WMenu *menu, int recurse)
 	if (menu->on_destroy)
 		(*menu->on_destroy) (menu);
 
-	/* Destroy items if this menu own them. If this is the "brother" menu,
-	 * leave them alone as it is shared by them.
-	 */
-	if (!menu->flags.brother) {
-		for (i = 0; i < menu->entry_no; i++) {
-			wfree(menu->entries[i]->text);
-
-			if (menu->entries[i]->rtext)
-				wfree(menu->entries[i]->rtext);
+	/* Destroy items if this menu own them. */
+	for (i = 0; i < menu->entry_no; i++) {
+		wfree(menu->entries[i]->text);
+		if (menu->entries[i]->rtext)
+			wfree(menu->entries[i]->rtext);
 #ifdef USER_MENU
-			if (menu->entries[i]->instances)
-				WMReleasePropList(menu->entries[i]->instances);
+		if (menu->entries[i]->instances)
+			WMReleasePropList(menu->entries[i]->instances);
 #endif
-			if (menu->entries[i]->free_cdata && menu->entries[i]->clientdata)
-				(*menu->entries[i]->free_cdata) (menu->entries[i]->clientdata);
+		if (menu->entries[i]->free_cdata && menu->entries[i]->clientdata)
+			(*menu->entries[i]->free_cdata) (menu->entries[i]->clientdata);
 
-			wfree(menu->entries[i]);
-		}
-
-		if (recurse) {
-			for (i = 0; i < menu->cascade_no; i++) {
-				if (menu->cascades[i]) {
-					if (menu->cascades[i]->flags.brother)
-						wMenuDestroy(menu->cascades[i]->brother, recurse);
-					else
-						wMenuDestroy(menu->cascades[i], recurse);
-				}
-			}
-		}
-
-		if (menu->entries)
-			wfree(menu->entries);
+		wfree(menu->entries[i]);
 	}
+
+	if (recurse) {
+		for (i = 0; i < menu->cascade_no; i++) {
+			if (menu->cascades[i])
+				wMenuDestroy(menu->cascades[i], recurse);
+		}
+	}
+
+	if (menu->entries)
+		wfree(menu->entries);
 
 	menu_destroy(menu);
 }
@@ -1168,7 +1095,6 @@ void wMenuSetEnabled(WMenu *menu, int index, int enable)
 
 	menu->entries[index]->flags.enabled = enable;
 	paintEntry(menu, index, index == menu->selected_entry);
-	paintEntry(menu->brother, index, index == menu->selected_entry);
 }
 
 
@@ -1208,18 +1134,11 @@ static void selectEntry(WMenu *menu, int entry_no)
 		if (entry->cascade >= 0 && menu->cascades && entry->flags.enabled) {
 			/* Callback for when the submenu is opened. */
 			submenu = menu->cascades[entry->cascade];
-			if (submenu && submenu->flags.brother)
-				submenu = submenu->brother;
 
 			if (entry->callback) {
 				/* Only call the callback if the submenu is not yet mapped. */
-				if (menu->flags.brother) {
-					if (!submenu || !submenu->flags.mapped)
-						(*entry->callback) (menu->brother, entry);
-				} else {
-					if (!submenu || !submenu->flags.buttoned)
-						(*entry->callback) (menu, entry);
-				}
+				if (!submenu || !submenu->flags.buttoned)
+					(*entry->callback) (menu, entry);
 			}
 
 			/* the submenu menu might have changed */
@@ -1299,45 +1218,26 @@ static void closeCascade(WMenu *menu)
 {
 	WMenu *parent = menu->parent;
 
-	if (menu->flags.brother || (!menu->flags.buttoned && (!menu->flags.app_menu || menu->parent != NULL))) {
-		selectEntry(menu, -1);
-		XSync(dpy, 0);
+	if (menu->flags.buttoned || (menu->flags.app_menu && menu->parent == NULL))
+		return;
+
+	selectEntry(menu, -1);
+	XSync(dpy, 0);
 #if (MENU_BLINK_DELAY > 2)
-		wusleep(MENU_BLINK_DELAY / 2);
+	wusleep(MENU_BLINK_DELAY / 2);
 #endif
-		wMenuUnmap(menu);
-		while (parent != NULL
-		       && (parent->parent != NULL || !parent->flags.app_menu || parent->flags.brother)
-		       && !parent->flags.buttoned) {
-			selectEntry(parent, -1);
-			wMenuUnmap(parent);
-			parent = parent->parent;
-		}
-
-		if (parent)
-			selectEntry(parent, -1);
+	wMenuUnmap(menu);
+	while (parent != NULL &&
+	       (parent->parent != NULL || !parent->flags.app_menu) &&
+	       !parent->flags.buttoned) {
+		selectEntry(parent, -1);
+		wMenuUnmap(parent);
+		parent = parent->parent;
 	}
+
+	if (parent)
+		selectEntry(parent, -1);
 }
-
-static void closeBrotherCascadesOf(WMenu *menu)
-{
-	WMenu *tmp;
-	int i;
-
-	for (i = 0; i < menu->cascade_no; i++) {
-		if (menu->cascades[i]->flags.brother)
-			tmp = menu->cascades[i];
-		else
-			tmp = menu->cascades[i]->brother;
-
-		if (tmp->flags.mapped) {
-			selectEntry(tmp->parent, -1);
-			closeBrotherCascadesOf(tmp);
-			break;
-		}
-	}
-}
-
 
 static WMenu *parentMenu(WMenu *menu)
 {
@@ -1719,7 +1619,7 @@ static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
 
 	wRaiseFrame(menu->frame->core);
 
-	close_on_exit = (bev->send_event || menu->flags.brother);
+	close_on_exit = (bev->send_event);
 
 	smenu = findMenu(scr, &x, &y);
 	if (!smenu) {
@@ -1978,16 +1878,13 @@ static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
 		} else if (entry->callback != NULL && entry->cascade < 0) {
 			selectEntry(menu, -1);
 		} else {
-			if (entry->cascade >= 0 && menu->cascades && menu->cascades[entry->cascade]->flags.brother)
-				selectEntry(menu, -1);
+			if (entry->cascade >= 0 && menu->cascades)
+				selectEntry(menu, entry_no);
 		}
 	}
 
-	if (((WMenu *) desc->parent)->flags.brother || close_on_exit || !smenu)
+	if (close_on_exit || !smenu)
 		closeCascade(desc->parent);
-
-	/* close the cascade windows that should not remain opened */
-	closeBrotherCascadesOf(desc->parent);
 
 	if (!wPreferences.wrap_menus)
 		wMenuMove(parentMenu(desc->parent), old_frame_x, old_frame_y, True);
@@ -2088,15 +1985,11 @@ static void menuTitleMouseDown(WCoreWindow * sender, void *data, XEvent * event)
 	XEvent ev;
 	int x = menu->frame_x, y = menu->frame_y;
 	int dx = event->xbutton.x_root, dy = event->xbutton.y_root;
-	int i, lower;
+	int lower;
 	Bool started;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) sender;
-
-	/* can't touch the menu copy */
-	if (menu->flags.brother)
-		return;
 
 	if (event->xbutton.button != Button1 && event->xbutton.button != Button2)
 		return;
@@ -2127,23 +2020,12 @@ static void menuTitleMouseDown(WCoreWindow * sender, void *data, XEvent * event)
 		}
 	}
 
-	/* tear off the menu if it's a root menu or a cascade
-	   application menu */
-	if (!menu->flags.buttoned && !menu->flags.brother && (!menu->flags.app_menu || menu->parent != NULL)) {
+	/* tear off the menu if it's a root menu or a cascade application menu */
+	if (!menu->flags.buttoned && (!menu->flags.app_menu || menu->parent != NULL)) {
 		menu->flags.buttoned = 1;
 		wFrameWindowShowButton(menu->frame, WFF_RIGHT_BUTTON);
-		if (menu->parent) {
-			/* turn off selected menu entry in parent menu */
+		if (menu->parent) /* turn off selected menu entry in parent menu */
 			selectEntry(menu->parent, -1);
-
-			/* make parent map the copy in place of the original */
-			for (i = 0; i < menu->parent->cascade_no; i++) {
-				if (menu->parent->cascades[i] == menu) {
-					menu->parent->cascades[i] = menu->brother;
-					break;
-				}
-			}
-		}
 	}
 
 	started = False;
@@ -2201,24 +2083,11 @@ static void menuTitleMouseDown(WCoreWindow * sender, void *data, XEvent * event)
 static void menuCloseClick(WCoreWindow *sender, void *data, XEvent *event)
 {
 	WMenu *menu = (WMenu *) data;
-	WMenu *parent = menu->parent;
-	int i;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) sender;
 	(void) event;
 
-	if (parent) {
-		for (i = 0; i < parent->cascade_no; i++) {
-			/* find the entry that points to the copy */
-			if (parent->cascades[i] == menu->brother) {
-				/* make it point to the original */
-				parent->cascades[i] = menu;
-				menu->parent = parent;
-				break;
-			}
-		}
-	}
 	wMenuUnmap(menu);
 }
 
@@ -2301,9 +2170,6 @@ static Bool saveMenuRecurs(WMPropList *menus, WScreen *scr, WMenu *menu)
 	int save_menus = 0, i;
 	char buffer[512];
 	Bool ok = True;
-
-	if (menu->flags.brother)
-		menu = menu->brother;
 
 	if (menu->flags.buttoned && menu != scr->switch_menu) {
 		buffer[0] = '\0';
@@ -2422,15 +2288,6 @@ static int restoreMenuRecurs(WScreen *scr, WMPropList *menus, WMenu *menu, const
 
 			wMenuMapAt(menu, x, y, False);
 
-			if (menu->parent) {
-				/* make parent map the copy in place of the original */
-				for (i = 0; i < menu->parent->cascade_no; i++) {
-					if (menu->parent->cascades[i] == menu) {
-						menu->parent->cascades[i] = menu->brother;
-						break;
-					}
-				}
-			}
 			if (lowered)
 				changeMenuLevels(menu, True);
 

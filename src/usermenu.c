@@ -307,12 +307,8 @@ void wUserMenuRefreshInstances(WMenu * menu, WWindow * wwin)
 				paintflag = 1;
 		}
 	}
-	for (i = 0; i < menu->cascade_no; i++) {
-		if (!menu->cascades[i]->flags.brother)
+	for (i = 0; i < menu->cascade_no; i++)
 			wUserMenuRefreshInstances(menu->cascades[i], wwin);
-		else
-			wUserMenuRefreshInstances(menu->cascades[i]->brother, wwin);
-	}
 
 	if (paintflag)
 		wMenuPaint(menu);

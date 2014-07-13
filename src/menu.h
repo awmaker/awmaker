@@ -52,7 +52,6 @@ typedef struct WMenuEntry {
 
 typedef struct WMenu {
     struct WMenu *parent;
-    struct WMenu *brother;
 
     time_t timestamp;		       /* for the root menu. Last time
                                         * menu was reloaded */
@@ -63,8 +62,7 @@ typedef struct WMenu {
     Pixmap menu_texture_data;
     int frame_x, frame_y;	       /* position of the frame in root*/
 
-    WMenuEntry **entries;	       /* array of entries. This is shared
-                                        * by the menu and it's "brother" */
+    WMenuEntry **entries;	       /* array of entries */
     short alloced_entries;	       /* number of entries allocated in
                                         * entry array */
     struct WMenu **cascades;	       /* array of cascades */
@@ -94,7 +92,6 @@ typedef struct WMenu {
         unsigned int open_to_left:1;   /* direction to open submenus */
         unsigned int lowered:1;
 
-        unsigned int brother:1;	       /* if this is a copy of the menu*/
         unsigned int editing:1;
         unsigned int jump_back_pending:1;
 
@@ -119,8 +116,8 @@ void wMenuEntrySetCascade(WMenu *menu, WMenuEntry *entry, WMenu *cascade);
 
 void wMenuRemoveItem(WMenu *menu, int index);
 
-WMenu *wMenuCreate(WScreen *screen, const char *title, int main_menu);
-WMenu *wMenuCreateForApp(const char *title, int main_menu);
+WMenu *wMenuCreate(WScreen *screen, const char *title);
+WMenu *wMenuCreateForApp(const char *title);
 void wMenuMap(WMenu *menu);
 void wMenuMapAt(WMenu *menu, int x, int y, int keyboard);
 #define wMenuMapCopyAt(menu, x, y) wMenuMapAt((menu)->brother, (x), (y), False)
@@ -133,7 +130,7 @@ WMenu *wMenuUnderPointer(WScreen *screen);
 void wMenuSaveState(WScreen *scr);
 void wMenuRestoreState(WScreen *scr);
 
-WMenu *menu_create(const char *title, int main_menu);
+WMenu *menu_create(const char *title);
 void menu_map(WMenu *menu, WScreen *screen);
 
 #endif

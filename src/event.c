@@ -713,22 +713,13 @@ static void executeButtonAction(WScreen * scr, XEvent * event, int action)
 		break;
 	case WA_OPEN_APPMENU:
 		OpenRootMenu(scr, event->xbutton.x_root, event->xbutton.y_root, False);
-		/* ugly hack */
-		if (scr->root_menu) {
-			if (scr->root_menu->brother->flags.mapped)
-				event->xbutton.window = scr->root_menu->brother->frame->core->window;
-			else
-				event->xbutton.window = scr->root_menu->frame->core->window;
-		}
+		if (scr->root_menu)
+			event->xbutton.window = scr->root_menu->frame->core->window;
 		break;
 	case WA_OPEN_WINLISTMENU:
 		OpenSwitchMenu(scr, event->xbutton.x_root, event->xbutton.y_root, False);
-		if (scr->switch_menu) {
-			if (scr->switch_menu->brother->flags.mapped)
-				event->xbutton.window = scr->switch_menu->brother->frame->core->window;
-			else
-				event->xbutton.window = scr->switch_menu->frame->core->window;
-		}
+		if (scr->switch_menu)
+			event->xbutton.window = scr->switch_menu->frame->core->window;
 		break;
 	default:
 		break;

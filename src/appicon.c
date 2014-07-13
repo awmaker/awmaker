@@ -601,7 +601,7 @@ static WMenu *createApplicationMenu(void)
 {
 	WMenu *menu;
 
-	menu = menu_create(NULL, False);
+	menu = menu_create(NULL);
 
 	wMenuAddCallback(menu, _("Unhide Here"), unhideHereCallback, NULL);
 	wMenuAddCallback(menu, _("Hide"), hideCallback, NULL);
