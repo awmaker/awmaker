@@ -325,7 +325,7 @@ WMenuEntry *wMenuInsertCallback(WMenu *menu, int index, const char *text,
 	return entry;
 }
 
-void wMenuEntrySetCascade(WMenu *menu, WMenuEntry *entry, WMenu *cascade)
+void wMenuEntrySetCascade_create(WMenu *menu, WMenuEntry *entry, WMenu *cascade)
 {
 	int i, done = 0;
 
@@ -348,7 +348,10 @@ void wMenuEntrySetCascade(WMenu *menu, WMenuEntry *entry, WMenu *cascade)
 		menu->cascades = wrealloc(menu->cascades, sizeof(WMenu) * (menu->cascade_no + 1));
 		menu->cascades[menu->cascade_no++] = cascade;
 	}
+}
 
+void wMenuEntrySetCascade_map(WMenu *menu, WMenu *cascade)
+{
 	if (menu->flags.lowered) {
 		cascade->flags.lowered = 1;
 		ChangeStackingLevel(cascade->frame->core, WMNormalLevel);
@@ -356,6 +359,12 @@ void wMenuEntrySetCascade(WMenu *menu, WMenuEntry *entry, WMenu *cascade)
 
 	if (!menu->flags.realized)
 		wMenuRealize(menu);
+}
+
+void wMenuEntrySetCascade(WMenu *menu, WMenuEntry *entry, WMenu *cascade)
+{
+	wMenuEntrySetCascade_create(menu, entry, cascade);
+	wMenuEntrySetCascade_map(menu, cascade);
 }
 
 void wMenuEntryRemoveCascade(WMenu *menu, WMenuEntry *entry)
