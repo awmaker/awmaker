@@ -388,6 +388,55 @@ static void titlebar_map(WFrameWindow *fwin, int theight, int bsize, int flags)
 	}
 }
 
+static void titlebar_update(WFrameWindow *fwin, int theight, int bsize)
+{
+	int left_button_pos_width, left_button_pos_height;
+	int right_button_pos_width, right_button_pos_height;
+#ifdef XKB_BUTTON_HINT
+	int language_button_pos_width, language_button_pos_height;
+#endif
+	int width = fwin->core->width;
+
+	fwin->top_width = theight;
+	fwin->flags.need_texture_remake = 1;
+
+	if (wPreferences.new_style == TS_NEW) {
+		left_button_pos_width = 0;
+		left_button_pos_height = 0;
+#ifdef XKB_BUTTON_HINT
+		if (fwin->flags.hide_left_button || !fwin->left_button || fwin->flags.lbutton_dont_fit) {
+			language_button_pos_width = 0;
+			language_button_pos_height = 0;
+		} else {
+			language_button_pos_width = bsize;
+			language_button_pos_height = 0;
+		}
+#endif
+		right_button_pos_width = width - bsize + 1;
+		right_button_pos_height = 0;
+	} else {	/* !new_style */
+		left_button_pos_width = 3;
+		left_button_pos_height = (theight - bsize) / 2;
+#ifdef XKB_BUTTON_HINT
+		language_button_pos_width = bsize + 6;
+		language_button_pos_height = (theight - bsize) / 2;
+#endif
+		right_button_pos_width = width - bsize - 3;
+		right_button_pos_height = (theight - bsize) / 2;
+	}
+
+	if (fwin->left_button)
+		wCoreConfigure(fwin->left_button, left_button_pos_width, left_button_pos_height, bsize, bsize);
+#ifdef XKB_BUTTON_HINT
+	if (fwin->language_button)
+		wCoreConfigure(fwin->language_button, language_button_pos_width, language_button_pos_height, bsize, bsize);
+#endif
+	if (fwin->right_button)
+		wCoreConfigure(fwin->right_button, right_button_pos_width, right_button_pos_height, bsize, bsize);
+
+	updateTitlebar(fwin);
+}
+
 static void titlebar_unmap(WFrameWindow *fwin)
 {
 	wframewindow_unmap_wcorewindow(fwin->left_button);
@@ -465,11 +514,6 @@ static void resizebar_unmap(WFrameWindow *fwin)
 void wFrameWindowUpdateBorders(WFrameWindow * fwin, int flags)
 {
 	int theight, bsize, width, height;
-	int left_button_pos_width, left_button_pos_height;
-	int right_button_pos_width, right_button_pos_height;
-#ifdef XKB_BUTTON_HINT
-	int language_button_pos_width, language_button_pos_height;
-#endif
 
 	WScreen *scr = fwin->screen_ptr;
 
@@ -503,45 +547,7 @@ void wFrameWindowUpdateBorders(WFrameWindow * fwin, int flags)
 		/* if we had a titlebar and is requesting for one,
 		 * check if the size has changed and resize it */
 		if (flags & WFF_TITLEBAR) {
-			fwin->top_width = theight;
-
-			fwin->flags.need_texture_remake = 1;
-
-			if (wPreferences.new_style == TS_NEW) {
-				left_button_pos_width = 0;
-				left_button_pos_height = 0;
-#ifdef XKB_BUTTON_HINT
-				if (fwin->flags.hide_left_button || !fwin->left_button || fwin->flags.lbutton_dont_fit) {
-					language_button_pos_width = 0;
-					language_button_pos_height = 0;
-				} else {
-					language_button_pos_width = bsize;
-					language_button_pos_height = 0;
-				}
-#endif
-				right_button_pos_width = width - bsize + 1;
-				right_button_pos_height = 0;
-			} else {	/* !new_style */
-				left_button_pos_width = 3;
-				left_button_pos_height = (theight - bsize) / 2;
-#ifdef XKB_BUTTON_HINT
-				language_button_pos_width = bsize + 6;
-				language_button_pos_height = (theight - bsize) / 2;
-#endif
-				right_button_pos_width = width - bsize - 3;
-				right_button_pos_height = (theight - bsize) / 2;
-			}
-
-			if (fwin->left_button)
-				wCoreConfigure(fwin->left_button, left_button_pos_width, left_button_pos_height, bsize, bsize);
-#ifdef XKB_BUTTON_HINT
-			if (fwin->language_button)
-				wCoreConfigure(fwin->language_button, language_button_pos_width, language_button_pos_height, bsize, bsize);
-#endif
-			if (fwin->right_button)
-				wCoreConfigure(fwin->right_button, right_button_pos_width, right_button_pos_height, bsize, bsize);
-
-			updateTitlebar(fwin);
+			titlebar_update(fwin, theight, bsize);
 		} else {
 			titlebar_unmap(fwin);
 			titlebar_destroy(fwin);
