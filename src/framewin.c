@@ -176,6 +176,9 @@ static void set_framewin_descriptors(WCoreWindow *wcore, void *handle_expose,
 static void left_button_create(WFrameWindow *fwin, int bsize)
 {
 	fwin->left_button = wcore_create(bsize, bsize);
+
+	if (fwin->left_button)
+		set_framewin_descriptors(fwin->left_button, handleButtonExpose, fwin, WCLASS_FRAME, buttonMouseDown);
 }
 
 static void left_button_map(WFrameWindow *fwin, int theight, int bsize)
@@ -235,6 +238,9 @@ static void left_button_unmap(WFrameWindow *fwin)
 static void language_button_create(WFrameWindow *fwin, int bsize)
 {
 	fwin->language_button = wcore_create(bsize, bsize);
+
+	if (fwin->language_button)
+		set_framewin_descriptors(fwin->language_button, handleButtonExpose, fwin, WCLASS_FRAME, buttonMouseDown);
 }
 
 static void language_button_map(WFrameWindow *fwin, int theight, int bsize)
@@ -283,6 +289,9 @@ static void language_button_unmap(WFrameWindow *fwin)
 static void right_button_create(WFrameWindow *fwin, int bsize)
 {
 	fwin->right_button = wcore_create(bsize, bsize);
+
+	if (fwin->right_button)
+		set_framewin_descriptors(fwin->right_button, handleButtonExpose, fwin, WCLASS_FRAME, buttonMouseDown);
 }
 
 static void right_button_map(WFrameWindow *fwin, int theight, int bsize)
@@ -357,17 +366,6 @@ static void titlebar_create(WFrameWindow *fwin, int theight, int bsize, int flag
 	/* setup object descriptors */
 	if (fwin->titlebar)
 		set_framewin_descriptors(fwin->titlebar, handleExpose, fwin, WCLASS_FRAME, titlebarMouseDown);
-
-	if (fwin->left_button)
-		set_framewin_descriptors(fwin->left_button, handleButtonExpose, fwin, WCLASS_FRAME, buttonMouseDown);
-
-	if (fwin->right_button)
-		set_framewin_descriptors(fwin->right_button, handleButtonExpose, fwin, WCLASS_FRAME, buttonMouseDown);
-
-#ifdef XKB_BUTTON_HINT
-	if (fwin->language_button)
-		set_framewin_descriptors(fwin->language_button, handleButtonExpose, fwin, WCLASS_FRAME, buttonMouseDown);
-#endif
 }
 
 static void titlebar_map(WFrameWindow *fwin, int theight, int bsize, int flags)
