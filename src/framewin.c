@@ -1531,12 +1531,16 @@ static void handleButtonExpose(WObjDescriptor *desc, XEvent *event)
 			paintButton(button, fwin->title_texture[fwin->flags.state],
 				    WMColorPixel(fwin->title_color[fwin->flags.state]),
 				    fwin->languagebutton_image, False);
-	} else
+		return;
+	}
 #endif
-	if (button == fwin->left_button)
+	if (button == fwin->left_button) {
 		paintButton(button, fwin->title_texture[fwin->flags.state],
 			    WMColorPixel(fwin->title_color[fwin->flags.state]), fwin->lbutton_image, False);
-	else
+		return;
+	}
+
+	if (button == fwin->right_button)
 		paintButton(button, fwin->title_texture[fwin->flags.state],
 			    WMColorPixel(fwin->title_color[fwin->flags.state]), fwin->rbutton_image, False);
 }
@@ -1627,20 +1631,26 @@ static void buttonMouseDown(WObjDescriptor *desc, XEvent *event)
 	}
 	paintButton(button, texture, pixel, image, False);
 
-	if (execute) {
-		if (button == fwin->left_button) {
-			if (fwin->on_click_left)
-				(*fwin->on_click_left) (button, fwin->child, &ev);
-		} else if (button == fwin->right_button) {
-			if (fwin->on_click_right)
-				(*fwin->on_click_right) (button, fwin->child, &ev);
-		}
-#ifdef XKB_BUTTON_HINT
-		else if (button == fwin->language_button) {
-			if (fwin->on_click_language)
-				(*fwin->on_click_language) (button, fwin->child, &ev);
-		}
-#endif
+	if (!execute)
+		return;
 
+	if (button == fwin->left_button) {
+		if (fwin->on_click_left)
+			(*fwin->on_click_left) (button, fwin->child, &ev);
+		return;
 	}
+
+	if (button == fwin->right_button) {
+		if (fwin->on_click_right)
+			(*fwin->on_click_right) (button, fwin->child, &ev);
+		return;
+	}
+
+#ifdef XKB_BUTTON_HINT
+	if (button == fwin->language_button) {
+		if (fwin->on_click_language)
+			(*fwin->on_click_language) (button, fwin->child, &ev);
+		return;
+	}
+#endif
 }
