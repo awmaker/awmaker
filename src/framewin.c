@@ -226,6 +226,11 @@ static void left_button_map(WFrameWindow *fwin, int theight, int bsize)
 	fwin->flags.left_button = 1;
 }
 
+static void left_button_unmap(WFrameWindow *fwin)
+{
+	wframewindow_unmap_wcorewindow(fwin->left_button);
+}
+
 #ifdef XKB_BUTTON_HINT
 static void language_button_create(WFrameWindow *fwin, int bsize)
 {
@@ -267,6 +272,11 @@ static void language_button_map(WFrameWindow *fwin, int theight, int bsize)
 	}
 
 	fwin->flags.language_button = 1;
+}
+
+static void language_button_unmap(WFrameWindow *fwin)
+{
+	wframewindow_unmap_wcorewindow(fwin->language_button);
 }
 #endif
 
@@ -314,6 +324,11 @@ static void right_button_map(WFrameWindow *fwin, int theight, int bsize)
 		XMapRaised(dpy, fwin->right_button->window);
 
 	fwin->flags.right_button = 1;
+}
+
+static void right_button_unmap(WFrameWindow *fwin)
+{
+	wframewindow_unmap_wcorewindow(fwin->right_button);
 }
 
 static void titlebar_create(WFrameWindow *fwin, int theight, int bsize, int flags)
@@ -439,11 +454,11 @@ static void titlebar_update(WFrameWindow *fwin, int theight, int bsize)
 
 static void titlebar_unmap(WFrameWindow *fwin)
 {
-	wframewindow_unmap_wcorewindow(fwin->left_button);
+	left_button_unmap(fwin);
+	right_button_unmap(fwin);
 #ifdef XKB_BUTTON_HINT
-	wframewindow_unmap_wcorewindow(fwin->language_button);
+	language_button_unmap(fwin);
 #endif
-	wframewindow_unmap_wcorewindow(fwin->right_button);
 	wframewindow_unmap_wcorewindow(fwin->titlebar);
 
 	fwin->top_width = 0;
