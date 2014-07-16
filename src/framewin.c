@@ -232,6 +232,7 @@ static void left_button_map(WFrameWindow *fwin, int theight, int bsize)
 static void left_button_unmap(WFrameWindow *fwin)
 {
 	wframewindow_unmap_wcorewindow(fwin->left_button);
+	fwin->flags.left_button = 0;
 }
 
 #ifdef XKB_BUTTON_HINT
@@ -283,6 +284,7 @@ static void language_button_map(WFrameWindow *fwin, int theight, int bsize)
 static void language_button_unmap(WFrameWindow *fwin)
 {
 	wframewindow_unmap_wcorewindow(fwin->language_button);
+	fwin->flags.language_button = 0;
 }
 #endif
 
@@ -338,6 +340,7 @@ static void right_button_map(WFrameWindow *fwin, int theight, int bsize)
 static void right_button_unmap(WFrameWindow *fwin)
 {
 	wframewindow_unmap_wcorewindow(fwin->right_button);
+	fwin->flags.right_button = 0;
 }
 
 static void titlebar_create(WFrameWindow *fwin, int theight, int bsize, int flags)
