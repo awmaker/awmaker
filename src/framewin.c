@@ -349,21 +349,19 @@ static void titlebar_create(WFrameWindow *fwin, int theight, int bsize, int flag
 
 	/* if we didn't have a titlebar and are being requested for
 	 * one, create it */
-	if (flags & WFF_TITLEBAR) {
-		fwin->top_width = theight;
+	fwin->top_width = theight;
 
-		fwin->titlebar = wcore_create(width + 1, theight);
+	fwin->titlebar = wcore_create(width + 1, theight);
 
-		if (flags & WFF_LEFT_BUTTON)
-			left_button_create(fwin, bsize);
+	if (flags & WFF_LEFT_BUTTON)
+		left_button_create(fwin, bsize);
 
 #ifdef XKB_BUTTON_HINT
-		if (flags & WFF_LANGUAGE_BUTTON)
-			language_button_create(fwin, bsize);
+	if (flags & WFF_LANGUAGE_BUTTON)
+		language_button_create(fwin, bsize);
 #endif
-		if (flags & WFF_RIGHT_BUTTON)
-			right_button_create(fwin, bsize);
-	}
+	if (flags & WFF_RIGHT_BUTTON)
+		right_button_create(fwin, bsize);
 
 	/* setup object descriptors */
 	if (fwin->titlebar)
@@ -560,13 +558,10 @@ void wFrameWindowUpdateBorders(WFrameWindow * fwin, int flags)
 	}
 
 	if (fwin->titlebar) {
-		/* if we had a titlebar and is requesting for one,
-		 * check if the size has changed and resize it */
+		titlebar_unmap(fwin);
 		if (flags & WFF_TITLEBAR) {
+			titlebar_map(fwin, theight, bsize, flags);
 			titlebar_update(fwin, theight, bsize);
-		} else {
-			titlebar_unmap(fwin);
-			titlebar_destroy(fwin);
 		}
 	} else {
 		titlebar_create(fwin, theight, bsize, flags);
