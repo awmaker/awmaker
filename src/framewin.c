@@ -453,15 +453,17 @@ static void titlebar_update(WFrameWindow *fwin, int theight, int bsize)
 
 static void titlebar_unmap(WFrameWindow *fwin)
 {
-	left_button_unmap(fwin);
-	right_button_unmap(fwin);
+	if (fwin->flags.titlebar) {
+		left_button_unmap(fwin);
+		right_button_unmap(fwin);
 #ifdef XKB_BUTTON_HINT
-	language_button_unmap(fwin);
+		language_button_unmap(fwin);
 #endif
-	wframewindow_unmap_wcorewindow(fwin->titlebar);
+		wframewindow_unmap_wcorewindow(fwin->titlebar);
 
-	fwin->top_width = 0;
-	fwin->flags.titlebar = 0;
+		fwin->top_width = 0;
+		fwin->flags.titlebar = 0;
+	}
 }
 
 static void titlebar_destroy(WFrameWindow *fwin)
@@ -520,9 +522,11 @@ static void resizebar_update(WFrameWindow *fwin, int width, int height)
 
 static void resizebar_unmap(WFrameWindow *fwin)
 {
-	fwin->bottom_width = 0;
-	fwin->flags.resizebar = 0;
-	wframewindow_unmap_wcorewindow(fwin->resizebar);
+	if (fwin->flags.resizebar) {
+		fwin->bottom_width = 0;
+		wframewindow_unmap_wcorewindow(fwin->resizebar);
+		fwin->flags.resizebar = 0;
+	}
 }
 
 void wFrameWindowUpdateBorders(WFrameWindow * fwin, int flags)
