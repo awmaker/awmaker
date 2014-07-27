@@ -1073,7 +1073,7 @@ static void remakeTexture_resizebar(WFrameWindow *fwin, int state)
 	}
 }
 
-static void paint_title(WFrameWindow *fwin, int all_buttons, int lofs, int rofs, int state)
+static void paint_title(WFrameWindow *fwin, int lofs, int rofs, int state)
 {
 	Drawable buf;
 	WScreen *scr = fwin->screen_ptr;
@@ -1095,11 +1095,7 @@ static void paint_title(WFrameWindow *fwin, int all_buttons, int lofs, int rofs,
 		break;
 
 	default:
-		if (!all_buttons)
 			x = lofs + (fwin->titlebar->width - w - lofs - rofs) / 2;
-		else
-			x = (fwin->titlebar->width - w) / 2;
-		break;
 	}
 
 	y = *fwin->title_clearance + TITLEBAR_EXTEND_SPACE;
@@ -1199,33 +1195,26 @@ void wFrameWindowPaint(WFrameWindow * fwin)
 
 	if (fwin->titlebar && !fwin->flags.repaint_only_resizebar) {
 		int lofs = 6, rofs = 6;
-		int allButtons = 1;
 
 		if (!wPreferences.new_style == TS_NEW) {
 			if (fwin->left_button && !fwin->flags.hide_left_button && !fwin->flags.lbutton_dont_fit)
 				lofs += fwin->left_button->width + 3;
-			else
-				allButtons = 0;
 
 #ifdef XKB_BUTTON_HINT
 			if (fwin->language_button && !fwin->flags.hide_language_button
 			    && !fwin->flags.languagebutton_dont_fit)
 				lofs += fwin->language_button->width;
-			else
-				allButtons = 0;
 #endif
 
 			if (fwin->right_button && !fwin->flags.hide_right_button && !fwin->flags.rbutton_dont_fit)
 				rofs += fwin->right_button->width + 3;
-			else
-				allButtons = 0;
 		}
 #ifdef XKB_BUTTON_HINT
 		fwin->languagebutton_image = fwin->screen_ptr->b_pixmaps[WBUT_XKBGROUP1 + fwin->languagemode];
 #endif
 
 		if (fwin->title)
-			paint_title(fwin, allButtons, lofs, rofs, state);
+			paint_title(fwin, lofs, rofs, state);
 
 		if (fwin->left_button)
 			handleButtonExpose(&fwin->left_button->descriptor, NULL);
