@@ -33,18 +33,11 @@
 #include "colormap.h"
 
 
-void wColormapInstallForWindow(WScreen * scr, WWindow * wwin)
+void wColormapInstallForWindow(WScreen *scr, WWindow *wwin)
 {
-	int i;
+	int i, done = 0;
 	XWindowAttributes attributes;
-	int done = 0;
 	Window xwin = None;
-
-	if (wwin) {
-		xwin = wwin->client_win;
-	} else {
-		xwin = scr->root_win;
-	}
 
 	scr->cmap_window = wwin;
 
@@ -80,9 +73,16 @@ void wColormapInstallForWindow(WScreen * scr, WWindow * wwin)
 	}
 
 	if (!done) {
+		if (wwin)
+			xwin = wwin->client_win;
+		else
+			xwin = scr->root_win;
+
 		attributes.colormap = None;
+
 		if (xwin != None)
 			XGetWindowAttributes(dpy, xwin, &attributes);
+
 		if (attributes.colormap == None)
 			attributes.colormap = scr->colormap;
 
@@ -92,6 +92,7 @@ void wColormapInstallForWindow(WScreen * scr, WWindow * wwin)
 				XInstallColormap(dpy, attributes.colormap);
 		}
 	}
+
 	XSync(dpy, False);
 }
 

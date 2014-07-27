@@ -1076,9 +1076,9 @@ static void handleEnterNotify(XEvent * event)
 	/* enter to window */
 	wwin = wWindowFor(event->xcrossing.window);
 	if (!wwin) {
-		if (wPreferences.colormap_mode == WCM_POINTER) {
+		if (wPreferences.colormap_mode == WCM_POINTER)
 			wColormapInstallForWindow(scr, NULL);
-		}
+
 		if (scr->autoRaiseTimer && event->xcrossing.root == event->xcrossing.window) {
 			WMDeleteTimerHandler(scr->autoRaiseTimer);
 			scr->autoRaiseTimer = NULL;
