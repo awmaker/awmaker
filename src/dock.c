@@ -1937,6 +1937,24 @@ WAppIcon *wClipRestoreState(WScreen *scr, WMPropList *clip_state)
 	return icon;
 }
 
+/* restore lowered/raised state */
+void restore_state_lowered(WDock *dock, WMPropList *state)
+{
+	WMPropList *value;
+
+	dock->lowered = 0;
+
+	value = WMGetFromPLDictionary(state, dLowered);
+	if (value) {
+		if (!WMIsPLString(value)) {
+			COMPLAIN("Lowered");
+		} else {
+			if (strcasecmp(WMGetFromPLString(value), "YES") == 0)
+				dock->lowered = 1;
+		}
+	}
+}
+
 WDock *wDockRestoreState(WScreen *scr, WMPropList *dock_state, int type)
 {
 	WDock *dock;
@@ -1986,18 +2004,7 @@ WDock *wDockRestoreState(WScreen *scr, WMPropList *dock_state, int type)
 		}
 	}
 
-	/* restore lowered/raised state */
-	dock->lowered = 0;
-
-	value = WMGetFromPLDictionary(dock_state, dLowered);
-	if (value) {
-		if (!WMIsPLString(value)) {
-			COMPLAIN("Lowered");
-		} else {
-			if (strcasecmp(WMGetFromPLString(value), "YES") == 0)
-				dock->lowered = 1;
-		}
-	}
+	restore_state_lowered(dock, dock_state);
 
 	/* restore collapsed state */
 	dock->collapsed = 0;
