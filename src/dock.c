@@ -1955,6 +1955,24 @@ void restore_state_lowered(WDock *dock, WMPropList *state)
 	}
 }
 
+/* restore collapsed state */
+void restore_state_collapsed(WDock *dock, WMPropList *state)
+{
+	WMPropList *value;
+
+	dock->collapsed = 0;
+
+	value = WMGetFromPLDictionary(state, dCollapsed);
+	if (value) {
+		if (!WMIsPLString(value)) {
+			COMPLAIN("Collapsed");
+		} else {
+			if (strcasecmp(WMGetFromPLString(value), "YES") == 0)
+				dock->collapsed = 1;
+		}
+	}
+}
+
 WDock *wDockRestoreState(WScreen *scr, WMPropList *dock_state, int type)
 {
 	WDock *dock;
@@ -2005,19 +2023,7 @@ WDock *wDockRestoreState(WScreen *scr, WMPropList *dock_state, int type)
 	}
 
 	restore_state_lowered(dock, dock_state);
-
-	/* restore collapsed state */
-	dock->collapsed = 0;
-
-	value = WMGetFromPLDictionary(dock_state, dCollapsed);
-	if (value) {
-		if (!WMIsPLString(value)) {
-			COMPLAIN("Collapsed");
-		} else {
-			if (strcasecmp(WMGetFromPLString(value), "YES") == 0)
-				dock->collapsed = 1;
-		}
-	}
+	restore_state_collapsed(dock, dock_state);
 
 	/* restore auto-collapsed state */
 	value = WMGetFromPLDictionary(dock_state, dAutoCollapse);
