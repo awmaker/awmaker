@@ -1374,7 +1374,7 @@ static WMenu *dockMenuCreate(WScreen *scr, int type)
 	}
 }
 
-WDock *wDockCreate(WScreen *scr, int type, const char *name)
+WDock *dock_create(WScreen *scr, const char *name)
 {
 	WDock *dock;
 	WAppIcon *btn;
@@ -1382,34 +1382,19 @@ WDock *wDockCreate(WScreen *scr, int type, const char *name)
 	make_keys();
 
 	dock = wmalloc(sizeof(WDock));
-
-	switch (type) {
-	case WM_CLIP:
-		dock->max_icons = DOCK_MAX_ICONS;
-		break;
-	case WM_DRAWER:
-		dock->max_icons = scr->scr_width / wPreferences.icon_size;
-		break;
-	case WM_DOCK:
-	default:
-		dock->max_icons = scr->scr_height / wPreferences.icon_size;
-	}
-
+	dock->max_icons = scr->scr_height / wPreferences.icon_size;
 	dock->icon_array = wmalloc(sizeof(WAppIcon *) * dock->max_icons);
 
-	btn = mainIconCreate(scr, type, name);
+	btn = mainIconCreate(scr, WM_DOCK, name);
 
 	btn->dock = dock;
 
 	dock->x_pos = btn->x_pos;
 	dock->y_pos = btn->y_pos;
 	dock->screen_ptr = scr;
-	dock->type = type;
+	dock->type = WM_DOCK;
 	dock->icon_count = 1;
-	if (type == WM_DRAWER)
-		dock->on_right_side = w_global.dock.dock->on_right_side;
-	else
-		dock->on_right_side = 1;
+	dock->on_right_side = 1;
 	dock->collapsed = 0;
 	dock->auto_collapse = 0;
 	dock->auto_collapse_magic = NULL;
@@ -1423,14 +1408,102 @@ WDock *wDockCreate(WScreen *scr, int type, const char *name)
 	XMoveWindow(dpy, btn->icon->core->window, btn->x_pos, btn->y_pos);
 
 	/* create dock menu */
-	dock->menu = dockMenuCreate(scr, type);
-
-	if (type == WM_DRAWER) {
-		drawerAppendToChain(scr, dock);
-		dock->auto_collapse = 1;
-	}
+	dock->menu = dockMenuCreate(scr, WM_DOCK);
 
 	return dock;
+}
+
+WDock *clip_create(WScreen *scr, const char *name)
+{
+	WDock *dock;
+	WAppIcon *btn;
+
+	make_keys();
+
+	dock = wmalloc(sizeof(WDock));
+	dock->max_icons = DOCK_MAX_ICONS;
+	dock->icon_array = wmalloc(sizeof(WAppIcon *) * dock->max_icons);
+
+	btn = mainIconCreate(scr, WM_CLIP, name);
+
+	btn->dock = dock;
+
+	dock->x_pos = btn->x_pos;
+	dock->y_pos = btn->y_pos;
+	dock->screen_ptr = scr;
+	dock->type = WM_CLIP;
+	dock->icon_count = 1;
+	dock->on_right_side = 1;
+	dock->collapsed = 0;
+	dock->auto_collapse = 0;
+	dock->auto_collapse_magic = NULL;
+	dock->auto_raise_lower = 0;
+	dock->auto_lower_magic = NULL;
+	dock->auto_raise_magic = NULL;
+	dock->attract_icons = 0;
+	dock->lowered = 1;
+	dock->icon_array[0] = btn;
+	wRaiseFrame(btn->icon->core);
+	XMoveWindow(dpy, btn->icon->core->window, btn->x_pos, btn->y_pos);
+
+	/* create clip menu */
+	dock->menu = dockMenuCreate(scr, WM_CLIP);
+
+	return dock;
+}
+
+WDock *drawer_create(WScreen *scr, const char *name)
+{
+	WDock *dock;
+	WAppIcon *btn;
+
+	make_keys();
+
+	dock = wmalloc(sizeof(WDock));
+	dock->max_icons = scr->scr_width / wPreferences.icon_size;
+	dock->icon_array = wmalloc(sizeof(WAppIcon *) * dock->max_icons);
+
+	btn = mainIconCreate(scr, WM_DRAWER, name);
+
+	btn->dock = dock;
+
+	dock->x_pos = btn->x_pos;
+	dock->y_pos = btn->y_pos;
+	dock->screen_ptr = scr;
+	dock->type = WM_DRAWER;
+	dock->icon_count = 1;
+	dock->on_right_side = w_global.dock.dock->on_right_side;
+	dock->collapsed = 0;
+	dock->auto_collapse = 1;
+	dock->auto_collapse_magic = NULL;
+	dock->auto_raise_lower = 0;
+	dock->auto_lower_magic = NULL;
+	dock->auto_raise_magic = NULL;
+	dock->attract_icons = 0;
+	dock->lowered = 1;
+	dock->icon_array[0] = btn;
+	wRaiseFrame(btn->icon->core);
+	XMoveWindow(dpy, btn->icon->core->window, btn->x_pos, btn->y_pos);
+
+	/* create dock menu */
+	dock->menu = dockMenuCreate(scr, WM_DRAWER);
+
+	drawerAppendToChain(scr, dock);
+
+	return dock;
+}
+
+WDock *wDockCreate(WScreen *scr, int type, const char *name)
+{
+	switch(type) {
+	case WM_CLIP:
+		return clip_create(scr, name);
+	case WM_DRAWER:
+		return drawer_create(scr, name);
+	case WM_DOCK:
+	default: /* Avoid compiler warning */
+		return dock_create(scr, name);
+	}
 }
 
 void wDockDestroy(WDock *dock)
