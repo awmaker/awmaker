@@ -1991,6 +1991,22 @@ void restore_state_autocollapsed(WDock *dock, WMPropList *state)
 	}
 }
 
+/* restore auto-raise/lower state */
+void restore_state_autoraise(WDock *dock, WMPropList *state)
+{
+	WMPropList *value;
+
+	value = WMGetFromPLDictionary(state, dAutoRaiseLower);
+	if (value) {
+		if (!WMIsPLString(value)) {
+			COMPLAIN("AutoRaiseLower");
+		} else {
+			if (strcasecmp(WMGetFromPLString(value), "YES") == 0)
+				dock->auto_raise_lower = 1;
+		}
+	}
+}
+
 WDock *wDockRestoreState(WScreen *scr, WMPropList *dock_state, int type)
 {
 	WDock *dock;
@@ -2043,17 +2059,7 @@ WDock *wDockRestoreState(WScreen *scr, WMPropList *dock_state, int type)
 	restore_state_lowered(dock, dock_state);
 	restore_state_collapsed(dock, dock_state);
 	restore_state_autocollapsed(dock, dock_state);
-
-	/* restore auto-raise/lower state */
-	value = WMGetFromPLDictionary(dock_state, dAutoRaiseLower);
-	if (value) {
-		if (!WMIsPLString(value)) {
-			COMPLAIN("AutoRaiseLower");
-		} else {
-			if (strcasecmp(WMGetFromPLString(value), "YES") == 0)
-				dock->auto_raise_lower = 1;
-		}
-	}
+	restore_state_autoraise(dock, dock_state);
 
 	/* restore attract icons state */
 	dock->attract_icons = 0;
