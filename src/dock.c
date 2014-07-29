@@ -2007,6 +2007,24 @@ void restore_state_autoraise(WDock *dock, WMPropList *state)
 	}
 }
 
+/* restore attract icons state */
+void restore_state_autoattracticons(WDock *dock, WMPropList *state)
+{
+	WMPropList *value;
+
+	dock->attract_icons = 0;
+
+	value = WMGetFromPLDictionary(state, dAutoAttractIcons);
+	if (value) {
+		if (!WMIsPLString(value)) {
+			COMPLAIN("AutoAttractIcons");
+		} else {
+			if (strcasecmp(WMGetFromPLString(value), "YES") == 0)
+				dock->attract_icons = 1;
+		}
+	}
+}
+
 WDock *wDockRestoreState(WScreen *scr, WMPropList *dock_state, int type)
 {
 	WDock *dock;
@@ -2060,19 +2078,7 @@ WDock *wDockRestoreState(WScreen *scr, WMPropList *dock_state, int type)
 	restore_state_collapsed(dock, dock_state);
 	restore_state_autocollapsed(dock, dock_state);
 	restore_state_autoraise(dock, dock_state);
-
-	/* restore attract icons state */
-	dock->attract_icons = 0;
-
-	value = WMGetFromPLDictionary(dock_state, dAutoAttractIcons);
-	if (value) {
-		if (!WMIsPLString(value)) {
-			COMPLAIN("AutoAttractIcons");
-		} else {
-			if (strcasecmp(WMGetFromPLString(value), "YES") == 0)
-				dock->attract_icons = 1;
-		}
-	}
+	restore_state_autoattracticons(dock, dock_state);
 
 	/* application list */
 
