@@ -1693,7 +1693,9 @@ static WMPropList *dockSaveState(WDock *dock)
 	dock_state = WMCreatePLDictionary(dApplications, list, NULL);
 
 	if (dock->type == WM_DOCK) {
-		snprintf(buffer, sizeof(buffer), "Applications%i", dock->screen_ptr->scr_height);
+		/* Save with the same screen_id. See get_application_list() */
+		snprintf(buffer, sizeof(buffer), "%ix%i",
+			 dock->screen_ptr->scr_width, dock->screen_ptr->scr_height);
 		save_application_list(dock_state, list, buffer);
 
 		snprintf(buffer, sizeof(buffer), "%i,%i", (dock->on_right_side ? -ICON_SIZE : 0), dock->y_pos);
@@ -2034,11 +2036,10 @@ static WMPropList *get_application_list(WMPropList *dock_state, char *screen_id)
 	 * When saving, it saves the dock state in
 	 * Applications and Applicationsnnn
 	 *
-	 * When loading, it will first try Applicationsnnn.
+	 * When loading, it will first try Applications_nnn.
 	 * If it does not exist, use Applications as default.
 	 */
-	snprintf(buffer, sizeof(buffer), "Applications%s", screen_id);
-
+	snprintf(buffer, sizeof(buffer), "Applications_%s", screen_id);
 	tmp = WMCreatePLString(buffer);
 	apps = WMGetFromPLDictionary(dock_state, tmp);
 	WMReleasePropList(tmp);
@@ -2054,7 +2055,7 @@ static void save_application_list(WMPropList *state, WMPropList *list, char *scr
 	char buffer[64];
 	WMPropList *key;
 
-	snprintf(buffer, sizeof(buffer), "%s", screen_id);
+	snprintf(buffer, sizeof(buffer), "Applications_%s", screen_id);
 	key = WMCreatePLString(buffer);
 	WMPutInPLDictionary(state, key, list);
 	WMReleasePropList(key);
@@ -2117,7 +2118,7 @@ WDock *wDockRestoreState(WScreen *scr, WMPropList *dock_state, int type)
 	restore_state_autoattracticons(dock, dock_state);
 
 	/* application list */
-	snprintf(screen_id, sizeof(screen_id), "Applications%i", scr->scr_height);
+	snprintf(screen_id, sizeof(screen_id), "%ix%i", scr->scr_width, scr->scr_height);
 	apps = get_application_list(dock_state, screen_id);
 	if (!apps)
 		goto finish;
