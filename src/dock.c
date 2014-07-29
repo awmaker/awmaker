@@ -128,6 +128,8 @@ static void drawerConsolidateIcons(WDock *drawer);
 
 static int onScreen(WScreen *scr, int x, int y);
 
+static void save_application_list(WMPropList *state, WMPropList *list, char *screen_id);
+
 static void make_keys(void)
 {
 	if (dCommand != NULL)
@@ -1671,7 +1673,7 @@ static WMPropList *dockSaveState(WDock *dock)
 	int i;
 	WMPropList *icon_info;
 	WMPropList *list = NULL, *dock_state = NULL;
-	WMPropList *value, *key;
+	WMPropList *value;
 	char buffer[256];
 
 	list = WMCreatePLArray(NULL);
@@ -1692,9 +1694,7 @@ static WMPropList *dockSaveState(WDock *dock)
 
 	if (dock->type == WM_DOCK) {
 		snprintf(buffer, sizeof(buffer), "Applications%i", dock->screen_ptr->scr_height);
-		key = WMCreatePLString(buffer);
-		WMPutInPLDictionary(dock_state, key, list);
-		WMReleasePropList(key);
+		save_application_list(dock_state, list, buffer);
 
 		snprintf(buffer, sizeof(buffer), "%i,%i", (dock->on_right_side ? -ICON_SIZE : 0), dock->y_pos);
 		value = WMCreatePLString(buffer);
@@ -2049,6 +2049,16 @@ static WMPropList *get_application_list(WMPropList *dock_state, char *screen_id)
 	return apps;
 }
 
+static void save_application_list(WMPropList *state, WMPropList *list, char *screen_id)
+{
+	char buffer[64];
+	WMPropList *key;
+
+	snprintf(buffer, sizeof(buffer), "%s", screen_id);
+	key = WMCreatePLString(buffer);
+	WMPutInPLDictionary(state, key, list);
+	WMReleasePropList(key);
+}
 
 WDock *wDockRestoreState(WScreen *scr, WMPropList *dock_state, int type)
 {
