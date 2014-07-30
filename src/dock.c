@@ -2142,20 +2142,11 @@ void dock_set_attacheddocks(WScreen *scr, WDock *dock, WMPropList *state, int ty
 	}
 }
 
-WDock *wDockRestoreState(WScreen *scr, WMPropList *dock_state, int type)
+void restore_dock_position(WDock *dock, WScreen *scr, WMPropList *state, int type)
 {
-	WDock *dock;
 	WMPropList *value;
 
-	dock = wDockCreate(scr, type, NULL);
-
-	if (!dock_state)
-		return dock;
-
-	WMRetainPropList(dock_state);
-
-	/* restore position */
-	value = WMGetFromPLDictionary(dock_state, dPosition);
+	value = WMGetFromPLDictionary(state, dPosition);
 	if (value) {
 		if (!WMIsPLString(value)) {
 			COMPLAIN("Position");
@@ -2187,6 +2178,21 @@ WDock *wDockRestoreState(WScreen *scr, WMPropList *dock_state, int type)
 			}
 		}
 	}
+}
+
+WDock *wDockRestoreState(WScreen *scr, WMPropList *dock_state, int type)
+{
+	WDock *dock;
+
+	dock = wDockCreate(scr, type, NULL);
+
+	if (!dock_state)
+		return dock;
+
+	WMRetainPropList(dock_state);
+
+	/* restore position */
+	restore_dock_position(dock, scr, dock_state, type);
 
 	restore_state_lowered(dock, dock_state);
 	restore_state_collapsed(dock, dock_state);
