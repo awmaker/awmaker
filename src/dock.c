@@ -2061,71 +2061,21 @@ static void save_application_list(WMPropList *state, WMPropList *list, char *scr
 	WMReleasePropList(key);
 }
 
-WDock *wDockRestoreState(WScreen *scr, WMPropList *dock_state, int type)
+void dock_set_attacheddocks(WScreen *scr, WDock *dock, WMPropList *state, int type)
 {
-	WDock *dock;
-	WMPropList *apps;
-	WMPropList *value;
-	WAppIcon *aicon, *old_top;
-	int count, i;
 	char screen_id[64];
+	int count, i;
+	WMPropList *apps, *value;
+	WAppIcon *aicon, *old_top;
 
-	dock = wDockCreate(scr, type, NULL);
-
-	if (!dock_state)
-		return dock;
-
-	WMRetainPropList(dock_state);
-
-	/* restore position */
-	value = WMGetFromPLDictionary(dock_state, dPosition);
-	if (value) {
-		if (!WMIsPLString(value)) {
-			COMPLAIN("Position");
-		} else {
-			if (sscanf(WMGetFromPLString(value), "%i,%i", &dock->x_pos, &dock->y_pos) != 2)
-				COMPLAIN("Position");
-
-			/* check position sanity */
-			if (!onScreen(scr, dock->x_pos, dock->y_pos)) {
-				int x = dock->x_pos;
-				wScreenKeepInside(scr, &x, &dock->y_pos, ICON_SIZE, ICON_SIZE);
-			}
-
-			/* Is this needed any more? */
-			if (type == WM_CLIP) {
-				if (dock->x_pos < 0) {
-					dock->x_pos = 0;
-				} else if (dock->x_pos > scr->scr_width - ICON_SIZE) {
-					dock->x_pos = scr->scr_width - ICON_SIZE;
-				}
-			} else {
-				if (dock->x_pos >= 0) {
-					dock->x_pos = DOCK_EXTRA_SPACE;
-					dock->on_right_side = 0;
-				} else {
-					dock->x_pos = scr->scr_width - DOCK_EXTRA_SPACE - ICON_SIZE;
-					dock->on_right_side = 1;
-				}
-			}
-		}
-	}
-
-	restore_state_lowered(dock, dock_state);
-	restore_state_collapsed(dock, dock_state);
-	restore_state_autocollapsed(dock, dock_state);
-	restore_state_autoraise(dock, dock_state);
-	restore_state_autoattracticons(dock, dock_state);
-
-	/* application list */
 	snprintf(screen_id, sizeof(screen_id), "%ix%i", scr->scr_width, scr->scr_height);
-	apps = get_application_list(dock_state, screen_id);
+	apps = get_application_list(state, screen_id);
 	if (!apps)
-		goto finish;
+		return;
 
 	count = WMGetPropListItemCount(apps);
 	if (count == 0)
-		goto finish;
+		return;
 
 	old_top = dock->icon_array[0];
 
@@ -2190,8 +2140,63 @@ WDock *wDockRestoreState(WScreen *scr, WMPropList *dock_state, int type)
 
 		wAppIconDestroy(old_top);
 	}
+}
 
-finish:
+WDock *wDockRestoreState(WScreen *scr, WMPropList *dock_state, int type)
+{
+	WDock *dock;
+	WMPropList *value;
+
+	dock = wDockCreate(scr, type, NULL);
+
+	if (!dock_state)
+		return dock;
+
+	WMRetainPropList(dock_state);
+
+	/* restore position */
+	value = WMGetFromPLDictionary(dock_state, dPosition);
+	if (value) {
+		if (!WMIsPLString(value)) {
+			COMPLAIN("Position");
+		} else {
+			if (sscanf(WMGetFromPLString(value), "%i,%i", &dock->x_pos, &dock->y_pos) != 2)
+				COMPLAIN("Position");
+
+			/* check position sanity */
+			if (!onScreen(scr, dock->x_pos, dock->y_pos)) {
+				int x = dock->x_pos;
+				wScreenKeepInside(scr, &x, &dock->y_pos, ICON_SIZE, ICON_SIZE);
+			}
+
+			/* Is this needed any more? */
+			if (type == WM_CLIP) {
+				if (dock->x_pos < 0) {
+					dock->x_pos = 0;
+				} else if (dock->x_pos > scr->scr_width - ICON_SIZE) {
+					dock->x_pos = scr->scr_width - ICON_SIZE;
+				}
+			} else {
+				if (dock->x_pos >= 0) {
+					dock->x_pos = DOCK_EXTRA_SPACE;
+					dock->on_right_side = 0;
+				} else {
+					dock->x_pos = scr->scr_width - DOCK_EXTRA_SPACE - ICON_SIZE;
+					dock->on_right_side = 1;
+				}
+			}
+		}
+	}
+
+	restore_state_lowered(dock, dock_state);
+	restore_state_collapsed(dock, dock_state);
+	restore_state_autocollapsed(dock, dock_state);
+	restore_state_autoraise(dock, dock_state);
+	restore_state_autoattracticons(dock, dock_state);
+
+	/* application list */
+	dock_set_attacheddocks(scr, dock, dock_state, type);
+
 	WMReleasePropList(dock_state);
 
 	return dock;
