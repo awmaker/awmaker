@@ -885,7 +885,8 @@ void wWorkspaceRestoreState(WScreen *scr)
 			if (w_global.workspace.array[i]->clip)
 				wDockDestroy(w_global.workspace.array[i]->clip);
 
-			w_global.workspace.array[i]->clip = wDockRestoreState(scr, clip_state, WM_CLIP);
+			w_global.workspace.array[i]->clip = wDockCreate(scr, WM_CLIP, NULL);
+			wDockRestoreState(w_global.workspace.array[i]->clip, clip_state);
 			if (i > 0)
 				wDockHideIcons(w_global.workspace.array[i]->clip);
 

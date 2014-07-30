@@ -2180,19 +2180,12 @@ void restore_dock_position(WDock *dock, WScreen *scr, WMPropList *state, int typ
 	}
 }
 
-WDock *wDockRestoreState(WScreen *scr, WMPropList *dock_state, int type)
+void wDockRestoreState(WDock *dock, WMPropList *dock_state)
 {
-	WDock *dock;
-
-	dock = wDockCreate(scr, type, NULL);
-
-	if (!dock_state)
-		return dock;
-
 	WMRetainPropList(dock_state);
 
 	/* restore position */
-	restore_dock_position(dock, scr, dock_state, type);
+	restore_dock_position(dock, dock->screen_ptr, dock_state, dock->type);
 
 	restore_state_lowered(dock, dock_state);
 	restore_state_collapsed(dock, dock_state);
@@ -2201,11 +2194,9 @@ WDock *wDockRestoreState(WScreen *scr, WMPropList *dock_state, int type)
 	restore_state_autoattracticons(dock, dock_state);
 
 	/* application list */
-	dock_set_attacheddocks(scr, dock, dock_state, type);
+	dock_set_attacheddocks(dock->screen_ptr, dock, dock_state, dock->type);
 
 	WMReleasePropList(dock_state);
-
-	return dock;
 }
 
 void wDockLaunchWithState(WAppIcon *btn, WSavedState *state)
