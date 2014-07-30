@@ -128,6 +128,8 @@ static void drawerConsolidateIcons(WDock *drawer);
 
 static int onScreen(WScreen *scr, int x, int y);
 
+static void moveDock(WDock *dock, int new_x, int new_y);
+
 static void save_application_list(WMPropList *state, WMPropList *list, char *screen_id);
 
 static void make_keys(void)
@@ -2177,6 +2179,35 @@ void restore_dock_position(WDock *dock, WScreen *scr, WMPropList *state, int typ
 				}
 			}
 		}
+	}
+}
+
+void restore_drawer_position(WDock *drawer, WMPropList *state)
+{
+	WMPropList *value;
+
+	value = WMGetFromPLDictionary(state, dPosition);
+	if (!value || !WMIsPLString(value))
+		COMPLAIN("Position");
+	else {
+		int x, y, y_index;
+		if (sscanf(WMGetFromPLString(value), "%i,%i", &x, &y) != 2)
+			COMPLAIN("Position");
+
+		/* check position sanity */
+		if (x != w_global.dock.dock->x_pos)
+			x = w_global.dock.dock->x_pos;
+
+		y_index = (y - w_global.dock.dock->y_pos) / ICON_SIZE;
+
+		/* Here we should do something more intelligent, since it
+		 * can happen even if the user hasn't hand-edited his
+		 * G/D/State file (but uses a lower resolution). */
+		if (y_index >= w_global.dock.dock->max_icons)
+			y_index = w_global.dock.dock->max_icons - 1;
+
+		y = w_global.dock.dock->y_pos + y_index * ICON_SIZE;
+		moveDock(drawer, x, y);
 	}
 }
 
@@ -4976,28 +5007,7 @@ static WDock * drawerRestoreState(WScreen *scr, WMPropList *drawer_state)
 		drawer->icon_array[0]->paste_command = wstrdup(WMGetFromPLString(value));
 
 	/* restore position */
-	value = WMGetFromPLDictionary(drawer_state, dPosition);
-	if (!value || !WMIsPLString(value))
-		COMPLAIN("Position");
-	else {
-		int x, y, y_index;
-		if (sscanf(WMGetFromPLString(value), "%i,%i", &x, &y) != 2)
-			COMPLAIN("Position");
-
-		/* check position sanity */
-		if (x != w_global.dock.dock->x_pos) {
-			x = w_global.dock.dock->x_pos;
-		}
-		y_index = (y - w_global.dock.dock->y_pos) / ICON_SIZE;
-		if (y_index >= w_global.dock.dock->max_icons) {
-			/* Here we should do something more intelligent, since it
-			 * can happen even if the user hasn't hand-edited his
-			 * G/D/State file (but uses a lower resolution). */
-			y_index = w_global.dock.dock->max_icons - 1;
-		}
-		y = w_global.dock.dock->y_pos + y_index * ICON_SIZE;
-		moveDock(drawer, x, y);
-	}
+	restore_drawer_position(drawer, drawer_state);
 
 	/* restore dock properties (applist and others) */
 	dock_state = WMGetFromPLDictionary(drawer_state, dDock);
