@@ -1432,8 +1432,8 @@ WDock *clip_create(WScreen *scr, const char *name)
 
 	btn->dock = dock;
 
-	dock->x_pos = btn->x_pos;
-	dock->y_pos = btn->y_pos;
+	dock->x_pos = 0;
+	dock->y_pos = 0;
 	dock->screen_ptr = scr;
 	dock->type = WM_CLIP;
 	dock->icon_count = 1;
@@ -1910,22 +1910,6 @@ WAppIcon *wClipRestoreState(WScreen *scr, WMPropList *clip_state)
 
 	WMRetainPropList(clip_state);
 
-	/* restore position */
-
-	value = WMGetFromPLDictionary(clip_state, dPosition);
-
-	if (value) {
-		if (!WMIsPLString(value)) {
-			COMPLAIN("Position");
-		} else {
-			if (sscanf(WMGetFromPLString(value), "%i,%i", &icon->x_pos, &icon->y_pos) != 2)
-				COMPLAIN("Position");
-
-			/* check position sanity */
-			if (!onScreen(scr, icon->x_pos, icon->y_pos))
-				wScreenKeepInside(scr, &icon->x_pos, &icon->y_pos, ICON_SIZE, ICON_SIZE);
-		}
-	}
 #ifdef XDND			/* was OFFIX */
 	value = WMGetFromPLDictionary(clip_state, dDropCommand);
 	if (value && WMIsPLString(value))
@@ -2198,6 +2182,10 @@ void restore_clip_position(WDock *dock, WScreen *scr, WMPropList *state)
 			} else if (dock->x_pos > scr->scr_width - ICON_SIZE) {
 				dock->x_pos = scr->scr_width - ICON_SIZE;
 			}
+
+			/* Copy the dock coords in the appicon coords */
+			w_global.clip.icon->x_pos = dock->x_pos;
+			w_global.clip.icon->y_pos = dock->y_pos;
 		}
 	}
 }
