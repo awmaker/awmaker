@@ -84,7 +84,21 @@ void wWorkspaceMake(WScreen * scr, int count)
 int wWorkspaceNew(WScreen *scr)
 {
 	WWorkspace *wspace, **list;
+	WMPropList *state;
 	int i;
+	char *path;
+
+	make_keys();
+
+	/* We need load the WMState file to set the Clip session state */
+	path = wdefaultspathfordomain("WMState");
+	w_global.session_state = WMReadPropListFromFile(path);
+	wfree(path);
+	if (!w_global.session_state && w_global.screen_count > 1) {
+		path = wdefaultspathfordomain("WMState");
+		w_global.session_state = WMReadPropListFromFile(path);
+		wfree(path);
+	}
 
 	if (w_global.workspace.count < MAX_WORKSPACES) {
 		w_global.workspace.count++;
@@ -105,8 +119,11 @@ int wWorkspaceNew(WScreen *scr)
 			snprintf(wspace->name, name_length, new_name, w_global.workspace.count);
 		}
 
-		if (!wPreferences.flags.noclip)
+		if (!wPreferences.flags.noclip) {
 			wspace->clip = wDockCreate(scr, WM_CLIP, NULL);
+			state = WMGetFromPLDictionary(w_global.session_state, dClip);
+			wDockRestoreState(wspace->clip, state);
+		}
 
 		list = wmalloc(sizeof(WWorkspace *) * w_global.workspace.count);
 
