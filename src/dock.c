@@ -2144,7 +2144,7 @@ void dock_set_attacheddocks(WScreen *scr, WDock *dock, WMPropList *state, int ty
 	}
 }
 
-void restore_dock_position(WDock *dock, WScreen *scr, WMPropList *state, int type)
+void restore_dock_position(WDock *dock, WScreen *scr, WMPropList *state)
 {
 	WMPropList *value;
 
@@ -2163,20 +2163,40 @@ void restore_dock_position(WDock *dock, WScreen *scr, WMPropList *state, int typ
 			}
 
 			/* Is this needed any more? */
-			if (type == WM_CLIP) {
-				if (dock->x_pos < 0) {
-					dock->x_pos = 0;
-				} else if (dock->x_pos > scr->scr_width - ICON_SIZE) {
-					dock->x_pos = scr->scr_width - ICON_SIZE;
-				}
+			if (dock->x_pos >= 0) {
+				dock->x_pos = DOCK_EXTRA_SPACE;
+				dock->on_right_side = 0;
 			} else {
-				if (dock->x_pos >= 0) {
-					dock->x_pos = DOCK_EXTRA_SPACE;
-					dock->on_right_side = 0;
-				} else {
-					dock->x_pos = scr->scr_width - DOCK_EXTRA_SPACE - ICON_SIZE;
-					dock->on_right_side = 1;
-				}
+				dock->x_pos = scr->scr_width - DOCK_EXTRA_SPACE - ICON_SIZE;
+				dock->on_right_side = 1;
+			}
+		}
+	}
+}
+
+void restore_clip_position(WDock *dock, WScreen *scr, WMPropList *state)
+{
+	WMPropList *value;
+
+	value = WMGetFromPLDictionary(state, dPosition);
+	if (value) {
+		if (!WMIsPLString(value)) {
+			COMPLAIN("Position");
+		} else {
+			if (sscanf(WMGetFromPLString(value), "%i,%i", &dock->x_pos, &dock->y_pos) != 2)
+				COMPLAIN("Position");
+
+			/* check position sanity */
+			if (!onScreen(scr, dock->x_pos, dock->y_pos)) {
+				int x = dock->x_pos;
+				wScreenKeepInside(scr, &x, &dock->y_pos, ICON_SIZE, ICON_SIZE);
+			}
+
+			/* Is this needed any more? */
+			if (dock->x_pos < 0) {
+				dock->x_pos = 0;
+			} else if (dock->x_pos > scr->scr_width - ICON_SIZE) {
+				dock->x_pos = scr->scr_width - ICON_SIZE;
 			}
 		}
 	}
@@ -2216,7 +2236,11 @@ void wDockRestoreState(WDock *dock, WMPropList *dock_state)
 	WMRetainPropList(dock_state);
 
 	/* restore position */
-	restore_dock_position(dock, dock->screen_ptr, dock_state, dock->type);
+	if (dock->type == WM_DOCK)
+		restore_dock_position(dock, dock->screen_ptr, dock_state);
+
+	if (dock->type == WM_CLIP)
+		restore_clip_position(dock, dock->screen_ptr, dock_state);
 
 	restore_state_lowered(dock, dock_state);
 	restore_state_collapsed(dock, dock_state);
