@@ -1962,9 +1962,10 @@ void restore_state_collapsed(WDock *dock, WMPropList *state)
 }
 
 /* restore auto-collapsed state */
-void restore_state_autocollapsed(WDock *dock, WMPropList *state)
+int restore_state_autocollapsed(WDock *dock, WMPropList *state)
 {
 	WMPropList *value;
+	int ret = 0;
 
 	value = WMGetFromPLDictionary(state, dAutoCollapse);
 	if (value) {
@@ -1974,9 +1975,12 @@ void restore_state_autocollapsed(WDock *dock, WMPropList *state)
 			if (strcasecmp(WMGetFromPLString(value), "YES") == 0) {
 				dock->auto_collapse = 1;
 				dock->collapsed = 1;
+				ret = 1;
 			}
 		}
 	}
+
+	return ret;
 }
 
 /* restore auto-raise/lower state */
@@ -2237,7 +2241,7 @@ void wDockRestoreState(WDock *dock, WMPropList *dock_state)
 
 	restore_state_lowered(dock, dock_state);
 	restore_state_collapsed(dock, dock_state);
-	restore_state_autocollapsed(dock, dock_state);
+	(void) restore_state_autocollapsed(dock, dock_state);
 	restore_state_autoraise(dock, dock_state);
 	(void) restore_state_autoattracticons(dock, dock_state);
 
@@ -5041,13 +5045,10 @@ static WDock * drawerRestoreState(WScreen *scr, WMPropList *drawer_state)
 	restore_state_collapsed(drawer, dock_state);
 
 	/* restore auto-collapsed state */
-	value = WMGetFromPLDictionary(dock_state, dAutoCollapse);
-	if (value && strcasecmp(WMGetFromPLString(value), "YES") == 0) {
-		drawer->auto_collapse = 1;
-		drawer->collapsed = 1;
-	} else {
-		drawer->auto_collapse = 0; // because wDockCreate sets it (drawers only)
-	}
+	if (!restore_state_autocollapsed(drawer, dock_state))
+		drawer->auto_collapse = 0; /* because wDockCreate sets it (drawers only)
+					    * Probably we can change it in create_drawer
+					    * But I am not sure yet (kix) */
 
 	/* restore auto-raise/lower state: same as scr->dock, no matter what */
 	drawer->auto_raise_lower = w_global.dock.dock->auto_raise_lower;
