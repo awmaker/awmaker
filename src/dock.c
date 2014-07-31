@@ -1896,7 +1896,7 @@ static WAppIcon *restore_icon_state(WScreen *scr, WMPropList *info, int type, in
 	return aicon;
 }
 
-#define COMPLAIN(key) wwarning(_("bad value in dock state info:%s"), key)
+#define COMPLAIN(key) wwarning(_("bad value in dock/drawer state info:%s"), key)
 
 WAppIcon *wClipRestoreState(WScreen *scr, WMPropList *clip_state)
 {
@@ -5033,11 +5033,8 @@ static WDock * drawerRestoreState(WScreen *scr, WMPropList *drawer_state)
 	wRaiseFrame(drawer->icon_array[0]->icon->core);
 
 	/* restore collapsed state */
-	drawer->collapsed = 0;
-	value = WMGetFromPLDictionary(dock_state, dCollapsed);
-	if (value && strcasecmp(WMGetFromPLString(value), "YES") == 0) {
-		drawer->collapsed = 1;
-	}
+	restore_state_collapsed(drawer, dock_state);
+
 	/* restore auto-collapsed state */
 	value = WMGetFromPLDictionary(dock_state, dAutoCollapse);
 	if (value && strcasecmp(WMGetFromPLString(value), "YES") == 0) {
