@@ -2056,23 +2056,15 @@ static void save_application_list(WMPropList *state, WMPropList *list, char *scr
 	WMReleasePropList(key);
 }
 
-void dock_set_attacheddocks(WScreen *scr, WDock *dock, WMPropList *state, int type)
+static int set_attacheddocks(WScreen *scr, WDock *dock, WMPropList *apps, int type)
 {
-	char screen_id[64];
 	int count, i;
-	WMPropList *apps, *value;
-	WAppIcon *aicon, *old_top;
-
-	snprintf(screen_id, sizeof(screen_id), "%ix%i", scr->scr_width, scr->scr_height);
-	apps = get_application_list(state, screen_id);
-	if (!apps)
-		return;
+	WMPropList *value;
+	WAppIcon *aicon;
 
 	count = WMGetPropListItemCount(apps);
 	if (count == 0)
-		return;
-
-	old_top = dock->icon_array[0];
+		return 1;
 
 	/* dock->icon_count is set to 1 when dock is created.
 	 * Since Clip is already restored, we want to keep it so for clip,
@@ -2113,6 +2105,25 @@ void dock_set_attacheddocks(WScreen *scr, WDock *dock, WMPropList *state, int ty
 			dock->icon_count++;
 		}
 	}
+
+	return 0;
+}
+
+void dock_set_attacheddocks(WScreen *scr, WDock *dock, WMPropList *state, int type)
+{
+	char screen_id[64];
+	WMPropList *apps;
+	WAppIcon *old_top;
+
+	old_top = dock->icon_array[0];
+
+	snprintf(screen_id, sizeof(screen_id), "%ix%i", scr->scr_width, scr->scr_height);
+	apps = get_application_list(state, screen_id);
+	if (!apps)
+		return;
+
+	if (set_attacheddocks(scr, dock, apps, type))
+		return;
 
 	/* if the first icon is not defined, use the default */
 	if (dock->icon_array[0] == NULL) {
@@ -5002,8 +5013,6 @@ static WDock * drawerRestoreState(WScreen *scr, WMPropList *drawer_state)
 {
 	WDock *drawer;
 	WMPropList *apps, *value, *dock_state;
-	WAppIcon *aicon;
-	int count, i;
 
 	if (!drawer_state)
 		return NULL;
@@ -5059,48 +5068,9 @@ static WDock * drawerRestoreState(WScreen *scr, WMPropList *drawer_state)
 
 	/* application list */
 	apps = WMGetFromPLDictionary(dock_state, dApplications);
+	if (apps)
+		set_attacheddocks(scr, drawer, apps, WM_DRAWER);
 
-	if (!apps) {
-		goto finish;
-	}
-
-	count = WMGetPropListItemCount(apps);
-
-	if (count == 0)
-		goto finish;
-
-	for (i=0; i<count; i++) {
-		if (drawer->icon_count >= drawer->max_icons) {
-			wwarning(_("there are too many icons stored in drawer. Ignoring what doesn't fit"));
-			break;
-		}
-
-		value = WMGetFromPLArray(apps, i);
-		aicon = restore_icon_state(scr, value, WM_DRAWER, drawer->icon_count);
-
-		drawer->icon_array[drawer->icon_count] = aicon;
-
-		if (aicon) {
-			aicon->dock = drawer;
-			aicon->x_pos = drawer->x_pos + (aicon->xindex * ICON_SIZE);
-			aicon->y_pos = drawer->y_pos + (aicon->yindex * ICON_SIZE);
-
-			if (!drawer->lowered)
-				ChangeStackingLevel(aicon->icon->core, WMDockLevel);
-			else
-				ChangeStackingLevel(aicon->icon->core, WMNormalLevel);
-
-			wCoreConfigure(aicon->icon->core, aicon->x_pos, aicon->y_pos, 0, 0);
-
-			if (!drawer->collapsed)
-				XMapWindow(dpy, aicon->icon->core->window);
-			wRaiseFrame(aicon->icon->core);
-
-			drawer->icon_count++;
-		}
-	}
-
-finish:
 	WMReleasePropList(drawer_state);
 
 	return drawer;
