@@ -1996,9 +1996,10 @@ void restore_state_autoraise(WDock *dock, WMPropList *state)
 }
 
 /* restore attract icons state */
-void restore_state_autoattracticons(WDock *dock, WMPropList *state)
+int restore_state_autoattracticons(WDock *dock, WMPropList *state)
 {
 	WMPropList *value;
+	int ret = 0;
 
 	dock->attract_icons = 0;
 
@@ -2007,10 +2008,14 @@ void restore_state_autoattracticons(WDock *dock, WMPropList *state)
 		if (!WMIsPLString(value)) {
 			COMPLAIN("AutoAttractIcons");
 		} else {
-			if (strcasecmp(WMGetFromPLString(value), "YES") == 0)
+			if (strcasecmp(WMGetFromPLString(value), "YES") == 0) {
 				dock->attract_icons = 1;
+				ret = 1;
+			}
 		}
 	}
+
+	return ret;
 }
 
 static WMPropList *get_application_list(WMPropList *dock_state, char *screen_id)
@@ -2234,7 +2239,7 @@ void wDockRestoreState(WDock *dock, WMPropList *dock_state)
 	restore_state_collapsed(dock, dock_state);
 	restore_state_autocollapsed(dock, dock_state);
 	restore_state_autoraise(dock, dock_state);
-	restore_state_autoattracticons(dock, dock_state);
+	(void) restore_state_autoattracticons(dock, dock_state);
 
 	/* application list */
 	dock_set_attacheddocks(dock->screen_ptr, dock, dock_state, dock->type);
@@ -5048,12 +5053,8 @@ static WDock * drawerRestoreState(WScreen *scr, WMPropList *drawer_state)
 	drawer->auto_raise_lower = w_global.dock.dock->auto_raise_lower;
 
 	/* restore attract icons state */
-	drawer->attract_icons = 0;
-	value = WMGetFromPLDictionary(dock_state, dAutoAttractIcons);
-	if (value && strcasecmp(WMGetFromPLString(value), "YES") == 0) {
-		drawer->attract_icons = 1;
+	if (restore_state_autoattracticons(drawer, dock_state))
 		scr->attracting_drawer = drawer;
-	}
 
 	/* application list */
 	apps = WMGetFromPLDictionary(dock_state, dApplications);
