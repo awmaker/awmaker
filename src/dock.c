@@ -828,9 +828,6 @@ static WAppIcon *mainIconCreate(WScreen *scr, int type, const char *name)
 
 	switch(type) {
 	case WM_CLIP:
-		if (w_global.clip.icon)
-			return w_global.clip.icon;
-
 		btn = wAppIconCreateForDock(scr, NULL, "Logo", "WMClip", TILE_CLIP);
 		btn->icon->core->descriptor.handle_expose = clipIconExpose;
 		x_pos = 0;
@@ -1428,7 +1425,10 @@ WDock *clip_create(WScreen *scr, const char *name)
 	dock->max_icons = DOCK_MAX_ICONS;
 	dock->icon_array = wmalloc(sizeof(WAppIcon *) * dock->max_icons);
 
-	btn = mainIconCreate(scr, WM_CLIP, name);
+	if (w_global.clip.icon)
+		btn = w_global.clip.icon;
+	else
+		btn = mainIconCreate(scr, WM_CLIP, name);
 
 	btn->dock = dock;
 
@@ -1903,7 +1903,10 @@ WAppIcon *wClipRestoreState(WScreen *scr, WMPropList *clip_state)
 	WAppIcon *icon;
 	WMPropList *value;
 
-	icon = mainIconCreate(scr, WM_CLIP, NULL);
+	if (w_global.clip.icon)
+		icon = w_global.clip.icon;
+	else
+		icon = mainIconCreate(scr, WM_CLIP, NULL);
 
 	if (!clip_state)
 		return icon;
