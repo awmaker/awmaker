@@ -67,7 +67,6 @@ static void iconDblClick(WObjDescriptor * desc, XEvent * event);
 static void iconExpose(WObjDescriptor * desc, XEvent * event);
 static void wApplicationSaveIconPathFor(const char *iconPath, const char *wm_instance, const char *wm_class);
 static WAppIcon *wAppIconCreate(WWindow * leader_win);
-static void add_to_appicon_list(WAppIcon *appicon);
 static void remove_from_appicon_list(WAppIcon *appicon);
 static void create_appicon_from_dock(WWindow *wwin, WApplication *wapp, Window main_window);
 
@@ -104,56 +103,6 @@ void wApplicationExtractDirPackIcon(const char *path, const char *wm_instance, c
 			wfree(iconPath);
 		}
 	}
-}
-
-WAppIcon *wAppIconCreateForDock(WScreen *scr, const char *command, const char *wm_instance, const char *wm_class, int tile)
-{
-	WAppIcon *aicon;
-
-	aicon = wmalloc(sizeof(WAppIcon));
-	wretain(aicon);
-	aicon->yindex = -1;
-	aicon->xindex = -1;
-
-	add_to_appicon_list(aicon);
-
-	if (command)
-		aicon->command = wstrdup(command);
-
-	if (wm_class)
-		aicon->wm_class = wstrdup(wm_class);
-
-	if (wm_instance)
-		aicon->wm_instance = wstrdup(wm_instance);
-
-	if (strcmp(wm_class, "WMDock") == 0 && wPreferences.flags.clip_merged_in_dock)
-		tile = TILE_CLIP;
-
-	aicon->icon = icon_create_core();
-	wcore_map_toplevel(aicon->icon->core, scr, 0, 0, 0, scr->w_depth,
-			   scr->w_visual, scr->w_colormap, scr->white_pixel);
-
-	aicon->icon->tile_type = tile;
-
-	set_icon_image_from_database(aicon->icon, wm_instance, wm_class, command);
-	/* Update the icon, because icon could be NULL */
-	wIconUpdate(aicon->icon);
-
-	WMAddNotificationObserver(icon_appearanceObserver, aicon->icon, WNIconAppearanceSettingsChanged, aicon->icon);
-	WMAddNotificationObserver(icon_tileObserver, aicon->icon, WNIconTileSettingsChanged, aicon->icon);
-
-#ifdef XDND
-	wXDNDMakeAwareness(aicon->icon->core->window);
-#endif
-
-	/* will be overriden by dock */
-	aicon->icon->core->descriptor.handle_mousedown = appIconMouseDown;
-	aicon->icon->core->descriptor.handle_expose = iconExpose;
-	aicon->icon->core->descriptor.parent_type = WCLASS_APPICON;
-	aicon->icon->core->descriptor.parent = aicon;
-	AddToStackList(aicon->icon->core);
-
-	return aicon;
 }
 
 void create_appicon_for_application(WApplication *wapp, WWindow *wwin)
@@ -1211,7 +1160,7 @@ static void create_appicon_from_dock(WWindow *wwin, WApplication *wapp, Window m
 }
 
 /* Add the appicon to the appiconlist */
-static void add_to_appicon_list(WAppIcon *appicon)
+void add_to_appicon_list(WAppIcon *appicon)
 {
 	appicon->prev = NULL;
 	appicon->next = w_global.app_icon_list;

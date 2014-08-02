@@ -101,6 +101,7 @@ static void toggleLowered(WDock *dock);
 static void toggleCollapsed(WDock *dock);
 
 static void clipIconExpose(WObjDescriptor *desc, XEvent *event);
+static void dockIconExpose(WObjDescriptor *desc, XEvent *event);
 
 static void clipLeave(WDock *dock);
 
@@ -822,7 +823,44 @@ static WAppIcon *create_icon_for_dock(WScreen *scr)
 	WAppIcon *btn;
 	int x_pos;
 
-	btn = wAppIconCreateForDock(scr, NULL, "Logo", "WMDock", TILE_NORMAL);
+	/* Create appicon's icon */
+	btn = wmalloc(sizeof(WAppIcon));
+	wretain(btn);
+	btn->yindex = -1;
+	btn->xindex = -1;
+
+	add_to_appicon_list(btn);
+
+	btn->wm_class = wstrdup("WMDock");
+	btn->wm_instance = wstrdup("Logo");
+
+	btn->icon = icon_create_core();
+	if (wPreferences.flags.clip_merged_in_dock)
+		btn->icon->tile_type = TILE_CLIP;
+	else
+		btn->icon->tile_type = TILE_NORMAL;
+
+	wcore_map_toplevel(btn->icon->core, scr, 0, 0, 0, scr->w_depth,
+			   scr->w_visual, scr->w_colormap, scr->white_pixel);
+
+	set_icon_image_from_database(btn->icon, btn->wm_instance, btn->wm_class, NULL);
+	/* Update the icon, because icon could be NULL */
+	wIconUpdate(btn->icon);
+
+	WMAddNotificationObserver(icon_appearanceObserver, btn->icon, WNIconAppearanceSettingsChanged, btn->icon);
+	WMAddNotificationObserver(icon_tileObserver, btn->icon, WNIconTileSettingsChanged, btn->icon);
+
+#ifdef XDND
+	wXDNDMakeAwareness(btn->icon->core->window);
+#endif
+
+	/* will be overriden by dock */
+	btn->icon->core->descriptor.handle_mousedown = appIconMouseDown;
+	btn->icon->core->descriptor.handle_expose = dockIconExpose;
+	btn->icon->core->descriptor.parent_type = WCLASS_APPICON;
+	btn->icon->core->descriptor.parent = btn;
+	AddToStackList(btn->icon->core);
+
 	if (wPreferences.flags.clip_merged_in_dock)
 		btn->icon->core->descriptor.handle_expose = clipIconExpose;
 	x_pos = scr->scr_width - ICON_SIZE - DOCK_EXTRA_SPACE;
@@ -850,7 +888,41 @@ static WAppIcon *create_icon_for_clip(WScreen *scr)
 	WAppIcon *btn;
 	int x_pos;
 
-	btn = wAppIconCreateForDock(scr, NULL, "Logo", "WMClip", TILE_CLIP);
+	/* Create appicon's icon */
+	btn = wmalloc(sizeof(WAppIcon));
+	wretain(btn);
+	btn->yindex = -1;
+	btn->xindex = -1;
+
+	add_to_appicon_list(btn);
+
+	btn->wm_class = wstrdup("WMClip");
+	btn->wm_instance = wstrdup("Logo");
+
+	btn->icon = icon_create_core();
+	wcore_map_toplevel(btn->icon->core, scr, 0, 0, 0, scr->w_depth,
+			   scr->w_visual, scr->w_colormap, scr->white_pixel);
+
+	btn->icon->tile_type = TILE_CLIP;
+
+	set_icon_image_from_database(btn->icon, btn->wm_instance, btn->wm_class, NULL);
+	/* Update the icon, because icon could be NULL */
+	wIconUpdate(btn->icon);
+
+	WMAddNotificationObserver(icon_appearanceObserver, btn->icon, WNIconAppearanceSettingsChanged, btn->icon);
+	WMAddNotificationObserver(icon_tileObserver, btn->icon, WNIconTileSettingsChanged, btn->icon);
+
+#ifdef XDND
+	wXDNDMakeAwareness(aicon->icon->core->window);
+#endif
+
+	/* will be overriden by dock */
+	btn->icon->core->descriptor.handle_mousedown = appIconMouseDown;
+	btn->icon->core->descriptor.handle_expose = dockIconExpose;
+	btn->icon->core->descriptor.parent_type = WCLASS_APPICON;
+	btn->icon->core->descriptor.parent = btn;
+	AddToStackList(btn->icon->core);
+
 	btn->icon->core->descriptor.handle_expose = clipIconExpose;
 	x_pos = 0;
 
@@ -878,7 +950,44 @@ static WAppIcon *create_icon_for_drawer(WScreen *scr, const char *name)
 
 	if (name == NULL)
 		name = findUniqueName(scr, "Drawer");
-	btn = wAppIconCreateForDock(scr, NULL, name, "WMDrawer", TILE_DRAWER);
+
+	/* Create appicon's icon */
+	btn = wmalloc(sizeof(WAppIcon));
+	wretain(btn);
+	btn->yindex = -1;
+	btn->xindex = -1;
+
+	add_to_appicon_list(btn);
+
+	btn->wm_class = wstrdup("WMDrawer");
+
+	if (name)
+		btn->wm_instance = wstrdup(name);
+
+	btn->icon = icon_create_core();
+	wcore_map_toplevel(btn->icon->core, scr, 0, 0, 0, scr->w_depth,
+			   scr->w_visual, scr->w_colormap, scr->white_pixel);
+
+	btn->icon->tile_type = TILE_DRAWER;
+
+	set_icon_image_from_database(btn->icon, btn->wm_instance, btn->wm_class, NULL);
+	/* Update the icon, because icon could be NULL */
+	wIconUpdate(btn->icon);
+
+	WMAddNotificationObserver(icon_appearanceObserver, btn->icon, WNIconAppearanceSettingsChanged, btn->icon);
+	WMAddNotificationObserver(icon_tileObserver, btn->icon, WNIconTileSettingsChanged, btn->icon);
+
+#ifdef XDND
+	wXDNDMakeAwareness(btn->icon->core->window);
+#endif
+
+	/* will be overriden by dock */
+	btn->icon->core->descriptor.handle_mousedown = appIconMouseDown;
+	btn->icon->core->descriptor.handle_expose = dockIconExpose;
+	btn->icon->core->descriptor.parent_type = WCLASS_APPICON;
+	btn->icon->core->descriptor.parent = btn;
+	AddToStackList(btn->icon->core);
+
 	btn->icon->core->descriptor.handle_expose = drawerIconExpose;
 	x_pos = 0;
 
@@ -1857,7 +1966,50 @@ static WAppIcon *restore_icon_state(WScreen *scr, WMPropList *info, int type, in
 		return NULL;
 	}
 
-	aicon = wAppIconCreateForDock(scr, command, winstance, wclass, TILE_NORMAL);
+	/* Create appicon's icon */
+	aicon = wmalloc(sizeof(WAppIcon));
+	wretain(aicon);
+	aicon->yindex = -1;
+	aicon->xindex = -1;
+
+	add_to_appicon_list(aicon);
+
+	if (command)
+		aicon->command = wstrdup(command);
+
+	if (wclass)
+		aicon->wm_class = wstrdup(wclass);
+
+	if (winstance)
+		aicon->wm_instance = wstrdup(winstance);
+
+	aicon->icon = icon_create_core();
+	if (strcmp(wclass, "WMDock") == 0 && wPreferences.flags.clip_merged_in_dock)
+		aicon->icon->tile_type = TILE_CLIP;
+	else
+		aicon->icon->tile_type = TILE_NORMAL;
+
+	wcore_map_toplevel(aicon->icon->core, scr, 0, 0, 0, scr->w_depth,
+			   scr->w_visual, scr->w_colormap, scr->white_pixel);
+
+	set_icon_image_from_database(aicon->icon, winstance, wclass, command);
+	/* Update the icon, because icon could be NULL */
+	wIconUpdate(aicon->icon);
+
+	WMAddNotificationObserver(icon_appearanceObserver, aicon->icon, WNIconAppearanceSettingsChanged, aicon->icon);
+	WMAddNotificationObserver(icon_tileObserver, aicon->icon, WNIconTileSettingsChanged, aicon->icon);
+
+#ifdef XDND
+	wXDNDMakeAwareness(aicon->icon->core->window);
+#endif
+
+	/* will be overriden by dock */
+	aicon->icon->core->descriptor.handle_mousedown = appIconMouseDown;
+	aicon->icon->core->descriptor.handle_expose = dockIconExpose;
+	aicon->icon->core->descriptor.parent_type = WCLASS_APPICON;
+	aicon->icon->core->descriptor.parent = aicon;
+	AddToStackList(aicon->icon->core);
+
 	if (wclass)
 		wfree(wclass);
 	if (winstance)
@@ -3554,8 +3706,48 @@ void wDockTrackWindowLaunch(WDock *dock, Window window)
 				icon->launching = 1;
 				dockIconPaint(icon);
 
-				aicon = wAppIconCreateForDock(dock->screen_ptr, NULL,
-							      wm_instance, wm_class, TILE_NORMAL);
+				/* Create appicon's icon */
+				aicon = wmalloc(sizeof(WAppIcon));
+				wretain(aicon);
+				aicon->yindex = -1;
+				aicon->xindex = -1;
+
+				add_to_appicon_list(aicon);
+
+				if (wm_class)
+					aicon->wm_class = wstrdup(wm_class);
+
+				if (wm_instance)
+					aicon->wm_instance = wstrdup(wm_instance);
+
+				aicon->icon = icon_create_core();
+				if (strcmp(wm_class, "WMDock") == 0 && wPreferences.flags.clip_merged_in_dock)
+					aicon->icon->tile_type = TILE_CLIP;
+				else
+					aicon->icon->tile_type = TILE_NORMAL;
+
+				wcore_map_toplevel(aicon->icon->core, dock->screen_ptr, 0, 0, 0,
+						   dock->screen_ptr->w_depth, dock->screen_ptr->w_visual,
+						   dock->screen_ptr->w_colormap, dock->screen_ptr->white_pixel);
+
+				set_icon_image_from_database(aicon->icon, wm_instance, wm_class, command);
+				/* Update the icon, because icon could be NULL */
+				wIconUpdate(aicon->icon);
+
+				WMAddNotificationObserver(icon_appearanceObserver, aicon->icon, WNIconAppearanceSettingsChanged, aicon->icon);
+				WMAddNotificationObserver(icon_tileObserver, aicon->icon, WNIconTileSettingsChanged, aicon->icon);
+
+#ifdef XDND
+				wXDNDMakeAwareness(aicon->icon->core->window);
+#endif
+
+				/* will be overriden by dock */
+				aicon->icon->core->descriptor.handle_mousedown = appIconMouseDown;
+				aicon->icon->core->descriptor.handle_expose = dockIconExpose;
+				aicon->icon->core->descriptor.parent_type = WCLASS_APPICON;
+				aicon->icon->core->descriptor.parent = aicon;
+				AddToStackList(aicon->icon->core);
+
 				/* XXX: can: aicon->icon == NULL ? */
 				PlaceIcon(dock->screen_ptr, &x0, &y0, wGetHeadForWindow(aicon->icon->owner));
 				wAppIconMove(aicon, x0, y0);
@@ -4610,6 +4802,13 @@ static char * findUniqueName(WScreen *scr, const char *instance_basename)
 	return buffer;
 }
 
+static void dockIconExpose(WObjDescriptor *desc, XEvent *event)
+{
+        /* Parameter not used, but tell the compiler that it is ok */
+        (void) event;
+
+        wAppIconPaint(desc->parent);
+}
 
 static void drawerIconExpose(WObjDescriptor *desc, XEvent *event)
 {
