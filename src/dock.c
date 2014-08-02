@@ -854,15 +854,13 @@ static WAppIcon *create_icon_for_dock(WScreen *scr)
 	wXDNDMakeAwareness(btn->icon->core->window);
 #endif
 
-	/* will be overriden by dock */
-	btn->icon->core->descriptor.handle_mousedown = appIconMouseDown;
-	btn->icon->core->descriptor.handle_expose = dockIconExpose;
-	btn->icon->core->descriptor.parent_type = WCLASS_APPICON;
-	btn->icon->core->descriptor.parent = btn;
 	AddToStackList(btn->icon->core);
 
 	if (wPreferences.flags.clip_merged_in_dock)
 		btn->icon->core->descriptor.handle_expose = clipIconExpose;
+	else
+		btn->icon->core->descriptor.handle_expose = dockIconExpose;
+
 	x_pos = scr->scr_width - ICON_SIZE - DOCK_EXTRA_SPACE;
 
 	btn->xindex = 0;
@@ -877,6 +875,7 @@ static WAppIcon *create_icon_for_dock(WScreen *scr)
 	btn->x_pos = x_pos;
 	btn->y_pos = 0;
 	btn->docked = 1;
+
 	if (wPreferences.flags.clip_merged_in_dock)
 		w_global.clip.icon = btn;
 
@@ -916,19 +915,14 @@ static WAppIcon *create_icon_for_clip(WScreen *scr)
 	wXDNDMakeAwareness(aicon->icon->core->window);
 #endif
 
-	/* will be overriden by dock */
-	btn->icon->core->descriptor.handle_mousedown = appIconMouseDown;
-	btn->icon->core->descriptor.handle_expose = dockIconExpose;
-	btn->icon->core->descriptor.parent_type = WCLASS_APPICON;
-	btn->icon->core->descriptor.parent = btn;
 	AddToStackList(btn->icon->core);
 
-	btn->icon->core->descriptor.handle_expose = clipIconExpose;
 	x_pos = 0;
 
 	btn->xindex = 0;
 	btn->yindex = 0;
 
+	btn->icon->core->descriptor.handle_expose = clipIconExpose;
 	btn->icon->core->descriptor.handle_mousedown = iconMouseDown;
 	btn->icon->core->descriptor.handle_enternotify = clipEnterNotify;
 	btn->icon->core->descriptor.handle_leavenotify = clipLeaveNotify;
@@ -981,11 +975,6 @@ static WAppIcon *create_icon_for_drawer(WScreen *scr, const char *name)
 	wXDNDMakeAwareness(btn->icon->core->window);
 #endif
 
-	/* will be overriden by dock */
-	btn->icon->core->descriptor.handle_mousedown = appIconMouseDown;
-	btn->icon->core->descriptor.handle_expose = dockIconExpose;
-	btn->icon->core->descriptor.parent_type = WCLASS_APPICON;
-	btn->icon->core->descriptor.parent = btn;
 	AddToStackList(btn->icon->core);
 
 	btn->icon->core->descriptor.handle_expose = drawerIconExpose;
@@ -2003,11 +1992,6 @@ static WAppIcon *restore_icon_state(WScreen *scr, WMPropList *info, int type, in
 	wXDNDMakeAwareness(aicon->icon->core->window);
 #endif
 
-	/* will be overriden by dock */
-	aicon->icon->core->descriptor.handle_mousedown = appIconMouseDown;
-	aicon->icon->core->descriptor.handle_expose = dockIconExpose;
-	aicon->icon->core->descriptor.parent_type = WCLASS_APPICON;
-	aicon->icon->core->descriptor.parent = aicon;
 	AddToStackList(aicon->icon->core);
 
 	if (wclass)
@@ -2017,6 +2001,7 @@ static WAppIcon *restore_icon_state(WScreen *scr, WMPropList *info, int type, in
 	if (command)
 		wfree(command);
 
+	aicon->icon->core->descriptor.handle_expose = dockIconExpose;
 	aicon->icon->core->descriptor.handle_mousedown = iconMouseDown;
 	aicon->icon->core->descriptor.handle_enternotify = clipEnterNotify;
 	aicon->icon->core->descriptor.handle_leavenotify = clipLeaveNotify;
