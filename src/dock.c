@@ -1336,7 +1336,8 @@ WDock *dock_create(WScreen *scr)
 	make_keys();
 
 	dock = wmalloc(sizeof(WDock));
-	dock->max_icons = scr->scr_height / wPreferences.icon_size;
+	/* Max icon number, without screen */
+	dock->max_icons = DOCK_MAX_ICONS;
 	dock->icon_array = wmalloc(sizeof(WAppIcon *) * dock->max_icons);
 
 	/* Create appicon's icon */
