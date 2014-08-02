@@ -58,8 +58,6 @@ static void miniwindowExpose(WObjDescriptor *desc, XEvent *event);
 static void miniwindowMouseDown(WObjDescriptor *desc, XEvent *event);
 static void miniwindowDblClick(WObjDescriptor *desc, XEvent *event);
 
-static WIcon *icon_create_core(void);
-
 static void set_dockapp_in_icon(WIcon *icon);
 static void get_rimage_icon_from_icon_win(WIcon *icon);
 static void get_rimage_icon_from_user_icon(WIcon *icon);
@@ -71,7 +69,7 @@ static void unset_icon_image(WIcon *icon);
 
 /****** Notification Observers ******/
 
-static void appearanceObserver(void *self, WMNotification *notif)
+void icon_appearanceObserver(void *self, WMNotification *notif)
 {
 	WIcon *icon = (WIcon *) self;
 	uintptr_t flags = (uintptr_t)WMGetNotificationClientData(notif);
@@ -89,7 +87,7 @@ static void appearanceObserver(void *self, WMNotification *notif)
 	XClearArea(dpy, icon->core->window, 0, 0, icon->core->width, icon->core->height, True);
 }
 
-static void tileObserver(void *self, WMNotification *notif)
+void icon_tileObserver(void *self, WMNotification *notif)
 {
 	WIcon *icon = (WIcon *) self;
 
@@ -146,8 +144,8 @@ WIcon *icon_create_for_wwindow(WWindow *wwin)
 	/* Update the icon, because icon could be NULL */
 	wIconUpdate(icon);
 
-	WMAddNotificationObserver(appearanceObserver, icon, WNIconAppearanceSettingsChanged, icon);
-	WMAddNotificationObserver(tileObserver, icon, WNIconTileSettingsChanged, icon);
+	WMAddNotificationObserver(icon_appearanceObserver, icon, WNIconAppearanceSettingsChanged, icon);
+	WMAddNotificationObserver(icon_tileObserver, icon, WNIconTileSettingsChanged, icon);
 
 	return icon;
 }
@@ -166,13 +164,13 @@ WIcon *icon_create_for_dock(WScreen *scr, const char *command, const char *wm_in
 	/* Update the icon, because icon could be NULL */
 	wIconUpdate(icon);
 
-	WMAddNotificationObserver(appearanceObserver, icon, WNIconAppearanceSettingsChanged, icon);
-	WMAddNotificationObserver(tileObserver, icon, WNIconTileSettingsChanged, icon);
+	WMAddNotificationObserver(icon_appearanceObserver, icon, WNIconAppearanceSettingsChanged, icon);
+	WMAddNotificationObserver(icon_tileObserver, icon, WNIconTileSettingsChanged, icon);
 
 	return icon;
 }
 
-static WIcon *icon_create_core(void)
+WIcon *icon_create_core(void)
 {
 	WIcon *icon;
 

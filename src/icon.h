@@ -55,6 +55,7 @@ typedef struct WIcon {
 
 WIcon *icon_create_for_dock(WScreen *scr, const char *command, const char *wm_instance, const char *wm_class, int tile);
 WIcon *icon_create_for_wwindow(WWindow *wwin);
+WIcon *icon_create_core(void);
 
 void set_icon_image_from_database(WIcon *icon, const char *wm_instance, const char *wm_class, const char *command);
 void wIconDestroy(WIcon *icon);
@@ -74,5 +75,8 @@ char *get_name_for_instance_class(const char *wm_instance, const char *wm_class)
 
 void wIconSetHighlited(WIcon *icon, Bool flag);
 void set_icon_image_from_image(WIcon *icon, RImage *image);
+
+void icon_appearanceObserver(void *self, WMNotification *notif);
+void icon_tileObserver(void *self, WMNotification *notif);
 
 #endif /* WMICON_H_ */
