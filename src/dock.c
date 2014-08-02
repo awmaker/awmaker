@@ -2055,36 +2055,6 @@ static WAppIcon *restore_icon_state(WScreen *scr, WMPropList *info, int type, in
 
 #define COMPLAIN(key) wwarning(_("bad value in dock/drawer state info:%s"), key)
 
-WAppIcon *wClipRestoreState(WScreen *scr, WMPropList *clip_state)
-{
-	WAppIcon *icon;
-	WMPropList *value;
-
-	if (w_global.clip.icon)
-		icon = w_global.clip.icon;
-	else
-		icon = create_icon_for_clip(scr);
-
-	if (!clip_state)
-		return icon;
-
-	WMRetainPropList(clip_state);
-
-#ifdef XDND			/* was OFFIX */
-	value = WMGetFromPLDictionary(clip_state, dDropCommand);
-	if (value && WMIsPLString(value))
-		icon->dnd_command = wstrdup(WMGetFromPLString(value));
-#endif
-
-	value = WMGetFromPLDictionary(clip_state, dPasteCommand);
-	if (value && WMIsPLString(value))
-		icon->paste_command = wstrdup(WMGetFromPLString(value));
-
-	WMReleasePropList(clip_state);
-
-	return icon;
-}
-
 /* restore lowered/raised state */
 void restore_state_lowered(WDock *dock, WMPropList *state)
 {

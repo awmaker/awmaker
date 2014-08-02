@@ -99,7 +99,6 @@ int wDockReceiveDNDDrop(WScreen *scr, XEvent *event);
 void wClipIconPaint(void);
 void wClipSaveState(void);
 WMPropList *wClipSaveWorkspaceState(int workspace);
-WAppIcon *wClipRestoreState(WScreen *scr, WMPropList *clip_state);
 
 void wDrawerIconPaint(WAppIcon *dicon);
 void wDrawersSaveState(WScreen *scr);
