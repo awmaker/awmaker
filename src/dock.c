@@ -885,13 +885,12 @@ static WAppIcon *create_icon_for_dock(WScreen *scr)
 static WAppIcon *create_icon_for_clip(WScreen *scr)
 {
 	WAppIcon *btn;
-	int x_pos;
 
 	/* Create appicon's icon */
 	btn = wmalloc(sizeof(WAppIcon));
 	wretain(btn);
-	btn->yindex = -1;
-	btn->xindex = -1;
+	btn->yindex = 0;
+	btn->xindex = 0;
 
 	add_to_appicon_list(btn);
 
@@ -917,11 +916,6 @@ static WAppIcon *create_icon_for_clip(WScreen *scr)
 
 	AddToStackList(btn->icon->core);
 
-	x_pos = 0;
-
-	btn->xindex = 0;
-	btn->yindex = 0;
-
 	btn->icon->core->descriptor.handle_expose = clipIconExpose;
 	btn->icon->core->descriptor.handle_mousedown = iconMouseDown;
 	btn->icon->core->descriptor.handle_enternotify = clipEnterNotify;
@@ -929,7 +923,7 @@ static WAppIcon *create_icon_for_clip(WScreen *scr)
 	btn->icon->core->descriptor.parent_type = WCLASS_DOCK_ICON;
 	btn->icon->core->descriptor.parent = btn;
 	XMapWindow(dpy, btn->icon->core->window);
-	btn->x_pos = x_pos;
+	btn->x_pos = 0;
 	btn->y_pos = 0;
 	btn->docked = 1;
 	w_global.clip.icon = btn;
@@ -940,7 +934,6 @@ static WAppIcon *create_icon_for_clip(WScreen *scr)
 static WAppIcon *create_icon_for_drawer(WScreen *scr, const char *name)
 {
 	WAppIcon *btn;
-	int x_pos;
 
 	if (name == NULL)
 		name = findUniqueName(scr, "Drawer");
@@ -948,8 +941,8 @@ static WAppIcon *create_icon_for_drawer(WScreen *scr, const char *name)
 	/* Create appicon's icon */
 	btn = wmalloc(sizeof(WAppIcon));
 	wretain(btn);
-	btn->yindex = -1;
-	btn->xindex = -1;
+	btn->yindex = 0;
+	btn->xindex = 0;
 
 	add_to_appicon_list(btn);
 
@@ -978,18 +971,13 @@ static WAppIcon *create_icon_for_drawer(WScreen *scr, const char *name)
 	AddToStackList(btn->icon->core);
 
 	btn->icon->core->descriptor.handle_expose = drawerIconExpose;
-	x_pos = 0;
-
-	btn->xindex = 0;
-	btn->yindex = 0;
-
 	btn->icon->core->descriptor.handle_mousedown = iconMouseDown;
 	btn->icon->core->descriptor.handle_enternotify = clipEnterNotify;
 	btn->icon->core->descriptor.handle_leavenotify = clipLeaveNotify;
 	btn->icon->core->descriptor.parent_type = WCLASS_DOCK_ICON;
 	btn->icon->core->descriptor.parent = btn;
 	XMapWindow(dpy, btn->icon->core->window);
-	btn->x_pos = x_pos;
+	btn->x_pos = 0;
 	btn->y_pos = 0;
 	btn->docked = 1;
 
