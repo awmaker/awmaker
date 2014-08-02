@@ -128,7 +128,19 @@ WAppIcon *wAppIconCreateForDock(WScreen *scr, const char *command, const char *w
 
 	if (strcmp(wm_class, "WMDock") == 0 && wPreferences.flags.clip_merged_in_dock)
 		tile = TILE_CLIP;
-	aicon->icon = icon_create_for_dock(scr, command, wm_instance, wm_class, tile);
+
+	aicon->icon = icon_create_core();
+	wcore_map_toplevel(aicon->icon->core, scr, 0, 0, 0, scr->w_depth,
+			   scr->w_visual, scr->w_colormap, scr->white_pixel);
+
+	aicon->icon->tile_type = tile;
+
+	set_icon_image_from_database(aicon->icon, wm_instance, wm_class, command);
+	/* Update the icon, because icon could be NULL */
+	wIconUpdate(aicon->icon);
+
+	WMAddNotificationObserver(icon_appearanceObserver, aicon->icon, WNIconAppearanceSettingsChanged, aicon->icon);
+	WMAddNotificationObserver(icon_tileObserver, aicon->icon, WNIconTileSettingsChanged, aicon->icon);
 
 #ifdef XDND
 	wXDNDMakeAwareness(aicon->icon->core->window);

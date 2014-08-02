@@ -150,26 +150,6 @@ WIcon *icon_create_for_wwindow(WWindow *wwin)
 	return icon;
 }
 
-WIcon *icon_create_for_dock(WScreen *scr, const char *command, const char *wm_instance, const char *wm_class, int tile)
-{
-	WIcon *icon;
-
-	icon = icon_create_core();
-	wcore_map_toplevel(icon->core, scr, 0, 0, 0, scr->w_depth,
-			   scr->w_visual, scr->w_colormap, scr->white_pixel);
-
-	icon->tile_type = tile;
-
-	set_icon_image_from_database(icon, wm_instance, wm_class, command);
-	/* Update the icon, because icon could be NULL */
-	wIconUpdate(icon);
-
-	WMAddNotificationObserver(icon_appearanceObserver, icon, WNIconAppearanceSettingsChanged, icon);
-	WMAddNotificationObserver(icon_tileObserver, icon, WNIconTileSettingsChanged, icon);
-
-	return icon;
-}
-
 WIcon *icon_create_core(void)
 {
 	WIcon *icon;

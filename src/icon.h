@@ -53,7 +53,6 @@ typedef struct WIcon {
 					 * color */
 } WIcon;
 
-WIcon *icon_create_for_dock(WScreen *scr, const char *command, const char *wm_instance, const char *wm_class, int tile);
 WIcon *icon_create_for_wwindow(WWindow *wwin);
 WIcon *icon_create_core(void);
 
