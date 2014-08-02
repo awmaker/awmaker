@@ -1331,34 +1331,58 @@ WDock *dock_create(WScreen *scr)
 {
 	WDock *dock;
 	WAppIcon *btn;
-	int x_pos;
 
 	make_keys();
 
 	dock = wmalloc(sizeof(WDock));
+
+	/* Set basic variables */
+	dock->type = WM_DOCK;
+	dock->icon_count = 1;
+	dock->collapsed = 0;
+	dock->auto_collapse = 0;
+	dock->auto_collapse_magic = NULL;
+	dock->auto_raise_lower = 0;
+	dock->auto_lower_magic = NULL;
+	dock->auto_raise_magic = NULL;
+	dock->attract_icons = 0;
+	dock->lowered = 1;
 	/* Max icon number, without screen */
 	dock->max_icons = DOCK_MAX_ICONS;
 	dock->icon_array = wmalloc(sizeof(WAppIcon *) * dock->max_icons);
-
-	/* Create appicon's icon */
 	btn = wmalloc(sizeof(WAppIcon));
-	wretain(btn);
-	btn->yindex = -1;
-	btn->xindex = -1;
 
+	wretain(btn);
 	add_to_appicon_list(btn);
 
 	btn->wm_class = wstrdup("WMDock");
 	btn->wm_instance = wstrdup("Logo");
+	btn->xindex = 0;
+	btn->yindex = 0;
+	btn->docked = 1;
+	btn->dock = dock;
+	dock->on_right_side = 1;
+	dock->icon_array[0] = btn;
 
 	btn->icon = icon_create_core();
+	btn->icon->core->descriptor.parent_type = WCLASS_DOCK_ICON;
+	btn->icon->core->descriptor.parent = btn;
+
 	if (wPreferences.flags.clip_merged_in_dock)
 		btn->icon->tile_type = TILE_CLIP;
 	else
 		btn->icon->tile_type = TILE_NORMAL;
 
+	if (wPreferences.flags.clip_merged_in_dock)
+		w_global.clip.icon = btn;
+	dock->screen_ptr = scr;
 	wcore_map_toplevel(btn->icon->core, scr, 0, 0, 0, scr->w_depth,
 			   scr->w_visual, scr->w_colormap, scr->white_pixel);
+
+	if (wPreferences.flags.clip_merged_in_dock)
+		btn->icon->core->descriptor.handle_expose = clipIconExpose;
+	else
+		btn->icon->core->descriptor.handle_expose = dockIconExpose;
 
 	set_icon_image_from_database(btn->icon, btn->wm_instance, btn->wm_class, NULL);
 	/* Update the icon, because icon could be NULL */
@@ -1373,46 +1397,16 @@ WDock *dock_create(WScreen *scr)
 
 	AddToStackList(btn->icon->core);
 
-	if (wPreferences.flags.clip_merged_in_dock)
-		btn->icon->core->descriptor.handle_expose = clipIconExpose;
-	else
-		btn->icon->core->descriptor.handle_expose = dockIconExpose;
-
-	x_pos = scr->scr_width - ICON_SIZE - DOCK_EXTRA_SPACE;
-
-	btn->xindex = 0;
-	btn->yindex = 0;
-
 	btn->icon->core->descriptor.handle_mousedown = iconMouseDown;
 	btn->icon->core->descriptor.handle_enternotify = clipEnterNotify;
 	btn->icon->core->descriptor.handle_leavenotify = clipLeaveNotify;
-	btn->icon->core->descriptor.parent_type = WCLASS_DOCK_ICON;
-	btn->icon->core->descriptor.parent = btn;
 	XMapWindow(dpy, btn->icon->core->window);
-	btn->x_pos = x_pos;
+	btn->x_pos = scr->scr_width - ICON_SIZE - DOCK_EXTRA_SPACE;
 	btn->y_pos = 0;
-	btn->docked = 1;
-
-	if (wPreferences.flags.clip_merged_in_dock)
-		w_global.clip.icon = btn;
-
-	btn->dock = dock;
 
 	dock->x_pos = btn->x_pos;
 	dock->y_pos = btn->y_pos;
-	dock->screen_ptr = scr;
-	dock->type = WM_DOCK;
-	dock->icon_count = 1;
-	dock->on_right_side = 1;
-	dock->collapsed = 0;
-	dock->auto_collapse = 0;
-	dock->auto_collapse_magic = NULL;
-	dock->auto_raise_lower = 0;
-	dock->auto_lower_magic = NULL;
-	dock->auto_raise_magic = NULL;
-	dock->attract_icons = 0;
-	dock->lowered = 1;
-	dock->icon_array[0] = btn;
+
 	wRaiseFrame(btn->icon->core);
 	XMoveWindow(dpy, btn->icon->core->window, btn->x_pos, btn->y_pos);
 
