@@ -818,34 +818,15 @@ static void unhideHereCallback(WMenu *menu, WMenuEntry *entry)
 	wUnhideApplication(wapp, False, True);
 }
 
-/* Name is only used when type == WM_DRAWER and when restoring a specific
- * drawer, with a specific name. When creating a drawer, leave name to NULL
- * and mainIconCreate will find the first unused unique name */
-static WAppIcon *mainIconCreate(WScreen *scr, int type, const char *name)
+static WAppIcon *create_icon_for_dock(WScreen *scr)
 {
 	WAppIcon *btn;
 	int x_pos;
 
-	switch(type) {
-	case WM_CLIP:
-		btn = wAppIconCreateForDock(scr, NULL, "Logo", "WMClip", TILE_CLIP);
+	btn = wAppIconCreateForDock(scr, NULL, "Logo", "WMDock", TILE_NORMAL);
+	if (wPreferences.flags.clip_merged_in_dock)
 		btn->icon->core->descriptor.handle_expose = clipIconExpose;
-		x_pos = 0;
-		break;
-	case WM_DOCK:
-	default: /* to avoid a warning about btn and x_pos, basically */
-		btn = wAppIconCreateForDock(scr, NULL, "Logo", "WMDock", TILE_NORMAL);
-		if (wPreferences.flags.clip_merged_in_dock)
-			btn->icon->core->descriptor.handle_expose = clipIconExpose;
-		x_pos = scr->scr_width - ICON_SIZE - DOCK_EXTRA_SPACE;
-		break;
-	case WM_DRAWER:
-		if (name == NULL)
-			name = findUniqueName(scr, "Drawer");
-		btn = wAppIconCreateForDock(scr, NULL, name, "WMDrawer", TILE_DRAWER);
-		btn->icon->core->descriptor.handle_expose = drawerIconExpose;
-		x_pos = 0;		
-	}
+	x_pos = scr->scr_width - ICON_SIZE - DOCK_EXTRA_SPACE;
 
 	btn->xindex = 0;
 	btn->yindex = 0;
@@ -859,9 +840,83 @@ static WAppIcon *mainIconCreate(WScreen *scr, int type, const char *name)
 	btn->x_pos = x_pos;
 	btn->y_pos = 0;
 	btn->docked = 1;
-	if (type == WM_CLIP ||
-		(type == WM_DOCK && wPreferences.flags.clip_merged_in_dock))
+	if (wPreferences.flags.clip_merged_in_dock)
 		w_global.clip.icon = btn;
+
+	return btn;
+}
+
+static WAppIcon *create_icon_for_clip(WScreen *scr)
+{
+	WAppIcon *btn;
+	int x_pos;
+
+	btn = wAppIconCreateForDock(scr, NULL, "Logo", "WMClip", TILE_CLIP);
+	btn->icon->core->descriptor.handle_expose = clipIconExpose;
+	x_pos = 0;
+
+	btn->xindex = 0;
+	btn->yindex = 0;
+
+	btn->icon->core->descriptor.handle_mousedown = iconMouseDown;
+	btn->icon->core->descriptor.handle_enternotify = clipEnterNotify;
+	btn->icon->core->descriptor.handle_leavenotify = clipLeaveNotify;
+	btn->icon->core->descriptor.parent_type = WCLASS_DOCK_ICON;
+	btn->icon->core->descriptor.parent = btn;
+	XMapWindow(dpy, btn->icon->core->window);
+	btn->x_pos = x_pos;
+	btn->y_pos = 0;
+	btn->docked = 1;
+	w_global.clip.icon = btn;
+
+	return btn;
+}
+
+static WAppIcon *create_icon_for_drawer(WScreen *scr, const char *name)
+{
+	WAppIcon *btn;
+	int x_pos;
+
+	if (name == NULL)
+		name = findUniqueName(scr, "Drawer");
+	btn = wAppIconCreateForDock(scr, NULL, name, "WMDrawer", TILE_DRAWER);
+	btn->icon->core->descriptor.handle_expose = drawerIconExpose;
+	x_pos = 0;
+
+	btn->xindex = 0;
+	btn->yindex = 0;
+
+	btn->icon->core->descriptor.handle_mousedown = iconMouseDown;
+	btn->icon->core->descriptor.handle_enternotify = clipEnterNotify;
+	btn->icon->core->descriptor.handle_leavenotify = clipLeaveNotify;
+	btn->icon->core->descriptor.parent_type = WCLASS_DOCK_ICON;
+	btn->icon->core->descriptor.parent = btn;
+	XMapWindow(dpy, btn->icon->core->window);
+	btn->x_pos = x_pos;
+	btn->y_pos = 0;
+	btn->docked = 1;
+
+	return btn;
+}
+
+/* Name is only used when type == WM_DRAWER and when restoring a specific
+ * drawer, with a specific name. When creating a drawer, leave name to NULL
+ * and mainIconCreate will find the first unused unique name */
+static WAppIcon *mainIconCreate(WScreen *scr, int type, const char *name)
+{
+	WAppIcon *btn;
+
+	switch(type) {
+	case WM_CLIP:
+		btn = create_icon_for_clip(scr);
+		break;
+	case WM_DOCK:
+	default: /* to avoid a warning about btn and x_pos, basically */
+		btn = create_icon_for_dock(scr);
+		break;
+	case WM_DRAWER:
+		btn = create_icon_for_drawer(scr, name);
+	}
 
 	return btn;
 }
