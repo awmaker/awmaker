@@ -1314,19 +1314,6 @@ static WMenu *dock_menu_create(WScreen *scr)
 	return menu;
 }
 
-static WMenu *dockMenuCreate(WScreen *scr, int type)
-{
-	switch(type) {
-	case WM_CLIP:
-		return clip_menu_create(scr);
-	case WM_DRAWER:
-		return drawer_menu_create(scr);
-	case WM_DOCK:
-	default: /* Avoid compiler warning */
-		return dock_menu_create(scr);
-	}
-}
-
 WDock *dock_create(WScreen *scr)
 {
 	WDock *dock;
@@ -1411,7 +1398,7 @@ WDock *dock_create(WScreen *scr)
 	XMoveWindow(dpy, btn->icon->core->window, btn->x_pos, btn->y_pos);
 
 	/* create dock menu */
-	dock->menu = dockMenuCreate(scr, WM_DOCK);
+	dock->menu = dock_menu_create(scr);
 
 	return dock;
 }
@@ -1494,7 +1481,7 @@ WDock *clip_create(WScreen *scr)
 	XMoveWindow(dpy, btn->icon->core->window, btn->x_pos, btn->y_pos);
 
 	/* create clip menu */
-	dock->menu = dockMenuCreate(scr, WM_CLIP);
+	dock->menu = clip_menu_create(scr);
 
 	return dock;
 }
@@ -1578,7 +1565,7 @@ WDock *drawer_create(WScreen *scr, const char *name)
 	XMoveWindow(dpy, btn->icon->core->window, btn->x_pos, btn->y_pos);
 
 	/* create dock menu */
-	dock->menu = dockMenuCreate(scr, WM_DRAWER);
+	dock->menu = drawer_menu_create(scr);
 
 	drawerAppendToChain(scr, dock);
 
