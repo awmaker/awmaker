@@ -114,7 +114,6 @@ static void launchDockedApplication(WAppIcon *btn, Bool withSelection);
 
 static void clipAutoLower(void *cdata);
 static void clipAutoRaise(void *cdata);
-static WAppIcon *mainIconCreate(WScreen *scr, int type, const char *name);
 
 static void drawerIconExpose(WObjDescriptor *desc, XEvent *event);
 static void removeDrawerCallback(WMenu *menu, WMenuEntry *entry);
@@ -899,28 +898,6 @@ static WAppIcon *create_icon_for_drawer(WScreen *scr, const char *name)
 	return btn;
 }
 
-/* Name is only used when type == WM_DRAWER and when restoring a specific
- * drawer, with a specific name. When creating a drawer, leave name to NULL
- * and mainIconCreate will find the first unused unique name */
-static WAppIcon *mainIconCreate(WScreen *scr, int type, const char *name)
-{
-	WAppIcon *btn;
-
-	switch(type) {
-	case WM_CLIP:
-		btn = create_icon_for_clip(scr);
-		break;
-	case WM_DOCK:
-	default: /* to avoid a warning about btn and x_pos, basically */
-		btn = create_icon_for_dock(scr);
-		break;
-	case WM_DRAWER:
-		btn = create_icon_for_drawer(scr, name);
-	}
-
-	return btn;
-}
-
 static void switchWSCommand(WMenu *menu, WMenuEntry *entry)
 {
 	WAppIcon *btn, *icon = (WAppIcon *) entry->clientdata;
@@ -1430,7 +1407,7 @@ static WMenu *dockMenuCreate(WScreen *scr, int type)
 	}
 }
 
-WDock *dock_create(WScreen *scr, const char *name)
+WDock *dock_create(WScreen *scr)
 {
 	WDock *dock;
 	WAppIcon *btn;
@@ -1441,7 +1418,7 @@ WDock *dock_create(WScreen *scr, const char *name)
 	dock->max_icons = scr->scr_height / wPreferences.icon_size;
 	dock->icon_array = wmalloc(sizeof(WAppIcon *) * dock->max_icons);
 
-	btn = mainIconCreate(scr, WM_DOCK, name);
+	btn = create_icon_for_dock(scr);
 
 	btn->dock = dock;
 
@@ -1469,7 +1446,7 @@ WDock *dock_create(WScreen *scr, const char *name)
 	return dock;
 }
 
-WDock *clip_create(WScreen *scr, const char *name)
+WDock *clip_create(WScreen *scr)
 {
 	WDock *dock;
 	WAppIcon *btn;
@@ -1483,7 +1460,7 @@ WDock *clip_create(WScreen *scr, const char *name)
 	if (w_global.clip.icon)
 		btn = w_global.clip.icon;
 	else
-		btn = mainIconCreate(scr, WM_CLIP, name);
+		btn = create_icon_for_clip(scr);
 
 	btn->dock = dock;
 
@@ -1522,7 +1499,7 @@ WDock *drawer_create(WScreen *scr, const char *name)
 	dock->max_icons = scr->scr_width / wPreferences.icon_size;
 	dock->icon_array = wmalloc(sizeof(WAppIcon *) * dock->max_icons);
 
-	btn = mainIconCreate(scr, WM_DRAWER, name);
+	btn = create_icon_for_drawer(scr, name);
 
 	btn->dock = dock;
 
@@ -1556,12 +1533,12 @@ WDock *wDockCreate(WScreen *scr, int type, const char *name)
 {
 	switch(type) {
 	case WM_CLIP:
-		return clip_create(scr, name);
+		return clip_create(scr);
 	case WM_DRAWER:
 		return drawer_create(scr, name);
 	case WM_DOCK:
 	default: /* Avoid compiler warning */
-		return dock_create(scr, name);
+		return dock_create(scr);
 	}
 }
 
@@ -1961,7 +1938,7 @@ WAppIcon *wClipRestoreState(WScreen *scr, WMPropList *clip_state)
 	if (w_global.clip.icon)
 		icon = w_global.clip.icon;
 	else
-		icon = mainIconCreate(scr, WM_CLIP, NULL);
+		icon = create_icon_for_clip(scr);
 
 	if (!clip_state)
 		return icon;
