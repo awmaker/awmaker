@@ -1427,6 +1427,18 @@ WDock *clip_create(WScreen *scr)
 	dock->max_icons = DOCK_MAX_ICONS;
 	dock->icon_array = wmalloc(sizeof(WAppIcon *) * dock->max_icons);
 
+	dock->type = WM_CLIP;
+	dock->icon_count = 1;
+	dock->on_right_side = 1;
+	dock->collapsed = 0;
+	dock->auto_collapse = 0;
+	dock->auto_collapse_magic = NULL;
+	dock->auto_raise_lower = 0;
+	dock->auto_lower_magic = NULL;
+	dock->auto_raise_magic = NULL;
+	dock->attract_icons = 0;
+	dock->lowered = 1;
+
 	if (w_global.clip.icon) {
 		btn = w_global.clip.icon;
 	} else {
@@ -1474,22 +1486,11 @@ WDock *clip_create(WScreen *scr)
 	}
 
 	btn->dock = dock;
+	dock->icon_array[0] = btn;
 
 	dock->x_pos = 0;
 	dock->y_pos = 0;
 	dock->screen_ptr = scr;
-	dock->type = WM_CLIP;
-	dock->icon_count = 1;
-	dock->on_right_side = 1;
-	dock->collapsed = 0;
-	dock->auto_collapse = 0;
-	dock->auto_collapse_magic = NULL;
-	dock->auto_raise_lower = 0;
-	dock->auto_lower_magic = NULL;
-	dock->auto_raise_magic = NULL;
-	dock->attract_icons = 0;
-	dock->lowered = 1;
-	dock->icon_array[0] = btn;
 	wRaiseFrame(btn->icon->core);
 	XMoveWindow(dpy, btn->icon->core->window, btn->x_pos, btn->y_pos);
 
