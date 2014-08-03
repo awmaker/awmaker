@@ -132,6 +132,14 @@ static void moveDock(WDock *dock, int new_x, int new_y);
 
 static void save_application_list(WMPropList *state, WMPropList *list, char *screen_id);
 
+static void restore_dock_position(WDock *dock, WScreen *scr, WMPropList *state);
+static void restore_state_lowered(WDock *dock, WMPropList *state);
+static void restore_state_collapsed(WDock *dock, WMPropList *state);
+static void restore_state_autoraise(WDock *dock, WMPropList *state);
+static void dock_set_attacheddocks(WScreen *scr, WDock *dock, WMPropList *state, int type);
+static int restore_state_autocollapsed(WDock *dock, WMPropList *state);
+static int restore_state_autoattracticons(WDock *dock, WMPropList *state);
+
 static void make_keys(void)
 {
 	if (dCommand != NULL)
@@ -1331,7 +1339,7 @@ static void dock_menu_map(WMenu *menu, WScreen *scr)
 	}
 }
 
-WDock *dock_create(WScreen *scr)
+WDock *dock_create(WScreen *scr, WMPropList *state)
 {
 	WDock *dock;
 	WAppIcon *btn;
@@ -1417,6 +1425,25 @@ WDock *dock_create(WScreen *scr)
 	/* create dock menu */
 	dock->menu = dock_menu_create();
 	dock_menu_map(dock->menu, scr);
+
+	if (!state)
+		return dock;
+
+	WMRetainPropList(state);
+
+	/* restore position */
+	restore_dock_position(dock, dock->screen_ptr, state);
+
+	restore_state_lowered(dock, state);
+	restore_state_collapsed(dock, state);
+	(void) restore_state_autocollapsed(dock, state);
+	restore_state_autoraise(dock, state);
+	(void) restore_state_autoattracticons(dock, state);
+
+	/* application list */
+	dock_set_attacheddocks(dock->screen_ptr, dock, state, dock->type);
+
+	WMReleasePropList(state);
 
 	return dock;
 }
@@ -2046,7 +2073,7 @@ static WAppIcon *restore_icon_state(WScreen *scr, WMPropList *info, int type, in
 #define COMPLAIN(key) wwarning(_("bad value in dock/drawer state info:%s"), key)
 
 /* restore lowered/raised state */
-void restore_state_lowered(WDock *dock, WMPropList *state)
+static void restore_state_lowered(WDock *dock, WMPropList *state)
 {
 	WMPropList *value;
 
@@ -2064,7 +2091,7 @@ void restore_state_lowered(WDock *dock, WMPropList *state)
 }
 
 /* restore collapsed state */
-void restore_state_collapsed(WDock *dock, WMPropList *state)
+static void restore_state_collapsed(WDock *dock, WMPropList *state)
 {
 	WMPropList *value;
 
@@ -2082,7 +2109,7 @@ void restore_state_collapsed(WDock *dock, WMPropList *state)
 }
 
 /* restore auto-collapsed state */
-int restore_state_autocollapsed(WDock *dock, WMPropList *state)
+static int restore_state_autocollapsed(WDock *dock, WMPropList *state)
 {
 	WMPropList *value;
 	int ret = 0;
@@ -2104,7 +2131,7 @@ int restore_state_autocollapsed(WDock *dock, WMPropList *state)
 }
 
 /* restore auto-raise/lower state */
-void restore_state_autoraise(WDock *dock, WMPropList *state)
+static void restore_state_autoraise(WDock *dock, WMPropList *state)
 {
 	WMPropList *value;
 
@@ -2120,7 +2147,7 @@ void restore_state_autoraise(WDock *dock, WMPropList *state)
 }
 
 /* restore attract icons state */
-int restore_state_autoattracticons(WDock *dock, WMPropList *state)
+static int restore_state_autoattracticons(WDock *dock, WMPropList *state)
 {
 	WMPropList *value;
 	int ret = 0;
@@ -2229,7 +2256,7 @@ static int set_attacheddocks(WScreen *scr, WDock *dock, WMPropList *apps, int ty
 	return 0;
 }
 
-void dock_set_attacheddocks(WScreen *scr, WDock *dock, WMPropList *state, int type)
+static void dock_set_attacheddocks(WScreen *scr, WDock *dock, WMPropList *state, int type)
 {
 	char screen_id[64];
 	WMPropList *apps;
@@ -2268,7 +2295,7 @@ void dock_set_attacheddocks(WScreen *scr, WDock *dock, WMPropList *state, int ty
 	}
 }
 
-void restore_dock_position(WDock *dock, WScreen *scr, WMPropList *state)
+static void restore_dock_position(WDock *dock, WScreen *scr, WMPropList *state)
 {
 	WMPropList *value;
 
