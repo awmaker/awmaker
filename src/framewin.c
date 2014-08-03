@@ -602,14 +602,14 @@ void framewindow_unmap(WFrameWindow *fwin)
 {
 	titlebar_unmap(fwin);
 	resizebar_unmap(fwin);
+
+	RemoveFromStackList(fwin->core);
 }
 
 void wFrameWindowDestroy(WFrameWindow *fwin)
 {
 	titlebar_destroy(fwin);
 	resizebar_destroy(fwin);
-
-	RemoveFromStackList(fwin->core);
 
 	wframewindow_unmap_wcorewindow(fwin->core);
 	wframewindow_destroy_wcorewindow(fwin->core);
