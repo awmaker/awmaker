@@ -1126,7 +1126,7 @@ static void updateDockPositionMenu(WMenu *menu, WDock *dock)
 	entry->clientdata = dock;
 }
 
-static WMenu *makeDockPositionMenu(WScreen *scr)
+static WMenu *makeDockPositionMenu(void)
 {
 	/* When calling this, the dock is being created, so scr->dock is still not set
 	 * Therefore the callbacks' clientdata and the indicators can't be set,
@@ -1139,8 +1139,6 @@ static WMenu *makeDockPositionMenu(WScreen *scr)
 		wwarning(_("could not create options submenu for dock position menu"));
 		return NULL;
 	}
-
-	menu_map(menu, scr);
 
 	entry = wMenuAddCallback(menu, _("Normal"), setDockPositionNormalCallback, NULL);
 	entry->flags.indicator = 1;
@@ -1155,7 +1153,6 @@ static WMenu *makeDockPositionMenu(WScreen *scr)
 	entry->flags.indicator_type = MI_DIAMOND;
 
 	menu->flags.realized = 0;
-	wMenuRealize(menu);
 
 	return menu;
 }
@@ -1296,7 +1293,12 @@ static WMenu *dock_menu_create(WScreen *scr)
 
 	entry = wMenuAddCallback(menu, _("Dock position"), NULL, NULL);
 	if (w_global.dock.pos_menu == NULL)
-		w_global.dock.pos_menu = makeDockPositionMenu(scr);
+		w_global.dock.pos_menu = makeDockPositionMenu();
+
+	if (w_global.dock.pos_menu) {
+		menu_map(w_global.dock.pos_menu, scr);
+		wMenuRealize(w_global.dock.pos_menu);
+	}
 
 	wMenuEntrySetCascade_create(menu, entry, w_global.dock.pos_menu);
 	wMenuEntrySetCascade_map(menu, w_global.dock.pos_menu);
