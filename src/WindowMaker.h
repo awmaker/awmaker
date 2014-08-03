@@ -532,6 +532,7 @@ extern struct wmaker_global_variables {
 	struct {
 		struct WDock *dock;	/* Window Maker Dock. Future array for multi-screen? */
 		struct WMenu *pos_menu;	/* menu for position of the dock */
+		struct WMenu *dock_menu;	/* Dock menu */
 		struct WMenu *drawer_menu;	/* menu for the drawers */
 	} dock;
 

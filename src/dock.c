@@ -1300,7 +1300,7 @@ static void drawer_menu_map(WMenu *menu, WScreen *scr)
 	wMenuEntrySetCascade_map(menu, w_global.clip.opt_menu);
 }
 
-static WMenu *dock_menu_create(void)
+WMenu *dock_menu_create(void)
 {
 	WMenu *menu;
 	WMenuEntry *entry;
@@ -1424,7 +1424,7 @@ WDock *dock_create(WScreen *scr, WMPropList *state)
 	XMoveWindow(dpy, btn->icon->core->window, btn->x_pos, btn->y_pos);
 
 	/* create dock menu */
-	dock->menu = dock_menu_create();
+	dock->menu = w_global.dock.dock_menu;
 	dock_menu_map(dock->menu, scr);
 
 	if (!state)

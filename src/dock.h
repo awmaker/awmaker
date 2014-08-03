@@ -121,4 +121,5 @@ int wClipMakeIconOmnipresent(WAppIcon *aicon, int omnipresent);
 
 WMenu *makeDockPositionMenu(void);
 WMenu *makeClipOptionsMenu(void);
+WMenu *dock_menu_create(void);
 #endif

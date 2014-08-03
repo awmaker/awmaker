@@ -628,6 +628,7 @@ void StartUp(Bool defaultScreenOnly)
 	InitializeSwitchMenu();
 	w_global.dock.pos_menu = makeDockPositionMenu();
 	w_global.clip.opt_menu = makeClipOptionsMenu();
+	w_global.dock.dock_menu = dock_menu_create();
 
 	/* manage the screens */
 	for (j = 0; j < max; j++) {
