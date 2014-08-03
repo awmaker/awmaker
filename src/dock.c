@@ -1234,30 +1234,19 @@ static void clip_menu_map(WMenu *menu, WScreen *scr)
 	}
 }
 
-static WMenu *drawer_menu_create(WScreen *scr)
+static void drawer_menu_create(void)
 {
 	WMenu *menu;
 	WMenuEntry *entry;
 
-	if (w_global.dock.drawer_menu)
-		return w_global.dock.drawer_menu;
-
 	menu = menu_create(NULL);
-	menu_map(menu, scr);
 
 	entry = wMenuAddCallback(menu, _("Drawer options"), NULL, NULL);
 
-	if (w_global.clip.opt_menu == NULL) {
+	if (!w_global.clip.opt_menu)
 		w_global.clip.opt_menu = makeClipOptionsMenu();
 
-		if (w_global.clip.opt_menu) {
-			menu_map(w_global.clip.opt_menu, scr);
-			wMenuRealize(w_global.clip.opt_menu);
-		}
-	}
-
 	wMenuEntrySetCascade_create(menu, entry, w_global.clip.opt_menu);
-	wMenuEntrySetCascade_map(menu, w_global.clip.opt_menu);
 
 	entry = wMenuAddCallback(menu, _("Selected"), selectCallback, NULL);
 	entry->flags.indicator = 1;
@@ -1291,8 +1280,20 @@ static WMenu *drawer_menu_create(WScreen *scr)
 	entry->text = _("Kill"); /* can be: Remove drawer */
 
 	w_global.dock.drawer_menu = menu;
+}
 
-	return menu;
+static void drawer_menu_map(WMenu *menu, WScreen *scr)
+{
+	menu_map(menu, scr);
+
+	/* This code is shared with the Clip
+	 * if the clip was created, we don't need do it again */
+	if ((w_global.clip.opt_menu) && (wPreferences.flags.noclip)) {
+		menu_map(w_global.clip.opt_menu, scr);
+		wMenuRealize(w_global.clip.opt_menu);
+	}
+
+	wMenuEntrySetCascade_map(menu, w_global.clip.opt_menu);
 }
 
 static WMenu *dock_menu_create(void)
@@ -1595,7 +1596,13 @@ WDock *drawer_create(WScreen *scr, const char *name)
 	XMoveWindow(dpy, btn->icon->core->window, btn->x_pos, btn->y_pos);
 
 	/* create dock menu */
-	dock->menu = drawer_menu_create(scr);
+	if (!w_global.dock.drawer_menu) {
+		drawer_menu_create();
+		dock->menu = w_global.dock.drawer_menu;
+		drawer_menu_map(w_global.dock.drawer_menu, scr);
+	} else {
+		dock->menu = w_global.dock.drawer_menu;
+	}
 
 	drawerAppendToChain(scr, dock);
 
