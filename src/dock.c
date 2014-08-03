@@ -1152,35 +1152,25 @@ static WMenu *makeDockPositionMenu(void)
 	return menu;
 }
 
-static WMenu *clip_menu_create(WScreen *scr)
+void clip_menu_create(void)
 {
 	WMenu *menu;
 	WMenuEntry *entry;
 
-	if (w_global.clip.menu)
-		return w_global.clip.menu;
-
+	/* Create menus */
 	menu = menu_create(NULL);
-	menu_map(menu, scr);
+	w_global.clip.submenu = makeWorkspaceMenu();
+	if (!w_global.clip.opt_menu)
+		w_global.clip.opt_menu = makeClipOptionsMenu();
 
 	entry = wMenuAddCallback(menu, _("Clip Options"), NULL, NULL);
 
-	if (w_global.clip.opt_menu == NULL) {
-		w_global.clip.opt_menu = makeClipOptionsMenu();
-
-		if (w_global.clip.opt_menu) {
-			menu_map(w_global.clip.opt_menu, scr);
-			wMenuRealize(w_global.clip.opt_menu);
-		}
-	}
-
 	wMenuEntrySetCascade_create(menu, entry, w_global.clip.opt_menu);
-	wMenuEntrySetCascade_map(menu, w_global.clip.opt_menu);
 
-	 /* The same menu is used for the dock and its appicons. If the menu
-	  * entry text is different between the two contexts, or if it can
-	  * change depending on some state, free the duplicated string (from
-	  * wMenuInsertCallback) and use gettext's string */
+	/* The same menu is used for the dock and its appicons. If the menu
+	 * entry text is different between the two contexts, or if it can
+	 * change depending on some state, free the duplicated string (from
+	 * wMenuInsertCallback) and use gettext's string */
 	entry = wMenuAddCallback(menu, _("Rename Workspace"), renameCallback, NULL);
 	wfree(entry->text);
 	entry->text = _("Rename Workspace"); /* can be: (Toggle) Omnipresent */
@@ -1201,14 +1191,9 @@ static WMenu *clip_menu_create(WScreen *scr)
 	entry = wMenuAddCallback(menu, _("Move Icon To"), NULL, NULL);
 	wfree(entry->text);
 	entry->text = _("Move Icon To"); /* can be: Move Icons to */
-	w_global.clip.submenu = makeWorkspaceMenu();
-	menu_map(w_global.clip.submenu, scr);
-	wMenuRealize(w_global.clip.submenu);
 
-	if (w_global.clip.submenu) {
+	if (w_global.clip.submenu)
 		wMenuEntrySetCascade_create(menu, entry, w_global.clip.submenu);
-		wMenuEntrySetCascade_map(menu, w_global.clip.submenu);
-	}
 
 	entry = wMenuAddCallback(menu, _("Remove Icon"), removeIconsCallback, NULL);
 	wfree(entry->text);
@@ -1217,6 +1202,7 @@ static WMenu *clip_menu_create(WScreen *scr)
 	wMenuAddCallback(menu, _("Attract Icons"), colectIconsCallback, NULL);
 	wMenuAddCallback(menu, _("Launch"), launchCallback, NULL);
 	wMenuAddCallback(menu, _("Unhide Here"), unhideHereCallback, NULL);
+
 	entry = wMenuAddCallback(menu, _("Hide"), hideCallback, NULL);
 	wfree(entry->text);
 	entry->text = _("Hide"); /* can be: Unhide */
@@ -1228,8 +1214,24 @@ static WMenu *clip_menu_create(WScreen *scr)
 	entry->text = _("Kill"); /* can be: Remove drawer */
 
 	w_global.clip.menu = menu;
+}
 
-	return menu;
+static void clip_menu_map(WMenu *menu, WScreen *scr)
+{
+	menu_map(menu, scr);
+
+	if (w_global.clip.opt_menu) {
+		menu_map(w_global.clip.opt_menu, scr);
+		wMenuRealize(w_global.clip.opt_menu);
+	}
+
+	wMenuEntrySetCascade_map(menu, w_global.clip.opt_menu);
+
+	if (w_global.clip.submenu) {
+		menu_map(w_global.clip.submenu, scr);
+		wMenuRealize(w_global.clip.submenu);
+		wMenuEntrySetCascade_map(menu, w_global.clip.submenu);
+	}
 }
 
 static WMenu *drawer_menu_create(WScreen *scr)
@@ -1503,7 +1505,13 @@ WDock *clip_create(WScreen *scr)
 	XMoveWindow(dpy, btn->icon->core->window, btn->x_pos, btn->y_pos);
 
 	/* create clip menu */
-	dock->menu = clip_menu_create(scr);
+	if (!w_global.clip.menu) {
+		clip_menu_create();
+		dock->menu = w_global.clip.menu;
+		clip_menu_map(w_global.clip.menu, scr);
+	} else {
+		dock->menu = w_global.clip.menu;
+	}
 
 	return dock;
 }
