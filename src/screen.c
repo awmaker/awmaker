@@ -789,7 +789,7 @@ void wScreenRestoreState(WScreen * scr)
 		w_global.session_state = WMCreatePLDictionary(NULL, NULL);
 
 	if (!wPreferences.flags.nodock) {
-		w_global.dock.dock = wDockCreate(scr, WM_DOCK, NULL);
+		w_global.dock.dock = dock_create(scr);
 		state = WMGetFromPLDictionary(w_global.session_state, dDock);
 		wDockRestoreState(w_global.dock.dock, state);
 	}
