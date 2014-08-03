@@ -1421,6 +1421,62 @@ WDock *dock_create(WScreen *scr)
 	return dock;
 }
 
+/* Create appicon's icon */
+void clip_icon_create(void)
+{
+	WAppIcon *btn;
+
+	btn = wmalloc(sizeof(WAppIcon));
+	wretain(btn);
+
+	add_to_appicon_list(btn);
+
+	btn->wm_class = wstrdup("WMClip");
+	btn->wm_instance = wstrdup("Logo");
+
+	btn->icon = icon_create_core();
+	btn->icon->tile_type = TILE_CLIP;
+
+	btn->xindex = 0;
+	btn->yindex = 0;
+	btn->x_pos = 0;
+	btn->y_pos = 0;
+	btn->docked = 1;
+	w_global.clip.icon = btn;
+
+}
+
+void clip_icon_map(WScreen *scr)
+{
+	wcore_map_toplevel(w_global.clip.icon->icon->core, scr, 0, 0, 0, scr->w_depth,
+			   scr->w_visual, scr->w_colormap, scr->white_pixel);
+
+	set_icon_image_from_database(w_global.clip.icon->icon,
+				     w_global.clip.icon->wm_instance,
+				     w_global.clip.icon->wm_class, NULL);
+	/* Update the icon, because icon could be NULL */
+	wIconUpdate(w_global.clip.icon->icon);
+
+	WMAddNotificationObserver(icon_appearanceObserver, w_global.clip.icon->icon,
+				  WNIconAppearanceSettingsChanged, w_global.clip.icon->icon);
+	WMAddNotificationObserver(icon_tileObserver, w_global.clip.icon->icon,
+				  WNIconTileSettingsChanged, w_global.clip.icon->icon);
+
+#ifdef XDND
+	wXDNDMakeAwareness(w_global.clip.icon->icon->core->window);
+#endif
+
+	AddToStackList(w_global.clip.icon->icon->core);
+
+	w_global.clip.icon->icon->core->descriptor.handle_expose = clipIconExpose;
+	w_global.clip.icon->icon->core->descriptor.handle_mousedown = iconMouseDown;
+	w_global.clip.icon->icon->core->descriptor.handle_enternotify = clipEnterNotify;
+	w_global.clip.icon->icon->core->descriptor.handle_leavenotify = clipLeaveNotify;
+	w_global.clip.icon->icon->core->descriptor.parent_type = WCLASS_DOCK_ICON;
+	w_global.clip.icon->icon->core->descriptor.parent = w_global.clip.icon;
+	XMapWindow(dpy, w_global.clip.icon->icon->core->window);
+}
+
 WDock *clip_create(WScreen *scr)
 {
 	WDock *dock;
@@ -1432,52 +1488,12 @@ WDock *clip_create(WScreen *scr)
 	dock->max_icons = DOCK_MAX_ICONS;
 	dock->icon_array = wmalloc(sizeof(WAppIcon *) * dock->max_icons);
 
-	if (w_global.clip.icon) {
-		btn = w_global.clip.icon;
-	} else {
-		/* Create appicon's icon */
-		btn = wmalloc(sizeof(WAppIcon));
-		wretain(btn);
-		btn->yindex = 0;
-		btn->xindex = 0;
-
-		add_to_appicon_list(btn);
-
-		btn->wm_class = wstrdup("WMClip");
-		btn->wm_instance = wstrdup("Logo");
-
-		btn->icon = icon_create_core();
-		wcore_map_toplevel(btn->icon->core, scr, 0, 0, 0, scr->w_depth,
-				   scr->w_visual, scr->w_colormap, scr->white_pixel);
-
-		btn->icon->tile_type = TILE_CLIP;
-
-		set_icon_image_from_database(btn->icon, btn->wm_instance, btn->wm_class, NULL);
-		/* Update the icon, because icon could be NULL */
-		wIconUpdate(btn->icon);
-
-		WMAddNotificationObserver(icon_appearanceObserver, btn->icon, WNIconAppearanceSettingsChanged, btn->icon);
-		WMAddNotificationObserver(icon_tileObserver, btn->icon, WNIconTileSettingsChanged, btn->icon);
-
-#ifdef XDND
-		wXDNDMakeAwareness(aicon->icon->core->window);
-#endif
-
-		AddToStackList(btn->icon->core);
-
-		btn->icon->core->descriptor.handle_expose = clipIconExpose;
-		btn->icon->core->descriptor.handle_mousedown = iconMouseDown;
-		btn->icon->core->descriptor.handle_enternotify = clipEnterNotify;
-		btn->icon->core->descriptor.handle_leavenotify = clipLeaveNotify;
-		btn->icon->core->descriptor.parent_type = WCLASS_DOCK_ICON;
-		btn->icon->core->descriptor.parent = btn;
-		XMapWindow(dpy, btn->icon->core->window);
-		btn->x_pos = 0;
-		btn->y_pos = 0;
-		btn->docked = 1;
-		w_global.clip.icon = btn;
+	if (!w_global.clip.icon) {
+		clip_icon_create();
+		clip_icon_map(scr);
 	}
 
+	btn = w_global.clip.icon;
 	btn->dock = dock;
 
 	dock->x_pos = 0;
