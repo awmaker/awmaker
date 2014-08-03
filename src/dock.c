@@ -1176,7 +1176,8 @@ static WMenu *clip_menu_create(WScreen *scr)
 	if (w_global.clip.opt_menu == NULL)
 		w_global.clip.opt_menu = makeClipOptionsMenu(scr);
 
-	wMenuEntrySetCascade(menu, entry, w_global.clip.opt_menu);
+	wMenuEntrySetCascade_create(menu, entry, w_global.clip.opt_menu);
+	wMenuEntrySetCascade_map(menu, w_global.clip.opt_menu);
 
 	 /* The same menu is used for the dock and its appicons. If the menu
 	  * entry text is different between the two contexts, or if it can
@@ -1203,8 +1204,10 @@ static WMenu *clip_menu_create(WScreen *scr)
 	wfree(entry->text);
 	entry->text = _("Move Icon To"); /* can be: Move Icons to */
 	w_global.clip.submenu = makeWorkspaceMenu(scr);
-	if (w_global.clip.submenu)
-		wMenuEntrySetCascade(menu, entry, w_global.clip.submenu);
+	if (w_global.clip.submenu) {
+		wMenuEntrySetCascade_create(menu, entry, w_global.clip.submenu);
+		wMenuEntrySetCascade_map(menu, w_global.clip.submenu);
+	}
 
 	entry = wMenuAddCallback(menu, _("Remove Icon"), removeIconsCallback, NULL);
 	wfree(entry->text);
@@ -1244,7 +1247,8 @@ static WMenu *drawer_menu_create(WScreen *scr)
 	if (w_global.clip.opt_menu == NULL)
 		w_global.clip.opt_menu = makeClipOptionsMenu(scr);
 
-	wMenuEntrySetCascade(menu, entry, w_global.clip.opt_menu);
+	wMenuEntrySetCascade_create(menu, entry, w_global.clip.opt_menu);
+	wMenuEntrySetCascade_map(menu, w_global.clip.opt_menu);
 
 	entry = wMenuAddCallback(menu, _("Selected"), selectCallback, NULL);
 	entry->flags.indicator = 1;
@@ -1293,7 +1297,9 @@ static WMenu *dock_menu_create(WScreen *scr)
 	entry = wMenuAddCallback(menu, _("Dock position"), NULL, NULL);
 	if (w_global.dock.pos_menu == NULL)
 		w_global.dock.pos_menu = makeDockPositionMenu(scr);
-	wMenuEntrySetCascade(menu, entry, w_global.dock.pos_menu);
+
+	wMenuEntrySetCascade_create(menu, entry, w_global.dock.pos_menu);
+	wMenuEntrySetCascade_map(menu, w_global.dock.pos_menu);
 
 	if (!wPreferences.flags.nodrawer)
 		entry = wMenuAddCallback(menu, _("Add a drawer"), addADrawerCallback, NULL);
