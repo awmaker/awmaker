@@ -1283,25 +1283,18 @@ static WMenu *drawer_menu_create(WScreen *scr)
 	return menu;
 }
 
-static WMenu *dock_menu_create(WScreen *scr)
+static WMenu *dock_menu_create(void)
 {
 	WMenu *menu;
 	WMenuEntry *entry;
 
 	menu = menu_create(NULL);
-	menu_map(menu, scr);
 
 	entry = wMenuAddCallback(menu, _("Dock position"), NULL, NULL);
 	if (w_global.dock.pos_menu == NULL)
 		w_global.dock.pos_menu = makeDockPositionMenu();
 
-	if (w_global.dock.pos_menu) {
-		menu_map(w_global.dock.pos_menu, scr);
-		wMenuRealize(w_global.dock.pos_menu);
-	}
-
 	wMenuEntrySetCascade_create(menu, entry, w_global.dock.pos_menu);
-	wMenuEntrySetCascade_map(menu, w_global.dock.pos_menu);
 
 	if (!wPreferences.flags.nodrawer)
 		entry = wMenuAddCallback(menu, _("Add a drawer"), addADrawerCallback, NULL);
@@ -1320,6 +1313,16 @@ static WMenu *dock_menu_create(WScreen *scr)
 	entry->text = _("Kill"); /* can be: Remove drawer */
 
 	return menu;
+}
+
+static void dock_menu_map(WMenu *menu, WScreen *scr)
+{
+	menu_map(menu, scr);
+	wMenuEntrySetCascade_map(menu, w_global.dock.pos_menu);
+	if (w_global.dock.pos_menu) {
+		menu_map(w_global.dock.pos_menu, scr);
+		wMenuRealize(w_global.dock.pos_menu);
+	}
 }
 
 WDock *dock_create(WScreen *scr)
@@ -1406,7 +1409,8 @@ WDock *dock_create(WScreen *scr)
 	XMoveWindow(dpy, btn->icon->core->window, btn->x_pos, btn->y_pos);
 
 	/* create dock menu */
-	dock->menu = dock_menu_create(scr);
+	dock->menu = dock_menu_create();
+	dock_menu_map(dock->menu, scr);
 
 	return dock;
 }
