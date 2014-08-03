@@ -988,7 +988,7 @@ static void updateClipOptionsMenu(WMenu *menu, WDock *dock)
 }
 
 
-static WMenu *makeClipOptionsMenu(WScreen *scr)
+static WMenu *makeClipOptionsMenu(void)
 {
 	WMenu *menu;
 	WMenuEntry *entry;
@@ -998,8 +998,6 @@ static WMenu *makeClipOptionsMenu(WScreen *scr)
 		wwarning(_("could not create options submenu for Clip menu"));
 		return NULL;
 	}
-
-	menu_map(menu, scr);
 
 	entry = wMenuAddCallback(menu, _("Keep on Top"), toggleLoweredCallback, NULL);
 	entry->flags.indicator = 1;
@@ -1027,7 +1025,6 @@ static WMenu *makeClipOptionsMenu(WScreen *scr)
 	entry->flags.indicator_type = MI_CHECK;
 
 	menu->flags.realized = 0;
-	wMenuRealize(menu);
 
 	return menu;
 }
@@ -1170,8 +1167,14 @@ static WMenu *clip_menu_create(WScreen *scr)
 
 	entry = wMenuAddCallback(menu, _("Clip Options"), NULL, NULL);
 
-	if (w_global.clip.opt_menu == NULL)
-		w_global.clip.opt_menu = makeClipOptionsMenu(scr);
+	if (w_global.clip.opt_menu == NULL) {
+		w_global.clip.opt_menu = makeClipOptionsMenu();
+
+		if (w_global.clip.opt_menu) {
+			menu_map(w_global.clip.opt_menu, scr);
+			wMenuRealize(w_global.clip.opt_menu);
+		}
+	}
 
 	wMenuEntrySetCascade_create(menu, entry, w_global.clip.opt_menu);
 	wMenuEntrySetCascade_map(menu, w_global.clip.opt_menu);
@@ -1241,8 +1244,14 @@ static WMenu *drawer_menu_create(WScreen *scr)
 
 	entry = wMenuAddCallback(menu, _("Drawer options"), NULL, NULL);
 
-	if (w_global.clip.opt_menu == NULL)
-		w_global.clip.opt_menu = makeClipOptionsMenu(scr);
+	if (w_global.clip.opt_menu == NULL) {
+		w_global.clip.opt_menu = makeClipOptionsMenu();
+
+		if (w_global.clip.opt_menu) {
+			menu_map(w_global.clip.opt_menu, scr);
+			wMenuRealize(w_global.clip.opt_menu);
+		}
+	}
 
 	wMenuEntrySetCascade_create(menu, entry, w_global.clip.opt_menu);
 	wMenuEntrySetCascade_map(menu, w_global.clip.opt_menu);
