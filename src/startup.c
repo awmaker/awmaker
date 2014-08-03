@@ -624,6 +624,11 @@ void StartUp(Bool defaultScreenOnly)
 		}
 	}
 
+	/* Init the system menus */
+	InitializeSwitchMenu();
+	w_global.dock.pos_menu = makeDockPositionMenu();
+	w_global.clip.opt_menu = makeClipOptionsMenu();
+
 	/* manage the screens */
 	for (j = 0; j < max; j++) {
 		if (defaultScreenOnly || max == 1) {
@@ -641,8 +646,6 @@ void StartUp(Bool defaultScreenOnly)
 		}
 		w_global.screen_count++;
 	}
-
-	InitializeSwitchMenu();
 
 	/* initialize/restore state for the screens */
 	for (j = 0; j < w_global.screen_count; j++) {

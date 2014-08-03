@@ -986,7 +986,7 @@ static void updateClipOptionsMenu(WMenu *menu, WDock *dock)
 }
 
 
-static WMenu *makeClipOptionsMenu(void)
+WMenu *makeClipOptionsMenu(void)
 {
 	WMenu *menu;
 	WMenuEntry *entry;
@@ -1121,7 +1121,7 @@ static void updateDockPositionMenu(WMenu *menu, WDock *dock)
 	entry->clientdata = dock;
 }
 
-static WMenu *makeDockPositionMenu(void)
+WMenu *makeDockPositionMenu(void)
 {
 	/* When calling this, the dock is being created, so scr->dock is still not set
 	 * Therefore the callbacks' clientdata and the indicators can't be set,
@@ -1160,8 +1160,6 @@ void clip_menu_create(void)
 	/* Create menus */
 	menu = menu_create(NULL);
 	w_global.clip.submenu = makeWorkspaceMenu();
-	if (!w_global.clip.opt_menu)
-		w_global.clip.opt_menu = makeClipOptionsMenu();
 
 	entry = wMenuAddCallback(menu, _("Clip Options"), NULL, NULL);
 
@@ -1243,9 +1241,6 @@ static void drawer_menu_create(void)
 
 	entry = wMenuAddCallback(menu, _("Drawer options"), NULL, NULL);
 
-	if (!w_global.clip.opt_menu)
-		w_global.clip.opt_menu = makeClipOptionsMenu();
-
 	wMenuEntrySetCascade_create(menu, entry, w_global.clip.opt_menu);
 
 	entry = wMenuAddCallback(menu, _("Selected"), selectCallback, NULL);
@@ -1304,8 +1299,6 @@ static WMenu *dock_menu_create(void)
 	menu = menu_create(NULL);
 
 	entry = wMenuAddCallback(menu, _("Dock position"), NULL, NULL);
-	if (w_global.dock.pos_menu == NULL)
-		w_global.dock.pos_menu = makeDockPositionMenu();
 
 	wMenuEntrySetCascade_create(menu, entry, w_global.dock.pos_menu);
 

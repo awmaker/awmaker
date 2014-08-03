@@ -123,4 +123,6 @@ typedef enum
 
 int wClipMakeIconOmnipresent(WAppIcon *aicon, int omnipresent);
 
+WMenu *makeDockPositionMenu(void);
+WMenu *makeClipOptionsMenu(void);
 #endif
