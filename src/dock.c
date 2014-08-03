@@ -133,6 +133,7 @@ static void moveDock(WDock *dock, int new_x, int new_y);
 static void save_application_list(WMPropList *state, WMPropList *list, char *screen_id);
 
 static void restore_dock_position(WDock *dock, WScreen *scr, WMPropList *state);
+static void restore_clip_position(WDock *dock, WScreen *scr, WMPropList *state);
 static void restore_state_lowered(WDock *dock, WMPropList *state);
 static void restore_state_collapsed(WDock *dock, WMPropList *state);
 static void restore_state_autoraise(WDock *dock, WMPropList *state);
@@ -1504,7 +1505,7 @@ void clip_icon_map(WScreen *scr)
 	XMapWindow(dpy, w_global.clip.icon->icon->core->window);
 }
 
-WDock *clip_create(WScreen *scr)
+WDock *clip_create(WScreen *scr, WMPropList *state)
 {
 	WDock *dock;
 	WAppIcon *btn;
@@ -1549,6 +1550,25 @@ WDock *clip_create(WScreen *scr)
 	} else {
 		dock->menu = w_global.clip.menu;
 	}
+
+	if (!state)
+		return dock;
+
+	WMRetainPropList(state);
+
+	/* restore position */
+	restore_clip_position(dock, dock->screen_ptr, state);
+
+	restore_state_lowered(dock, state);
+	restore_state_collapsed(dock, state);
+	(void) restore_state_autocollapsed(dock, state);
+	restore_state_autoraise(dock, state);
+	(void) restore_state_autoattracticons(dock, state);
+
+	/* application list */
+	dock_set_attacheddocks(dock->screen_ptr, dock, state, dock->type);
+
+	WMReleasePropList(state);
 
 	return dock;
 }
@@ -2325,7 +2345,7 @@ static void restore_dock_position(WDock *dock, WScreen *scr, WMPropList *state)
 	}
 }
 
-void restore_clip_position(WDock *dock, WScreen *scr, WMPropList *state)
+static void restore_clip_position(WDock *dock, WScreen *scr, WMPropList *state)
 {
 	WMPropList *value;
 
@@ -2384,29 +2404,6 @@ void restore_drawer_position(WDock *drawer, WMPropList *state)
 		y = w_global.dock.dock->y_pos + y_index * ICON_SIZE;
 		moveDock(drawer, x, y);
 	}
-}
-
-void wDockRestoreState(WDock *dock, WMPropList *dock_state)
-{
-	WMRetainPropList(dock_state);
-
-	/* restore position */
-	if (dock->type == WM_DOCK)
-		restore_dock_position(dock, dock->screen_ptr, dock_state);
-
-	if (dock->type == WM_CLIP)
-		restore_clip_position(dock, dock->screen_ptr, dock_state);
-
-	restore_state_lowered(dock, dock_state);
-	restore_state_collapsed(dock, dock_state);
-	(void) restore_state_autocollapsed(dock, dock_state);
-	restore_state_autoraise(dock, dock_state);
-	(void) restore_state_autoattracticons(dock, dock_state);
-
-	/* application list */
-	dock_set_attacheddocks(dock->screen_ptr, dock, dock_state, dock->type);
-
-	WMReleasePropList(dock_state);
 }
 
 void wDockLaunchWithState(WAppIcon *btn, WSavedState *state)
