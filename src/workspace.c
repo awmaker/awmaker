@@ -120,7 +120,7 @@ int wWorkspaceNew(WScreen *scr)
 		}
 
 		if (!wPreferences.flags.noclip) {
-			wspace->clip = wDockCreate(scr, WM_CLIP, NULL);
+			wspace->clip = clip_create(scr);
 			state = WMGetFromPLDictionary(w_global.session_state, dClip);
 			wDockRestoreState(wspace->clip, state);
 		}
@@ -902,7 +902,7 @@ void wWorkspaceRestoreState(WScreen *scr)
 			if (w_global.workspace.array[i]->clip)
 				wDockDestroy(w_global.workspace.array[i]->clip);
 
-			w_global.workspace.array[i]->clip = wDockCreate(scr, WM_CLIP, NULL);
+			w_global.workspace.array[i]->clip = clip_create(scr);
 			wDockRestoreState(w_global.workspace.array[i]->clip, clip_state);
 			if (i > 0)
 				wDockHideIcons(w_global.workspace.array[i]->clip);
