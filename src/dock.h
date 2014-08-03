@@ -60,11 +60,6 @@ typedef struct WDock {
     struct WDDomain *defaults;
 } WDock;
 
-
-
-
-
-WDock *wDockCreate(WScreen *scr, int type, const char *name);
 void wDockRestoreState(WDock *dock, WMPropList *dock_state);
 WDock *clip_create(WScreen *scr);
 WDock *dock_create(WScreen *scr);

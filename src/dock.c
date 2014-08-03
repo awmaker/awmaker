@@ -1618,19 +1618,6 @@ WDock *drawer_create(WScreen *scr, const char *name)
 	return dock;
 }
 
-WDock *wDockCreate(WScreen *scr, int type, const char *name)
-{
-	switch(type) {
-	case WM_CLIP:
-		return clip_create(scr);
-	case WM_DRAWER:
-		return drawer_create(scr, name);
-	case WM_DOCK:
-	default: /* Avoid compiler warning */
-		return dock_create(scr);
-	}
-}
-
 void wDockDestroy(WDock *dock)
 {
 	int i;
@@ -4807,7 +4794,7 @@ static int addADrawer(WScreen *scr)
 		 * ICON_SIZE multiple, as some space is lost above and under it */
 		return -1;
 
-	drawer = wDockCreate(scr, WM_DRAWER, NULL);
+	drawer = drawer_create(scr, NULL);
 	drawer->lowered = w_global.dock.dock->lowered;
 	if (!drawer->lowered)
 		ChangeStackingLevel(drawer->icon_array[0]->icon->core, WMDockLevel);
@@ -5203,7 +5190,7 @@ static WDock * drawerRestoreState(WScreen *scr, WMPropList *drawer_state)
 
 	/* Get the instance name, and create a drawer */
 	value = WMGetFromPLDictionary(drawer_state, dName);
-	drawer = wDockCreate(scr, WM_DRAWER, WMGetFromPLString(value));
+	drawer = drawer_create(scr, WMGetFromPLString(value));
 
 	/* restore DnD command and paste command */
 #ifdef XDND
@@ -5235,8 +5222,8 @@ static WDock * drawerRestoreState(WScreen *scr, WMPropList *drawer_state)
 
 	/* restore auto-collapsed state */
 	if (!restore_state_autocollapsed(drawer, dock_state))
-		drawer->auto_collapse = 0; /* because wDockCreate sets it (drawers only)
-					    * Probably we can change it in create_drawer
+		drawer->auto_collapse = 0; /* because drawer_create() sets it
+					    * Probably we can change it
 					    * But I am not sure yet (kix) */
 
 	/* restore auto-raise/lower state: same as scr->dock, no matter what */
