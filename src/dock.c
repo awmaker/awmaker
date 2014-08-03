@@ -931,7 +931,7 @@ static void updateWorkspaceMenu(WMenu *menu, WAppIcon *icon)
 		wMenuRealize(menu);
 }
 
-static WMenu *makeWorkspaceMenu(WScreen *scr)
+static WMenu *makeWorkspaceMenu(void)
 {
 	WMenu *menu;
 
@@ -939,11 +939,9 @@ static WMenu *makeWorkspaceMenu(WScreen *scr)
 	if (!menu)
 		wwarning(_("could not create workspace submenu for Clip menu"));
 
-	menu_map(menu, scr);
 	wMenuAddCallback(menu, "", switchWSCommand, (void *)w_global.clip.icon);
 
 	menu->flags.realized = 0;
-	wMenuRealize(menu);
 
 	return menu;
 }
@@ -1203,7 +1201,10 @@ static WMenu *clip_menu_create(WScreen *scr)
 	entry = wMenuAddCallback(menu, _("Move Icon To"), NULL, NULL);
 	wfree(entry->text);
 	entry->text = _("Move Icon To"); /* can be: Move Icons to */
-	w_global.clip.submenu = makeWorkspaceMenu(scr);
+	w_global.clip.submenu = makeWorkspaceMenu();
+	menu_map(w_global.clip.submenu, scr);
+	wMenuRealize(w_global.clip.submenu);
+
 	if (w_global.clip.submenu) {
 		wMenuEntrySetCascade_create(menu, entry, w_global.clip.submenu);
 		wMenuEntrySetCascade_map(menu, w_global.clip.submenu);
