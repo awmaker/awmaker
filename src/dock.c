@@ -4034,7 +4034,7 @@ static void set_dockmenu_common_code(WDock *dock, WMenuEntry *entry, WAppIcon *a
 	}
 }
 
-static void openDockMenu(WDock *dock, WAppIcon *aicon, XEvent *event)
+static void open_menu_dock(WDock *dock, WAppIcon *aicon, XEvent *event)
 {
 	WScreen *scr = dock->screen_ptr;
 	WObjDescriptor *desc;
@@ -4042,25 +4042,40 @@ static void openDockMenu(WDock *dock, WAppIcon *aicon, XEvent *event)
 	int index = 0;
 	int x_pos;
 
-	if (dock->type == WM_DOCK)
-		set_dockmenu_dock_code(dock, entry, aicon, &index);
-	else
-		set_dockmenu_clipdrawer_code(dock, entry, aicon, &index);
-
+	set_dockmenu_dock_code(dock, entry, aicon, &index);
 	set_dockmenu_common_code(dock, entry, aicon, &index);
 
 	if (!dock->menu->flags.realized)
 		wMenuRealize(dock->menu);
 
-	if (dock->type == WM_CLIP || dock->type == WM_DRAWER) {
-		x_pos = event->xbutton.x_root - dock->menu->frame->core->width / 2 - 1;
-		if (x_pos < 0)
-			x_pos = 0;
-		else if (x_pos + dock->menu->frame->core->width > scr->scr_width - 2)
-			x_pos = scr->scr_width - dock->menu->frame->core->width - 4;
-	} else {
-		x_pos = dock->on_right_side ? scr->scr_width - dock->menu->frame->core->width - 3 : 0;
-	}
+	x_pos = dock->on_right_side ? scr->scr_width - dock->menu->frame->core->width - 3 : 0;
+	wMenuMapAt(dock->menu, x_pos, event->xbutton.y_root + 2, False);
+
+	/* allow drag select */
+	event->xany.send_event = True;
+	desc = &dock->menu->menu->descriptor;
+	(*desc->handle_mousedown) (desc, event);
+}
+
+static void open_menu_clipdrawer(WDock *dock, WAppIcon *aicon, XEvent *event)
+{
+	WScreen *scr = dock->screen_ptr;
+	WObjDescriptor *desc;
+	WMenuEntry *entry;
+	int index = 0;
+	int x_pos;
+
+	set_dockmenu_clipdrawer_code(dock, entry, aicon, &index);
+	set_dockmenu_common_code(dock, entry, aicon, &index);
+
+	if (!dock->menu->flags.realized)
+		wMenuRealize(dock->menu);
+
+	x_pos = event->xbutton.x_root - dock->menu->frame->core->width / 2 - 1;
+	if (x_pos < 0)
+		x_pos = 0;
+	else if (x_pos + dock->menu->frame->core->width > scr->scr_width - 2)
+		x_pos = scr->scr_width - dock->menu->frame->core->width - 4;
 
 	wMenuMapAt(dock->menu, x_pos, event->xbutton.y_root + 2, False);
 
@@ -4493,7 +4508,14 @@ static void iconMouseDown(WObjDescriptor *desc, XEvent *event)
 			return;
 		}
 
-		openDockMenu(dock, aicon, event);
+		switch (dock->type) {
+		case WM_DOCK:
+			open_menu_dock(dock, aicon, event);
+			break;
+		case WM_CLIP:
+		case WM_DRAWER:
+			open_menu_clipdrawer(dock, aicon, event);
+		}
 	}
 }
 
