@@ -955,43 +955,43 @@ static WMenu *makeWorkspaceMenu(void)
 	return menu;
 }
 
-static void updateClipOptionsMenu(WMenu *menu, WDock *dock)
+static void updateClipOptionsMenu(WDock *dock)
 {
 	WMenuEntry *entry;
 	int index = 0;
 
-	if (!menu || !dock)
+	if (!w_global.clip.opt_menu || !dock)
 		return;
 
 	/* keep on top */
-	entry = menu->entries[index];
+	entry = w_global.clip.opt_menu->entries[index];
 	entry->flags.indicator_on = !dock->lowered;
 	entry->clientdata = dock;
-	wMenuSetEnabled(menu, index, dock->type == WM_CLIP);
+	wMenuSetEnabled(w_global.clip.opt_menu, index, dock->type == WM_CLIP);
 
 	/* collapsed */
-	entry = menu->entries[++index];
+	entry = w_global.clip.opt_menu->entries[++index];
 	entry->flags.indicator_on = dock->collapsed;
 	entry->clientdata = dock;
 
 	/* auto-collapse */
-	entry = menu->entries[++index];
+	entry = w_global.clip.opt_menu->entries[++index];
 	entry->flags.indicator_on = dock->auto_collapse;
 	entry->clientdata = dock;
 
 	/* auto-raise/lower */
-	entry = menu->entries[++index];
+	entry = w_global.clip.opt_menu->entries[++index];
 	entry->flags.indicator_on = dock->auto_raise_lower;
 	entry->clientdata = dock;
-	wMenuSetEnabled(menu, index, dock->lowered && (dock->type == WM_CLIP));
+	wMenuSetEnabled(w_global.clip.opt_menu, index, dock->lowered && (dock->type == WM_CLIP));
 
 	/* attract icons */
-	entry = menu->entries[++index];
+	entry = w_global.clip.opt_menu->entries[++index];
 	entry->flags.indicator_on = dock->attract_icons;
 	entry->clientdata = dock;
 
-	menu->flags.realized = 0;
-	wMenuRealize(menu);
+	w_global.clip.opt_menu->flags.realized = 0;
+	wMenuRealize(w_global.clip.opt_menu);
 }
 
 
@@ -3889,7 +3889,7 @@ static void openDockMenu(WDock *dock, WAppIcon *aicon, XEvent *event)
 	} else {
 		/* clip/drawer options */
 		if (w_global.clip.opt_menu)
-			updateClipOptionsMenu(w_global.clip.opt_menu, dock);
+			updateClipOptionsMenu(dock);
 
 		n_selected = numberOfSelectedIcons(dock);
 
