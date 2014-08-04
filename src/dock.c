@@ -1106,28 +1106,30 @@ static void setDockPositionKeepOnTopCallback(WMenu *menu, WMenuEntry *entry)
 	entry->flags.indicator_on = 1;
 }
 
-static void updateDockPositionMenu(WMenu *menu, WDock *dock)
+static void updateDockPositionMenu(WDock *dock)
 {
 	WMenuEntry *entry;
 	int index = 0;
 
-	assert(menu);
-	assert(dock);
+	if (!w_global.dock.pos_menu || !dock)
+		return;
 
 	/* Normal level */
-	entry = menu->entries[index++];
+	entry = w_global.dock.pos_menu->entries[index++];
 	entry->flags.indicator_on = (dock->lowered && !dock->auto_raise_lower);
 	entry->clientdata = dock;
 
 	/* Auto-raise/lower */
-	entry = menu->entries[index++];
+	entry = w_global.dock.pos_menu->entries[index++];
 	entry->flags.indicator_on = dock->auto_raise_lower;
 	entry->clientdata = dock;
 
 	/* Keep on top */
-	entry = menu->entries[index++];
+	entry = w_global.dock.pos_menu->entries[index++];
 	entry->flags.indicator_on = !dock->lowered;
 	entry->clientdata = dock;
+
+	dock->menu->flags.realized = 0;
 }
 
 WMenu *makeDockPositionMenu(void)
@@ -3878,8 +3880,7 @@ static void openDockMenu(WDock *dock, WAppIcon *aicon, XEvent *event)
 
 	if (dock->type == WM_DOCK) {
 		/* Dock position menu */
-		updateDockPositionMenu(w_global.dock.pos_menu, dock);
-		dock->menu->flags.realized = 0;
+		updateDockPositionMenu(dock);
 		if (!wPreferences.flags.nodrawer) {
 			/* add a drawer */
 			entry = dock->menu->entries[++index];
