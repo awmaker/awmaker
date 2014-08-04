@@ -1072,18 +1072,22 @@ static void setDockPositionAutoRaiseLowerCallback(WMenu *menu, WMenuEntry *entry
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) menu;
 
-	if (entry->flags.indicator_on) // already set, nothing to do
+	/* Already set, nothing to do */
+	if (entry->flags.indicator_on)
 		return;
-	// Do we come from normal or keep on top?
+
+	/* Do we come from normal or keep on top? */
 	if (!dock->lowered)
-	{
 		toggleLowered(dock);
-	}
+
 	dock->auto_raise_lower = 1;
-	// Only for aesthetic purposes, can be removed when Autoraise status is no longer exposed in drawer option menu
-	for (dc = dock->screen_ptr->drawers; dc != NULL; dc = dc->next) {
+
+	/* Only for aesthetic purposes, can be removed
+	 * when Autoraise status is no longer exposed
+	 * in drawer option menu */
+	for (dc = dock->screen_ptr->drawers; dc != NULL; dc = dc->next)
 		dc->adrawer->auto_raise_lower = 1;
-	}
+
 	entry->flags.indicator_on = 1;
 }
 
