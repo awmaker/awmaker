@@ -4450,8 +4450,7 @@ static void iconMouseDown(WObjDescriptor *desc, XEvent *event)
 				event->xany.send_event = True;
 				(*desc->handle_mousedown) (desc, event);
 			}
-		} else if (dock->type == WM_CLIP &&
-			   (event->xbutton.state & ShiftMask) && aicon != w_global.clip.icon) {
+		} else if (dock->type == WM_CLIP && (event->xbutton.state & ShiftMask)) {
 			wClipMakeIconOmnipresent(aicon, !aicon->omnipresent);
 		} else {
 			WAppIcon *btn = desc->parent;
