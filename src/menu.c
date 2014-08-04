@@ -168,9 +168,19 @@ WMenu *menu_create(const char *title)
 	return menu;
 }
 
-void menu_destroy(WMenu *menu)
+void menu_unmap(WMenu *menu)
 {
 	destroy_pixmap(menu->menu_texture_data);
+
+        XDeleteContext(dpy, menu->menu->window, w_global.context.client_win);
+        XDestroyWindow(dpy, menu->menu->window);
+
+	framewindow_unmap(menu->frame);
+}
+
+void menu_destroy(WMenu *menu)
+{
+	menu_unmap(menu);
 
 	if (menu->cascades)
 		wfree(menu->cascades);
@@ -178,14 +188,8 @@ void menu_destroy(WMenu *menu)
         if (menu->menu->stacking)
                 wfree(menu->menu->stacking);
 
-        XDeleteContext(dpy, menu->menu->window, w_global.context.client_win);
-        XDestroyWindow(dpy, menu->menu->window);
-
         wcore_destroy(menu->menu);
-
-	framewindow_unmap(menu->frame);
 	wFrameWindowDestroy(menu->frame);
-
 	wfree(menu);
 }
 

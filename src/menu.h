@@ -132,6 +132,7 @@ void wMenuRestoreState(WScreen *scr);
 
 WMenu *menu_create(const char *title);
 void menu_map(WMenu *menu, WScreen *screen);
+void menu_unmap(WMenu *menu);
 
 void wMenuEntrySetCascade_create(WMenu *menu, WMenuEntry *entry, WMenu *cascade);
 void wMenuEntrySetCascade_map(WMenu *menu, WMenu *cascade);
