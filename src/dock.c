@@ -1352,6 +1352,12 @@ static void dock_menu_map(WMenu *menu, WScreen *scr)
 	}
 }
 
+static void dock_menu_unmap(WMenu *menu)
+{
+	menu_unmap(w_global.dock.pos_menu);
+	menu_unmap(menu);
+}
+
 WDock *dock_create(WScreen *scr, WMPropList *state)
 {
 	WDock *dock;
