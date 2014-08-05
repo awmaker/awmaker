@@ -1443,7 +1443,6 @@ WDock *dock_create(WScreen *scr, WMPropList *state)
 
 	/* create dock menu */
 	dock->menu = w_global.dock.dock_menu;
-	dock_menu_map(dock->menu, scr);
 
 	if (!state)
 		return dock;
@@ -4516,7 +4515,9 @@ static void iconMouseDown(WObjDescriptor *desc, XEvent *event)
 
 		switch (dock->type) {
 		case WM_DOCK:
+			dock_menu_map(dock->menu, scr);
 			open_menu_dock(dock, aicon, event);
+			dock_menu_unmap(dock->menu);
 			break;
 		case WM_CLIP:
 		case WM_DRAWER:
