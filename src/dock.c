@@ -1574,12 +1574,10 @@ WDock *clip_create(WScreen *scr, WMPropList *state)
 	XMoveWindow(dpy, btn->icon->core->window, btn->x_pos, btn->y_pos);
 
 	/* create clip menu */
-	if (!w_global.clip.menu) {
+	if (!w_global.clip.menu)
 		clip_menu_create();
-		dock->menu = w_global.clip.menu;
-	} else {
-		dock->menu = w_global.clip.menu;
-	}
+
+	dock->menu = w_global.clip.menu;
 
 	if (!state)
 		return dock;
@@ -1682,12 +1680,10 @@ WDock *drawer_create(WScreen *scr, const char *name)
 	XMoveWindow(dpy, btn->icon->core->window, btn->x_pos, btn->y_pos);
 
 	/* create dock menu */
-	if (!w_global.dock.drawer_menu) {
+	if (!w_global.dock.drawer_menu)
 		drawer_menu_create();
-		dock->menu = w_global.dock.drawer_menu;
-	} else {
-		dock->menu = w_global.dock.drawer_menu;
-	}
+
+	dock->menu = w_global.dock.drawer_menu;
 
 	drawerAppendToChain(scr, dock);
 
