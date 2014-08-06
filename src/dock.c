@@ -1577,7 +1577,6 @@ WDock *clip_create(WScreen *scr, WMPropList *state)
 	if (!w_global.clip.menu) {
 		clip_menu_create();
 		dock->menu = w_global.clip.menu;
-		clip_menu_map(w_global.clip.menu, scr);
 	} else {
 		dock->menu = w_global.clip.menu;
 	}
@@ -1686,7 +1685,6 @@ WDock *drawer_create(WScreen *scr, const char *name)
 	if (!w_global.dock.drawer_menu) {
 		drawer_menu_create();
 		dock->menu = w_global.dock.drawer_menu;
-		drawer_menu_map(w_global.dock.drawer_menu, scr);
 	} else {
 		dock->menu = w_global.dock.drawer_menu;
 	}
@@ -4534,8 +4532,14 @@ static void iconMouseDown(WObjDescriptor *desc, XEvent *event)
 			dock_menu_unmap(dock->menu);
 			break;
 		case WM_CLIP:
-		case WM_DRAWER:
+			clip_menu_map(dock->menu, scr);
 			open_menu_clipdrawer(dock, aicon, event);
+			clip_menu_unmap(dock->menu);
+			break;
+		case WM_DRAWER:
+			drawer_menu_map(dock->menu, scr);
+			open_menu_clipdrawer(dock, aicon, event);
+			drawer_menu_unmap(dock->menu);
 		}
 	}
 }
