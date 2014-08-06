@@ -1320,6 +1320,12 @@ static void drawer_menu_map(WMenu *menu, WScreen *scr)
 	wMenuEntrySetCascade_map(menu, w_global.clip.opt_menu);
 }
 
+static void drawer_menu_unmap(WMenu *menu)
+{
+	menu_unmap(w_global.clip.opt_menu);
+	menu_unmap(menu);
+}
+
 WMenu *dock_menu_create(void)
 {
 	WMenu *menu;
