@@ -1253,6 +1253,14 @@ static void clip_menu_map(WMenu *menu, WScreen *scr)
 	}
 }
 
+static void clip_menu_unmap(WMenu *menu)
+{
+
+	menu_unmap(w_global.clip.opt_menu);
+	menu_unmap(w_global.clip.submenu);
+	menu_unmap(menu);
+}
+
 static void drawer_menu_create(void)
 {
 	WMenu *menu;
