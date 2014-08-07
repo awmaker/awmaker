@@ -630,6 +630,10 @@ void StartUp(Bool defaultScreenOnly)
 	w_global.clip.opt_menu = makeClipOptionsMenu();
 	w_global.dock.dock_menu = dock_menu_create();
 
+	/* Create the dock */
+	if (!wPreferences.flags.nodock)
+		w_global.dock.dock = dock_create();
+
 	/* manage the screens */
 	for (j = 0; j < max; j++) {
 		if (defaultScreenOnly || max == 1) {
