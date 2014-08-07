@@ -1372,7 +1372,7 @@ static void dock_menu_unmap(WMenu *menu)
 	menu_unmap(menu);
 }
 
-WDock *dock_create(WScreen *scr, WMPropList *state)
+WDock *dock_create(void)
 {
 	WDock *dock;
 	WAppIcon *btn;
@@ -1392,6 +1392,10 @@ WDock *dock_create(WScreen *scr, WMPropList *state)
 	dock->auto_raise_magic = NULL;
 	dock->attract_icons = 0;
 	dock->lowered = 1;
+
+	/* create dock menu */
+	dock->menu = w_global.dock.dock_menu;
+
 	/* Max icon number, without screen */
 	dock->max_icons = DOCK_MAX_ICONS;
 	dock->icon_array = wmalloc(sizeof(WAppIcon *) * dock->max_icons);
@@ -1420,6 +1424,14 @@ WDock *dock_create(WScreen *scr, WMPropList *state)
 
 	if (wPreferences.flags.clip_merged_in_dock)
 		w_global.clip.icon = btn;
+
+	return dock;
+}
+
+void dock_map(WDock *dock, WScreen *scr, WMPropList *state)
+{
+	WAppIcon *btn = dock->icon_array[0];
+
 	dock->screen_ptr = scr;
 	wcore_map_toplevel(btn->icon->core, scr, 0, 0, 0, scr->w_depth,
 			   scr->w_visual, scr->w_colormap, scr->white_pixel);
@@ -1455,11 +1467,8 @@ WDock *dock_create(WScreen *scr, WMPropList *state)
 	wRaiseFrame(btn->icon->core);
 	XMoveWindow(dpy, btn->icon->core->window, btn->x_pos, btn->y_pos);
 
-	/* create dock menu */
-	dock->menu = w_global.dock.dock_menu;
-
 	if (!state)
-		return dock;
+		return;
 
 	WMRetainPropList(state);
 
@@ -1476,8 +1485,6 @@ WDock *dock_create(WScreen *scr, WMPropList *state)
 	dock_set_attacheddocks(dock->screen_ptr, dock, state, dock->type);
 
 	WMReleasePropList(state);
-
-	return dock;
 }
 
 /* Create appicon's icon */
