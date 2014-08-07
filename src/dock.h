@@ -64,6 +64,9 @@ WDock *clip_create(WScreen *scr, WMPropList *state);
 WDock *dock_create(void);
 void dock_map(WDock *dock, WScreen *scr, WMPropList *dock_state);
 
+void clip_icon_create(void);
+void clip_icon_map(WScreen *scr);
+
 void wDockDestroy(WDock *dock);
 void wDockHideIcons(WDock *dock);
 void wDockShowIcons(WDock *dock);

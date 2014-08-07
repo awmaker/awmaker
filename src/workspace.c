@@ -120,6 +120,13 @@ int wWorkspaceNew(WScreen *scr)
 		}
 
 		if (!wPreferences.flags.noclip) {
+			/* We should create and map the dock icon only in the first
+			 * workspace, because the image is shared */
+			if (!w_global.clip.icon) {
+				clip_icon_create();
+				clip_icon_map(scr);
+			}
+
 			state = WMGetFromPLDictionary(w_global.session_state, dClip);
 			wspace->clip = clip_create(scr, state);
 		}
@@ -900,6 +907,15 @@ void wWorkspaceRestoreState(WScreen *scr)
 			clip_state = WMGetFromPLDictionary(wks_state, dClip);
 			if (w_global.workspace.array[i]->clip)
 				wDockDestroy(w_global.workspace.array[i]->clip);
+
+			/* We should create and map the dock icon only in the first
+			 * workspace, because the image is shared */
+			if (i == 0) {
+				if (!w_global.clip.icon) {
+					clip_icon_create();
+					clip_icon_map(scr);
+				}
+			}
 
 			w_global.workspace.array[i]->clip = clip_create(scr, clip_state);
 

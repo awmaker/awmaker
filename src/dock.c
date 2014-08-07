@@ -1554,11 +1554,6 @@ WDock *clip_create(WScreen *scr, WMPropList *state)
 	dock->max_icons = DOCK_MAX_ICONS;
 	dock->icon_array = wmalloc(sizeof(WAppIcon *) * dock->max_icons);
 
-	if (!w_global.clip.icon) {
-		clip_icon_create();
-		clip_icon_map(scr);
-	}
-
 	btn = w_global.clip.icon;
 	btn->dock = dock;
 
