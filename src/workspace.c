@@ -128,7 +128,8 @@ int wWorkspaceNew(WScreen *scr)
 			}
 
 			state = WMGetFromPLDictionary(w_global.session_state, dClip);
-			wspace->clip = clip_create(scr, state);
+			wspace->clip = clip_create();
+			clip_map(wspace->clip, scr, state);
 		}
 
 		list = wmalloc(sizeof(WWorkspace *) * w_global.workspace.count);
@@ -917,7 +918,8 @@ void wWorkspaceRestoreState(WScreen *scr)
 				}
 			}
 
-			w_global.workspace.array[i]->clip = clip_create(scr, clip_state);
+			w_global.workspace.array[i]->clip = clip_create();
+			clip_map(w_global.workspace.array[i]->clip, scr, clip_state);
 
 			if (i > 0)
 				wDockHideIcons(w_global.workspace.array[i]->clip);

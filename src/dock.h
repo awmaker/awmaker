@@ -60,8 +60,9 @@ typedef struct WDock {
     struct WDDomain *defaults;
 } WDock;
 
-WDock *clip_create(WScreen *scr, WMPropList *state);
+WDock *clip_create(void);
 WDock *dock_create(void);
+void clip_map(WDock *dock, WScreen *scr, WMPropList *state);
 void dock_map(WDock *dock, WScreen *scr, WMPropList *dock_state);
 
 void clip_icon_create(void);

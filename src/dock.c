@@ -1543,7 +1543,7 @@ void clip_icon_map(WScreen *scr)
 	XMapWindow(dpy, w_global.clip.icon->icon->core->window);
 }
 
-WDock *clip_create(WScreen *scr, WMPropList *state)
+WDock *clip_create(void)
 {
 	WDock *dock;
 	WAppIcon *btn;
@@ -1557,9 +1557,6 @@ WDock *clip_create(WScreen *scr, WMPropList *state)
 	btn = w_global.clip.icon;
 	btn->dock = dock;
 
-	dock->x_pos = 0;
-	dock->y_pos = 0;
-	dock->screen_ptr = scr;
 	dock->type = WM_CLIP;
 	dock->icon_count = 1;
 	dock->on_right_side = 1;
@@ -1572,8 +1569,6 @@ WDock *clip_create(WScreen *scr, WMPropList *state)
 	dock->attract_icons = 0;
 	dock->lowered = 1;
 	dock->icon_array[0] = btn;
-	wRaiseFrame(btn->icon->core);
-	XMoveWindow(dpy, btn->icon->core->window, btn->x_pos, btn->y_pos);
 
 	/* create clip menu */
 	if (!w_global.clip.menu)
@@ -1581,8 +1576,21 @@ WDock *clip_create(WScreen *scr, WMPropList *state)
 
 	dock->menu = w_global.clip.menu;
 
+	return dock;
+}
+
+void clip_map(WDock *dock, WScreen *scr, WMPropList *state)
+{
+	WAppIcon *btn = w_global.clip.icon;
+
+	dock->x_pos = 0;
+	dock->y_pos = 0;
+	dock->screen_ptr = scr;
+	wRaiseFrame(btn->icon->core);
+	XMoveWindow(dpy, btn->icon->core->window, btn->x_pos, btn->y_pos);
+
 	if (!state)
-		return dock;
+		return;
 
 	WMRetainPropList(state);
 
@@ -1599,8 +1607,6 @@ WDock *clip_create(WScreen *scr, WMPropList *state)
 	dock_set_attacheddocks(dock->screen_ptr, dock, state, dock->type);
 
 	WMReleasePropList(state);
-
-	return dock;
 }
 
 WDock *drawer_create(WScreen *scr, const char *name)
