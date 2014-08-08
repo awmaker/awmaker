@@ -1630,28 +1630,34 @@ WDock *drawer_create(WScreen *scr, const char *name)
 	/* Max icon number, without screen */
 	dock->max_icons = DOCK_MAX_ICONS;
 	dock->icon_array = wmalloc(sizeof(WAppIcon *) * dock->max_icons);
-
-	if (name == NULL)
-		name = findUniqueName("Drawer");
-
-	/* Create appicon's icon */
 	btn = wmalloc(sizeof(WAppIcon));
-	wretain(btn);
-	btn->yindex = 0;
-	btn->xindex = 0;
 
+	wretain(btn);
 	add_to_appicon_list(btn);
 
+	/* Create appicon's icon */
+	btn->xindex = 0;
+	btn->yindex = 0;
+	btn->docked = 1;
+	btn->dock = dock;
+	dock->on_right_side = w_global.dock.dock->on_right_side;
+	dock->icon_array[0] = btn;
+
 	btn->wm_class = wstrdup("WMDrawer");
+
+	if (!name)
+		name = findUniqueName("Drawer");
 
 	if (name)
 		btn->wm_instance = wstrdup(name);
 
 	btn->icon = icon_create_core();
+	btn->icon->core->descriptor.parent_type = WCLASS_DOCK_ICON;
+	btn->icon->core->descriptor.parent = btn;
+	btn->icon->tile_type = TILE_DRAWER;
+
 	wcore_map_toplevel(btn->icon->core, scr, 0, 0, 0, scr->w_depth,
 			   scr->w_visual, scr->w_colormap, scr->white_pixel);
-
-	btn->icon->tile_type = TILE_DRAWER;
 
 	set_icon_image_from_database(btn->icon, btn->wm_instance, btn->wm_class, NULL);
 	/* Update the icon, because icon could be NULL */
@@ -1670,19 +1676,13 @@ WDock *drawer_create(WScreen *scr, const char *name)
 	btn->icon->core->descriptor.handle_mousedown = iconMouseDown;
 	btn->icon->core->descriptor.handle_enternotify = clipEnterNotify;
 	btn->icon->core->descriptor.handle_leavenotify = clipLeaveNotify;
-	btn->icon->core->descriptor.parent_type = WCLASS_DOCK_ICON;
-	btn->icon->core->descriptor.parent = btn;
 	XMapWindow(dpy, btn->icon->core->window);
 	btn->x_pos = 0;
 	btn->y_pos = 0;
-	btn->docked = 1;
-	btn->dock = dock;
 
 	dock->x_pos = btn->x_pos;
 	dock->y_pos = btn->y_pos;
 	dock->screen_ptr = scr;
-	dock->on_right_side = w_global.dock.dock->on_right_side;
-	dock->icon_array[0] = btn;
 	wRaiseFrame(btn->icon->core);
 	XMoveWindow(dpy, btn->icon->core->window, btn->x_pos, btn->y_pos);
 
