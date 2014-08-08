@@ -1629,7 +1629,9 @@ WDock *drawer_create(WScreen *scr, const char *name)
 	dock->auto_raise_magic = NULL;
 	dock->attract_icons = 0;
 	dock->lowered = 1;
-	dock->max_icons = scr->scr_width / wPreferences.icon_size;
+
+	/* Max icon number, without screen */
+	dock->max_icons = DOCK_MAX_ICONS;
 	dock->icon_array = wmalloc(sizeof(WAppIcon *) * dock->max_icons);
 
 	if (name == NULL)
