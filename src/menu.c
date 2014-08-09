@@ -1618,7 +1618,6 @@ static void menu_rename_workspace(WScreen *scr, int entry_no)
 
 static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
 {
-	WWindow *wwin;
 	XButtonEvent *bev = &event->xbutton;
 	WMenu *smenu, *menu = desc->parent;
 	WScreen *scr = menu->frame->screen_ptr;
@@ -1692,8 +1691,7 @@ static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
 				OpenWindowMenu2((WWindow *)entry->clientdata,
 								event->xbutton.x_root,
 								event->xbutton.y_root, False);
-				wwin = (WWindow *)entry->clientdata;
-				desc = &wwin->screen_ptr->window_menu->menu->descriptor;
+				desc = &w_global.menu.window_menu->menu->descriptor;
 				event->xany.send_event = True;
 				(*desc->handle_mousedown)(desc, event);
 
