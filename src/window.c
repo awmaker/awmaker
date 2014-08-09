@@ -601,7 +601,7 @@ WWindow *wManageWindow(WScreen *scr, Window window)
 	wm_state = PropGetWindowState(window);
 
 	/* if it's startup and the window is unmapped, don't manage it */
-	if (scr->flags.startup && wm_state < 0 && wattribs.map_state == IsUnmapped) {
+	if (w_global.startup.phase1 && wm_state < 0 && wattribs.map_state == IsUnmapped) {
 		XUngrabServer(dpy);
 		return NULL;
 	}
@@ -810,7 +810,7 @@ WWindow *wManageWindow(WScreen *scr, Window window)
 	wNETWMCheckInitialClientState(wwin);
 
 	/* apply previous state if it exists and we're in startup */
-	if (scr->flags.startup && wm_state >= 0) {
+	if (w_global.startup.phase1 && wm_state >= 0) {
 		if (wm_state == IconicState)
 			wwin->flags.miniaturized = 1;
 		else if (wm_state == WithdrawnState)
@@ -943,7 +943,7 @@ WWindow *wManageWindow(WScreen *scr, Window window)
 			x = win_state->state->x;
 			y = win_state->state->y;
 		} else if ((wwin->transient_for == None || wPreferences.window_placement != WPM_MANUAL)
-			   && !scr->flags.startup
+			   && !w_global.startup.phase1
 			   && workspace == w_global.workspace.current
 			   && !wwin->flags.miniaturized
 			   && !wwin->flags.maximized && !(wwin->normal_hints->flags & (USPosition | PPosition))) {
@@ -1197,7 +1197,7 @@ WWindow *wManageWindow(WScreen *scr, Window window)
 		else
 			wClientSetState(wwin, NormalState, None);
 
-		if (wPreferences.superfluous && !wPreferences.no_animations && !scr->flags.startup &&
+		if (wPreferences.superfluous && !wPreferences.no_animations && !w_global.startup.phase1 &&
 		    (wwin->transient_for == None || wwin->transient_for == scr->root_win) &&
 		    /*
 		     * The brain damaged idiotic non-click to focus modes will

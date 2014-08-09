@@ -253,7 +253,7 @@ void wShadeWindow(WWindow *wwin)
 	WMPostNotificationName(WMNChangedState, wwin, "shade");
 
 #ifdef ANIMATIONS
-	if (!wwin->screen_ptr->flags.startup) {
+	if (!w_global.startup.phase1) {
 		/* Catch up with events not processed while animation was running */
 		ProcessPendingEvents();
 	}
@@ -991,17 +991,14 @@ static void unmapTransientsFor(WWindow *wwin)
 	while (tmp) {
 		/* unmap the transients for this transient */
 		if (tmp != wwin && tmp->transient_for == wwin->client_win
-		    && (tmp->flags.mapped || wwin->screen_ptr->flags.startup || tmp->flags.shaded)) {
+		    && (tmp->flags.mapped || w_global.startup.phase1 || tmp->flags.shaded)) {
 			unmapTransientsFor(tmp);
 			tmp->flags.miniaturized = 1;
-			if (!tmp->flags.shaded) {
+			if (!tmp->flags.shaded)
 				wWindowUnmap(tmp);
-			} else {
+			else
 				XUnmapWindow(dpy, tmp->frame->core->window);
-			}
-			/*
-			   if (!tmp->flags.shaded)
-			 */
+
 			wClientSetState(tmp, IconicState, None);
 
 			WMPostNotificationName(WMNChangedState, tmp, "iconify-transient");
@@ -1116,7 +1113,7 @@ void wIconifyWindow(WWindow * wwin)
 
 		flushExpose();
 #ifdef ANIMATIONS
-		if (!wwin->screen_ptr->flags.startup && !wwin->flags.skip_next_animation
+		if (!w_global.startup.phase1 && !wwin->flags.skip_next_animation
 		    && !wPreferences.no_animations) {
 			int ix, iy, iw, ih;
 
@@ -1180,16 +1177,15 @@ void wIconifyWindow(WWindow * wwin)
 			wSetFocusTo(wwin->screen_ptr, NULL);
 		}
 #ifdef ANIMATIONS
-		if (!wwin->screen_ptr->flags.startup) {
+		if (!w_global.startup.phase1) {
 			/* Catch up with events not processed while animation was running */
 			Window clientwin = wwin->client_win;
 
 			ProcessPendingEvents();
 
 			/* the window can disappear while ProcessPendingEvents() runs */
-			if (!wWindowFor(clientwin)) {
+			if (!wWindowFor(clientwin))
 				return;
-			}
 		}
 #endif
 	}
@@ -1257,7 +1253,7 @@ void wDeiconifyWindow(WWindow *wwin)
 	/* if the window is in another workspace, do it silently */
 	if (!netwm_hidden) {
 #ifdef ANIMATIONS
-		if (!wwin->screen_ptr->flags.startup && !wPreferences.no_animations
+		if (!w_global.startup.phase1 && !wPreferences.no_animations
 		    && !wwin->flags.skip_next_animation && wwin->icon != NULL) {
 			int ix, iy, iw, ih;
 
@@ -1312,7 +1308,7 @@ void wDeiconifyWindow(WWindow *wwin)
 		wSetFocusTo(wwin->screen_ptr, wwin);
 
 #ifdef ANIMATIONS
-		if (!wwin->screen_ptr->flags.startup) {
+		if (!w_global.startup.phase1) {
 			/* Catch up with events not processed while animation was running */
 			Window clientwin = wwin->client_win;
 
@@ -1363,7 +1359,7 @@ static void hideWindow(WIcon *icon, int icon_x, int icon_y, WWindow *wwin, int a
 	flushExpose();
 
 #ifdef ANIMATIONS
-	if (!wwin->screen_ptr->flags.startup && !wPreferences.no_animations &&
+	if (!w_global.startup.phase1 && !wPreferences.no_animations &&
 	    !wwin->flags.skip_next_animation && animate) {
 		animateResize(wwin->screen_ptr, wwin->frame_x, wwin->frame_y,
 			      wwin->frame->core->width, wwin->frame->core->height,
@@ -1542,7 +1538,7 @@ static void unhideWindow(WIcon *icon, int icon_x, int icon_y, WWindow *wwin, int
 	wwin->flags.hidden = 0;
 
 #ifdef ANIMATIONS
-	if (!wwin->screen_ptr->flags.startup && !wPreferences.no_animations && animate) {
+	if (!w_global.startup.phase1 && !wPreferences.no_animations && animate) {
 		animateResize(wwin->screen_ptr, icon_x, icon_y,
 			      icon->core->width, icon->core->height,
 			      wwin->frame_x, wwin->frame_y,
@@ -1938,7 +1934,7 @@ static void shade_animate(WWindow *wwin, Bool what)
 
 	switch(what) {
 	case SHADE:
-		if (!wwin->screen_ptr->flags.startup) {
+		if (!w_global.startup.phase1) {
 			/* do the shading animation */
 			h = wwin->frame->core->height;
 			s = h / SHADE_STEPS;

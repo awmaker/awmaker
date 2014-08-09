@@ -3700,7 +3700,7 @@ void wDockTrackWindowLaunch(WDock *dock, Window window)
 			}
 			found = True;
 			if (!wPreferences.no_animations && !icon->launching &&
-			    !dock->screen_ptr->flags.startup && !dock->collapsed) {
+			    !w_global.startup.phase1 && !dock->collapsed) {
 				WAppIcon *aicon;
 				int x0, y0;
 

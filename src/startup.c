@@ -741,7 +741,7 @@ static Bool windowInList(Window window, Window * list, int count)
  * reparented/managed.
  *-----------------------------------------------------------------------
  */
-static void manageAllWindows(WScreen * scr, int crashRecovery)
+static void manageAllWindows(WScreen *scr, int crashRecovery)
 {
 	Window root, parent;
 	Window *children;
@@ -752,7 +752,7 @@ static void manageAllWindows(WScreen * scr, int crashRecovery)
 	XGrabServer(dpy);
 	XQueryTree(dpy, scr->root_win, &root, &parent, &children, &nchildren);
 
-	scr->flags.startup = 1;
+	w_global.startup.phase1 = 1;
 
 	/* first remove all icon windows */
 	for (i = 0; i < nchildren; i++) {
@@ -830,17 +830,19 @@ static void manageAllWindows(WScreen * scr, int crashRecovery)
 	}
 
 	XFree(children);
-	scr->flags.startup = 0;
-	scr->flags.startup2 = 1;
+	w_global.startup.phase1 = 0;
+	w_global.startup.phase2 = 1;
 
 	while (XPending(dpy)) {
 		XEvent ev;
 		WMNextEvent(dpy, &ev);
 		WMHandleEvent(&ev);
 	}
+
 	w_global.workspace.last_used = 0;
 	wWorkspaceForceChange(scr, 0);
 	if (!wPreferences.flags.noclip)
 		wDockShowIcons(w_global.workspace.array[w_global.workspace.current]->clip);
-	scr->flags.startup2 = 0;
+
+	w_global.startup.phase2 = 0;
 }

@@ -1152,7 +1152,7 @@ void wReadDefaults(WScreen * scr, WMPropList * new_dict)
 		}
 	}
 
-	if (needs_refresh != 0 && !scr->flags.startup) {
+	if (needs_refresh != 0 && !w_global.startup.phase1) {
 		int foo;
 
 		foo = 0;

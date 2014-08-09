@@ -454,7 +454,7 @@ static void showWorkspaceName(WScreen * scr, int workspace)
 
 void wWorkspaceChange(WScreen *scr, int workspace)
 {
-	if (scr->flags.startup || scr->flags.startup2 || scr->flags.ignore_focus_events)
+	if (w_global.startup.phase1 || w_global.startup.phase2 || scr->flags.ignore_focus_events)
 		return;
 
 	if (workspace != w_global.workspace.current)

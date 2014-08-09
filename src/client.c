@@ -715,7 +715,7 @@ wClientGetNormalHints(WWindow * wwin, XWindowAttributes * wattribs, Bool geometr
 	wwin->normal_hints->flags &= ~PPosition;
 #endif
 
-	if (pre_icccm && !wwin->screen_ptr->flags.startup && geometry) {
+	if (pre_icccm && !w_global.startup.phase1 && geometry) {
 		if (wwin->normal_hints->flags & (USPosition | PPosition)) {
 			*x = wwin->normal_hints->x;
 			*y = wwin->normal_hints->y;
