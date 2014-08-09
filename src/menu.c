@@ -1687,7 +1687,7 @@ static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
 			}
 
 		} else if (!delayed_select) {
-			if (menu == scr->switch_menu && event->xbutton.button == Button3) {
+			if (menu == w_global.menu.switch_menu && event->xbutton.button == Button3) {
 				selectEntry(menu, entry_no);
 				OpenWindowMenu2((WWindow *)entry->clientdata,
 								event->xbutton.x_root,
@@ -2131,9 +2131,9 @@ void wMenuSaveState(WScreen *scr)
 
 	menus = WMCreatePLDictionary(NULL, NULL);
 
-	if (scr->switch_menu && scr->switch_menu->flags.buttoned) {
+	if (w_global.menu.switch_menu && w_global.menu.switch_menu->flags.buttoned) {
 		key = WMCreatePLString("SwitchMenu");
-		saveMenuInfo(menus, scr->switch_menu, key);
+		saveMenuInfo(menus, w_global.menu.switch_menu, key);
 		WMReleasePropList(key);
 		save_menus = 1;
 	}
@@ -2188,7 +2188,7 @@ static Bool saveMenuRecurs(WMPropList *menus, WScreen *scr, WMenu *menu)
 	char buffer[512];
 	Bool ok = True;
 
-	if (menu->flags.buttoned && menu != scr->switch_menu) {
+	if (menu->flags.buttoned && menu != w_global.menu.switch_menu) {
 		buffer[0] = '\0';
 		ok = getMenuPath(menu, buffer, 510);
 
@@ -2252,7 +2252,7 @@ static int restoreMenu(WScreen *scr, WMPropList *menu)
 		return False;
 
 	OpenSwitchMenu(scr, x, y, False);
-	pmenu = scr->switch_menu;
+	pmenu = w_global.menu.switch_menu;
 	if (pmenu) {
 		width = MENUW(pmenu);
 		height = MENUH(pmenu);

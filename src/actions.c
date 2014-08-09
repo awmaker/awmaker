@@ -1382,7 +1382,7 @@ void wHideAll(WScreen *scr)
 	if (!scr)
 		return;
 
-	menu = scr->switch_menu;
+	menu = w_global.menu.switch_menu;
 
 	windows = wmalloc(sizeof(WWindow *));
 

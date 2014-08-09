@@ -509,6 +509,7 @@ extern struct wmaker_global_variables {
 	/* Menu related */
 	struct {
 		struct WMenu *root_menu;	/* root window menu */
+		struct WMenu *switch_menu;	/* window list menu */
 
 		struct {
 			unsigned int root_menu_changed_shortcuts:1;

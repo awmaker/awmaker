@@ -718,8 +718,8 @@ static void executeButtonAction(WScreen * scr, XEvent * event, int action)
 		break;
 	case WA_OPEN_WINLISTMENU:
 		OpenSwitchMenu(scr, event->xbutton.x_root, event->xbutton.y_root, False);
-		if (scr->switch_menu)
-			event->xbutton.window = scr->switch_menu->frame->core->window;
+		if (w_global.menu.switch_menu)
+			event->xbutton.window = w_global.menu.switch_menu->frame->core->window;
 		break;
 	default:
 		break;

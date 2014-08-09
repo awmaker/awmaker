@@ -102,14 +102,10 @@ void InitializeSwitchMenu(void)
 	}
 }
 
-/*
- *
- * Open switch menu
- *
- */
-void OpenSwitchMenu(WScreen * scr, int x, int y, int keyboard)
+/* Open switch menu */
+void OpenSwitchMenu(WScreen *scr, int x, int y, int keyboard)
 {
-	WMenu *switchmenu = scr->switch_menu;
+	WMenu *switchmenu = w_global.menu.switch_menu;
 	WWindow *wwin;
 
 	if (switchmenu) {
@@ -131,7 +127,7 @@ void OpenSwitchMenu(WScreen * scr, int x, int y, int keyboard)
 		return;
 	}
 	switchmenu = wMenuCreate(scr, _("Windows"));
-	scr->switch_menu = switchmenu;
+	w_global.menu.switch_menu = switchmenu;
 
 	wwin = scr->focused_window;
 	while (wwin) {
@@ -187,19 +183,17 @@ static int menuIndexForWindow(WMenu * menu, WWindow * wwin, int old_pos)
 	return idx;
 }
 
-/*
- * Update switch menu
- */
-void UpdateSwitchMenu(WScreen * scr, WWindow * wwin, int action)
+/* Update switch menu */
+void UpdateSwitchMenu(WScreen *scr, WWindow *wwin, int action)
 {
-	WMenu *switchmenu = scr->switch_menu;
+	WMenu *switchmenu = w_global.menu.switch_menu;
 	WMenuEntry *entry;
 	char title[MAX_MENU_TEXT_LENGTH + 6];
 	int len = sizeof(title);
 	int i;
 	int checkVisibility = 0;
 
-	if (!wwin->screen_ptr->switch_menu)
+	if (!w_global.menu.switch_menu)
 		return;
 	/*
 	 *  This menu is updated under the following conditions:
@@ -358,9 +352,9 @@ void UpdateSwitchMenu(WScreen * scr, WWindow * wwin, int action)
 	wMenuPaint(switchmenu);
 }
 
-static void UpdateSwitchMenuWorkspace(WScreen *scr, int workspace)
+static void UpdateSwitchMenuWorkspace(int workspace)
 {
-	WMenu *menu = scr->switch_menu;
+	WMenu *menu = w_global.menu.switch_menu;
 	int i;
 	WWindow *wwin;
 
@@ -414,9 +408,8 @@ static void observer(void *self, WMNotification * notif)
 	}
 }
 
-static void wsobserver(void *self, WMNotification * notif)
+static void wsobserver(void *self, WMNotification *notif)
 {
-	WScreen *scr = (WScreen *) WMGetNotificationObject(notif);
 	const char *name = WMGetNotificationName(notif);
 	void *data = WMGetNotificationClientData(notif);
 
@@ -424,7 +417,7 @@ static void wsobserver(void *self, WMNotification * notif)
 	(void) self;
 
 	if (strcmp(name, WMNWorkspaceNameChanged) == 0) {
-		UpdateSwitchMenuWorkspace(scr, (uintptr_t)data);
+		UpdateSwitchMenuWorkspace((uintptr_t)data);
 	} else if (strcmp(name, WMNWorkspaceChanged) == 0) {
 
 	}

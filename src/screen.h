@@ -188,7 +188,6 @@ typedef struct _WScreen {
     struct WPixmap *menu_shade_indicator;  /* for shaded window */
     int app_menu_x, app_menu_y;	       /* position for application menus */
 
-    struct WMenu *switch_menu;	       /* window list menu */
     struct WMenu *window_menu;	       /* window command menu */
     struct WMenu *icon_menu;	       /* icon/appicon menu */
 
