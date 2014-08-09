@@ -1606,7 +1606,7 @@ void clip_map(WDock *dock, WScreen *scr, WMPropList *state)
 	WMReleasePropList(state);
 }
 
-WDock *drawer_create(WScreen *scr, const char *name)
+WDock *drawer_create(const char *name)
 {
 	WDock *dock;
 	WAppIcon *btn;
@@ -1656,6 +1656,13 @@ WDock *drawer_create(WScreen *scr, const char *name)
 	btn->icon->core->descriptor.parent = btn;
 	btn->icon->tile_type = TILE_DRAWER;
 
+	return dock;
+}
+
+void drawer_map(WDock *dock, WScreen *scr)
+{
+	WAppIcon *btn = dock->icon_array[0];
+
 	wcore_map_toplevel(btn->icon->core, scr, 0, 0, 0, scr->w_depth,
 			   scr->w_visual, scr->w_colormap, scr->white_pixel);
 
@@ -1693,8 +1700,6 @@ WDock *drawer_create(WScreen *scr, const char *name)
 	dock->menu = w_global.dock.drawer_menu;
 
 	drawerAppendToChain(dock);
-
-	return dock;
 }
 
 void wDockDestroy(WDock *dock)
@@ -4895,7 +4900,8 @@ static int addADrawer(WScreen *scr)
 		 * ICON_SIZE multiple, as some space is lost above and under it */
 		return -1;
 
-	drawer = drawer_create(scr, NULL);
+	drawer = drawer_create(NULL);
+	drawer_map(drawer, scr);
 	drawer->lowered = w_global.dock.dock->lowered;
 	if (!drawer->lowered)
 		ChangeStackingLevel(drawer->icon_array[0]->icon->core, WMDockLevel);
@@ -5293,7 +5299,8 @@ static WDock * drawerRestoreState(WScreen *scr, WMPropList *drawer_state)
 
 	/* Get the instance name, and create a drawer */
 	value = WMGetFromPLDictionary(drawer_state, dName);
-	drawer = drawer_create(scr, WMGetFromPLString(value));
+	drawer = drawer_create(WMGetFromPLString(value));
+	drawer_map(drawer, scr);
 
 	/* restore DnD command and paste command */
 #ifdef XDND
