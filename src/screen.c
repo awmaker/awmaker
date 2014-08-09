@@ -759,13 +759,13 @@ void wScreenUpdateUsableArea(WScreen *scr)
 		wArrangeIcons(scr, True);
 }
 
-void wScreenRestoreState(WScreen * scr)
+void wScreenRestoreState(WScreen *scr)
 {
 	WMPropList *state;
 	char *path;
 
 	OpenRootMenu(scr, -10000, -10000, False);
-	wMenuUnmap(scr->root_menu);
+	wMenuUnmap(w_global.menu.root_menu);
 
 	make_keys();
 

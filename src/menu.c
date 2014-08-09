@@ -1607,7 +1607,7 @@ static void menu_rename_workspace(WScreen *scr, int entry_no)
 	name = wstrdup(w_global.workspace.array[number]->name);
 	snprintf(buffer, sizeof(buffer), _("Type the name for workspace %i:"), number + 1);
 
-	wMenuUnmap(scr->root_menu);
+	wMenuUnmap(w_global.menu.root_menu);
 
 	if (wInputDialog(scr, _("Rename Workspace"), buffer, &name))
 		wWorkspaceRename(scr, number, name);
@@ -2138,7 +2138,7 @@ void wMenuSaveState(WScreen *scr)
 		save_menus = 1;
 	}
 
-	if (saveMenuRecurs(menus, scr, scr->root_menu))
+	if (saveMenuRecurs(menus, scr, w_global.menu.root_menu))
 		save_menus = 1;
 
 	if (w_global.workspace.menu && w_global.workspace.menu->flags.buttoned) {
@@ -2357,9 +2357,10 @@ void wMenuRestoreState(WScreen *scr)
 	WMReleasePropList(skey);
 	restoreMenu(scr, menu);
 
-	if (!scr->root_menu) {
+	if (!w_global.menu.root_menu) {
 		OpenRootMenu(scr, scr->scr_width * 2, 0, False);
-		wMenuUnmap(scr->root_menu);
+		wMenuUnmap(w_global.menu.root_menu);
 	}
-	restoreMenuRecurs(scr, menus, scr->root_menu, "");
+
+	restoreMenuRecurs(scr, menus, w_global.menu.root_menu, "");
 }

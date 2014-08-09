@@ -506,6 +506,15 @@ extern struct wmaker_global_variables {
 	/* Screens related */
 	int screen_count;
 
+	/* Menu related */
+	struct {
+		struct WMenu *root_menu;	/* root window menu */
+
+		struct {
+			unsigned int root_menu_changed_shortcuts:1;
+		} flags;
+	} menu;
+
 	/* Workspace related */
 	struct {
 		struct WWorkspace **array;	/* data for the workspaces */

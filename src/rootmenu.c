@@ -426,7 +426,7 @@ static void rebindKeygrabs(WScreen * scr)
 	}
 }
 
-static void removeShortcutsForMenu(WMenu * menu)
+static void removeShortcutsForMenu(WMenu *menu)
 {
 	Shortcut *ptr, *tmp;
 	Shortcut *newList = NULL;
@@ -442,8 +442,9 @@ static void removeShortcutsForMenu(WMenu * menu)
 		}
 		ptr = tmp;
 	}
+
 	shortcutList = newList;
-	menu->menu->screen_ptr->flags.root_menu_changed_shortcuts = 1;
+	w_global.menu.flags.root_menu_changed_shortcuts = 1;
 }
 
 static Bool addShortcut(const char *file, const char *shortcutDefinition, WMenu *menu, WMenuEntry *entry)
@@ -499,7 +500,7 @@ static Bool addShortcut(const char *file, const char *shortcutDefinition, WMenu 
 	ptr->next = shortcutList;
 	shortcutList = ptr;
 
-	menu->menu->screen_ptr->flags.root_menu_changed_shortcuts = 1;
+	w_global.menu.flags.root_menu_changed_shortcuts = 1;
 
 	return True;
 }
@@ -1498,10 +1499,9 @@ static WMenu *configureMenu(WScreen * scr, WMPropList * definition, Bool include
 			return NULL;
 		}
 
-		if (!scr->root_menu || stat_buf.st_mtime > scr->root_menu->timestamp
+		if (!w_global.menu.root_menu || stat_buf.st_mtime > w_global.menu.root_menu->timestamp
 		    /* if the pointer in WMRootMenu has changed */
-		    || w_global.domain.root_menu->timestamp > scr->root_menu->timestamp) {
-
+		    || w_global.domain.root_menu->timestamp > w_global.menu.root_menu->timestamp) {
 			if (menu_is_default) {
 				wwarning(_
 					 ("using default menu file \"%s\" as the menu referenced in WMRootMenu could not be found "),
@@ -1627,24 +1627,17 @@ static WMenu *configureMenu(WScreen * scr, WMPropList * definition, Bool include
  * user map's them.
  *----------------------------------------------------------------------
  */
-void OpenRootMenu(WScreen * scr, int x, int y, int keyboard)
+void OpenRootMenu(WScreen *scr, int x, int y, int keyboard)
 {
 	WMenu *menu = NULL;
 	WMPropList *definition;
-	/*
-	   static WMPropList *domain=NULL;
 
-	   if (!domain) {
-	   domain = WMCreatePLString("WMRootMenu");
-	   }
-	 */
-
-	scr->flags.root_menu_changed_shortcuts = 0;
+	w_global.menu.flags.root_menu_changed_shortcuts = 0;
 	scr->flags.added_workspace_menu = 0;
 	scr->flags.added_windows_menu = 0;
 
-	if (scr->root_menu && scr->root_menu->flags.mapped) {
-		menu = scr->root_menu;
+	if (w_global.menu.root_menu && w_global.menu.root_menu->flags.mapped) {
+		menu = w_global.menu.root_menu;
 		if (!menu->flags.buttoned) {
 			wMenuUnmap(menu);
 		} else {
@@ -1658,18 +1651,16 @@ void OpenRootMenu(WScreen * scr, int x, int y, int keyboard)
 
 	definition = w_global.domain.root_menu->dictionary;
 
-	/*
-	   definition = PLGetDomain(domain);
-	 */
 	if (definition) {
 		if (WMIsPLArray(definition)) {
-			if (!scr->root_menu || w_global.domain.root_menu->timestamp > scr->root_menu->timestamp) {
+			if (!w_global.menu.root_menu ||
+			    w_global.domain.root_menu->timestamp > w_global.menu.root_menu->timestamp) {
 				menu = configureMenu(scr, definition, True);
 				if (menu)
 					menu->timestamp = w_global.domain.root_menu->timestamp;
-
-			} else
+			} else {
 				menu = NULL;
+			}
 		} else {
 			menu = configureMenu(scr, definition, True);
 		}
@@ -1677,23 +1668,24 @@ void OpenRootMenu(WScreen * scr, int x, int y, int keyboard)
 
 	if (!menu) {
 		/* menu hasn't changed or could not be read */
-		if (!scr->root_menu) {
+		if (!w_global.menu.root_menu) {
 			wMessageDialog(scr, _("Error"),
 				       _("The applications menu could not be loaded. "
 					 "Look at the console output for a detailed "
 					 "description of the errors."), _("OK"), NULL, NULL);
 
 			menu = makeDefaultMenu(scr);
-			scr->root_menu = menu;
+			w_global.menu.root_menu = menu;
 		}
-		menu = scr->root_menu;
+		menu = w_global.menu.root_menu;
 	} else {
 		/* new root menu */
-		if (scr->root_menu) {
-			wMenuDestroy(scr->root_menu, True);
-		}
-		scr->root_menu = menu;
+		if (w_global.menu.root_menu)
+			wMenuDestroy(w_global.menu.root_menu, True);
+
+		w_global.menu.root_menu = menu;
 	}
+
 	if (menu) {
 		int newx, newy;
 
@@ -1709,6 +1701,6 @@ void OpenRootMenu(WScreen * scr, int x, int y, int keyboard)
 		wMenuMapAt(menu, newx, newy, keyboard);
 	}
 
-	if (scr->flags.root_menu_changed_shortcuts)
+	if (w_global.menu.flags.root_menu_changed_shortcuts)
 		rebindKeygrabs(scr);
 }
