@@ -106,7 +106,7 @@ void wDrawersSaveState(void);
 void wDrawersRestoreState(WScreen *scr);
 int wIsADrawer(WAppIcon *aicon);
 
-void wClipUpdateForWorkspaceChange(WScreen *scr, int workspace);
+void wClipUpdateForWorkspaceChange(int workspace);
 
 RImage *wClipMakeTile(RImage *normalTile);
 RImage *wDrawerMakeTile(RImage *normalTile);

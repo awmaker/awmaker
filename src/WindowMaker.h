@@ -296,6 +296,11 @@ typedef struct WDrawerChain {
     struct WDrawerChain *next;
 } WDrawerChain;
 
+typedef struct WAppIconChain {
+    struct WAppIcon *aicon;
+    struct WAppIconChain *next;
+} WAppIconChain;
+
 typedef struct {
     int x1, y1;
     int x2, y2;
@@ -529,6 +534,7 @@ extern struct wmaker_global_variables {
 	/* Clip related */
 	struct {
 		struct WAppIcon *icon;	/* The clip main icon, or the dock's, if they are merged */
+		WAppIconChain *global_icons;	/* Omnipresent icons chain in clip */
 
 		struct WMenu *menu;	/* Menu for clips */
 		struct WMenu *submenu;	/* Workspace list for clips */

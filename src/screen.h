@@ -50,15 +50,7 @@ typedef struct WReservedArea {
     struct WReservedArea *next;
 } WReservedArea;
 
-
-typedef struct WAppIconChain {
-    struct WAppIcon *aicon;
-    struct WAppIconChain *next;
-} WAppIconChain;
-
-/*
- * each WScreen is saved into a context associated with it's root window
- */
+/* each WScreen is saved into a context associated with it's root window */
 typedef struct _WScreen {
     int	screen;			       /* screen number */
     Window info_window;		       /* for our window manager info stuff */
@@ -203,7 +195,6 @@ typedef struct _WScreen {
 
     struct WPixmap *dock_dots;	       /* 3 dots for the Dock */
     Window dock_shadow;		       /* shadow for dock buttons */
-    WAppIconChain *global_icons;       /* for omnipresent icons chain in clip */
 
     struct RContext *rcontext;	       /* wrlib context */
 

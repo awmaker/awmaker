@@ -503,7 +503,7 @@ void wWorkspaceForceChange(WScreen * scr, int workspace)
 	if (workspace > w_global.workspace.count - 1)
 		wWorkspaceMake(scr, workspace - w_global.workspace.count + 1);
 
-	wClipUpdateForWorkspaceChange(scr, workspace);
+	wClipUpdateForWorkspaceChange(workspace);
 
 	w_global.workspace.last_used = w_global.workspace.current;
 	w_global.workspace.current = workspace;

@@ -3233,13 +3233,15 @@ Bool wDockFindFreeSlot(WDock *dock, int *x_pos, int *y_pos)
 				else if (btn->yindex == 0 && btn->xindex > 0 && btn->xindex < hcount)
 					hmap[btn->xindex] = 1;
 			}
-			for (chain = scr->global_icons; chain != NULL; chain = chain->next) {
+
+			for (chain = w_global.clip.global_icons; chain != NULL; chain = chain->next) {
 				btn = chain->aicon;
 				if (btn->xindex == 0 && btn->yindex > 0 && btn->yindex < vcount)
 					vmap[btn->yindex] = 1;
 				else if (btn->yindex == 0 && btn->xindex > 0 && btn->xindex < hcount)
 					hmap[btn->xindex] = 1;
 			}
+
 			break;
 		case C_NW:
 			for (i = 0; i < dock->max_icons; i++) {
@@ -3252,13 +3254,15 @@ Bool wDockFindFreeSlot(WDock *dock, int *x_pos, int *y_pos)
 				else if (btn->yindex == 0 && btn->xindex < 0 && btn->xindex > -hcount)
 					hmap[-btn->xindex] = 1;
 			}
-			for (chain = scr->global_icons; chain != NULL; chain = chain->next) {
+
+			for (chain = w_global.clip.global_icons; chain != NULL; chain = chain->next) {
 				btn = chain->aicon;
 				if (btn->xindex == 0 && btn->yindex > 0 && btn->yindex < vcount)
 					vmap[btn->yindex] = 1;
 				else if (btn->yindex == 0 && btn->xindex < 0 && btn->xindex > -hcount)
 					hmap[-btn->xindex] = 1;
 			}
+
 			break;
 		case C_SE:
 			for (i = 0; i < dock->max_icons; i++) {
@@ -3271,13 +3275,15 @@ Bool wDockFindFreeSlot(WDock *dock, int *x_pos, int *y_pos)
 				else if (btn->yindex == 0 && btn->xindex > 0 && btn->xindex < hcount)
 					hmap[btn->xindex] = 1;
 			}
-			for (chain = scr->global_icons; chain != NULL; chain = chain->next) {
+
+			for (chain = w_global.clip.global_icons; chain != NULL; chain = chain->next) {
 				btn = chain->aicon;
 				if (btn->xindex == 0 && btn->yindex < 0 && btn->yindex > -vcount)
 					vmap[-btn->yindex] = 1;
 				else if (btn->yindex == 0 && btn->xindex > 0 && btn->xindex < hcount)
 					hmap[btn->xindex] = 1;
 			}
+
 			break;
 		case C_SW:
 		default:
@@ -3290,8 +3296,10 @@ Bool wDockFindFreeSlot(WDock *dock, int *x_pos, int *y_pos)
 					vmap[-btn->yindex] = 1;
 				else if (btn->yindex == 0 && btn->xindex < 0 && btn->xindex > -hcount)
 					hmap[-btn->xindex] = 1;
+
 			}
-			for (chain = scr->global_icons; chain != NULL; chain = chain->next) {
+
+			for (chain = w_global.clip.global_icons; chain != NULL; chain = chain->next) {
 				btn = chain->aicon;
 				if (btn->xindex == 0 && btn->yindex < 0 && btn->yindex > -vcount)
 					vmap[-btn->yindex] = 1;
@@ -3361,7 +3369,7 @@ Bool wDockFindFreeSlot(WDock *dock, int *x_pos, int *y_pos)
 			slot_map[XY2OFS(btn->xindex, btn->yindex)] = 1;
 	}
 
-	for (chain = scr->global_icons; chain != NULL; chain = chain->next)
+	for (chain = w_global.clip.global_icons; chain != NULL; chain = chain->next)
 		slot_map[XY2OFS(chain->aicon->xindex, chain->aicon->yindex)] = 1;
 
 	/* Find closest slot from the center that is free by scanning the
@@ -3773,13 +3781,13 @@ void wDockTrackWindowLaunch(WDock *dock, Window window)
 		free(wm_instance);
 }
 
-void wClipUpdateForWorkspaceChange(WScreen *scr, int workspace)
+void wClipUpdateForWorkspaceChange(int workspace)
 {
 	if (!wPreferences.flags.noclip) {
 		w_global.clip.icon->dock = w_global.workspace.array[workspace]->clip;
 		if (w_global.workspace.current != workspace) {
 			WDock *old_clip = w_global.workspace.array[w_global.workspace.current]->clip;
-			WAppIconChain *chain = scr->global_icons;
+			WAppIconChain *chain = w_global.clip.global_icons;
 
 			while (chain) {
 				wDockMoveIconBetweenDocks(chain->aicon->dock,
@@ -4724,7 +4732,6 @@ static Bool iconCanBeOmnipresent(WAppIcon *aicon)
 
 int wClipMakeIconOmnipresent(WAppIcon *aicon, int omnipresent)
 {
-	WScreen *scr = aicon->icon->core->screen_ptr;
 	WAppIconChain *new_entry, *tmp, *tmp1;
 	int status = WO_SUCCESS;
 
@@ -4739,8 +4746,8 @@ int wClipMakeIconOmnipresent(WAppIcon *aicon, int omnipresent)
 			aicon->omnipresent = 1;
 			new_entry = wmalloc(sizeof(WAppIconChain));
 			new_entry->aicon = aicon;
-			new_entry->next = scr->global_icons;
-			scr->global_icons = new_entry;
+			new_entry->next = w_global.clip.global_icons;
+			w_global.clip.global_icons = new_entry;
 			w_global.global_icon_count++;
 		} else {
 			aicon->omnipresent = 0;
@@ -4748,13 +4755,13 @@ int wClipMakeIconOmnipresent(WAppIcon *aicon, int omnipresent)
 		}
 	} else {
 		aicon->omnipresent = 0;
-		if (aicon == scr->global_icons->aicon) {
-			tmp = scr->global_icons->next;
-			wfree(scr->global_icons);
-			scr->global_icons = tmp;
+		if (aicon == w_global.clip.global_icons->aicon) {
+			tmp = w_global.clip.global_icons->next;
+			wfree(w_global.clip.global_icons);
+			w_global.clip.global_icons = tmp;
 			w_global.global_icon_count--;
 		} else {
-			tmp = scr->global_icons;
+			tmp = w_global.clip.global_icons;
 			while (tmp->next) {
 				if (tmp->next->aicon == aicon) {
 					tmp1 = tmp->next->next;
