@@ -127,7 +127,7 @@ void wMenuMove(WMenu *menu, int x, int y, int submenus);
 void wMenuEntryRemoveCascade(WMenu *menu, WMenuEntry *entry);
 void wMenuScroll(WMenu *menu);
 WMenu *wMenuUnderPointer(WScreen *screen);
-void wMenuSaveState(WScreen *scr);
+void wMenuSaveState(void);
 void wMenuRestoreState(WScreen *scr);
 
 WMenu *menu_create(const char *title);

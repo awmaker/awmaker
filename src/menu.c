@@ -93,7 +93,7 @@ static void menuCloseClick(WCoreWindow *sender, void *data, XEvent *event);
 static void updateTexture(WMenu *menu);
 static void selectEntry(WMenu *menu, int entry_no);
 static void closeCascade(WMenu *menu);
-static int saveMenuRecurs(WMPropList *menus, WScreen *scr, WMenu *menu);
+static int saveMenuRecurs(WMPropList *menus, WMenu *menu);
 static int restoreMenuRecurs(WScreen *scr, WMPropList *menus, WMenu *menu, const char *path);
 
 /****** Notification Observers ******/
@@ -2122,7 +2122,7 @@ static void saveMenuInfo(WMPropList *dict, WMenu *menu, WMPropList *key)
 	WMReleasePropList(list);
 }
 
-void wMenuSaveState(WScreen *scr)
+void wMenuSaveState(void)
 {
 	WMPropList *menus, *key;
 	int save_menus = 0;
@@ -2136,7 +2136,7 @@ void wMenuSaveState(WScreen *scr)
 		save_menus = 1;
 	}
 
-	if (saveMenuRecurs(menus, scr, w_global.menu.root_menu))
+	if (saveMenuRecurs(menus, w_global.menu.root_menu))
 		save_menus = 1;
 
 	if (w_global.workspace.menu && w_global.workspace.menu->flags.buttoned) {
@@ -2179,7 +2179,7 @@ static Bool getMenuPath(WMenu *menu, char *buffer, int bufSize)
 	return True;
 }
 
-static Bool saveMenuRecurs(WMPropList *menus, WScreen *scr, WMenu *menu)
+static Bool saveMenuRecurs(WMPropList *menus, WMenu *menu)
 {
 	WMPropList *key;
 	int save_menus = 0, i;
@@ -2200,7 +2200,7 @@ static Bool saveMenuRecurs(WMPropList *menus, WScreen *scr, WMenu *menu)
 
 	if (ok) {
 		for (i = 0; i < menu->cascade_no; i++) {
-			if (saveMenuRecurs(menus, scr, menu->cascades[i]))
+			if (saveMenuRecurs(menus, menu->cascades[i]))
 				save_menus = 1;
 		}
 	}

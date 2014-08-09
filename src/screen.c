@@ -871,7 +871,7 @@ void wScreenSaveState(WScreen * scr)
 	/* clean up */
 	WMPLSetCaseSensitive(False);
 
-	wMenuSaveState(scr);
+	wMenuSaveState();
 
 	if (w_global.screen_count == 1) {
 		str = wdefaultspathfordomain("WMState");
