@@ -506,6 +506,11 @@ extern struct wmaker_global_variables {
 	/* Screens related */
 	int screen_count;
 
+	/* RImage tiles */
+	struct {
+		struct RImage *clip;	/* tile with arrows to change workspace */
+	} tile;
+
 	/* Menu related */
 	struct {
 		struct WMenu *root_menu;	/* root window menu */

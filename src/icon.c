@@ -242,7 +242,7 @@ static void icon_update_pixmap(WIcon *icon, RImage *image)
 		tile = RCloneImage(scr->icon_tile);
 		break;
 	case TILE_CLIP:
-		tile = RCloneImage(scr->clip_tile);
+		tile = RCloneImage(w_global.tile.clip);
 		break;
 	case TILE_DRAWER:
 		tile = RCloneImage(scr->drawer_tile);

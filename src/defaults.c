@@ -2559,10 +2559,10 @@ static int setIconTile(WScreen * scr, WDefaultEntry * entry, void *tdata, void *
 	PropSetIconTileHint(scr, img);
 
 	if (!wPreferences.flags.noclip || wPreferences.flags.clip_merged_in_dock) {
-		if (scr->clip_tile) {
-			RReleaseImage(scr->clip_tile);
-		}
-		scr->clip_tile = wClipMakeTile(img);
+		if (w_global.tile.clip)
+			RReleaseImage(w_global.tile.clip);
+
+		w_global.tile.clip = wClipMakeTile(img);
 	}
 
 	if (!wPreferences.flags.nodrawer) {
