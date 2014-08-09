@@ -800,7 +800,7 @@ void wScreenRestoreState(WScreen *scr)
 			 * the right side. If we aren't, redo it now. */
 			assert(w_global.tile.drawer);
 			RReleaseImage(w_global.tile.drawer);
-			w_global.tile.drawer = wDrawerMakeTile(scr->icon_tile);
+			w_global.tile.drawer = wDrawerMakeTile(w_global.tile.icon);
 		}
 		wDrawersRestoreState(scr);
 	}

@@ -194,7 +194,6 @@ typedef struct _WScreen {
 
     WMScreen *wmscreen;		       /* for widget library */
 
-    struct RImage *icon_tile;
     Pixmap icon_tile_pixmap;		/* For app supplied icons */
 
     struct RImage *def_icon_rimage;	/* Default RImage icon */

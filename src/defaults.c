@@ -2547,13 +2547,13 @@ static int setIconTile(WScreen * scr, WDefaultEntry * entry, void *tdata, void *
 	}
 	RConvertImage(scr->rcontext, img, &pixmap);
 
-	if (scr->icon_tile) {
+	if (w_global.tile.icon) {
 		reset = 1;
-		RReleaseImage(scr->icon_tile);
+		RReleaseImage(w_global.tile.icon);
 		XFreePixmap(dpy, scr->icon_tile_pixmap);
 	}
 
-	scr->icon_tile = img;
+	w_global.tile.icon = img;
 
 	/* put the icon in the noticeboard hint */
 	PropSetIconTileHint(scr, img);

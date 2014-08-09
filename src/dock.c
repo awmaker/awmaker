@@ -121,7 +121,7 @@ static void removeDrawerCallback(WMenu *menu, WMenuEntry *entry);
 static void drawerAppendToChain(WDock *drawer);
 static char *findUniqueName(const char *instance_basename);
 static void addADrawerCallback(WMenu *menu, WMenuEntry *entry);
-static void swapDrawers(WScreen *scr, int new_x);
+static void swapDrawers(int new_x);
 static WDock *getDrawer(int y_index);
 static int indexOfHole(WDock *drawer, WAppIcon *moving_aicon, int redocking);
 static void drawerConsolidateIcons(WDock *drawer);
@@ -3461,7 +3461,7 @@ static void swapDock(WDock *dock)
 	else
 		x = dock->x_pos = DOCK_EXTRA_SPACE;
 
-	swapDrawers(scr, x);
+	swapDrawers(x);
 
 	for (i = 0; i < dock->max_icons; i++) {
 		btn = dock->icon_array[i];
@@ -5111,14 +5111,14 @@ static void swapDrawer(WDock *drawer, int new_x)
 }
 
 
-static void swapDrawers(WScreen *scr, int new_x)
+static void swapDrawers(int new_x)
 {
 	WDrawerChain *dc;
 
 	if (w_global.tile.drawer)
 		RReleaseImage(w_global.tile.drawer);
 
-	w_global.tile.drawer = wDrawerMakeTile(scr->icon_tile);
+	w_global.tile.drawer = wDrawerMakeTile(w_global.tile.icon);
 
 	for (dc = w_global.drawer.drawers; dc != NULL; dc = dc->next)
 		swapDrawer(dc->adrawer, new_x);

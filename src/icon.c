@@ -239,7 +239,7 @@ static void icon_update_pixmap(WIcon *icon, RImage *image)
 
 	switch (icon->tile_type) {
 	case TILE_NORMAL:
-		tile = RCloneImage(scr->icon_tile);
+		tile = RCloneImage(w_global.tile.icon);
 		break;
 	case TILE_CLIP:
 		tile = RCloneImage(w_global.tile.clip);
@@ -254,7 +254,7 @@ static void icon_update_pixmap(WIcon *icon, RImage *image)
 		 * "may be used uninitialized"
 		 */
 		wwarning("Unknown tile type: %d.\n", icon->tile_type);
-		tile = RCloneImage(scr->icon_tile);
+		tile = RCloneImage(w_global.tile.icon);
 	}
 
 	if (image) {
