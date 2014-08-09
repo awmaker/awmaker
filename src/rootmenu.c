@@ -805,22 +805,23 @@ static WMenuEntry *addWorkspaceMenu(WScreen *scr, WMenu *menu, const char *title
 	WMenu *wsmenu;
 	WMenuEntry *entry;
 
-	if (scr->flags.added_workspace_menu) {
+	if (w_global.menu.flags.added_workspace_menu) {
 		wwarning(_
 			 ("There are more than one WORKSPACE_MENU commands in the applications menu. Only one is allowed."));
 		return NULL;
-	} else {
-		scr->flags.added_workspace_menu = 1;
-
-		wsmenu = wWorkspaceMenuMake(scr, True);
-		wsmenu->on_destroy = cleanupWorkspaceMenu;
-
-		w_global.workspace.menu = wsmenu;
-		entry = wMenuAddCallback(menu, title, NULL, NULL);
-		wMenuEntrySetCascade(menu, entry, wsmenu);
-
-		wWorkspaceMenuUpdate(wsmenu);
 	}
+
+	w_global.menu.flags.added_workspace_menu = 1;
+
+	wsmenu = wWorkspaceMenuMake(scr, True);
+	wsmenu->on_destroy = cleanupWorkspaceMenu;
+
+	w_global.workspace.menu = wsmenu;
+	entry = wMenuAddCallback(menu, title, NULL, NULL);
+	wMenuEntrySetCascade(menu, entry, wsmenu);
+
+	wWorkspaceMenuUpdate(wsmenu);
+
 	return entry;
 }
 
@@ -1633,7 +1634,7 @@ void OpenRootMenu(WScreen *scr, int x, int y, int keyboard)
 	WMPropList *definition;
 
 	w_global.menu.flags.root_menu_changed_shortcuts = 0;
-	scr->flags.added_workspace_menu = 0;
+	w_global.menu.flags.added_workspace_menu = 0;
 	scr->flags.added_windows_menu = 0;
 
 	if (w_global.menu.root_menu && w_global.menu.root_menu->flags.mapped) {

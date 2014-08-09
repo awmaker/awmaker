@@ -242,7 +242,6 @@ typedef struct _WScreen {
     struct {
         unsigned int regenerate_icon_textures:1;
         unsigned int dnd_data_convertion_status:1;
-        unsigned int added_workspace_menu:1;
         unsigned int added_windows_menu:1;
         unsigned int next_click_is_not_double:1;
         unsigned int backimage_helper_launched:1;
