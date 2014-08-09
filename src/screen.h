@@ -203,7 +203,6 @@ typedef struct _WScreen {
 
     struct WPixmap *dock_dots;	       /* 3 dots for the Dock */
     Window dock_shadow;		       /* shadow for dock buttons */
-    struct WDock *last_dock;
     WAppIconChain *global_icons;       /* for omnipresent icons chain in clip */
     int global_icon_count;	       /* How many global icons do we have */
 

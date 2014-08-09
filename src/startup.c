@@ -662,7 +662,7 @@ void StartUp(Bool defaultScreenOnly)
 
 		/* manage all windows that were already here before us */
 		if (!wPreferences.flags.nodock && w_global.dock.dock)
-			wScreen[j]->last_dock = w_global.dock.dock;
+			w_global.last_dock = w_global.dock.dock;
 
 		manageAllWindows(wScreen[j], wPreferences.flags.restarting == 2);
 
@@ -676,15 +676,16 @@ void StartUp(Bool defaultScreenOnly)
 		if (!wPreferences.flags.noautolaunch) {
 			/* auto-launch apps */
 			if (!wPreferences.flags.nodock && w_global.dock.dock) {
-				wScreen[j]->last_dock = w_global.dock.dock;
+				w_global.last_dock = w_global.dock.dock;
 				wDockDoAutoLaunch(w_global.dock.dock, 0);
 			}
+
 			/* auto-launch apps in clip */
 			if (!wPreferences.flags.noclip) {
 				int i;
 				for (i = 0; i < w_global.workspace.count; i++) {
 					if (w_global.workspace.array[i]->clip) {
-						wScreen[j]->last_dock = w_global.workspace.array[i]->clip;
+						w_global.last_dock = w_global.workspace.array[i]->clip;
 						wDockDoAutoLaunch(w_global.workspace.array[i]->clip, i);
 					}
 				}
@@ -694,7 +695,7 @@ void StartUp(Bool defaultScreenOnly)
 			if (!wPreferences.flags.nodrawer) {
 				WDrawerChain *dc;
 				for (dc = w_global.drawer.drawers; dc; dc = dc->next) {
-					wScreen[j]->last_dock = dc->adrawer;
+					w_global.last_dock = dc->adrawer;
 					wDockDoAutoLaunch(dc->adrawer, 0);
 				}
 			}

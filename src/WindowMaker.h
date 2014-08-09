@@ -522,6 +522,9 @@ extern struct wmaker_global_variables {
 		 * we can have multiple docks */
 	} workspace;
 
+	/* Clip & Dock & Drawer related */
+	struct WDock *last_dock;
+
 	/* Clip related */
 	struct {
 		struct WAppIcon *icon;	/* The clip main icon, or the dock's, if they are merged */

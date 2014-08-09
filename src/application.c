@@ -138,7 +138,7 @@ WApplication *wApplicationCreate(WWindow * wwin)
 	/* application descriptor */
 	XSaveContext(dpy, main_window, w_global.context.app_win, (XPointer) wapp);
 
-	create_appicon_for_application(wapp, wwin);
+	create_appicon_for_application(wapp);
 
 	return wapp;
 }

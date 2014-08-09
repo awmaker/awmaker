@@ -861,8 +861,6 @@ static void switchWSCommand(WMenu *menu, WMenuEntry *entry)
 
 static void launchDockedApplication(WAppIcon *btn, Bool withSelection)
 {
-	WScreen *scr = btn->icon->core->screen_ptr;
-
 	if (!btn->launching &&
 	    ((!withSelection && btn->command != NULL) || (withSelection && btn->paste_command != NULL))) {
 		if (!btn->forced_dock) {
@@ -881,7 +879,7 @@ static void launchDockedApplication(WAppIcon *btn, Bool withSelection)
 		}
 		btn->drop_launch = 0;
 		btn->paste_launch = withSelection;
-		scr->last_dock = btn->dock;
+		w_global.last_dock = btn->dock;
 		btn->pid = execCommand(btn, (withSelection ? btn->paste_command : btn->command), NULL);
 		if (btn->pid > 0) {
 			if (btn->buggy_app) {
@@ -1724,11 +1722,14 @@ void wDockDestroy(WDock *dock)
 	}
 	if (wPreferences.auto_arrange_icons)
 		wArrangeIcons(dock->screen_ptr, True);
+
 	wfree(dock->icon_array);
 	if (dock->menu && dock->type != WM_CLIP)
 		wMenuDestroy(dock->menu, True);
-	if (dock->screen_ptr->last_dock == dock)
-		dock->screen_ptr->last_dock = NULL;
+
+	if (w_global.last_dock == dock)
+		w_global.last_dock = NULL;
+
 	wfree(dock);
 }
 
@@ -4452,7 +4453,7 @@ static void iconMouseDown(WObjDescriptor *desc, XEvent *event)
 	if (aicon->editing || WCHECK_STATE(WSTATE_MODAL))
 		return;
 
-	scr->last_dock = dock;
+	w_global.last_dock = dock;
 
 	if (dock->menu->flags.mapped)
 		wMenuUnmap(dock->menu);
@@ -4933,15 +4934,12 @@ static void addADrawerCallback(WMenu *menu, WMenuEntry *entry)
 
 static void drawerDestroy(WDock *drawer)
 {
-	WScreen *scr;
 	int i;
 	WAppIcon *aicon = NULL;
 	WMArray *icons;
 
 	if (drawer == NULL)
 		return;
-
-	scr = drawer->screen_ptr;
 
 	/* Note regarding menus: we can't delete any dock/clip/drawer menu, because
 	 * that would (attempt to) wfree some memory in gettext library (see menu
@@ -4984,8 +4982,8 @@ static void drawerDestroy(WDock *drawer)
 	drawer->icon_array = NULL;
 
 	drawerRemoveFromChain(drawer);
-	if (scr->last_dock == drawer)
-		scr->last_dock = NULL;
+	if (w_global.last_dock == drawer)
+		w_global.last_dock = NULL;
 
 	if (w_global.drawer.attracting_drawer == drawer)
 		w_global.drawer.attracting_drawer = NULL;

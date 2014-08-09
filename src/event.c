@@ -604,11 +604,11 @@ static void handleMapRequest(XEvent * ev)
 	 * It is not necessary for normally docked apps, but is needed for
 	 * apps that were forcedly docked (like with dockit).
 	 */
-	if (scr->last_dock) {
+	if (w_global.last_dock) {
 		if (wwin && wwin->main_window != None && wwin->main_window != window)
-			wDockTrackWindowLaunch(scr->last_dock, wwin->main_window);
+			wDockTrackWindowLaunch(w_global.last_dock, wwin->main_window);
 		else
-			wDockTrackWindowLaunch(scr->last_dock, window);
+			wDockTrackWindowLaunch(w_global.last_dock, window);
 	}
 
 	if (wwin) {
