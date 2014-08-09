@@ -223,8 +223,8 @@ void menu_map(WMenu *menu, WScreen *screen)
 
 	menu->frame->rbutton_image = screen->b_pixmaps[WBUT_CLOSE];
 
-	menu->frame_x = screen->app_menu_x;
-	menu->frame_y = screen->app_menu_y;
+	menu->frame_x = 0;
+	menu->frame_y = 0;
 
 	wcore_map(menu->menu, menu->frame->core,
 		  menu->frame->core->screen_ptr, 0,
@@ -1058,8 +1058,8 @@ void wMenuMap(WMenu *menu)
 	}
 
 	if (menu->flags.app_menu && menu->parent == NULL) {
-		menu->frame_x = menu->frame->screen_ptr->app_menu_x;
-		menu->frame_y = menu->frame->screen_ptr->app_menu_y;
+		menu->frame_x = 0;
+		menu->frame_y = 0;
 		XMoveWindow(dpy, menu->frame->core->window, menu->frame_x, menu->frame_y);
 	}
 

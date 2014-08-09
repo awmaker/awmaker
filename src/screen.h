@@ -186,7 +186,6 @@ typedef struct _WScreen {
     struct WPixmap *menu_mini_indicator;   /* for miniwindow */
     struct WPixmap *menu_hide_indicator;   /* for hidden window */
     struct WPixmap *menu_shade_indicator;  /* for shaded window */
-    int app_menu_x, app_menu_y;	       /* position for application menus */
 
     struct WPixmap *dock_dots;	       /* 3 dots for the Dock */
     Window dock_shadow;		       /* shadow for dock buttons */
