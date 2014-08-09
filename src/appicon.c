@@ -579,13 +579,13 @@ static void openApplicationMenu(WApplication *wapp, int x, int y)
 	WScreen *scr = wapp->main_window_desc->screen_ptr;
 	int i;
 
-	if (!scr->icon_menu) {
-		scr->icon_menu = createApplicationMenu();
-		menu_map(scr->icon_menu, scr);
-		wfree(scr->icon_menu->entries[1]->text);
+	if (!w_global.menu.icon_menu) {
+		w_global.menu.icon_menu = createApplicationMenu();
+		menu_map(w_global.menu.icon_menu, scr);
+		wfree(w_global.menu.icon_menu->entries[1]->text);
 	}
 
-	menu = scr->icon_menu;
+	menu = w_global.menu.icon_menu;
 
 	if (wapp->flags.hidden)
 		menu->entries[1]->text = _("Unhide");
@@ -689,7 +689,7 @@ void appIconMouseDown(WObjDescriptor * desc, XEvent * event)
 		openApplicationMenu(wapp, event->xbutton.x_root, event->xbutton.y_root);
 
 		/* allow drag select of menu */
-		desc = &scr->icon_menu->menu->descriptor;
+		desc = &w_global.menu.icon_menu->menu->descriptor;
 		event->xbutton.send_event = True;
 		(*desc->handle_mousedown) (desc, event);
 		return;
