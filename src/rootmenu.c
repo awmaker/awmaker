@@ -837,25 +837,27 @@ static WMenuEntry *addWindowsMenu(WScreen *scr, WMenu *menu, const char *title)
 	WWindow *wwin;
 	WMenuEntry *entry;
 
-	if (scr->flags.added_windows_menu) {
+	if (w_global.menu.flags.added_window_menu) {
 		wwarning(_
 			 ("There are more than one WINDOWS_MENU commands in the applications menu. Only one is allowed."));
 		return NULL;
-	} else {
-		scr->flags.added_windows_menu = 1;
-
-		wwmenu = wMenuCreate(scr, _("Window List"));
-		wwmenu->on_destroy = cleanupWindowsMenu;
-		w_global.menu.switch_menu = wwmenu;
-		wwin = scr->focused_window;
-		while (wwin) {
-			UpdateSwitchMenu(scr, wwin, ACTION_ADD);
-
-			wwin = wwin->prev;
-		}
-		entry = wMenuAddCallback(menu, title, NULL, NULL);
-		wMenuEntrySetCascade(menu, entry, wwmenu);
 	}
+
+	w_global.menu.flags.added_window_menu = 1;
+
+	wwmenu = wMenuCreate(scr, _("Window List"));
+	wwmenu->on_destroy = cleanupWindowsMenu;
+	w_global.menu.switch_menu = wwmenu;
+	wwin = scr->focused_window;
+	while (wwin) {
+		UpdateSwitchMenu(scr, wwin, ACTION_ADD);
+
+		wwin = wwin->prev;
+	}
+
+	entry = wMenuAddCallback(menu, title, NULL, NULL);
+	wMenuEntrySetCascade(menu, entry, wwmenu);
+
 	return entry;
 }
 
@@ -1635,7 +1637,7 @@ void OpenRootMenu(WScreen *scr, int x, int y, int keyboard)
 
 	w_global.menu.flags.root_menu_changed_shortcuts = 0;
 	w_global.menu.flags.added_workspace_menu = 0;
-	scr->flags.added_windows_menu = 0;
+	w_global.menu.flags.added_window_menu = 0;
 
 	if (w_global.menu.root_menu && w_global.menu.root_menu->flags.mapped) {
 		menu = w_global.menu.root_menu;

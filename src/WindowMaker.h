@@ -516,6 +516,7 @@ extern struct wmaker_global_variables {
 		struct {
 			unsigned int root_menu_changed_shortcuts:1;
 			unsigned int added_workspace_menu:1; /* See w_global.workspace */
+			unsigned int added_window_menu:1;
 		} flags;
 	} menu;
 
