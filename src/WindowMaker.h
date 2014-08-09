@@ -523,6 +523,7 @@ extern struct wmaker_global_variables {
 	} workspace;
 
 	/* Clip & Dock & Drawer related */
+	int global_icon_count;		/* How many global icons do we have */
 	struct WDock *last_dock;
 
 	/* Clip related */

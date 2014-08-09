@@ -3176,7 +3176,7 @@ Bool wDockFindFreeSlot(WDock *dock, int *x_pos, int *y_pos)
 	}
 
 	if (dock->type == WM_CLIP && dock != w_global.workspace.array[w_global.workspace.current]->clip)
-		extra_count = scr->global_icon_count;
+		extra_count = w_global.global_icon_count;
 
 	/* if the dock is full */
 	if (dock->icon_count + extra_count >= dock->max_icons)
@@ -4699,7 +4699,6 @@ static void clipAutoRaise(void *cdata)
 
 static Bool iconCanBeOmnipresent(WAppIcon *aicon)
 {
-	WScreen *scr = aicon->icon->core->screen_ptr;
 	WDock *clip;
 	WAppIcon *btn;
 	int i, j;
@@ -4710,7 +4709,7 @@ static Bool iconCanBeOmnipresent(WAppIcon *aicon)
 		if (clip == aicon->dock)
 			continue;
 
-		if (clip->icon_count + scr->global_icon_count >= clip->max_icons)
+		if (clip->icon_count + w_global.global_icon_count >= clip->max_icons)
 			return False;	/* Clip is full in some workspace */
 
 		for (j = 0; j < clip->max_icons; j++) {
@@ -4742,7 +4741,7 @@ int wClipMakeIconOmnipresent(WAppIcon *aicon, int omnipresent)
 			new_entry->aicon = aicon;
 			new_entry->next = scr->global_icons;
 			scr->global_icons = new_entry;
-			scr->global_icon_count++;
+			w_global.global_icon_count++;
 		} else {
 			aicon->omnipresent = 0;
 			status = WO_FAILED;
@@ -4753,7 +4752,7 @@ int wClipMakeIconOmnipresent(WAppIcon *aicon, int omnipresent)
 			tmp = scr->global_icons->next;
 			wfree(scr->global_icons);
 			scr->global_icons = tmp;
-			scr->global_icon_count--;
+			w_global.global_icon_count--;
 		} else {
 			tmp = scr->global_icons;
 			while (tmp->next) {
@@ -4761,7 +4760,7 @@ int wClipMakeIconOmnipresent(WAppIcon *aicon, int omnipresent)
 					tmp1 = tmp->next->next;
 					wfree(tmp->next);
 					tmp->next = tmp1;
-					scr->global_icon_count--;
+					w_global.global_icon_count--;
 					break;
 				}
 				tmp = tmp->next;
