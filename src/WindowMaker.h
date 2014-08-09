@@ -290,7 +290,11 @@ enum {
     WColorSettings = 1 << 2
 };
 
-
+/* Drawers, which are docks, really */
+typedef struct WDrawerChain {
+    struct WDock *adrawer;
+    struct WDrawerChain *next;
+} WDrawerChain;
 
 typedef struct {
     int x1, y1;
@@ -535,6 +539,14 @@ extern struct wmaker_global_variables {
 		struct WMenu *dock_menu;	/* Dock menu */
 		struct WMenu *drawer_menu;	/* menu for the drawers */
 	} dock;
+
+	/* Drawers related */
+	struct {
+		struct WDrawerChain *drawers;		 /* List of drawers */
+		int drawer_count;		 /* Nb of drawers that */
+		struct WDock *attracting_drawer; /* The drawer that auto-attracts icons,
+						  * or NULL */
+	} drawer;
 
 #ifdef HAVE_INOTIFY
 	struct {

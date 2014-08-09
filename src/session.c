@@ -166,9 +166,8 @@ static unsigned getInt(WMPropList * value)
 	return n;
 }
 
-static WMPropList *makeWindowState(WWindow * wwin, WApplication * wapp)
+static WMPropList *makeWindowState(WWindow *wwin, WApplication *wapp)
 {
-	WScreen *scr = wwin->screen_ptr;
 	Window win;
 	int i;
 	unsigned mask;
@@ -246,10 +245,11 @@ static WMPropList *makeWindowState(WWindow * wwin, WApplication * wapp)
 			/* Try the drawers */
 			if (name == NULL) {
 				WDrawerChain *dc;
-				for (dc = scr->drawers; dc != NULL; dc = dc->next) {
+				for (dc = w_global.drawer.drawers; dc != NULL; dc = dc->next) {
 					if (dc->adrawer == wapp->app_icon->dock)
 						break;
 				}
+
 				assert(dc != NULL);
 				name = dc->adrawer->icon_array[0]->wm_instance;
 			}
@@ -479,13 +479,12 @@ void wSessionRestoreState(WScreen *scr)
 						}
 					}
 				}
-				if (dock == NULL) // Try the drawers
-				{
+
+				/* Try the drawers */
+				if (dock == NULL) {
 					WDrawerChain *dc;
-					for (dc = scr->drawers; dc != NULL; dc = dc->next)
-					{
-						if (strcmp(dc->adrawer->icon_array[0]->wm_instance, tmp) == 0)
-						{
+					for (dc = w_global.drawer.drawers; dc != NULL; dc = dc->next) {
+						if (strcmp(dc->adrawer->icon_array[0]->wm_instance, tmp) == 0) {
 							dock = dc->adrawer;
 							break;
 						}

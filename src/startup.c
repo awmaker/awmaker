@@ -689,10 +689,11 @@ void StartUp(Bool defaultScreenOnly)
 					}
 				}
 			}
+
 			/* auto-launch apps in drawers */
 			if (!wPreferences.flags.nodrawer) {
 				WDrawerChain *dc;
-				for (dc = wScreen[j]->drawers; dc; dc = dc->next) {
+				for (dc = w_global.drawer.drawers; dc; dc = dc->next) {
 					wScreen[j]->last_dock = dc->adrawer;
 					wDockDoAutoLaunch(dc->adrawer, 0);
 				}

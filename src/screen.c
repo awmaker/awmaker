@@ -851,23 +851,21 @@ void wScreenSaveState(WScreen * scr)
 	wWorkspaceSaveState(old_state);
 
 	if (!wPreferences.flags.nodrawer) {
-		wDrawersSaveState(scr);
+		wDrawersSaveState();
 	} else {
-		if ((foo = WMGetFromPLDictionary(old_state, dDrawers)) != NULL) {
+		if ((foo = WMGetFromPLDictionary(old_state, dDrawers)) != NULL)
 			WMPutInPLDictionary(w_global.session_state, dDrawers, foo);
-		}
 	}
 
 
 	if (wPreferences.save_session_on_exit) {
 		wSessionSaveState(scr);
 	} else {
-		if ((foo = WMGetFromPLDictionary(old_state, dApplications)) != NULL) {
+		if ((foo = WMGetFromPLDictionary(old_state, dApplications)) != NULL)
 			WMPutInPLDictionary(w_global.session_state, dApplications, foo);
-		}
-		if ((foo = WMGetFromPLDictionary(old_state, dWorkspace)) != NULL) {
+
+		if ((foo = WMGetFromPLDictionary(old_state, dWorkspace)) != NULL)
 			WMPutInPLDictionary(w_global.session_state, dWorkspace, foo);
-		}
 	}
 
 	/* clean up */

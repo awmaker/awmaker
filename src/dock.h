@@ -102,7 +102,7 @@ void wClipSaveState(void);
 WMPropList *wClipSaveWorkspaceState(int workspace);
 
 void wDrawerIconPaint(WAppIcon *dicon);
-void wDrawersSaveState(WScreen *scr);
+void wDrawersSaveState(void);
 void wDrawersRestoreState(WScreen *scr);
 int wIsADrawer(WAppIcon *aicon);
 

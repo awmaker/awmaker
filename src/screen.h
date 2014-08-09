@@ -56,13 +56,6 @@ typedef struct WAppIconChain {
     struct WAppIconChain *next;
 } WAppIconChain;
 
-
-/* Drawers, which are docks, really */
-typedef struct WDrawerChain {
-    struct WDock *adrawer;
-    struct WDrawerChain *next;
-} WDrawerChain;
-
 /*
  * each WScreen is saved into a context associated with it's root window
  */
@@ -213,10 +206,6 @@ typedef struct _WScreen {
     struct WDock *last_dock;
     WAppIconChain *global_icons;       /* for omnipresent icons chain in clip */
     int global_icon_count;	       /* How many global icons do we have */
-    WDrawerChain *drawers;             /* Chain of drawers */
-    /* Cache the following two informations, as they are used quite a lot */
-    int drawer_count;                  /* Nb of drawers that */
-    struct WDock *attracting_drawer;   /* The drawer that auto-attracts icons, or NULL */
 
     struct RContext *rcontext;	       /* wrlib context */
 
