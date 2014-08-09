@@ -2566,10 +2566,10 @@ static int setIconTile(WScreen * scr, WDefaultEntry * entry, void *tdata, void *
 	}
 
 	if (!wPreferences.flags.nodrawer) {
-		if (scr->drawer_tile) {
-			RReleaseImage(scr->drawer_tile);
-		}
-		scr->drawer_tile = wDrawerMakeTile(img);
+		if (w_global.tile.drawer)
+			RReleaseImage(w_global.tile.drawer);
+
+		w_global.tile.drawer= wDrawerMakeTile(img);
 	}
 
 	scr->icon_tile_pixmap = pixmap;

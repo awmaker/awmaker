@@ -509,6 +509,7 @@ extern struct wmaker_global_variables {
 	/* RImage tiles */
 	struct {
 		struct RImage *clip;	/* tile with arrows to change workspace */
+		struct RImage *drawer;	/* tile for a drawer (tile + arrow) */
 	} tile;
 
 	/* Menu related */

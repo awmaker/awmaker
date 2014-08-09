@@ -5115,10 +5115,10 @@ static void swapDrawers(WScreen *scr, int new_x)
 {
 	WDrawerChain *dc;
 
-	if (scr->drawer_tile)
-		RReleaseImage(scr->drawer_tile);
+	if (w_global.tile.drawer)
+		RReleaseImage(w_global.tile.drawer);
 
-	scr->drawer_tile = wDrawerMakeTile(scr->icon_tile);
+	w_global.tile.drawer = wDrawerMakeTile(scr->icon_tile);
 
 	for (dc = w_global.drawer.drawers; dc != NULL; dc = dc->next)
 		swapDrawer(dc->adrawer, new_x);

@@ -798,9 +798,9 @@ void wScreenRestoreState(WScreen *scr)
 			/* Drawer tile was created early in wScreenInit() -> wReadDefaults(). At
 			 * that time, scr->dock was NULL and the tile was created as if we were on
 			 * the right side. If we aren't, redo it now. */
-			assert(scr->drawer_tile);
-			RReleaseImage(scr->drawer_tile);
-			scr->drawer_tile = wDrawerMakeTile(scr->icon_tile);
+			assert(w_global.tile.drawer);
+			RReleaseImage(w_global.tile.drawer);
+			w_global.tile.drawer = wDrawerMakeTile(scr->icon_tile);
 		}
 		wDrawersRestoreState(scr);
 	}
