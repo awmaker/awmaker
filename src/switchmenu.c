@@ -416,9 +416,6 @@ static void wsobserver(void *self, WMNotification *notif)
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) self;
 
-	if (strcmp(name, WMNWorkspaceNameChanged) == 0) {
-		UpdateSwitchMenuWorkspace((uintptr_t)data);
-	} else if (strcmp(name, WMNWorkspaceChanged) == 0) {
-
-	}
+	if (strcmp(name, WMNWorkspaceNameChanged) == 0)
+		UpdateSwitchMenuWorkspace((uintptr_t) data);
 }
