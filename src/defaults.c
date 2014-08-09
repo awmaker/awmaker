@@ -3395,11 +3395,13 @@ static int setSwPOptions(WScreen * scr, WDefaultEntry * entry, void *tdata, void
 	return 0;
 }
 
-static int setModifierKeyLabels(WScreen * scr, WDefaultEntry * entry, void *tdata, void *foo)
+static int setModifierKeyLabels(WScreen *scr, WDefaultEntry * entry, void *tdata, void *foo)
 {
 	WMPropList *array = tdata;
 	int i;
 	struct WPreferences *prefs = foo;
+
+	(void) scr;
 
 	if (!WMIsPLArray(array) || WMGetPropListItemCount(array) != 7) {
 		wwarning(_("Value for option \"%s\" must be an array of 7 strings"), entry->key);
@@ -3407,7 +3409,7 @@ static int setModifierKeyLabels(WScreen * scr, WDefaultEntry * entry, void *tdat
 		return 0;
 	}
 
-	DestroyWindowMenu(scr);
+	DestroyWindowMenu();
 
 	for (i = 0; i < 7; i++) {
 		if (prefs->modifier_labels[i])

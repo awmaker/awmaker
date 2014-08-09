@@ -193,7 +193,7 @@ static void execMenuCommand(WMenu * menu, WMenuEntry * entry)
 	WWindow *wwin = (WWindow *) entry->clientdata;
 	WApplication *wapp;
 
-	CloseWindowMenu(menu->frame->screen_ptr);
+	CloseWindowMenu();
 
 	switch (entry->order) {
 	case MC_CLOSE:
@@ -580,7 +580,7 @@ static WMenu *createWindowMenu(WScreen * scr)
 	return menu;
 }
 
-void CloseWindowMenu(WScreen *scr)
+void CloseWindowMenu(void)
 {
 	if (w_global.menu.window_menu) {
 		if (w_global.menu.window_menu->flags.mapped)
@@ -816,7 +816,7 @@ void OpenMiniwindowMenu(WWindow * wwin, int x, int y)
 	wMenuMapAt(menu, x, y, False);
 }
 
-void DestroyWindowMenu(WScreen *scr)
+void DestroyWindowMenu(void)
 {
 	if (w_global.menu.window_menu) {
 		w_global.menu.window_menu->entries[MC_MINIATURIZE]->text = NULL;
