@@ -1404,9 +1404,7 @@ WDock *dock_create(void)
 	/* create dock menu */
 	dock->menu = w_global.dock.dock_menu;
 
-	btn = wmalloc(sizeof(WAppIcon));
-	wretain(btn);
-	add_to_appicon_list(btn);
+	btn = dock_icon_create_core();
 
 	btn->wm_class = wstrdup("WMDock");
 	btn->wm_instance = wstrdup("Logo");
@@ -1417,7 +1415,6 @@ WDock *dock_create(void)
 	dock->on_right_side = 1;
 	dock->icon_array[0] = btn;
 
-	btn->icon = icon_create_core();
 	btn->icon->core->descriptor.parent_type = WCLASS_DOCK_ICON;
 	btn->icon->core->descriptor.parent = btn;
 
@@ -1496,15 +1493,11 @@ void clip_icon_create(void)
 {
 	WAppIcon *btn;
 
-	btn = wmalloc(sizeof(WAppIcon));
-	wretain(btn);
-
-	add_to_appicon_list(btn);
+	btn = dock_icon_create_core();
 
 	btn->wm_class = wstrdup("WMClip");
 	btn->wm_instance = wstrdup("Logo");
 
-	btn->icon = icon_create_core();
 	btn->icon->tile_type = TILE_CLIP;
 
 	btn->xindex = 0;
@@ -1613,9 +1606,7 @@ WDock *drawer_create(const char *name)
 	dock->type = WM_DRAWER;
 	dock->auto_collapse = 1;
 
-	btn = wmalloc(sizeof(WAppIcon));
-	wretain(btn);
-	add_to_appicon_list(btn);
+	btn = dock_icon_create_core();
 
 	/* Create appicon's icon */
 	btn->xindex = 0;
@@ -1633,7 +1624,6 @@ WDock *drawer_create(const char *name)
 	if (name)
 		btn->wm_instance = wstrdup(name);
 
-	btn->icon = icon_create_core();
 	btn->icon->core->descriptor.parent_type = WCLASS_DOCK_ICON;
 	btn->icon->core->descriptor.parent = btn;
 	btn->icon->tile_type = TILE_DRAWER;
@@ -2003,12 +1993,9 @@ static WAppIcon *restore_icon_state(WScreen *scr, WMPropList *info, int type, in
 	}
 
 	/* Create appicon's icon */
-	aicon = wmalloc(sizeof(WAppIcon));
-	wretain(aicon);
+	aicon = dock_icon_create_core();
 	aicon->yindex = -1;
 	aicon->xindex = -1;
-
-	add_to_appicon_list(aicon);
 
 	if (command)
 		aicon->command = wstrdup(command);
@@ -2019,7 +2006,6 @@ static WAppIcon *restore_icon_state(WScreen *scr, WMPropList *info, int type, in
 	if (winstance)
 		aicon->wm_instance = wstrdup(winstance);
 
-	aicon->icon = icon_create_core();
 	if (strcmp(wclass, "WMDock") == 0 && wPreferences.flags.clip_merged_in_dock)
 		aicon->icon->tile_type = TILE_CLIP;
 	else
@@ -3692,12 +3678,9 @@ void wDockTrackWindowLaunch(WDock *dock, Window window)
 				dockIconPaint(icon);
 
 				/* Create appicon's icon */
-				aicon = wmalloc(sizeof(WAppIcon));
-				wretain(aicon);
+				aicon = dock_icon_create_core();
 				aicon->yindex = -1;
 				aicon->xindex = -1;
-
-				add_to_appicon_list(aicon);
 
 				if (wm_class)
 					aicon->wm_class = wstrdup(wm_class);
@@ -3705,7 +3688,6 @@ void wDockTrackWindowLaunch(WDock *dock, Window window)
 				if (wm_instance)
 					aicon->wm_instance = wstrdup(wm_instance);
 
-				aicon->icon = icon_create_core();
 				if (strcmp(wm_class, "WMDock") == 0 && wPreferences.flags.clip_merged_in_dock)
 					aicon->icon->tile_type = TILE_CLIP;
 				else

@@ -285,6 +285,18 @@ static WAppIcon *wAppIconCreate(WWindow *leader_win)
 	return aicon;
 }
 
+WAppIcon *dock_icon_create_core(void)
+{
+	WAppIcon *btn;
+
+	btn = wmalloc(sizeof(WAppIcon));
+	wretain(btn);
+	add_to_appicon_list(btn);
+	btn->icon = icon_create_core();
+
+	return btn;
+}
+
 void wAppIconDestroy(WAppIcon *aicon)
 {
 	RemoveFromStackList(aicon->icon->core);
