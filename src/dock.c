@@ -1367,17 +1367,17 @@ static void dock_menu_unmap(WMenu *menu)
 	menu_unmap(menu);
 }
 
-WDock *dock_create(void)
+static WDock *dock_create_core(void)
 {
 	WDock *dock;
-	WAppIcon *btn;
 
 	make_keys();
 
 	dock = wmalloc(sizeof(WDock));
+	dock->max_icons = DOCK_MAX_ICONS;
+	dock->icon_array = wmalloc(sizeof(WAppIcon *) * dock->max_icons);
 
 	/* Set basic variables */
-	dock->type = WM_DOCK;
 	dock->icon_count = 1;
 	dock->collapsed = 0;
 	dock->auto_collapse = 0;
@@ -1388,14 +1388,23 @@ WDock *dock_create(void)
 	dock->attract_icons = 0;
 	dock->lowered = 1;
 
+	return dock;
+}
+
+WDock *dock_create(void)
+{
+	WDock *dock;
+	WAppIcon *btn;
+
+	dock = dock_create_core();
+
+	/* Set basic variables */
+	dock->type = WM_DOCK;
+
 	/* create dock menu */
 	dock->menu = w_global.dock.dock_menu;
 
-	/* Max icon number, without screen */
-	dock->max_icons = DOCK_MAX_ICONS;
-	dock->icon_array = wmalloc(sizeof(WAppIcon *) * dock->max_icons);
 	btn = wmalloc(sizeof(WAppIcon));
-
 	wretain(btn);
 	add_to_appicon_list(btn);
 
@@ -1543,26 +1552,13 @@ WDock *clip_create(void)
 	WDock *dock;
 	WAppIcon *btn;
 
-	make_keys();
-
-	dock = wmalloc(sizeof(WDock));
-	dock->max_icons = DOCK_MAX_ICONS;
-	dock->icon_array = wmalloc(sizeof(WAppIcon *) * dock->max_icons);
+	dock = dock_create_core();
 
 	btn = w_global.clip.icon;
 	btn->dock = dock;
 
 	dock->type = WM_CLIP;
-	dock->icon_count = 1;
 	dock->on_right_side = 1;
-	dock->collapsed = 0;
-	dock->auto_collapse = 0;
-	dock->auto_collapse_magic = NULL;
-	dock->auto_raise_lower = 0;
-	dock->auto_lower_magic = NULL;
-	dock->auto_raise_magic = NULL;
-	dock->attract_icons = 0;
-	dock->lowered = 1;
 	dock->icon_array[0] = btn;
 
 	/* create clip menu */
@@ -1611,25 +1607,13 @@ WDock *drawer_create(const char *name)
 
 	make_keys();
 
-	dock = wmalloc(sizeof(WDock));
+	dock = dock_create_core();
 
 	/* Set basic variables */
 	dock->type = WM_DRAWER;
-	dock->icon_count = 1;
-	dock->collapsed = 0;
 	dock->auto_collapse = 1;
-	dock->auto_collapse_magic = NULL;
-	dock->auto_raise_lower = 0;
-	dock->auto_lower_magic = NULL;
-	dock->auto_raise_magic = NULL;
-	dock->attract_icons = 0;
-	dock->lowered = 1;
 
-	/* Max icon number, without screen */
-	dock->max_icons = DOCK_MAX_ICONS;
-	dock->icon_array = wmalloc(sizeof(WAppIcon *) * dock->max_icons);
 	btn = wmalloc(sizeof(WAppIcon));
-
 	wretain(btn);
 	add_to_appicon_list(btn);
 
