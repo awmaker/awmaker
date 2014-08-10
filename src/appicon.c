@@ -297,6 +297,31 @@ WAppIcon *dock_icon_create_core(void)
 	return btn;
 }
 
+WAppIcon *create_appicon(char *command, char *wm_class, char *wm_instance)
+{
+	WAppIcon *aicon;
+
+	aicon = dock_icon_create_core();
+	aicon->yindex = -1;
+	aicon->xindex = -1;
+
+	if (command)
+		aicon->command = wstrdup(command);
+
+	if (wm_class)
+		aicon->wm_class = wstrdup(wm_class);
+
+	if (wm_instance)
+		aicon->wm_instance = wstrdup(wm_instance);
+
+	if (strcmp(wm_class, "WMDock") == 0 && wPreferences.flags.clip_merged_in_dock)
+		aicon->icon->tile_type = TILE_CLIP;
+	else
+		aicon->icon->tile_type = TILE_NORMAL;
+
+	return aicon;
+}
+
 void wAppIconDestroy(WAppIcon *aicon)
 {
 	RemoveFromStackList(aicon->icon->core);

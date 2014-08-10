@@ -1992,23 +1992,7 @@ static WAppIcon *restore_icon_state(WScreen *scr, WMPropList *info, int type, in
 	}
 
 	/* Create appicon's icon */
-	aicon = dock_icon_create_core();
-	aicon->yindex = -1;
-	aicon->xindex = -1;
-
-	if (command)
-		aicon->command = wstrdup(command);
-
-	if (wclass)
-		aicon->wm_class = wstrdup(wclass);
-
-	if (winstance)
-		aicon->wm_instance = wstrdup(winstance);
-
-	if (strcmp(wclass, "WMDock") == 0 && wPreferences.flags.clip_merged_in_dock)
-		aicon->icon->tile_type = TILE_CLIP;
-	else
-		aicon->icon->tile_type = TILE_NORMAL;
+	aicon = create_appicon(command, wclass, winstance);
 
 	wcore_map_toplevel(aicon->icon->core, scr, 0, 0, 0, scr->w_depth,
 			   scr->w_visual, scr->w_colormap, scr->white_pixel);
@@ -3677,20 +3661,7 @@ void wDockTrackWindowLaunch(WDock *dock, Window window)
 				dockIconPaint(icon);
 
 				/* Create appicon's icon */
-				aicon = dock_icon_create_core();
-				aicon->yindex = -1;
-				aicon->xindex = -1;
-
-				if (wm_class)
-					aicon->wm_class = wstrdup(wm_class);
-
-				if (wm_instance)
-					aicon->wm_instance = wstrdup(wm_instance);
-
-				if (strcmp(wm_class, "WMDock") == 0 && wPreferences.flags.clip_merged_in_dock)
-					aicon->icon->tile_type = TILE_CLIP;
-				else
-					aicon->icon->tile_type = TILE_NORMAL;
+				aicon = create_appicon(NULL, wm_class, wm_instance);
 
 				wcore_map_toplevel(aicon->icon->core, dock->screen_ptr, 0, 0, 0,
 						   dock->screen_ptr->w_depth, dock->screen_ptr->w_visual,
