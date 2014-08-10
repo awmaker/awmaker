@@ -1418,13 +1418,12 @@ WDock *dock_create(void)
 	btn->icon->core->descriptor.parent_type = WCLASS_DOCK_ICON;
 	btn->icon->core->descriptor.parent = btn;
 
-	if (wPreferences.flags.clip_merged_in_dock)
+	if (wPreferences.flags.clip_merged_in_dock) {
 		btn->icon->tile_type = TILE_CLIP;
-	else
-		btn->icon->tile_type = TILE_NORMAL;
-
-	if (wPreferences.flags.clip_merged_in_dock)
 		w_global.clip.icon = btn;
+	} else {
+		btn->icon->tile_type = TILE_NORMAL;
+	}
 
 	return dock;
 }
