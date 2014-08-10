@@ -1993,27 +1993,14 @@ static WAppIcon *restore_icon_state(WScreen *scr, WMPropList *info, int type, in
 
 	/* Create appicon's icon */
 	aicon = create_appicon(command, wclass, winstance);
-
-	wcore_map_toplevel(aicon->icon->core, scr, 0, 0, 0, scr->w_depth,
-			   scr->w_visual, scr->w_colormap, scr->white_pixel);
-
-	set_icon_image_from_database(aicon->icon, winstance, wclass, command);
-	/* Update the icon, because icon could be NULL */
-	wIconUpdate(aicon->icon);
-
-	WMAddNotificationObserver(icon_appearanceObserver, aicon->icon, WNIconAppearanceSettingsChanged, aicon->icon);
-	WMAddNotificationObserver(icon_tileObserver, aicon->icon, WNIconTileSettingsChanged, aicon->icon);
-
-#ifdef XDND
-	wXDNDMakeAwareness(aicon->icon->core->window);
-#endif
-
-	AddToStackList(aicon->icon->core);
+	appicon_map(aicon, scr);
 
 	if (wclass)
 		wfree(wclass);
+
 	if (winstance)
 		wfree(winstance);
+
 	if (command)
 		wfree(command);
 
@@ -3662,30 +3649,14 @@ void wDockTrackWindowLaunch(WDock *dock, Window window)
 
 				/* Create appicon's icon */
 				aicon = create_appicon(NULL, wm_class, wm_instance);
-
-				wcore_map_toplevel(aicon->icon->core, dock->screen_ptr, 0, 0, 0,
-						   dock->screen_ptr->w_depth, dock->screen_ptr->w_visual,
-						   dock->screen_ptr->w_colormap, dock->screen_ptr->white_pixel);
-
-				set_icon_image_from_database(aicon->icon, wm_instance, wm_class, command);
-				/* Update the icon, because icon could be NULL */
-				wIconUpdate(aicon->icon);
-
-				WMAddNotificationObserver(icon_appearanceObserver, aicon->icon, WNIconAppearanceSettingsChanged, aicon->icon);
-				WMAddNotificationObserver(icon_tileObserver, aicon->icon, WNIconTileSettingsChanged, aicon->icon);
-
-#ifdef XDND
-				wXDNDMakeAwareness(aicon->icon->core->window);
-#endif
+				appicon_map(aicon, dock->screen_ptr);
 
 				/* will be overriden by dock */
 				aicon->icon->core->descriptor.handle_mousedown = appIconMouseDown;
 				aicon->icon->core->descriptor.handle_expose = dockIconExpose;
 				aicon->icon->core->descriptor.parent_type = WCLASS_APPICON;
 				aicon->icon->core->descriptor.parent = aicon;
-				AddToStackList(aicon->icon->core);
 
-				/* XXX: can: aicon->icon == NULL ? */
 				PlaceIcon(dock->screen_ptr, &x0, &y0, wGetHeadForWindow(aicon->icon->owner));
 				wAppIconMove(aicon, x0, y0);
 				/* Should this always be lowered? -Dan */

@@ -610,6 +610,25 @@ static WMenu *createApplicationMenu(void)
 	return menu;
 }
 
+void appicon_map(WAppIcon *aicon, WScreen *scr)
+{
+	wcore_map_toplevel(aicon->icon->core, scr, 0, 0, 0, scr->w_depth,
+			   scr->w_visual, scr->w_colormap, scr->white_pixel);
+
+	set_icon_image_from_database(aicon->icon, aicon->wm_instance, aicon->wm_class, aicon->command);
+	/* Update the icon, because icon could be NULL */
+	wIconUpdate(aicon->icon);
+
+	WMAddNotificationObserver(icon_appearanceObserver, aicon->icon, WNIconAppearanceSettingsChanged, aicon->icon);
+	WMAddNotificationObserver(icon_tileObserver, aicon->icon, WNIconTileSettingsChanged, aicon->icon);
+
+#ifdef XDND
+	wXDNDMakeAwareness(aicon->icon->core->window);
+#endif
+
+	AddToStackList(aicon->icon->core);
+}
+
 static void openApplicationMenu(WApplication *wapp, int x, int y)
 {
 	WMenu *menu;
