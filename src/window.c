@@ -121,7 +121,7 @@ static void appearanceObserver(void *self, WMNotification * notif)
 		wwin->frame->flags.need_texture_remake = 1;
 
 	if (flags & (WTextureSettings | WColorSettings)) {
-		if (wwin->frame->titlebar)
+		if (wwin->frame->titlebar && wwin->frame->flags.titlebar)
 			XClearWindow(dpy, wwin->frame->titlebar->window);
 
 		wFrameWindowPaint(wwin->frame);

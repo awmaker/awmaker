@@ -1195,7 +1195,7 @@ static void handleXkbIndicatorStateNotify(XEvent *event)
 				wwin->frame->languagemode = staterec.group;
 			}
 #ifdef XKB_BUTTON_HINT
-			if (wwin->frame->titlebar) {
+			if (wwin->frame->titlebar && wwin->frame->flags.titlebar) {
 				wFrameWindowPaint(wwin->frame);
 			}
 #endif

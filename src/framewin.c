@@ -352,7 +352,6 @@ static void titlebar_create(WFrameWindow *fwin, int theight, int bsize, int flag
 	if (flags & WFF_TITLEBAR) {
 		fwin->top_width = theight;
 
-		fwin->flags.titlebar = 1;
 		fwin->titlebar = wcore_create(width + 1, theight);
 
 		if (flags & WFF_LEFT_BUTTON)
@@ -376,6 +375,7 @@ static void titlebar_map(WFrameWindow *fwin, int theight, int bsize, int flags)
 	/* if we didn't have a titlebar and are being requested for
 	 * one, create it */
 	if (flags & WFF_TITLEBAR) {
+		fwin->flags.titlebar = 1;
 		fwin->top_width = theight;
 
 		wcore_map(fwin->titlebar, fwin->core,
@@ -740,7 +740,7 @@ void wFrameWindowHideButton(WFrameWindow * fwin, int flags)
 	}
 #endif
 
-	if (fwin->titlebar) {
+	if (fwin->titlebar && fwin->flags.titlebar) {
 		if (wPreferences.new_style == TS_NEW) {
 			updateTitlebar(fwin);
 		} else {
@@ -782,7 +782,7 @@ void wFrameWindowShowButton(WFrameWindow * fwin, int flags)
 		fwin->flags.hide_left_button = 0;
 	}
 
-	if (fwin->titlebar) {
+	if (fwin->titlebar && fwin->flags.titlebar) {
 		if (wPreferences.new_style == TS_NEW) {
 			updateTitlebar(fwin);
 		} else {
@@ -943,7 +943,7 @@ static void updateTexture_titlebar(WFrameWindow *fwin)
 	unsigned long pixel;
 	int i = fwin->flags.state;
 
-	if (fwin->titlebar) {
+	if (fwin->titlebar && fwin->flags.titlebar) {
 		if (fwin->title_texture[i]->any.type != WTEX_SOLID) {
 			XSetWindowBackgroundPixmap(dpy, fwin->titlebar->window, fwin->title_back[i]);
 			if (wPreferences.new_style == TS_NEW) {
@@ -1012,7 +1012,7 @@ static void remakeTexture_titlebar(WFrameWindow *fwin, int state)
 	Pixmap tpmap;
 #endif
 
-	if (fwin->title_texture[state] && fwin->titlebar) {
+	if (fwin->title_texture[state] && fwin->titlebar && fwin->flags.titlebar) {
 		destroy_framewin_button(fwin, state);
 
 		if (fwin->title_texture[state]->any.type != WTEX_SOLID) {
@@ -1180,7 +1180,7 @@ void wFrameWindowPaint(WFrameWindow * fwin)
 		updateTexture_resizebar(fwin);
 	}
 
-	if (fwin->titlebar && !fwin->flags.repaint_only_resizebar
+	if (fwin->titlebar && fwin->flags.titlebar && !fwin->flags.repaint_only_resizebar
 	    && fwin->title_texture[state]->any.type == WTEX_SOLID) {
 		wDrawBevel(fwin->titlebar->window, fwin->titlebar->width,
 			   fwin->titlebar->height, (WTexSolid *) fwin->title_texture[state], WREL_RAISED);
@@ -1193,7 +1193,7 @@ void wFrameWindowPaint(WFrameWindow * fwin)
 				     fwin->resizebar->height, (WTexSolid *) fwin->resizebar_texture[0],
 				     fwin->resizebar_corner_width);
 
-	if (fwin->titlebar && !fwin->flags.repaint_only_resizebar) {
+	if (fwin->titlebar && fwin->flags.titlebar && !fwin->flags.repaint_only_resizebar) {
 		int lofs = 6, rofs = 6;
 
 		if (!wPreferences.new_style == TS_NEW) {
@@ -1246,7 +1246,7 @@ static void reconfigure(WFrameWindow * fwin, int x, int y, int width, int height
 	fwin->core->width = width;
 	fwin->core->height = height;
 
-	if (fwin->titlebar && resizedHorizontally) {
+	if (fwin->titlebar && fwin->flags.titlebar && resizedHorizontally) {
 		/* Check if the titlebar is wide enough to hold the buttons.
 		 * Temporarily remove them if can't
 		 */
@@ -1343,7 +1343,7 @@ int wFrameWindowChangeTitle(WFrameWindow *fwin, const char *new_title)
 		wfree(fwin->title);
 
 	fwin->title = wstrdup(new_title);
-	if (fwin->titlebar) {
+	if (fwin->titlebar && fwin->flags.titlebar) {
 		XClearWindow(dpy, fwin->titlebar->window);
 		wFrameWindowPaint(fwin);
 	}
@@ -1367,7 +1367,7 @@ static void handleExpose(WObjDescriptor * desc, XEvent * event)
 {
 	WFrameWindow *fwin = (WFrameWindow *) desc->parent;
 
-	if (fwin->titlebar && fwin->titlebar->window == event->xexpose.window)
+	if (fwin->titlebar && fwin->flags.titlebar && fwin->titlebar->window == event->xexpose.window)
 		fwin->flags.repaint_only_titlebar = 1;
 
 	if (fwin->resizebar && fwin->resizebar->window == event->xexpose.window)
