@@ -59,6 +59,9 @@
 #include "placement.h"
 #include "misc.h"
 #include "event.h"
+#ifdef XDND
+#include "xdnd.h"
+#endif
 
 /**** Local variables ****/
 #define CLIP_REWIND       1
