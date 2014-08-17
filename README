@@ -1,314 +1,102 @@
 
+                        awmaker - Abstracting Window Maker
+                             A Window Maker Fork
+                        Rodolfo García Peñas (kix) - 2014
 
+This is a small project to break the Window Maker dependency with
+the screen.
 
-		       		GNU Window Maker
-		       	       X11 Window Manager
+WHY?
+====
+Window Maker is a nice window manager, but is screen dependent. We cannot
+run Window Maker without a screen, and this is a problem.
 
-			    <http://windowmaker.org>
+Probably you think that I am crazy, because Window Maker is a window manager,
+so it needs a screen. Probably I am crazy, yes, I will try to show the idea.
 
-				     by
+When Window Maker creates an icon, a window, the Dock,... is not only setting
+some variables, images,... is setting and *painting* them on the screen. All
+items created in Window Maker are bind to the current screen. Now, if we
+connect other screen to the computer, Window Maker is unable to unbind
+them from the screen and paint the items to the new screen. Window Maker
+needs to be restarted to start again with the new screen.
 
-		      	     Alfredo K. Kojima 
+All items in Window Maker are created and mapped to the current screen.
+You cannot see the items because they are hidden, and Window Maker only
+show and hide them.
 
-			 	 Dan Pascu
+AND?
+====
+awmaker includes different steps. When an item is created, is not mapped
+in the screen. Is only created. When the user needs the item, then is mapped
+to the current screen. When the user finish with the item, the item is
+unmapped (not destroyed, only unmapped).
 
+For example. With Window Maker, menus are created (yes, the menu, buttons,
+framewin, background,...) when Window Maker starts. When the user needs a
+menu, Window Maker paint the menu on the screen. With awmaker, the menu is
+created when Window Maker starts (awmaker is a fork of Window Maker ;-))
+the items are created but they don't know nothing about the user screen.
+When the user needs the menu, then awmaker set the screen options and paint
+the menu. When the user finish, awmaker destroy all the screen related stuff.
+If we attach a new screen, awmaker can paint the menu again in the new screen,
+because the screen related stuff is created on live.
 
+WINDOW MAKER AND awmaker
+========================
+awmaker is not Window Maker, is a fork. awmaker code comes from Window
+Maker and many functions are the same. Low level functions, like
+X11 code, file management,... are/will be the same, but in the future
+many code will be different.
 
-			       Web/FTP Master
+Patches for Window Maker probably could be included in awmaker without
+changes, but other patches could need some tweaks. Don't work twice, if your
+patch is common for Window Maker and awmaker, sent it to Window Maker, we
+will include it in awmaker.
 
-			       Phillip Smith
+On the other hand, some bugs or problems could be solved in awmaker. Feel
+free to include them in Window Maker.
 
+awmaker is a different project created to include abstraction. Probably
+in the future this ideas could be integrated in Window Maker. Window Maker
+is a mature window manager and include this new ideas could break their
+stability, for this reason, hold different projects is good for Window Maker.
 
+Window Maker and awmaker share some things, like the libraries (WINGs, WUtil
+and wraster) and the WPrefs application. awmaker should not include in the
+future this libraries in their code, and use the libraries included in the
+Window Maker development tree. WPrefs shouldn't be a problem, because the
+look&feel should be the same between Window Maker and awmaker. 
 
-		Congratulations! You have purchased an extremely fine
-	device that would give you thousands of years of trouble-free 
-	service, except	that you undoubtedly will destroy it via some
-	typical bonehead consumer maneuver. Which is why we ask you
-	to PLEASE FOR GOD'S SAKE READ THIS OWNER'S MANUAL CAREFULLY
-	BEFORE YOU UNPACK THE DEVICE. YOU ALREADY UNPACKED IT, DIDN'T
-	YOU? YOU UNPACKED IT AND PLUGGED IT IN AND TURNED IT ON AND 
-	FIDDLED WITH THE KNOBS, AND NOW YOUR CHILD, THE	SAME CHILD WHO
-	ONCE SHOVED A POLISH SAUSAGE INTO YOUR VIDEOCASSETTE RECORDER
-	AND SET IT ON "FAST FORWARD", THIS CHILD ALSO IS FIDDLING
-	WITH THE KNOBS, RIGHT?  AND YOU'RE JUST NOW STARTING TO READ 
-	THE INSTRUCTIONS, RIGHT???  WE MIGHT AS WELL JUST BREAK THESE 
-	DEVICES	RIGHT AT THE FACTORY BEFORE WE SHIP THEM OUT, YOU 
-	KNOW THAT? 
-				-- Dave	Barry, "Read This First!"
+Please, read the README.WMAKER file for more info about Window Maker.
 
-
-Description
+SOME THINGS
 ===========
 
-Window Maker is the GNU window manager for the X Window System. It was designed
-to emulate the look and feel of part of the NEXTSTEP(tm) GUI. It's supposed to
-be relatively fast and small, feature rich, easy to configure and easy to use,
-with a simple and elegant appearance borrowed from NEXTSTEP(tm).
+1. awmaker is unstable. Don't use awmaker in production environments.
+2. awmaker is under development. Is not a final product. Probably only
+   a 20% of awmaker is done. Is a long way. We are playing.
 
-Window Maker was designed keeping integration with GNUstep in mind and is the
-"official" window manager for it. It is also part of the GNU project
-(www.gnu.org) Read more about GNUstep further on this file.
-
-Hints (information given by applications to integrate well with the window
-manager) for Motif(tm) and NETWM are also supported (NETWM is used by KDE and
-GNOME, so they are automatically supported as a result).  So you can replace any
-of the window managers for these environments with Window Maker while keeping
-most, if not all, of the native window manager functionality.
-
-Window Maker was previously called WindowMaker.
-
-Window Maker has no connection with Windowmaker, the software for making windows
-and doors.
-
-
-Documentation
-=============
-
-Read before asking.
-
-* README files all over the source tree have info related to the stuff
-in the directories. 
-
-* INSTALL has installation instructions and some troubleshooting tips.
-You're meant to read it if you are compiling the sources.
-
-* FAQ: Frequently Asked Questions. READ IT!!! FAQ.I18N is for
-internationalization related questions.
-
-* NEWS: list user visible changes from the previous version. Read it if
-you are upgrading.
-
-* BUGFORM: use it to send bug reports. Please do use it.
-
-* ChangeLog: what changed from the previous version?
-
-* BUGS: list of known bugs
-
-
-*** User Guide
-
-The Window Maker User's Guide can be downloaded from the official ftp
-or web sites.
-
-The User Guide explains how to use Window Maker, the configuration files
-and options.
-
-
-*** man pages
-
-Type "man wmaker" in the shell prompt to get general help about Window Maker
-
-
-
-Directories & Files in the Source Tree
-======================================
-
-* Install is a script for configuring and compiling Window Maker in a easy
-  way (not that the normal way is difficult, but...).
-
-* AUTHORS: the credits
-
-* TODO: plans for the future
-
-* util/ has various utility programs.
-
-* WPrefs.app/ is the configuration program. 
-
-* src/wconfig.h has compile time options you can change to select some
-  options/features and other stuff.
-
-* WINGs/ NEXTSTEP lookalike widget library
-
-* wrlib/ image processing library
-
-* po/ has message catalogs which are the translated versions of the messages
-  displayed by Window Maker.
-
-
-HELP ME!!!
+NEXT STEPS
 ==========
+The next steps are:
 
-There is a mailing list for discussing Window Maker at
-wmaker-user@lists.windowmaker.org To subscribe to it, send a message to
-wmaker-user-subscribe@lists.windowmaker.org
-
-If you got a problem, ask there (after reading the docs, of course). The people
-there is more likely to be able to answer your questions than we are.  For bug
-reports use the BUGFORM.
-
-If you have a problem with a precompiled version of Window Maker (rpm, deb etc),
-first ask the person who made the package.
-
-IMPORTANT NOTE: when asking for help (in the mailing list or to the developers,
-directly) *always* send information about the system you are using. You can use
-the system information section at the end of BUGFORM as a guideline. Another
-thing: please don't send HTML mail.
-
-
-There is also a #windowmaker IRC channel at freenode. To join there, connect
-your irc client to irc.freenode.net. irc.windowmaker.org will direct you to the
-correct IRC network.
-
-
-GNUstep
-=======
-
-GNUstep is a complete object-oriented development system, based on the OpenStep
-specification released by NeXT(tm) (now Apple(tm)) and Sun(tm). It will provide
-everything one needs to produce cross-platform, object-oriented, graphical (and
-non-graphical) applications; providing among other things, base system
-libraries, a high-level GUI application framework that uses a Display
-PostScript(tm)-like imaging model (DGS), objects for accessing relational
-databases, distributed objects and a graphical development environment, with
-tools like interface modeler, a project management system (project center) and
-other tools.
-
-The GNUstep development system will be used to create a user environment, with
-everything needed for a complete graphical user interface, such as a file
-viewer, text editors and other applications. Note that the user environment (or
-"desktop environment") is only a small part of the whole GNUstep project and
-therefore it does not "compete" with other projects like KDE or GNOME, simply
-because they are completely different things.
-
-For more information on the GNUstep project, visit: http://www.gnustep.org
-
-
-Running multiple instances of Window Maker
-==========================================
-
-It is not a good idea to run more than one instance of Window Maker
-from the same user (so that wmaker will use the same configuration files) at the
-same time. You might get unexpected behavior when Window Maker updates it's
-configuration files.
-
-If you really desire to do this, try running Window Maker with the command line
-option --static so that it will not update or change any of the configuration
-files.
-
-
-Performance Tuning
-==================
-
-If you want to diminish Window Maker's memory usage and improve performance,
-while keeping a nice appearance and good functionality, follow the items bellow:
-
-- use solid textures for everything, mainly title bars and menus. If you want a
-  nice looking desktop, use the Traditional style.
-- turn NewStyle and Superfluous off
-- do not bind many shortcuts in the menu and keep only the essential items in
-  the menu
-- turn on DisableClip
-- edit wconfig.h and disable the NUMLOCK_HACK and the features you don't use
-  anyway (keep in mind that some of the #defines might not work, as they are not
-  fully supported). Make sure to always keep NumLock and ScrollLock turned off.
-- turn on DisableAnimations. You can also #undefine ANIMATIONS in wconfig.h
-- strip down the default IconPath and PixmapPath entries to contain only 
-  the paths that you really have in your system. 
-- do not use large images in the root background
-- remove support for image formats you don't use
-- to reduce memory usage, disable the icon cache, by setting the RIMAGE_CACHE
-  environment variable to 0. If you want to increase performance at the cost of
-  memory usage, set it's value to a value like the number of different icons you
-  use. Also, disable anti-aliased text support in ~/GNUstep/Defaults/WMGLOBAL.
-
-
-Keyboard Mouse Control
-======================
-
-Many people ask about adding keyboard control of mouse, like in fvwm, but Window
-Maker will not have such feature. The XKB extension supports mouse simulation
-from the keyboard, in a much more powerful fashion than any simulation done by
-a window manager.
-
-To enable it, hit the Control+Shift+NumLock or Shift+NumLock key combination.
-You should hear the speaker beeping. To disable it, do the same thing.
-
-To control the mouse the numeric keypad is used as follows:
-- 4 (left arrow), 7 (Home), 8 (up arrow), 9 (PgUp), 6 (right arrow), 
-3 (PgDn), 2 (down arrow) and 1 (End) move the mouse to the corresponding
-direction;
-- holding one of the above keys and then holding the 5 key will move the
-pointer faster;
-- / will select the first mouse button (left button);
-- * will select the second mouse button (middle button);
-- - will select the third mouse button (right button);
-- 5 will do a click with the currently selected mouse button;
-- + will do a double-click with the currently selected button;
-- 0 (Ins) will click and hold the currently selected button;
-- . (Del) will release the currently selected button that was previously
-clicked with the 0 (Ins) key.
-
-
-The above key values work in a XFree86 3.2 (X11R6.1) X server but your
-mileage may vary.
-
-
-How to make a gdb backtrace
-===========================
-
-Backtraces can help us fix bugs that make Window Maker crash. If you find a bug
-that crashes Window Maker, please send a backtrace with your bug report.
-
-To make a useful backtrace, you need a core file with debugging information
-produced by Window Maker when it crashes. It should have been installed without
-stripping too.
-
-To compile wmaker with debugging information:
-
-  ./configure --enable-debug
-  make
-
-If you get the dialog window telling you that wmaker crashed and asks you what
-to do, tell it to "Abort and leave a core file".
-
-  script
-  cd src
-  gdb .libs/wmaker path_to_the_core_file
-
-Then, in the gdb prompt type "bt". Quit from gdb by typing "quit" and then, in
-the shell prompt, type "exit".
-
-The file named typescript will contain the backtrace.
-
-
-
-Copyrights & Disclaimers
-========================
-
-Window Maker is copyrighted by Alfredo K. Kojima and is licensed through the GNU
-General Public License. Read the COPYING file for the complete license.
-
-The icons that are distributed with this program and were made by Marco van
-Hylckama Vlieg, are licensed through the GNU General Public License. Read the
-COPYING file for the complete license.
-
-The icons listed in COPYING.WTFPL and are distributed in this program and were
-made by Banlu Kemiyatorn (]d), are licensed through the "do What The Fuck you
-want to Public License". Read the COPYING.WTFPL file for the complete license.
-
-NeXT, OpenStep and NEXTSTEP are a trademarks of NeXT Computer, Inc.  All other
-trademarks are property of their respective owners.
-
-The authors reserve the right to make changes in the software without prior
-notice.
-
-
-Authors
-=======
-
-Alfredo K. Kojima <kojima@windowmaker.info>
-Dan Pascu <dan@windowmaker.info>
-]d <id@windowmaker.info>
-
-Please don't ask us questions before reading the documentation (esp. the FAQ,
-this file and INSTALL files) and about "cool" things you see in people's desktop
-screenshots.
-
-
-The AUTHORS file contains a list of the people who have contributed to the
-project. The name of people who have helped with localization (translation) can
-be found in po/README and Window Maker/README
-
-If you have any comments, fixes and bug reports (filled BUGFORMs) send them
-to wmaker-dev@lists.windowmaker.org
-
+1. There are six main blocks (windows, icons, framewin, workspaces, main
+   icons [Dock, Clip, Drawer] and menus). Include create, map and unmap
+   functions for all of them. There are functions created for wcore, framewin
+   and menus, this code could be improved, but is a way to understand the
+   main idea for other blocks.
+2. Break the icon screen dependency. When the icon is created, is created
+   for the current screen. Probably the better way is read the file name and
+   create the icon in the "_map" function.
+3. Change the start up steps. The start up should create the workspaces and
+   include the Clip, Dock, Drawers in the workspaces. Then load the screen
+   and map the workspace in the screen/s.
+4. Include shutdown steps. The shutdown step should unmap all the items
+   (workspaces,...) without destroy the items.
+5. Join steps 3 and 4. We can change the screen without restart awmaker.
+   
+CAN I PLAY?
+===========
+Yes! You are very welcome to help in the project. Fork it. We are in
+https://github.com/awmaker/awmaker
