@@ -2423,13 +2423,13 @@ void wDockDoAutoLaunch(WDock *dock, int workspace)
 }
 
 #ifdef XDND			/* was OFFIX */
-static WDock *findDock(WScreen *scr, XEvent *event, int *icon_pos)
+static WDock *findDock(XEvent *event, int *icon_pos)
 {
 	WDock *dock;
 	int i;
 
 	*icon_pos = -1;
-	if ((dock = scr->dock) != NULL) {
+	if ((dock = w_global.dock.dock) != NULL) {
 		for (i = 0; i < dock->max_icons; i++) {
 			if (dock->icon_array[i]
 			    && dock->icon_array[i]->icon->core->window == event->xclient.window) {
@@ -2458,7 +2458,7 @@ int wDockReceiveDNDDrop(WScreen *scr, XEvent *event)
 	WAppIcon *btn;
 	int icon_pos;
 
-	dock = findDock(scr, event, &icon_pos);
+	dock = findDock(event, &icon_pos);
 	if (!dock)
 		return False;
 
@@ -2492,7 +2492,7 @@ int wDockReceiveDNDDrop(WScreen *scr, XEvent *event)
 
 		btn->paste_launch = 0;
 		btn->drop_launch = 1;
-		scr->last_dock = dock;
+		w_global.last_dock = dock;
 		btn->pid = execCommand(btn, btn->dnd_command, NULL);
 		if (btn->pid > 0) {
 			dockIconPaint(btn);
