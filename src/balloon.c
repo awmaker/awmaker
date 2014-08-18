@@ -468,8 +468,7 @@ static void showBalloon(WScreen * scr)
 		showApercu(scr, x, y, (wPreferences.icon_size - 1) * 2, (wPreferences.icon_size - 1) * 2,
 					scr->balloon->text, scr->balloon->apercu);
 	else
-		if (wPreferences.miniwin_title_balloon)
-			showText(scr, x, y, scr->balloon->h, w, scr->balloon->text);
+		showText(scr, x, y, scr->balloon->h, w, scr->balloon->text);
 }
 
 static void frameBalloon(WObjDescriptor * object)
