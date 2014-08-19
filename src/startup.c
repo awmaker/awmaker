@@ -629,6 +629,7 @@ void StartUp(Bool defaultScreenOnly)
 	w_global.dock.pos_menu = makeDockPositionMenu();
 	w_global.clip.opt_menu = makeClipOptionsMenu();
 	w_global.dock.dock_menu = dock_menu_create();
+	w_global.dock.drawer_opt_menu = makeClipOptionsMenu();
 
 	/* Create the dock */
 	if (!wPreferences.flags.nodock)
