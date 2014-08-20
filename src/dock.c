@@ -59,6 +59,9 @@
 #include "placement.h"
 #include "misc.h"
 #include "event.h"
+#ifdef XDND
+#include "xdnd.h"
+#endif
 
 /**** Local variables ****/
 #define CLIP_REWIND       1
@@ -950,45 +953,44 @@ static WMenu *makeWorkspaceMenu(void)
 	return menu;
 }
 
-static void updateClipOptionsMenu(WDock *dock)
+static void updateOptionsMenu(WDock *dock, WMenu *menu)
 {
 	WMenuEntry *entry;
 	int index = 0;
 
-	if (!w_global.clip.opt_menu || !dock)
+	if (!menu || !dock)
 		return;
 
 	/* keep on top */
-	entry = w_global.clip.opt_menu->entries[index];
+	entry = menu->entries[index];
 	entry->flags.indicator_on = !dock->lowered;
 	entry->clientdata = dock;
-	wMenuSetEnabled(w_global.clip.opt_menu, index, dock->type == WM_CLIP);
+	wMenuSetEnabled(menu, index, dock->type == WM_CLIP);
 
 	/* collapsed */
-	entry = w_global.clip.opt_menu->entries[++index];
+	entry = menu->entries[++index];
 	entry->flags.indicator_on = dock->collapsed;
 	entry->clientdata = dock;
 
 	/* auto-collapse */
-	entry = w_global.clip.opt_menu->entries[++index];
+	entry = menu->entries[++index];
 	entry->flags.indicator_on = dock->auto_collapse;
 	entry->clientdata = dock;
 
 	/* auto-raise/lower */
-	entry = w_global.clip.opt_menu->entries[++index];
+	entry = menu->entries[++index];
 	entry->flags.indicator_on = dock->auto_raise_lower;
 	entry->clientdata = dock;
-	wMenuSetEnabled(w_global.clip.opt_menu, index, dock->lowered && (dock->type == WM_CLIP));
+	wMenuSetEnabled(menu, index, dock->lowered && (dock->type == WM_CLIP));
 
 	/* attract icons */
-	entry = w_global.clip.opt_menu->entries[++index];
+	entry = menu->entries[++index];
 	entry->flags.indicator_on = dock->attract_icons;
 	entry->clientdata = dock;
 
-	w_global.clip.opt_menu->flags.realized = 0;
-	wMenuRealize(w_global.clip.opt_menu);
+	menu->flags.realized = 0;
+	wMenuRealize(menu);
 }
-
 
 WMenu *makeClipOptionsMenu(void)
 {
@@ -1265,7 +1267,7 @@ static void drawer_menu_create(void)
 
 	entry = wMenuAddCallback(menu, _("Drawer options"), NULL, NULL);
 
-	wMenuEntrySetCascade_create(menu, entry, w_global.clip.opt_menu);
+	wMenuEntrySetCascade_create(menu, entry, w_global.dock.drawer_opt_menu);
 
 	entry = wMenuAddCallback(menu, _("Selected"), selectCallback, NULL);
 	entry->flags.indicator = 1;
@@ -1305,19 +1307,17 @@ static void drawer_menu_map(WMenu *menu, WScreen *scr)
 {
 	menu_map(menu, scr);
 
-	/* This code is shared with the Clip
-	 * if the clip was created, we don't need do it again */
-	if ((w_global.clip.opt_menu) && (wPreferences.flags.noclip)) {
-		menu_map(w_global.clip.opt_menu, scr);
-		wMenuRealize(w_global.clip.opt_menu);
+	if (w_global.dock.drawer_opt_menu) {
+		menu_map(w_global.dock.drawer_opt_menu, scr);
+		wMenuRealize(w_global.dock.drawer_opt_menu);
 	}
 
-	wMenuEntrySetCascade_map(menu, w_global.clip.opt_menu);
+	wMenuEntrySetCascade_map(menu, w_global.dock.drawer_opt_menu);
 }
 
 static void drawer_menu_unmap(WMenu *menu)
 {
-	menu_unmap(w_global.clip.opt_menu);
+	menu_unmap(w_global.dock.drawer_opt_menu);
 	menu_unmap(menu);
 }
 
@@ -2423,13 +2423,13 @@ void wDockDoAutoLaunch(WDock *dock, int workspace)
 }
 
 #ifdef XDND			/* was OFFIX */
-static WDock *findDock(WScreen *scr, XEvent *event, int *icon_pos)
+static WDock *findDock(XEvent *event, int *icon_pos)
 {
 	WDock *dock;
 	int i;
 
 	*icon_pos = -1;
-	if ((dock = scr->dock) != NULL) {
+	if ((dock = w_global.dock.dock) != NULL) {
 		for (i = 0; i < dock->max_icons; i++) {
 			if (dock->icon_array[i]
 			    && dock->icon_array[i]->icon->core->window == event->xclient.window) {
@@ -2458,7 +2458,7 @@ int wDockReceiveDNDDrop(WScreen *scr, XEvent *event)
 	WAppIcon *btn;
 	int icon_pos;
 
-	dock = findDock(scr, event, &icon_pos);
+	dock = findDock(event, &icon_pos);
 	if (!dock)
 		return False;
 
@@ -2492,7 +2492,7 @@ int wDockReceiveDNDDrop(WScreen *scr, XEvent *event)
 
 		btn->paste_launch = 0;
 		btn->drop_launch = 1;
-		scr->last_dock = dock;
+		w_global.last_dock = dock;
 		btn->pid = execCommand(btn, btn->dnd_command, NULL);
 		if (btn->pid > 0) {
 			dockIconPaint(btn);
@@ -3828,36 +3828,34 @@ static void set_dockmenu_dock_code(WDock *dock, WMenuEntry *entry, WAppIcon *aic
 	}
 }
 
-static void set_dockmenu_clipdrawer_code(WDock *dock, WMenuEntry *entry, WAppIcon *aicon, int *index)
+static void set_dockmenu_clip_code(WDock *dock, WMenuEntry *entry, WAppIcon *aicon, int *index)
 {
 	int n_selected;
 
 	/* clip/drawer options */
 	if (w_global.clip.opt_menu)
-		updateClipOptionsMenu(dock);
+		updateOptionsMenu(dock, w_global.clip.opt_menu);
 
 	n_selected = numberOfSelectedIcons(dock);
 
-	if (dock->type == WM_CLIP) {
-		/* Rename Workspace */
-		entry = dock->menu->entries[++(*index)];
-		if (aicon == w_global.clip.icon) {
-			entry->callback = renameCallback;
-			entry->clientdata = dock;
+	/* Rename Workspace */
+	entry = dock->menu->entries[++(*index)];
+	if (aicon == w_global.clip.icon) {
+		entry->callback = renameCallback;
+		entry->clientdata = dock;
+		entry->flags.indicator = 0;
+		entry->text = _("Rename Workspace");
+	} else {
+		entry->callback = omnipresentCallback;
+		entry->clientdata = aicon;
+		if (n_selected > 0) {
 			entry->flags.indicator = 0;
-			entry->text = _("Rename Workspace");
+			entry->text = _("Toggle Omnipresent");
 		} else {
-			entry->callback = omnipresentCallback;
-			entry->clientdata = aicon;
-			if (n_selected > 0) {
-				entry->flags.indicator = 0;
-				entry->text = _("Toggle Omnipresent");
-			} else {
-				entry->flags.indicator = 1;
-				entry->flags.indicator_on = aicon->omnipresent;
-				entry->flags.indicator_type = MI_CHECK;
-				entry->text = _("Omnipresent");
-			}
+			entry->flags.indicator = 1;
+			entry->flags.indicator_on = aicon->omnipresent;
+			entry->flags.indicator_type = MI_CHECK;
+			entry->text = _("Omnipresent");
 		}
 	}
 
@@ -3887,19 +3885,71 @@ static void set_dockmenu_clipdrawer_code(WDock *dock, WMenuEntry *entry, WAppIco
 
 	wMenuSetEnabled(dock->menu, *index, dock->icon_count > 1);
 
-	if (dock->type == WM_CLIP) {
-		/* this is the workspace submenu part */
-		entry = dock->menu->entries[++(*index)];
-		if (n_selected > 1)
-			entry->text = _("Move Icons To");
-		else
-			entry->text = _("Move Icon To");
+	/* this is the workspace submenu part */
+	entry = dock->menu->entries[++(*index)];
+	if (n_selected > 1)
+		entry->text = _("Move Icons To");
+	else
+		entry->text = _("Move Icon To");
 
-		if (w_global.clip.submenu)
-			updateWorkspaceMenu(w_global.clip.submenu, aicon);
+	if (w_global.clip.submenu)
+		updateWorkspaceMenu(w_global.clip.submenu, aicon);
 
-		wMenuSetEnabled(dock->menu, *index, !aicon->omnipresent);
-	}
+	wMenuSetEnabled(dock->menu, *index, !aicon->omnipresent);
+
+	/* remove icon(s) */
+	entry = dock->menu->entries[++(*index)];
+	entry->clientdata = aicon;
+	if (n_selected > 1)
+		entry->text = _("Remove Icons");
+	else
+		entry->text = _("Remove Icon");
+
+	wMenuSetEnabled(dock->menu, *index, dock->icon_count > 1);
+
+	/* attract icon(s) */
+	entry = dock->menu->entries[++(*index)];
+	entry->clientdata = aicon;
+
+	dock->menu->flags.realized = 0;
+	wMenuRealize(dock->menu);
+}
+
+static void set_dockmenu_drawer_code(WDock *dock, WMenuEntry *entry, WAppIcon *aicon, int *index)
+{
+	int n_selected;
+
+	/* clip/drawer options */
+	if (w_global.dock.drawer_opt_menu)
+		updateOptionsMenu(dock, w_global.dock.drawer_opt_menu);
+
+	n_selected = numberOfSelectedIcons(dock);
+
+	/* select/unselect icon */
+	entry = dock->menu->entries[++(*index)];
+	entry->clientdata = aicon;
+	entry->flags.indicator_on = aicon->icon->selected;
+	wMenuSetEnabled(dock->menu, *index, aicon != w_global.clip.icon && !wIsADrawer(aicon));
+
+	/* select/unselect all icons */
+	entry = dock->menu->entries[++(*index)];
+	entry->clientdata = aicon;
+	if (n_selected > 0)
+		entry->text = _("Unselect All Icons");
+	else
+		entry->text = _("Select All Icons");
+
+	wMenuSetEnabled(dock->menu, *index, dock->icon_count > 1);
+
+	/* keep icon(s) */
+	entry = dock->menu->entries[++(*index)];
+	entry->clientdata = aicon;
+	if (n_selected > 1)
+		entry->text = _("Keep Icons");
+	else
+		entry->text = _("Keep Icon");
+
+	wMenuSetEnabled(dock->menu, *index, dock->icon_count > 1);
 
 	/* remove icon(s) */
 	entry = dock->menu->entries[++(*index)];
@@ -3996,7 +4046,7 @@ static void open_menu_dock(WDock *dock, WAppIcon *aicon, XEvent *event)
 	(*desc->handle_mousedown) (desc, event);
 }
 
-static void open_menu_clipdrawer(WDock *dock, WAppIcon *aicon, XEvent *event)
+static void open_menu_clip(WDock *dock, WAppIcon *aicon, XEvent *event)
 {
 	WScreen *scr = dock->screen_ptr;
 	WObjDescriptor *desc;
@@ -4004,7 +4054,35 @@ static void open_menu_clipdrawer(WDock *dock, WAppIcon *aicon, XEvent *event)
 	int index = 0;
 	int x_pos;
 
-	set_dockmenu_clipdrawer_code(dock, entry, aicon, &index);
+	set_dockmenu_clip_code(dock, entry, aicon, &index);
+	set_dockmenu_common_code(dock, entry, aicon, &index);
+
+	if (!dock->menu->flags.realized)
+		wMenuRealize(dock->menu);
+
+	x_pos = event->xbutton.x_root - dock->menu->frame->core->width / 2 - 1;
+	if (x_pos < 0)
+		x_pos = 0;
+	else if (x_pos + dock->menu->frame->core->width > scr->scr_width - 2)
+		x_pos = scr->scr_width - dock->menu->frame->core->width - 4;
+
+	wMenuMapAt(dock->menu, x_pos, event->xbutton.y_root + 2, False);
+
+	/* allow drag select */
+	event->xany.send_event = True;
+	desc = &dock->menu->menu->descriptor;
+	(*desc->handle_mousedown) (desc, event);
+}
+
+static void open_menu_drawer(WDock *dock, WAppIcon *aicon, XEvent *event)
+{
+	WScreen *scr = dock->screen_ptr;
+	WObjDescriptor *desc;
+	WMenuEntry *entry;
+	int index = 0;
+	int x_pos;
+
+	set_dockmenu_drawer_code(dock, entry, aicon, &index);
 	set_dockmenu_common_code(dock, entry, aicon, &index);
 
 	if (!dock->menu->flags.realized)
@@ -4455,12 +4533,12 @@ static void iconMouseDown(WObjDescriptor *desc, XEvent *event)
 			break;
 		case WM_CLIP:
 			clip_menu_map(dock->menu, scr);
-			open_menu_clipdrawer(dock, aicon, event);
+			open_menu_clip(dock, aicon, event);
 			clip_menu_unmap(dock->menu);
 			break;
 		case WM_DRAWER:
 			drawer_menu_map(dock->menu, scr);
-			open_menu_clipdrawer(dock, aicon, event);
+			open_menu_drawer(dock, aicon, event);
 			drawer_menu_unmap(dock->menu);
 		}
 	}

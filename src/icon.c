@@ -214,6 +214,9 @@ void wIconDestroy(WIcon *icon)
 	if (icon->pixmap)
 		XFreePixmap(dpy, icon->pixmap);
 
+	if (icon->apercu)
+		XFreePixmap(dpy, icon->apercu);
+
 	unset_icon_image(icon);
 
 	icon_destroy_core(icon);
@@ -313,10 +316,12 @@ void wIconChangeTitle(WIcon *icon, WWindow *wwin)
 	if (icon->icon_name != NULL)
 		XFree(icon->icon_name);
 
-	/* Set the new one, using two methods */
+	/* Set the new one, using two methods to identify
+	the icon name or switch back to window name */
 	icon->icon_name = wNETWMGetIconName(wwin->client_win);
 	if (!icon->icon_name)
-		wGetIconName(dpy, wwin->client_win, &icon->icon_name);
+		if (!wGetIconName(dpy, wwin->client_win, &icon->icon_name))
+			icon->icon_name = wNETWMGetWindowName(wwin->client_win);
 }
 
 RImage *wIconValidateIconSize(RImage *icon, int max_size)
@@ -568,6 +573,23 @@ void set_icon_image_from_image(WIcon *icon, RImage *image)
 
 	icon->file_image = NULL;
 	icon->file_image = image;
+}
+
+void set_icon_apercu(WIcon *icon, RImage *image)
+{
+	Pixmap tmp;
+	RImage *scaled_apercu;
+	WScreen *scr = icon->core->screen_ptr;
+
+	scaled_apercu = RSmoothScaleImage(image, (wPreferences.icon_size - 1 - APERCU_BORDER) * wPreferences.apercu_size,
+						(wPreferences.icon_size - 1 - APERCU_BORDER) * wPreferences.apercu_size);
+
+	if (RConvertImage(scr->rcontext, scaled_apercu, &tmp)) {
+		if (icon->apercu != None)
+			XFreePixmap(dpy, icon->apercu);
+		icon->apercu = tmp;
+	}
+	RReleaseImage(scaled_apercu);
 }
 
 void wIconUpdate(WIcon *icon)

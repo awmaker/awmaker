@@ -197,12 +197,11 @@ static Bool isAwareXDND(Window window)
 
 static Bool acceptXDND(Window window)
 {
-	WScreen *scr = wScreenForWindow(window);
 	WDock *dock;
 	int icon_pos, i;
 
 	icon_pos = -1;
-	dock = scr->dock;
+	dock = w_global.dock.dock;
 	if (dock) {
 		for (i = 0; i < dock->max_icons; i++) {
 			if (dock->icon_array[i]

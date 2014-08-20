@@ -401,7 +401,8 @@ extern struct WPreferences {
 
     /* balloon text */
     char window_balloon;
-    char miniwin_balloon;
+    char miniwin_title_balloon;
+    char miniwin_apercu_balloon;
     char appicon_balloon;
     char help_balloon;
 
@@ -434,6 +435,7 @@ extern struct WPreferences {
     char cycle_ignore_minimized;        /* Ignore minimized windows when cycling */
     char strict_windoze_cycle;          /* don't close switch panel when shift is released */
     char panel_only_open;               /* Only open the switch panel; don't switch */
+    char apercu_size;                   /* Size of apercu preview as a multiple of icon size */
 
     /* All delays here are in ms. 0 means instant auto-action. */
     int clip_auto_raise_delay;         /* Delay after which the clip will be raised when entered */
@@ -575,6 +577,7 @@ extern struct wmaker_global_variables {
 		struct WMenu *pos_menu;	/* menu for position of the dock */
 		struct WMenu *dock_menu;	/* Dock menu */
 		struct WMenu *drawer_menu;	/* menu for the drawers */
+		struct WMenu *drawer_opt_menu;	/* Options for drawers */
 	} dock;
 
 	/* Drawers related */
