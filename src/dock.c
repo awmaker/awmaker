@@ -1425,6 +1425,8 @@ WDock *dock_create(void)
 		btn->icon->tile_type = TILE_NORMAL;
 	}
 
+	set_icon_image_from_database(btn->icon, btn->wm_instance, btn->wm_class, NULL);
+
 	return dock;
 }
 
@@ -1441,7 +1443,6 @@ void dock_map(WDock *dock, WScreen *scr, WMPropList *state)
 	else
 		btn->icon->core->descriptor.handle_expose = dockIconExpose;
 
-	set_icon_image_from_database(btn->icon, btn->wm_instance, btn->wm_class, NULL);
 	map_icon_image(btn->icon);
 
 	WMAddNotificationObserver(icon_appearanceObserver, btn->icon, WNIconAppearanceSettingsChanged, btn->icon);
@@ -1503,8 +1504,9 @@ void clip_icon_create(void)
 	btn->x_pos = 0;
 	btn->y_pos = 0;
 	btn->docked = 1;
-	w_global.clip.icon = btn;
 
+	set_icon_image_from_database(btn->icon, btn->wm_instance, btn->wm_class, NULL);
+	w_global.clip.icon = btn;
 }
 
 void clip_icon_map(WScreen *scr)
@@ -1512,9 +1514,6 @@ void clip_icon_map(WScreen *scr)
 	wcore_map_toplevel(w_global.clip.icon->icon->core, scr, 0, 0, 0, scr->w_depth,
 			   scr->w_visual, scr->w_colormap, scr->white_pixel);
 
-	set_icon_image_from_database(w_global.clip.icon->icon,
-				     w_global.clip.icon->wm_instance,
-				     w_global.clip.icon->wm_class, NULL);
 	map_icon_image(w_global.clip.icon->icon);
 
 	WMAddNotificationObserver(icon_appearanceObserver, w_global.clip.icon->icon,
@@ -1625,6 +1624,8 @@ WDock *drawer_create(const char *name)
 	btn->icon->core->descriptor.parent = btn;
 	btn->icon->tile_type = TILE_DRAWER;
 
+	set_icon_image_from_database(btn->icon, btn->wm_instance, btn->wm_class, NULL);
+
 	return dock;
 }
 
@@ -1635,7 +1636,6 @@ void drawer_map(WDock *dock, WScreen *scr)
 	wcore_map_toplevel(btn->icon->core, scr, 0, 0, 0, scr->w_depth,
 			   scr->w_visual, scr->w_colormap, scr->white_pixel);
 
-	set_icon_image_from_database(btn->icon, btn->wm_instance, btn->wm_class, NULL);
 	map_icon_image(btn->icon);
 
 	WMAddNotificationObserver(icon_appearanceObserver, btn->icon, WNIconAppearanceSettingsChanged, btn->icon);
