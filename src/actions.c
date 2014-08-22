@@ -1057,6 +1057,33 @@ static WWindow *recursiveTransientFor(WWindow * wwin)
 	return wwin;
 }
 
+static int getAnimationGeometry(WWindow *wwin, int *ix, int *iy, int *iw, int *ih)
+{
+	if (!w_global.startup.phase1 && !wPreferences.no_animations
+	&& !wwin->flags.skip_next_animation && wwin->icon != NULL) {
+		if (!wPreferences.disable_miniwindows && !wwin->flags.net_handle_icon) {
+			*ix = wwin->icon_x;
+			*iy = wwin->icon_y;
+			*iw = wwin->icon->core->width;
+			*ih = wwin->icon->core->height;
+		} else {
+			if (wwin->flags.net_handle_icon) {
+				*ix = wwin->icon_x;
+				*iy = wwin->icon_y;
+				*iw = wwin->icon_w;
+				*ih = wwin->icon_h;
+			} else {
+				*ix = 0;
+				*iy = 0;
+				*iw = wwin->screen_ptr->scr_width;
+				*ih = wwin->screen_ptr->scr_height;
+			}
+		}
+		return 1;
+	}
+	return 0;
+}
+
 void wIconifyWindow(WWindow * wwin)
 {
 	XWindowAttributes attribs;
@@ -1134,6 +1161,9 @@ void wIconifyWindow(WWindow * wwin)
 	unmapTransientsFor(wwin);
 
 	if (present) {
+#ifdef ANIMATIONS
+		int ix, iy, iw, ih;
+#endif
 		XUngrabPointer(dpy, CurrentTime);
 		wWindowUnmap(wwin);
 		/* let all Expose events arrive so that we can repaint
@@ -1147,31 +1177,9 @@ void wIconifyWindow(WWindow * wwin)
 
 		flushExpose();
 #ifdef ANIMATIONS
-		if (!w_global.startup.phase1 && !wwin->flags.skip_next_animation
-		    && !wPreferences.no_animations) {
-			int ix, iy, iw, ih;
-
-			if (!wPreferences.disable_miniwindows && !wwin->flags.net_handle_icon) {
-				ix = wwin->icon_x;
-				iy = wwin->icon_y;
-				iw = wwin->icon->core->width;
-				ih = wwin->icon->core->height;
-			} else {
-				if (wwin->flags.net_handle_icon) {
-					ix = wwin->icon_x;
-					iy = wwin->icon_y;
-					iw = wwin->icon_w;
-					ih = wwin->icon_h;
-				} else {
-					ix = 0;
-					iy = 0;
-					iw = wwin->screen_ptr->scr_width;
-					ih = wwin->screen_ptr->scr_height;
-				}
-			}
+		if (getAnimationGeometry(wwin, &ix, &iy, &iw, &ih))
 			animateResize(wwin->screen_ptr, wwin->frame_x, wwin->frame_y,
 				      wwin->frame->core->width, wwin->frame->core->height, ix, iy, iw, ih);
-		}
 #endif
 	}
 
@@ -1287,33 +1295,11 @@ void wDeiconifyWindow(WWindow *wwin)
 	/* if the window is in another workspace, do it silently */
 	if (!netwm_hidden) {
 #ifdef ANIMATIONS
-		if (!w_global.startup.phase1 && !wPreferences.no_animations
-		    && !wwin->flags.skip_next_animation && wwin->icon != NULL) {
-			int ix, iy, iw, ih;
-
-			if (!wPreferences.disable_miniwindows
-			    && !wwin->flags.net_handle_icon) {
-				ix = wwin->icon_x;
-				iy = wwin->icon_y;
-				iw = wwin->icon->core->width;
-				ih = wwin->icon->core->height;
-			} else {
-				if (wwin->flags.net_handle_icon) {
-					ix = wwin->icon_x;
-					iy = wwin->icon_y;
-					iw = wwin->icon_w;
-					ih = wwin->icon_h;
-				} else {
-					ix = 0;
-					iy = 0;
-					iw = wwin->screen_ptr->scr_width;
-					ih = wwin->screen_ptr->scr_height;
-				}
-			}
+		int ix, iy, iw, ih;
+		if (getAnimationGeometry(wwin, &ix, &iy, &iw, &ih))
 			animateResize(wwin->screen_ptr, ix, iy, iw, ih,
 				      wwin->frame_x, wwin->frame_y,
 				      wwin->frame->core->width, wwin->frame->core->height);
-		}
 #endif	/* ANIMATIONS */
 		wwin->flags.skip_next_animation = 0;
 		XGrabServer(dpy);
