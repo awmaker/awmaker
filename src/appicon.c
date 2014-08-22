@@ -217,6 +217,7 @@ void removeAppIconFor(WApplication *wapp)
 
 	if (wPreferences.highlight_active_app)
 		wIconSetHighlited(wapp->app_icon->icon, False);
+
 	if (wapp->app_icon->docked && !wapp->app_icon->attracted) {
 		wapp->app_icon->running = 0;
 		/* since we keep it, we don't care if it was attracted or not */
@@ -236,9 +237,9 @@ void removeAppIconFor(WApplication *wapp)
 		wAppIconPaint(wapp->app_icon);
 	} else if (wapp->app_icon->docked) {
 		wapp->app_icon->running = 0;
-		if (wapp->app_icon->dock->type == WM_DRAWER) {
+		if (wapp->app_icon->dock->type == WM_DRAWER)
 			wDrawerFillTheGap(wapp->app_icon->dock, wapp->app_icon, True);
-		}
+
 		wDockDetach(wapp->app_icon->dock, wapp->app_icon);
 	} else {
 		wAppIconDestroy(wapp->app_icon);
