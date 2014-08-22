@@ -1123,7 +1123,8 @@ void wIconifyWindow(WWindow *wwin)
 		if (!wwin->flags.icon_moved)
 			PlaceIcon(wwin->screen_ptr, &wwin->icon_x, &wwin->icon_y, wGetHeadForWindow(wwin));
 
-		wwin->icon = icon_create_for_wwindow(wwin);
+		wwin->icon = icon_for_wwindow_create(wwin);
+		icon_for_wwindow_map(wwin->icon);
 		wwin->icon->mapped = 1;
 
 		/* extract the window screenshot everytime, as the option can be enable anytime */

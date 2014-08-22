@@ -267,7 +267,8 @@ static WAppIcon *wAppIconCreate(WWindow *leader_win)
 	if (leader_win->wm_instance)
 		aicon->wm_instance = wstrdup(leader_win->wm_instance);
 
-	aicon->icon = icon_create_for_wwindow(leader_win);
+	aicon->icon = icon_for_wwindow_create(leader_win);
+	icon_for_wwindow_map(aicon->icon);
 #ifdef XDND
 	wXDNDMakeAwareness(aicon->icon->core->window);
 #endif

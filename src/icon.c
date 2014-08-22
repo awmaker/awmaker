@@ -110,16 +110,32 @@ static int getSize(Drawable d, unsigned int *w, unsigned int *h, unsigned int *d
 	return XGetGeometry(dpy, d, &rjunk, &xjunk, &yjunk, w, h, &bjunk, dep);
 }
 
-WIcon *icon_create_for_wwindow(WWindow *wwin)
+WIcon *icon_for_wwindow_create(WWindow *wwin)
 {
-	WScreen *scr = wwin->screen_ptr;
 	WIcon *icon;
 
 	icon = icon_create_core();
+	icon->owner = wwin;
+	icon->tile_type = TILE_NORMAL;
+	set_icon_image_from_database(icon, wwin->wm_instance, wwin->wm_class, NULL);
+
+#ifdef NO_MINIWINDOW_TITLES
+	icon->show_title = 0;
+#else
+	icon->show_title = 1;
+#endif
+
+	return icon;
+}
+
+void icon_for_wwindow_map(WIcon *icon)
+{
+	WWindow *wwin = icon->owner;
+	WScreen *scr = wwin->screen_ptr;
+
 	wcore_map_toplevel(icon->core, scr, wwin->icon_x, wwin->icon_y, 0, scr->w_depth,
 			   scr->w_visual, scr->w_colormap, scr->white_pixel);
 
-	icon->owner = wwin;
 	if (wwin->wm_hints && (wwin->wm_hints->flags & IconWindowHint)) {
 		if (wwin->client_win == wwin->main_window) {
 			WApplication *wapp;
@@ -131,22 +147,13 @@ WIcon *icon_create_for_wwindow(WWindow *wwin)
 			icon->icon_win = wwin->wm_hints->icon_window;
 		}
 	}
-#ifdef NO_MINIWINDOW_TITLES
-	icon->show_title = 0;
-#else
-	icon->show_title = 1;
-#endif
 
 	wIconChangeTitle(icon, wwin);
-	icon->tile_type = TILE_NORMAL;
 
-	set_icon_image_from_database(icon, wwin->wm_instance, wwin->wm_class, NULL);
 	map_icon_image(icon);
 
 	WMAddNotificationObserver(icon_appearanceObserver, icon, WNIconAppearanceSettingsChanged, icon);
 	WMAddNotificationObserver(icon_tileObserver, icon, WNIconTileSettingsChanged, icon);
-
-	return icon;
 }
 
 WIcon *icon_create_core(void)
