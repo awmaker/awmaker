@@ -318,6 +318,8 @@ WAppIcon *create_appicon(char *command, char *wm_class, char *wm_instance)
 	else
 		aicon->icon->tile_type = TILE_NORMAL;
 
+	set_icon_image_from_database(aicon->icon, aicon->wm_instance, aicon->wm_class, aicon->command);
+
 	return aicon;
 }
 
@@ -614,7 +616,6 @@ void appicon_map(WAppIcon *aicon, WScreen *scr)
 	wcore_map_toplevel(aicon->icon->core, scr, 0, 0, 0, scr->w_depth,
 			   scr->w_visual, scr->w_colormap, scr->white_pixel);
 
-	set_icon_image_from_database(aicon->icon, aicon->wm_instance, aicon->wm_class, aicon->command);
 	map_icon_image(aicon->icon);
 
 	WMAddNotificationObserver(icon_appearanceObserver, aicon->icon, WNIconAppearanceSettingsChanged, aicon->icon);
