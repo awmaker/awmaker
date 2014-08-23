@@ -270,7 +270,11 @@ static WAppIcon *wAppIcon_create(WWindow *leader_win)
 	if (leader_win->wm_instance)
 		aicon->wm_instance = wstrdup(leader_win->wm_instance);
 
-	aicon->icon = icon_for_wwindow_create(leader_win);
+	aicon->icon = icon_create_core();
+	aicon->icon->owner = leader_win;
+	aicon->icon->tile_type = TILE_NORMAL;
+	set_icon_image_from_database(aicon->icon, leader_win->wm_instance,
+				     leader_win->wm_class, NULL);
 	aicon->icon->show_title = 0;
 
 	/* will be overriden if docked */

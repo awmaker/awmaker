@@ -56,7 +56,6 @@ typedef struct WIcon {
 					 * color */
 } WIcon;
 
-WIcon *icon_for_wwindow_create(WWindow *wwin);
 void icon_for_wwindow_map(WIcon *icon);
 WIcon *icon_create_core(void);
 

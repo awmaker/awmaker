@@ -110,24 +110,6 @@ static int getSize(Drawable d, unsigned int *w, unsigned int *h, unsigned int *d
 	return XGetGeometry(dpy, d, &rjunk, &xjunk, &yjunk, w, h, &bjunk, dep);
 }
 
-WIcon *icon_for_wwindow_create(WWindow *wwin)
-{
-	WIcon *icon;
-
-	icon = icon_create_core();
-	icon->owner = wwin;
-	icon->tile_type = TILE_NORMAL;
-	set_icon_image_from_database(icon, wwin->wm_instance, wwin->wm_class, NULL);
-
-#ifdef NO_MINIWINDOW_TITLES
-	icon->show_title = 0;
-#else
-	icon->show_title = 1;
-#endif
-
-	return icon;
-}
-
 void icon_for_wwindow_map(WIcon *icon)
 {
 	WWindow *wwin = icon->owner;

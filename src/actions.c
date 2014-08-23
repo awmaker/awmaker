@@ -1123,7 +1123,16 @@ void wIconifyWindow(WWindow *wwin)
 		if (!wwin->flags.icon_moved)
 			PlaceIcon(wwin->screen_ptr, &wwin->icon_x, &wwin->icon_y, wGetHeadForWindow(wwin));
 
-		wwin->icon = icon_for_wwindow_create(wwin);
+		wwin->icon = icon_create_core();
+		wwin->icon->owner = wwin;
+		wwin->icon->tile_type = TILE_NORMAL;
+		set_icon_image_from_database(wwin->icon, wwin->wm_instance, wwin->wm_class, NULL);
+
+#ifdef NO_MINIWINDOW_TITLES
+		wwin->icon->show_title = 0;
+#else
+		wwin->icon->show_title = 1;
+#endif
 		icon_for_wwindow_map(wwin->icon);
 		wwin->icon->mapped = 1;
 
