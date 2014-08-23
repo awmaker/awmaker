@@ -296,7 +296,7 @@ static void wAppIcon_map(WAppIcon *aicon)
 	AddToStackList(aicon->icon->core);
 }
 
-WAppIcon *dock_icon_create_core(char *command, char *wm_class, char *wm_instance)
+WAppIcon *dock_icon_create(char *command, char *wm_class, char *wm_instance)
 {
 	WAppIcon *btn;
 
@@ -323,7 +323,7 @@ WAppIcon *create_appicon(char *command, char *wm_class, char *wm_instance)
 {
 	WAppIcon *aicon;
 
-	aicon = dock_icon_create_core(command, wm_class, wm_instance);
+	aicon = dock_icon_create(command, wm_class, wm_instance);
 	aicon->yindex = -1;
 	aicon->xindex = -1;
 

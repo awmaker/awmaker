@@ -1404,7 +1404,7 @@ WDock *dock_create(void)
 	/* create dock menu */
 	dock->menu = w_global.dock.dock_menu;
 
-	btn = dock_icon_create_core(NULL, "WMDock", "Logo");
+	btn = dock_icon_create(NULL, "WMDock", "Logo");
 
 	btn->xindex = 0;
 	btn->yindex = 0;
@@ -1488,7 +1488,7 @@ void clip_icon_create(void)
 {
 	WAppIcon *btn;
 
-	btn = dock_icon_create_core(NULL, "WMClip", "Logo");
+	btn = dock_icon_create(NULL, "WMClip", "Logo");
 
 	btn->icon->tile_type = TILE_CLIP;
 
@@ -1597,7 +1597,7 @@ WDock *drawer_create(const char *name)
 	if (!name)
 		name = findUniqueName("Drawer");
 
-	btn = dock_icon_create_core(NULL, "WMDrawer", (char *) name);
+	btn = dock_icon_create(NULL, "WMDrawer", (char *) name);
 
 	/* Create appicon's icon */
 	btn->xindex = 0;
