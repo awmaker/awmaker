@@ -66,7 +66,8 @@
 static void iconDblClick(WObjDescriptor * desc, XEvent * event);
 static void iconExpose(WObjDescriptor * desc, XEvent * event);
 static void wApplicationSaveIconPathFor(const char *iconPath, const char *wm_instance, const char *wm_class);
-static WAppIcon *wAppIconCreate(WWindow * leader_win);
+static WAppIcon *wAppIcon_create(WWindow *leader_win);
+static void wAppIcon_map(WAppIcon *aicon);
 static void remove_from_appicon_list(WAppIcon *appicon);
 static void create_appicon_from_dock(WApplication *wapp, Window main_window);
 
@@ -113,7 +114,8 @@ void create_appicon_for_application(WApplication *wapp)
 	/* If app_icon was not found, create it */
 	if (!wapp->app_icon) {
 		/* Create the icon */
-		wapp->app_icon = wAppIconCreate(wapp->main_window_desc);
+		wapp->app_icon = wAppIcon_create(wapp->main_window_desc);
+		wAppIcon_map(wapp->app_icon);
 		wIconUpdate(wapp->app_icon->icon);
 
 		/* Now, paint the icon */
@@ -251,7 +253,7 @@ void removeAppIconFor(WApplication *wapp)
 		wArrangeIcons(wapp->main_window_desc->screen_ptr, True);
 }
 
-static WAppIcon *wAppIconCreate(WWindow *leader_win)
+static WAppIcon *wAppIcon_create(WWindow *leader_win)
 {
 	WAppIcon *aicon;
 
@@ -269,20 +271,25 @@ static WAppIcon *wAppIconCreate(WWindow *leader_win)
 		aicon->wm_instance = wstrdup(leader_win->wm_instance);
 
 	aicon->icon = icon_for_wwindow_create(leader_win);
-	icon_for_wwindow_map(aicon->icon);
-#ifdef XDND
-	wXDNDMakeAwareness(aicon->icon->core->window);
-#endif
+	aicon->icon->show_title = 0;
 
 	/* will be overriden if docked */
 	aicon->icon->core->descriptor.handle_mousedown = appIconMouseDown;
 	aicon->icon->core->descriptor.handle_expose = iconExpose;
 	aicon->icon->core->descriptor.parent_type = WCLASS_APPICON;
 	aicon->icon->core->descriptor.parent = aicon;
-	AddToStackList(aicon->icon->core);
-	aicon->icon->show_title = 0;
 
 	return aicon;
+}
+
+static void wAppIcon_map(WAppIcon *aicon)
+{
+	icon_for_wwindow_map(aicon->icon);
+#ifdef XDND
+	wXDNDMakeAwareness(aicon->icon->core->window);
+#endif
+
+	AddToStackList(aicon->icon->core);
 }
 
 WAppIcon *dock_icon_create_core(void)
