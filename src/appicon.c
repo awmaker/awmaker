@@ -253,6 +253,29 @@ void removeAppIconFor(WApplication *wapp)
 		wArrangeIcons(wapp->main_window_desc->screen_ptr, True);
 }
 
+static WAppIcon *dock_icon_create_core(char *command, char *wm_class, char *wm_instance)
+{
+	WAppIcon *btn;
+
+	btn = wmalloc(sizeof(WAppIcon));
+	wretain(btn);
+
+	btn->icon = icon_create_core();
+
+	if (command)
+		btn->command = wstrdup(command);
+
+	if (wm_class)
+		btn->wm_class = wstrdup(wm_class);
+
+	if (wm_instance)
+		btn->wm_instance = wstrdup(wm_instance);
+
+	set_icon_image_from_database(btn->icon, btn->wm_instance, btn->wm_class, btn->command);
+
+	return btn;
+}
+
 static WAppIcon *wAppIcon_create(WWindow *leader_win)
 {
 	WAppIcon *aicon;
@@ -300,21 +323,8 @@ WAppIcon *dock_icon_create(char *command, char *wm_class, char *wm_instance)
 {
 	WAppIcon *btn;
 
-	btn = wmalloc(sizeof(WAppIcon));
-	wretain(btn);
+	btn = dock_icon_create_core(command, wm_class, wm_instance);
 	add_to_appicon_list(btn);
-	btn->icon = icon_create_core();
-
-	if (command)
-		btn->command = wstrdup(command);
-
-	if (wm_class)
-		btn->wm_class = wstrdup(wm_class);
-
-	if (wm_instance)
-		btn->wm_instance = wstrdup(wm_instance);
-
-	set_icon_image_from_database(btn->icon, btn->wm_instance, btn->wm_class, btn->command);
 
 	return btn;
 }
