@@ -69,7 +69,7 @@ static void wApplicationSaveIconPathFor(const char *iconPath, const char *wm_ins
 static WAppIcon *wAppIcon_create(WWindow *leader_win);
 static void wAppIcon_map(WAppIcon *aicon);
 static void remove_from_appicon_list(WAppIcon *appicon);
-static void create_appicon_from_dock(WApplication *wapp, Window main_window);
+static void create_appicon_from_dock(WApplication *wapp);
 
 /* This function is used if the application is a .app. It checks if it has an icon in it
  * like for example /usr/local/GNUstep/Applications/WPrefs.app/WPrefs.tiff
@@ -109,7 +109,7 @@ void wApplicationExtractDirPackIcon(const char *path, const char *wm_instance, c
 void create_appicon_for_application(WApplication *wapp)
 {
 	/* Try to create an icon from the dock or clip */
-	create_appicon_from_dock(wapp, wapp->main_window);
+	create_appicon_from_dock(wapp);
 
 	/* If app_icon was not found, create it */
 	if (!wapp->app_icon) {
@@ -1167,8 +1167,9 @@ static WAppIcon *findDockIconFor(WDock *dock, Window main_window)
 	return aicon;
 }
 
-static void create_appicon_from_dock(WApplication *wapp, Window main_window)
+static void create_appicon_from_dock(WApplication *wapp)
 {
+	Window main_window = wapp->main_window;
 	wapp->app_icon = NULL;
 
 	if (w_global.last_dock)
