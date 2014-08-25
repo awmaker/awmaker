@@ -655,7 +655,7 @@ static void selectCallback(WMenu *menu, WMenuEntry *entry)
 	wMenuPaint(menu);
 }
 
-static void colectIconsCallback(WMenu *menu, WMenuEntry *entry)
+static void attractIconsCallback(WMenu *menu, WMenuEntry *entry)
 {
 	WAppIcon *clickedIcon = (WAppIcon *) entry->clientdata;
 	WDock *clip; /* clip... is a WM_CLIP or a WM_DRAWER */
@@ -1215,7 +1215,7 @@ void clip_menu_create(void)
 	wfree(entry->text);
 	entry->text = _("Remove Icon"); /* can be: Remove Icons */
 
-	wMenuAddCallback(menu, _("Attract Icons"), colectIconsCallback, NULL);
+	wMenuAddCallback(menu, _("Attract Icons"), attractIconsCallback, NULL);
 	wMenuAddCallback(menu, _("Launch"), launchCallback, NULL);
 	wMenuAddCallback(menu, _("Unhide Here"), unhideHereCallback, NULL);
 
@@ -1286,7 +1286,7 @@ static void drawer_menu_create(void)
 	wfree(entry->text);
 	entry->text = _("Remove Icon"); /* can be: Remove Icons */
 
-	wMenuAddCallback(menu, _("Attract Icons"), colectIconsCallback, NULL);
+	wMenuAddCallback(menu, _("Attract Icons"), attractIconsCallback, NULL);
 	wMenuAddCallback(menu, _("Launch"), launchCallback, NULL);
 	wMenuAddCallback(menu, _("Unhide Here"), unhideHereCallback, NULL);
 
