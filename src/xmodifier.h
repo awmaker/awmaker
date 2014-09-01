@@ -22,5 +22,6 @@
 
 void wXModifierInitialize(void);
 int  wXModifierFromKey(const char *key);
+char *wXModifierToShortcutLabel(int mask);
 
 #endif /* _XMODIFIER_H_INCLUDED */
