@@ -702,8 +702,35 @@ static void handleExpose(XEvent * event)
 	}
 }
 
-static void executeButtonAction(WScreen * scr, XEvent * event, int action)
+static void executeWheelAction(WScreen *scr, XEvent *event, int action)
 {
+	WWindow *wwin;
+	Bool next_direction = True;
+
+	if (event->xbutton.button == Button5 || event->xbutton.button == Button6)
+		next_direction = False;
+
+	switch (action) {
+	case WA_SWITCH_WORKSPACES:
+		if (next_direction)
+			wWorkspaceRelativeChange(scr, 1);
+		else
+			wWorkspaceRelativeChange(scr, -1);
+		break;
+	case WA_SWITCH_WINDOWS:
+		wwin = scr->focused_window;
+		if (next_direction)
+			wWindowFocusNext(wwin, True);
+		else
+			wWindowFocusPrev(wwin, True);
+		break;
+	}
+}
+
+static void executeButtonAction(WScreen *scr, XEvent *event, int action)
+{
+	WWindow *wwin;
+
 	switch (action) {
 	case WA_SELECT_WINDOWS:
 		wUnselectWindows(scr);
@@ -719,7 +746,19 @@ static void executeButtonAction(WScreen * scr, XEvent * event, int action)
 		if (w_global.menu.switch_menu)
 			event->xbutton.window = w_global.menu.switch_menu->frame->core->window;
 		break;
-	default:
+	case WA_MOVE_PREVWORKSPACE:
+		wWorkspaceRelativeChange(scr, -1);
+		break;
+	case WA_MOVE_NEXTWORKSPACE:
+		wWorkspaceRelativeChange(scr, 1);
+		break;
+	case WA_MOVE_PREVWINDOW:
+		wwin = scr->focused_window;
+		wWindowFocusPrev(wwin, True);
+		break;
+	case WA_MOVE_NEXTWINDOW:
+		wwin = scr->focused_window;
+		wWindowFocusNext(wwin, True);
 		break;
 	}
 }
@@ -748,13 +787,13 @@ static void handleButtonPress(XEvent * event)
 		}else if (event->xbutton.button == Button9 && wPreferences.mouse_button9 != WA_NONE) {
 			executeButtonAction(scr, event, wPreferences.mouse_button9);
 		} else if (event->xbutton.button == Button4 && wPreferences.mouse_wheel_scroll != WA_NONE) {
-			wWorkspaceRelativeChange(scr, 1);
+			executeWheelAction(scr, event, wPreferences.mouse_wheel_scroll);
 		} else if (event->xbutton.button == Button5 && wPreferences.mouse_wheel_scroll != WA_NONE) {
-			wWorkspaceRelativeChange(scr, -1);
+			executeWheelAction(scr, event, wPreferences.mouse_wheel_scroll);
 		} else if (event->xbutton.button == Button6 && wPreferences.mouse_wheel_tilt != WA_NONE) {
-			wWorkspaceRelativeChange(scr, -1);
+			executeWheelAction(scr, event, wPreferences.mouse_wheel_tilt);
 		} else if (event->xbutton.button == Button7 && wPreferences.mouse_wheel_tilt != WA_NONE) {
-			wWorkspaceRelativeChange(scr, 1);
+			executeWheelAction(scr, event, wPreferences.mouse_wheel_tilt);
 		}
 	}
 
