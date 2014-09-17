@@ -240,12 +240,17 @@ static WOptionEnumeration seMouseButtonActions[] = {
 	{"SelectWindows", WA_SELECT_WINDOWS, 0},
 	{"OpenApplicationsMenu", WA_OPEN_APPMENU, 0},
 	{"OpenWindowListMenu", WA_OPEN_WINLISTMENU, 0},
+	{"MoveToPrevWorkspace", WA_MOVE_PREVWORKSPACE, 0},
+	{"MoveToNextWorkspace", WA_MOVE_NEXTWORKSPACE, 0},
+	{"MoveToPrevWindow", WA_MOVE_PREVWINDOW, 0},
+	{"MoveToNextWindow", WA_MOVE_NEXTWINDOW, 0},
 	{NULL, 0, 0}
 };
 
 static WOptionEnumeration seMouseWheelActions[] = {
 	{"None", WA_NONE, 0},
 	{"SwitchWorkspaces", WA_SWITCH_WORKSPACES, 0},
+	{"SwitchWindows", WA_SWITCH_WINDOWS, 0},
 	{NULL, 0, 0}
 };
 
@@ -324,8 +329,6 @@ WDefaultEntry staticOptionList[] = {
 	    &wPreferences.icon_size, getInt, NULL, NULL, NULL},
 	{"ModifierKey", "Mod1", NULL,
 	    &wPreferences.modifier_mask, getModMask, NULL, NULL, NULL},
-	{"DisableWSMouseActions", "NO", NULL,
-	    &wPreferences.disable_root_mouse, getBool, NULL, NULL, NULL},
 	{"FocusMode", "manual", seFocusModes,				/* have a problem when switching from */
 	    &wPreferences.focus_mode, getEnum, NULL, NULL, NULL},	/* manual to sloppy without restart */
 	{"NewStyle", "new", seTitlebarModes,
@@ -353,14 +356,22 @@ WDefaultEntry optionList[] = {
 	    &wPreferences.icon_yard, getEnum, setIconPosition, NULL, NULL},
 	{"IconificationStyle", "Zoom", seIconificationStyles,
 	    &wPreferences.iconification_style, getEnum, NULL, NULL, NULL},
+	{"DisableWSMouseActions", "NO", NULL,
+	    &wPreferences.disable_root_mouse, getBool, NULL, NULL, NULL},
 	{"MouseLeftButtonAction", "SelectWindows", seMouseButtonActions,
 	    &wPreferences.mouse_button1, getEnum, NULL, NULL, NULL},
 	{"MouseMiddleButtonAction", "OpenWindowListMenu", seMouseButtonActions,
 	    &wPreferences.mouse_button2, getEnum, NULL, NULL, NULL},
 	{"MouseRightButtonAction", "OpenApplicationsMenu", seMouseButtonActions,
 	    &wPreferences.mouse_button3, getEnum, NULL, NULL, NULL},
+	{"MouseBackwardButtonAction", "None", seMouseButtonActions,
+	    &wPreferences.mouse_button8, getEnum, NULL, NULL, NULL},
+	{"MouseForwardButtonAction", "None", seMouseButtonActions,
+	    &wPreferences.mouse_button9, getEnum, NULL, NULL, NULL},
 	{"MouseWheelAction", "None", seMouseWheelActions,
-	    &wPreferences.mouse_wheel, getEnum, NULL, NULL, NULL},
+	    &wPreferences.mouse_wheel_scroll, getEnum, NULL, NULL, NULL},
+	{"MouseWheelTiltAction", "None", seMouseWheelActions,
+	    &wPreferences.mouse_wheel_tilt, getEnum, NULL, NULL, NULL},
 	{"PixmapPath", DEF_PIXMAP_PATHS, NULL,
 	    &wPreferences.pixmap_path, getPathList, NULL, NULL, NULL},
 	{"IconPath", DEF_ICON_PATHS, NULL,

@@ -2,6 +2,7 @@
  *  Window Maker window manager
  *
  *  Copyright (c) 1997-2003 Alfredo K. Kojima
+ *  Copyright (c) 2014 Window Maker Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -205,6 +206,11 @@ typedef enum {
 #define WA_OPEN_APPMENU         2
 #define WA_OPEN_WINLISTMENU     3
 #define WA_SWITCH_WORKSPACES    4
+#define WA_MOVE_PREVWORKSPACE   5
+#define WA_MOVE_NEXTWORKSPACE   6
+#define WA_SWITCH_WINDOWS       7
+#define WA_MOVE_PREVWINDOW      8
+#define WA_MOVE_NEXTWINDOW      9
 
 /* workspace display position */
 #define WD_NONE		0
@@ -397,7 +403,10 @@ extern struct WPreferences {
     signed char mouse_button1;	       /* action for left mouse button */
     signed char mouse_button2;	       /* action for middle mouse button */
     signed char mouse_button3;	       /* action for right mouse button */
-    signed char mouse_wheel;	       /* action for mouse wheel */
+    signed char mouse_button8;	       /* action for 4th button aka backward mouse button */
+    signed char mouse_button9;	       /* action for 5th button aka forward mouse button */
+    signed char mouse_wheel_scroll;  /* action for mouse wheel scroll */
+    signed char mouse_wheel_tilt;      /* action for mouse wheel tilt */
 
     /* balloon text */
     char window_balloon;
