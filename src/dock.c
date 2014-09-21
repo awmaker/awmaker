@@ -3639,43 +3639,45 @@ void wDockTrackWindowLaunch(WDock *dock, Window window)
 			break;
 		}
 
-		if ((icon->wm_instance || icon->wm_class)
-		    && (icon->launching || !icon->running)) {
+		if (!icon->wm_instance && !icon->wm_class)
+			continue;
 
-			if (icon->wm_instance && wm_instance && strcmp(icon->wm_instance, wm_instance) != 0)
-				continue;
+		if (!icon->launching && icon->running)
+			continue;
 
-			if (icon->wm_class && wm_class && strcmp(icon->wm_class, wm_class) != 0)
-				continue;
+		if (icon->wm_instance && wm_instance && strcmp(icon->wm_instance, wm_instance) != 0)
+			continue;
 
-			if (firstPass && command && strcmp(icon->command, command) != 0)
-				continue;
+		if (icon->wm_class && wm_class && strcmp(icon->wm_class, wm_class) != 0)
+			continue;
 
-			if (!icon->relaunching) {
-				WApplication *wapp;
+		if (firstPass && command && strcmp(icon->command, command) != 0)
+			continue;
 
-				/* Possibly an application that was docked with dockit,
-				 * but the user did not update WMState to indicate that
-				 * it was docked by force */
-				wapp = wApplicationOf(window);
-				if (!wapp) {
-					icon->forced_dock = 1;
-					icon->running = 0;
-				}
-				if (!icon->forced_dock)
-					icon->main_window = window;
+		if (!icon->relaunching) {
+			WApplication *wapp;
+
+			/* Possibly an application that was docked with dockit,
+			 * but the user did not update WMState to indicate that
+			 * it was docked by force */
+			wapp = wApplicationOf(window);
+			if (!wapp) {
+				icon->forced_dock = 1;
+				icon->running = 0;
 			}
-			found = True;
-			if (!wPreferences.no_animations && !icon->launching &&
-			    !w_global.startup.phase1 && !dock->collapsed) {
-				icon->launching = 1;
-				dockIconPaint(icon);
-				move_to_dock(dock, icon, wm_class, wm_instance);
-			}
-
-			wDockFinishLaunch(icon);
-			break;
+			if (!icon->forced_dock)
+				icon->main_window = window;
 		}
+		found = True;
+		if (!wPreferences.no_animations && !icon->launching &&
+		    !w_global.startup.phase1 && !dock->collapsed) {
+			icon->launching = 1;
+			dockIconPaint(icon);
+			move_to_dock(dock, icon, wm_class, wm_instance);
+		}
+
+		wDockFinishLaunch(icon);
+		break;
 	}
 
 	if (firstPass && !found) {
