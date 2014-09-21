@@ -296,7 +296,7 @@ static void wAppIcon_map(WAppIcon *aicon)
 	AddToStackList(aicon->icon->core);
 }
 
-WAppIcon *dock_icon_create_core(void)
+WAppIcon *dock_icon_create_core(char *command, char *wm_class, char *wm_instance)
 {
 	WAppIcon *btn;
 
@@ -305,6 +305,17 @@ WAppIcon *dock_icon_create_core(void)
 	add_to_appicon_list(btn);
 	btn->icon = icon_create_core();
 
+	if (command)
+		btn->command = wstrdup(command);
+
+	if (wm_class)
+		btn->wm_class = wstrdup(wm_class);
+
+	if (wm_instance)
+		btn->wm_instance = wstrdup(wm_instance);
+
+	set_icon_image_from_database(btn->icon, btn->wm_instance, btn->wm_class, btn->command);
+
 	return btn;
 }
 
@@ -312,25 +323,14 @@ WAppIcon *create_appicon(char *command, char *wm_class, char *wm_instance)
 {
 	WAppIcon *aicon;
 
-	aicon = dock_icon_create_core();
+	aicon = dock_icon_create_core(command, wm_class, wm_instance);
 	aicon->yindex = -1;
 	aicon->xindex = -1;
-
-	if (command)
-		aicon->command = wstrdup(command);
-
-	if (wm_class)
-		aicon->wm_class = wstrdup(wm_class);
-
-	if (wm_instance)
-		aicon->wm_instance = wstrdup(wm_instance);
 
 	if (strcmp(wm_class, "WMDock") == 0 && wPreferences.flags.clip_merged_in_dock)
 		aicon->icon->tile_type = TILE_CLIP;
 	else
 		aicon->icon->tile_type = TILE_NORMAL;
-
-	set_icon_image_from_database(aicon->icon, aicon->wm_instance, aicon->wm_class, aicon->command);
 
 	return aicon;
 }

@@ -1404,10 +1404,8 @@ WDock *dock_create(void)
 	/* create dock menu */
 	dock->menu = w_global.dock.dock_menu;
 
-	btn = dock_icon_create_core();
+	btn = dock_icon_create_core(NULL, "WMDock", "Logo");
 
-	btn->wm_class = wstrdup("WMDock");
-	btn->wm_instance = wstrdup("Logo");
 	btn->xindex = 0;
 	btn->yindex = 0;
 	btn->docked = 1;
@@ -1424,8 +1422,6 @@ WDock *dock_create(void)
 	} else {
 		btn->icon->tile_type = TILE_NORMAL;
 	}
-
-	set_icon_image_from_database(btn->icon, btn->wm_instance, btn->wm_class, NULL);
 
 	return dock;
 }
@@ -1492,10 +1488,7 @@ void clip_icon_create(void)
 {
 	WAppIcon *btn;
 
-	btn = dock_icon_create_core();
-
-	btn->wm_class = wstrdup("WMClip");
-	btn->wm_instance = wstrdup("Logo");
+	btn = dock_icon_create_core(NULL, "WMClip", "Logo");
 
 	btn->icon->tile_type = TILE_CLIP;
 
@@ -1505,7 +1498,6 @@ void clip_icon_create(void)
 	btn->y_pos = 0;
 	btn->docked = 1;
 
-	set_icon_image_from_database(btn->icon, btn->wm_instance, btn->wm_class, NULL);
 	w_global.clip.icon = btn;
 }
 
@@ -1602,7 +1594,10 @@ WDock *drawer_create(const char *name)
 	dock->type = WM_DRAWER;
 	dock->auto_collapse = 1;
 
-	btn = dock_icon_create_core();
+	if (!name)
+		name = findUniqueName("Drawer");
+
+	btn = dock_icon_create_core(NULL, "WMDrawer", (char *) name);
 
 	/* Create appicon's icon */
 	btn->xindex = 0;
@@ -1612,19 +1607,9 @@ WDock *drawer_create(const char *name)
 	dock->on_right_side = w_global.dock.dock->on_right_side;
 	dock->icon_array[0] = btn;
 
-	btn->wm_class = wstrdup("WMDrawer");
-
-	if (!name)
-		name = findUniqueName("Drawer");
-
-	if (name)
-		btn->wm_instance = wstrdup(name);
-
 	btn->icon->core->descriptor.parent_type = WCLASS_DOCK_ICON;
 	btn->icon->core->descriptor.parent = btn;
 	btn->icon->tile_type = TILE_DRAWER;
-
-	set_icon_image_from_database(btn->icon, btn->wm_instance, btn->wm_class, NULL);
 
 	return dock;
 }
