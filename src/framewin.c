@@ -468,9 +468,6 @@ static void titlebar_unmap(WFrameWindow *fwin)
 
 static void titlebar_destroy(WFrameWindow *fwin)
 {
-	/* we had a titlebar, but now we don't need it anymore */
-	destroy_framewin_buttons(fwin);
-
 	wframewindow_destroy_wcorewindow(fwin->left_button);
 #ifdef XKB_BUTTON_HINT
 	wframewindow_destroy_wcorewindow(fwin->language_button);

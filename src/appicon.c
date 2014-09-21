@@ -66,9 +66,10 @@
 static void iconDblClick(WObjDescriptor * desc, XEvent * event);
 static void iconExpose(WObjDescriptor * desc, XEvent * event);
 static void wApplicationSaveIconPathFor(const char *iconPath, const char *wm_instance, const char *wm_class);
-static WAppIcon *wAppIconCreate(WWindow * leader_win);
+static WAppIcon *wAppIcon_create(WWindow *leader_win);
+static void wAppIcon_map(WAppIcon *aicon);
 static void remove_from_appicon_list(WAppIcon *appicon);
-static void create_appicon_from_dock(WApplication *wapp, Window main_window);
+static void create_appicon_from_dock(WApplication *wapp);
 
 /* This function is used if the application is a .app. It checks if it has an icon in it
  * like for example /usr/local/GNUstep/Applications/WPrefs.app/WPrefs.tiff
@@ -108,12 +109,13 @@ void wApplicationExtractDirPackIcon(const char *path, const char *wm_instance, c
 void create_appicon_for_application(WApplication *wapp)
 {
 	/* Try to create an icon from the dock or clip */
-	create_appicon_from_dock(wapp, wapp->main_window);
+	create_appicon_from_dock(wapp);
 
 	/* If app_icon was not found, create it */
 	if (!wapp->app_icon) {
 		/* Create the icon */
-		wapp->app_icon = wAppIconCreate(wapp->main_window_desc);
+		wapp->app_icon = wAppIcon_create(wapp->main_window_desc);
+		wAppIcon_map(wapp->app_icon);
 		wIconUpdate(wapp->app_icon->icon);
 
 		/* Now, paint the icon */
@@ -217,6 +219,7 @@ void removeAppIconFor(WApplication *wapp)
 
 	if (wPreferences.highlight_active_app)
 		wIconSetHighlited(wapp->app_icon->icon, False);
+
 	if (wapp->app_icon->docked && !wapp->app_icon->attracted) {
 		wapp->app_icon->running = 0;
 		/* since we keep it, we don't care if it was attracted or not */
@@ -230,17 +233,15 @@ void removeAppIconFor(WApplication *wapp)
 		/* Set the icon image */
 		set_icon_image_from_database(wapp->app_icon->icon, wapp->app_icon->wm_instance,
 					     wapp->app_icon->wm_class, wapp->app_icon->command);
-
-		/* Update the icon, because wapp->app_icon->icon could be NULL */
-		wIconUpdate(wapp->app_icon->icon);
+		map_icon_image(wapp->app_icon->icon);
 
 		/* Paint it */
 		wAppIconPaint(wapp->app_icon);
 	} else if (wapp->app_icon->docked) {
 		wapp->app_icon->running = 0;
-		if (wapp->app_icon->dock->type == WM_DRAWER) {
+		if (wapp->app_icon->dock->type == WM_DRAWER)
 			wDrawerFillTheGap(wapp->app_icon->dock, wapp->app_icon, True);
-		}
+
 		wDockDetach(wapp->app_icon->dock, wapp->app_icon);
 	} else {
 		wAppIconDestroy(wapp->app_icon);
@@ -252,47 +253,68 @@ void removeAppIconFor(WApplication *wapp)
 		wArrangeIcons(wapp->main_window_desc->screen_ptr, True);
 }
 
-static WAppIcon *wAppIconCreate(WWindow *leader_win)
+static WAppIcon *dock_icon_create_core(char *command, char *wm_class, char *wm_instance)
+{
+	WAppIcon *btn;
+
+	btn = wmalloc(sizeof(WAppIcon));
+	wretain(btn);
+
+	btn->icon = icon_create_core();
+
+	if (command)
+		btn->command = wstrdup(command);
+
+	if (wm_class)
+		btn->wm_class = wstrdup(wm_class);
+
+	if (wm_instance)
+		btn->wm_instance = wstrdup(wm_instance);
+
+	set_icon_image_from_database(btn->icon, btn->wm_instance, btn->wm_class, btn->command);
+
+	return btn;
+}
+
+static WAppIcon *wAppIcon_create(WWindow *leader_win)
 {
 	WAppIcon *aicon;
 
-	aicon = wmalloc(sizeof(WAppIcon));
-	wretain(aicon);
+	aicon = dock_icon_create_core(NULL, leader_win->wm_class, leader_win->wm_instance);
 	aicon->yindex = -1;
 	aicon->xindex = -1;
 	aicon->prev = NULL;
 	aicon->next = NULL;
 
-	if (leader_win->wm_class)
-		aicon->wm_class = wstrdup(leader_win->wm_class);
-
-	if (leader_win->wm_instance)
-		aicon->wm_instance = wstrdup(leader_win->wm_instance);
-
-	aicon->icon = icon_create_for_wwindow(leader_win);
-#ifdef XDND
-	wXDNDMakeAwareness(aicon->icon->core->window);
-#endif
+	aicon->icon->owner = leader_win;
+	aicon->icon->tile_type = TILE_NORMAL;
+	aicon->icon->show_title = 0;
 
 	/* will be overriden if docked */
 	aicon->icon->core->descriptor.handle_mousedown = appIconMouseDown;
 	aicon->icon->core->descriptor.handle_expose = iconExpose;
 	aicon->icon->core->descriptor.parent_type = WCLASS_APPICON;
 	aicon->icon->core->descriptor.parent = aicon;
-	AddToStackList(aicon->icon->core);
-	aicon->icon->show_title = 0;
 
 	return aicon;
 }
 
-WAppIcon *dock_icon_create_core(void)
+static void wAppIcon_map(WAppIcon *aicon)
+{
+	icon_for_wwindow_map(aicon->icon);
+#ifdef XDND
+	wXDNDMakeAwareness(aicon->icon->core->window);
+#endif
+
+	AddToStackList(aicon->icon->core);
+}
+
+WAppIcon *dock_icon_create(char *command, char *wm_class, char *wm_instance)
 {
 	WAppIcon *btn;
 
-	btn = wmalloc(sizeof(WAppIcon));
-	wretain(btn);
+	btn = dock_icon_create_core(command, wm_class, wm_instance);
 	add_to_appicon_list(btn);
-	btn->icon = icon_create_core();
 
 	return btn;
 }
@@ -301,18 +323,9 @@ WAppIcon *create_appicon(char *command, char *wm_class, char *wm_instance)
 {
 	WAppIcon *aicon;
 
-	aicon = dock_icon_create_core();
+	aicon = dock_icon_create(command, wm_class, wm_instance);
 	aicon->yindex = -1;
 	aicon->xindex = -1;
-
-	if (command)
-		aicon->command = wstrdup(command);
-
-	if (wm_class)
-		aicon->wm_class = wstrdup(wm_class);
-
-	if (wm_instance)
-		aicon->wm_instance = wstrdup(wm_instance);
 
 	if (strcmp(wm_class, "WMDock") == 0 && wPreferences.flags.clip_merged_in_dock)
 		aicon->icon->tile_type = TILE_CLIP;
@@ -615,9 +628,7 @@ void appicon_map(WAppIcon *aicon, WScreen *scr)
 	wcore_map_toplevel(aicon->icon->core, scr, 0, 0, 0, scr->w_depth,
 			   scr->w_visual, scr->w_colormap, scr->white_pixel);
 
-	set_icon_image_from_database(aicon->icon, aicon->wm_instance, aicon->wm_class, aicon->command);
-	/* Update the icon, because icon could be NULL */
-	wIconUpdate(aicon->icon);
+	map_icon_image(aicon->icon);
 
 	WMAddNotificationObserver(icon_appearanceObserver, aicon->icon, WNIconAppearanceSettingsChanged, aicon->icon);
 	WMAddNotificationObserver(icon_tileObserver, aicon->icon, WNIconTileSettingsChanged, aicon->icon);
@@ -1160,8 +1171,9 @@ static WAppIcon *findDockIconFor(WDock *dock, Window main_window)
 	return aicon;
 }
 
-static void create_appicon_from_dock(WApplication *wapp, Window main_window)
+static void create_appicon_from_dock(WApplication *wapp)
 {
+	Window main_window = wapp->main_window;
 	wapp->app_icon = NULL;
 
 	if (w_global.last_dock)

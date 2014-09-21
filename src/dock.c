@@ -1404,10 +1404,8 @@ WDock *dock_create(void)
 	/* create dock menu */
 	dock->menu = w_global.dock.dock_menu;
 
-	btn = dock_icon_create_core();
+	btn = dock_icon_create(NULL, "WMDock", "Logo");
 
-	btn->wm_class = wstrdup("WMDock");
-	btn->wm_instance = wstrdup("Logo");
 	btn->xindex = 0;
 	btn->yindex = 0;
 	btn->docked = 1;
@@ -1441,9 +1439,7 @@ void dock_map(WDock *dock, WScreen *scr, WMPropList *state)
 	else
 		btn->icon->core->descriptor.handle_expose = dockIconExpose;
 
-	set_icon_image_from_database(btn->icon, btn->wm_instance, btn->wm_class, NULL);
-	/* Update the icon, because icon could be NULL */
-	wIconUpdate(btn->icon);
+	map_icon_image(btn->icon);
 
 	WMAddNotificationObserver(icon_appearanceObserver, btn->icon, WNIconAppearanceSettingsChanged, btn->icon);
 	WMAddNotificationObserver(icon_tileObserver, btn->icon, WNIconTileSettingsChanged, btn->icon);
@@ -1492,10 +1488,7 @@ void clip_icon_create(void)
 {
 	WAppIcon *btn;
 
-	btn = dock_icon_create_core();
-
-	btn->wm_class = wstrdup("WMClip");
-	btn->wm_instance = wstrdup("Logo");
+	btn = dock_icon_create(NULL, "WMClip", "Logo");
 
 	btn->icon->tile_type = TILE_CLIP;
 
@@ -1504,8 +1497,8 @@ void clip_icon_create(void)
 	btn->x_pos = 0;
 	btn->y_pos = 0;
 	btn->docked = 1;
-	w_global.clip.icon = btn;
 
+	w_global.clip.icon = btn;
 }
 
 void clip_icon_map(WScreen *scr)
@@ -1513,11 +1506,7 @@ void clip_icon_map(WScreen *scr)
 	wcore_map_toplevel(w_global.clip.icon->icon->core, scr, 0, 0, 0, scr->w_depth,
 			   scr->w_visual, scr->w_colormap, scr->white_pixel);
 
-	set_icon_image_from_database(w_global.clip.icon->icon,
-				     w_global.clip.icon->wm_instance,
-				     w_global.clip.icon->wm_class, NULL);
-	/* Update the icon, because icon could be NULL */
-	wIconUpdate(w_global.clip.icon->icon);
+	map_icon_image(w_global.clip.icon->icon);
 
 	WMAddNotificationObserver(icon_appearanceObserver, w_global.clip.icon->icon,
 				  WNIconAppearanceSettingsChanged, w_global.clip.icon->icon);
@@ -1605,7 +1594,10 @@ WDock *drawer_create(const char *name)
 	dock->type = WM_DRAWER;
 	dock->auto_collapse = 1;
 
-	btn = dock_icon_create_core();
+	if (!name)
+		name = findUniqueName("Drawer");
+
+	btn = dock_icon_create(NULL, "WMDrawer", (char *) name);
 
 	/* Create appicon's icon */
 	btn->xindex = 0;
@@ -1614,14 +1606,6 @@ WDock *drawer_create(const char *name)
 	btn->dock = dock;
 	dock->on_right_side = w_global.dock.dock->on_right_side;
 	dock->icon_array[0] = btn;
-
-	btn->wm_class = wstrdup("WMDrawer");
-
-	if (!name)
-		name = findUniqueName("Drawer");
-
-	if (name)
-		btn->wm_instance = wstrdup(name);
 
 	btn->icon->core->descriptor.parent_type = WCLASS_DOCK_ICON;
 	btn->icon->core->descriptor.parent = btn;
@@ -1637,9 +1621,7 @@ void drawer_map(WDock *dock, WScreen *scr)
 	wcore_map_toplevel(btn->icon->core, scr, 0, 0, 0, scr->w_depth,
 			   scr->w_visual, scr->w_colormap, scr->white_pixel);
 
-	set_icon_image_from_database(btn->icon, btn->wm_instance, btn->wm_class, NULL);
-	/* Update the icon, because icon could be NULL */
-	wIconUpdate(btn->icon);
+	map_icon_image(btn->icon);
 
 	WMAddNotificationObserver(icon_appearanceObserver, btn->icon, WNIconAppearanceSettingsChanged, btn->icon);
 	WMAddNotificationObserver(icon_tileObserver, btn->icon, WNIconTileSettingsChanged, btn->icon);
@@ -3584,6 +3566,36 @@ WAppIcon *wDockFindIconForWindow(WDock *dock, Window window)
 	return NULL;
 }
 
+void move_to_dock(WDock *dock, WAppIcon *icon, char *wm_class, char *wm_instance)
+{
+	WAppIcon *aicon;
+	int x0, y0;
+
+	/* Create appicon's icon */
+	aicon = create_appicon(NULL, wm_class, wm_instance);
+	appicon_map(aicon, dock->screen_ptr);
+
+	/* will be overriden by dock */
+	aicon->icon->core->descriptor.handle_mousedown = appIconMouseDown;
+	aicon->icon->core->descriptor.handle_expose = dockIconExpose;
+	aicon->icon->core->descriptor.parent_type = WCLASS_APPICON;
+	aicon->icon->core->descriptor.parent = aicon;
+
+	PlaceIcon(dock->screen_ptr, &x0, &y0, wGetHeadForWindow(aicon->icon->owner));
+	wAppIconMove(aicon, x0, y0);
+
+	/* Should this always be lowered? -Dan */
+	if (dock->lowered)
+		wLowerFrame(aicon->icon->core);
+
+	XMapWindow(dpy, aicon->icon->core->window);
+	aicon->launching = 1;
+	wAppIconPaint(aicon);
+	SlideWindow(aicon->icon->core->window, x0, y0, icon->x_pos, icon->y_pos);
+	XUnmapWindow(dpy, aicon->icon->core->window);
+	wAppIconDestroy(aicon);
+}
+
 void wDockTrackWindowLaunch(WDock *dock, Window window)
 {
 	WAppIcon *icon;
@@ -3612,66 +3624,45 @@ void wDockTrackWindowLaunch(WDock *dock, Window window)
 			break;
 		}
 
-		if ((icon->wm_instance || icon->wm_class)
-		    && (icon->launching || !icon->running)) {
+		if (!icon->wm_instance && !icon->wm_class)
+			continue;
 
-			if (icon->wm_instance && wm_instance && strcmp(icon->wm_instance, wm_instance) != 0)
-				continue;
+		if (!icon->launching && icon->running)
+			continue;
 
-			if (icon->wm_class && wm_class && strcmp(icon->wm_class, wm_class) != 0)
-				continue;
+		if (icon->wm_instance && wm_instance && strcmp(icon->wm_instance, wm_instance) != 0)
+			continue;
 
-			if (firstPass && command && strcmp(icon->command, command) != 0)
-				continue;
+		if (icon->wm_class && wm_class && strcmp(icon->wm_class, wm_class) != 0)
+			continue;
 
-			if (!icon->relaunching) {
-				WApplication *wapp;
+		if (firstPass && command && strcmp(icon->command, command) != 0)
+			continue;
 
-				/* Possibly an application that was docked with dockit,
-				 * but the user did not update WMState to indicate that
-				 * it was docked by force */
-				wapp = wApplicationOf(window);
-				if (!wapp) {
-					icon->forced_dock = 1;
-					icon->running = 0;
-				}
-				if (!icon->forced_dock)
-					icon->main_window = window;
+		if (!icon->relaunching) {
+			WApplication *wapp;
+
+			/* Possibly an application that was docked with dockit,
+			 * but the user did not update WMState to indicate that
+			 * it was docked by force */
+			wapp = wApplicationOf(window);
+			if (!wapp) {
+				icon->forced_dock = 1;
+				icon->running = 0;
 			}
-			found = True;
-			if (!wPreferences.no_animations && !icon->launching &&
-			    !w_global.startup.phase1 && !dock->collapsed) {
-				WAppIcon *aicon;
-				int x0, y0;
-
-				icon->launching = 1;
-				dockIconPaint(icon);
-
-				/* Create appicon's icon */
-				aicon = create_appicon(NULL, wm_class, wm_instance);
-				appicon_map(aicon, dock->screen_ptr);
-
-				/* will be overriden by dock */
-				aicon->icon->core->descriptor.handle_mousedown = appIconMouseDown;
-				aicon->icon->core->descriptor.handle_expose = dockIconExpose;
-				aicon->icon->core->descriptor.parent_type = WCLASS_APPICON;
-				aicon->icon->core->descriptor.parent = aicon;
-
-				PlaceIcon(dock->screen_ptr, &x0, &y0, wGetHeadForWindow(aicon->icon->owner));
-				wAppIconMove(aicon, x0, y0);
-				/* Should this always be lowered? -Dan */
-				if (dock->lowered)
-					wLowerFrame(aicon->icon->core);
-				XMapWindow(dpy, aicon->icon->core->window);
-				aicon->launching = 1;
-				wAppIconPaint(aicon);
-				SlideWindow(aicon->icon->core->window, x0, y0, icon->x_pos, icon->y_pos);
-				XUnmapWindow(dpy, aicon->icon->core->window);
-				wAppIconDestroy(aicon);
-			}
-			wDockFinishLaunch(icon);
-			break;
+			if (!icon->forced_dock)
+				icon->main_window = window;
 		}
+		found = True;
+		if (!wPreferences.no_animations && !icon->launching &&
+		    !w_global.startup.phase1 && !dock->collapsed) {
+			icon->launching = 1;
+			dockIconPaint(icon);
+			move_to_dock(dock, icon, wm_class, wm_instance);
+		}
+
+		wDockFinishLaunch(icon);
+		break;
 	}
 
 	if (firstPass && !found) {

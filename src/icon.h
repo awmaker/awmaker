@@ -38,7 +38,7 @@ typedef struct WIcon {
 
 	Window 		icon_win;	/* client suplied icon window */
 
-	char		*file;		/* the file with the icon image */
+	char		*file_name;	/* the file with the icon image */
 	RImage 		*file_image;	/* the image from the file */
 
 	unsigned int 	tile_type:4;
@@ -56,7 +56,7 @@ typedef struct WIcon {
 					 * color */
 } WIcon;
 
-WIcon *icon_create_for_wwindow(WWindow *wwin);
+void icon_for_wwindow_map(WIcon *icon);
 WIcon *icon_create_core(void);
 
 void set_icon_image_from_database(WIcon *icon, const char *wm_instance, const char *wm_class, const char *command);
@@ -78,6 +78,7 @@ char *get_name_for_instance_class(const char *wm_instance, const char *wm_class)
 void wIconSetHighlited(WIcon *icon, Bool flag);
 void set_icon_image_from_image(WIcon *icon, RImage *image);
 void set_icon_apercu(WIcon *icon, RImage *image);
+void map_icon_image(WIcon *icon);
 
 void icon_appearanceObserver(void *self, WMNotification *notif);
 void icon_tileObserver(void *self, WMNotification *notif);
