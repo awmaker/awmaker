@@ -4532,6 +4532,14 @@ static void iconMouseDown(WObjDescriptor *desc, XEvent *event)
 			open_menu_drawer(dock, aicon, event);
 			drawer_menu_unmap(dock->menu);
 		}
+		break;
+	case Button4:
+		if (dock->type == WM_CLIP)
+			wWorkspaceRelativeChange(scr, 1);
+		break;
+	case Button5:
+		if (dock->type == WM_CLIP)
+			wWorkspaceRelativeChange(scr, -1);
 	}
 }
 
