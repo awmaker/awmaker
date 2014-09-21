@@ -361,6 +361,7 @@ extern struct WPreferences {
     char no_dithering;		       /* use dithering or not */
     char no_animations;		       /* enable/disable animations */
     char no_autowrap;		       /* wrap workspace when window is moved to the edge */
+    char window_snapping;              /* enable window snapping */
 
     char highlight_active_app;         /* show the focused app by highlighting its icon */
     char auto_arrange_icons;	       /* automagically arrange icons */
