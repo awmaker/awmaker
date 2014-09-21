@@ -141,8 +141,7 @@ WIcon *icon_create_for_wwindow(WWindow *wwin)
 	icon->tile_type = TILE_NORMAL;
 
 	set_icon_image_from_database(icon, wwin->wm_instance, wwin->wm_class, NULL);
-	/* Update the icon, because icon could be NULL */
-	wIconUpdate(icon);
+	map_icon_image(icon);
 
 	WMAddNotificationObserver(icon_appearanceObserver, icon, WNIconAppearanceSettingsChanged, icon);
 	WMAddNotificationObserver(icon_tileObserver, icon, WNIconTileSettingsChanged, icon);
@@ -919,7 +918,14 @@ void set_icon_image_from_database(WIcon *icon, const char *wm_instance, const ch
 	file = get_icon_filename(wm_instance, wm_class, command, False);
 	if (file) {
 		icon->file_name = wstrdup(file);
-		icon->file_image = get_rimage_from_file(icon->core->screen_ptr, icon->file_name, wPreferences.icon_size);
 		wfree(file);
 	}
+}
+
+void map_icon_image(WIcon *icon)
+{
+	icon->file_image = get_rimage_from_file(icon->core->screen_ptr, icon->file_name, wPreferences.icon_size);
+
+	/* Update the icon, because icon could be NULL */
+	wIconUpdate(icon);
 }

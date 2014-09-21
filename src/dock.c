@@ -1442,8 +1442,7 @@ void dock_map(WDock *dock, WScreen *scr, WMPropList *state)
 		btn->icon->core->descriptor.handle_expose = dockIconExpose;
 
 	set_icon_image_from_database(btn->icon, btn->wm_instance, btn->wm_class, NULL);
-	/* Update the icon, because icon could be NULL */
-	wIconUpdate(btn->icon);
+	map_icon_image(btn->icon);
 
 	WMAddNotificationObserver(icon_appearanceObserver, btn->icon, WNIconAppearanceSettingsChanged, btn->icon);
 	WMAddNotificationObserver(icon_tileObserver, btn->icon, WNIconTileSettingsChanged, btn->icon);
@@ -1516,8 +1515,7 @@ void clip_icon_map(WScreen *scr)
 	set_icon_image_from_database(w_global.clip.icon->icon,
 				     w_global.clip.icon->wm_instance,
 				     w_global.clip.icon->wm_class, NULL);
-	/* Update the icon, because icon could be NULL */
-	wIconUpdate(w_global.clip.icon->icon);
+	map_icon_image(w_global.clip.icon->icon);
 
 	WMAddNotificationObserver(icon_appearanceObserver, w_global.clip.icon->icon,
 				  WNIconAppearanceSettingsChanged, w_global.clip.icon->icon);
@@ -1638,8 +1636,7 @@ void drawer_map(WDock *dock, WScreen *scr)
 			   scr->w_visual, scr->w_colormap, scr->white_pixel);
 
 	set_icon_image_from_database(btn->icon, btn->wm_instance, btn->wm_class, NULL);
-	/* Update the icon, because icon could be NULL */
-	wIconUpdate(btn->icon);
+	map_icon_image(btn->icon);
 
 	WMAddNotificationObserver(icon_appearanceObserver, btn->icon, WNIconAppearanceSettingsChanged, btn->icon);
 	WMAddNotificationObserver(icon_tileObserver, btn->icon, WNIconTileSettingsChanged, btn->icon);

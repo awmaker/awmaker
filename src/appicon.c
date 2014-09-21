@@ -230,9 +230,7 @@ void removeAppIconFor(WApplication *wapp)
 		/* Set the icon image */
 		set_icon_image_from_database(wapp->app_icon->icon, wapp->app_icon->wm_instance,
 					     wapp->app_icon->wm_class, wapp->app_icon->command);
-
-		/* Update the icon, because wapp->app_icon->icon could be NULL */
-		wIconUpdate(wapp->app_icon->icon);
+		map_icon_image(wapp->app_icon->icon);
 
 		/* Paint it */
 		wAppIconPaint(wapp->app_icon);
@@ -616,8 +614,7 @@ void appicon_map(WAppIcon *aicon, WScreen *scr)
 			   scr->w_visual, scr->w_colormap, scr->white_pixel);
 
 	set_icon_image_from_database(aicon->icon, aicon->wm_instance, aicon->wm_class, aicon->command);
-	/* Update the icon, because icon could be NULL */
-	wIconUpdate(aicon->icon);
+	map_icon_image(aicon->icon);
 
 	WMAddNotificationObserver(icon_appearanceObserver, aicon->icon, WNIconAppearanceSettingsChanged, aicon->icon);
 	WMAddNotificationObserver(icon_tileObserver, aicon->icon, WNIconTileSettingsChanged, aicon->icon);
