@@ -189,27 +189,15 @@ void wSetFocusTo(WScreen *scr, WWindow *wwin)
 
 	/* if this is not the focused window focus it */
 	if (focused != wwin) {
-		WWindow *tmp = focused;
-		/* get the last one from the list */
-		while (tmp->prev)
-			tmp = tmp->prev;
+		/* change the focus window list order */
+		if (wwin->prev)
+			wwin->prev->next = wwin->next;
 
-		/* change the focus window list order
-		   the current focused window and siblings are moved to the end */
-		focused->next = tmp;
-		tmp->prev = focused;
+		if (wwin->next)
+			wwin->next->prev = wwin->prev;
 
-		/* cut the sibling link to the wwin window we want to focus
-		   as now the last sibling will become the last in the list */
-		tmp = focused;
-		while (tmp->prev) {
-			if (tmp->prev == wwin)
-				tmp->prev = NULL;
-			else
-				tmp = tmp->prev;
-		}
-
-		/* wwin is becoming the first focused window */
+		wwin->prev = focused;
+		focused->next = wwin;
 		wwin->next = NULL;
 		scr->focused_window = wwin;
 
