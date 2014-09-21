@@ -38,7 +38,7 @@ typedef struct WIcon {
 
 	Window 		icon_win;	/* client suplied icon window */
 
-	char		*file;		/* the file with the icon image */
+	char		*file_name;	/* the file with the icon image */
 	RImage 		*file_image;	/* the image from the file */
 
 	unsigned int 	tile_type:4;

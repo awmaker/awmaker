@@ -170,7 +170,7 @@ WIcon *icon_create_core(void)
 	icon->core->stacking->child_of = NULL;
 
 	/* Icon image */
-	icon->file = NULL;
+	icon->file_name = NULL;
 	icon->file_image = NULL;
 
 	return icon;
@@ -370,7 +370,7 @@ int wIconChangeImageFile(WIcon *icon, const char *file)
 
 	/* Set the new image */
 	set_icon_image_from_image(icon, image);
-	icon->file = wstrdup(path);
+	icon->file_name = wstrdup(path);
 	update_icon_pixmap(icon);
 
 	wfree(path);
@@ -553,9 +553,9 @@ void wIconSelect(WIcon *icon)
 
 static void unset_icon_image(WIcon *icon)
 {
-	if (icon->file) {
-		wfree(icon->file);
-		icon->file = NULL;
+	if (icon->file_name) {
+		wfree(icon->file_name);
+		icon->file_name = NULL;
 	}
 
 	if (icon->file_image) {
@@ -918,8 +918,8 @@ void set_icon_image_from_database(WIcon *icon, const char *wm_instance, const ch
 
 	file = get_icon_filename(wm_instance, wm_class, command, False);
 	if (file) {
-		icon->file = wstrdup(file);
-		icon->file_image = get_rimage_from_file(icon->core->screen_ptr, icon->file, wPreferences.icon_size);
+		icon->file_name = wstrdup(file);
+		icon->file_image = get_rimage_from_file(icon->core->screen_ptr, icon->file_name, wPreferences.icon_size);
 		wfree(file);
 	}
 }
