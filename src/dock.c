@@ -3581,6 +3581,36 @@ WAppIcon *wDockFindIconForWindow(WDock *dock, Window window)
 	return NULL;
 }
 
+void move_to_dock(WDock *dock, WAppIcon *icon, char *wm_class, char *wm_instance)
+{
+	WAppIcon *aicon;
+	int x0, y0;
+
+	/* Create appicon's icon */
+	aicon = create_appicon(NULL, wm_class, wm_instance);
+	appicon_map(aicon, dock->screen_ptr);
+
+	/* will be overriden by dock */
+	aicon->icon->core->descriptor.handle_mousedown = appIconMouseDown;
+	aicon->icon->core->descriptor.handle_expose = dockIconExpose;
+	aicon->icon->core->descriptor.parent_type = WCLASS_APPICON;
+	aicon->icon->core->descriptor.parent = aicon;
+
+	PlaceIcon(dock->screen_ptr, &x0, &y0, wGetHeadForWindow(aicon->icon->owner));
+	wAppIconMove(aicon, x0, y0);
+
+	/* Should this always be lowered? -Dan */
+	if (dock->lowered)
+		wLowerFrame(aicon->icon->core);
+
+	XMapWindow(dpy, aicon->icon->core->window);
+	aicon->launching = 1;
+	wAppIconPaint(aicon);
+	SlideWindow(aicon->icon->core->window, x0, y0, icon->x_pos, icon->y_pos);
+	XUnmapWindow(dpy, aicon->icon->core->window);
+	wAppIconDestroy(aicon);
+}
+
 void wDockTrackWindowLaunch(WDock *dock, Window window)
 {
 	WAppIcon *icon;
@@ -3638,34 +3668,11 @@ void wDockTrackWindowLaunch(WDock *dock, Window window)
 			found = True;
 			if (!wPreferences.no_animations && !icon->launching &&
 			    !w_global.startup.phase1 && !dock->collapsed) {
-				WAppIcon *aicon;
-				int x0, y0;
-
 				icon->launching = 1;
 				dockIconPaint(icon);
-
-				/* Create appicon's icon */
-				aicon = create_appicon(NULL, wm_class, wm_instance);
-				appicon_map(aicon, dock->screen_ptr);
-
-				/* will be overriden by dock */
-				aicon->icon->core->descriptor.handle_mousedown = appIconMouseDown;
-				aicon->icon->core->descriptor.handle_expose = dockIconExpose;
-				aicon->icon->core->descriptor.parent_type = WCLASS_APPICON;
-				aicon->icon->core->descriptor.parent = aicon;
-
-				PlaceIcon(dock->screen_ptr, &x0, &y0, wGetHeadForWindow(aicon->icon->owner));
-				wAppIconMove(aicon, x0, y0);
-				/* Should this always be lowered? -Dan */
-				if (dock->lowered)
-					wLowerFrame(aicon->icon->core);
-				XMapWindow(dpy, aicon->icon->core->window);
-				aicon->launching = 1;
-				wAppIconPaint(aicon);
-				SlideWindow(aicon->icon->core->window, x0, y0, icon->x_pos, icon->y_pos);
-				XUnmapWindow(dpy, aicon->icon->core->window);
-				wAppIconDestroy(aicon);
+				move_to_dock(dock, icon, wm_class, wm_instance);
 			}
+
 			wDockFinishLaunch(icon);
 			break;
 		}
