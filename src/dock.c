@@ -1612,6 +1612,14 @@ WDock *drawer_create(const char *name)
 	btn->icon->core->descriptor.parent = btn;
 	btn->icon->tile_type = TILE_DRAWER;
 
+	/* create dock menu */
+	if (!w_global.dock.drawer_menu)
+		drawer_menu_create();
+
+	dock->menu = w_global.dock.drawer_menu;
+
+	drawerAppendToChain(dock);
+
 	return dock;
 }
 
@@ -1646,14 +1654,6 @@ void drawer_map(WDock *dock, WScreen *scr)
 	XMapWindow(dpy, btn->icon->core->window);
 	wRaiseFrame(btn->icon->core);
 	XMoveWindow(dpy, btn->icon->core->window, btn->x_pos, btn->y_pos);
-
-	/* create dock menu */
-	if (!w_global.dock.drawer_menu)
-		drawer_menu_create();
-
-	dock->menu = w_global.dock.drawer_menu;
-
-	drawerAppendToChain(dock);
 }
 
 void wDockDestroy(WDock *dock)
