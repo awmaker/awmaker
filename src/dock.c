@@ -128,6 +128,7 @@ static void swapDrawers(int new_x);
 static WDock *getDrawer(int y_index);
 static int indexOfHole(WDock *drawer, WAppIcon *moving_aicon, int redocking);
 static void drawerConsolidateIcons(WDock *drawer);
+static void drawerRestoreState_map(WScreen *scr, WDock *drawer);
 
 static int onScreen(WScreen *scr, int x, int y);
 
@@ -1611,6 +1612,14 @@ WDock *drawer_create(const char *name)
 	btn->icon->core->descriptor.parent = btn;
 	btn->icon->tile_type = TILE_DRAWER;
 
+	/* create dock menu */
+	if (!w_global.dock.drawer_menu)
+		drawer_menu_create();
+
+	dock->menu = w_global.dock.drawer_menu;
+
+	drawerAppendToChain(dock);
+
 	return dock;
 }
 
@@ -1636,23 +1645,15 @@ void drawer_map(WDock *dock, WScreen *scr)
 	btn->icon->core->descriptor.handle_mousedown = iconMouseDown;
 	btn->icon->core->descriptor.handle_enternotify = clipEnterNotify;
 	btn->icon->core->descriptor.handle_leavenotify = clipLeaveNotify;
-	XMapWindow(dpy, btn->icon->core->window);
-	btn->x_pos = 0;
-	btn->y_pos = 0;
 
-	dock->x_pos = btn->x_pos;
-	dock->y_pos = btn->y_pos;
+	btn->x_pos = dock->x_pos;
+	btn->y_pos = dock->y_pos;
+
 	dock->screen_ptr = scr;
+
+	XMapWindow(dpy, btn->icon->core->window);
 	wRaiseFrame(btn->icon->core);
 	XMoveWindow(dpy, btn->icon->core->window, btn->x_pos, btn->y_pos);
-
-	/* create dock menu */
-	if (!w_global.dock.drawer_menu)
-		drawer_menu_create();
-
-	dock->menu = w_global.dock.drawer_menu;
-
-	drawerAppendToChain(dock);
 }
 
 void wDockDestroy(WDock *dock)
@@ -1936,11 +1937,11 @@ static Bool getBooleanDockValue(WMPropList *value, WMPropList *key)
 	return False;
 }
 
-static WAppIcon *restore_icon_state(WScreen *scr, WMPropList *info, int type, int index)
+static WAppIcon *restore_icon_state(WMPropList *info, int type, int index)
 {
 	WAppIcon *aicon;
 	WMPropList *cmd, *value;
-	char *wclass, *winstance, *command;
+	char *wclass, *winstance, *command = NULL;
 
 	cmd = WMGetFromPLDictionary(info, dCommand);
 	if (!cmd || !WMIsPLString(cmd))
@@ -1959,8 +1960,6 @@ static WAppIcon *restore_icon_state(WScreen *scr, WMPropList *info, int type, in
 	/* get commands */
 	if (cmd)
 		command = wstrdup(WMGetFromPLString(cmd));
-	else
-		command = NULL;
 
 	if (!command || strcmp(command, "-") == 0) {
 		if (command)
@@ -1975,7 +1974,6 @@ static WAppIcon *restore_icon_state(WScreen *scr, WMPropList *info, int type, in
 
 	/* Create appicon's icon */
 	aicon = create_appicon(command, wclass, winstance);
-	appicon_map(aicon, scr);
 
 	if (wclass)
 		wfree(wclass);
@@ -2183,7 +2181,37 @@ static void save_application_list(WMPropList *state, WMPropList *list, char *scr
 	WMReleasePropList(key);
 }
 
-static int set_attacheddocks(WScreen *scr, WDock *dock, WMPropList *apps, int type)
+static void set_attacheddocks_map(WScreen *scr, WDock *dock, int type)
+{
+	WAppIcon *aicon;
+	int i = 0;
+
+	if (!dock)
+		return;
+
+	if (type != WM_DOCK)
+		i = 1;
+
+	for (; i < dock->max_icons; i++) {
+		aicon = dock->icon_array[i];
+		if (aicon) {
+			appicon_map(aicon, scr);
+
+			if (dock->lowered)
+				ChangeStackingLevel(aicon->icon->core, WMNormalLevel);
+			else
+				ChangeStackingLevel(aicon->icon->core, WMDockLevel);
+
+			wCoreConfigure(aicon->icon->core, aicon->x_pos, aicon->y_pos, 0, 0);
+			if (!dock->collapsed)
+				XMapWindow(dpy, aicon->icon->core->window);
+
+			wRaiseFrame(aicon->icon->core);
+		}
+	}
+}
+
+static int set_attacheddocks(WDock *dock, WMPropList *apps, int type)
 {
 	int count, i;
 	WMPropList *value;
@@ -2207,26 +2235,13 @@ static int set_attacheddocks(WScreen *scr, WDock *dock, WMPropList *apps, int ty
 		}
 
 		value = WMGetFromPLArray(apps, i);
-		aicon = restore_icon_state(scr, value, type, dock->icon_count);
-
+		aicon = restore_icon_state(value, type, dock->icon_count);
 		dock->icon_array[dock->icon_count] = aicon;
 
 		if (aicon) {
 			aicon->dock = dock;
 			aicon->x_pos = dock->x_pos + (aicon->xindex * ICON_SIZE);
 			aicon->y_pos = dock->y_pos + (aicon->yindex * ICON_SIZE);
-
-			if (dock->lowered)
-				ChangeStackingLevel(aicon->icon->core, WMNormalLevel);
-			else
-				ChangeStackingLevel(aicon->icon->core, WMDockLevel);
-
-			wCoreConfigure(aicon->icon->core, aicon->x_pos, aicon->y_pos, 0, 0);
-			if (!dock->collapsed)
-				XMapWindow(dpy, aicon->icon->core->window);
-
-			wRaiseFrame(aicon->icon->core);
-
 			dock->icon_count++;
 		} else if (dock->icon_count == 0 && type == WM_DOCK) {
 			dock->icon_count++;
@@ -2249,8 +2264,10 @@ static void dock_set_attacheddocks(WScreen *scr, WDock *dock, WMPropList *state,
 	if (!apps)
 		return;
 
-	if (set_attacheddocks(scr, dock, apps, type))
+	if (set_attacheddocks(dock, apps, type))
 		return;
+
+	set_attacheddocks_map(scr, dock, type);
 
 	/* if the first icon is not defined, use the default */
 	if (dock->icon_array[0] == NULL) {
@@ -2340,20 +2357,20 @@ static void restore_clip_position(WDock *dock, WScreen *scr, WMPropList *state)
 void restore_drawer_position(WDock *drawer, WMPropList *state)
 {
 	WMPropList *value;
+	int y_index;
 
 	value = WMGetFromPLDictionary(state, dPosition);
-	if (!value || !WMIsPLString(value))
+	if (!value || !WMIsPLString(value)) {
 		COMPLAIN("Position");
-	else {
-		int x, y, y_index;
-		if (sscanf(WMGetFromPLString(value), "%i,%i", &x, &y) != 2)
+	} else {
+		if (sscanf(WMGetFromPLString(value), "%i,%i", &drawer->x_pos, &drawer->y_pos) != 2)
 			COMPLAIN("Position");
 
 		/* check position sanity */
-		if (x != w_global.dock.dock->x_pos)
-			x = w_global.dock.dock->x_pos;
+		if (drawer->x_pos != w_global.dock.dock->x_pos)
+			drawer->x_pos = w_global.dock.dock->x_pos;
 
-		y_index = (y - w_global.dock.dock->y_pos) / ICON_SIZE;
+		y_index = (drawer->y_pos - w_global.dock.dock->y_pos) / ICON_SIZE;
 
 		/* Here we should do something more intelligent, since it
 		 * can happen even if the user hasn't hand-edited his
@@ -2361,8 +2378,7 @@ void restore_drawer_position(WDock *drawer, WMPropList *state)
 		if (y_index >= w_global.dock.dock->max_icons)
 			y_index = w_global.dock.dock->max_icons - 1;
 
-		y = w_global.dock.dock->y_pos + y_index * ICON_SIZE;
-		moveDock(drawer, x, y);
+		drawer->y_pos = w_global.dock.dock->y_pos + y_index * ICON_SIZE;
 	}
 }
 
@@ -4861,10 +4877,9 @@ static int addADrawer(WScreen *scr)
 	for (y = -dock->max_icons + 1; y < dock->max_icons; y++)
 		can_be_here[y + dock->max_icons - 1] = True;
 
-	for (i = 0; i < dock->max_icons; i++) {
+	for (i = 0; i < dock->max_icons; i++)
 		if (dock->icon_array[i] != NULL)
 			can_be_here[dock->icon_array[i]->yindex + dock->max_icons - 1] = False;
-	}
 
 	for (dc = w_global.drawer.drawers; dc != NULL; dc = dc->next) {
 		y = (int) ((dc->adrawer->y_pos - dock->y_pos) / ICON_SIZE);
@@ -4872,13 +4887,10 @@ static int addADrawer(WScreen *scr)
 	}
 
 	found_y = False;
-	for (sig = 1; !found_y && sig > -2; sig -= 2) // 1, then -1
-	{
-		for (y = sig; sig * y < dock->max_icons; y += sig)
-		{
+	for (sig = 1; !found_y && sig > -2; sig -= 2) { /* 1, then -1 */
+		for (y = sig; sig * y < dock->max_icons; y += sig) {
 			if (can_be_here[y + dock->max_icons - 1] &&
-				onScreen(scr, dock->x_pos, dock->y_pos + y * ICON_SIZE))
-			{
+				onScreen(scr, dock->x_pos, dock->y_pos + y * ICON_SIZE)) {
 				found_y = True;
 				break;
 			}
@@ -4892,12 +4904,6 @@ static int addADrawer(WScreen *scr)
 		return -1;
 
 	drawer = drawer_create(NULL);
-	drawer_map(drawer, scr);
-	drawer->lowered = w_global.dock.dock->lowered;
-	if (!drawer->lowered)
-		ChangeStackingLevel(drawer->icon_array[0]->icon->core, WMDockLevel);
-	else
-		ChangeStackingLevel(drawer->icon_array[0]->icon->core, WMNormalLevel);
 	drawer->auto_raise_lower = w_global.dock.dock->auto_raise_lower;
 	drawer->x_pos = dock->x_pos;
 	drawer->y_pos = dock->y_pos + ICON_SIZE * y;
@@ -4905,8 +4911,8 @@ static int addADrawer(WScreen *scr)
 	drawer->icon_array[0]->yindex = 0;
 	drawer->icon_array[0]->x_pos = drawer->x_pos;
 	drawer->icon_array[0]->y_pos = drawer->y_pos;
-	XMoveWindow(dpy, drawer->icon_array[0]->icon->core->window,
-		drawer->icon_array[0]->x_pos, drawer->icon_array[0]->y_pos);
+
+	drawerRestoreState_map(scr, drawer);
 
 	return 0;
 }
@@ -5270,10 +5276,7 @@ static void drawerConsolidateIcons(WDock *drawer)
 	}
 }
 
-
-
-/* similar to wDockRestoreState, but a lot a specific stuff too... */
-static WDock * drawerRestoreState(WScreen *scr, WMPropList *drawer_state)
+static WDock *drawerRestoreState(WMPropList *drawer_state)
 {
 	WDock *drawer;
 	WMPropList *apps, *value, *dock_state;
@@ -5288,7 +5291,6 @@ static WDock * drawerRestoreState(WScreen *scr, WMPropList *drawer_state)
 	/* Get the instance name, and create a drawer */
 	value = WMGetFromPLDictionary(drawer_state, dName);
 	drawer = drawer_create(WMGetFromPLString(value));
-	drawer_map(drawer, scr);
 
 	/* restore DnD command and paste command */
 #ifdef XDND
@@ -5306,14 +5308,6 @@ static WDock * drawerRestoreState(WScreen *scr, WMPropList *drawer_state)
 
 	/* restore dock properties (applist and others) */
 	dock_state = WMGetFromPLDictionary(drawer_state, dDock);
-
-	/* restore lowered/raised state: same as scr->dock, no matter what */
-	drawer->lowered = w_global.dock.dock->lowered;
-	if (!drawer->lowered)
-		ChangeStackingLevel(drawer->icon_array[0]->icon->core, WMDockLevel);
-	else
-		ChangeStackingLevel(drawer->icon_array[0]->icon->core, WMNormalLevel);
-	wRaiseFrame(drawer->icon_array[0]->icon->core);
 
 	/* restore collapsed state */
 	restore_state_collapsed(drawer, dock_state);
@@ -5334,13 +5328,28 @@ static WDock * drawerRestoreState(WScreen *scr, WMPropList *drawer_state)
 	/* application list */
 	apps = WMGetFromPLDictionary(dock_state, dApplications);
 	if (apps)
-		set_attacheddocks(scr, drawer, apps, WM_DRAWER);
+		set_attacheddocks(drawer, apps, WM_DRAWER);
 
 	WMReleasePropList(drawer_state);
 
 	return drawer;
 }
 
+static void drawerRestoreState_map(WScreen *scr, WDock *drawer)
+{
+	drawer_map(drawer, scr);
+
+	/* restore lowered/raised state: same as scr->dock, no matter what */
+	drawer->lowered = w_global.dock.dock->lowered;
+	if (!drawer->lowered)
+		ChangeStackingLevel(drawer->icon_array[0]->icon->core, WMDockLevel);
+	else
+		ChangeStackingLevel(drawer->icon_array[0]->icon->core, WMNormalLevel);
+
+	wRaiseFrame(drawer->icon_array[0]->icon->core);
+
+	set_attacheddocks_map(scr, drawer, WM_DRAWER);
+}
 
 /* Same kind of comment than for previous function: this function is
  * very similar to make_icon_state, but has substential differences as
@@ -5409,8 +5418,7 @@ void wDrawersSaveState(void)
 	WMReleasePropList(all_drawers);
 }
 
-
-void wDrawersRestoreState(WScreen *scr)
+void wDrawersRestoreState(void)
 {
 	WMPropList *all_drawers, *drawer_state;
 	int i;
@@ -5426,7 +5434,14 @@ void wDrawersRestoreState(WScreen *scr)
 
 	for (i = 0; i < WMGetPropListItemCount(all_drawers); i++) {
 		drawer_state = WMGetFromPLArray(all_drawers, i);
-		drawerRestoreState(scr, drawer_state);
-		// Note: scr->drawers was updated when the the drawer was created
+		drawerRestoreState(drawer_state);
 	}
+}
+
+void wDrawersRestoreState_map(WScreen *scr)
+{
+	WDrawerChain *dc;
+
+	for (dc = w_global.drawer.drawers; dc != NULL; dc = dc->next)
+		drawerRestoreState_map(scr, dc->adrawer);
 }

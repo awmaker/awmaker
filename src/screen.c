@@ -797,7 +797,8 @@ void wScreenRestoreState(WScreen *scr)
 			RReleaseImage(w_global.tile.drawer);
 			w_global.tile.drawer = wDrawerMakeTile(w_global.tile.icon);
 		}
-		wDrawersRestoreState(scr);
+		wDrawersRestoreState();
+		wDrawersRestoreState_map(scr);
 	}
 
 	wWorkspaceRestoreState(scr);
