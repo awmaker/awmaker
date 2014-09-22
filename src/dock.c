@@ -2211,7 +2211,7 @@ static void set_attacheddocks_map(WScreen *scr, WDock *dock, int type)
 	}
 }
 
-static int set_attacheddocks(WDock *dock, WMPropList *apps, int type)
+static int set_attacheddocks(WDock *dock, WMPropList *apps)
 {
 	int count, i;
 	WMPropList *value;
@@ -2225,7 +2225,7 @@ static int set_attacheddocks(WDock *dock, WMPropList *apps, int type)
 	 * Since Clip is already restored, we want to keep it so for clip,
 	 * but for dock we may change the default top tile, so we set it to 0.
 	 */
-	if (type == WM_DOCK)
+	if (dock->type == WM_DOCK)
 		dock->icon_count = 0;
 
 	for (i = 0; i < count; i++) {
@@ -2235,7 +2235,7 @@ static int set_attacheddocks(WDock *dock, WMPropList *apps, int type)
 		}
 
 		value = WMGetFromPLArray(apps, i);
-		aicon = restore_icon_state(value, type, dock->icon_count);
+		aicon = restore_icon_state(value, dock->type, dock->icon_count);
 		dock->icon_array[dock->icon_count] = aicon;
 
 		if (aicon) {
@@ -2243,7 +2243,7 @@ static int set_attacheddocks(WDock *dock, WMPropList *apps, int type)
 			aicon->x_pos = dock->x_pos + (aicon->xindex * ICON_SIZE);
 			aicon->y_pos = dock->y_pos + (aicon->yindex * ICON_SIZE);
 			dock->icon_count++;
-		} else if (dock->icon_count == 0 && type == WM_DOCK) {
+		} else if (dock->icon_count == 0 && dock->type == WM_DOCK) {
 			dock->icon_count++;
 		}
 	}
@@ -2264,7 +2264,7 @@ static void dock_set_attacheddocks(WScreen *scr, WDock *dock, WMPropList *state)
 	if (!apps)
 		return;
 
-	if (set_attacheddocks(dock, apps, dock->type))
+	if (set_attacheddocks(dock, apps))
 		return;
 
 	set_attacheddocks_map(scr, dock, dock->type);
@@ -5328,7 +5328,7 @@ static WDock *drawerRestoreState(WMPropList *drawer_state)
 	/* application list */
 	apps = WMGetFromPLDictionary(dock_state, dApplications);
 	if (apps)
-		set_attacheddocks(drawer, apps, WM_DRAWER);
+		set_attacheddocks(drawer, apps);
 
 	WMReleasePropList(drawer_state);
 
