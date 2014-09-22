@@ -128,6 +128,7 @@ static void swapDrawers(int new_x);
 static WDock *getDrawer(int y_index);
 static int indexOfHole(WDock *drawer, WAppIcon *moving_aicon, int redocking);
 static void drawerConsolidateIcons(WDock *drawer);
+static void drawerRestoreState_map(WScreen *scr, WDock *drawer);
 
 static int onScreen(WScreen *scr, int x, int y);
 
@@ -4911,16 +4912,7 @@ static int addADrawer(WScreen *scr)
 	drawer->icon_array[0]->x_pos = drawer->x_pos;
 	drawer->icon_array[0]->y_pos = drawer->y_pos;
 
-	drawer_map(drawer, scr);
-
-	drawer->lowered = w_global.dock.dock->lowered;
-	if (!drawer->lowered)
-		ChangeStackingLevel(drawer->icon_array[0]->icon->core, WMDockLevel);
-	else
-		ChangeStackingLevel(drawer->icon_array[0]->icon->core, WMNormalLevel);
-
-	XMoveWindow(dpy, drawer->icon_array[0]->icon->core->window,
-		drawer->icon_array[0]->x_pos, drawer->icon_array[0]->y_pos);
+	drawerRestoreState_map(scr, drawer);
 
 	return 0;
 }
