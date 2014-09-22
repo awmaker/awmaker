@@ -5418,11 +5418,9 @@ void wDrawersSaveState(void)
 	WMReleasePropList(all_drawers);
 }
 
-
-void wDrawersRestoreState(WScreen *scr)
+void wDrawersRestoreState(void)
 {
 	WMPropList *all_drawers, *drawer_state;
-	WDock *drawer = NULL;
 	int i;
 
 	make_keys();
@@ -5436,8 +5434,14 @@ void wDrawersRestoreState(WScreen *scr)
 
 	for (i = 0; i < WMGetPropListItemCount(all_drawers); i++) {
 		drawer_state = WMGetFromPLArray(all_drawers, i);
-		drawer = drawerRestoreState(drawer_state);
-		drawerRestoreState_map(scr, drawer);
-		/* Note: scr->drawers was updated when the the drawer was created */
+		drawerRestoreState(drawer_state);
 	}
+}
+
+void wDrawersRestoreState_map(WScreen *scr)
+{
+	WDrawerChain *dc;
+
+	for (dc = w_global.drawer.drawers; dc != NULL; dc = dc->next)
+		drawerRestoreState_map(scr, dc->adrawer);
 }
