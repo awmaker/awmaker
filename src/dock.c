@@ -141,7 +141,7 @@ static void restore_clip_position(WDock *dock, WScreen *scr, WMPropList *state);
 static void restore_state_lowered(WDock *dock, WMPropList *state);
 static void restore_state_collapsed(WDock *dock, WMPropList *state);
 static void restore_state_autoraise(WDock *dock, WMPropList *state);
-static void dock_set_attacheddocks(WScreen *scr, WDock *dock, WMPropList *state, int type);
+static void dock_set_attacheddocks(WScreen *scr, WDock *dock, WMPropList *state);
 static int restore_state_autocollapsed(WDock *dock, WMPropList *state);
 static int restore_state_autoattracticons(WDock *dock, WMPropList *state);
 
@@ -1479,7 +1479,7 @@ void dock_map(WDock *dock, WScreen *scr, WMPropList *state)
 	(void) restore_state_autoattracticons(dock, state);
 
 	/* application list */
-	dock_set_attacheddocks(dock->screen_ptr, dock, state, dock->type);
+	dock_set_attacheddocks(dock->screen_ptr, dock, state);
 
 	WMReleasePropList(state);
 }
@@ -1577,7 +1577,7 @@ void clip_map(WDock *dock, WScreen *scr, WMPropList *state)
 	(void) restore_state_autoattracticons(dock, state);
 
 	/* application list */
-	dock_set_attacheddocks(dock->screen_ptr, dock, state, dock->type);
+	dock_set_attacheddocks(dock->screen_ptr, dock, state);
 
 	WMReleasePropList(state);
 }
@@ -2251,7 +2251,7 @@ static int set_attacheddocks(WDock *dock, WMPropList *apps, int type)
 	return 0;
 }
 
-static void dock_set_attacheddocks(WScreen *scr, WDock *dock, WMPropList *state, int type)
+static void dock_set_attacheddocks(WScreen *scr, WDock *dock, WMPropList *state)
 {
 	char screen_id[64];
 	WMPropList *apps;
@@ -2264,10 +2264,10 @@ static void dock_set_attacheddocks(WScreen *scr, WDock *dock, WMPropList *state,
 	if (!apps)
 		return;
 
-	if (set_attacheddocks(dock, apps, type))
+	if (set_attacheddocks(dock, apps, dock->type))
 		return;
 
-	set_attacheddocks_map(scr, dock, type);
+	set_attacheddocks_map(scr, dock, dock->type);
 
 	/* if the first icon is not defined, use the default */
 	if (dock->icon_array[0] == NULL) {
