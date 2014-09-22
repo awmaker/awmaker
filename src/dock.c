@@ -4861,10 +4861,9 @@ static int addADrawer(WScreen *scr)
 	for (y = -dock->max_icons + 1; y < dock->max_icons; y++)
 		can_be_here[y + dock->max_icons - 1] = True;
 
-	for (i = 0; i < dock->max_icons; i++) {
+	for (i = 0; i < dock->max_icons; i++)
 		if (dock->icon_array[i] != NULL)
 			can_be_here[dock->icon_array[i]->yindex + dock->max_icons - 1] = False;
-	}
 
 	for (dc = w_global.drawer.drawers; dc != NULL; dc = dc->next) {
 		y = (int) ((dc->adrawer->y_pos - dock->y_pos) / ICON_SIZE);
@@ -4872,13 +4871,10 @@ static int addADrawer(WScreen *scr)
 	}
 
 	found_y = False;
-	for (sig = 1; !found_y && sig > -2; sig -= 2) // 1, then -1
-	{
-		for (y = sig; sig * y < dock->max_icons; y += sig)
-		{
+	for (sig = 1; !found_y && sig > -2; sig -= 2) { /* 1, then -1 */
+		for (y = sig; sig * y < dock->max_icons; y += sig) {
 			if (can_be_here[y + dock->max_icons - 1] &&
-				onScreen(scr, dock->x_pos, dock->y_pos + y * ICON_SIZE))
-			{
+				onScreen(scr, dock->x_pos, dock->y_pos + y * ICON_SIZE)) {
 				found_y = True;
 				break;
 			}
