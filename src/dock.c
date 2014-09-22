@@ -2180,7 +2180,37 @@ static void save_application_list(WMPropList *state, WMPropList *list, char *scr
 	WMReleasePropList(key);
 }
 
-static int set_attacheddocks(WScreen *scr, WDock *dock, WMPropList *apps, int type)
+static void set_attacheddocks_map(WScreen *scr, WDock *dock, int type)
+{
+	WAppIcon *aicon;
+	int i = 0;
+
+	if (!dock)
+		return;
+
+	if (type != WM_DOCK)
+		i = 1;
+
+	for (; i < dock->max_icons; i++) {
+		aicon = dock->icon_array[i];
+		if (aicon) {
+			appicon_map(aicon, scr);
+
+			if (dock->lowered)
+				ChangeStackingLevel(aicon->icon->core, WMNormalLevel);
+			else
+				ChangeStackingLevel(aicon->icon->core, WMDockLevel);
+
+			wCoreConfigure(aicon->icon->core, aicon->x_pos, aicon->y_pos, 0, 0);
+			if (!dock->collapsed)
+				XMapWindow(dpy, aicon->icon->core->window);
+
+			wRaiseFrame(aicon->icon->core);
+		}
+	}
+}
+
+static int set_attacheddocks(WDock *dock, WMPropList *apps, int type)
 {
 	int count, i;
 	WMPropList *value;
@@ -2205,27 +2235,12 @@ static int set_attacheddocks(WScreen *scr, WDock *dock, WMPropList *apps, int ty
 
 		value = WMGetFromPLArray(apps, i);
 		aicon = restore_icon_state(value, type, dock->icon_count);
-		if (aicon)
-			appicon_map(aicon, scr);
-
 		dock->icon_array[dock->icon_count] = aicon;
 
 		if (aicon) {
 			aicon->dock = dock;
 			aicon->x_pos = dock->x_pos + (aicon->xindex * ICON_SIZE);
 			aicon->y_pos = dock->y_pos + (aicon->yindex * ICON_SIZE);
-
-			if (dock->lowered)
-				ChangeStackingLevel(aicon->icon->core, WMNormalLevel);
-			else
-				ChangeStackingLevel(aicon->icon->core, WMDockLevel);
-
-			wCoreConfigure(aicon->icon->core, aicon->x_pos, aicon->y_pos, 0, 0);
-			if (!dock->collapsed)
-				XMapWindow(dpy, aicon->icon->core->window);
-
-			wRaiseFrame(aicon->icon->core);
-
 			dock->icon_count++;
 		} else if (dock->icon_count == 0 && type == WM_DOCK) {
 			dock->icon_count++;
@@ -2248,8 +2263,10 @@ static void dock_set_attacheddocks(WScreen *scr, WDock *dock, WMPropList *state,
 	if (!apps)
 		return;
 
-	if (set_attacheddocks(scr, dock, apps, type))
+	if (set_attacheddocks(dock, apps, type))
 		return;
+
+	set_attacheddocks_map(scr, dock, type);
 
 	/* if the first icon is not defined, use the default */
 	if (dock->icon_array[0] == NULL) {
@@ -5332,8 +5349,10 @@ static WDock * drawerRestoreState(WScreen *scr, WMPropList *drawer_state)
 
 	/* application list */
 	apps = WMGetFromPLDictionary(dock_state, dApplications);
-	if (apps)
-		set_attacheddocks(scr, drawer, apps, WM_DRAWER);
+	if (apps) {
+		set_attacheddocks(drawer, apps, WM_DRAWER);
+		set_attacheddocks_map(scr, drawer, WM_DRAWER);
+	}
 
 	WMReleasePropList(drawer_state);
 
