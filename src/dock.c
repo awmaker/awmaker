@@ -1936,7 +1936,7 @@ static Bool getBooleanDockValue(WMPropList *value, WMPropList *key)
 	return False;
 }
 
-static WAppIcon *restore_icon_state(WScreen *scr, WMPropList *info, int type, int index)
+static WAppIcon *restore_icon_state(WMPropList *info, int type, int index)
 {
 	WAppIcon *aicon;
 	WMPropList *cmd, *value;
@@ -1973,7 +1973,6 @@ static WAppIcon *restore_icon_state(WScreen *scr, WMPropList *info, int type, in
 
 	/* Create appicon's icon */
 	aicon = create_appicon(command, wclass, winstance);
-	appicon_map(aicon, scr);
 
 	if (wclass)
 		wfree(wclass);
@@ -2205,7 +2204,9 @@ static int set_attacheddocks(WScreen *scr, WDock *dock, WMPropList *apps, int ty
 		}
 
 		value = WMGetFromPLArray(apps, i);
-		aicon = restore_icon_state(scr, value, type, dock->icon_count);
+		aicon = restore_icon_state(value, type, dock->icon_count);
+		if (aicon)
+			appicon_map(aicon, scr);
 
 		dock->icon_array[dock->icon_count] = aicon;
 
