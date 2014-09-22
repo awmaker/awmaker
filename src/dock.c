@@ -5336,6 +5336,13 @@ static WDock * drawerRestoreState(WScreen *scr, WMPropList *drawer_state)
 	if (restore_state_autoattracticons(drawer, dock_state))
 		w_global.drawer.attracting_drawer = drawer;
 
+	/* application list */
+	apps = WMGetFromPLDictionary(dock_state, dApplications);
+	if (apps)
+		set_attacheddocks(drawer, apps, WM_DRAWER);
+
+	WMReleasePropList(drawer_state);
+
 	drawer_map(drawer, scr);
 
 	/* restore lowered/raised state: same as scr->dock, no matter what */
@@ -5344,16 +5351,11 @@ static WDock * drawerRestoreState(WScreen *scr, WMPropList *drawer_state)
 		ChangeStackingLevel(drawer->icon_array[0]->icon->core, WMDockLevel);
 	else
 		ChangeStackingLevel(drawer->icon_array[0]->icon->core, WMNormalLevel);
+
 	wRaiseFrame(drawer->icon_array[0]->icon->core);
 
-	/* application list */
-	apps = WMGetFromPLDictionary(dock_state, dApplications);
-	if (apps) {
-		set_attacheddocks(drawer, apps, WM_DRAWER);
+	if (apps)
 		set_attacheddocks_map(scr, drawer, WM_DRAWER);
-	}
-
-	WMReleasePropList(drawer_state);
 
 	return drawer;
 }
