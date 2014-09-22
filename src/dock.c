@@ -5284,10 +5284,7 @@ static void drawerConsolidateIcons(WDock *drawer)
 	}
 }
 
-
-
-/* similar to wDockRestoreState, but a lot a specific stuff too... */
-static WDock * drawerRestoreState(WScreen *scr, WMPropList *drawer_state)
+static WDock *drawerRestoreState(WMPropList *drawer_state)
 {
 	WDock *drawer;
 	WMPropList *apps, *value, *dock_state;
@@ -5343,6 +5340,11 @@ static WDock * drawerRestoreState(WScreen *scr, WMPropList *drawer_state)
 
 	WMReleasePropList(drawer_state);
 
+	return drawer;
+}
+
+static void drawerRestoreState_map(WScreen *scr, WDock *drawer)
+{
 	drawer_map(drawer, scr);
 
 	/* restore lowered/raised state: same as scr->dock, no matter what */
@@ -5354,12 +5356,8 @@ static WDock * drawerRestoreState(WScreen *scr, WMPropList *drawer_state)
 
 	wRaiseFrame(drawer->icon_array[0]->icon->core);
 
-	if (apps)
-		set_attacheddocks_map(scr, drawer, WM_DRAWER);
-
-	return drawer;
+	set_attacheddocks_map(scr, drawer, WM_DRAWER);
 }
-
 
 /* Same kind of comment than for previous function: this function is
  * very similar to make_icon_state, but has substential differences as
@@ -5432,6 +5430,7 @@ void wDrawersSaveState(void)
 void wDrawersRestoreState(WScreen *scr)
 {
 	WMPropList *all_drawers, *drawer_state;
+	WDock *drawer = NULL;
 	int i;
 
 	make_keys();
@@ -5445,7 +5444,8 @@ void wDrawersRestoreState(WScreen *scr)
 
 	for (i = 0; i < WMGetPropListItemCount(all_drawers); i++) {
 		drawer_state = WMGetFromPLArray(all_drawers, i);
-		drawerRestoreState(scr, drawer_state);
-		// Note: scr->drawers was updated when the the drawer was created
+		drawer = drawerRestoreState(drawer_state);
+		drawerRestoreState_map(scr, drawer);
+		/* Note: scr->drawers was updated when the the drawer was created */
 	}
 }
