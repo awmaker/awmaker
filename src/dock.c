@@ -2356,20 +2356,20 @@ static void restore_clip_position(WDock *dock, WScreen *scr, WMPropList *state)
 void restore_drawer_position(WDock *drawer, WMPropList *state)
 {
 	WMPropList *value;
+	int y_index;
 
 	value = WMGetFromPLDictionary(state, dPosition);
-	if (!value || !WMIsPLString(value))
+	if (!value || !WMIsPLString(value)) {
 		COMPLAIN("Position");
-	else {
-		int x, y, y_index;
-		if (sscanf(WMGetFromPLString(value), "%i,%i", &x, &y) != 2)
+	} else {
+		if (sscanf(WMGetFromPLString(value), "%i,%i", &drawer->x_pos, &drawer->y_pos) != 2)
 			COMPLAIN("Position");
 
 		/* check position sanity */
-		if (x != w_global.dock.dock->x_pos)
-			x = w_global.dock.dock->x_pos;
+		if (drawer->x_pos != w_global.dock.dock->x_pos)
+			drawer->x_pos = w_global.dock.dock->x_pos;
 
-		y_index = (y - w_global.dock.dock->y_pos) / ICON_SIZE;
+		y_index = (drawer->y_pos - w_global.dock.dock->y_pos) / ICON_SIZE;
 
 		/* Here we should do something more intelligent, since it
 		 * can happen even if the user hasn't hand-edited his
@@ -2377,8 +2377,7 @@ void restore_drawer_position(WDock *drawer, WMPropList *state)
 		if (y_index >= w_global.dock.dock->max_icons)
 			y_index = w_global.dock.dock->max_icons - 1;
 
-		y = w_global.dock.dock->y_pos + y_index * ICON_SIZE;
-		moveDock(drawer, x, y);
+		drawer->y_pos = w_global.dock.dock->y_pos + y_index * ICON_SIZE;
 	}
 }
 
