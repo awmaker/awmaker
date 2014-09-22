@@ -1940,7 +1940,7 @@ static WAppIcon *restore_icon_state(WScreen *scr, WMPropList *info, int type, in
 {
 	WAppIcon *aicon;
 	WMPropList *cmd, *value;
-	char *wclass, *winstance, *command;
+	char *wclass, *winstance, *command = NULL;
 
 	cmd = WMGetFromPLDictionary(info, dCommand);
 	if (!cmd || !WMIsPLString(cmd))
@@ -1959,8 +1959,6 @@ static WAppIcon *restore_icon_state(WScreen *scr, WMPropList *info, int type, in
 	/* get commands */
 	if (cmd)
 		command = wstrdup(WMGetFromPLString(cmd));
-	else
-		command = NULL;
 
 	if (!command || strcmp(command, "-") == 0) {
 		if (command)
