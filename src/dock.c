@@ -2181,7 +2181,7 @@ static void save_application_list(WMPropList *state, WMPropList *list, char *scr
 	WMReleasePropList(key);
 }
 
-static void set_attacheddocks_map(WScreen *scr, WDock *dock, int type)
+static void set_attacheddocks_map(WScreen *scr, WDock *dock)
 {
 	WAppIcon *aicon;
 	int i = 0;
@@ -2189,7 +2189,7 @@ static void set_attacheddocks_map(WScreen *scr, WDock *dock, int type)
 	if (!dock)
 		return;
 
-	if (type != WM_DOCK)
+	if (dock->type != WM_DOCK)
 		i = 1;
 
 	for (; i < dock->max_icons; i++) {
@@ -2267,7 +2267,7 @@ static void dock_set_attacheddocks(WScreen *scr, WDock *dock, WMPropList *state)
 	if (set_attacheddocks(dock, apps))
 		return;
 
-	set_attacheddocks_map(scr, dock, dock->type);
+	set_attacheddocks_map(scr, dock);
 
 	/* if the first icon is not defined, use the default */
 	if (dock->icon_array[0] == NULL) {
@@ -5348,7 +5348,7 @@ static void drawerRestoreState_map(WScreen *scr, WDock *drawer)
 
 	wRaiseFrame(drawer->icon_array[0]->icon->core);
 
-	set_attacheddocks_map(scr, drawer, WM_DRAWER);
+	set_attacheddocks_map(scr, drawer);
 }
 
 /* Same kind of comment than for previous function: this function is
