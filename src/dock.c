@@ -3582,33 +3582,20 @@ WAppIcon *wDockFindIconForWindow(WDock *dock, Window window)
 	return NULL;
 }
 
-void wDockTrackWindowLaunch(WDock *dock, Window window)
+static int find_win_in_dock(WDock *dock, Window window, char *wm_class,
+			    char *wm_instance, char *command, Bool firstPass)
 {
 	WAppIcon *icon;
-	char *wm_class, *wm_instance;
 	int i;
-	Bool firstPass = True;
-	Bool found = False;
-	char *command = NULL;
 
-	if (!PropGetWMClass(window, &wm_class, &wm_instance)) {
-		free(wm_class);
-		free(wm_instance);
-		return;
-	}
-
-	command = GetCommandForWindow(window);
- retry:
 	for (i = 0; i < dock->max_icons; i++) {
 		icon = dock->icon_array[i];
 		if (!icon)
 			continue;
 
 		/* app is already attached to icon */
-		if (icon->main_window == window) {
-			found = True;
-			break;
-		}
+		if (icon->main_window == window)
+			return 1;
 
 		if (!icon->wm_instance && !icon->wm_class)
 			continue;
@@ -3636,28 +3623,45 @@ void wDockTrackWindowLaunch(WDock *dock, Window window)
 				icon->forced_dock = 1;
 				icon->running = 0;
 			}
+
 			if (!icon->forced_dock)
 				icon->main_window = window;
 		}
-		found = True;
+
 		if (!wPreferences.no_animations && !icon->launching &&
 		    !w_global.startup.phase1 && !dock->collapsed)
 			move_appicon_to_dock(dock->screen_ptr, icon, wm_class, wm_instance);
 
 		wDockFinishLaunch(icon);
-		break;
+		return 1;
 	}
 
-	if (firstPass && !found) {
-		firstPass = False;
-		goto retry;
+	return 0;
+}
+
+void wDockTrackWindowLaunch(WDock *dock, Window window)
+{
+	char *wm_class, *wm_instance, *command = NULL;
+	Bool found = False;
+
+	if (!PropGetWMClass(window, &wm_class, &wm_instance)) {
+		free(wm_class);
+		free(wm_instance);
+		return;
 	}
+
+	command = GetCommandForWindow(window);
+
+	found = find_win_in_dock(dock, window, wm_class, wm_instance, command, True);
+	if (!found)
+		find_win_in_dock(dock, window, wm_class, wm_instance, command, False);
 
 	if (command)
 		wfree(command);
 
 	if (wm_class)
 		free(wm_class);
+
 	if (wm_instance)
 		free(wm_instance);
 }
