@@ -3668,38 +3668,48 @@ void wDockTrackWindowLaunch(WDock *dock, Window window)
 
 void wClipUpdateForWorkspaceChange(int workspace)
 {
-	if (!wPreferences.flags.noclip) {
-		w_global.clip.icon->dock = w_global.workspace.array[workspace]->clip;
-		if (w_global.workspace.current != workspace) {
-			WDock *old_clip = w_global.workspace.array[w_global.workspace.current]->clip;
-			WAppIconChain *chain = w_global.clip.global_icons;
+	WDock *old_clip;
+	WAppIconChain *chain;
 
-			while (chain) {
-				wDockMoveIconBetweenDocks(chain->aicon->dock,
-						     w_global.workspace.array[workspace]->clip,
-						     chain->aicon, chain->aicon->xindex, chain->aicon->yindex);
-				if (w_global.workspace.array[workspace]->clip->collapsed)
-					XUnmapWindow(dpy, chain->aicon->icon->core->window);
-				chain = chain->next;
-			}
+	if (wPreferences.flags.noclip)
+		return;
 
-			wDockHideIcons(old_clip);
-			if (old_clip->auto_raise_lower) {
-				if (old_clip->auto_raise_magic) {
-					WMDeleteTimerHandler(old_clip->auto_raise_magic);
-					old_clip->auto_raise_magic = NULL;
-				}
-				wDockLower(old_clip);
-			}
-			if (old_clip->auto_collapse) {
-				if (old_clip->auto_expand_magic) {
-					WMDeleteTimerHandler(old_clip->auto_expand_magic);
-					old_clip->auto_expand_magic = NULL;
-				}
-				old_clip->collapsed = 1;
-			}
-			wDockShowIcons(w_global.workspace.array[workspace]->clip);
+	w_global.clip.icon->dock = w_global.workspace.array[workspace]->clip;
+	if (w_global.workspace.current != workspace) {
+		old_clip = w_global.workspace.array[w_global.workspace.current]->clip;
+		chain = w_global.clip.global_icons;
+
+		while (chain) {
+			wDockMoveIconBetweenDocks(chain->aicon->dock,
+					     w_global.workspace.array[workspace]->clip,
+					     chain->aicon, chain->aicon->xindex, chain->aicon->yindex);
+
+			if (w_global.workspace.array[workspace]->clip->collapsed)
+				XUnmapWindow(dpy, chain->aicon->icon->core->window);
+
+			chain = chain->next;
 		}
+
+		wDockHideIcons(old_clip);
+		if (old_clip->auto_raise_lower) {
+			if (old_clip->auto_raise_magic) {
+				WMDeleteTimerHandler(old_clip->auto_raise_magic);
+				old_clip->auto_raise_magic = NULL;
+			}
+
+			wDockLower(old_clip);
+		}
+
+		if (old_clip->auto_collapse) {
+			if (old_clip->auto_expand_magic) {
+				WMDeleteTimerHandler(old_clip->auto_expand_magic);
+				old_clip->auto_expand_magic = NULL;
+			}
+
+			old_clip->collapsed = 1;
+		}
+
+		wDockShowIcons(w_global.workspace.array[workspace]->clip);
 	}
 }
 
