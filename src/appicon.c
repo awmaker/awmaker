@@ -1270,3 +1270,27 @@ WAppIcon *wAppIconFor(Window window)
 
 	return NULL;
 }
+
+void move_appicon_to_dock(WScreen *scr, WAppIcon *icon, char *wm_class, char *wm_instance)
+{
+	WAppIcon *aicon;
+	int x0, y0;
+
+	/* Create appicon's icon */
+	aicon = create_appicon(NULL, wm_class, wm_instance);
+	aicon->icon->core->descriptor.parent_type = WCLASS_APPICON;
+	aicon->icon->core->descriptor.parent = aicon;
+	appicon_map(aicon, scr);
+
+	/* Map it on the screen, in the right possition */
+	PlaceIcon(scr, &x0, &y0, wGetHeadForWindow(aicon->icon->owner));
+	wAppIconMove(aicon, x0, y0);
+	XMapWindow(dpy, aicon->icon->core->window);
+	aicon->launching = 1;
+	wAppIconPaint(aicon);
+
+	/* Move to the docked icon and destroy it */
+	SlideWindow(aicon->icon->core->window, x0, y0, icon->x_pos, icon->y_pos);
+	XUnmapWindow(dpy, aicon->icon->core->window);
+	wAppIconDestroy(aicon);
+}
