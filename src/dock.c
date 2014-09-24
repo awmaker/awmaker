@@ -3582,7 +3582,7 @@ WAppIcon *wDockFindIconForWindow(WDock *dock, Window window)
 	return NULL;
 }
 
-void move_to_dock(WDock *dock, WAppIcon *icon, char *wm_class, char *wm_instance)
+void move_to_dock(WScreen *scr, WAppIcon *icon, char *wm_class, char *wm_instance)
 {
 	WAppIcon *aicon;
 	int x0, y0;
@@ -3591,10 +3591,10 @@ void move_to_dock(WDock *dock, WAppIcon *icon, char *wm_class, char *wm_instance
 	aicon = create_appicon(NULL, wm_class, wm_instance);
 	aicon->icon->core->descriptor.parent_type = WCLASS_APPICON;
 	aicon->icon->core->descriptor.parent = aicon;
-	appicon_map(aicon, dock->screen_ptr);
+	appicon_map(aicon, scr);
 
 	/* Map it on the screen, in the right possition */
-	PlaceIcon(dock->screen_ptr, &x0, &y0, wGetHeadForWindow(aicon->icon->owner));
+	PlaceIcon(scr, &x0, &y0, wGetHeadForWindow(aicon->icon->owner));
 	wAppIconMove(aicon, x0, y0);
 	XMapWindow(dpy, aicon->icon->core->window);
 	aicon->launching = 1;
@@ -3666,7 +3666,7 @@ void wDockTrackWindowLaunch(WDock *dock, Window window)
 		found = True;
 		if (!wPreferences.no_animations && !icon->launching &&
 		    !w_global.startup.phase1 && !dock->collapsed)
-			move_to_dock(dock, icon, wm_class, wm_instance);
+			move_to_dock(dock->screen_ptr, icon, wm_class, wm_instance);
 
 		wDockFinishLaunch(icon);
 		break;
