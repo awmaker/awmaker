@@ -81,6 +81,18 @@ void wWorkspaceMake(WScreen * scr, int count)
 	}
 }
 
+static void set_workspace_clip(WDock **clip, WScreen *scr, WMPropList *state) {
+	/* We should create and map the dock icon only in the first
+	 * workspace, because the image is shared */
+	if (!w_global.clip.icon) {
+		clip_icon_create();
+		clip_icon_map(scr);
+	}
+
+	*clip = clip_create();
+	clip_map(*clip, scr, state);
+}
+
 int wWorkspaceNew(WScreen *scr)
 {
 	WWorkspace *wspace, **list;
@@ -121,16 +133,7 @@ int wWorkspaceNew(WScreen *scr)
 	wspace->clip = NULL;
 	if (!wPreferences.flags.noclip) {
 		state = WMGetFromPLDictionary(w_global.session_state, dClip);
-
-		/* We should create and map the dock icon only in the first
-		 * workspace, because the image is shared */
-		if (!w_global.clip.icon) {
-			clip_icon_create();
-			clip_icon_map(scr);
-		}
-
-		wspace->clip = clip_create();
-		clip_map(wspace->clip, scr, state);
+		set_workspace_clip(&wspace->clip, scr, state);
 	}
 
 	list = wmalloc(sizeof(WWorkspace *) * w_global.workspace.count);
@@ -907,15 +910,7 @@ void wWorkspaceRestoreState(WScreen *scr)
 			if (w_global.workspace.array[i]->clip)
 				wDockDestroy(w_global.workspace.array[i]->clip);
 
-			/* We should create and map the dock icon only in the first
-			 * workspace, because the image is shared */
-			if (!w_global.clip.icon) {
-				clip_icon_create();
-				clip_icon_map(scr);
-			}
-
-			w_global.workspace.array[i]->clip = clip_create();
-			clip_map(w_global.workspace.array[i]->clip, scr, clip_state);
+			set_workspace_clip(&w_global.workspace.array[i]->clip, scr, clip_state);
 
 			if (i > 0)
 				wDockHideIcons(w_global.workspace.array[i]->clip);
