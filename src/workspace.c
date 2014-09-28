@@ -85,6 +85,8 @@ int wWorkspaceNew(WScreen *scr)
 {
 	WWorkspace *wspace, **list;
 	WMPropList *state;
+	static const char *new_name = NULL;
+	static size_t name_length;
 	int i;
 	char *path;
 
@@ -100,28 +102,23 @@ int wWorkspaceNew(WScreen *scr)
 		wfree(path);
 	}
 
+	/* Max workspaces reached check */
 	if (w_global.workspace.count >= MAX_WORKSPACES)
 		return -1;
 
+	/* Create a new one */
+	wspace = wmalloc(sizeof(WWorkspace));
 	w_global.workspace.count++;
 
-	wspace = wmalloc(sizeof(WWorkspace));
+	/* Set the workspace name */
 	wspace->name = NULL;
+	new_name = _("Workspace %i");
+	name_length = strlen(new_name) + 8;
+	wspace->name = wmalloc(name_length);
+	snprintf(wspace->name, name_length, new_name, w_global.workspace.count);
+
+	/* Set the clip */
 	wspace->clip = NULL;
-
-	if (!wspace->name) {
-		static const char *new_name = NULL;
-		static size_t name_length;
-
-		if (new_name == NULL) {
-			new_name = _("Workspace %i");
-			name_length = strlen(new_name) + 8;
-		}
-
-		wspace->name = wmalloc(name_length);
-		snprintf(wspace->name, name_length, new_name, w_global.workspace.count);
-	}
-
 	if (!wPreferences.flags.noclip) {
 		/* We should create and map the dock icon only in the first
 		 * workspace, because the image is shared */
