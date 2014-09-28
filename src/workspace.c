@@ -100,59 +100,59 @@ int wWorkspaceNew(WScreen *scr)
 		wfree(path);
 	}
 
-	if (w_global.workspace.count < MAX_WORKSPACES) {
-		w_global.workspace.count++;
+	if (w_global.workspace.count >= MAX_WORKSPACES)
+		return -1;
 
-		wspace = wmalloc(sizeof(WWorkspace));
-		wspace->name = NULL;
-		wspace->clip = NULL;
+	w_global.workspace.count++;
 
-		if (!wspace->name) {
-			static const char *new_name = NULL;
-			static size_t name_length;
+	wspace = wmalloc(sizeof(WWorkspace));
+	wspace->name = NULL;
+	wspace->clip = NULL;
 
-			if (new_name == NULL) {
-				new_name = _("Workspace %i");
-				name_length = strlen(new_name) + 8;
-			}
-			wspace->name = wmalloc(name_length);
-			snprintf(wspace->name, name_length, new_name, w_global.workspace.count);
+	if (!wspace->name) {
+		static const char *new_name = NULL;
+		static size_t name_length;
+
+		if (new_name == NULL) {
+			new_name = _("Workspace %i");
+			name_length = strlen(new_name) + 8;
 		}
 
-		if (!wPreferences.flags.noclip) {
-			/* We should create and map the dock icon only in the first
-			 * workspace, because the image is shared */
-			if (!w_global.clip.icon) {
-				clip_icon_create();
-				clip_icon_map(scr);
-			}
-
-			state = WMGetFromPLDictionary(w_global.session_state, dClip);
-			wspace->clip = clip_create();
-			clip_map(wspace->clip, scr, state);
-		}
-
-		list = wmalloc(sizeof(WWorkspace *) * w_global.workspace.count);
-
-		for (i = 0; i < w_global.workspace.count - 1; i++)
-			list[i] = w_global.workspace.array[i];
-
-		list[i] = wspace;
-		if (w_global.workspace.array)
-			wfree(w_global.workspace.array);
-
-		w_global.workspace.array = list;
-
-		wWorkspaceMenuUpdate(w_global.workspace.menu);
-		wWorkspaceMenuUpdate(w_global.clip.ws_menu);
-		wNETWMUpdateDesktop(scr);
-		WMPostNotificationName(WMNWorkspaceCreated, scr, (void *)(uintptr_t) (w_global.workspace.count - 1));
-		XFlush(dpy);
-
-		return w_global.workspace.count - 1;
+		wspace->name = wmalloc(name_length);
+		snprintf(wspace->name, name_length, new_name, w_global.workspace.count);
 	}
 
-	return -1;
+	if (!wPreferences.flags.noclip) {
+		/* We should create and map the dock icon only in the first
+		 * workspace, because the image is shared */
+		if (!w_global.clip.icon) {
+			clip_icon_create();
+			clip_icon_map(scr);
+		}
+
+		state = WMGetFromPLDictionary(w_global.session_state, dClip);
+		wspace->clip = clip_create();
+		clip_map(wspace->clip, scr, state);
+	}
+
+	list = wmalloc(sizeof(WWorkspace *) * w_global.workspace.count);
+
+	for (i = 0; i < w_global.workspace.count - 1; i++)
+		list[i] = w_global.workspace.array[i];
+
+	list[i] = wspace;
+	if (w_global.workspace.array)
+		wfree(w_global.workspace.array);
+
+	w_global.workspace.array = list;
+
+	wWorkspaceMenuUpdate(w_global.workspace.menu);
+	wWorkspaceMenuUpdate(w_global.clip.ws_menu);
+	wNETWMUpdateDesktop(scr);
+	WMPostNotificationName(WMNWorkspaceCreated, scr, (void *)(uintptr_t) (w_global.workspace.count - 1));
+	XFlush(dpy);
+
+	return w_global.workspace.count - 1;
 }
 
 Bool wWorkspaceDelete(WScreen * scr, int workspace)
