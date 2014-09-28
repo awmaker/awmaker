@@ -2231,6 +2231,24 @@ static void set_attacheddocks_map(virtual_screen *vscr, WDock *dock)
 	}
 }
 
+static void set_attacheddocks_unmap(WDock *dock)
+{
+	WAppIcon *aicon;
+	int i = 0;
+
+	if (!dock)
+		return;
+
+	if (dock->type != WM_DOCK)
+		i = 1;
+
+	for (; i < dock->max_icons; i++) {
+		aicon = dock->icon_array[i];
+		if (aicon)
+			appicon_unmap(aicon);
+	}
+}
+
 static int set_attacheddocks(WDock *dock, WMPropList *apps)
 {
 	int count, i;
