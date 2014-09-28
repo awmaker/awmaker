@@ -141,7 +141,7 @@ static void restore_clip_position(WDock *dock, WScreen *scr, WMPropList *state);
 static void restore_state_lowered(WDock *dock, WMPropList *state);
 static void restore_state_collapsed(WDock *dock, WMPropList *state);
 static void restore_state_autoraise(WDock *dock, WMPropList *state);
-static void dock_set_attacheddocks(WScreen *scr, WDock *dock, WMPropList *state, int type);
+static void dock_set_attacheddocks(WScreen *scr, WDock *dock, WMPropList *state);
 static int restore_state_autocollapsed(WDock *dock, WMPropList *state);
 static int restore_state_autoattracticons(WDock *dock, WMPropList *state);
 
@@ -1479,7 +1479,7 @@ void dock_map(WDock *dock, WScreen *scr, WMPropList *state)
 	(void) restore_state_autoattracticons(dock, state);
 
 	/* application list */
-	dock_set_attacheddocks(dock->screen_ptr, dock, state, dock->type);
+	dock_set_attacheddocks(dock->screen_ptr, dock, state);
 
 	WMReleasePropList(state);
 }
@@ -1577,7 +1577,7 @@ void clip_map(WDock *dock, WScreen *scr, WMPropList *state)
 	(void) restore_state_autoattracticons(dock, state);
 
 	/* application list */
-	dock_set_attacheddocks(dock->screen_ptr, dock, state, dock->type);
+	dock_set_attacheddocks(dock->screen_ptr, dock, state);
 
 	WMReleasePropList(state);
 }
@@ -2181,7 +2181,7 @@ static void save_application_list(WMPropList *state, WMPropList *list, char *scr
 	WMReleasePropList(key);
 }
 
-static void set_attacheddocks_map(WScreen *scr, WDock *dock, int type)
+static void set_attacheddocks_map(WScreen *scr, WDock *dock)
 {
 	WAppIcon *aicon;
 	int i = 0;
@@ -2189,7 +2189,7 @@ static void set_attacheddocks_map(WScreen *scr, WDock *dock, int type)
 	if (!dock)
 		return;
 
-	if (type != WM_DOCK)
+	if (dock->type != WM_DOCK)
 		i = 1;
 
 	for (; i < dock->max_icons; i++) {
@@ -2211,7 +2211,7 @@ static void set_attacheddocks_map(WScreen *scr, WDock *dock, int type)
 	}
 }
 
-static int set_attacheddocks(WDock *dock, WMPropList *apps, int type)
+static int set_attacheddocks(WDock *dock, WMPropList *apps)
 {
 	int count, i;
 	WMPropList *value;
@@ -2225,7 +2225,7 @@ static int set_attacheddocks(WDock *dock, WMPropList *apps, int type)
 	 * Since Clip is already restored, we want to keep it so for clip,
 	 * but for dock we may change the default top tile, so we set it to 0.
 	 */
-	if (type == WM_DOCK)
+	if (dock->type == WM_DOCK)
 		dock->icon_count = 0;
 
 	for (i = 0; i < count; i++) {
@@ -2235,7 +2235,7 @@ static int set_attacheddocks(WDock *dock, WMPropList *apps, int type)
 		}
 
 		value = WMGetFromPLArray(apps, i);
-		aicon = restore_icon_state(value, type, dock->icon_count);
+		aicon = restore_icon_state(value, dock->type, dock->icon_count);
 		dock->icon_array[dock->icon_count] = aicon;
 
 		if (aicon) {
@@ -2243,7 +2243,7 @@ static int set_attacheddocks(WDock *dock, WMPropList *apps, int type)
 			aicon->x_pos = dock->x_pos + (aicon->xindex * ICON_SIZE);
 			aicon->y_pos = dock->y_pos + (aicon->yindex * ICON_SIZE);
 			dock->icon_count++;
-		} else if (dock->icon_count == 0 && type == WM_DOCK) {
+		} else if (dock->icon_count == 0 && dock->type == WM_DOCK) {
 			dock->icon_count++;
 		}
 	}
@@ -2251,7 +2251,7 @@ static int set_attacheddocks(WDock *dock, WMPropList *apps, int type)
 	return 0;
 }
 
-static void dock_set_attacheddocks(WScreen *scr, WDock *dock, WMPropList *state, int type)
+static void dock_set_attacheddocks(WScreen *scr, WDock *dock, WMPropList *state)
 {
 	char screen_id[64];
 	WMPropList *apps;
@@ -2264,10 +2264,10 @@ static void dock_set_attacheddocks(WScreen *scr, WDock *dock, WMPropList *state,
 	if (!apps)
 		return;
 
-	if (set_attacheddocks(dock, apps, type))
+	if (set_attacheddocks(dock, apps))
 		return;
 
-	set_attacheddocks_map(scr, dock, type);
+	set_attacheddocks_map(scr, dock);
 
 	/* if the first icon is not defined, use the default */
 	if (dock->icon_array[0] == NULL) {
@@ -3582,63 +3582,20 @@ WAppIcon *wDockFindIconForWindow(WDock *dock, Window window)
 	return NULL;
 }
 
-void move_to_dock(WDock *dock, WAppIcon *icon, char *wm_class, char *wm_instance)
-{
-	WAppIcon *aicon;
-	int x0, y0;
-
-	/* Create appicon's icon */
-	aicon = create_appicon(NULL, wm_class, wm_instance);
-	appicon_map(aicon, dock->screen_ptr);
-
-	/* will be overriden by dock */
-	aicon->icon->core->descriptor.handle_mousedown = appIconMouseDown;
-	aicon->icon->core->descriptor.handle_expose = dockIconExpose;
-	aicon->icon->core->descriptor.parent_type = WCLASS_APPICON;
-	aicon->icon->core->descriptor.parent = aicon;
-
-	PlaceIcon(dock->screen_ptr, &x0, &y0, wGetHeadForWindow(aicon->icon->owner));
-	wAppIconMove(aicon, x0, y0);
-
-	/* Should this always be lowered? -Dan */
-	if (dock->lowered)
-		wLowerFrame(aicon->icon->core);
-
-	XMapWindow(dpy, aicon->icon->core->window);
-	aicon->launching = 1;
-	wAppIconPaint(aicon);
-	SlideWindow(aicon->icon->core->window, x0, y0, icon->x_pos, icon->y_pos);
-	XUnmapWindow(dpy, aicon->icon->core->window);
-	wAppIconDestroy(aicon);
-}
-
-void wDockTrackWindowLaunch(WDock *dock, Window window)
+static int find_win_in_dock(WDock *dock, Window window, char *wm_class,
+			    char *wm_instance, char *command, Bool firstPass)
 {
 	WAppIcon *icon;
-	char *wm_class, *wm_instance;
 	int i;
-	Bool firstPass = True;
-	Bool found = False;
-	char *command = NULL;
 
-	if (!PropGetWMClass(window, &wm_class, &wm_instance)) {
-		free(wm_class);
-		free(wm_instance);
-		return;
-	}
-
-	command = GetCommandForWindow(window);
- retry:
 	for (i = 0; i < dock->max_icons; i++) {
 		icon = dock->icon_array[i];
 		if (!icon)
 			continue;
 
 		/* app is already attached to icon */
-		if (icon->main_window == window) {
-			found = True;
-			break;
-		}
+		if (icon->main_window == window)
+			return 1;
 
 		if (!icon->wm_instance && !icon->wm_class)
 			continue;
@@ -3666,69 +3623,93 @@ void wDockTrackWindowLaunch(WDock *dock, Window window)
 				icon->forced_dock = 1;
 				icon->running = 0;
 			}
+
 			if (!icon->forced_dock)
 				icon->main_window = window;
 		}
-		found = True;
+
 		if (!wPreferences.no_animations && !icon->launching &&
-		    !w_global.startup.phase1 && !dock->collapsed) {
-			icon->launching = 1;
-			dockIconPaint(icon);
-			move_to_dock(dock, icon, wm_class, wm_instance);
-		}
+		    !w_global.startup.phase1 && !dock->collapsed)
+			move_appicon_to_dock(dock->screen_ptr, icon, wm_class, wm_instance);
 
 		wDockFinishLaunch(icon);
-		break;
+		return 1;
 	}
 
-	if (firstPass && !found) {
-		firstPass = False;
-		goto retry;
+	return 0;
+}
+
+void wDockTrackWindowLaunch(WDock *dock, Window window)
+{
+	char *wm_class, *wm_instance, *command = NULL;
+	Bool found = False;
+
+	if (!PropGetWMClass(window, &wm_class, &wm_instance)) {
+		free(wm_class);
+		free(wm_instance);
+		return;
 	}
+
+	command = GetCommandForWindow(window);
+
+	found = find_win_in_dock(dock, window, wm_class, wm_instance, command, True);
+	if (!found)
+		find_win_in_dock(dock, window, wm_class, wm_instance, command, False);
 
 	if (command)
 		wfree(command);
 
 	if (wm_class)
 		free(wm_class);
+
 	if (wm_instance)
 		free(wm_instance);
 }
 
 void wClipUpdateForWorkspaceChange(int workspace)
 {
-	if (!wPreferences.flags.noclip) {
-		w_global.clip.icon->dock = w_global.workspace.array[workspace]->clip;
-		if (w_global.workspace.current != workspace) {
-			WDock *old_clip = w_global.workspace.array[w_global.workspace.current]->clip;
-			WAppIconChain *chain = w_global.clip.global_icons;
+	WDock *old_clip;
+	WAppIconChain *chain;
 
-			while (chain) {
-				wDockMoveIconBetweenDocks(chain->aicon->dock,
-						     w_global.workspace.array[workspace]->clip,
-						     chain->aicon, chain->aicon->xindex, chain->aicon->yindex);
-				if (w_global.workspace.array[workspace]->clip->collapsed)
-					XUnmapWindow(dpy, chain->aicon->icon->core->window);
-				chain = chain->next;
-			}
+	if (wPreferences.flags.noclip)
+		return;
 
-			wDockHideIcons(old_clip);
-			if (old_clip->auto_raise_lower) {
-				if (old_clip->auto_raise_magic) {
-					WMDeleteTimerHandler(old_clip->auto_raise_magic);
-					old_clip->auto_raise_magic = NULL;
-				}
-				wDockLower(old_clip);
-			}
-			if (old_clip->auto_collapse) {
-				if (old_clip->auto_expand_magic) {
-					WMDeleteTimerHandler(old_clip->auto_expand_magic);
-					old_clip->auto_expand_magic = NULL;
-				}
-				old_clip->collapsed = 1;
-			}
-			wDockShowIcons(w_global.workspace.array[workspace]->clip);
+	w_global.clip.icon->dock = w_global.workspace.array[workspace]->clip;
+	if (w_global.workspace.current != workspace) {
+		old_clip = w_global.workspace.array[w_global.workspace.current]->clip;
+		chain = w_global.clip.global_icons;
+
+		while (chain) {
+			wDockMoveIconBetweenDocks(chain->aicon->dock,
+					     w_global.workspace.array[workspace]->clip,
+					     chain->aicon, chain->aicon->xindex, chain->aicon->yindex);
+
+			if (w_global.workspace.array[workspace]->clip->collapsed)
+				XUnmapWindow(dpy, chain->aicon->icon->core->window);
+
+			chain = chain->next;
 		}
+
+		wDockHideIcons(old_clip);
+		if (old_clip->auto_raise_lower) {
+			if (old_clip->auto_raise_magic) {
+				WMDeleteTimerHandler(old_clip->auto_raise_magic);
+				old_clip->auto_raise_magic = NULL;
+			}
+
+			wDockLower(old_clip);
+		}
+
+		if (old_clip->auto_collapse) {
+			if (old_clip->auto_expand_magic) {
+				WMDeleteTimerHandler(old_clip->auto_expand_magic);
+				old_clip->auto_expand_magic = NULL;
+			}
+
+			old_clip->collapsed = 1;
+		}
+
+		wDockShowIcons(w_global.workspace.array[workspace]->clip);
 	}
 }
 
@@ -5328,7 +5309,7 @@ static WDock *drawerRestoreState(WMPropList *drawer_state)
 	/* application list */
 	apps = WMGetFromPLDictionary(dock_state, dApplications);
 	if (apps)
-		set_attacheddocks(drawer, apps, WM_DRAWER);
+		set_attacheddocks(drawer, apps);
 
 	WMReleasePropList(drawer_state);
 
@@ -5348,7 +5329,7 @@ static void drawerRestoreState_map(WScreen *scr, WDock *drawer)
 
 	wRaiseFrame(drawer->icon_array[0]->icon->core);
 
-	set_attacheddocks_map(scr, drawer, WM_DRAWER);
+	set_attacheddocks_map(scr, drawer);
 }
 
 /* Same kind of comment than for previous function: this function is
