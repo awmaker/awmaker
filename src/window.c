@@ -99,6 +99,8 @@ static void resizebarMouseDown(WCoreWindow *sender, void *data, XEvent *event);
 
 static void release_wwindowstate(WWindowState *wstate);
 
+static WWindow *window_focus_sloppy(WScreen *scr, WWindow *wwin);
+
 /****** Notification Observers ******/
 
 static void appearanceObserver(void *self, WMNotification * notif)
@@ -1559,20 +1561,7 @@ void wUnmanageWindow(WWindow *wwin, Bool restore, Bool destroyed)
 			newFocusedWindow = tmp;
 
 		} else if (wPreferences.focus_mode == WKF_SLOPPY) {
-			unsigned int mask;
-			int foo;
-			Window bar, win;
-
-			/*  This is to let the root window get the keyboard input
-			 * if Sloppy focus mode and no other window get focus.
-			 * This way keybindings will not freeze.
-			 */
-			tmp = NULL;
-			if (XQueryPointer(dpy, scr->root_win, &bar, &win, &foo, &foo, &foo, &foo, &mask))
-				tmp = wWindowFor(win);
-			if (tmp == wwin)
-				tmp = NULL;
-			newFocusedWindow = tmp;
+			newFocusedWindow = window_focus_sloppy(scr, wwin);
 		} else {
 			newFocusedWindow = NULL;
 		}
@@ -3057,4 +3046,23 @@ static void windowIconifyClick(WCoreWindow *sender, void *data, XEvent *event)
 			wIconifyWindow(wwin);
 		}
 	}
+}
+
+static WWindow *window_focus_sloppy(WScreen *scr, WWindow *wwin) {
+	WWindow *tmp = NULL;
+	unsigned int mask;
+	int foo;
+	Window bar, win;
+
+	/*  This is to let the root window get the keyboard input
+	 * if Sloppy focus mode and no other window get focus.
+	 * This way keybindings will not freeze.
+	 */
+	if (XQueryPointer(dpy, scr->root_win, &bar, &win, &foo, &foo, &foo, &foo, &mask))
+		tmp = wWindowFor(win);
+
+	if (tmp == wwin)
+		tmp = NULL;
+
+	return tmp;
 }
