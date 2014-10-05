@@ -1529,17 +1529,13 @@ void wUnmanageWindow(WWindow *wwin, Bool restore, Bool destroyed)
 		}
 
 		if (wPreferences.focus_mode == WKF_CLICK) {
-
 			/* if in click to focus mode and the window
 			 * was a transient, focus the owner window
 			 */
-			tmp = NULL;
-			if (wPreferences.focus_mode == WKF_CLICK) {
-				tmp = wWindowFor(wwin->transient_for);
-				if (tmp && (!tmp->flags.mapped || WFLAGP(tmp, no_focusable))) {
-					tmp = NULL;
-				}
-			}
+			tmp = wWindowFor(wwin->transient_for);
+			if (tmp && (!tmp->flags.mapped || WFLAGP(tmp, no_focusable)))
+				tmp = NULL;
+
 			/* otherwise, focus the next one in the focus list */
 			if (!tmp) {
 				tmp = scr->focused_window;
