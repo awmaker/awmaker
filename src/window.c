@@ -100,6 +100,7 @@ static void resizebarMouseDown(WCoreWindow *sender, void *data, XEvent *event);
 static void release_wwindowstate(WWindowState *wstate);
 
 static WWindow *window_focus_sloppy(WScreen *scr, WWindow *wwin);
+static WWindow *window_focus_click(WScreen *scr, WWindow *wwin);
 
 /****** Notification Observers ******/
 
@@ -1518,8 +1519,6 @@ void wUnmanageWindow(WWindow *wwin, Bool restore, Bool destroyed)
 		scr->focused_window = NULL;
 		newFocusedWindow = NULL;
 	} else {
-		WWindow *tmp;
-
 		if (wwin->prev)
 			wwin->prev->next = wwin->next;
 
@@ -1530,41 +1529,12 @@ void wUnmanageWindow(WWindow *wwin, Bool restore, Bool destroyed)
 			scr->focused_window->next = NULL;
 		}
 
-		if (wPreferences.focus_mode == WKF_CLICK) {
-			/* if in click to focus mode and the window
-			 * was a transient, focus the owner window
-			 */
-			tmp = wWindowFor(wwin->transient_for);
-			if (tmp && (!tmp->flags.mapped || WFLAGP(tmp, no_focusable)))
-				tmp = NULL;
-
-			/* otherwise, focus the next one in the focus list */
-			if (!tmp) {
-				tmp = scr->focused_window;
-				while (tmp) {	/* look for one in the window list first */
-					if (!WFLAGP(tmp, no_focusable) && !WFLAGP(tmp, skip_window_list)
-					    && (tmp->flags.mapped || tmp->flags.shaded))
-						break;
-					tmp = tmp->prev;
-				}
-				if (!tmp) {	/* if unsuccessful, choose any focusable window */
-					tmp = scr->focused_window;
-					while (tmp) {
-						if (!WFLAGP(tmp, no_focusable)
-						    && (tmp->flags.mapped || tmp->flags.shaded))
-							break;
-						tmp = tmp->prev;
-					}
-				}
-			}
-
-			newFocusedWindow = tmp;
-
-		} else if (wPreferences.focus_mode == WKF_SLOPPY) {
+		if (wPreferences.focus_mode == WKF_CLICK)
+			newFocusedWindow = window_focus_click(scr, wwin);
+		else if (wPreferences.focus_mode == WKF_SLOPPY)
 			newFocusedWindow = window_focus_sloppy(scr, wwin);
-		} else {
+		else
 			newFocusedWindow = NULL;
-		}
 	}
 
 	if (!wwin->flags.internal_window)
@@ -3063,6 +3033,39 @@ static WWindow *window_focus_sloppy(WScreen *scr, WWindow *wwin) {
 
 	if (tmp == wwin)
 		tmp = NULL;
+
+	return tmp;
+}
+
+static WWindow *window_focus_click(WScreen *scr, WWindow *wwin) {
+	WWindow *tmp = NULL;
+
+	/* if in click to focus mode and the window
+	 * was a transient, focus the owner window
+	 */
+	tmp = wWindowFor(wwin->transient_for);
+	if (tmp && (!tmp->flags.mapped || WFLAGP(tmp, no_focusable)))
+		tmp = NULL;
+
+	/* otherwise, focus the next one in the focus list */
+	if (!tmp) {
+		tmp = scr->focused_window;
+		while (tmp) {	/* look for one in the window list first */
+			if (!WFLAGP(tmp, no_focusable) && !WFLAGP(tmp, skip_window_list)
+			    && (tmp->flags.mapped || tmp->flags.shaded))
+				break;
+			tmp = tmp->prev;
+		}
+		if (!tmp) {	/* if unsuccessful, choose any focusable window */
+			tmp = scr->focused_window;
+			while (tmp) {
+				if (!WFLAGP(tmp, no_focusable)
+				    && (tmp->flags.mapped || tmp->flags.shaded))
+					break;
+				tmp = tmp->prev;
+			}
+		}
+	}
 
 	return tmp;
 }
