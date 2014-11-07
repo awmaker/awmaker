@@ -77,20 +77,26 @@ typedef struct _Panel {
 
 #define THUMB_SIZE	16
 
-static const char *const placements[] = {
-	"auto",
-	"random",
-	"manual",
-	"cascade",
-	"smart",
-	"center"
+static const struct {
+	const char *db_value;
+	const char *label;
+} window_placements[] = {
+	{ "auto",     N_("Automatic") },
+	{ "random",   N_("Random")    },
+	{ "manual",   N_("Manual")    },
+	{ "cascade",  N_("Cascade")   },
+	{ "smart",    N_("Smart")     },
+	{ "center",   N_("Center")    }
 };
 
-static const char *const dragMaximizedWindowOptions[] = {
-	"Move",
-	"RestoreGeometry",
-	"Unmaximize",
-	"NoMove"
+static const struct {
+	const char *db_value;
+	const char *label;
+} drag_maximized_window_options[] = {
+	{ "Move",            N_("...change position (normal behavior)") },
+	{ "RestoreGeometry", N_("...restore unmaximized geometry")      },
+	{ "Unmaximize",      N_("...consider the window unmaximized")   },
+	{ "NoMove",          N_("...do not move the window")            }
 };
 
 static void sliderCallback(WMWidget * w, void *data)
@@ -155,41 +161,33 @@ static void resizeCallback(WMWidget * w, void *data)
 
 static int getPlacement(const char *str)
 {
+	int i;
+
 	if (!str)
 		return 0;
 
-	if (strcasecmp(str, "auto") == 0)
-		return 0;
-	else if (strcasecmp(str, "random") == 0)
-		return 1;
-	else if (strcasecmp(str, "manual") == 0)
-		return 2;
-	else if (strcasecmp(str, "cascade") == 0)
-		return 3;
-	else if (strcasecmp(str, "smart") == 0)
-		return 4;
-	else if (strcasecmp(str, "center") == 0)
-		return 5;
-	else
-		wwarning(_("bad option value %s in WindowPlacement. Using default value"), str);
+	for (i = 0; i < wlengthof(window_placements); i++) {
+		if (strcasecmp(str, window_placements[i].db_value) == 0)
+			return i;
+	}
+
+	wwarning(_("bad option value %s in WindowPlacement. Using default value"), str);
 	return 0;
 }
 
 static int getDragMaximizedWindow(const char *str)
 {
+	int i;
+
 	if (!str)
 		return 0;
 
-	if (strcasecmp(str, "Move") == 0)
-		return 0;
-	else if (strcasecmp(str, "RestoreGeometry") == 0)
-		return 1;
-	else if (strcasecmp(str, "Unmaximize") == 0)
-		return 2;
-	else if (strcasecmp(str, "NoMove") == 0)
-		return 3;
-	else
-		wwarning(_("bad option value %s in WindowPlacement. Using default value"), str);
+	for (i = 0; i < wlengthof(drag_maximized_window_options); i++) {
+		if (strcasecmp(str, drag_maximized_window_options[i].db_value) == 0)
+			return i;
+	}
+
+	wwarning(_("bad option value %s in WindowPlacement. Using default value"), str);
 	return 0;
 }
 
@@ -259,7 +257,7 @@ static void storeData(_Panel * panel)
 	SetBoolForKey(WMGetButtonSelected(panel->opaqresizeB), "OpaqueResize");
 	SetBoolForKey(WMGetButtonSelected(panel->opaqkeybB), "OpaqueMoveResizeKeyboard");
 
-	SetStringForKey(placements[WMGetPopUpButtonSelectedItem(panel->placP)], "WindowPlacement");
+	SetStringForKey(window_placements[WMGetPopUpButtonSelectedItem(panel->placP)].db_value, "WindowPlacement");
 	sprintf(buf, "%i", WMGetSliderValue(panel->hsli));
 	x = WMCreatePLString(buf);
 	sprintf(buf, "%i", WMGetSliderValue(panel->vsli));
@@ -271,8 +269,8 @@ static void storeData(_Panel * panel)
 
 	SetIntegerForKey(WMGetSliderValue(panel->resS), "EdgeResistance");
 
-	SetStringForKey(dragMaximizedWindowOptions[WMGetPopUpButtonSelectedItem(panel->dragmaxP)],
-			"DragMaximizedWindow");
+	SetStringForKey(drag_maximized_window_options[WMGetPopUpButtonSelectedItem(panel->dragmaxP)].db_value,
+	                "DragMaximizedWindow");
 
 	SetIntegerForKey(WMGetSliderValue(panel->resizeS), "ResizeIncrement");
 	SetBoolForKey(WMGetButtonSelected(panel->resrB), "Attraction");
@@ -290,6 +288,7 @@ static void createPanel(Panel * p)
 	int swidth, sheight;
 	char *path;
 	WMBox *hbox;
+	int i;
 
 	panel->box = WMCreateBox(panel->parent);
 	WMSetViewExpandsToParent(WMWidgetView(panel->box), 2, 2, 2, 2);
@@ -312,12 +311,9 @@ static void createPanel(Panel * p)
 	panel->placP = WMCreatePopUpButton(panel->placF);
 	WMResizeWidget(panel->placP, 105, 20);
 	WMMoveWidget(panel->placP, 10, 20);
-	WMAddPopUpButtonItem(panel->placP, _("Automatic"));
-	WMAddPopUpButtonItem(panel->placP, _("Random"));
-	WMAddPopUpButtonItem(panel->placP, _("Manual"));
-	WMAddPopUpButtonItem(panel->placP, _("Cascade"));
-	WMAddPopUpButtonItem(panel->placP, _("Smart"));
-	WMAddPopUpButtonItem(panel->placP, _("Center"));
+
+	for (i = 0; i < wlengthof(window_placements); i++)
+		WMAddPopUpButtonItem(panel->placP, _(window_placements[i].label));
 
 	panel->porigL = WMCreateLabel(panel->placF);
 	WMResizeWidget(panel->porigL, 110, 32);
@@ -533,10 +529,9 @@ static void createPanel(Panel * p)
 	panel->dragmaxP = WMCreatePopUpButton(panel->dragmaxF);
 	WMResizeWidget(panel->dragmaxP, 269, 20);
 	WMMoveWidget(panel->dragmaxP, 10, 20);
-	WMAddPopUpButtonItem(panel->dragmaxP, _("...change position (normal behavior)"));
-	WMAddPopUpButtonItem(panel->dragmaxP, _("...restore unmaximized geometry"));
-	WMAddPopUpButtonItem(panel->dragmaxP, _("...consider the window unmaximized"));
-	WMAddPopUpButtonItem(panel->dragmaxP, _("...do not move the window"));
+
+	for (i = 0; i < wlengthof(drag_maximized_window_options); i++)
+		WMAddPopUpButtonItem(panel->dragmaxP, _(drag_maximized_window_options[i].label));
 
 	WMMapSubwidgets(panel->dragmaxF);
 

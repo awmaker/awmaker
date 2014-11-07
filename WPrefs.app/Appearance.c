@@ -28,9 +28,119 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <fcntl.h>
+#include <math.h>
 
 #include "TexturePanel.h"
 
+
+static const struct {
+	const char *key;
+	const char *default_value;
+	const char *label;
+	WMRect      preview;	/* The rectangle where the corresponding object is displayed */
+	WMPoint     hand;	/* The coordinate where the hand is drawn when pointing this item */
+} colorOptions[] = {
+	/* Related to Window titles */
+	{ "FTitleColor", "white", N_("Focused Window Title"),
+	  { { 30, 10 }, { 190, 20 } }, { 5, 10 } },
+	{ "UTitleColor", "black", N_("Unfocused Window Title"),
+	  { { 30, 40 }, { 190, 20 } }, { 5, 40 } },
+	{ "PTitleColor", "white", N_("Owner of Focused Window Title"),
+	  { { 30, 70 }, { 190, 20 } }, { 5, 70 } },
+
+	/* Related to Menus */
+	{ "MenuTitleColor", "white", N_("Menu Title") ,
+	  { { 30, 120 }, { 90, 20 } }, { 5, 120 } },
+	{ "MenuTextColor", "black", N_("Menu Item Text") ,
+	  { { 30, 140 }, { 90, 20 } }, { 5, 140 } },
+	{ "MenuDisabledColor", "#616161", N_("Disabled Menu Item Text") ,
+	  { { 30, 160 }, { 90, 20 } }, { 5, 160 } },
+	{ "HighlightColor", "white", N_("Menu Highlight Color") ,
+	  { { 30, 180 }, { 90, 20 } }, { 5, 180 } },
+	{ "HighlightTextColor", "black", N_("Highlighted Menu Text Color") ,
+	  { { 30, 200 }, { 90, 20 } }, { 5, 180 } },
+	/*
+	 * yuck kluge: the coordinate for HighlightTextColor are actually those of the last "Normal item"
+	 * at the bottom when user clicks it, the "yuck kluge" in the function 'previewClick' will swap it
+	 * for the MenuTextColor selection as user would expect
+	 *
+	 * Note that the entries are reffered by their index for performance
+	 */
+
+	/* Related to Window's border */
+	{ "FrameFocusedBorderColor", "black", N_("Focused Window Border Color") ,
+	  { { 0, 0 }, { 0, 0 } }, { -22, -21 } },
+	{ "FrameBorderColor", "black", N_("Window Border Color") ,
+	  { { 0, 0 }, { 0, 0 } }, { -22, -21 } },
+	{ "FrameSelectedBorderColor", "white", N_("Selected Window Border Color") ,
+	  { { 0, 0 }, { 0, 0 } }, { -22, -21 } },
+
+	/* Related to Icons and Clip */
+	{ "IconTitleColor", "white", N_("Miniwindow Title") ,
+	  { { 155, 130 }, { 64, 64 } }, { 130, 132 } },
+	{ "IconTitleBack", "black", N_("Miniwindow Title Back") ,
+	  { { 155, 130 }, { 64, 64 } }, { 130, 132 } },
+	{ "ClipTitleColor", "black", N_("Clip Title") ,
+	  { { 155, 130 }, { 64, 64 } }, { 130, 132 } },
+	{ "CClipTitleColor", "#454045", N_("Collapsed Clip Title") ,
+	  { { 155, 130 }, { 64, 64 } }, { 130, 132 } }
+};
+
+/********************************************************************/
+typedef enum {
+	MSTYLE_NORMAL = 0,
+	MSTYLE_SINGLE = 1,
+	MSTYLE_FLAT   = 2
+} menu_style_index;
+
+static const struct {
+	const char *db_value;
+	const char *file_name;
+} menu_style[] = {
+	[MSTYLE_NORMAL] { "normal",        "msty1" },
+	[MSTYLE_SINGLE] { "singletexture", "msty2" },
+	[MSTYLE_FLAT]   { "flat",          "msty3" }
+};
+
+/********************************************************************/
+static const struct {
+	const char *label;
+	const char *db_value;
+} wintitle_align[] = {
+	[WALeft]   { N_("Left"),   "left"   },
+	[WACenter] { N_("Center"), "center" },
+	[WARight]  { N_("Right"),  "right"  }
+};
+
+/********************************************************************/
+static const char *const sample_colors[] = {
+	"black",
+	"#292929",
+	"#525252",
+	"#848484",
+	"#adadad",
+	"#d6d6d6",
+	"white",
+	"#d6d68c",
+	"#d6a57b",
+	"#8cd68c",
+	"#8cd6ce",
+	"#d68c8c",
+	"#8c9cd6",
+	"#bd86d6",
+	"#d68cbd",
+	"#d64a4a",
+	"#4a5ad6",
+	"#4ad6ce",
+	"#4ad65a",
+	"#ced64a",
+	"#d6844a",
+	"#8ad631",
+	"#ce29c6",
+	"#ce2973"
+};
+
+/********************************************************************/
 typedef struct _Panel {
 	WMBox *box;
 	char *sectionName;
@@ -60,20 +170,20 @@ typedef struct _Panel {
 	WMFrame *colF;
 
 	WMPopUpButton *colP;
-	WMColor *colors[15];
+	WMColor *colors[wlengthof_nocheck(colorOptions)];
 
 	WMColorWell *colW;
 
-	WMColorWell *sampW[24];
+	WMColorWell *sampW[wlengthof_nocheck(sample_colors)];
 
 	/* options */
 	WMFrame *optF;
 
 	WMFrame *mstyF;
-	WMButton *mstyB[3];
+	WMButton *mstyB[wlengthof_nocheck(menu_style)];
 
 	WMFrame *taliF;
-	WMButton *taliB[3];
+	WMButton *taliB[wlengthof_nocheck(wintitle_align)];
 
 	/* */
 
@@ -94,9 +204,9 @@ typedef struct _Panel {
 
 	char oldTabItem;
 
-	int menuStyle;
+	menu_style_index menuStyle;
 
-	int titleAlignment;
+	WMAlignment titleAlignment;
 
 	Pixmap preview;
 	Pixmap previewNoText;
@@ -150,10 +260,6 @@ static WMTabViewDelegate tabviewDelegate = {
 #define TDEL_FILE	"tdel"
 #define TEDIT_FILE	"tedit"
 #define TEXTR_FILE 	"textr"
-
-#define MSTYLE1_FILE	"msty1"
-#define MSTYLE2_FILE	"msty2"
-#define MSTYLE3_FILE	"msty3"
 
 /* XPM */
 static char *blueled_xpm[] = {
@@ -263,34 +369,6 @@ static char *hand_xpm[] = {
 	"                      "
 };
 
-static char *sampleColors[] = {
-	"black",
-	"#292929",
-	"#525252",
-	"#848484",
-	"#adadad",
-	"#d6d6d6",
-	"white",
-	"#d6d68c",
-	"#d6a57b",
-	"#8cd68c",
-	"#8cd6ce",
-	"#d68c8c",
-	"#8c9cd6",
-	"#bd86d6",
-	"#d68cbd",
-	"#d64a4a",
-	"#4a5ad6",
-	"#4ad6ce",
-	"#4ad65a",
-	"#ced64a",
-	"#d6844a",
-	"#8ad631",
-	"#ce29c6",
-	"#ce2973",
-	"black"
-};
-
 static const struct {
 	const char *key;
 	const char *default_value;
@@ -346,12 +424,6 @@ enum {
 };
 
 enum {
-	MSTYLE_NORMAL,
-	MSTYLE_SINGLE,
-	MSTYLE_FLAT
-};
-
-enum {
 	FTITLE_COL,
 	UTITLE_COL,
 	OTITLE_COL,
@@ -367,59 +439,6 @@ enum {
 	ICONB_COL,
 	CLIP_COL,
 	CCLIP_COL
-};
-
-static const struct {
-	const char *key;
-	const char *default_value;
-	const char *label;
-	WMRect      preview;	/* The rectangle where the corresponding object is displayed */
-	WMPoint     hand;	/* The coordinate where the hand is drawn when pointing this item */
-} colorOptions[] = {
-	/* Related to Window titles */
-	{ "FTitleColor", "white", N_("Focused Window Title"),
-	  { { 30, 10 }, { 190, 20 } }, { 5, 10 } },
-	{ "UTitleColor", "black", N_("Unfocused Window Title"),
-	  { { 30, 40 }, { 190, 20 } }, { 5, 40 } },
-	{ "PTitleColor", "white", N_("Owner of Focused Window Title"),
-	  { { 30, 70 }, { 190, 20 } }, { 5, 70 } },
-
-	/* Related to Menus */
-	{ "MenuTitleColor", "white", N_("Menu Title") ,
-	  { { 30, 120 }, { 90, 20 } }, { 5, 120 } },
-	{ "MenuTextColor", "black", N_("Menu Item Text") ,
-	  { { 30, 140 }, { 90, 20 } }, { 5, 140 } },
-	{ "MenuDisabledColor", "#616161", N_("Disabled Menu Item Text") ,
-	  { { 30, 160 }, { 90, 20 } }, { 5, 160 } },
-	{ "HighlightColor", "white", N_("Menu Highlight Color") ,
-	  { { 30, 180 }, { 90, 20 } }, { 5, 180 } },
-	{ "HighlightTextColor", "black", N_("Highlighted Menu Text Color") ,
-	  { { 30, 200 }, { 90, 20 } }, { 5, 180 } },
-	/*
-	 * yuck kluge: the coordinate for HighlightTextColor are actually those of the last "Normal item"
-	 * at the bottom when user clicks it, the "yuck kluge" in the function 'previewClick' will swap it
-	 * for the MenuTextColor selection as user would expect
-	 *
-	 * Note that the entries are reffered by their index for performance
-	 */
-
-	/* Related to Window's border */
-	{ "FrameFocusedBorderColor", "black", N_("Focused Window Border Color") ,
-	  { { 0, 0 }, { 0, 0 } }, { -22, -21 } },
-	{ "FrameBorderColor", "black", N_("Window Border Color") ,
-	  { { 0, 0 }, { 0, 0 } }, { -22, -21 } },
-	{ "FrameSelectedBorderColor", "white", N_("Selected Window Border Color") ,
-	  { { 0, 0 }, { 0, 0 } }, { -22, -21 } },
-
-	/* Related to Icons and Clip */
-	{ "IconTitleColor", "white", N_("Miniwindow Title") ,
-	  { { 155, 130 }, { 64, 64 } }, { 130, 132 } },
-	{ "IconTitleBack", "black", N_("Miniwindow Title Back") ,
-	  { { 155, 130 }, { 64, 64 } }, { 130, 132 } },
-	{ "ClipTitleColor", "black", N_("Clip Title") ,
-	  { { 155, 130 }, { 64, 64 } }, { 130, 132 } },
-	{ "CClipTitleColor", "#454045", N_("Collapsed Clip Title") ,
-	  { { 155, 130 }, { 64, 64 } }, { 130, 132 } }
 };
 
 
@@ -1353,8 +1372,8 @@ static void fillColorList(_Panel * panel)
 
 	list = WMGetUDObjectForKey(udb, "ColorList");
 	if (!list) {
-		for (i = 0; i < 24; i++) {
-			color = WMCreateNamedColor(scr, sampleColors[i], False);
+		for (i = 0; i < wlengthof(sample_colors); i++) {
+			color = WMCreateNamedColor(scr, sample_colors[i], False);
 			if (!color)
 				continue;
 			WMSetColorWellColor(panel->sampW[i], color);
@@ -1363,7 +1382,7 @@ static void fillColorList(_Panel * panel)
 	} else {
 		WMPropList *c;
 
-		for (i = 0; i < WMIN(24, WMGetPropListItemCount(list)); i++) {
+		for (i = 0; i < WMIN(wlengthof(sample_colors), WMGetPropListItemCount(list)); i++) {
 			c = WMGetFromPLArray(list, i);
 			if (!c || !WMIsPLString(c))
 				continue;
@@ -1749,37 +1768,31 @@ static void changedTabItem(struct WMTabViewDelegate *self, WMTabView * tabView, 
 static void menuStyleCallback(WMWidget * self, void *data)
 {
 	_Panel *panel = (_Panel *) data;
+	menu_style_index i;
 
-	if (self == panel->mstyB[0]) {
-		panel->menuStyle = MSTYLE_NORMAL;
-		updatePreviewBox(panel, 1 << PMITEM);
-
-	} else if (self == panel->mstyB[1]) {
-		panel->menuStyle = MSTYLE_SINGLE;
-		updatePreviewBox(panel, 1 << PMITEM);
-
-	} else if (self == panel->mstyB[2]) {
-		panel->menuStyle = MSTYLE_FLAT;
-		updatePreviewBox(panel, 1 << PMITEM);
+	for (i = 0; i < wlengthof(menu_style); i++) {
+		if (self == panel->mstyB[i]) {
+			panel->menuStyle = i;
+			break;
+		}
 	}
+
+	updatePreviewBox(panel, 1 << PMITEM);
 }
 
 static void titleAlignCallback(WMWidget * self, void *data)
 {
 	_Panel *panel = (_Panel *) data;
+	WMAlignment align;
 
-	if (self == panel->taliB[0]) {
-		panel->titleAlignment = WALeft;
-		updatePreviewBox(panel, 1 << PFOCUSED | 1 << PUNFOCUSED | 1 << POWNER);
-
-	} else if (self == panel->taliB[1]) {
-		panel->titleAlignment = WACenter;
-		updatePreviewBox(panel, 1 << PFOCUSED | 1 << PUNFOCUSED | 1 << POWNER);
-
-	} else if (self == panel->taliB[2]) {
-		panel->titleAlignment = WARight;
-		updatePreviewBox(panel, 1 << PFOCUSED | 1 << PUNFOCUSED | 1 << POWNER);
+	for (align = 0; align < wlengthof(wintitle_align); align++) {
+		if (self == panel->taliB[align]) {
+			panel->titleAlignment = align;
+			break;
+		}
 	}
+
+	updatePreviewBox(panel, 1 << PFOCUSED | 1 << PUNFOCUSED | 1 << POWNER);
 }
 
 static void createPanel(Panel * p)
@@ -1952,13 +1965,31 @@ static void createPanel(Panel * p)
 	WMMoveWidget(panel->colW, 30, 75);
 	WMAddNotificationObserver(colorWellObserver, panel, WMColorWellDidChangeNotification, panel->colW);
 
-	for (i = 0; i < 4; i++) {
-		int j;
-		for (j = 0; j < 6; j++) {
-			panel->sampW[i + j * 4] = WMCreateColorWell(panel->colF);
-			WMResizeWidget(panel->sampW[i + j * 4], 22, 22);
-			WMMoveWidget(panel->sampW[i + j * 4], 130 + i * 22, 40 + j * 22);
-			WSetColorWellBordered(panel->sampW[i + j * 4], False);
+	{ /* Distribute the color samples regularly in the right half */
+		const int parent_width  = 242;
+		const int parent_height = 195;
+		const int available_width  = (parent_width / 2) - 7;
+		const int available_height = parent_height - 7 - 20 - 7 - 7;
+		const int widget_size = 22;
+
+		const int nb_x = (int) round(sqrt(wlengthof(sample_colors) * available_width / available_height));
+		const int nb_y = (wlengthof(sample_colors) + nb_x - 1) / nb_x;
+
+		const int offset_x = (parent_width / 2) + (available_width - nb_x * widget_size) / 2;
+		const int offset_y = (7 + 20 + 7) + (available_height - nb_y * widget_size) / 2;
+
+		int x, y;
+
+		x = 0; y = 0;
+		for (i = 0; i < wlengthof(sample_colors); i++) {
+			panel->sampW[i] = WMCreateColorWell(panel->colF);
+			WMResizeWidget(panel->sampW[i], widget_size, widget_size);
+			WMMoveWidget(panel->sampW[i], offset_x + x * widget_size, offset_y + y * widget_size);
+			WSetColorWellBordered(panel->sampW[i], False);
+			if (++x >= nb_x) {
+				y++;
+				x = 0;
+			}
 		}
 	}
 
@@ -1979,7 +2010,7 @@ static void createPanel(Panel * p)
 	WMMoveWidget(panel->mstyF, 15, 10);
 	WMSetFrameTitle(panel->mstyF, _("Menu Style"));
 
-	for (i = 0; i < 3; i++) {
+	for (i = 0; i < wlengthof(menu_style); i++) {
 		WMPixmap *icon;
 		char *path;
 
@@ -1988,17 +2019,7 @@ static void createPanel(Panel * p)
 		WMMoveWidget(panel->mstyB[i], 15 + i * 65, 20);
 		WMSetButtonImagePosition(panel->mstyB[i], WIPImageOnly);
 		WMSetButtonAction(panel->mstyB[i], menuStyleCallback, panel);
-		switch (i) {
-		case 0:
-			path = LocateImage(MSTYLE1_FILE);
-			break;
-		case 1:
-			path = LocateImage(MSTYLE2_FILE);
-			break;
-		case 2:
-			path = LocateImage(MSTYLE3_FILE);
-			break;
-		}
+		path = LocateImage(menu_style[i].file_name);
 		if (path) {
 			icon = WMCreatePixmapFromFile(scr, path);
 			if (icon) {
@@ -2020,20 +2041,10 @@ static void createPanel(Panel * p)
 	WMMoveWidget(panel->taliF, 15, 100);
 	WMSetFrameTitle(panel->taliF, _("Title Alignment"));
 
-	for (i = 0; i < 3; i++) {
+	for (i = 0; i < wlengthof(wintitle_align); i++) {
 		panel->taliB[i] = WMCreateRadioButton(panel->taliF);
 		WMSetButtonAction(panel->taliB[i], titleAlignCallback, panel);
-		switch (i) {
-		case 0:
-			WMSetButtonText(panel->taliB[i], _("Left"));
-			break;
-		case 1:
-			WMSetButtonText(panel->taliB[i], _("Center"));
-			break;
-		case 2:
-			WMSetButtonText(panel->taliB[i], _("Right"));
-			break;
-		}
+		WMSetButtonText(panel->taliB[i], _(wintitle_align[i].label));
 		WMResizeWidget(panel->taliB[i], 90, 18);
 		WMMoveWidget(panel->taliB[i], 10, 15 + 20 * i);
 	}
@@ -2093,21 +2104,27 @@ static void showData(_Panel * panel)
 	const char *str;
 
 	str = GetStringForKey("MenuStyle");
-	if (str && strcasecmp(str, "flat") == 0) {
-		panel->menuStyle = MSTYLE_FLAT;
-	} else if (str && strcasecmp(str, "singletexture") == 0) {
-		panel->menuStyle = MSTYLE_SINGLE;
-	} else {
-		panel->menuStyle = MSTYLE_NORMAL;
+	panel->menuStyle = MSTYLE_NORMAL;
+	if (str != NULL) {
+		for (i = 0; i < wlengthof(menu_style); i++) {
+			if (strcasecmp(str, menu_style[i].db_value) == 0) {
+				panel->menuStyle = i;
+				break;
+			}
+		}
 	}
 
 	str = GetStringForKey("TitleJustify");
-	if (str && strcasecmp(str, "left") == 0) {
-		panel->titleAlignment = WALeft;
-	} else if (str && strcasecmp(str, "right") == 0) {
-		panel->titleAlignment = WARight;
-	} else {
-		panel->titleAlignment = WACenter;
+	panel->titleAlignment = WACenter;
+	if (str != NULL) {
+		WMAlignment align;
+
+		for (align = 0; align < wlengthof(wintitle_align); align++) {
+			if (strcasecmp(str, wintitle_align[align].db_value) == 0) {
+				panel->titleAlignment = align;
+				break;
+			}
+		}
 	}
 
 	for (i = 0; i < wlengthof(colorOptions); i++) {
@@ -2159,30 +2176,8 @@ static void storeData(_Panel * panel)
 		}
 	}
 
-	switch (panel->menuStyle) {
-	case MSTYLE_SINGLE:
-		SetStringForKey("singletexture", "MenuStyle");
-		break;
-	case MSTYLE_FLAT:
-		SetStringForKey("flat", "MenuStyle");
-		break;
-	default:
-	case MSTYLE_NORMAL:
-		SetStringForKey("normal", "MenuStyle");
-		break;
-	}
-	switch (panel->titleAlignment) {
-	case WALeft:
-		SetStringForKey("left", "TitleJustify");
-		break;
-	case WARight:
-		SetStringForKey("right", "TitleJustify");
-		break;
-	default:
-	case WACenter:
-		SetStringForKey("center", "TitleJustify");
-		break;
-	}
+	SetStringForKey(menu_style[panel->menuStyle].db_value, "MenuStyle");
+	SetStringForKey(wintitle_align[panel->titleAlignment].db_value, "TitleJustify");
 }
 
 static void prepareForClose(_Panel * panel)
@@ -2212,7 +2207,7 @@ static void prepareForClose(_Panel * panel)
 
 	/* store list of colors */
 	textureList = WMCreatePLArray(NULL, NULL);
-	for (i = 0; i < 24; i++) {
+	for (i = 0; i < wlengthof(sample_colors); i++) {
 		WMColor *color;
 		char *str;
 

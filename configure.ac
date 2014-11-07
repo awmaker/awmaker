@@ -258,6 +258,12 @@ AC_CHECK_FUNCS(gethostname select poll strcasecmp strncasecmp \
 	       setsid mallinfo mkstemp sysconf)
 AC_SEARCH_LIBS([strerror], [cposix])
 
+dnl nanosleep is generally available in standard libc, although not always the
+dnl case. One known example is Solaris which needs -lrt
+AC_SEARCH_LIBS([nanosleep], [rt], [],
+    [AC_MSG_ERROR([function 'nanosleep' not found, please report to wmaker-dev@lists.windowmaker.org])])
+
+
 dnl Check for strlcat/strlcpy
 dnl =========================
 AC_ARG_WITH([libbsd],
@@ -625,6 +631,26 @@ fi
 AC_SUBST(XFTFLAGS)
 AC_SUBST(XFTLIBS)
 
+dnl PANGO support
+dnl =============
+pango=no
+AC_ARG_ENABLE(pango, AS_HELP_STRING([--enable-pango], [enable Pango text layout support]),
+                pango=$enableval, pango=no)
+
+PANGOFLAGS=
+PANGOLIBS=
+if test "$pango" = yes; then
+	PANGOLIBS=`$PKGCONFIG pangoxft --libs`
+	PANGOFLAGS=`$PKGCONFIG pangoxft --cflags`
+	if test "x$PANGOLIBS" = "x" ; then
+	        AC_MSG_RESULT([not found])
+	else
+		AC_DEFINE(USE_PANGO, 1, [Define if Pango is to be used])
+		AC_MSG_RESULT([found])
+	fi
+fi
+inc_search_path="$inc_search_path $PANGOFLAGS"
+AC_SUBST(PANGOLIBS)
 
 dnl ==============================================
 dnl         Graphic Format Libraries
@@ -869,6 +895,7 @@ echo "Supported X extensions:             :$supported_xext"
 echo "Supported graphic format libraries  :$supported_gfx"
 echo "Unsupported features                :$unsupported"
 echo "Antialiased text support in WINGs   : $xft"
+echo "Pango text layout support in WINGs  : $pango"
 echo "Translated message files to install : $mof"
 dnl echo "Supported languages beside English  : $languages"
 if test "x$MOFILES" != "x"; then

@@ -21,6 +21,28 @@
 
 #include "WPrefs.h"
 
+
+static const struct {
+	const char *db_key;
+	const char *label;
+} balloon_choices[] = {
+	{ "WindowTitleBalloons",       N_("incomplete window titles"), },
+	{ "MiniwindowTitleBalloons",   N_("miniwindow titles"), },
+	{ "MiniwindowApercuBalloons",  N_("miniwindow apercus"), },
+	{ "AppIconBalloons",           N_("application/dock icons"), },
+	{ "HelpBalloons",              N_("internal help"), }
+};
+
+static const struct {
+	const char *db_key;
+	int default_value;
+	const char *label;
+} appicon_bouncing[] = {
+	{ "DoNotMakeAppIconsBounce",   False, N_("Disable AppIcon bounce.") },
+	{ "BounceAppIconsWhenUrgent",  True,  N_("Bounce AppIcon when the application wants attention.") },
+	{ "RaiseAppIconsWhenBouncing", False, N_("Raise AppIcons when bouncing.") }
+};
+
 typedef struct _Panel {
 	WMBox *box;
 
@@ -39,12 +61,10 @@ typedef struct _Panel {
 	WMPopUpButton *posiP;
 
 	WMFrame *ballF;
-	WMButton *ballB[5];
+	WMButton *ballB[wlengthof_nocheck(balloon_choices)];
 
 	WMFrame *optF;
-	WMButton *bounceB;
-	WMButton *bounceUrgB;
-	WMButton *bounceRaisB;
+	WMButton *bounceB[wlengthof_nocheck(appicon_bouncing)];
 
 	WMFrame *borderF;
 	WMSlider *borderS;
@@ -129,22 +149,20 @@ static void showData(_Panel * panel)
 		WMSetButtonSelected(panel->lrB, True);
 	}
 
-	WMSetButtonSelected(panel->bounceB, GetBoolForKey("DoNotMakeAppIconsBounce"));
-	if (GetStringForKey("BounceAppIconsWhenUrgent"))
-		WMSetButtonSelected(panel->bounceUrgB, GetBoolForKey("BounceAppIconsWhenUrgent"));
-	WMSetButtonSelected(panel->bounceRaisB, GetBoolForKey("RaiseAppIconsWhenBouncing"));
+	for (x = 0; x < wlengthof(appicon_bouncing); x++) {
+		if (GetStringForKey(appicon_bouncing[x].db_key))
+			WMSetButtonSelected(panel->bounceB[x], GetBoolForKey(appicon_bouncing[x].db_key));
+	}
 
-	WMSetButtonSelected(panel->ballB[0], GetBoolForKey("WindowTitleBalloons"));
-	WMSetButtonSelected(panel->ballB[1], GetBoolForKey("MiniwindowTitleBalloons"));
-	WMSetButtonSelected(panel->ballB[2], GetBoolForKey("MiniwindowApercuBalloons"));
-	WMSetButtonSelected(panel->ballB[3], GetBoolForKey("AppIconBalloons"));
-	WMSetButtonSelected(panel->ballB[4], GetBoolForKey("HelpBalloons"));
+	for (x = 0; x < wlengthof(balloon_choices); x++)
+		WMSetButtonSelected(panel->ballB[x], GetBoolForKey(balloon_choices[x].db_key));
 }
 
 static void storeData(_Panel * panel)
 {
 	char *str;
 	Bool lr, tb;
+	int i;
 
 	switch (WMGetPopUpButtonSelectedItem(panel->sizeP)) {
 	case 0:
@@ -194,14 +212,11 @@ static void storeData(_Panel * panel)
 	SetStringForKey(str, "WorkspaceBorder");
 	SetIntegerForKey(WMGetSliderValue(panel->borderS), "WorkspaceBorderSize");
 
-	SetBoolForKey(WMGetButtonSelected(panel->bounceB), "DoNotMakeAppIconsBounce");
-	SetBoolForKey(WMGetButtonSelected(panel->bounceUrgB), "BounceAppIconsWhenUrgent");
-	SetBoolForKey(WMGetButtonSelected(panel->bounceRaisB), "RaiseAppIconsWhenBouncing");
-	SetBoolForKey(WMGetButtonSelected(panel->ballB[0]), "WindowTitleBalloons");
-	SetBoolForKey(WMGetButtonSelected(panel->ballB[1]), "MiniwindowTitleBalloons");
-	SetBoolForKey(WMGetButtonSelected(panel->ballB[2]), "MiniwindowApercuBalloons");
-	SetBoolForKey(WMGetButtonSelected(panel->ballB[3]), "AppIconBalloons");
-	SetBoolForKey(WMGetButtonSelected(panel->ballB[4]), "HelpBalloons");
+	for (i = 0; i < wlengthof(appicon_bouncing); i++)
+		SetBoolForKey(WMGetButtonSelected(panel->bounceB[i]), appicon_bouncing[i].db_key);
+
+	for (i = 0; i < wlengthof(balloon_choices); i++)
+		SetBoolForKey(WMGetButtonSelected(panel->ballB[i]), balloon_choices[i].db_key);
 }
 
 static void createPanel(Panel * p)
@@ -257,16 +272,12 @@ static void createPanel(Panel * p)
 	WMMoveWidget(panel->ballF, 265, 10);
 	WMSetFrameTitle(panel->ballF, _("Show balloon for..."));
 
-	for (i = 0; i < 5; i++) {
+	for (i = 0; i < wlengthof(balloon_choices); i++) {
 		panel->ballB[i] = WMCreateSwitchButton(panel->ballF);
 		WMResizeWidget(panel->ballB[i], 210, 20);
 		WMMoveWidget(panel->ballB[i], 15, 16 + i * 22);
+		WMSetButtonText(panel->ballB[i], _(balloon_choices[i].label));
 	}
-	WMSetButtonText(panel->ballB[0], _("incomplete window titles"));
-	WMSetButtonText(panel->ballB[1], _("miniwindow titles"));
-	WMSetButtonText(panel->ballB[2], _("miniwindow apercus"));
-	WMSetButtonText(panel->ballB[3], _("application/dock icons"));
-	WMSetButtonText(panel->ballB[4], _("internal help"));
 
 	WMMapSubwidgets(panel->ballF);
 
@@ -276,21 +287,15 @@ static void createPanel(Panel * p)
 	WMMoveWidget(panel->optF, 265, 136);
 	WMSetFrameTitle(panel->optF, _("AppIcon bouncing"));
 
-	panel->bounceB = WMCreateSwitchButton(panel->optF);
-	WMResizeWidget(panel->bounceB, 210, 25);
-	WMMoveWidget(panel->bounceB, 15, 14);
-	WMSetButtonText(panel->bounceB, _("Disable AppIcon bounce."));
+	for (i = 0; i < wlengthof(appicon_bouncing); i++) {
+		panel->bounceB[i] = WMCreateSwitchButton(panel->optF);
+		WMResizeWidget(panel->bounceB[i], 210, 26);
+		WMMoveWidget(panel->bounceB[i], 15, 12 + i * 25);
+		WMSetButtonText(panel->bounceB[i], _(appicon_bouncing[i].label));
 
-	panel->bounceUrgB = WMCreateSwitchButton(panel->optF);
-	WMResizeWidget(panel->bounceUrgB, 210, 28);
-	WMMoveWidget(panel->bounceUrgB, 15, 37);
-	WMSetButtonText(panel->bounceUrgB, _("Bounce AppIcon when the application wants attention."));
-	WMSetButtonSelected(panel->bounceUrgB, True); /* defaults to true */
-
-	panel->bounceRaisB = WMCreateSwitchButton(panel->optF);
-	WMResizeWidget(panel->bounceRaisB, 210, 23);
-	WMMoveWidget(panel->bounceRaisB, 15, 65);
-	WMSetButtonText(panel->bounceRaisB, _("Raise AppIcons when bouncing."));
+		if (appicon_bouncing[i].default_value)
+			WMSetButtonSelected(panel->bounceB[i], True);
+	}
 
 	WMMapSubwidgets(panel->optF);
 
