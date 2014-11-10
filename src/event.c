@@ -1513,6 +1513,12 @@ static void handleKeyPress(XEvent *event)
 			handleMaximize(wwin, MAX_MAXIMUS | MAX_KEYBOARD);
 		}
 		break;
+	case WKBD_OMNIPRESENT:
+		if (ISMAPPED(wwin) && ISFOCUSED(wwin)) {
+			CloseWindowMenu(&(scr->vscr));
+			wWindowSetOmnipresent(wwin, !wwin->flags.omnipresent);
+		}
+		break;
 	case WKBD_RAISE:
 		if (ISMAPPED(wwin) && ISFOCUSED(wwin)) {
 			CloseWindowMenu(&(scr->vscr));
