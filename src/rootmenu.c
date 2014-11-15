@@ -1363,8 +1363,7 @@ static WMenu *readMenuDirectory(WScreen *scr, const char *title, char **path, co
 		addMenuEntry(menu, M_(data->name), NULL, "OPEN_MENU", buffer, path[data->index]);
 
 		wfree(buffer);
-		if (data->name)
-			wfree(data->name);
+		wfree(data->name);
 		wfree(data);
 	}
 
@@ -1409,8 +1408,7 @@ static WMenu *readMenuDirectory(WScreen *scr, const char *title, char **path, co
 		addMenuEntry(menu, M_(data->name), NULL, "SHEXEC", buffer, path[data->index]);
 
 		wfree(buffer);
-		if (data->name)
-			wfree(data->name);
+		wfree(data->name);
 		wfree(data);
 	}
 
