@@ -1454,8 +1454,10 @@ static int isPointNearBoder(WMenu *menu, int x, int y)
 	return flag;
 }
 
-static void leaving(_delay *dl)
+static void callback_leaving(void *user_param)
 {
+	_delay *dl = (_delay *) user_param;
+
 	wMenuMove(dl->menu, dl->ox, dl->oy, True);
 	dl->menu->jump_back = NULL;
 	dl->menu->menu->screen_ptr->flags.jump_back_pending = 0;
@@ -1568,7 +1570,7 @@ void wMenuScroll(WMenu *menu)
 			delayer = omenu->jump_back;
 		}
 
-		WMAddTimerHandler(MENU_JUMP_BACK_DELAY, (WMCallback *) leaving, delayer);
+		WMAddTimerHandler(MENU_JUMP_BACK_DELAY, callback_leaving, delayer);
 	}
 }
 
