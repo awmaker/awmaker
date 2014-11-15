@@ -532,8 +532,6 @@ void wDrawBevel(Drawable d, unsigned width, unsigned height, WTexSolid *texture,
 	XSegment segs[4];
 
 	switch (relief) {
-	case WREL_FLAT:
-		return;
 	case WREL_MENUENTRY:
 	case WREL_RAISED:
 	case WREL_ICON:
