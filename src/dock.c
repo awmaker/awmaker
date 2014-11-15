@@ -1943,7 +1943,7 @@ static WAppIcon *restore_icon_state(WMPropList *info, int type, int index)
 {
 	WAppIcon *aicon;
 	WMPropList *cmd, *value;
-	char *wclass, *winstance, *command = NULL;
+	char *wclass, *winstance, *command;
 
 	cmd = WMGetFromPLDictionary(info, dCommand);
 	if (!cmd || !WMIsPLString(cmd))
@@ -1960,14 +1960,13 @@ static WAppIcon *restore_icon_state(WMPropList *info, int type, int index)
 		return NULL;
 
 	/* get commands */
-	if (cmd)
-		command = wstrdup(WMGetFromPLString(cmd));
+	command = wstrdup(WMGetFromPLString(cmd));
+	if (strcmp(command, "-") == 0) {
+		wfree(command);
 
-	if (!command || strcmp(command, "-") == 0) {
-		if (command)
-			wfree(command);
 		if (wclass)
 			wfree(wclass);
+
 		if (winstance)
 			wfree(winstance);
 
@@ -1983,8 +1982,7 @@ static WAppIcon *restore_icon_state(WMPropList *info, int type, int index)
 	if (winstance)
 		wfree(winstance);
 
-	if (command)
-		wfree(command);
+	wfree(command);
 
 	aicon->icon->core->descriptor.handle_expose = dockIconExpose;
 	aicon->icon->core->descriptor.handle_mousedown = iconMouseDown;
