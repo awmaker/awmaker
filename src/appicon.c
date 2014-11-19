@@ -646,13 +646,13 @@ static void openApplicationMenu(WApplication *wapp, int x, int y)
 	WScreen *scr = wapp->main_window_desc->screen_ptr;
 	int i;
 
-	if (!w_global.menu.icon_menu) {
-		w_global.menu.icon_menu = createApplicationMenu();
-		menu_map(w_global.menu.icon_menu, scr);
-		wfree(w_global.menu.icon_menu->entries[1]->text);
+	if (!scr->vscr.menu.icon_menu) {
+		scr->vscr.menu.icon_menu = createApplicationMenu();
+		menu_map(scr->vscr.menu.icon_menu, scr);
+		wfree(scr->vscr.menu.icon_menu->entries[1]->text);
 	}
 
-	menu = w_global.menu.icon_menu;
+	menu = scr->vscr.menu.icon_menu;
 
 	if (wapp->flags.hidden)
 		menu->entries[1]->text = _("Unhide");
@@ -713,7 +713,7 @@ static void iconDblClick(WObjDescriptor *desc, XEvent *event)
 		wHideOtherApplications(aicon->icon->owner);
 }
 
-void appIconMouseDown(WObjDescriptor * desc, XEvent * event)
+void appIconMouseDown(WObjDescriptor *desc, XEvent *event)
 {
 	WAppIcon *aicon = desc->parent;
 	WScreen *scr = aicon->icon->core->screen_ptr;
@@ -726,12 +726,12 @@ void appIconMouseDown(WObjDescriptor * desc, XEvent * event)
 		/* Middle or right mouse actions were handled on first click */
 		if (event->xbutton.button == Button1)
 			iconDblClick(desc, event);
+
 		return;
 	}
 
 	if (event->xbutton.button == Button2) {
 		WApplication *wapp = wApplicationOf(aicon->icon->owner->main_window);
-
 		if (wapp)
 			relaunchApplication(wapp);
 
@@ -741,7 +741,6 @@ void appIconMouseDown(WObjDescriptor * desc, XEvent * event)
 	if (event->xbutton.button == Button3) {
 		WObjDescriptor *desc;
 		WApplication *wapp = wApplicationOf(aicon->icon->owner->main_window);
-
 		if (!wapp)
 			return;
 
@@ -750,13 +749,14 @@ void appIconMouseDown(WObjDescriptor * desc, XEvent * event)
 				 | ButtonReleaseMask | ButtonPressMask, GrabModeAsync,
 				 GrabModeAsync, None, None, CurrentTime) != GrabSuccess) {
 			wwarning("pointer grab failed for appicon menu");
+
 			return;
 		}
 
 		openApplicationMenu(wapp, event->xbutton.x_root, event->xbutton.y_root);
 
 		/* allow drag select of menu */
-		desc = &w_global.menu.icon_menu->menu->descriptor;
+		desc = &scr->vscr.menu.icon_menu->menu->descriptor;
 		event->xbutton.send_event = True;
 		(*desc->handle_mousedown) (desc, event);
 		return;
@@ -764,9 +764,7 @@ void appIconMouseDown(WObjDescriptor * desc, XEvent * event)
 
 	hasMoved = wHandleAppIconMove(aicon, event);
 	if (wPreferences.single_click && !hasMoved && aicon->dock != NULL)
-	{
 		iconDblClick(desc, event);
-	}
 }
 
 Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)

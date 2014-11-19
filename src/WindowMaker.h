@@ -534,7 +534,6 @@ extern struct wmaker_global_variables {
 
 	/* Menu related */
 	struct {
-		struct WMenu *icon_menu;	/* icon/appicon menu */
 		struct WMenu *window_menu;	/* window command menu */
 
 		struct {
