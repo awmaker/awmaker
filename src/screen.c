@@ -758,16 +758,16 @@ void wScreenRestoreState(WScreen *scr)
 {
 	WMPropList *state;
 	char *path;
+	char buf[16];
 
 	OpenRootMenu(scr, -10000, -10000, False);
-	wMenuUnmap(w_global.menu.root_menu);
+	wMenuUnmap(scr->vscr.menu.root_menu);
 
 	make_keys();
 
 	if (w_global.screen_count == 1) {
 		path = wdefaultspathfordomain("WMState");
 	} else {
-		char buf[16];
 		snprintf(buf, sizeof(buf), "WMState.%i", scr->screen);
 		path = wdefaultspathfordomain(buf);
 	}
@@ -805,11 +805,12 @@ void wScreenRestoreState(WScreen *scr)
 	wScreenUpdateUsableArea(scr);
 }
 
-void wScreenSaveState(WScreen * scr)
+void wScreenSaveState(WScreen *scr)
 {
 	WWindow *wwin;
 	char *str;
 	WMPropList *old_state, *foo;
+	char buf[16];
 
 	make_keys();
 
@@ -867,18 +868,18 @@ void wScreenSaveState(WScreen * scr)
 	/* clean up */
 	WMPLSetCaseSensitive(False);
 
-	wMenuSaveState();
+	wMenuSaveState(&(scr->vscr));
 
 	if (w_global.screen_count == 1) {
 		str = wdefaultspathfordomain("WMState");
 	} else {
-		char buf[16];
 		snprintf(buf, sizeof(buf), "WMState.%i", scr->screen);
 		str = wdefaultspathfordomain(buf);
 	}
-	if (!WMWritePropListToFile(w_global.session_state, str)) {
+
+	if (!WMWritePropListToFile(w_global.session_state, str))
 		werror(_("could not save session state in %s"), str);
-	}
+
 	wfree(str);
 	WMReleasePropList(old_state);
 }

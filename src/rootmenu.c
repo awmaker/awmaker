@@ -1481,9 +1481,9 @@ static WMenu *configureMenu(WScreen * scr, WMPropList * definition, Bool include
 			return NULL;
 		}
 
-		if (!w_global.menu.root_menu || stat_buf.st_mtime > w_global.menu.root_menu->timestamp
+		if (!scr->vscr.menu.root_menu || stat_buf.st_mtime > scr->vscr.menu.root_menu->timestamp
 		    /* if the pointer in WMRootMenu has changed */
-		    || w_global.domain.root_menu->timestamp > w_global.menu.root_menu->timestamp) {
+		    || w_global.domain.root_menu->timestamp > scr->vscr.menu.root_menu->timestamp) {
 			if (menu_is_default) {
 				wwarning(_
 					 ("using default menu file \"%s\" as the menu referenced in WMRootMenu could not be found "),
@@ -1618,8 +1618,8 @@ void OpenRootMenu(WScreen *scr, int x, int y, int keyboard)
 	w_global.menu.flags.added_workspace_menu = 0;
 	w_global.menu.flags.added_window_menu = 0;
 
-	if (w_global.menu.root_menu && w_global.menu.root_menu->flags.mapped) {
-		menu = w_global.menu.root_menu;
+	if (scr->vscr.menu.root_menu && scr->vscr.menu.root_menu->flags.mapped) {
+		menu = scr->vscr.menu.root_menu;
 		if (!menu->flags.buttoned) {
 			wMenuUnmap(menu);
 		} else {
@@ -1635,8 +1635,8 @@ void OpenRootMenu(WScreen *scr, int x, int y, int keyboard)
 
 	if (definition) {
 		if (WMIsPLArray(definition)) {
-			if (!w_global.menu.root_menu ||
-			    w_global.domain.root_menu->timestamp > w_global.menu.root_menu->timestamp) {
+			if (!scr->vscr.menu.root_menu ||
+			    w_global.domain.root_menu->timestamp > scr->vscr.menu.root_menu->timestamp) {
 				menu = configureMenu(scr, definition, True);
 				if (menu)
 					menu->timestamp = w_global.domain.root_menu->timestamp;
@@ -1650,22 +1650,22 @@ void OpenRootMenu(WScreen *scr, int x, int y, int keyboard)
 
 	if (!menu) {
 		/* menu hasn't changed or could not be read */
-		if (!w_global.menu.root_menu) {
+		if (!scr->vscr.menu.root_menu) {
 			wMessageDialog(scr, _("Error"),
 				       _("The applications menu could not be loaded. "
 					 "Look at the console output for a detailed "
 					 "description of the errors."), _("OK"), NULL, NULL);
 
 			menu = makeDefaultMenu(scr);
-			w_global.menu.root_menu = menu;
+			scr->vscr.menu.root_menu = menu;
 		}
-		menu = w_global.menu.root_menu;
+		menu = scr->vscr.menu.root_menu;
 	} else {
 		/* new root menu */
-		if (w_global.menu.root_menu)
-			wMenuDestroy(w_global.menu.root_menu, True);
+		if (scr->vscr.menu.root_menu)
+			wMenuDestroy(scr->vscr.menu.root_menu, True);
 
-		w_global.menu.root_menu = menu;
+		scr->vscr.menu.root_menu = menu;
 	}
 
 	if (menu) {

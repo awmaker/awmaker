@@ -738,8 +738,8 @@ static void executeButtonAction(WScreen *scr, XEvent *event, int action)
 		break;
 	case WA_OPEN_APPMENU:
 		OpenRootMenu(scr, event->xbutton.x_root, event->xbutton.y_root, False);
-		if (w_global.menu.root_menu)
-			event->xbutton.window = w_global.menu.root_menu->frame->core->window;
+		if (scr->vscr.menu.root_menu)
+			event->xbutton.window = scr->vscr.menu.root_menu->frame->core->window;
 		break;
 	case WA_OPEN_WINLISTMENU:
 		OpenSwitchMenu(scr, event->xbutton.x_root, event->xbutton.y_root, False);
