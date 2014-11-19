@@ -865,6 +865,8 @@ static void switchWSCommand(WMenu *menu, WMenuEntry *entry)
 
 static void launchDockedApplication(WAppIcon *btn, Bool withSelection)
 {
+	WScreen *scr = btn->icon->core->screen_ptr;
+
 	if (!btn->launching &&
 	    ((!withSelection && btn->command != NULL) || (withSelection && btn->paste_command != NULL))) {
 		if (!btn->forced_dock) {
@@ -883,7 +885,7 @@ static void launchDockedApplication(WAppIcon *btn, Bool withSelection)
 		}
 		btn->drop_launch = 0;
 		btn->paste_launch = withSelection;
-		w_global.last_dock = btn->dock;
+		scr->vscr.last_dock = btn->dock;
 		btn->pid = execCommand(btn, (withSelection ? btn->paste_command : btn->command), NULL);
 		if (btn->pid > 0) {
 			if (btn->buggy_app) {
@@ -1676,6 +1678,7 @@ void wDockDestroy(WDock *dock)
 			}
 		}
 	}
+
 	if (wPreferences.auto_arrange_icons)
 		wArrangeIcons(dock->screen_ptr, True);
 
@@ -1683,8 +1686,8 @@ void wDockDestroy(WDock *dock)
 	if (dock->menu && dock->type != WM_CLIP)
 		wMenuDestroy(dock->menu, True);
 
-	if (w_global.last_dock == dock)
-		w_global.last_dock = NULL;
+	if (dock->screen_ptr->vscr.last_dock == dock)
+		dock->screen_ptr->vscr.last_dock = NULL;
 
 	wfree(dock);
 }
@@ -2490,7 +2493,7 @@ int wDockReceiveDNDDrop(WScreen *scr, XEvent *event)
 
 		btn->paste_launch = 0;
 		btn->drop_launch = 1;
-		w_global.last_dock = dock;
+		scr->vscr.last_dock = dock;
 		btn->pid = execCommand(btn, btn->dnd_command, NULL);
 		if (btn->pid > 0) {
 			dockIconPaint(btn);
@@ -3114,7 +3117,7 @@ Bool wDockFindFreeSlot(WDock *dock, int *x_pos, int *y_pos)
 	}
 
 	if (dock->type == WM_CLIP && dock != w_global.workspace.array[w_global.workspace.current]->clip)
-		extra_count = w_global.global_icon_count;
+		extra_count = scr->vscr.global_icon_count;
 
 	/* if the dock is full */
 	if (dock->icon_count + extra_count >= dock->max_icons)
@@ -4434,7 +4437,7 @@ static void iconMouseDown(WObjDescriptor *desc, XEvent *event)
 	if (aicon->editing || WCHECK_STATE(WSTATE_MODAL))
 		return;
 
-	w_global.last_dock = dock;
+	scr->vscr.last_dock = dock;
 
 	if (dock->menu->flags.mapped)
 		wMenuUnmap(dock->menu);
@@ -4688,6 +4691,7 @@ static void clipAutoRaise(void *cdata)
 
 static Bool iconCanBeOmnipresent(WAppIcon *aicon)
 {
+	WScreen *scr = aicon->icon->core->screen_ptr;
 	WDock *clip;
 	WAppIcon *btn;
 	int i, j;
@@ -4698,7 +4702,7 @@ static Bool iconCanBeOmnipresent(WAppIcon *aicon)
 		if (clip == aicon->dock)
 			continue;
 
-		if (clip->icon_count + w_global.global_icon_count >= clip->max_icons)
+		if (clip->icon_count + scr->vscr.global_icon_count >= clip->max_icons)
 			return False;	/* Clip is full in some workspace */
 
 		for (j = 0; j < clip->max_icons; j++) {
@@ -4713,6 +4717,7 @@ static Bool iconCanBeOmnipresent(WAppIcon *aicon)
 
 int wClipMakeIconOmnipresent(WAppIcon *aicon, int omnipresent)
 {
+	WScreen *scr = aicon->icon->core->screen_ptr;
 	WAppIconChain *new_entry, *tmp, *tmp1;
 	int status = WO_SUCCESS;
 
@@ -4729,7 +4734,7 @@ int wClipMakeIconOmnipresent(WAppIcon *aicon, int omnipresent)
 			new_entry->aicon = aicon;
 			new_entry->next = w_global.clip.global_icons;
 			w_global.clip.global_icons = new_entry;
-			w_global.global_icon_count++;
+			scr->vscr.global_icon_count++;
 		} else {
 			aicon->omnipresent = 0;
 			status = WO_FAILED;
@@ -4740,7 +4745,7 @@ int wClipMakeIconOmnipresent(WAppIcon *aicon, int omnipresent)
 			tmp = w_global.clip.global_icons->next;
 			wfree(w_global.clip.global_icons);
 			w_global.clip.global_icons = tmp;
-			w_global.global_icon_count--;
+			scr->vscr.global_icon_count--;
 		} else {
 			tmp = w_global.clip.global_icons;
 			while (tmp->next) {
@@ -4748,7 +4753,7 @@ int wClipMakeIconOmnipresent(WAppIcon *aicon, int omnipresent)
 					tmp1 = tmp->next->next;
 					wfree(tmp->next);
 					tmp->next = tmp1;
-					w_global.global_icon_count--;
+					scr->vscr.global_icon_count--;
 					break;
 				}
 				tmp = tmp->next;
@@ -4911,12 +4916,15 @@ static void addADrawerCallback(WMenu *menu, WMenuEntry *entry)
 
 static void drawerDestroy(WDock *drawer)
 {
+	WScreen *scr;
 	int i;
 	WAppIcon *aicon = NULL;
 	WMArray *icons;
 
 	if (drawer == NULL)
 		return;
+
+	scr = drawer->screen_ptr;
 
 	/* Note regarding menus: we can't delete any dock/clip/drawer menu, because
 	 * that would (attempt to) wfree some memory in gettext library (see menu
@@ -4959,8 +4967,8 @@ static void drawerDestroy(WDock *drawer)
 	drawer->icon_array = NULL;
 
 	drawerRemoveFromChain(drawer);
-	if (w_global.last_dock == drawer)
-		w_global.last_dock = NULL;
+	if (scr->vscr.last_dock == drawer)
+		scr->vscr.last_dock = NULL;
 
 	if (w_global.drawer.attracting_drawer == drawer)
 		w_global.drawer.attracting_drawer = NULL;

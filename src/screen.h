@@ -53,6 +53,10 @@ typedef struct WReservedArea {
 /* This virtual screen includes all items located in the screen */
 typedef struct virtual_screen {
 	int window_count;	       /* number of windows in window_list */
+
+        /* Clip & Dock & Drawer related */
+	int global_icon_count;         /* How many global icons do we have */
+	struct WDock *last_dock;
 } virtual_screen;
 
 /* each WScreen is saved into a context associated with it's root window */
