@@ -827,8 +827,8 @@ static WMenuEntry *addWorkspaceMenu(WScreen *scr, WMenu *menu, const char *title
 
 static void cleanupWindowsMenu(WMenu *menu)
 {
-	if (w_global.menu.switch_menu == menu)
-		w_global.menu.switch_menu = NULL;
+	if (menu->frame->screen_ptr->vscr.menu.switch_menu == menu)
+		menu->frame->screen_ptr->vscr.menu.switch_menu = NULL;
 }
 
 static WMenuEntry *addWindowsMenu(WScreen *scr, WMenu *menu, const char *title)
@@ -847,7 +847,7 @@ static WMenuEntry *addWindowsMenu(WScreen *scr, WMenu *menu, const char *title)
 
 	wwmenu = wMenuCreate(scr, _("Window List"));
 	wwmenu->on_destroy = cleanupWindowsMenu;
-	w_global.menu.switch_menu = wwmenu;
+	scr->vscr.menu.switch_menu = wwmenu;
 	wwin = scr->focused_window;
 	while (wwin) {
 		UpdateSwitchMenu(scr, wwin, ACTION_ADD);
