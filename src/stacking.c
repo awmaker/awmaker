@@ -91,7 +91,7 @@ void RemakeStackList(WScreen * scr)
 			WMSetInBag(scr->stacking_list, level, frame);
 		}
 		XFree(windows);
-		scr->window_count = c;
+		scr->vscr.window_count = c;
 	}
 
 	CommitStacking(scr);
@@ -115,7 +115,7 @@ void CommitStacking(WScreen * scr)
 	Window *windows;
 	WMBagIterator iter;
 
-	nwindows = scr->window_count;
+	nwindows = scr->vscr.window_count;
 	windows = wmalloc(sizeof(Window) * nwindows);
 
 	i = 0;
@@ -401,7 +401,7 @@ void AddToStackList(WCoreWindow * frame)
 	WScreen *scr = frame->screen_ptr;
 	WCoreWindow *trans = NULL;
 
-	frame->screen_ptr->window_count++;
+	frame->screen_ptr->vscr.window_count++;
 	XSaveContext(dpy, frame->window, w_global.context.stack, (XPointer) frame);
 	curtop = WMGetFromBag(scr->stacking_list, index);
 
@@ -570,7 +570,7 @@ void RemoveFromStackList(WCoreWindow * frame)
 	else			/* this was the first window on the list */
 		WMSetInBag(frame->screen_ptr->stacking_list, index, frame->stacking->under);
 
-	frame->screen_ptr->window_count--;
+	frame->screen_ptr->vscr.window_count--;
 
 	WMPostNotificationName(WMNResetStacking, frame->screen_ptr, NULL);
 }

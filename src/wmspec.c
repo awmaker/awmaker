@@ -537,7 +537,7 @@ static void wNETWMShowingDesktop(WScreen *scr, Bool show)
 		WWindow *tmp, **wins;
 		int i = 0;
 
-		wins = (WWindow **) wmalloc(sizeof(WWindow *) * (scr->window_count + 1));
+		wins = (WWindow **) wmalloc(sizeof(WWindow *) * (scr->vscr.window_count + 1));
 
 		tmp = scr->focused_window;
 		while (tmp) {
@@ -749,7 +749,7 @@ static void updateClientList(WScreen *scr)
 	Window *windows;
 	int count;
 
-	windows = (Window *) wmalloc(sizeof(Window) * (scr->window_count + 1));
+	windows = (Window *) wmalloc(sizeof(Window) * (scr->vscr.window_count + 1));
 
 	count = 0;
 	wwin = scr->focused_window;
@@ -773,7 +773,7 @@ static void updateClientListStacking(WScreen *scr, WWindow *wwin_excl)
 	WMBagIterator iter;
 
 	/* update client list */
-	i = scr->window_count + 1;
+	i = scr->vscr.window_count + 1;
 	client_list = (Window *) wmalloc(sizeof(Window) * i);
 	client_list_reverse = (Window *) wmalloc(sizeof(Window) * i);
 

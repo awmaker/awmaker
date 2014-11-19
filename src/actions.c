@@ -1044,7 +1044,7 @@ static WWindow *recursiveTransientFor(WWindow *wwin)
 		return None;
 
 	/* hackish way to detect transient_for cycle */
-	i = wwin->screen_ptr->window_count + 1;
+	i = wwin->screen_ptr->vscr.window_count + 1;
 
 	while (wwin && wwin->transient_for != None && i > 0) {
 		wwin = wWindowFor(wwin->transient_for);

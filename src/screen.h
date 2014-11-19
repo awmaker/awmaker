@@ -50,6 +50,11 @@ typedef struct WReservedArea {
     struct WReservedArea *next;
 } WReservedArea;
 
+/* This virtual screen includes all items located in the screen */
+typedef struct virtual_screen {
+	int window_count;	       /* number of windows in window_list */
+} virtual_screen;
+
 /* each WScreen is saved into a context associated with it's root window */
 typedef struct _WScreen {
     int	screen;			       /* screen number */
@@ -97,8 +102,6 @@ typedef struct _WScreen {
                                         * is ordered from the topmost to
                                         * the lowest window
                                         */
-
-    int window_count;		       /* number of windows in window_list */
 
     WReservedArea *reservedAreas;      /* used to build totalUsableArea */
 
@@ -241,6 +244,8 @@ typedef struct _WScreen {
         unsigned int jump_back_pending:1;
         unsigned int ignore_focus_events:1;
     } flags;
+
+    struct virtual_screen vscr;
 } WScreen;
 
 
