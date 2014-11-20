@@ -1461,7 +1461,7 @@ void wUnmanageWindow(WWindow *wwin, Bool restore, Bool destroyed)
 
 	/* Close window menu if it's open for this window */
 	if (wwin->flags.menu_open_for_me)
-		CloseWindowMenu();
+		CloseWindowMenu(&(scr->vscr));
 
 	/* Don't restore focus to this window after a window exits
 	 * fullscreen mode */
@@ -1706,7 +1706,7 @@ void wWindowFocus(WWindow *wwin, WWindow *owin)
 
 void wWindowUnfocus(WWindow *wwin)
 {
-	CloseWindowMenu();
+	CloseWindowMenu(&(wwin->screen_ptr->vscr));
 
 	if (wwin->flags.is_gnustep == 0)
 		wFrameWindowChangeState(wwin->frame, wwin->flags.semi_focused ? WS_PFOCUSED : WS_UNFOCUSED);
@@ -2696,40 +2696,34 @@ static void resizebarMouseDown(WCoreWindow *sender, void *data, XEvent *event)
 
 #ifndef NUMLOCK_HACK
 	if ((event->xbutton.state & ValidModMask)
-	    != (event->xbutton.state & ~LockMask)) {
+	    != (event->xbutton.state & ~LockMask))
 		wwarning(_("The NumLock, ScrollLock or similar key seems to be turned on. "
 			   "Turn it off or some mouse actions and keyboard shortcuts will not work."));
-	}
 #endif
 
 	event->xbutton.state &= w_global.shortcut.modifiers_mask;
 
-	CloseWindowMenu();
+	CloseWindowMenu(&(wwin->screen_ptr->vscr));
 
 	if (wPreferences.focus_mode == WKF_CLICK && !(event->xbutton.state & ControlMask)
-	    && !WFLAGP(wwin, no_focusable)) {
+	    && !WFLAGP(wwin, no_focusable))
 		wSetFocusTo(wwin->screen_ptr, wwin);
-	}
 
 	if (event->xbutton.button == Button1)
 		wRaiseFrame(wwin->frame->core);
 
-	if (event->xbutton.window != wwin->frame->resizebar->window) {
+	if (event->xbutton.window != wwin->frame->resizebar->window)
 		if (XGrabPointer(dpy, wwin->frame->resizebar->window, True,
 				 ButtonMotionMask | ButtonReleaseMask | ButtonPressMask,
-				 GrabModeAsync, GrabModeAsync, None, None, CurrentTime) != GrabSuccess) {
+				 GrabModeAsync, GrabModeAsync, None, None, CurrentTime) != GrabSuccess)
 			return;
-		}
-	}
 
-	if (event->xbutton.state & MOD_MASK) {
-		/* move the window */
+	if (event->xbutton.state & MOD_MASK)
 		wMouseMoveWindow(wwin, event);
-		XUngrabPointer(dpy, CurrentTime);
-	} else {
+	else
 		wMouseResizeWindow(wwin, event);
-		XUngrabPointer(dpy, CurrentTime);
-	}
+
+	XUngrabPointer(dpy, CurrentTime);
 }
 
 static void titlebarDblClick(WCoreWindow *sender, void *data, XEvent *event)
@@ -2798,6 +2792,7 @@ static void frameMouseDown(WObjDescriptor *desc, XEvent *event)
 		resize_width_increment = wwin->normal_hints->width_inc * w_scale;
 		resize_height_increment = wwin->normal_hints->height_inc * h_scale;
 	}
+
 	if (resize_width_increment <= 1 && resize_height_increment <= 1) {
 		resize_width_increment = wPreferences.resize_increment;
 		resize_height_increment = wPreferences.resize_increment;
@@ -2805,7 +2800,7 @@ static void frameMouseDown(WObjDescriptor *desc, XEvent *event)
 
 	event->xbutton.state &= w_global.shortcut.modifiers_mask;
 
-	CloseWindowMenu();
+	CloseWindowMenu(&(wwin->screen_ptr->vscr));
 
 	if (!(event->xbutton.state & ControlMask) && !WFLAGP(wwin, no_focusable))
 		wSetFocusTo(wwin->screen_ptr, wwin);
@@ -2864,31 +2859,30 @@ static void titlebarMouseDown(WCoreWindow *sender, void *data, XEvent *event)
 #endif
 	event->xbutton.state &= w_global.shortcut.modifiers_mask;
 
-	CloseWindowMenu();
+	CloseWindowMenu(&(wwin->screen_ptr->vscr));
 
 	if (wPreferences.focus_mode == WKF_CLICK && !(event->xbutton.state & ControlMask)
 	    && !WFLAGP(wwin, no_focusable))
 		wSetFocusTo(wwin->screen_ptr, wwin);
 
 	if (event->xbutton.button == Button1 || event->xbutton.button == Button2) {
-
 		if (event->xbutton.button == Button1) {
 			if (event->xbutton.state & MOD_MASK)
 				wLowerFrame(wwin->frame->core);
 			else
 				wRaiseFrame(wwin->frame->core);
 		}
+
 		if ((event->xbutton.state & ShiftMask)
-		    && !(event->xbutton.state & ControlMask)) {
+		    && !(event->xbutton.state & ControlMask))
 			wSelectWindow(wwin, !wwin->flags.selected);
 			return;
-		}
+
 		if (event->xbutton.window != wwin->frame->titlebar->window
 		    && XGrabPointer(dpy, wwin->frame->titlebar->window, False,
 				    ButtonMotionMask | ButtonReleaseMask | ButtonPressMask,
-				    GrabModeAsync, GrabModeAsync, None, None, CurrentTime) != GrabSuccess) {
+				    GrabModeAsync, GrabModeAsync, None, None, CurrentTime) != GrabSuccess)
 			return;
-		}
 
 		/* move the window */
 		wMouseMoveWindow(wwin, event);
@@ -2901,14 +2895,13 @@ static void titlebarMouseDown(WCoreWindow *sender, void *data, XEvent *event)
 		if (event->xbutton.window != wwin->frame->titlebar->window
 		    && XGrabPointer(dpy, wwin->frame->titlebar->window, False,
 				    ButtonMotionMask | ButtonReleaseMask | ButtonPressMask,
-				    GrabModeAsync, GrabModeAsync, None, None, CurrentTime) != GrabSuccess) {
+				    GrabModeAsync, GrabModeAsync, None, None, CurrentTime) != GrabSuccess)
 			return;
-		}
 
 		OpenWindowMenu(wwin, event->xbutton.x_root, wwin->frame_y + wwin->frame->top_width, False);
 
 		/* allow drag select */
-		desc = &w_global.menu.window_menu->menu->descriptor;
+		desc = &wwin->screen_ptr->vscr.menu.window_menu->menu->descriptor;
 		event->xany.send_event = True;
 		(*desc->handle_mousedown) (desc, event);
 
@@ -2925,7 +2918,7 @@ static void windowCloseClick(WCoreWindow *sender, void *data, XEvent *event)
 
 	event->xbutton.state &= w_global.shortcut.modifiers_mask;
 
-	CloseWindowMenu();
+	CloseWindowMenu(&(wwin->screen_ptr->vscr));
 
 	if (event->xbutton.button < Button1 || event->xbutton.button > Button3)
 		return;
@@ -2934,11 +2927,10 @@ static void windowCloseClick(WCoreWindow *sender, void *data, XEvent *event)
 	if (event->xbutton.state & ControlMask) {
 		wClientKill(wwin);
 	} else {
-		if (wwin->protocols.DELETE_WINDOW && event->xbutton.state == 0) {
+		if (wwin->protocols.DELETE_WINDOW && event->xbutton.state == 0)
 			/* send delete message */
 			wClientSendProtocol(wwin, w_global.atom.wm.delete_window,
-									  w_global.timestamp.last_event);
-		}
+					    w_global.timestamp.last_event);
 	}
 }
 
@@ -2949,7 +2941,7 @@ static void windowCloseDblClick(WCoreWindow *sender, void *data, XEvent *event)
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) sender;
 
-	CloseWindowMenu();
+	CloseWindowMenu(&(wwin->screen_ptr->vscr));
 
 	if (event->xbutton.button < Button1 || event->xbutton.button > Button3)
 		return;
@@ -2997,7 +2989,7 @@ static void windowIconifyClick(WCoreWindow *sender, void *data, XEvent *event)
 
 	event->xbutton.state &= w_global.shortcut.modifiers_mask;
 
-	CloseWindowMenu();
+	CloseWindowMenu(&(wwin->screen_ptr->vscr));
 
 	if (event->xbutton.button < Button1 || event->xbutton.button > Button3)
 		return;
@@ -3008,10 +3000,10 @@ static void windowIconifyClick(WCoreWindow *sender, void *data, XEvent *event)
 	} else {
 		WApplication *wapp;
 		if ((event->xbutton.state & ControlMask) || (event->xbutton.button == Button3)) {
-
 			wapp = wApplicationOf(wwin->main_window);
 			if (wapp && !WFLAGP(wwin, no_appicon))
 				wHideApplication(wapp);
+
 		} else if (event->xbutton.state == 0) {
 			wIconifyWindow(wwin);
 		}

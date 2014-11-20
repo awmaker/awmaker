@@ -63,6 +63,7 @@ typedef struct virtual_screen {
 		struct WMenu *root_menu;   /* root window menu */
 		struct WMenu *switch_menu; /* window list menu */
 		struct WMenu *icon_menu;   /* icon/appicon menu */
+		struct WMenu *window_menu; /* window command menu */
 	} menu;
 
 } virtual_screen;

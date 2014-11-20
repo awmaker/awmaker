@@ -3440,7 +3440,7 @@ static int setModifierKeyLabels(WScreen *scr, WDefaultEntry * entry, void *tdata
 		return 0;
 	}
 
-	DestroyWindowMenu();
+	DestroyWindowMenu(&(scr->vscr));
 
 	for (i = 0; i < 7; i++) {
 		if (prefs->modifier_labels[i])

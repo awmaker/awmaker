@@ -188,12 +188,12 @@ static void updateUnmaximizeShortcut(WMenuEntry * entry, int flags)
 	entry->rtext = GetShortcutKey(wKeyBindings[key]);
 }
 
-static void execMenuCommand(WMenu * menu, WMenuEntry * entry)
+static void execMenuCommand(WMenu *menu, WMenuEntry *entry)
 {
 	WWindow *wwin = (WWindow *) entry->clientdata;
 	WApplication *wapp;
 
-	CloseWindowMenu();
+	CloseWindowMenu(&(menu->frame->screen_ptr->vscr));
 
 	switch (entry->order) {
 	case MC_CLOSE:
@@ -580,19 +580,20 @@ static WMenu *createWindowMenu(WScreen * scr)
 	return menu;
 }
 
-void CloseWindowMenu(void)
+void CloseWindowMenu(virtual_screen *vscr)
 {
-	if (w_global.menu.window_menu) {
-		if (w_global.menu.window_menu->flags.mapped)
-			wMenuUnmap(w_global.menu.window_menu);
+	WWindow *wwin;
 
-		if (w_global.menu.window_menu->entries[0]->clientdata) {
-			WWindow *wwin = (WWindow *) w_global.menu.window_menu->entries[0]->clientdata;
+	if (vscr->menu.window_menu) {
+		if (vscr->menu.window_menu->flags.mapped)
+			wMenuUnmap(vscr->menu.window_menu);
 
+		if (vscr->menu.window_menu->entries[0]->clientdata) {
+			wwin = (WWindow *) vscr->menu.window_menu->entries[0]->clientdata;
 			wwin->flags.menu_open_for_me = 0;
 		}
 
-		w_global.menu.window_menu->entries[0]->clientdata = NULL;
+		vscr->menu.window_menu->entries[0]->clientdata = NULL;
 	}
 }
 
@@ -721,19 +722,19 @@ static WMenu *open_window_menu_core(WWindow *wwin)
 
 	wwin->flags.menu_open_for_me = 1;
 
-	if (!w_global.menu.window_menu) {
-		w_global.menu.window_menu = createWindowMenu(scr);
+	if (!scr->vscr.menu.window_menu) {
+		scr->vscr.menu.window_menu = createWindowMenu(scr);
 
 		/* hack to save some memory allocation/deallocation */
-		wfree(w_global.menu.window_menu->entries[MC_MINIATURIZE]->text);
-		wfree(w_global.menu.window_menu->entries[MC_MAXIMIZE]->text);
-		wfree(w_global.menu.window_menu->entries[MC_SHADE]->text);
-		wfree(w_global.menu.window_menu->entries[MC_SELECT]->text);
+		wfree(scr->vscr.menu.window_menu->entries[MC_MINIATURIZE]->text);
+		wfree(scr->vscr.menu.window_menu->entries[MC_MAXIMIZE]->text);
+		wfree(scr->vscr.menu.window_menu->entries[MC_SHADE]->text);
+		wfree(scr->vscr.menu.window_menu->entries[MC_SELECT]->text);
 	} else {
 		updateWorkspaceMenu(w_global.workspace.submenu);
 	}
 
-	menu = w_global.menu.window_menu;
+	menu = scr->vscr.menu.window_menu;
 	if (menu->flags.mapped) {
 		wMenuUnmap(menu);
 		if (menu->entries[0]->clientdata == wwin)
@@ -803,7 +804,7 @@ void OpenWindowMenu2(WWindow *wwin, int x, int y, int keyboard)
 		wMenuMapAt(menu, x, y, keyboard);
 }
 
-void OpenMiniwindowMenu(WWindow * wwin, int x, int y)
+void OpenMiniwindowMenu(WWindow *wwin, int x, int y)
 {
 	WMenu *menu;
 
@@ -816,14 +817,14 @@ void OpenMiniwindowMenu(WWindow * wwin, int x, int y)
 	wMenuMapAt(menu, x, y, False);
 }
 
-void DestroyWindowMenu(void)
+void DestroyWindowMenu(virtual_screen *vscr)
 {
-	if (w_global.menu.window_menu) {
-		w_global.menu.window_menu->entries[MC_MINIATURIZE]->text = NULL;
-		w_global.menu.window_menu->entries[MC_MAXIMIZE]->text = NULL;
-		w_global.menu.window_menu->entries[MC_SHADE]->text = NULL;
-		w_global.menu.window_menu->entries[MC_SELECT]->text = NULL;
-		wMenuDestroy(w_global.menu.window_menu, True);
-		w_global.menu.window_menu = NULL;
+	if (vscr->menu.window_menu) {
+		vscr->menu.window_menu->entries[MC_MINIATURIZE]->text = NULL;
+		vscr->menu.window_menu->entries[MC_MAXIMIZE]->text = NULL;
+		vscr->menu.window_menu->entries[MC_SHADE]->text = NULL;
+		vscr->menu.window_menu->entries[MC_SELECT]->text = NULL;
+		wMenuDestroy(vscr->menu.window_menu, True);
+		vscr->menu.window_menu = NULL;
 	}
 }

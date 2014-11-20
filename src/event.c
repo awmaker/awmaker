@@ -1415,13 +1415,13 @@ static void handleKeyPress(XEvent * event)
 			OpenWindowMenu(wwin, wwin->frame_x, wwin->frame_y + wwin->frame->top_width, True);
 		break;
 	case WKBD_MINIMIZEALL:
-		CloseWindowMenu();
+		CloseWindowMenu(&(scr->vscr));
 		wHideAll(scr);
 		break;
 	case WKBD_MINIATURIZE:
 		if (ISMAPPED(wwin) && ISFOCUSED(wwin)
 		    && !WFLAGP(wwin, no_miniaturizable)) {
-			CloseWindowMenu();
+			CloseWindowMenu(&(scr->vscr));
 
 			if (wwin->protocols.MINIATURIZE_WINDOW)
 				wClientSendProtocol(wwin, w_global.atom.gnustep.wm_miniaturize_window, event->xbutton.time);
@@ -1432,7 +1432,7 @@ static void handleKeyPress(XEvent * event)
 	case WKBD_HIDE:
 		if (ISMAPPED(wwin) && ISFOCUSED(wwin)) {
 			WApplication *wapp = wApplicationOf(wwin->main_window);
-			CloseWindowMenu();
+			CloseWindowMenu(&(scr->vscr));
 
 			if (wapp && !WFLAGP(wapp->main_window_desc, no_appicon))
 				wHideApplication(wapp);
@@ -1440,105 +1440,105 @@ static void handleKeyPress(XEvent * event)
 		break;
 	case WKBD_HIDE_OTHERS:
 		if (ISMAPPED(wwin) && ISFOCUSED(wwin)) {
-			CloseWindowMenu();
+			CloseWindowMenu(&(scr->vscr));
 
 			wHideOtherApplications(wwin);
 		}
 		break;
 	case WKBD_MAXIMIZE:
 		if (ISMAPPED(wwin) && ISFOCUSED(wwin) && IS_RESIZABLE(wwin)) {
-			CloseWindowMenu();
+			CloseWindowMenu(&(scr->vscr));
 
 			handleMaximize(wwin, MAX_VERTICAL | MAX_HORIZONTAL | MAX_KEYBOARD);
 		}
 		break;
 	case WKBD_VMAXIMIZE:
 		if (ISMAPPED(wwin) && ISFOCUSED(wwin) && IS_RESIZABLE(wwin)) {
-			CloseWindowMenu();
+			CloseWindowMenu(&(scr->vscr));
 
 			handleMaximize(wwin, MAX_VERTICAL | MAX_KEYBOARD);
 		}
 		break;
 	case WKBD_HMAXIMIZE:
 		if (ISMAPPED(wwin) && ISFOCUSED(wwin) && IS_RESIZABLE(wwin)) {
-			CloseWindowMenu();
+			CloseWindowMenu(&(scr->vscr));
 
 			handleMaximize(wwin, MAX_HORIZONTAL | MAX_KEYBOARD);
 		}
 		break;
 	case WKBD_LHMAXIMIZE:
 		if (ISMAPPED(wwin) && ISFOCUSED(wwin) && IS_RESIZABLE(wwin)) {
-			CloseWindowMenu();
+			CloseWindowMenu(&(scr->vscr));
 
 			handleMaximize(wwin, MAX_VERTICAL | MAX_LEFTHALF | MAX_KEYBOARD);
 		}
 		break;
 	case WKBD_RHMAXIMIZE:
 		if (ISMAPPED(wwin) && ISFOCUSED(wwin) && IS_RESIZABLE(wwin)) {
-			CloseWindowMenu();
+			CloseWindowMenu(&(scr->vscr));
 
 			handleMaximize(wwin, MAX_VERTICAL | MAX_RIGHTHALF | MAX_KEYBOARD);
 		}
 		break;
 	case WKBD_THMAXIMIZE:
 		if (ISMAPPED(wwin) && ISFOCUSED(wwin) && IS_RESIZABLE(wwin)) {
-			CloseWindowMenu();
+			CloseWindowMenu(&(scr->vscr));
 
 			handleMaximize(wwin, MAX_HORIZONTAL | MAX_TOPHALF | MAX_KEYBOARD);
 		}
 		break;
 	case WKBD_BHMAXIMIZE:
 		if (ISMAPPED(wwin) && ISFOCUSED(wwin) && IS_RESIZABLE(wwin)) {
-			CloseWindowMenu();
+			CloseWindowMenu(&(scr->vscr));
 
 			handleMaximize(wwin, MAX_HORIZONTAL | MAX_BOTTOMHALF | MAX_KEYBOARD);
 		}
 		break;
 	case WKBD_LTCMAXIMIZE:
 		if (ISMAPPED(wwin) && ISFOCUSED(wwin) && IS_RESIZABLE(wwin)) {
-			CloseWindowMenu();
+			CloseWindowMenu(&(scr->vscr));
 
 			handleMaximize(wwin, MAX_LEFTHALF | MAX_TOPHALF | MAX_KEYBOARD);
 		}
 		break;
 	case WKBD_RTCMAXIMIZE:
 		if (ISMAPPED(wwin) && ISFOCUSED(wwin) && IS_RESIZABLE(wwin)) {
-			CloseWindowMenu();
+			CloseWindowMenu(&(scr->vscr));
 
 			handleMaximize(wwin, MAX_RIGHTHALF | MAX_TOPHALF | MAX_KEYBOARD);
 		}
 		break;
 	case WKBD_LBCMAXIMIZE:
 		if (ISMAPPED(wwin) && ISFOCUSED(wwin) && IS_RESIZABLE(wwin)) {
-			CloseWindowMenu();
+			CloseWindowMenu(&(scr->vscr));
 
 			handleMaximize(wwin, MAX_LEFTHALF | MAX_BOTTOMHALF | MAX_KEYBOARD);
 		}
 		 break;
 	case WKBD_RBCMAXIMIZE:
 		if (ISMAPPED(wwin) && ISFOCUSED(wwin) && IS_RESIZABLE(wwin)) {
-			CloseWindowMenu();
+			CloseWindowMenu(&(scr->vscr));
 
 			handleMaximize(wwin, MAX_RIGHTHALF | MAX_BOTTOMHALF | MAX_KEYBOARD);
 		}
 		break;
 	case WKBD_MAXIMUS:
 		if (ISMAPPED(wwin) && ISFOCUSED(wwin) && IS_RESIZABLE(wwin)) {
-			CloseWindowMenu();
+			CloseWindowMenu(&(scr->vscr));
 
 			handleMaximize(wwin, MAX_MAXIMUS | MAX_KEYBOARD);
 		}
 		break;
 	case WKBD_RAISE:
 		if (ISMAPPED(wwin) && ISFOCUSED(wwin)) {
-			CloseWindowMenu();
+			CloseWindowMenu(&(scr->vscr));
 
 			wRaiseFrame(wwin->frame->core);
 		}
 		break;
 	case WKBD_LOWER:
 		if (ISMAPPED(wwin) && ISFOCUSED(wwin)) {
-			CloseWindowMenu();
+			CloseWindowMenu(&(scr->vscr));
 
 			wLowerFrame(wwin->frame->core);
 		}
@@ -1561,14 +1561,14 @@ static void handleKeyPress(XEvent * event)
 		break;
 	case WKBD_MOVERESIZE:
 		if (ISMAPPED(wwin) && ISFOCUSED(wwin) && (IS_RESIZABLE(wwin) || IS_MOVABLE(wwin))) {
-			CloseWindowMenu();
+			CloseWindowMenu(&(scr->vscr));
 
 			wKeyboardMoveResizeWindow(wwin);
 		}
 		break;
 	case WKBD_CLOSE:
 		if (ISMAPPED(wwin) && ISFOCUSED(wwin) && !WFLAGP(wwin, no_closable)) {
-			CloseWindowMenu();
+			CloseWindowMenu(&(scr->vscr));
 			if (wwin->protocols.DELETE_WINDOW)
 				wClientSendProtocol(wwin, w_global.atom.wm.delete_window, event->xkey.time);
 		}
