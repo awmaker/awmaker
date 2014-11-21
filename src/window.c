@@ -2874,9 +2874,10 @@ static void titlebarMouseDown(WCoreWindow *sender, void *data, XEvent *event)
 		}
 
 		if ((event->xbutton.state & ShiftMask)
-		    && !(event->xbutton.state & ControlMask))
+		    && !(event->xbutton.state & ControlMask)) {
 			wSelectWindow(wwin, !wwin->flags.selected);
 			return;
+		}
 
 		if (event->xbutton.window != wwin->frame->titlebar->window
 		    && XGrabPointer(dpy, wwin->frame->titlebar->window, False,
