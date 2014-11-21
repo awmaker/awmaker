@@ -532,15 +532,6 @@ extern struct wmaker_global_variables {
 		struct RImage *drawer;	/* tile for a drawer (tile + arrow) */
 	} tile;
 
-	/* Menu related */
-	struct {
-		struct {
-			unsigned int root_menu_changed_shortcuts:1;
-			unsigned int added_workspace_menu:1; /* See w_global.workspace */
-			unsigned int added_window_menu:1;
-		} flags;
-	} menu;
-
 	/* Workspace related */
 	struct {
 		struct WWorkspace **array;	/* data for the workspaces */

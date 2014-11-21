@@ -444,7 +444,7 @@ static void removeShortcutsForMenu(WMenu *menu)
 	}
 
 	shortcutList = newList;
-	w_global.menu.flags.root_menu_changed_shortcuts = 1;
+	menu->menu->screen_ptr->vscr.menu.flags.root_menu_changed_shortcuts = 1;
 }
 
 static Bool addShortcut(const char *file, const char *shortcutDefinition, WMenu *menu, WMenuEntry *entry)
@@ -500,7 +500,7 @@ static Bool addShortcut(const char *file, const char *shortcutDefinition, WMenu 
 	ptr->next = shortcutList;
 	shortcutList = ptr;
 
-	w_global.menu.flags.root_menu_changed_shortcuts = 1;
+	menu->menu->screen_ptr->vscr.menu.flags.root_menu_changed_shortcuts = 1;
 
 	return True;
 }
@@ -805,13 +805,13 @@ static WMenuEntry *addWorkspaceMenu(WScreen *scr, WMenu *menu, const char *title
 	WMenu *wsmenu;
 	WMenuEntry *entry;
 
-	if (w_global.menu.flags.added_workspace_menu) {
+	if (scr->vscr.menu.flags.added_workspace_menu) {
 		wwarning(_
 			 ("There are more than one WORKSPACE_MENU commands in the applications menu. Only one is allowed."));
 		return NULL;
 	}
 
-	w_global.menu.flags.added_workspace_menu = 1;
+	scr->vscr.menu.flags.added_workspace_menu = 1;
 
 	wsmenu = wWorkspaceMenuMake(scr, True);
 	wsmenu->on_destroy = cleanupWorkspaceMenu;
@@ -837,13 +837,13 @@ static WMenuEntry *addWindowsMenu(WScreen *scr, WMenu *menu, const char *title)
 	WWindow *wwin;
 	WMenuEntry *entry;
 
-	if (w_global.menu.flags.added_window_menu) {
+	if (scr->vscr.menu.flags.added_window_menu) {
 		wwarning(_
 			 ("There are more than one WINDOWS_MENU commands in the applications menu. Only one is allowed."));
 		return NULL;
 	}
 
-	w_global.menu.flags.added_window_menu = 1;
+	scr->vscr.menu.flags.added_window_menu = 1;
 
 	wwmenu = wMenuCreate(scr, _("Window List"));
 	wwmenu->on_destroy = cleanupWindowsMenu;
@@ -1614,9 +1614,9 @@ void OpenRootMenu(WScreen *scr, int x, int y, int keyboard)
 	WMenu *menu = NULL;
 	WMPropList *definition;
 
-	w_global.menu.flags.root_menu_changed_shortcuts = 0;
-	w_global.menu.flags.added_workspace_menu = 0;
-	w_global.menu.flags.added_window_menu = 0;
+	scr->vscr.menu.flags.root_menu_changed_shortcuts = 0;
+	scr->vscr.menu.flags.added_workspace_menu = 0;
+	scr->vscr.menu.flags.added_window_menu = 0;
 
 	if (scr->vscr.menu.root_menu && scr->vscr.menu.root_menu->flags.mapped) {
 		menu = scr->vscr.menu.root_menu;
@@ -1683,6 +1683,6 @@ void OpenRootMenu(WScreen *scr, int x, int y, int keyboard)
 		wMenuMapAt(menu, newx, newy, keyboard);
 	}
 
-	if (w_global.menu.flags.root_menu_changed_shortcuts)
+	if (scr->vscr.menu.flags.root_menu_changed_shortcuts)
 		rebindKeygrabs(scr);
 }

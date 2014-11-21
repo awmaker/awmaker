@@ -64,6 +64,12 @@ typedef struct virtual_screen {
 		struct WMenu *switch_menu; /* window list menu */
 		struct WMenu *icon_menu;   /* icon/appicon menu */
 		struct WMenu *window_menu; /* window command menu */
+
+		struct {
+			unsigned int root_menu_changed_shortcuts:1;
+			unsigned int added_workspace_menu:1; /* See w_global.workspace */
+			unsigned int added_window_menu:1;
+		} flags;
 	} menu;
 
 } virtual_screen;
