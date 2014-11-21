@@ -219,7 +219,7 @@ void UpdateSwitchMenu(WScreen *scr, WWindow *wwin, int action)
 			snprintf(entry->rtext, MAX_WORKSPACENAME_WIDTH, "[*]");
 		else
 			snprintf(entry->rtext, MAX_WORKSPACENAME_WIDTH, "[%s]",
-				 w_global.workspace.array[wwin->frame->workspace]->name);
+				 scr->vscr.workspace.array[wwin->frame->workspace]->name);
 
 		if (wwin->flags.hidden) {
 			entry->flags.indicator_type = MI_HIDDEN;
@@ -268,17 +268,14 @@ void UpdateSwitchMenu(WScreen *scr, WWindow *wwin, int action)
 
 				case ACTION_CHANGE_WORKSPACE:
 					if (entry->rtext) {
-						int idx = -1;
 						char *t, *rt;
-						int it, ion;
+						int it, ion, idx = -1;
 
-						if (IS_OMNIPRESENT(wwin)) {
+						if (IS_OMNIPRESENT(wwin))
 							snprintf(entry->rtext, MAX_WORKSPACENAME_WIDTH, "[*]");
-						} else {
-							snprintf(entry->rtext, MAX_WORKSPACENAME_WIDTH,
-								 "[%s]",
-								 w_global.workspace.array[wwin->frame->workspace]->name);
-						}
+						else
+							snprintf(entry->rtext, MAX_WORKSPACENAME_WIDTH, "[%s]",
+								 scr->vscr.workspace.array[wwin->frame->workspace]->name);
 
 						rt = entry->rtext;
 						entry->rtext = NULL;
@@ -288,9 +285,8 @@ void UpdateSwitchMenu(WScreen *scr, WWindow *wwin, int action)
 						it = entry->flags.indicator_type;
 						ion = entry->flags.indicator_on;
 
-						if (!IS_OMNIPRESENT(wwin) && idx < 0) {
+						if (!IS_OMNIPRESENT(wwin) && idx < 0)
 							idx = menuIndexForWindow(switchmenu, wwin, i);
-						}
 
 						wMenuRemoveItem(switchmenu, i);
 
@@ -349,16 +345,17 @@ static void UpdateSwitchMenuWorkspace(virtual_screen *vscr, int workspace)
 
 	for (i = 0; i < menu->entry_no; i++) {
 		wwin = (WWindow *) menu->entries[i]->clientdata;
-
 		if (wwin->frame->workspace == workspace && !IS_OMNIPRESENT(wwin)) {
 			if (IS_OMNIPRESENT(wwin))
 				snprintf(menu->entries[i]->rtext, MAX_WORKSPACENAME_WIDTH, "[*]");
 			else
 				snprintf(menu->entries[i]->rtext, MAX_WORKSPACENAME_WIDTH, "[%s]",
-					 w_global.workspace.array[wwin->frame->workspace]->name);
+					 vscr->workspace.array[wwin->frame->workspace]->name);
+
 			menu->flags.realized = 0;
 		}
 	}
+
 	if (!menu->flags.realized)
 		wMenuRealize(menu);
 }

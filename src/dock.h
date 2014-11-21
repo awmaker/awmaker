@@ -99,7 +99,7 @@ int wDockReceiveDNDDrop(WScreen *scr, XEvent *event);
 
 void wClipIconPaint(void);
 void wClipSaveState(void);
-WMPropList *wClipSaveWorkspaceState(int workspace);
+WMPropList *wClipSaveWorkspaceState(virtual_screen *vscr, int workspace);
 
 void wDrawerIconPaint(WAppIcon *dicon);
 void wDrawersSaveState(void);
@@ -107,7 +107,7 @@ void wDrawersRestoreState(void);
 void wDrawersRestoreState_map(WScreen *scr);
 int wIsADrawer(WAppIcon *aicon);
 
-void wClipUpdateForWorkspaceChange(int workspace);
+void wClipUpdateForWorkspaceChange(virtual_screen *vscr, int workspace);
 
 RImage *wClipMakeTile(RImage *normalTile);
 RImage *wDrawerMakeTile(RImage *normalTile);

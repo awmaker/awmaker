@@ -1604,7 +1604,7 @@ static void menu_rename_workspace(WScreen *scr, int entry_no)
 	char *name;
 	int number = entry_no - 3; /* Entries "New", "Destroy Last" and "Last Used" appear before workspaces */
 
-	name = wstrdup(w_global.workspace.array[number]->name);
+	name = wstrdup(scr->vscr.workspace.array[number]->name);
 	snprintf(buffer, sizeof(buffer), _("Type the name for workspace %i:"), number + 1);
 
 	wMenuUnmap(scr->vscr.menu.root_menu);
@@ -2141,9 +2141,9 @@ void wMenuSaveState(virtual_screen *vscr)
 	if (saveMenuRecurs(menus, vscr->menu.root_menu, vscr))
 		save_menus = 1;
 
-	if (w_global.workspace.menu && w_global.workspace.menu->flags.buttoned) {
+	if (vscr->workspace.menu && vscr->workspace.menu->flags.buttoned) {
 		key = WMCreatePLString("WorkspaceMenu");
-		saveMenuInfo(menus, w_global.workspace.menu, key);
+		saveMenuInfo(menus, vscr->workspace.menu, key);
 		WMReleasePropList(key);
 		save_menus = 1;
 	}

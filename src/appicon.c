@@ -143,7 +143,7 @@ void unpaint_app_icon(WApplication *wapp)
 		return;
 
 	scr = wapp->main_window_desc->screen_ptr;
-	clip = w_global.workspace.array[w_global.workspace.current]->clip;
+	clip = scr->vscr.workspace.array[scr->vscr.workspace.current]->clip;
 
 	if (!clip || !aicon->attracted || !clip->collapsed)
 		XUnmapWindow(dpy, aicon->icon->core->window);
@@ -178,7 +178,7 @@ void paint_app_icon(WApplication *wapp)
 
 	attracting_dock = w_global.drawer.attracting_drawer != NULL ?
 		w_global.drawer.attracting_drawer :
-		w_global.workspace.array[w_global.workspace.current]->clip;
+		scr->vscr.workspace.array[scr->vscr.workspace.current]->clip;
 	if (attracting_dock && attracting_dock->attract_icons &&
 		wDockFindFreeSlot(attracting_dock, &x, &y)) {
 		wapp->app_icon->attracted = 1;
@@ -389,7 +389,7 @@ static void updateDockNumbers(WScreen *scr)
 	WAppIcon *dicon = scr->dock->icon_array[0];
 
 	ws_numbers = wmalloc(20);
-	snprintf(ws_numbers, 20, "%i [ %i ]", w_global.workspace.current + 1, ((w_global.workspace.current / 10) + 1));
+	snprintf(ws_numbers, 20, "%i [ %i ]", scr->vscr.workspace.current + 1, ((scr->vscr.workspace.current / 10) + 1));
 	length = strlen(ws_numbers);
 
 	XClearArea(dpy, dicon->icon->core->window, 2, 2, 50, WMFontHeight(scr->icon_title_font) + 1, False);
@@ -704,7 +704,7 @@ static void iconDblClick(WObjDescriptor *desc, XEvent *event)
 
 	unhideHere = (event->xbutton.state & ShiftMask);
 	/* go to the last workspace that the user worked on the app */
-	if (!unhideHere && wapp->last_workspace != w_global.workspace.current)
+	if (!unhideHere && wapp->last_workspace != scr->vscr.workspace.current)
 		wWorkspaceChange(scr, wapp->last_workspace);
 
 	wUnhideApplication(wapp, event->xbutton.button == Button2, unhideHere);
@@ -844,8 +844,8 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 		allDocks[i++] = w_global.dock.dock;
 
 	if (!wPreferences.flags.noclip &&
-	    originalDock != w_global.workspace.array[w_global.workspace.current]->clip)
-		allDocks[i++] = w_global.workspace.array[w_global.workspace.current]->clip;
+	    originalDock != scr->vscr.workspace.array[scr->vscr.workspace.current]->clip)
+		allDocks[i++] = scr->vscr.workspace.array[scr->vscr.workspace.current]->clip;
 
 	for ( ; i < w_global.drawer.drawer_count + 2; i++) /* In case the clip, the dock, or both, are disabled */
 		allDocks[ i ] = NULL;
@@ -896,11 +896,11 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 
 			if (omnipresent && !showed_all_clips) {
 				int i;
-				for (i = 0; i < w_global.workspace.count; i++) {
-					if (i == w_global.workspace.current)
+				for (i = 0; i < scr->vscr.workspace.count; i++) {
+					if (i == scr->vscr.workspace.current)
 						continue;
 
-					wDockShowIcons(w_global.workspace.array[i]->clip);
+					wDockShowIcons(scr->vscr.workspace.array[i]->clip);
 					/* Note: if dock is collapsed (for instance, because it
 					   auto-collapses), its icons still won't show up */
 				}
@@ -1102,11 +1102,11 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 			}
 			if (showed_all_clips) {
 				int i;
-				for (i = 0; i < w_global.workspace.count; i++) {
-					if (i == w_global.workspace.current)
+				for (i = 0; i < scr->vscr.workspace.count; i++) {
+					if (i == scr->vscr.workspace.current)
 						continue;
 
-					wDockHideIcons(w_global.workspace.array[i]->clip);
+					wDockHideIcons(scr->vscr.workspace.array[i]->clip);
 				}
 			}
 			if (wPreferences.auto_arrange_icons && !(originalDock != NULL && docked))
@@ -1185,8 +1185,8 @@ static void create_appicon_from_dock(WWindow *wwin, WApplication *wapp)
 	/* check clips */
 	if (!wapp->app_icon) {
 		int i;
-		for (i = 0; i < w_global.workspace.count; i++) {
-			WDock *dock = w_global.workspace.array[i]->clip;
+		for (i = 0; i < scr->vscr.workspace.count; i++) {
+			WDock *dock = scr->vscr.workspace.array[i]->clip;
 
 			if (dock)
 				wapp->app_icon = findDockIconFor(dock, main_window);

@@ -336,15 +336,15 @@ void wNETWMUpdateDesktop(WScreen *scr)
 	long *views, sizes[2];
 	int count, i;
 
-	if (w_global.workspace.count == 0)
+	if (scr->vscr.workspace.count == 0)
 		return;
 
-	count = w_global.workspace.count * 2;
+	count = scr->vscr.workspace.count * 2;
 	views = wmalloc(sizeof(long) * count);
 	sizes[0] = scr->scr_width;
 	sizes[1] = scr->scr_height;
 
-	for (i = 0; i < w_global.workspace.count; i++) {
+	for (i = 0; i < scr->vscr.workspace.count; i++) {
 		views[2 * i + 0] = 0;
 		views[2 * i + 1] = 0;
 	}
@@ -557,13 +557,13 @@ static void wNETWMShowingDesktop(WScreen *scr, Bool show)
 		updateShowDesktop(scr, True);
 	} else if (scr->netdata->show_desktop != NULL) {
 		/* FIXME: get rid of workspace flashing ! */
-		int ws = w_global.workspace.current;
+		int ws = scr->vscr.workspace.current;
 		WWindow **tmp;
 		for (tmp = scr->netdata->show_desktop; *tmp; ++tmp) {
 			wDeiconifyWindow(*tmp);
 			(*tmp)->flags.net_show_desktop = 0;
 		}
-		if (ws != w_global.workspace.current)
+		if (ws != scr->vscr.workspace.current)
 			wWorkspaceChange(scr, ws);
 		wfree(scr->netdata->show_desktop);
 		scr->netdata->show_desktop = NULL;
@@ -688,13 +688,13 @@ void wNETWMUpdateWorkarea(WScreen *scr)
 	long *area;
 	int count, i;
 
-	if (!scr->netdata || w_global.workspace.count == 0 || !scr->usableArea)
+	if (!scr->netdata || scr->vscr.workspace.count == 0 || !scr->usableArea)
 		return;
 
-	count = w_global.workspace.count * 4;
+	count = scr->vscr.workspace.count * 4;
 	area = wmalloc(sizeof(long) * count);
 
-	for (i = 0; i < w_global.workspace.count; i++) {
+	for (i = 0; i < scr->vscr.workspace.count; i++) {
 		area[4 * i + 0] = scr->usableArea[0].x1;
 		area[4 * i + 1] = scr->usableArea[0].y1;
 		area[4 * i + 2] = scr->usableArea[0].x2 - scr->usableArea[0].x1;
@@ -807,7 +807,7 @@ static void updateWorkspaceCount(WScreen *scr)
 {				/* changeable */
 	long count;
 
-	count = w_global.workspace.count;
+	count = scr->vscr.workspace.count;
 
 	XChangeProperty(dpy, scr->root_win, net_number_of_desktops, XA_CARDINAL,
 			32, PropModeReplace, (unsigned char *)&count, 1);
@@ -817,7 +817,7 @@ static void updateCurrentWorkspace(WScreen *scr)
 {				/* changeable */
 	long count;
 
-	count = w_global.workspace.current;
+	count = scr->vscr.workspace.current;
 
 	XChangeProperty(dpy, scr->root_win, net_current_desktop, XA_CARDINAL, 32,
 			PropModeReplace, (unsigned char *)&count, 1);
@@ -830,9 +830,9 @@ static void updateWorkspaceNames(WScreen *scr)
 
 	pos = buf;
 	len = 0;
-	for (i = 0; i < w_global.workspace.count; i++) {
-		curr_size = strlen(w_global.workspace.array[i]->name);
-		strcpy(pos, w_global.workspace.array[i]->name);
+	for (i = 0; i < scr->vscr.workspace.count; i++) {
+		curr_size = strlen(scr->vscr.workspace.array[i]->name);
+		strcpy(pos, scr->vscr.workspace.array[i]->name);
 		pos += (curr_size + 1);
 		len += (curr_size + 1);
 	}
@@ -1488,13 +1488,13 @@ Bool wNETWMProcessClientMessage(XClientMessageEvent *event)
 			long value;
 
 			value = event->data.l[0];
-			if (value > w_global.workspace.count) {
-				wWorkspaceMake(scr, value - w_global.workspace.count);
-			} else if (value < w_global.workspace.count) {
+			if (value > scr->vscr.workspace.count) {
+				wWorkspaceMake(scr, value - scr->vscr.workspace.count);
+			} else if (value < scr->vscr.workspace.count) {
 				int i;
 				Bool rebuild = False;
 
-				for (i = w_global.workspace.count - 1; i >= value; i--) {
+				for (i = scr->vscr.workspace.count - 1; i >= value; i--) {
 					if (!wWorkspaceDelete(scr, i)) {
 						rebuild = True;
 						break;
@@ -1530,7 +1530,7 @@ Bool wNETWMProcessClientMessage(XClientMessageEvent *event)
 		 * - giving the client the focus does not cause a change in
 		 *   the active workspace (XXX: or the active head if Xinerama)
 		 */
-		if (wwin->frame->workspace == w_global.workspace.current /* No workspace change */
+		if (wwin->frame->workspace == scr->vscr.workspace.current /* No workspace change */
 		    || event->data.l[0] == 2 /* Requested by pager */
 		    || WFLAGP(wwin, focus_across_wksp) /* Explicitly allowed */) {
 				wNETWMShowingDesktop(scr, False);

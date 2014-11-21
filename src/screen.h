@@ -72,6 +72,32 @@ typedef struct virtual_screen {
 		} flags;
 	} menu;
 
+	/* Workspace related */
+	struct {
+		struct WWorkspace **array; /* data for the workspaces */
+
+		int count;	           /* number of workspaces */
+		int current;	           /* current workspace number */
+		int last_used;	           /* last used workspace number */
+
+		WMFont *font_for_name;     /* used during workspace switch */
+
+		/*
+		 * Ignore Workspace Change:
+		 * this variable is used to prevent workspace switch while certain
+		 * operations are ongoing.
+		 */
+		Bool ignore_change;
+
+		/* Menus */
+		struct WMenu *menu;     /* workspace operation */
+		struct WMenu *submenu;  /* workspace list for window_menu */
+		/* TODO kix: WDock should be here, in workspace
+		 * but I am creating the WDock inside "w_global.dock.dock"
+		 * to move it from WScreen. In w_global.dock.dock we can
+		 * have only one dock, but in w_global.workspace.dock
+		 * we can have multiple docks */
+	} workspace;
 } virtual_screen;
 
 /* each WScreen is saved into a context associated with it's root window */

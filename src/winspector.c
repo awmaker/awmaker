@@ -499,8 +499,8 @@ static void saveSettings(WMWidget *button, void *client_data)
 	}
 
 	i = WMGetPopUpButtonSelectedItem(panel->wsP) - 1;
-	if (i >= 0 && i < w_global.workspace.count) {
-		value = WMCreatePLString(w_global.workspace.array[i]->name);
+	if (i >= 0 && i < panel->frame->screen_ptr->vscr.workspace.count) {
+		value = WMCreatePLString(panel->frame->screen_ptr->vscr.workspace.array[i]->name);
 		different |= insertAttribute(dict, winDic, AStartWorkspace, value, flags);
 		WMReleasePropList(value);
 	}
@@ -938,9 +938,9 @@ static void revertSettings(WMWidget *button, void *client_data)
 
 	showIconFor(WMWidgetScreen(panel->alwChk), panel, wm_instance, wm_class, REVERT_TO_DEFAULT);
 
-	n = wDefaultGetStartWorkspace(wm_instance, wm_class);
+	n = wDefaultGetStartWorkspace(&(wwin->screen_ptr->vscr), wm_instance, wm_class);
 
-	if (n >= 0 && n < w_global.workspace.count)
+	if (n >= 0 && n < wwin->screen_ptr->vscr.workspace.count)
 		WMSetPopUpButtonSelectedItem(panel->wsP, n + 1);
 	else
 		WMSetPopUpButtonSelectedItem(panel->wsP, 0);
@@ -1534,11 +1534,11 @@ static void create_tab_icon_workspace(WWindow *wwin, InspectorPanel *panel)
 	WMResizeWidget(panel->wsP, PWIDTH - (2 * 15) - (2 * 20), 20);
 	WMAddPopUpButtonItem(panel->wsP, _("Nowhere in particular"));
 
-	for (i = 0; i < w_global.workspace.count; i++)
-		WMAddPopUpButtonItem(panel->wsP, w_global.workspace.array[i]->name);
+	for (i = 0; i < wwin->screen_ptr->vscr.workspace.count; i++)
+		WMAddPopUpButtonItem(panel->wsP, wwin->screen_ptr->vscr.workspace.array[i]->name);
 
-	i = wDefaultGetStartWorkspace(wwin->wm_instance, wwin->wm_class);
-	if (i >= 0 && i <= w_global.workspace.count)
+	i = wDefaultGetStartWorkspace(&(wwin->screen_ptr->vscr), wwin->wm_instance, wwin->wm_class);
+	if (i >= 0 && i <= wwin->screen_ptr->vscr.workspace.count)
 		WMSetPopUpButtonSelectedItem(panel->wsP, i + 1);
 	else
 		WMSetPopUpButtonSelectedItem(panel->wsP, 0);

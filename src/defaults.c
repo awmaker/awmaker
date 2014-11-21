@@ -1229,12 +1229,12 @@ void wReadDefaults(WScreen * scr, WMPropList * new_dict)
 			WMPostNotificationName(WNIconTileSettingsChanged, NULL, NULL);
 
 		if (needs_refresh & REFRESH_WORKSPACE_MENU) {
-			if (w_global.workspace.menu)
-				wWorkspaceMenuUpdate(w_global.workspace.menu);
+			if (scr->vscr.workspace.menu)
+				wWorkspaceMenuUpdate(&(scr->vscr), scr->vscr.workspace.menu);
 			if (w_global.clip.ws_menu)
-				wWorkspaceMenuUpdate(w_global.clip.ws_menu);
-			if (w_global.workspace.submenu)
-				w_global.workspace.submenu->flags.realized = 0;
+				wWorkspaceMenuUpdate(&(scr->vscr), w_global.clip.ws_menu);
+			if (scr->vscr.workspace.submenu)
+				scr->vscr.workspace.submenu->flags.realized = 0;
 			if (w_global.clip.submenu)
 				w_global.clip.submenu->flags.realized = 0;
 		}
@@ -2546,8 +2546,8 @@ static int setStickyIcons(WScreen * scr, WDefaultEntry * entry, void *bar, void 
 	(void) bar;
 	(void) foo;
 
-	if (w_global.workspace.array) {
-		wWorkspaceForceChange(scr, w_global.workspace.current);
+	if (scr->vscr.workspace.array) {
+		wWorkspaceForceChange(scr, scr->vscr.workspace.current);
 		wArrangeIcons(scr, False);
 	}
 	return 0;
@@ -2710,10 +2710,10 @@ static int setLargeDisplayFont(WScreen *scr, WDefaultEntry *entry, void *tdata, 
 	(void) entry;
 	(void) foo;
 
-	if (w_global.workspace.font_for_name)
-		WMReleaseFont(w_global.workspace.font_for_name);
+	if (scr->vscr.workspace.font_for_name)
+		WMReleaseFont(scr->vscr.workspace.font_for_name);
 
-	w_global.workspace.font_for_name = font;
+	scr->vscr.workspace.font_for_name = font;
 
 	return 0;
 }
@@ -3082,7 +3082,7 @@ static int setWorkspaceBack(WScreen * scr, WDefaultEntry * entry, void *tdata, v
 			if (str) {
 				SendHelperMessage(scr, 'S', 0, str);
 				wfree(str);
-				SendHelperMessage(scr, 'C', w_global.workspace.current + 1, NULL);
+				SendHelperMessage(scr, 'C', scr->vscr.workspace.current + 1, NULL);
 			} else {
 				SendHelperMessage(scr, 'U', 0, NULL);
 			}
