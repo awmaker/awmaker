@@ -500,7 +500,7 @@ WDefaultEntry optionList[] = {
 	    &wPreferences.strict_windoze_cycle, getBool, NULL, NULL, NULL},
 	{"SwitchPanelOnlyOpen",	"NO",	NULL,
 	    &wPreferences.panel_only_open, getBool, NULL, NULL, NULL},
-	{"ApercuSize", "2", NULL,
+	{"ApercuSize", "128", NULL,
 	    &wPreferences.apercu_size, getInt, NULL, NULL, NULL},
 
 	/* style options */
