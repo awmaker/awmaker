@@ -535,12 +535,6 @@ extern struct wmaker_global_variables {
 	/* Clip related */
 	struct {
 		struct WAppIcon *icon;	/* The clip main icon, or the dock's, if they are merged */
-		WAppIconChain *global_icons;	/* Omnipresent icons chain in clip */
-
-		struct WMenu *menu;	/* Menu for clips */
-		struct WMenu *submenu;	/* Workspace list for clips */
-		struct WMenu *opt_menu;	/* Options for Clip */
-		struct WMenu *ws_menu;	/* workspace menu for clip */
 	} clip;
 
 	/* Dock related */

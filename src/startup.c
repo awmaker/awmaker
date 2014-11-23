@@ -627,7 +627,6 @@ void StartUp(Bool defaultScreenOnly)
 	/* Init the system menus */
 	InitializeSwitchMenu();
 	w_global.dock.pos_menu = makeDockPositionMenu();
-	w_global.clip.opt_menu = makeClipOptionsMenu();
 	w_global.dock.dock_menu = dock_menu_create();
 	w_global.dock.drawer_opt_menu = makeClipOptionsMenu();
 

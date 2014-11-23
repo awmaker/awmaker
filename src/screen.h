@@ -98,6 +98,16 @@ typedef struct virtual_screen {
 		 * have only one dock, but in w_global.workspace.dock
 		 * we can have multiple docks */
 	} workspace;
+
+	/* Clip related */
+	struct {
+		WAppIconChain *global_icons;  /* Omnipresent icons chain in clip */
+
+		struct WMenu *menu;           /* Menu for clips */
+		struct WMenu *submenu;        /* Workspace list for clips */
+		struct WMenu *opt_menu;       /* Options for Clip */
+		struct WMenu *ws_menu;        /* workspace menu for clip */
+	} clip;
 } virtual_screen;
 
 /* each WScreen is saved into a context associated with it's root window */

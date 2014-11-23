@@ -1173,18 +1173,20 @@ WMenu *makeDockPositionMenu(void)
 	return menu;
 }
 
-void clip_menu_create(void)
+void clip_menu_create(virtual_screen *vscr)
 {
 	WMenu *menu;
 	WMenuEntry *entry;
 
 	/* Create menus */
 	menu = menu_create(NULL);
-	w_global.clip.submenu = makeWorkspaceMenu();
+	vscr->clip.submenu = makeWorkspaceMenu();
+	if (!vscr->clip.opt_menu)
+		vscr->clip.opt_menu = makeClipOptionsMenu();
 
 	entry = wMenuAddCallback(menu, _("Clip Options"), NULL, NULL);
 
-	wMenuEntrySetCascade_create(menu, entry, w_global.clip.opt_menu);
+	wMenuEntrySetCascade_create(menu, entry, vscr->clip.opt_menu);
 
 	/* The same menu is used for the dock and its appicons. If the menu
 	 * entry text is different between the two contexts, or if it can
@@ -1211,8 +1213,8 @@ void clip_menu_create(void)
 	wfree(entry->text);
 	entry->text = _("Move Icon To"); /* can be: Move Icons to */
 
-	if (w_global.clip.submenu)
-		wMenuEntrySetCascade_create(menu, entry, w_global.clip.submenu);
+	if (vscr->clip.submenu)
+		wMenuEntrySetCascade_create(menu, entry, vscr->clip.submenu);
 
 	entry = wMenuAddCallback(menu, _("Remove Icon"), removeIconsCallback, NULL);
 	wfree(entry->text);
@@ -1232,32 +1234,30 @@ void clip_menu_create(void)
 	wfree(entry->text);
 	entry->text = _("Kill"); /* can be: Remove drawer */
 
-	w_global.clip.menu = menu;
+	vscr->clip.menu = menu;
 }
 
 static void clip_menu_map(WMenu *menu, WScreen *scr)
 {
 	menu_map(menu, scr);
 
-	if (w_global.clip.opt_menu) {
-		menu_map(w_global.clip.opt_menu, scr);
-		wMenuRealize(w_global.clip.opt_menu);
+	if (scr->vscr.clip.opt_menu) {
+		menu_map(scr->vscr.clip.opt_menu, scr);
+		wMenuRealize(scr->vscr.clip.opt_menu);
 	}
 
-	wMenuEntrySetCascade_map(menu, w_global.clip.opt_menu);
-
-	if (w_global.clip.submenu) {
-		menu_map(w_global.clip.submenu, scr);
-		wMenuRealize(w_global.clip.submenu);
-		wMenuEntrySetCascade_map(menu, w_global.clip.submenu);
+	wMenuEntrySetCascade_map(menu, scr->vscr.clip.opt_menu);
+	if (scr->vscr.clip.submenu) {
+		menu_map(scr->vscr.clip.submenu, scr);
+		wMenuRealize(scr->vscr.clip.submenu);
+		wMenuEntrySetCascade_map(menu, scr->vscr.clip.submenu);
 	}
 }
 
-static void clip_menu_unmap(WMenu *menu)
+static void clip_menu_unmap(virtual_screen *vscr, WMenu *menu)
 {
-
-	menu_unmap(w_global.clip.opt_menu);
-	menu_unmap(w_global.clip.submenu);
+	menu_unmap(vscr->clip.opt_menu);
+	menu_unmap(vscr->clip.submenu);
 	menu_unmap(menu);
 }
 
@@ -1531,7 +1531,7 @@ void clip_icon_map(WScreen *scr)
 	XMapWindow(dpy, w_global.clip.icon->icon->core->window);
 }
 
-WDock *clip_create(void)
+WDock *clip_create(virtual_screen *vscr)
 {
 	WDock *dock;
 	WAppIcon *btn;
@@ -1546,10 +1546,10 @@ WDock *clip_create(void)
 	dock->icon_array[0] = btn;
 
 	/* create clip menu */
-	if (!w_global.clip.menu)
-		clip_menu_create();
+	if (!vscr->clip.menu)
+		clip_menu_create(vscr);
 
-	dock->menu = w_global.clip.menu;
+	dock->menu = vscr->clip.menu;
 
 	return dock;
 }
@@ -3180,7 +3180,7 @@ Bool wDockFindFreeSlot(WDock *dock, int *x_pos, int *y_pos)
 					hmap[btn->xindex] = 1;
 			}
 
-			for (chain = w_global.clip.global_icons; chain != NULL; chain = chain->next) {
+			for (chain = scr->vscr.clip.global_icons; chain != NULL; chain = chain->next) {
 				btn = chain->aicon;
 				if (btn->xindex == 0 && btn->yindex > 0 && btn->yindex < vcount)
 					vmap[btn->yindex] = 1;
@@ -3201,7 +3201,7 @@ Bool wDockFindFreeSlot(WDock *dock, int *x_pos, int *y_pos)
 					hmap[-btn->xindex] = 1;
 			}
 
-			for (chain = w_global.clip.global_icons; chain != NULL; chain = chain->next) {
+			for (chain = scr->vscr.clip.global_icons; chain != NULL; chain = chain->next) {
 				btn = chain->aicon;
 				if (btn->xindex == 0 && btn->yindex > 0 && btn->yindex < vcount)
 					vmap[btn->yindex] = 1;
@@ -3222,7 +3222,7 @@ Bool wDockFindFreeSlot(WDock *dock, int *x_pos, int *y_pos)
 					hmap[btn->xindex] = 1;
 			}
 
-			for (chain = w_global.clip.global_icons; chain != NULL; chain = chain->next) {
+			for (chain = scr->vscr.clip.global_icons; chain != NULL; chain = chain->next) {
 				btn = chain->aicon;
 				if (btn->xindex == 0 && btn->yindex < 0 && btn->yindex > -vcount)
 					vmap[-btn->yindex] = 1;
@@ -3245,7 +3245,7 @@ Bool wDockFindFreeSlot(WDock *dock, int *x_pos, int *y_pos)
 
 			}
 
-			for (chain = w_global.clip.global_icons; chain != NULL; chain = chain->next) {
+			for (chain = scr->vscr.clip.global_icons; chain != NULL; chain = chain->next) {
 				btn = chain->aicon;
 				if (btn->xindex == 0 && btn->yindex < 0 && btn->yindex > -vcount)
 					vmap[-btn->yindex] = 1;
@@ -3315,7 +3315,7 @@ Bool wDockFindFreeSlot(WDock *dock, int *x_pos, int *y_pos)
 			slot_map[XY2OFS(btn->xindex, btn->yindex)] = 1;
 	}
 
-	for (chain = w_global.clip.global_icons; chain != NULL; chain = chain->next)
+	for (chain = scr->vscr.clip.global_icons; chain != NULL; chain = chain->next)
 		slot_map[XY2OFS(chain->aicon->xindex, chain->aicon->yindex)] = 1;
 
 	/* Find closest slot from the center that is free by scanning the
@@ -3688,7 +3688,7 @@ void wClipUpdateForWorkspaceChange(virtual_screen *vscr, int workspace)
 	w_global.clip.icon->dock = vscr->workspace.array[workspace]->clip;
 	if (vscr->workspace.current != workspace) {
 		old_clip = vscr->workspace.array[vscr->workspace.current]->clip;
-		chain = w_global.clip.global_icons;
+		chain = vscr->clip.global_icons;
 
 		while (chain) {
 			wDockMoveIconBetweenDocks(chain->aicon->dock,
@@ -3830,10 +3830,11 @@ static void set_dockmenu_dock_code(WDock *dock, WMenuEntry *entry, WAppIcon *aic
 static void set_dockmenu_clip_code(WDock *dock, WMenuEntry *entry, WAppIcon *aicon, int *index)
 {
 	int n_selected;
+	WScreen *scr = dock->screen_ptr;
 
 	/* clip/drawer options */
-	if (w_global.clip.opt_menu)
-		updateOptionsMenu(dock, w_global.clip.opt_menu);
+	if (scr->vscr.clip.opt_menu)
+		updateOptionsMenu(dock, scr->vscr.clip.opt_menu);
 
 	n_selected = numberOfSelectedIcons(dock);
 
@@ -3891,8 +3892,8 @@ static void set_dockmenu_clip_code(WDock *dock, WMenuEntry *entry, WAppIcon *aic
 	else
 		entry->text = _("Move Icon To");
 
-	if (w_global.clip.submenu)
-		updateWorkspaceMenu(w_global.clip.submenu, aicon);
+	if (scr->vscr.clip.submenu)
+		updateWorkspaceMenu(scr->vscr.clip.submenu, aicon);
 
 	wMenuSetEnabled(dock->menu, *index, !aicon->omnipresent);
 
@@ -4485,11 +4486,11 @@ static void iconMouseDown(WObjDescriptor *desc, XEvent *event)
 		break;
 	case Button2:
 		if (aicon == w_global.clip.icon) {
-			if (!w_global.clip.ws_menu)
-				w_global.clip.ws_menu = wWorkspaceMenuMake(scr, False);
+			if (!scr->vscr.clip.ws_menu)
+				scr->vscr.clip.ws_menu = wWorkspaceMenuMake(scr, False);
 
-			if (w_global.clip.ws_menu) {
-				WMenu *wsMenu = w_global.clip.ws_menu;
+			if (scr->vscr.clip.ws_menu) {
+				WMenu *wsMenu = scr->vscr.clip.ws_menu;
 				int xpos;
 
 				wWorkspaceMenuUpdate(&(scr->vscr), wsMenu);
@@ -4533,7 +4534,7 @@ static void iconMouseDown(WObjDescriptor *desc, XEvent *event)
 		case WM_CLIP:
 			clip_menu_map(dock->menu, scr);
 			open_menu_clip(dock, aicon, event);
-			clip_menu_unmap(dock->menu);
+			clip_menu_unmap(&(scr->vscr), dock->menu);
 			break;
 		case WM_DRAWER:
 			drawer_menu_map(dock->menu, scr);
@@ -4740,8 +4741,8 @@ int wClipMakeIconOmnipresent(WAppIcon *aicon, int omnipresent)
 			aicon->omnipresent = 1;
 			new_entry = wmalloc(sizeof(WAppIconChain));
 			new_entry->aicon = aicon;
-			new_entry->next = w_global.clip.global_icons;
-			w_global.clip.global_icons = new_entry;
+			new_entry->next = scr->vscr.clip.global_icons;
+			scr->vscr.clip.global_icons = new_entry;
 			scr->vscr.global_icon_count++;
 		} else {
 			aicon->omnipresent = 0;
@@ -4749,13 +4750,13 @@ int wClipMakeIconOmnipresent(WAppIcon *aicon, int omnipresent)
 		}
 	} else {
 		aicon->omnipresent = 0;
-		if (aicon == w_global.clip.global_icons->aicon) {
-			tmp = w_global.clip.global_icons->next;
-			wfree(w_global.clip.global_icons);
-			w_global.clip.global_icons = tmp;
+		if (aicon == scr->vscr.clip.global_icons->aicon) {
+			tmp = scr->vscr.clip.global_icons->next;
+			wfree(scr->vscr.clip.global_icons);
+			scr->vscr.clip.global_icons = tmp;
 			scr->vscr.global_icon_count--;
 		} else {
-			tmp = w_global.clip.global_icons;
+			tmp = scr->vscr.clip.global_icons;
 			while (tmp->next) {
 				if (tmp->next->aicon == aicon) {
 					tmp1 = tmp->next->next;
