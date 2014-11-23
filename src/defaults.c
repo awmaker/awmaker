@@ -1190,8 +1190,9 @@ void wReadDefaults(WScreen * scr, WMPropList * new_dict)
 	if (wPreferences.apercu_size < 24) {
 		/* 24 is the minimum icon size proposed in WPref's settings */
 		wPreferences.apercu_size *= wPreferences.icon_size;
-		wwarning(_("your ApercuSize setting is using old syntax, it is converted to %d pixels; consider running WPrefs.app to update your settings"),
-			 wPreferences.apercu_size);
+		if (wPreferences.miniwin_apercu_balloon)
+			wwarning(_("your ApercuSize setting is using old syntax, it is converted to %d pixels; consider running WPrefs.app to update your settings"),
+				 wPreferences.apercu_size);
 	}
 
 	if (needs_refresh != 0 && !w_global.startup.phase1) {
