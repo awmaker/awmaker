@@ -1257,12 +1257,13 @@ void wDefaultUpdateIcons(WScreen *scr)
 	if (!wPreferences.flags.noclip || wPreferences.flags.clip_merged_in_dock)
 		wClipIconPaint();
 
-	for (dc = w_global.drawer.drawers; dc != NULL; dc = dc->next)
+	for (dc = scr->vscr.drawer.drawers; dc != NULL; dc = dc->next)
 		wDrawerIconPaint(dc->adrawer->icon_array[0]);
 
 	while (wwin) {
 		if (wwin->icon && wwin->flags.miniaturized)
 			wIconChangeImageFile(wwin->icon, NULL);
+
 		wwin = wwin->prev;
 	}
 }

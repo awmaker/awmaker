@@ -121,8 +121,8 @@ static void clipAutoRaise(void *cdata);
 
 static void drawerIconExpose(WObjDescriptor *desc, XEvent *event);
 static void removeDrawerCallback(WMenu *menu, WMenuEntry *entry);
-static void drawerAppendToChain(WDock *drawer);
-static char *findUniqueName(const char *instance_basename);
+static void drawerAppendToChain(virtual_screen *vscr, WDock *drawer);
+static char *findUniqueName(virtual_screen *vscr, const char *instance_basename);
 static void addADrawerCallback(WMenu *menu, WMenuEntry *entry);
 static void swapDrawers(virtual_screen *vscr, int new_x);
 static WDock *getDrawer(virtual_screen *vscr, int y_index);
@@ -626,17 +626,17 @@ static void toggleAutoAttractCallback(WMenu *menu, WMenuEntry *entry)
 					/* dock menu will be updated later, when opened */
 			}
 
-			if (w_global.drawer.attracting_drawer != NULL)
-				w_global.drawer.attracting_drawer->attract_icons = False;
+			if (scr->vscr.drawer.attracting_drawer != NULL)
+				scr->vscr.drawer.attracting_drawer->attract_icons = False;
 
-			w_global.drawer.attracting_drawer = dock;
+			scr->vscr.drawer.attracting_drawer = dock;
 		} else {
 			/* The newly auto-attracting dock is a clip: disable
 			 * previously attracting drawer, if applicable */
-			if (w_global.drawer.attracting_drawer != NULL) {
-				w_global.drawer.attracting_drawer->attract_icons = False;
+			if (scr->vscr.drawer.attracting_drawer != NULL) {
+				scr->vscr.drawer.attracting_drawer->attract_icons = False;
 				/* again, its menu will be updated, later. */
-				w_global.drawer.attracting_drawer = NULL;
+				scr->vscr.drawer.attracting_drawer = NULL;
 			}
 		}
 	}
@@ -750,7 +750,7 @@ static void toggleAutoRaiseLower(WDock *dock)
 
 	dock->auto_raise_lower = !dock->auto_raise_lower;
 	if (dock->type == WM_DOCK)
-		for (dc = w_global.drawer.drawers; dc != NULL; dc = dc->next)
+		for (dc = dock->screen_ptr->vscr.drawer.drawers; dc != NULL; dc = dc->next)
 			toggleAutoRaiseLower(dc->adrawer);
 }
 
@@ -1055,7 +1055,7 @@ static void setDockPositionNormalCallback(WMenu *menu, WMenuEntry *entry)
 		/* Only for aesthetic purposes, can be removed
 		 * when Autoraise status is no longer exposed
 		 * in drawer option menu */
-		for (dc = w_global.drawer.drawers; dc != NULL; dc = dc->next)
+		for (dc = dock->screen_ptr->vscr.drawer.drawers; dc != NULL; dc = dc->next)
 			dc->adrawer->auto_raise_lower = 0;
 	} else {
 		/* Will take care of setting lowered = 0 in drawers */
@@ -1086,7 +1086,7 @@ static void setDockPositionAutoRaiseLowerCallback(WMenu *menu, WMenuEntry *entry
 	/* Only for aesthetic purposes, can be removed
 	 * when Autoraise status is no longer exposed
 	 * in drawer option menu */
-	for (dc = w_global.drawer.drawers; dc != NULL; dc = dc->next)
+	for (dc = dock->screen_ptr->vscr.drawer.drawers; dc != NULL; dc = dc->next)
 		dc->adrawer->auto_raise_lower = 1;
 
 	entry->flags.indicator_on = 1;
@@ -1109,7 +1109,7 @@ static void setDockPositionKeepOnTopCallback(WMenu *menu, WMenuEntry *entry)
 	/* Only for aesthetic purposes, can be removed
 	 * when Autoraise status is no longer exposed
 	 * in drawer option menu */
-	for (dc = w_global.drawer.drawers; dc != NULL; dc = dc->next)
+	for (dc = dock->screen_ptr->vscr.drawer.drawers; dc != NULL; dc = dc->next)
 		dc->adrawer->auto_raise_lower = 0;
 
 	toggleLowered(dock);
@@ -1602,7 +1602,7 @@ WDock *drawer_create(virtual_screen *vscr, const char *name)
 	dock->auto_collapse = 1;
 
 	if (!name)
-		name = findUniqueName("Drawer");
+		name = findUniqueName(vscr, "Drawer");
 
 	btn = dock_icon_create(NULL, "WMDrawer", (char *) name);
 
@@ -1623,7 +1623,7 @@ WDock *drawer_create(virtual_screen *vscr, const char *name)
 		drawer_menu_create(vscr);
 
 	dock->menu = vscr->dock.drawer_menu;
-	drawerAppendToChain(dock);
+	drawerAppendToChain(vscr, dock);
 
 	return dock;
 }
@@ -3379,10 +3379,9 @@ static void moveDock(WDock *dock, int new_x, int new_y)
 	WDrawerChain *dc;
 	int i;
 
-	if (dock->type == WM_DOCK) {
-		for (dc = w_global.drawer.drawers; dc != NULL; dc = dc->next)
+	if (dock->type == WM_DOCK)
+		for (dc = dock->screen_ptr->vscr.drawer.drawers; dc != NULL; dc = dc->next)
 			moveDock(dc->adrawer, new_x, dc->adrawer->y_pos - dock->y_pos + new_y);
-	}
 
 	dock->x_pos = new_x;
 	dock->y_pos = new_y;
@@ -3541,7 +3540,7 @@ void wDockLower(WDock *dock)
 	WDrawerChain *dc;
 
 	if (dock->type == WM_DOCK)
-		for (dc = w_global.drawer.drawers; dc != NULL; dc = dc->next)
+		for (dc = dock->screen_ptr->vscr.drawer.drawers; dc != NULL; dc = dc->next)
 			wDockLower(dc->adrawer);
 
 	for (i = 0; i < dock->max_icons; i++)
@@ -3559,7 +3558,7 @@ void wDockRaise(WDock *dock)
 			wRaiseFrame(dock->icon_array[i]->icon->core);
 
 	if (dock->type == WM_DOCK)
-		for (dc = w_global.drawer.drawers; dc != NULL; dc = dc->next)
+		for (dc = dock->screen_ptr->vscr.drawer.drawers; dc != NULL; dc = dc->next)
 			wDockRaise(dc->adrawer);
 }
 
@@ -3797,7 +3796,7 @@ static void toggleLowered(WDock *dock)
 	}
 
 	if (dock->type == WM_DOCK) {
-		for (dc = w_global.drawer.drawers; dc != NULL; dc = dc->next)
+		for (dc = dock->screen_ptr->vscr.drawer.drawers; dc != NULL; dc = dc->next)
 			toggleLowered(dc->adrawer);
 
 		wScreenUpdateUsableArea(dock->screen_ptr);
@@ -4280,15 +4279,17 @@ static void handleDockMove(WDock *dock, WAppIcon *aicon, XEvent *event)
 						wDockReattachIcon(dock, tmpaicon, tmpaicon->xindex, new_index);
 					}
 
-					for (dc = w_global.drawer.drawers; dc != NULL; dc = dc->next) {
+					for (dc = scr->vscr.drawer.drawers; dc != NULL; dc = dc->next) {
 						int new_y, new_index, j, ok;
 						tmpaicon = dc->adrawer->icon_array[0];
 						if (onScreen(scr, tmpaicon->x_pos, tmpaicon->y_pos))
 							continue;
+
 						new_y = (tmpaicon->y_pos + ICON_SIZE * dock->max_icons) % (ICON_SIZE * dock->max_icons);
 						new_index = (new_y - dock->y_pos) / ICON_SIZE;
 						if (!onScreen(scr, tmpaicon->x_pos, new_y))
 							continue;
+
 						ok = 1;
 						for (j = 0; j < dock->max_icons; j++) {
 							if (dock->icon_array[j] != NULL &&
@@ -4781,45 +4782,47 @@ int wClipMakeIconOmnipresent(WAppIcon *aicon, int omnipresent)
 	return status;
 }
 
-static void drawerAppendToChain(WDock *drawer)
+static void drawerAppendToChain(virtual_screen *vscr, WDock *drawer)
 {
 	WDrawerChain **where_to_add;
 
-	where_to_add = &w_global.drawer.drawers;
+	where_to_add = &vscr->drawer.drawers;
 	while ((*where_to_add) != NULL)
 		where_to_add = &(*where_to_add)->next;
 
 	*where_to_add = wmalloc(sizeof(WDrawerChain));
 	(*where_to_add)->adrawer = drawer;
 	(*where_to_add)->next = NULL;
-	w_global.drawer.drawer_count++;
+	vscr->drawer.drawer_count++;
 }
 
 
-static void drawerRemoveFromChain(WDock *drawer)
+static void drawerRemoveFromChain(virtual_screen *vscr, WDock *drawer)
 {
 	WDrawerChain *next, **to_remove;
 
-	to_remove = &w_global.drawer.drawers;
+	to_remove = &vscr->drawer.drawers;
 	while (True) {
 		if (*to_remove == NULL) {
 			wwarning("The drawer to be removed can not be found.");
 			return;
 		}
+
 		if ((*to_remove)->adrawer == drawer)
 			break;
 
 		to_remove = &(*to_remove)->next;
 	}
+
 	next = (*to_remove)->next;
 	wfree(*to_remove);
 	*to_remove = next;
-	w_global.drawer.drawer_count--;
+	vscr->drawer.drawer_count--;
 }
 
 
 /* Don't free the returned string. Duplicate it. */
-static char *findUniqueName(const char *instance_basename)
+static char *findUniqueName(virtual_screen *vscr, const char *instance_basename)
 {
 	static char buffer[128];
 	WDrawerChain *dc;
@@ -4832,7 +4835,7 @@ static char *findUniqueName(const char *instance_basename)
 
 		already_in_use = False;
 
-		for (dc = w_global.drawer.drawers; dc != NULL; dc = dc->next) {
+		for (dc = vscr->drawer.drawers; dc != NULL; dc = dc->next) {
 			if (!strncmp(dc->adrawer->icon_array[0]->wm_instance, buffer,
 					sizeof buffer)) {
 				already_in_use = True;
@@ -4872,7 +4875,7 @@ static int addADrawer(WScreen *scr)
 	WDrawerChain *dc;
 	char can_be_here[2 * dock->max_icons - 1];
 
-	if (dock->icon_count + w_global.drawer.drawer_count >= dock->max_icons)
+	if (dock->icon_count + scr->vscr.drawer.drawer_count >= dock->max_icons)
 		return -1;
 
 	for (y = -dock->max_icons + 1; y < dock->max_icons; y++)
@@ -4882,7 +4885,7 @@ static int addADrawer(WScreen *scr)
 		if (dock->icon_array[i] != NULL)
 			can_be_here[dock->icon_array[i]->yindex + dock->max_icons - 1] = False;
 
-	for (dc = w_global.drawer.drawers; dc != NULL; dc = dc->next) {
+	for (dc = scr->vscr.drawer.drawers; dc != NULL; dc = dc->next) {
 		y = (int) ((dc->adrawer->y_pos - dock->y_pos) / ICON_SIZE);
 		can_be_here[y + dock->max_icons - 1] = False;
 	}
@@ -4963,6 +4966,7 @@ static void drawerDestroy(WDock *drawer)
 		for (i = 1; i < drawer->max_icons; i++) {
 			if (!(aicon = drawer->icon_array[i]))
 				continue;
+
 			WMAddToArray(icons, aicon);
 		}
 		removeIcons(icons, drawer);
@@ -4972,6 +4976,7 @@ static void drawerDestroy(WDock *drawer)
 		WMDeleteTimerHandler(drawer->auto_collapse_magic);
 		drawer->auto_collapse_magic = NULL;
 	}
+
 	if (drawer->auto_lower_magic) {
 		WMDeleteTimerHandler(drawer->auto_lower_magic);
 		drawer->auto_lower_magic = NULL;
@@ -4981,12 +4986,12 @@ static void drawerDestroy(WDock *drawer)
 	wfree(drawer->icon_array);
 	drawer->icon_array = NULL;
 
-	drawerRemoveFromChain(drawer);
+	drawerRemoveFromChain(&(scr->vscr), drawer);
 	if (scr->vscr.last_dock == drawer)
 		scr->vscr.last_dock = NULL;
 
-	if (w_global.drawer.attracting_drawer == drawer)
-		w_global.drawer.attracting_drawer = NULL;
+	if (scr->vscr.drawer.attracting_drawer == drawer)
+		scr->vscr.drawer.attracting_drawer = NULL;
 
 	wfree(drawer);
 }
@@ -5113,7 +5118,7 @@ static void swapDrawers(virtual_screen *vscr, int new_x)
 
 	w_global.tile.drawer = wDrawerMakeTile(vscr, w_global.tile.icon);
 
-	for (dc = w_global.drawer.drawers; dc != NULL; dc = dc->next)
+	for (dc = vscr->drawer.drawers; dc != NULL; dc = dc->next)
 		swapDrawer(dc->adrawer, new_x);
 }
 
@@ -5129,7 +5134,7 @@ static WDock *getDrawer(virtual_screen *vscr, int y_index)
 {
 	WDrawerChain *dc;
 
-	for (dc = w_global.drawer.drawers; dc != NULL; dc = dc->next)
+	for (dc = vscr->drawer.drawers; dc != NULL; dc = dc->next)
 		if (dc->adrawer->y_pos - vscr->dock.dock->y_pos == y_index * ICON_SIZE)
 			return dc->adrawer;
 
@@ -5325,7 +5330,7 @@ static WDock *drawerRestoreState(virtual_screen *vscr, WMPropList *drawer_state)
 
 	/* restore attract icons state */
 	if (restore_state_autoattracticons(drawer, dock_state))
-		w_global.drawer.attracting_drawer = drawer;
+		vscr->drawer.attracting_drawer = drawer;
 
 	/* application list */
 	apps = WMGetFromPLDictionary(dock_state, dApplications);
@@ -5408,8 +5413,8 @@ void wDrawersSaveState(virtual_screen *vscr)
 	make_keys();
 
 	all_drawers = WMCreatePLArray(NULL);
-	for (i=0, dc = w_global.drawer.drawers;
-	     i < w_global.drawer.drawer_count;
+	for (i=0, dc = vscr->drawer.drawers;
+	     i < vscr->drawer.drawer_count;
 	     i++, dc = dc->next) {
 		drawer_state = drawerSaveState(vscr, dc->adrawer);
 		WMAddToPLArray(all_drawers, drawer_state);
@@ -5444,6 +5449,6 @@ void wDrawersRestoreState_map(WScreen *scr)
 {
 	WDrawerChain *dc;
 
-	for (dc = w_global.drawer.drawers; dc != NULL; dc = dc->next)
+	for (dc = scr->vscr.drawer.drawers; dc != NULL; dc = dc->next)
 		drawerRestoreState_map(scr, dc->adrawer);
 }

@@ -176,8 +176,8 @@ void paint_app_icon(WApplication *wapp)
 	if (wapp->app_icon->docked)
 		return;
 
-	attracting_dock = w_global.drawer.attracting_drawer != NULL ?
-		w_global.drawer.attracting_drawer :
+	attracting_dock = scr->vscr.drawer.attracting_drawer != NULL ?
+		scr->vscr.drawer.attracting_drawer :
 		scr->vscr.workspace.array[scr->vscr.workspace.current]->clip;
 	if (attracting_dock && attracting_dock->attract_icons &&
 		wDockFindFreeSlot(attracting_dock, &x, &y)) {
@@ -773,7 +773,7 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 	WScreen *scr = icon->core->screen_ptr;
 	WDock *originalDock = aicon->dock; /* can be NULL */
 	WDock *lastDock = originalDock;
-	WDock *allDocks[w_global.drawer.drawer_count + 2]; /* clip, dock and drawers (order determined at runtime) */
+	WDock *allDocks[scr->vscr.drawer.drawer_count + 2]; /* clip, dock and drawers (order determined at runtime) */
 	WDrawerChain *dc;
 	Bool dockable, ondock;
 	Bool grabbed = False;
@@ -836,10 +836,10 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 	if (originalDock != NULL)
 		allDocks[ i++ ] = originalDock;
 	/* Testing scr->drawers is enough, no need to test wPreferences.flags.nodrawer */
-	for (dc = w_global.drawer.drawers; dc != NULL; dc = dc->next) {
+	for (dc = scr->vscr.drawer.drawers; dc != NULL; dc = dc->next)
 		if (dc->adrawer != originalDock)
 			allDocks[ i++ ] = dc->adrawer;
-	}
+
 	if (!wPreferences.flags.nodock && scr->vscr.dock.dock != originalDock)
 		allDocks[i++] = scr->vscr.dock.dock;
 
@@ -847,7 +847,7 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 	    originalDock != scr->vscr.workspace.array[scr->vscr.workspace.current]->clip)
 		allDocks[i++] = scr->vscr.workspace.array[scr->vscr.workspace.current]->clip;
 
-	for ( ; i < w_global.drawer.drawer_count + 2; i++) /* In case the clip, the dock, or both, are disabled */
+	for ( ; i < scr->vscr.drawer.drawer_count + 2; i++) /* In case the clip, the dock, or both, are disabled */
 		allDocks[ i ] = NULL;
 
 	wins[0] = icon->core->window;
@@ -913,10 +913,11 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 
 			WDock *theNewDock = NULL;
 			if (!(ev.xmotion.state & MOD_MASK) || aicon->launching || aicon->lock || originalDock == NULL) {
-				for (i = 0; dockable && i < w_global.drawer.drawer_count + 2; i++) {
+				for (i = 0; dockable && i < scr->vscr.drawer.drawer_count + 2; i++) {
 					WDock *theDock = allDocks[i];
 					if (theDock == NULL)
 						break;
+
 					if (wDockSnapIcon(theDock, aicon, x, y, &ix, &iy, (theDock == originalDock))) {
 						theNewDock = theDock;
 						break;
@@ -1199,7 +1200,7 @@ static void create_appicon_from_dock(WWindow *wwin, WApplication *wapp)
 	/* Finally check drawers */
 	if (!wapp->app_icon) {
 		WDrawerChain *dc;
-		for (dc = w_global.drawer.drawers; dc != NULL; dc = dc->next) {
+		for (dc = scr->vscr.drawer.drawers; dc != NULL; dc = dc->next) {
 			wapp->app_icon = findDockIconFor(dc->adrawer, main_window);
 			if (wapp->app_icon)
 				break;

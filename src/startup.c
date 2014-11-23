@@ -688,7 +688,7 @@ void StartUp(Bool defaultScreenOnly)
 			/* auto-launch apps in drawers */
 			if (!wPreferences.flags.nodrawer) {
 				WDrawerChain *dc;
-				for (dc = w_global.drawer.drawers; dc; dc = dc->next) {
+				for (dc = wScreen[j]->vscr.drawer.drawers; dc; dc = dc->next) {
 					wScreen[j]->vscr.last_dock = dc->adrawer;
 					wDockDoAutoLaunch(dc->adrawer, 0);
 				}

@@ -112,6 +112,14 @@ typedef struct virtual_screen {
 		struct WMenu *drawer_menu;     /* Menu for the drawers */
 		struct WMenu *drawer_opt_menu; /* Options for drawers */
 	} dock;
+
+	/* Drawers related */
+	struct {
+		struct WDrawerChain *drawers;    /* List of drawers */
+		int drawer_count;                /* Nb of drawers that */
+		struct WDock *attracting_drawer; /* The drawer that auto-attracts icons,
+                                                  * or NULL */
+	} drawer;
 } virtual_screen;
 
 /* each WScreen is saved into a context associated with it's root window */
@@ -306,8 +314,6 @@ typedef struct _WScreen {
 
     struct virtual_screen vscr;
 } WScreen;
-
-
 
 WScreen *wScreenInit(int screen_number);
 void wScreenSaveState(WScreen *scr);

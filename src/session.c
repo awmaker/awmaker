@@ -244,13 +244,13 @@ static WMPropList *makeWindowState(WWindow *wwin, WApplication *wapp)
 				if (i < wwin->frame->screen_ptr->vscr.workspace.count)
 					name = wwin->frame->screen_ptr->vscr.workspace.array[i]->name;
 			}
+
 			/* Try the drawers */
 			if (name == NULL) {
 				WDrawerChain *dc;
-				for (dc = w_global.drawer.drawers; dc != NULL; dc = dc->next) {
+				for (dc = scr->vscr.drawer.drawers; dc != NULL; dc = dc->next)
 					if (dc->adrawer == wapp->app_icon->dock)
 						break;
-				}
 
 				assert(dc != NULL);
 				name = dc->adrawer->icon_array[0]->wm_instance;
@@ -484,7 +484,7 @@ void wSessionRestoreState(WScreen *scr)
 				/* Try the drawers */
 				if (dock == NULL) {
 					WDrawerChain *dc;
-					for (dc = w_global.drawer.drawers; dc != NULL; dc = dc->next) {
+					for (dc = scr->vscr.drawer.drawers; dc != NULL; dc = dc->next) {
 						if (strcmp(dc->adrawer->icon_array[0]->wm_instance, tmp) == 0) {
 							dock = dc->adrawer;
 							break;

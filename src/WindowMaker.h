@@ -537,14 +537,6 @@ extern struct wmaker_global_variables {
 		struct WAppIcon *icon;	/* The clip main icon, or the dock's, if they are merged */
 	} clip;
 
-	/* Drawers related */
-	struct {
-		struct WDrawerChain *drawers;		 /* List of drawers */
-		int drawer_count;		 /* Nb of drawers that */
-		struct WDock *attracting_drawer; /* The drawer that auto-attracts icons,
-						  * or NULL */
-	} drawer;
-
 #ifdef HAVE_INOTIFY
 	struct {
 		int fd_event_queue;   /* Inotify's queue file descriptor */
@@ -554,7 +546,6 @@ extern struct wmaker_global_variables {
 
 	/* definition for X Atoms */
 	struct {
-
 		/* Window-Manager related */
 		struct {
 			Atom state;
