@@ -92,11 +92,6 @@ typedef struct virtual_screen {
 		/* Menus */
 		struct WMenu *menu;     /* workspace operation */
 		struct WMenu *submenu;  /* workspace list for window_menu */
-		/* TODO kix: WDock should be here, in workspace
-		 * but I am creating the WDock inside "w_global.dock.dock"
-		 * to move it from WScreen. In w_global.dock.dock we can
-		 * have only one dock, but in w_global.workspace.dock
-		 * we can have multiple docks */
 	} workspace;
 
 	/* Clip related */
@@ -108,6 +103,15 @@ typedef struct virtual_screen {
 		struct WMenu *opt_menu;       /* Options for Clip */
 		struct WMenu *ws_menu;        /* workspace menu for clip */
 	} clip;
+
+	/* Dock related */
+	struct {
+		struct WDock *dock;            /* Window Maker Dock. */
+		struct WMenu *pos_menu;        /* Menu for position of the dock */
+		struct WMenu *dock_menu;       /* Dock menu */
+		struct WMenu *drawer_menu;     /* Menu for the drawers */
+		struct WMenu *drawer_opt_menu; /* Options for drawers */
+	} dock;
 } virtual_screen;
 
 /* each WScreen is saved into a context associated with it's root window */

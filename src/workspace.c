@@ -632,11 +632,10 @@ void wWorkspaceForceChange(WScreen *scr, int workspace)
 			 * certainly not focused). Otherwise focus last
 			 * focused, or the root (depending on sloppiness)
 			 */
-			if (!tmp && wPreferences.focus_mode == WKF_SLOPPY) {
+			if (!tmp && wPreferences.focus_mode == WKF_SLOPPY)
 				wSetFocusTo(scr, foc);
-			} else {
+			else
 				wSetFocusTo(scr, tmp);
-			}
 		}
 	}
 
@@ -648,25 +647,23 @@ void wWorkspaceForceChange(WScreen *scr, int workspace)
 	if (!wPreferences.sticky_icons)
 		wArrangeIcons(scr, False);
 
-	if (w_global.dock.dock)
-		wAppIconPaint(w_global.dock.dock->icon_array[0]);
+	if (scr->vscr.dock.dock)
+		wAppIconPaint(scr->vscr.dock.dock->icon_array[0]);
 
 	if (!wPreferences.flags.noclip && (scr->vscr.workspace.array[workspace]->clip->auto_collapse ||
 					   scr->vscr.workspace.array[workspace]->clip->auto_raise_lower)) {
 		/* to handle enter notify. This will also */
 		XUnmapWindow(dpy, w_global.clip.icon->icon->core->window);
 		XMapWindow(dpy, w_global.clip.icon->icon->core->window);
-	}
-	else if (w_global.clip.icon != NULL) {
+	} else if (w_global.clip.icon != NULL) {
 		wClipIconPaint();
 	}
+
 	wScreenUpdateUsableArea(scr);
 	wNETWMUpdateDesktop(scr);
 	showWorkspaceName(scr, workspace);
 
 	WMPostNotificationName(WMNWorkspaceChanged, scr, (void *)(uintptr_t) workspace);
-
-	/*   XSync(dpy, False); */
 }
 
 static void switchWSCommand(WMenu * menu, WMenuEntry * entry)

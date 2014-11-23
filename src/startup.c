@@ -626,13 +626,6 @@ void StartUp(Bool defaultScreenOnly)
 
 	/* Init the system menus */
 	InitializeSwitchMenu();
-	w_global.dock.pos_menu = makeDockPositionMenu();
-	w_global.dock.dock_menu = dock_menu_create();
-	w_global.dock.drawer_opt_menu = makeClipOptionsMenu();
-
-	/* Create the dock */
-	if (!wPreferences.flags.nodock)
-		w_global.dock.dock = dock_create();
 
 	/* manage the screens */
 	for (j = 0; j < max; j++) {
@@ -649,6 +642,7 @@ void StartUp(Bool defaultScreenOnly)
 				continue;
 			}
 		}
+
 		w_global.screen_count++;
 	}
 
@@ -661,8 +655,8 @@ void StartUp(Bool defaultScreenOnly)
 		wScreenRestoreState(wScreen[j]);
 
 		/* manage all windows that were already here before us */
-		if (!wPreferences.flags.nodock && w_global.dock.dock)
-			wScreen[j]->vscr.last_dock = w_global.dock.dock;
+		if (!wPreferences.flags.nodock && wScreen[j]->vscr.dock.dock)
+			wScreen[j]->vscr.last_dock = wScreen[j]->vscr.dock.dock;
 
 		manageAllWindows(wScreen[j], wPreferences.flags.restarting == 2);
 
@@ -675,9 +669,9 @@ void StartUp(Bool defaultScreenOnly)
 
 		if (!wPreferences.flags.noautolaunch) {
 			/* auto-launch apps */
-			if (!wPreferences.flags.nodock && w_global.dock.dock) {
-				wScreen[j]->vscr.last_dock = w_global.dock.dock;
-				wDockDoAutoLaunch(w_global.dock.dock, 0);
+			if (!wPreferences.flags.nodock && wScreen[j]->vscr.dock.dock) {
+				wScreen[j]->vscr.last_dock = wScreen[j]->vscr.dock.dock;
+				wDockDoAutoLaunch(wScreen[j]->vscr.dock.dock, 0);
 			}
 
 			/* auto-launch apps in clip */

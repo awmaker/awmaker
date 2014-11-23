@@ -168,6 +168,7 @@ static unsigned getInt(WMPropList * value)
 
 static WMPropList *makeWindowState(WWindow *wwin, WApplication *wapp)
 {
+	WScreen *scr = wwin->screen_ptr;
 	Window win;
 	int i;
 	unsigned mask;
@@ -231,7 +232,7 @@ static WMPropList *makeWindowState(WWindow *wwin, WApplication *wapp)
 		if (wapp && wapp->app_icon && wapp->app_icon->dock) {
 			int i;
 			char *name = NULL;
-			if (wapp->app_icon->dock == w_global.dock.dock)
+			if (wapp->app_icon->dock == scr->vscr.dock.dock)
 				name = "Dock";
 
 			/* Try the clips */
@@ -468,7 +469,7 @@ void wSessionRestoreState(WScreen *scr)
 		if (value && WMIsPLString(value) && (tmp = WMGetFromPLString(value)) != NULL) {
 			if (sscanf(tmp, "%i", &n) != 1) {
 				if (!strcasecmp(tmp, "DOCK"))
-					dock = w_global.dock.dock;
+					dock = scr->vscr.dock.dock;
 
 				/* Try the clips */
 				if (dock == NULL) {
@@ -492,7 +493,7 @@ void wSessionRestoreState(WScreen *scr)
 				}
 			} else {
 				if (n == 0)
-					dock = w_global.dock.dock;
+					dock = scr->vscr.dock.dock;
 				else if (n > 0 && n <= scr->vscr.workspace.count)
 					dock = scr->vscr.workspace.array[n - 1]->clip;
 			}

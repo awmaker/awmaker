@@ -785,19 +785,21 @@ void wScreenRestoreState(WScreen *scr)
 
 	if (!wPreferences.flags.nodock) {
 		state = WMGetFromPLDictionary(w_global.session_state, dDock);
-		dock_map(w_global.dock.dock, scr, state);
+		scr->vscr.dock.dock = dock_create(&(scr->vscr));
+		dock_map(scr->vscr.dock.dock, scr, state);
 	}
 
 	if (!wPreferences.flags.nodrawer) {
-		if (!w_global.dock.dock->on_right_side) {
+		if (!scr->vscr.dock.dock->on_right_side) {
 			/* Drawer tile was created early in wScreenInit() -> wReadDefaults(). At
 			 * that time, scr->dock was NULL and the tile was created as if we were on
 			 * the right side. If we aren't, redo it now. */
 			assert(w_global.tile.drawer);
 			RReleaseImage(w_global.tile.drawer);
-			w_global.tile.drawer = wDrawerMakeTile(w_global.tile.icon);
+			w_global.tile.drawer = wDrawerMakeTile(&(scr->vscr), w_global.tile.icon);
 		}
-		wDrawersRestoreState();
+
+		wDrawersRestoreState(&(scr->vscr));
 		wDrawersRestoreState_map(scr);
 	}
 
@@ -831,13 +833,13 @@ void wScreenSaveState(WScreen *scr)
 
 	/* save dock state to file */
 	if (!wPreferences.flags.nodock) {
-		wDockSaveState(old_state);
+		wDockSaveState(&(scr->vscr), old_state);
 	} else {
 		if ((foo = WMGetFromPLDictionary(old_state, dDock)) != NULL)
 			WMPutInPLDictionary(w_global.session_state, dDock, foo);
 	}
 	if (!wPreferences.flags.noclip) {
-		wClipSaveState();
+		wClipSaveState(&(scr->vscr));
 	} else {
 		if ((foo = WMGetFromPLDictionary(old_state, dClip)) != NULL)
 			WMPutInPLDictionary(w_global.session_state, dClip, foo);
@@ -846,7 +848,7 @@ void wScreenSaveState(WScreen *scr)
 	wWorkspaceSaveState(&(scr->vscr), old_state);
 
 	if (!wPreferences.flags.nodrawer) {
-		wDrawersSaveState();
+		wDrawersSaveState(&(scr->vscr));
 	} else {
 		if ((foo = WMGetFromPLDictionary(old_state, dDrawers)) != NULL)
 			WMPutInPLDictionary(w_global.session_state, dDrawers, foo);
