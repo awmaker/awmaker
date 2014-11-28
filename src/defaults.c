@@ -1245,14 +1245,14 @@ void wReadDefaults(WScreen * scr, WMPropList * new_dict)
 			WMPostNotificationName(WNIconTileSettingsChanged, NULL, NULL);
 
 		if (needs_refresh & REFRESH_WORKSPACE_MENU) {
-			if (scr->vscr.workspace.menu)
-				wWorkspaceMenuUpdate(&(scr->vscr), scr->vscr.workspace.menu);
-			if (scr->vscr.clip.ws_menu)
-				wWorkspaceMenuUpdate(&(scr->vscr), scr->vscr.clip.ws_menu);
-			if (scr->vscr.workspace.submenu)
-				scr->vscr.workspace.submenu->flags.realized = 0;
-			if (scr->vscr.clip.submenu)
-				scr->vscr.clip.submenu->flags.realized = 0;
+			if (scr->vscr->workspace.menu)
+				wWorkspaceMenuUpdate(scr->vscr, scr->vscr->workspace.menu);
+			if (scr->vscr->clip.ws_menu)
+				wWorkspaceMenuUpdate(scr->vscr, scr->vscr->clip.ws_menu);
+			if (scr->vscr->workspace.submenu)
+				scr->vscr->workspace.submenu->flags.realized = 0;
+			if (scr->vscr->clip.submenu)
+				scr->vscr->clip.submenu->flags.realized = 0;
 		}
 	}
 }
@@ -1273,7 +1273,7 @@ void wDefaultUpdateIcons(WScreen *scr)
 	if (!wPreferences.flags.noclip || wPreferences.flags.clip_merged_in_dock)
 		wClipIconPaint();
 
-	for (dc = scr->vscr.drawer.drawers; dc != NULL; dc = dc->next)
+	for (dc = scr->vscr->drawer.drawers; dc != NULL; dc = dc->next)
 		wDrawerIconPaint(dc->adrawer->icon_array[0]);
 
 	while (wwin) {
@@ -2563,8 +2563,8 @@ static int setStickyIcons(WScreen * scr, WDefaultEntry * entry, void *bar, void 
 	(void) bar;
 	(void) foo;
 
-	if (scr->vscr.workspace.array) {
-		wWorkspaceForceChange(scr, scr->vscr.workspace.current);
+	if (scr->vscr->workspace.array) {
+		wWorkspaceForceChange(scr, scr->vscr->workspace.current);
 		wArrangeIcons(scr, False);
 	}
 	return 0;
@@ -2613,7 +2613,7 @@ static int setIconTile(WScreen * scr, WDefaultEntry * entry, void *tdata, void *
 		if (w_global.tile.drawer)
 			RReleaseImage(w_global.tile.drawer);
 
-		w_global.tile.drawer= wDrawerMakeTile(&(scr->vscr), img);
+		w_global.tile.drawer= wDrawerMakeTile(scr->vscr, img);
 	}
 
 	scr->icon_tile_pixmap = pixmap;
@@ -2727,10 +2727,10 @@ static int setLargeDisplayFont(WScreen *scr, WDefaultEntry *entry, void *tdata, 
 	(void) entry;
 	(void) foo;
 
-	if (scr->vscr.workspace.font_for_name)
-		WMReleaseFont(scr->vscr.workspace.font_for_name);
+	if (scr->vscr->workspace.font_for_name)
+		WMReleaseFont(scr->vscr->workspace.font_for_name);
 
-	scr->vscr.workspace.font_for_name = font;
+	scr->vscr->workspace.font_for_name = font;
 
 	return 0;
 }
@@ -3038,7 +3038,7 @@ static int setWorkspaceBack(WScreen * scr, WDefaultEntry * entry, void *tdata, v
 			if (str) {
 				SendHelperMessage(scr, 'S', 0, str);
 				wfree(str);
-				SendHelperMessage(scr, 'C', scr->vscr.workspace.current + 1, NULL);
+				SendHelperMessage(scr, 'C', scr->vscr->workspace.current + 1, NULL);
 			} else {
 				SendHelperMessage(scr, 'U', 0, NULL);
 			}
@@ -3396,7 +3396,7 @@ static int setModifierKeyLabels(WScreen *scr, WDefaultEntry * entry, void *tdata
 		return 0;
 	}
 
-	DestroyWindowMenu(&(scr->vscr));
+	DestroyWindowMenu(scr->vscr);
 
 	for (i = 0; i < 7; i++) {
 		if (prefs->modifier_labels[i])

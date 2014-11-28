@@ -1606,10 +1606,10 @@ static void menu_rename_workspace(WScreen *scr, int entry_no)
 	char *name;
 	int number = entry_no - 3; /* Entries "New", "Destroy Last" and "Last Used" appear before workspaces */
 
-	name = wstrdup(scr->vscr.workspace.array[number]->name);
+	name = wstrdup(scr->vscr->workspace.array[number]->name);
 	snprintf(buffer, sizeof(buffer), _("Type the name for workspace %i:"), number + 1);
 
-	wMenuUnmap(scr->vscr.menu.root_menu);
+	wMenuUnmap(scr->vscr->menu.root_menu);
 
 	if (wInputDialog(scr, _("Rename Workspace"), buffer, &name))
 		wWorkspaceRename(scr, number, name);
@@ -1689,13 +1689,13 @@ static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
 			}
 
 		} else if (!delayed_select) {
-			if (menu == scr->vscr.menu.switch_menu && event->xbutton.button == Button3) {
+			if (menu == scr->vscr->menu.switch_menu && event->xbutton.button == Button3) {
 				selectEntry(menu, entry_no);
 				OpenWindowMenu2((WWindow *)entry->clientdata,
 								event->xbutton.x_root,
 								event->xbutton.y_root, False);
 				wwin = (WWindow *)entry->clientdata;
-				desc = &wwin->screen_ptr->vscr.menu.window_menu->menu->descriptor;
+				desc = &wwin->screen_ptr->vscr->menu.window_menu->menu->descriptor;
 				event->xany.send_event = True;
 				(*desc->handle_mousedown)(desc, event);
 
@@ -2254,7 +2254,7 @@ static int restoreMenu(WScreen *scr, WMPropList *menu)
 		return False;
 
 	OpenSwitchMenu(scr, x, y, False);
-	pmenu = scr->vscr.menu.switch_menu;
+	pmenu = scr->vscr->menu.switch_menu;
 	if (pmenu) {
 		width = MENUW(pmenu);
 		height = MENUH(pmenu);
@@ -2359,10 +2359,10 @@ void wMenuRestoreState(WScreen *scr)
 	WMReleasePropList(skey);
 	restoreMenu(scr, menu);
 
-	if (!scr->vscr.menu.root_menu) {
+	if (!scr->vscr->menu.root_menu) {
 		OpenRootMenu(scr, scr->scr_width * 2, 0, False);
-		wMenuUnmap(scr->vscr.menu.root_menu);
+		wMenuUnmap(scr->vscr->menu.root_menu);
 	}
 
-	restoreMenuRecurs(scr, menus, scr->vscr.menu.root_menu, "");
+	restoreMenuRecurs(scr, menus, scr->vscr->menu.root_menu, "");
 }

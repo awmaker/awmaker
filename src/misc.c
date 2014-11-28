@@ -587,7 +587,7 @@ char *ExpandOptions(WScreen *scr, const char *cmdline)
 				break;
 
 			case 'W':
-				snprintf(tmpbuf, sizeof(tmpbuf), "0x%x", (unsigned int) scr->vscr.workspace.current + 1);
+				snprintf(tmpbuf, sizeof(tmpbuf), "0x%x", (unsigned int) scr->vscr->workspace.current + 1);
 				slen = strlen(tmpbuf);
 				olen += slen;
 				nout = realloc(out, olen);

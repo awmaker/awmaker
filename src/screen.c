@@ -493,6 +493,8 @@ WScreen *wScreenInit(int screen_number)
 	int i;
 
 	scr = wmalloc(sizeof(WScreen));
+	scr->vscr = wmalloc(sizeof(virtual_screen));
+	scr->vscr->screen_ptr = scr;
 
 	scr->stacking_list = WMCreateTreeBag();
 
@@ -767,7 +769,7 @@ void wScreenRestoreState(WScreen *scr)
 	char buf[16];
 
 	OpenRootMenu(scr, -10000, -10000, False);
-	wMenuUnmap(scr->vscr.menu.root_menu);
+	wMenuUnmap(scr->vscr->menu.root_menu);
 
 	make_keys();
 
@@ -791,21 +793,21 @@ void wScreenRestoreState(WScreen *scr)
 
 	if (!wPreferences.flags.nodock) {
 		state = WMGetFromPLDictionary(w_global.session_state, dDock);
-		scr->vscr.dock.dock = dock_create(&(scr->vscr));
-		dock_map(scr->vscr.dock.dock, scr, state);
+		scr->vscr->dock.dock = dock_create(scr->vscr);
+		dock_map(scr->vscr->dock.dock, scr, state);
 	}
 
 	if (!wPreferences.flags.nodrawer) {
-		if (!scr->vscr.dock.dock->on_right_side) {
+		if (!scr->vscr->dock.dock->on_right_side) {
 			/* Drawer tile was created early in wScreenInit() -> wReadDefaults(). At
 			 * that time, scr->dock was NULL and the tile was created as if we were on
 			 * the right side. If we aren't, redo it now. */
 			assert(w_global.tile.drawer);
 			RReleaseImage(w_global.tile.drawer);
-			w_global.tile.drawer = wDrawerMakeTile(&(scr->vscr), w_global.tile.icon);
+			w_global.tile.drawer = wDrawerMakeTile(scr->vscr, w_global.tile.icon);
 		}
 
-		wDrawersRestoreState(&(scr->vscr));
+		wDrawersRestoreState(scr->vscr);
 		wDrawersRestoreState_map(scr);
 	}
 
@@ -839,22 +841,22 @@ void wScreenSaveState(WScreen *scr)
 
 	/* save dock state to file */
 	if (!wPreferences.flags.nodock) {
-		wDockSaveState(&(scr->vscr), old_state);
+		wDockSaveState(scr->vscr, old_state);
 	} else {
 		if ((foo = WMGetFromPLDictionary(old_state, dDock)) != NULL)
 			WMPutInPLDictionary(w_global.session_state, dDock, foo);
 	}
 	if (!wPreferences.flags.noclip) {
-		wClipSaveState(&(scr->vscr));
+		wClipSaveState(scr->vscr);
 	} else {
 		if ((foo = WMGetFromPLDictionary(old_state, dClip)) != NULL)
 			WMPutInPLDictionary(w_global.session_state, dClip, foo);
 	}
 
-	wWorkspaceSaveState(&(scr->vscr), old_state);
+	wWorkspaceSaveState(scr->vscr, old_state);
 
 	if (!wPreferences.flags.nodrawer) {
-		wDrawersSaveState(&(scr->vscr));
+		wDrawersSaveState(scr->vscr);
 	} else {
 		if ((foo = WMGetFromPLDictionary(old_state, dDrawers)) != NULL)
 			WMPutInPLDictionary(w_global.session_state, dDrawers, foo);
@@ -873,7 +875,7 @@ void wScreenSaveState(WScreen *scr)
 	/* clean up */
 	WMPLSetCaseSensitive(False);
 
-	wMenuSaveState(&(scr->vscr));
+	wMenuSaveState(scr->vscr);
 
 	if (w_global.screen_count == 1) {
 		str = wdefaultspathfordomain("WMState");

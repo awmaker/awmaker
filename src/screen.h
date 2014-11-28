@@ -50,8 +50,12 @@ typedef struct WReservedArea {
     struct WReservedArea *next;
 } WReservedArea;
 
+typedef struct WScreen WScreen;
+typedef struct virtual_screen virtual_screen;
+
 /* This virtual screen includes all items located in the screen */
-typedef struct virtual_screen {
+struct virtual_screen {
+	WScreen *screen_ptr;           /* screen where vscreen is mapped, else NULL */
 	int window_count;	       /* number of windows in window_list */
 
         /* Clip & Dock & Drawer related */
@@ -120,10 +124,10 @@ typedef struct virtual_screen {
 		struct WDock *attracting_drawer; /* The drawer that auto-attracts icons,
                                                   * or NULL */
 	} drawer;
-} virtual_screen;
+};
 
 /* each WScreen is saved into a context associated with it's root window */
-typedef struct _WScreen {
+struct WScreen {
     int	screen;			       /* screen number */
     Window info_window;		       /* for our window manager info stuff */
 
@@ -312,8 +316,8 @@ typedef struct _WScreen {
         unsigned int ignore_focus_events:1;
     } flags;
 
-    struct virtual_screen vscr;
-} WScreen;
+    struct virtual_screen *vscr;
+};
 
 WScreen *wScreenInit(int screen_number);
 void wScreenSaveState(WScreen *scr);

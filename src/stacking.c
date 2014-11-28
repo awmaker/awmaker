@@ -75,23 +75,25 @@ void RemakeStackList(WScreen * scr)
 		/* verify list integrity */
 		c = 0;
 		for (i = 0; i < nwindows; i++) {
-			if (XFindContext(dpy, windows[i], w_global.context.stack, (XPointer *) & frame)
-			    == XCNOENT) {
+			if (XFindContext(dpy, windows[i], w_global.context.stack, (XPointer *) & frame) == XCNOENT)
 				continue;
-			}
+
 			if (!frame)
 				continue;
+
 			c++;
 			level = frame->stacking->window_level;
 			tmp = WMGetFromBag(scr->stacking_list, level);
 			if (tmp)
 				tmp->stacking->above = frame;
+
 			frame->stacking->under = tmp;
 			frame->stacking->above = NULL;
 			WMSetInBag(scr->stacking_list, level, frame);
 		}
+
 		XFree(windows);
-		scr->vscr.window_count = c;
+		scr->vscr->window_count = c;
 	}
 
 	CommitStacking(scr);
@@ -108,14 +110,14 @@ void RemakeStackList(WScreen * scr)
  * 	Windows may be restacked.
  *----------------------------------------------------------------------
  */
-void CommitStacking(WScreen * scr)
+void CommitStacking(WScreen *scr)
 {
 	WCoreWindow *tmp;
 	int nwindows, i;
 	Window *windows;
 	WMBagIterator iter;
 
-	nwindows = scr->vscr.window_count;
+	nwindows = scr->vscr->window_count;
 	windows = wmalloc(sizeof(Window) * nwindows);
 
 	i = 0;
@@ -401,7 +403,7 @@ void AddToStackList(WCoreWindow * frame)
 	WScreen *scr = frame->screen_ptr;
 	WCoreWindow *trans = NULL;
 
-	frame->screen_ptr->vscr.window_count++;
+	frame->screen_ptr->vscr->window_count++;
 	XSaveContext(dpy, frame->window, w_global.context.stack, (XPointer) frame);
 	curtop = WMGetFromBag(scr->stacking_list, index);
 
@@ -570,7 +572,7 @@ void RemoveFromStackList(WCoreWindow * frame)
 	else			/* this was the first window on the list */
 		WMSetInBag(frame->screen_ptr->stacking_list, index, frame->stacking->under);
 
-	frame->screen_ptr->vscr.window_count--;
+	frame->screen_ptr->vscr->window_count--;
 
 	WMPostNotificationName(WMNResetStacking, frame->screen_ptr, NULL);
 }
@@ -581,14 +583,15 @@ void ChangeStackingLevel(WCoreWindow * frame, int new_level)
 
 	if (frame->stacking->window_level == new_level)
 		return;
+
 	old_level = frame->stacking->window_level;
 
 	RemoveFromStackList(frame);
 	frame->stacking->window_level = new_level;
 	AddToStackList(frame);
-	if (old_level > new_level) {
+
+	if (old_level > new_level)
 		wRaiseFrame(frame);
-	} else {
+	else
 		wLowerFrame(frame);
-	}
 }

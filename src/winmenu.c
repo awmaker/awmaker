@@ -193,7 +193,7 @@ static void execMenuCommand(WMenu *menu, WMenuEntry *entry)
 	WWindow *wwin = (WWindow *) entry->clientdata;
 	WApplication *wapp;
 
-	CloseWindowMenu(&(menu->frame->screen_ptr->vscr));
+	CloseWindowMenu(menu->frame->screen_ptr->vscr);
 
 	switch (entry->order) {
 	case MC_CLOSE:
@@ -472,7 +472,7 @@ static WMenu *makeWorkspaceMenu(WScreen *scr)
 		return NULL;
 	}
 
-	updateWorkspaceMenu(&(scr->vscr), menu);
+	updateWorkspaceMenu(scr->vscr, menu);
 
 	return menu;
 }
@@ -561,9 +561,9 @@ static WMenu *createWindowMenu(WScreen * scr)
 	entry = wMenuAddCallback(menu, _("Select"), execMenuCommand, NULL);
 
 	entry = wMenuAddCallback(menu, _("Move To"), NULL, NULL);
-	scr->vscr.workspace.submenu = makeWorkspaceMenu(scr);
-	if (scr->vscr.workspace.submenu)
-		wMenuEntrySetCascade(menu, entry, scr->vscr.workspace.submenu);
+	scr->vscr->workspace.submenu = makeWorkspaceMenu(scr);
+	if (scr->vscr->workspace.submenu)
+		wMenuEntrySetCascade(menu, entry, scr->vscr->workspace.submenu);
 
 	entry = wMenuAddCallback(menu, _("Attributes..."), execMenuCommand, NULL);
 
@@ -701,13 +701,13 @@ static void updateMenuForWindow(WMenu *menu, WWindow *wwin)
 	for (i = 0; i < menu->entry_no; i++)
 		menu->entries[i]->clientdata = wwin;
 
-	for (i = 0; i < scr->vscr.workspace.submenu->entry_no; i++) {
-		scr->vscr.workspace.submenu->entries[i]->clientdata = wwin;
+	for (i = 0; i < scr->vscr->workspace.submenu->entry_no; i++) {
+		scr->vscr->workspace.submenu->entries[i]->clientdata = wwin;
 
-		if (i == scr->vscr.workspace.current)
-			wMenuSetEnabled(scr->vscr.workspace.submenu, i, False);
+		if (i == scr->vscr->workspace.current)
+			wMenuSetEnabled(scr->vscr->workspace.submenu, i, False);
 		else
-			wMenuSetEnabled(scr->vscr.workspace.submenu, i, True);
+			wMenuSetEnabled(scr->vscr->workspace.submenu, i, True);
 	}
 
 	menu->flags.realized = 0;
@@ -721,19 +721,19 @@ static WMenu *open_window_menu_core(WWindow *wwin)
 
 	wwin->flags.menu_open_for_me = 1;
 
-	if (!scr->vscr.menu.window_menu) {
-		scr->vscr.menu.window_menu = createWindowMenu(scr);
+	if (!scr->vscr->menu.window_menu) {
+		scr->vscr->menu.window_menu = createWindowMenu(scr);
 
 		/* hack to save some memory allocation/deallocation */
-		wfree(scr->vscr.menu.window_menu->entries[MC_MINIATURIZE]->text);
-		wfree(scr->vscr.menu.window_menu->entries[MC_MAXIMIZE]->text);
-		wfree(scr->vscr.menu.window_menu->entries[MC_SHADE]->text);
-		wfree(scr->vscr.menu.window_menu->entries[MC_SELECT]->text);
+		wfree(scr->vscr->menu.window_menu->entries[MC_MINIATURIZE]->text);
+		wfree(scr->vscr->menu.window_menu->entries[MC_MAXIMIZE]->text);
+		wfree(scr->vscr->menu.window_menu->entries[MC_SHADE]->text);
+		wfree(scr->vscr->menu.window_menu->entries[MC_SELECT]->text);
 	} else {
-		updateWorkspaceMenu(&(scr->vscr), scr->vscr.workspace.submenu);
+		updateWorkspaceMenu(scr->vscr, scr->vscr->workspace.submenu);
 	}
 
-	menu = scr->vscr.menu.window_menu;
+	menu = scr->vscr->menu.window_menu;
 	if (menu->flags.mapped) {
 		wMenuUnmap(menu);
 		if (menu->entries[0]->clientdata == wwin)
@@ -790,9 +790,9 @@ void OpenWindowMenu2(WWindow *wwin, int x, int y, int keyboard)
 		return;
 
 	/* Specific menu position */
-	for (i = 0; i < scr->vscr.workspace.submenu->entry_no; i++) {
-		scr->vscr.workspace.submenu->entries[i]->clientdata = wwin;
-		wMenuSetEnabled(scr->vscr.workspace.submenu, i, True);
+	for (i = 0; i < scr->vscr->workspace.submenu->entry_no; i++) {
+		scr->vscr->workspace.submenu->entries[i]->clientdata = wwin;
+		wMenuSetEnabled(scr->vscr->workspace.submenu, i, True);
 	}
 
 	x -= menu->frame->core->width / 2;

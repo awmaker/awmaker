@@ -91,7 +91,7 @@ void InitializeSwitchMenu(void)
 /* Open switch menu */
 void OpenSwitchMenu(WScreen *scr, int x, int y, int keyboard)
 {
-	WMenu *switchmenu = scr->vscr.menu.switch_menu;
+	WMenu *switchmenu = scr->vscr->menu.switch_menu;
 	WWindow *wwin;
 
 	if (switchmenu) {
@@ -113,7 +113,7 @@ void OpenSwitchMenu(WScreen *scr, int x, int y, int keyboard)
 		return;
 	}
 	switchmenu = wMenuCreate(scr, _("Windows"));
-	scr->vscr.menu.switch_menu = switchmenu;
+	scr->vscr->menu.switch_menu = switchmenu;
 
 	wwin = scr->focused_window;
 	while (wwin) {
@@ -172,14 +172,14 @@ static int menuIndexForWindow(WMenu * menu, WWindow * wwin, int old_pos)
 /* Update switch menu */
 void UpdateSwitchMenu(WScreen *scr, WWindow *wwin, int action)
 {
-	WMenu *switchmenu = scr->vscr.menu.switch_menu;
+	WMenu *switchmenu = scr->vscr->menu.switch_menu;
 	WMenuEntry *entry;
 	char title[MAX_MENU_TEXT_LENGTH + 6];
 	int len = sizeof(title);
 	int i;
 	int checkVisibility = 0;
 
-	if (!scr->vscr.menu.switch_menu)
+	if (!scr->vscr->menu.switch_menu)
 		return;
 	/*
 	 *  This menu is updated under the following conditions:
@@ -219,7 +219,7 @@ void UpdateSwitchMenu(WScreen *scr, WWindow *wwin, int action)
 			snprintf(entry->rtext, MAX_WORKSPACENAME_WIDTH, "[*]");
 		else
 			snprintf(entry->rtext, MAX_WORKSPACENAME_WIDTH, "[%s]",
-				 scr->vscr.workspace.array[wwin->frame->workspace]->name);
+				 scr->vscr->workspace.array[wwin->frame->workspace]->name);
 
 		if (wwin->flags.hidden) {
 			entry->flags.indicator_type = MI_HIDDEN;
@@ -275,7 +275,7 @@ void UpdateSwitchMenu(WScreen *scr, WWindow *wwin, int action)
 							snprintf(entry->rtext, MAX_WORKSPACENAME_WIDTH, "[*]");
 						else
 							snprintf(entry->rtext, MAX_WORKSPACENAME_WIDTH, "[%s]",
-								 scr->vscr.workspace.array[wwin->frame->workspace]->name);
+								 scr->vscr->workspace.array[wwin->frame->workspace]->name);
 
 						rt = entry->rtext;
 						entry->rtext = NULL;
@@ -401,5 +401,5 @@ static void wsobserver(void *self, WMNotification *notif)
 	(void) self;
 
 	if (strcmp(name, WMNWorkspaceNameChanged) == 0)
-		UpdateSwitchMenuWorkspace(&(scr->vscr), (uintptr_t) data);
+		UpdateSwitchMenuWorkspace(scr->vscr, (uintptr_t) data);
 }

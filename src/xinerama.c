@@ -306,26 +306,26 @@ WArea wGetUsableAreaForHead(WScreen *scr, int head, WArea *totalAreaPtr, Bool no
 
 	if (noicons) {
 		/* check if user wants dock covered */
-		if (scr->vscr.dock.dock && wPreferences.no_window_over_dock &&
-		    wAppIconTouchesHead(scr->vscr.dock.dock->icon_array[0], head)) {
+		if (scr->vscr->dock.dock && wPreferences.no_window_over_dock &&
+		    wAppIconTouchesHead(scr->vscr->dock.dock->icon_array[0], head)) {
 			int offset = wPreferences.icon_size + DOCK_EXTRA_SPACE;
 
-			if (scr->vscr.dock.dock->on_right_side)
+			if (scr->vscr->dock.dock->on_right_side)
 				usableArea.x2 -= offset;
 			else
 				usableArea.x1 += offset;
 		}
 
 		/* check if icons are on the same side as dock, and adjust if not done already */
-		if (scr->vscr.dock.dock && wPreferences.no_window_over_icons &&
+		if (scr->vscr->dock.dock && wPreferences.no_window_over_icons &&
 		    !wPreferences.no_window_over_dock && (wPreferences.icon_yard & IY_VERT)) {
 			int offset = wPreferences.icon_size + DOCK_EXTRA_SPACE;
 
-			if (scr->vscr.dock.dock->on_right_side && (wPreferences.icon_yard & IY_RIGHT))
+			if (scr->vscr->dock.dock->on_right_side && (wPreferences.icon_yard & IY_RIGHT))
 				usableArea.x2 -= offset;
 
 			/* can't use IY_LEFT in if, it's 0 ... */
-			if (!scr->vscr.dock.dock->on_right_side && !(wPreferences.icon_yard & IY_RIGHT))
+			if (!scr->vscr->dock.dock->on_right_side && !(wPreferences.icon_yard & IY_RIGHT))
 				usableArea.x1 += offset;
 		}
 	}

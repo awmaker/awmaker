@@ -198,7 +198,7 @@ static Bool isAwareXDND(Window window)
 static Bool acceptXDND(Window window)
 {
 	WScreen *scr = wScreenForWindow(window);
-	WDock *dock = scr->vscr.dock.dock;
+	WDock *dock = scr->vscr->dock.dock;
 	int i, icon_pos = -1;
 
 	if (dock) {
@@ -212,7 +212,7 @@ static Bool acceptXDND(Window window)
 	}
 
 	if (icon_pos < 0) {
-		dock = scr->vscr.workspace.array[scr->vscr.workspace.current]->clip;
+		dock = scr->vscr->workspace.array[scr->vscr->workspace.current]->clip;
 		if (dock) {
 			for (i = 0; i < dock->max_icons; i++) {
 				if (dock->icon_array[i]
