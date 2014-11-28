@@ -383,7 +383,7 @@ msgid "Before auto-collapsing"
 msgstr "Összecsukás előtt"
 
 #: ../../../wmaker-crm/WPrefs.app/Docks.c:57
-msgid "Before auto-raise"
+msgid "Before auto-raising"
 msgstr "Előrehozás előtt"
 
 #: ../../../wmaker-crm/WPrefs.app/Docks.c:58
@@ -401,7 +401,7 @@ msgstr "Kapocs automatikus előre ugrás késleltetései"
 #: ../../../wmaker-crm/WPrefs.app/Docks.c:228
 #: ../../../wmaker-crm/WPrefs.app/Focus.c:299
 #: ../../../wmaker-crm/WPrefs.app/MouseSettings.c:561
-msgid "msec"
+msgid "ms"
 msgstr "ms"
 
 #: ../../../wmaker-crm/WPrefs.app/Docks.c:244
@@ -537,44 +537,40 @@ msgid "Input Focus Mode"
 msgstr "Beviteli fókusz mód"
 
 #: ../../../wmaker-crm/WPrefs.app/Focus.c:206
-msgid "Manual:  Click on the window to set keyboard input focus."
-msgstr "Manuális:  Fókusz váltáshoz az ablakra kell kattintani."
+msgid "Manual:  Click on the window to set keyboard input focus"
+msgstr "Manuális:  Fókusz váltáshoz az ablakra kell kattintani"
 
 #: ../../../wmaker-crm/WPrefs.app/Focus.c:212
-msgid "Auto:  Set keyboard input focus to the window under the mouse pointer."
-msgstr "Automatikus:  A fókusz mindig azé az ablaké lesz, amely felett az egér mutató áll."
+msgid "Auto:  Set keyboard input focus to the window under the mouse pointer"
+msgstr "Automatikus:  A fókusz mindig azé az ablaké lesz, amely felett az egér mutató áll"
 
 #: ../../../wmaker-crm/WPrefs.app/Focus.c:225
-msgid "Install colormap in the window..."
+msgid "Install colormap from the window..."
 msgstr "Színtérkép ahhoz az ablakhoz..."
 
 #: ../../../wmaker-crm/WPrefs.app/Focus.c:230
-msgid "...that has the input focus."
-msgstr "...amelyiké a beviteli fókusz."
+msgid "...that has the input focus"
+msgstr "...amelyiké a beviteli fókusz"
 
 #: ../../../wmaker-crm/WPrefs.app/Focus.c:235
-msgid "...that's under the mouse pointer."
-msgstr "...amelyikre az egér mutat."
+msgid "...that's under the mouse pointer"
+msgstr "...amelyikre az egér mutat"
 
 #: ../../../wmaker-crm/WPrefs.app/Focus.c:244
 msgid "Automatic Window Raise Delay"
 msgstr "Automatikus ablak előrerakás késleltetése"
 
 #: ../../../wmaker-crm/WPrefs.app/Focus.c:316
-msgid "Do not let applications receive the click used to focus windows."
-msgstr "A fókuszálásra használt egérkattintást ne kapja meg az alkalmazás."
+msgid "Do not let applications receive the click used to focus windows"
+msgstr "A fókuszálásra használt egérkattintást ne kapja meg az alkalmazás"
 
 #: ../../../wmaker-crm/WPrefs.app/Focus.c:321
-msgid "Automatically focus new windows."
-msgstr "Új ablakok automatikusan fókuszba kerülnek."
+msgid "Automatically focus new windows"
+msgstr "Új ablakok automatikusan fókuszba kerülnek"
 
 #: ../../../wmaker-crm/WPrefs.app/Focus.c:326
-msgid ""
-"Raise window when switching\n"
-"focus with keyboard."
-msgstr ""
-"Billentyűvel váltott fókusznál\n"
-"az aktív ablak előtérbe is kerül."
+msgid "Raise window when switching focus with keyboard"
+msgstr "Billentyűvel váltott fókusznál az aktív ablak előtérbe is kerül"
 
 #: ../../../wmaker-crm/WPrefs.app/Focus.c:342
 msgid "Window Focus Preferences"
@@ -1865,16 +1861,16 @@ msgid "AppIcon bouncing"
 msgstr "Appikon pattogás"
 
 #: ../../../wmaker-crm/WPrefs.app/Preferences.c:279
-msgid "Disable AppIcon bounce."
-msgstr "Patogás letiltása."
+msgid "Disable AppIcon bounce"
+msgstr "Patogás letiltása"
 
 #: ../../../wmaker-crm/WPrefs.app/Preferences.c:284
-msgid "Bounce AppIcon when the application wants attention."
-msgstr "Az appikon pattog ha az alkalmazás figyelmet kér."
+msgid "Bounce when the application wants attention"
+msgstr "Az appikon pattog ha az alkalmazás figyelmet kér"
 
 #: ../../../wmaker-crm/WPrefs.app/Preferences.c:290
-msgid "Raise AppIcons when bouncing."
-msgstr "Ikonok előre hozása pattogáskor."
+msgid "Raise AppIcon when bouncing"
+msgstr "Ikonok előre hozása pattogáskor"
 
 #: ../../../wmaker-crm/WPrefs.app/Preferences.c:298
 msgid "Workspace border"
@@ -2269,16 +2265,16 @@ msgid "Workspace Navigation"
 msgstr "Munkafelület-navigálás"
 
 #: ../../../wmaker-crm/WPrefs.app/Workspace.c:123
-msgid "Wrap to the first workspace from the last workspace."
-msgstr "Az utolsó munkafelületről visszalép az elsőre."
+msgid "Wrap to the first workspace from the last workspace"
+msgstr "Az utolsó munkafelületről visszalép az elsőre"
 
 #: ../../../wmaker-crm/WPrefs.app/Workspace.c:139
-msgid "Switch workspaces while dragging windows."
-msgstr "Munkafelület váltás ablakok mozgatásakor."
+msgid "Switch workspaces while dragging windows"
+msgstr "Munkafelület váltás ablakok mozgatásakor"
 
 #: ../../../wmaker-crm/WPrefs.app/Workspace.c:155
-msgid "Automatically create new workspaces."
-msgstr "Új munkafelületek automatikus létrehozása."
+msgid "Automatically create new workspaces"
+msgstr "Új munkafelületek automatikus létrehozása"
 
 #. WMSetLabelTextAlignment(panel->posL, WARight);
 #: ../../../wmaker-crm/WPrefs.app/Workspace.c:172

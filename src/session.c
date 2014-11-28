@@ -168,6 +168,7 @@ static unsigned getInt(WMPropList * value)
 
 static WMPropList *makeWindowState(WWindow *wwin, WApplication *wapp)
 {
+	WScreen *scr = wwin->screen_ptr;
 	Window win;
 	int i;
 	unsigned mask;
@@ -198,14 +199,14 @@ static WMPropList *makeWindowState(WWindow *wwin, WApplication *wapp)
 		name = WMCreatePLString(buffer);
 		cmd = WMCreatePLString(command);
 
-		workspace = WMCreatePLString(w_global.workspace.array[wwin->frame->workspace]->name);
+		workspace = WMCreatePLString(wwin->frame->screen_ptr->vscr.workspace.array[wwin->frame->workspace]->name);
 		shaded = wwin->flags.shaded ? sYes : sNo;
 		miniaturized = wwin->flags.miniaturized ? sYes : sNo;
 		hidden = wwin->flags.hidden ? sYes : sNo;
 		snprintf(buffer, sizeof(buffer), "%ix%i+%i+%i",
 			 wwin->client.width, wwin->client.height, wwin->frame_x, wwin->frame_y);
-		geometry = WMCreatePLString(buffer);
 
+		geometry = WMCreatePLString(buffer);
 		for (mask = 0, i = 0; i < MAX_WINDOW_SHORTCUTS; i++) {
 			if (w_global.shortcut.windows[i] != NULL &&
 			    WMGetFirstInArray(w_global.shortcut.windows[i], wwin) != WANotFound)
@@ -231,24 +232,25 @@ static WMPropList *makeWindowState(WWindow *wwin, WApplication *wapp)
 		if (wapp && wapp->app_icon && wapp->app_icon->dock) {
 			int i;
 			char *name = NULL;
-			if (wapp->app_icon->dock == w_global.dock.dock)
+			if (wapp->app_icon->dock == scr->vscr.dock.dock)
 				name = "Dock";
 
 			/* Try the clips */
 			if (name == NULL) {
-				for (i = 0; i < w_global.workspace.count; i++)
-					if (w_global.workspace.array[i]->clip == wapp->app_icon->dock)
+				for (i = 0; i < wwin->frame->screen_ptr->vscr.workspace.count; i++)
+					if (wwin->frame->screen_ptr->vscr.workspace.array[i]->clip == wapp->app_icon->dock)
 						break;
-				if (i < w_global.workspace.count)
-					name = w_global.workspace.array[i]->name;
+
+				if (i < wwin->frame->screen_ptr->vscr.workspace.count)
+					name = wwin->frame->screen_ptr->vscr.workspace.array[i]->name;
 			}
+
 			/* Try the drawers */
 			if (name == NULL) {
 				WDrawerChain *dc;
-				for (dc = w_global.drawer.drawers; dc != NULL; dc = dc->next) {
+				for (dc = scr->vscr.drawer.drawers; dc != NULL; dc = dc->next)
 					if (dc->adrawer == wapp->app_icon->dock)
 						break;
-				}
 
 				assert(dc != NULL);
 				name = dc->adrawer->icon_array[0]->wm_instance;
@@ -271,7 +273,7 @@ static WMPropList *makeWindowState(WWindow *wwin, WApplication *wapp)
 	return win_state;
 }
 
-void wSessionSaveState(WScreen * scr)
+void wSessionSaveState(WScreen *scr)
 {
 	WWindow *wwin = scr->focused_window;
 	WMPropList *win_info, *wks;
@@ -317,7 +319,7 @@ void wSessionSaveState(WScreen * scr)
 	WMPutInPLDictionary(w_global.session_state, sApplications, list);
 	WMReleasePropList(list);
 
-	wks = WMCreatePLString(w_global.workspace.array[w_global.workspace.current]->name);
+	wks = WMCreatePLString(scr->vscr.workspace.array[scr->vscr.workspace.current]->name);
 	WMPutInPLDictionary(w_global.session_state, sWorkspace, wks);
 	WMReleasePropList(wks);
 
@@ -369,7 +371,7 @@ static pid_t execCommand(WScreen *scr, char *command)
 	return pid;
 }
 
-static WSavedState *getWindowState(WMPropList *win_state)
+static WSavedState *getWindowState(virtual_screen *vscr, WMPropList *win_state)
 {
 	WSavedState *state = wmalloc(sizeof(WSavedState));
 	WMPropList *value;
@@ -383,8 +385,8 @@ static WSavedState *getWindowState(WMPropList *win_state)
 		tmp = WMGetFromPLString(value);
 		if (sscanf(tmp, "%i", &state->workspace) != 1) {
 			state->workspace = -1;
-			for (i = 0; i < w_global.workspace.count; i++) {
-				if (strcmp(w_global.workspace.array[i]->name, tmp) == 0) {
+			for (i = 0; i < vscr->workspace.count; i++) {
+				if (strcmp(vscr->workspace.array[i]->name, tmp) == 0) {
 					state->workspace = i;
 					break;
 				}
@@ -449,9 +451,8 @@ void wSessionRestoreState(WScreen *scr)
 		win_info = WMGetFromPLArray(apps, i);
 
 		cmd = WMGetFromPLDictionary(win_info, sCommand);
-		if (!cmd || !WMIsPLString(cmd) || !(command = WMGetFromPLString(cmd))) {
+		if (!cmd || !WMIsPLString(cmd) || !(command = WMGetFromPLString(cmd)))
 			continue;
-		}
 
 		value = WMGetFromPLDictionary(win_info, sName);
 		if (!value)
@@ -461,20 +462,20 @@ void wSessionRestoreState(WScreen *scr)
 		if (!instance && !class)
 			continue;
 
-		state = getWindowState(win_info);
+		state = getWindowState(&(scr->vscr), win_info);
 
 		dock = NULL;
 		value = WMGetFromPLDictionary(win_info, sDock);
 		if (value && WMIsPLString(value) && (tmp = WMGetFromPLString(value)) != NULL) {
 			if (sscanf(tmp, "%i", &n) != 1) {
 				if (!strcasecmp(tmp, "DOCK"))
-					dock = w_global.dock.dock;
+					dock = scr->vscr.dock.dock;
 
 				/* Try the clips */
 				if (dock == NULL) {
-					for (j = 0; j < w_global.workspace.count; j++) {
-						if (strcmp(w_global.workspace.array[j]->name, tmp) == 0) {
-							dock = w_global.workspace.array[j]->clip;
+					for (j = 0; j < scr->vscr.workspace.count; j++) {
+						if (strcmp(scr->vscr.workspace.array[j]->name, tmp) == 0) {
+							dock = scr->vscr.workspace.array[j]->clip;
 							break;
 						}
 					}
@@ -483,7 +484,7 @@ void wSessionRestoreState(WScreen *scr)
 				/* Try the drawers */
 				if (dock == NULL) {
 					WDrawerChain *dc;
-					for (dc = w_global.drawer.drawers; dc != NULL; dc = dc->next) {
+					for (dc = scr->vscr.drawer.drawers; dc != NULL; dc = dc->next) {
 						if (strcmp(dc->adrawer->icon_array[0]->wm_instance, tmp) == 0) {
 							dock = dc->adrawer;
 							break;
@@ -491,11 +492,10 @@ void wSessionRestoreState(WScreen *scr)
 					}
 				}
 			} else {
-				if (n == 0) {
-					dock = w_global.dock.dock;
-				} else if (n > 0 && n <= w_global.workspace.count) {
-					dock = w_global.workspace.array[n - 1]->clip;
-				}
+				if (n == 0)
+					dock = scr->vscr.dock.dock;
+				else if (n > 0 && n <= scr->vscr.workspace.count)
+					dock = scr->vscr.workspace.array[n - 1]->clip;
 			}
 		}
 
@@ -524,11 +524,12 @@ void wSessionRestoreState(WScreen *scr)
 		if (class)
 			wfree(class);
 	}
+
 	/* clean up */
 	WMPLSetCaseSensitive(False);
 }
 
-void wSessionRestoreLastWorkspace(WScreen * scr)
+void wSessionRestoreLastWorkspace(WScreen *scr)
 {
 	WMPropList *wks;
 	int w;
@@ -554,8 +555,8 @@ void wSessionRestoreLastWorkspace(WScreen * scr)
 	WMPLSetCaseSensitive(False);
 
 	/* Get the workspace number for the workspace name */
-	w = wGetWorkspaceNumber(value);
+	w = wGetWorkspaceNumber(&(scr->vscr), value);
 
-	if (w != w_global.workspace.current && w < w_global.workspace.count)
+	if (w != scr->vscr.workspace.current && w < scr->vscr.workspace.count)
 		wWorkspaceChange(scr, w);
 }

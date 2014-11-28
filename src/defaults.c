@@ -32,7 +32,6 @@
 #include <time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <fcntl.h>
 #include <limits.h>
 #include <signal.h>
 
@@ -62,7 +61,6 @@
 #include "workspace.h"
 #include "properties.h"
 #include "misc.h"
-#include "event.h"
 #include "winmenu.h"
 
 #define MAX_SHORTCUT_LENGTH 32
@@ -502,7 +500,7 @@ WDefaultEntry optionList[] = {
 	    &wPreferences.strict_windoze_cycle, getBool, NULL, NULL, NULL},
 	{"SwitchPanelOnlyOpen",	"NO",	NULL,
 	    &wPreferences.panel_only_open, getBool, NULL, NULL, NULL},
-	{"ApercuSize", "2", NULL,
+	{"ApercuSize", "128", NULL,
 	    &wPreferences.apercu_size, getInt, NULL, NULL, NULL},
 
 	/* style options */
@@ -649,6 +647,8 @@ WDefaultEntry optionList[] = {
 		NULL, getKeybind, setKeyGrab, NULL, NULL},
 	{"MaximusKey", "None", (void*)WKBD_MAXIMUS,
 		NULL, getKeybind, setKeyGrab, NULL, NULL},
+	{"OmnipresentKey", "None", (void *)WKBD_OMNIPRESENT,
+	    NULL, getKeybind, setKeyGrab, NULL, NULL},
 	{"RaiseKey", "\"Meta+Up\"", (void *)WKBD_RAISE,
 	    NULL, getKeybind, setKeyGrab, NULL, NULL},
 	{"LowerKey", "\"Meta+Down\"", (void *)WKBD_LOWER,
@@ -1179,6 +1179,22 @@ void wReadDefaults(WScreen * scr, WMPropList * new_dict)
 		}
 	}
 
+	/*
+	 * Backward Compatibility:
+	 * the option 'apercu_size' used to be coded as a multiple of the icon size in v0.95.6
+	 * it is now expressed directly in pixels, but to avoid breaking user's setting we check
+	 * for old coding and convert it now.
+	 * This code should probably stay for at least 2 years, you should not consider removing
+	 * it before year 2017
+	 */
+	if (wPreferences.apercu_size < 24) {
+		/* 24 is the minimum icon size proposed in WPref's settings */
+		wPreferences.apercu_size *= wPreferences.icon_size;
+		if (wPreferences.miniwin_apercu_balloon)
+			wwarning(_("your ApercuSize setting is using old syntax, it is converted to %d pixels; consider running WPrefs.app to update your settings"),
+				 wPreferences.apercu_size);
+	}
+
 	if (needs_refresh != 0 && !w_global.startup.phase1) {
 		int foo;
 
@@ -1229,14 +1245,14 @@ void wReadDefaults(WScreen * scr, WMPropList * new_dict)
 			WMPostNotificationName(WNIconTileSettingsChanged, NULL, NULL);
 
 		if (needs_refresh & REFRESH_WORKSPACE_MENU) {
-			if (w_global.workspace.menu)
-				wWorkspaceMenuUpdate(w_global.workspace.menu);
-			if (w_global.clip.ws_menu)
-				wWorkspaceMenuUpdate(w_global.clip.ws_menu);
-			if (w_global.workspace.submenu)
-				w_global.workspace.submenu->flags.realized = 0;
-			if (w_global.clip.submenu)
-				w_global.clip.submenu->flags.realized = 0;
+			if (scr->vscr.workspace.menu)
+				wWorkspaceMenuUpdate(&(scr->vscr), scr->vscr.workspace.menu);
+			if (scr->vscr.clip.ws_menu)
+				wWorkspaceMenuUpdate(&(scr->vscr), scr->vscr.clip.ws_menu);
+			if (scr->vscr.workspace.submenu)
+				scr->vscr.workspace.submenu->flags.realized = 0;
+			if (scr->vscr.clip.submenu)
+				scr->vscr.clip.submenu->flags.realized = 0;
 		}
 	}
 }
@@ -1257,12 +1273,13 @@ void wDefaultUpdateIcons(WScreen *scr)
 	if (!wPreferences.flags.noclip || wPreferences.flags.clip_merged_in_dock)
 		wClipIconPaint();
 
-	for (dc = w_global.drawer.drawers; dc != NULL; dc = dc->next)
+	for (dc = scr->vscr.drawer.drawers; dc != NULL; dc = dc->next)
 		wDrawerIconPaint(dc->adrawer->icon_array[0]);
 
 	while (wwin) {
 		if (wwin->icon && wwin->flags.miniaturized)
 			wIconChangeImageFile(wwin->icon, NULL);
+
 		wwin = wwin->prev;
 	}
 }
@@ -2546,8 +2563,8 @@ static int setStickyIcons(WScreen * scr, WDefaultEntry * entry, void *bar, void 
 	(void) bar;
 	(void) foo;
 
-	if (w_global.workspace.array) {
-		wWorkspaceForceChange(scr, w_global.workspace.current);
+	if (scr->vscr.workspace.array) {
+		wWorkspaceForceChange(scr, scr->vscr.workspace.current);
 		wArrangeIcons(scr, False);
 	}
 	return 0;
@@ -2596,7 +2613,7 @@ static int setIconTile(WScreen * scr, WDefaultEntry * entry, void *tdata, void *
 		if (w_global.tile.drawer)
 			RReleaseImage(w_global.tile.drawer);
 
-		w_global.tile.drawer= wDrawerMakeTile(img);
+		w_global.tile.drawer= wDrawerMakeTile(&(scr->vscr), img);
 	}
 
 	scr->icon_tile_pixmap = pixmap;
@@ -2710,10 +2727,10 @@ static int setLargeDisplayFont(WScreen *scr, WDefaultEntry *entry, void *tdata, 
 	(void) entry;
 	(void) foo;
 
-	if (w_global.workspace.font_for_name)
-		WMReleaseFont(w_global.workspace.font_for_name);
+	if (scr->vscr.workspace.font_for_name)
+		WMReleaseFont(scr->vscr.workspace.font_for_name);
 
-	w_global.workspace.font_for_name = font;
+	scr->vscr.workspace.font_for_name = font;
 
 	return 0;
 }
@@ -2953,20 +2970,6 @@ static int setFrameSelectedBorderColor(WScreen * scr, WDefaultEntry * entry, voi
 	return REFRESH_FRAME_BORDER;
 }
 
-static void trackDeadProcess(pid_t pid, unsigned int status, void *client_data)
-{
-	WScreen *scr = (WScreen *) client_data;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) pid;
-	(void) status;
-
-	close(scr->helper_fd);
-	scr->helper_fd = 0;
-	scr->helper_pid = 0;
-	scr->flags.backimage_helper_launched = 0;
-}
-
 static int setWorkspaceSpecificBack(WScreen * scr, WDefaultEntry * entry, void *tdata, void *bar)
 {
 	WMPropList *value = tdata;
@@ -2987,62 +2990,15 @@ static int setWorkspaceSpecificBack(WScreen * scr, WDefaultEntry * entry, void *
 			return 0;
 		}
 	} else {
-		pid_t pid;
-		int filedes[2];
-
 		if (WMGetPropListItemCount(value) == 0)
 			return 0;
 
-		if (pipe(filedes) < 0) {
-			werror("pipe() failed:can't set workspace specific background image");
-
+		if (!start_bg_helper(scr)) {
 			WMReleasePropList(value);
 			return 0;
 		}
 
-		pid = fork();
-		if (pid < 0) {
-			werror("fork() failed:can't set workspace specific background image");
-			if (close(filedes[0]) < 0)
-				werror("could not close pipe");
-			if (close(filedes[1]) < 0)
-				werror("could not close pipe");
-
-		} else if (pid == 0) {
-			char *dither;
-
-			SetupEnvironment(scr);
-
-			if (close(0) < 0)
-				werror("could not close pipe");
-			if (dup(filedes[0]) < 0) {
-				werror("dup() failed:can't set workspace specific background image");
-			}
-			dither = wPreferences.no_dithering ? "-m" : "-d";
-			if (wPreferences.smooth_workspace_back)
-				execlp("wmsetbg", "wmsetbg", "-helper", "-S", dither, NULL);
-			else
-				execlp("wmsetbg", "wmsetbg", "-helper", dither, NULL);
-			werror("could not execute wmsetbg");
-			exit(1);
-		} else {
-
-			if (fcntl(filedes[0], F_SETFD, FD_CLOEXEC) < 0) {
-				werror("error setting close-on-exec flag");
-			}
-			if (fcntl(filedes[1], F_SETFD, FD_CLOEXEC) < 0) {
-				werror("error setting close-on-exec flag");
-			}
-
-			scr->helper_fd = filedes[1];
-			scr->helper_pid = pid;
-			scr->flags.backimage_helper_launched = 1;
-
-			wAddDeathHandler(pid, trackDeadProcess, scr);
-
-			SendHelperMessage(scr, 'P', -1, wPreferences.pixmap_path);
-		}
-
+		SendHelperMessage(scr, 'P', -1, wPreferences.pixmap_path);
 	}
 
 	for (i = 0; i < WMGetPropListItemCount(value); i++) {
@@ -3082,7 +3038,7 @@ static int setWorkspaceBack(WScreen * scr, WDefaultEntry * entry, void *tdata, v
 			if (str) {
 				SendHelperMessage(scr, 'S', 0, str);
 				wfree(str);
-				SendHelperMessage(scr, 'C', w_global.workspace.current + 1, NULL);
+				SendHelperMessage(scr, 'C', scr->vscr.workspace.current + 1, NULL);
 			} else {
 				SendHelperMessage(scr, 'U', 0, NULL);
 			}
@@ -3440,7 +3396,7 @@ static int setModifierKeyLabels(WScreen *scr, WDefaultEntry * entry, void *tdata
 		return 0;
 	}
 
-	DestroyWindowMenu();
+	DestroyWindowMenu(&(scr->vscr));
 
 	for (i = 0; i < 7; i++) {
 		if (prefs->modifier_labels[i])

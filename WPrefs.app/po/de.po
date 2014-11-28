@@ -419,40 +419,39 @@ msgid "Input Focus Mode"
 msgstr "Eingabefokus-Modus"
 
 #: ../../WPrefs.app/Focus.c:201
-msgid "Manual:  Click on the window to set keyboard input focus."
+msgid "Manual:  Click on the window to set keyboard input focus"
 msgstr "Manuell: Tastaturfokus durch Anklicken des Fensters setzen"
 
 #: ../../WPrefs.app/Focus.c:207
-msgid "Auto:  Set keyboard input focus to the window under the mouse pointer."
+msgid "Auto:  Set keyboard input focus to the window under the mouse pointer"
 msgstr "Auto: Tastaturfokus immer auf das Fenster unter dem Mauszeiger setzen"
 
 #: ../../WPrefs.app/Focus.c:220
-msgid "Install colormap in the window..."
+msgid "Install colormap from the window..."
 msgstr "Farbtabelle im Fenster setzen, das..."
 
 #: ../../WPrefs.app/Focus.c:225
-msgid "...that has the input focus."
-msgstr "...den Eingabefokus hat."
+msgid "...that has the input focus"
+msgstr "...den Eingabefokus hat"
 
 #: ../../WPrefs.app/Focus.c:230
-msgid "...that's under the mouse pointer."
-msgstr "...unter dem Mauszeiger ist."
+msgid "...that's under the mouse pointer"
+msgstr "...unter dem Mauszeiger ist"
 
 #: ../../WPrefs.app/Focus.c:239
 msgid "Automatic Window Raise Delay"
 msgstr "Verzögerung für Auto-Fensterheber"
 
 #: ../../WPrefs.app/Focus.c:294 ../../WPrefs.app/MouseSettings.c:555
-msgid "msec"
+msgid "ms"
 msgstr "ms"
 
 #: ../../WPrefs.app/Focus.c:311
-msgid "Do not let applications receive the click used to focus windows."
-msgstr ""
-"Mausklicks, die ein Fenster fokussiert haben, nicht an die Anwendung senden."
+msgid "Do not let applications receive the click used to focus windows"
+msgstr "Mausklicks, die ein Fenster fokussiert haben, nicht an die Anwendung senden"
 
 #: ../../WPrefs.app/Focus.c:316
-msgid "Automatically focus new windows."
+msgid "Automatically focus new windows"
 msgstr "Neue Fenster automatisch auswählen"
 
 #: ../../WPrefs.app/Focus.c:333
@@ -703,14 +702,12 @@ msgid "Focus previous window"
 msgstr "Vorheriges Fenster"
 
 #: ../../WPrefs.app/KeyboardShortcuts.c:488
-#, fuzzy
 msgid "Focus next group window"
-msgstr "Nächstes Fenster"
+msgstr ""
 
 #: ../../WPrefs.app/KeyboardShortcuts.c:489
-#, fuzzy
 msgid "Focus previous group window"
-msgstr "Vorheriges Fenster"
+msgstr ""
 
 #: ../../WPrefs.app/KeyboardShortcuts.c:490
 msgid "Switch to next workspace"
@@ -1584,12 +1581,8 @@ msgid "internal help"
 msgstr "interne Hilfe"
 
 #: ../../WPrefs.app/Preferences.c:278
-msgid ""
-"Raise window when switching\n"
-"focus with keyboard."
-msgstr ""
-"Aktives Fenster nach Tastatur-\n"
-"Fokuswechsel oben."
+msgid "Raise window when switching focus with keyboard"
+msgstr "Aktives Fenster nach Tastatur-Fokuswechsel oben"
 
 #: ../../WPrefs.app/Preferences.c:284
 msgid ""
@@ -1991,26 +1984,20 @@ msgid "Workspace Navigation"
 msgstr "Arbeitsflächennavigation"
 
 #: ../../WPrefs.app/Workspace.c:168
-msgid "Wrap to the first workspace from the last workspace."
-msgstr ""
-"Auf die letzte Arbeitsfläche folgt wieder\n"
-"die erste."
+msgid "Wrap to the first workspace from the last workspace"
+msgstr "Auf die letzte Arbeitsfläche folgt wieder die erste"
 
 #: ../../WPrefs.app/Workspace.c:187
-msgid "Switch workspaces while dragging windows."
-msgstr "Beim Bewegen von Fenstern Arbeitsfläche wechseln."
+msgid "Switch workspaces while dragging windows"
+msgstr "Beim Bewegen von Fenstern Arbeitsfläche wechseln"
 
 #: ../../WPrefs.app/Workspace.c:206
-msgid "Automatically create new workspaces."
-msgstr "Automatisch neue Arbeitsflächen erstellen."
+msgid "Automatically create new workspaces"
+msgstr "Automatisch neue Arbeitsflächen erstellen"
 
 #: ../../WPrefs.app/Workspace.c:226
-msgid ""
-"Position of workspace\n"
-"name display"
-msgstr ""
-"Position des Namens\n"
-"der Arbeitsfläche"
+msgid "Position of workspace name display"
+msgstr "Position des Namens der Arbeitsfläche"
 
 #: ../../WPrefs.app/Workspace.c:245
 msgid "Disable"

@@ -578,7 +578,6 @@ static void find_Maximus_geometry(WWindow *wwin, WArea usableArea, int *new_x, i
 	WWindow *tmp;
 	short int tbar_height_0 = 0, rbar_height_0 = 0, bd_width_0 = 0;
 	short int adjust_height;
-	int x_intsect, y_intsect;
 	/* the obstructing, original and new windows */
 	win_coords obs, orig, new;
 
@@ -611,40 +610,42 @@ static void find_Maximus_geometry(WWindow *wwin, WArea usableArea, int *new_x, i
 	/* The focused window is always the last in the list */
 	while (tmp->prev) {
 		/* ignore windows in other workspaces etc */
-		if (tmp->prev->frame->workspace != w_global.workspace.current ||
+		if (tmp->prev->frame->workspace != wwin->screen_ptr->vscr.workspace.current ||
 		    tmp->prev->flags.miniaturized || tmp->prev->flags.hidden) {
 			tmp = tmp->prev;
 			continue;
 		}
+
 		tmp = tmp->prev;
 
 		/* Set the coordinates of obstructing window */
 		set_window_coords(tmp, &obs);
 
 		/* Try to maximize in the y direction first */
-		x_intsect = calcIntersectionLength(orig.left, orig.width, obs.left, obs.width);
-		if (x_intsect != 0) {
+		if (calcIntersectionLength(orig.left, orig.width, obs.left, obs.width) != 0) {
 			/* TODO: Consider the case when coords are equal */
-			if (obs.bottom < orig.top && obs.bottom > new.top) {
+			if (obs.bottom < orig.top && obs.bottom > new.top)
 				/* w_0 is below the bottom of w_j */
 				new.top = obs.bottom + 1;
-			}
-			if (orig.bottom < obs.top && obs.top < new.bottom) {
+
+			if (orig.bottom < obs.top && obs.top < new.bottom)
 				/* The bottom of w_0 is above the top of w_j */
 				new.bottom = obs.top - 1;
-			}
 		}
 	}
 
 	tmp = wwin;
 	while (tmp->prev) {
-		if (tmp->prev->frame->workspace != w_global.workspace.current ||
+		/* ignore windows in other workspaces etc */
+		if (tmp->prev->frame->workspace != wwin->screen_ptr->vscr.workspace.current ||
 		    tmp->prev->flags.miniaturized || tmp->prev->flags.hidden) {
 			tmp = tmp->prev;
 			continue;
 		}
+
 		tmp = tmp->prev;
 
+		/* Set the coordinates of obstructing window */
 		set_window_coords(tmp, &obs);
 
 		/*
@@ -652,16 +653,14 @@ static void find_Maximus_geometry(WWindow *wwin, WArea usableArea, int *new_x, i
 		 * as they may have different intersections with the obstructing windows
 		 */
 		new.height = new.bottom - new.top - adjust_height;
-		y_intsect = calcIntersectionLength(new.top, new.height, obs.top, obs.height);
-		if (y_intsect != 0) {
-			if (obs.right < orig.left && obs.right > new.left) {
+		if (calcIntersectionLength(new.top, new.height, obs.top, obs.height) != 0) {
+			if (obs.right < orig.left && obs.right > new.left)
 				/* w_0 is completely to the right of w_j */
 				new.left = obs.right + 1;
-			}
-			if (orig.right < obs.left && obs.left < new.right) {
+
+			if (orig.right < obs.left && obs.left < new.right)
 				/* w_0 is completely to the left of w_j */
 				new.right = obs.left - 1;
-			}
 		}
 	}
 
@@ -1044,7 +1043,7 @@ static WWindow *recursiveTransientFor(WWindow *wwin)
 		return None;
 
 	/* hackish way to detect transient_for cycle */
-	i = wwin->screen_ptr->window_count + 1;
+	i = wwin->screen_ptr->vscr.window_count + 1;
 
 	while (wwin && wwin->transient_for != None && i > 0) {
 		wwin = wWindowFor(wwin->transient_for);
@@ -1103,15 +1102,14 @@ void wIconifyWindow(WWindow *wwin)
 			return;
 	}
 
-	present = wwin->frame->workspace == w_global.workspace.current;
+	present = wwin->frame->workspace == wwin->screen_ptr->vscr.workspace.current;
 
 	/* if the window is in another workspace, simplify process */
-	if (present) {
+	if (present)
 		/* icon creation may take a while */
 		XGrabPointer(dpy, wwin->screen_ptr->root_win, False,
 			     ButtonMotionMask | ButtonReleaseMask, GrabModeAsync,
 			     GrabModeAsync, None, None, CurrentTime);
-	}
 
 	if (!wPreferences.disable_miniwindows && !wwin->flags.net_handle_icon) {
 		if (!wwin->flags.icon_moved)
@@ -1197,7 +1195,7 @@ void wIconifyWindow(WWindow *wwin)
 	wwin->flags.skip_next_animation = 0;
 
 	if (!wPreferences.disable_miniwindows && !wwin->flags.net_handle_icon) {
-		if (w_global.workspace.current == wwin->frame->workspace ||
+		if (wwin->screen_ptr->vscr.workspace.current == wwin->frame->workspace ||
 		    IS_OMNIPRESENT(wwin) || wPreferences.sticky_icons)
 			XMapWindow(dpy, wwin->icon->core->window);
 
@@ -1259,17 +1257,17 @@ void wIconifyWindow(WWindow *wwin)
 void wDeiconifyWindow(WWindow *wwin)
 {
 	/* Let's avoid changing workspace while deiconifying */
-	w_global.workspace.ignore_change = True;
+	wwin->screen_ptr->vscr.workspace.ignore_change = True;
 
 	/* we're hiding for show_desktop */
 	int netwm_hidden = wwin->flags.net_show_desktop &&
-	    wwin->frame->workspace != w_global.workspace.current;
+	    wwin->frame->workspace != wwin->screen_ptr->vscr.workspace.current;
 
 	if (!netwm_hidden)
-		wWindowChangeWorkspace(wwin, w_global.workspace.current);
+		wWindowChangeWorkspace(wwin, wwin->screen_ptr->vscr.workspace.current);
 
 	if (!wwin->flags.miniaturized) {
-		w_global.workspace.ignore_change = False;
+		wwin->screen_ptr->vscr.workspace.ignore_change = False;
 		return;
 	}
 
@@ -1280,7 +1278,7 @@ void wDeiconifyWindow(WWindow *wwin)
 			wDeiconifyWindow(owner);
 			wSetFocusTo(wwin->screen_ptr, wwin);
 			wRaiseFrame(wwin->frame->core);
-			w_global.workspace.ignore_change = False;
+			wwin->screen_ptr->vscr.workspace.ignore_change = False;
 			return;
 		}
 	}
@@ -1347,7 +1345,7 @@ void wDeiconifyWindow(WWindow *wwin)
 
 			/* the window can disappear while ProcessPendingEvents() runs */
 			if (!wWindowFor(clientwin)) {
-				w_global.workspace.ignore_change = False;
+				wwin->screen_ptr->vscr.workspace.ignore_change = False;
 				return;
 			}
 		}
@@ -1363,7 +1361,7 @@ void wDeiconifyWindow(WWindow *wwin)
 	if (!netwm_hidden)
 		wUnshadeWindow(wwin);
 
-	w_global.workspace.ignore_change = False;
+	wwin->screen_ptr->vscr.workspace.ignore_change = False;
 }
 
 static void hideWindow(WIcon *icon, int icon_x, int icon_y, WWindow *wwin, int animate)
@@ -1412,7 +1410,7 @@ void wHideAll(WScreen *scr)
 	if (!scr)
 		return;
 
-	menu = w_global.menu.switch_menu;
+	menu = scr->vscr.menu.switch_menu;
 
 	windows = wmalloc(sizeof(WWindow *));
 
@@ -1436,11 +1434,10 @@ void wHideAll(WScreen *scr)
 
 	for (i = 0; i < wcount; i++) {
 		wwin = windows[i];
-		if (wwin->frame->workspace == w_global.workspace.current
+		if (wwin->frame->workspace == wwin->screen_ptr->vscr.workspace.current
 		    && !(wwin->flags.miniaturized || wwin->flags.hidden)
 		    && !wwin->flags.internal_window
-		    && !WFLAGP(wwin, no_miniaturizable)
-		   ) {
+		    && !WFLAGP(wwin, no_miniaturizable)) {
 			wwin->flags.skip_next_animation = 1;
 			wIconifyWindow(wwin);
 		}
@@ -1456,11 +1453,11 @@ void wHideOtherApplications(WWindow *awin)
 
 	if (!awin)
 		return;
-	wwin = awin->screen_ptr->focused_window;
 
+	wwin = awin->screen_ptr->focused_window;
 	while (wwin) {
 		if (wwin != awin
-		    && wwin->frame->workspace == w_global.workspace.current
+		    && wwin->frame->workspace == awin->screen_ptr->vscr.workspace.current
 		    && !(wwin->flags.miniaturized || wwin->flags.hidden)
 		    && !wwin->flags.internal_window
 		    && wGetWindowOfInspectorForWindow(wwin) != awin && !WFLAGP(wwin, no_hide_others)) {
@@ -1562,7 +1559,7 @@ void wHideApplication(WApplication *wapp)
 static void unhideWindow(WIcon *icon, int icon_x, int icon_y, WWindow *wwin, int animate, int bringToCurrentWS)
 {
 	if (bringToCurrentWS)
-		wWindowChangeWorkspace(wwin, w_global.workspace.current);
+		wWindowChangeWorkspace(wwin, wwin->screen_ptr->vscr.workspace.current);
 
 	wwin->flags.hidden = 0;
 
@@ -1575,7 +1572,7 @@ static void unhideWindow(WIcon *icon, int icon_x, int icon_y, WWindow *wwin, int
 	}
 #endif
 	wwin->flags.skip_next_animation = 0;
-	if (w_global.workspace.current == wwin->frame->workspace) {
+	if (wwin->screen_ptr->vscr.workspace.current == wwin->frame->workspace) {
 		XMapWindow(dpy, wwin->client_win);
 		XMapWindow(dpy, wwin->frame->core->window);
 		wClientSetState(wwin, NormalState, None);
@@ -1620,7 +1617,7 @@ void wUnhideApplication(WApplication *wapp, Bool miniwindows, Bool bringToCurren
 
 			if (wlist->flags.miniaturized) {
 				if ((bringToCurrentWS || wPreferences.sticky_icons ||
-				     wlist->frame->workspace == w_global.workspace.current) && wlist->icon) {
+				     wlist->frame->workspace == scr->vscr.workspace.current) && wlist->icon) {
 					if (!wlist->icon->mapped) {
 						int x, y;
 
@@ -1634,30 +1631,35 @@ void wUnhideApplication(WApplication *wapp, Bool miniwindows, Bool bringToCurren
 					}
 					wRaiseFrame(wlist->icon->core);
 				}
+
 				if (bringToCurrentWS)
-					wWindowChangeWorkspace(wlist, w_global.workspace.current);
+					wWindowChangeWorkspace(wlist, scr->vscr.workspace.current);
+
 				wlist->flags.hidden = 0;
-				if (miniwindows && wlist->frame->workspace == w_global.workspace.current)
+				if (miniwindows && wlist->frame->workspace == scr->vscr.workspace.current)
 					wDeiconifyWindow(wlist);
+
 				WMPostNotificationName(WMNChangedState, wlist, "hide");
 			} else if (wlist->flags.shaded) {
 				if (bringToCurrentWS)
-					wWindowChangeWorkspace(wlist, w_global.workspace.current);
+					wWindowChangeWorkspace(wlist, scr->vscr.workspace.current);
+
 				wlist->flags.hidden = 0;
 				wRaiseFrame(wlist->frame->core);
-				if (wlist->frame->workspace == w_global.workspace.current) {
+				if (wlist->frame->workspace == scr->vscr.workspace.current) {
 					XMapWindow(dpy, wlist->frame->core->window);
 					if (miniwindows)
 						wUnshadeWindow(wlist);
 				}
+
 				WMPostNotificationName(WMNChangedState, wlist, "hide");
 			} else if (wlist->flags.hidden) {
 				unhideWindow(wapp->app_icon->icon, wapp->app_icon->x_pos,
 					     wapp->app_icon->y_pos, wlist, animate, bringToCurrentWS);
 				animate = False;
 			} else {
-				if (bringToCurrentWS && wlist->frame->workspace != w_global.workspace.current)
-					wWindowChangeWorkspace(wlist, w_global.workspace.current);
+				if (bringToCurrentWS && wlist->frame->workspace != scr->vscr.workspace.current)
+					wWindowChangeWorkspace(wlist, scr->vscr.workspace.current);
 
 				wRaiseFrame(wlist->frame->core);
 			}
@@ -1691,7 +1693,7 @@ void wShowAllWindows(WScreen *scr)
 	old_foc = wwin = scr->focused_window;
 	while (wwin) {
 		if (!wwin->flags.internal_window &&
-		    (w_global.workspace.current == wwin->frame->workspace || IS_OMNIPRESENT(wwin))) {
+		    (scr->vscr.workspace.current == wwin->frame->workspace || IS_OMNIPRESENT(wwin))) {
 			if (wwin->flags.miniaturized) {
 				wwin->flags.skip_next_animation = 1;
 				wDeiconifyWindow(wwin);
@@ -1707,8 +1709,8 @@ void wShowAllWindows(WScreen *scr)
 		}
 		wwin = wwin->prev;
 	}
+
 	wSetFocusTo(scr, old_foc);
-	/*wRaiseFrame(old_foc->frame->core); */
 }
 
 void wRefreshDesktop(WScreen *scr)
@@ -1754,10 +1756,10 @@ void wArrangeIcons(WScreen *scr, Bool arrangeAll)
 		WArea area = wGetUsableAreaForHead(scr, head, NULL, False);
 		WMRect rect;
 
-		if (w_global.dock.dock) {
+		if (scr->vscr.dock.dock) {
 			int offset = wPreferences.icon_size + DOCK_EXTRA_SPACE;
 
-			if (w_global.dock.dock->on_right_side)
+			if (scr->vscr.dock.dock->on_right_side)
 				area.x2 -= offset;
 			else
 				area.x1 += offset;
@@ -1846,7 +1848,7 @@ void wArrangeIcons(WScreen *scr, Bool arrangeAll)
 
 	while (wwin) {
 		if (wwin->icon && wwin->flags.miniaturized && !wwin->flags.hidden &&
-		    (wwin->frame->workspace == w_global.workspace.current ||
+		    (wwin->frame->workspace == scr->vscr.workspace.current ||
 		     IS_OMNIPRESENT(wwin) || wPreferences.sticky_icons)) {
 
 			head = wGetHeadForWindow(wwin);
@@ -1915,7 +1917,7 @@ void wSelectWindow(WWindow *wwin, Bool flag)
 
 void wMakeWindowVisible(WWindow *wwin)
 {
-	if (wwin->frame->workspace != w_global.workspace.current)
+	if (wwin->frame->workspace != wwin->screen_ptr->vscr.workspace.current)
 		wWorkspaceChange(wwin->screen_ptr, wwin->frame->workspace);
 
 	if (wwin->flags.shaded)
@@ -1931,11 +1933,13 @@ void wMakeWindowVisible(WWindow *wwin)
 			wUnhideApplication(app, False, False);
 		}
 	}
+
 	if (wwin->flags.miniaturized) {
 		wDeiconifyWindow(wwin);
 	} else {
 		if (!WFLAGP(wwin, no_focusable))
 			wSetFocusTo(wwin->screen_ptr, wwin);
+
 		wRaiseFrame(wwin->frame->core);
 	}
 }

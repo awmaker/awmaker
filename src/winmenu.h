@@ -25,7 +25,7 @@
 void OpenWindowMenu(WWindow *wwin, int x, int y, int keyboard);
 void OpenWindowMenu2(WWindow *wwin, int x, int y, int keyboard);
 void OpenMiniwindowMenu(WWindow *wwin, int x, int y);
-void CloseWindowMenu(void);
-void DestroyWindowMenu(void);
+void CloseWindowMenu(virtual_screen *vscr);
+void DestroyWindowMenu(virtual_screen *vscr);
 
 #endif /* WMWINMENU_H */

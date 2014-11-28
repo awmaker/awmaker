@@ -453,7 +453,7 @@ extern struct WPreferences {
 	char cycle_ignore_minimized;        /* Ignore minimized windows when cycling */
 	char strict_windoze_cycle;          /* don't close switch panel when shift is released */
 	char panel_only_open;               /* Only open the switch panel; don't switch */
-	char apercu_size;                   /* Size of apercu preview as a multiple of icon size */
+	int apercu_size;                    /* Size of apercu preview in pixels */
 
 	/* All delays here are in ms. 0 means instant auto-action. */
 	int clip_auto_raise_delay;          /* Delay after which the clip will be raised when entered */
@@ -532,78 +532,10 @@ extern struct wmaker_global_variables {
 		struct RImage *drawer;	/* tile for a drawer (tile + arrow) */
 	} tile;
 
-	/* Menu related */
-	struct {
-		struct WMenu *root_menu;	/* root window menu */
-		struct WMenu *switch_menu;	/* window list menu */
-		struct WMenu *icon_menu;	/* icon/appicon menu */
-		struct WMenu *window_menu;	/* window command menu */
-
-		struct {
-			unsigned int root_menu_changed_shortcuts:1;
-			unsigned int added_workspace_menu:1; /* See w_global.workspace */
-			unsigned int added_window_menu:1;
-		} flags;
-	} menu;
-
-	/* Workspace related */
-	struct {
-		struct WWorkspace **array;	/* data for the workspaces */
-
-		int count;		/* number of workspaces */
-		int current;		/* current workspace number */
-		int last_used;		/* last used workspace number */
-
-		WMFont *font_for_name;  /* used during workspace switch */
-
-		/*
-		 * Ignore Workspace Change:
-		 * this variable is used to prevent workspace switch while certain
-		 * operations are ongoing.
-		 */
-		Bool ignore_change;
-
-		/* Menus */
-		struct WMenu *menu;	/* workspace operation */
-		struct WMenu *submenu;	/* workspace list for window_menu */
-		/* TODO kix: WDock should be here, in workspace
-		 * but I am creating the WDock inside "w_global.dock.dock"
-		 * to move it from WScreen. In w_global.dock.dock we can
-		 * have only one dock, but in w_global.workspace.dock
-		 * we can have multiple docks */
-	} workspace;
-
-	/* Clip & Dock & Drawer related */
-	int global_icon_count;		/* How many global icons do we have */
-	struct WDock *last_dock;
-
 	/* Clip related */
 	struct {
 		struct WAppIcon *icon;	/* The clip main icon, or the dock's, if they are merged */
-		WAppIconChain *global_icons;	/* Omnipresent icons chain in clip */
-
-		struct WMenu *menu;	/* Menu for clips */
-		struct WMenu *submenu;	/* Workspace list for clips */
-		struct WMenu *opt_menu;	/* Options for Clip */
-		struct WMenu *ws_menu;	/* workspace menu for clip */
 	} clip;
-
-	/* Dock related */
-	struct {
-		struct WDock *dock;	/* Window Maker Dock. Future array for multi-screen? */
-		struct WMenu *pos_menu;	/* menu for position of the dock */
-		struct WMenu *dock_menu;	/* Dock menu */
-		struct WMenu *drawer_menu;	/* menu for the drawers */
-		struct WMenu *drawer_opt_menu;	/* Options for drawers */
-	} dock;
-
-	/* Drawers related */
-	struct {
-		struct WDrawerChain *drawers;		 /* List of drawers */
-		int drawer_count;		 /* Nb of drawers that */
-		struct WDock *attracting_drawer; /* The drawer that auto-attracts icons,
-						  * or NULL */
-	} drawer;
 
 #ifdef HAVE_INOTIFY
 	struct {
@@ -614,7 +546,6 @@ extern struct wmaker_global_variables {
 
 	/* definition for X Atoms */
 	struct {
-
 		/* Window-Manager related */
 		struct {
 			Atom state;

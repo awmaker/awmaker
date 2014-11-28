@@ -93,7 +93,7 @@ static void menuCloseClick(WCoreWindow *sender, void *data, XEvent *event);
 static void updateTexture(WMenu *menu);
 static void selectEntry(WMenu *menu, int entry_no);
 static void closeCascade(WMenu *menu);
-static int saveMenuRecurs(WMPropList *menus, WMenu *menu);
+static Bool saveMenuRecurs(WMPropList *menus, WMenu *menu, virtual_screen *vscr);
 static int restoreMenuRecurs(WScreen *scr, WMPropList *menus, WMenu *menu, const char *path);
 
 /****** Notification Observers ******/
@@ -1454,8 +1454,10 @@ static int isPointNearBoder(WMenu *menu, int x, int y)
 	return flag;
 }
 
-static void leaving(_delay *dl)
+static void callback_leaving(void *user_param)
 {
+	_delay *dl = (_delay *) user_param;
+
 	wMenuMove(dl->menu, dl->ox, dl->oy, True);
 	dl->menu->jump_back = NULL;
 	dl->menu->menu->screen_ptr->flags.jump_back_pending = 0;
@@ -1568,7 +1570,7 @@ void wMenuScroll(WMenu *menu)
 			delayer = omenu->jump_back;
 		}
 
-		WMAddTimerHandler(MENU_JUMP_BACK_DELAY, (WMCallback *) leaving, delayer);
+		WMAddTimerHandler(MENU_JUMP_BACK_DELAY, callback_leaving, delayer);
 	}
 }
 
@@ -1604,10 +1606,10 @@ static void menu_rename_workspace(WScreen *scr, int entry_no)
 	char *name;
 	int number = entry_no - 3; /* Entries "New", "Destroy Last" and "Last Used" appear before workspaces */
 
-	name = wstrdup(w_global.workspace.array[number]->name);
+	name = wstrdup(scr->vscr.workspace.array[number]->name);
 	snprintf(buffer, sizeof(buffer), _("Type the name for workspace %i:"), number + 1);
 
-	wMenuUnmap(w_global.menu.root_menu);
+	wMenuUnmap(scr->vscr.menu.root_menu);
 
 	if (wInputDialog(scr, _("Rename Workspace"), buffer, &name))
 		wWorkspaceRename(scr, number, name);
@@ -1618,6 +1620,7 @@ static void menu_rename_workspace(WScreen *scr, int entry_no)
 
 static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
 {
+	WWindow *wwin;
 	XButtonEvent *bev = &event->xbutton;
 	WMenu *smenu, *menu = desc->parent;
 	WScreen *scr = menu->frame->screen_ptr;
@@ -1686,12 +1689,13 @@ static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
 			}
 
 		} else if (!delayed_select) {
-			if (menu == w_global.menu.switch_menu && event->xbutton.button == Button3) {
+			if (menu == scr->vscr.menu.switch_menu && event->xbutton.button == Button3) {
 				selectEntry(menu, entry_no);
 				OpenWindowMenu2((WWindow *)entry->clientdata,
 								event->xbutton.x_root,
 								event->xbutton.y_root, False);
-				desc = &w_global.menu.window_menu->menu->descriptor;
+				wwin = (WWindow *)entry->clientdata;
+				desc = &wwin->screen_ptr->vscr.menu.window_menu->menu->descriptor;
 				event->xany.send_event = True;
 				(*desc->handle_mousedown)(desc, event);
 
@@ -2122,26 +2126,26 @@ static void saveMenuInfo(WMPropList *dict, WMenu *menu, WMPropList *key)
 	WMReleasePropList(list);
 }
 
-void wMenuSaveState(void)
+void wMenuSaveState(virtual_screen *vscr)
 {
 	WMPropList *menus, *key;
 	int save_menus = 0;
 
 	menus = WMCreatePLDictionary(NULL, NULL);
 
-	if (w_global.menu.switch_menu && w_global.menu.switch_menu->flags.buttoned) {
+	if (vscr->menu.switch_menu && vscr->menu.switch_menu->flags.buttoned) {
 		key = WMCreatePLString("SwitchMenu");
-		saveMenuInfo(menus, w_global.menu.switch_menu, key);
+		saveMenuInfo(menus, vscr->menu.switch_menu, key);
 		WMReleasePropList(key);
 		save_menus = 1;
 	}
 
-	if (saveMenuRecurs(menus, w_global.menu.root_menu))
+	if (saveMenuRecurs(menus, vscr->menu.root_menu, vscr))
 		save_menus = 1;
 
-	if (w_global.workspace.menu && w_global.workspace.menu->flags.buttoned) {
+	if (vscr->workspace.menu && vscr->workspace.menu->flags.buttoned) {
 		key = WMCreatePLString("WorkspaceMenu");
-		saveMenuInfo(menus, w_global.workspace.menu, key);
+		saveMenuInfo(menus, vscr->workspace.menu, key);
 		WMReleasePropList(key);
 		save_menus = 1;
 	}
@@ -2179,14 +2183,14 @@ static Bool getMenuPath(WMenu *menu, char *buffer, int bufSize)
 	return True;
 }
 
-static Bool saveMenuRecurs(WMPropList *menus, WMenu *menu)
+static Bool saveMenuRecurs(WMPropList *menus, WMenu *menu, virtual_screen *vscr)
 {
 	WMPropList *key;
 	int save_menus = 0, i;
 	char buffer[512];
 	Bool ok = True;
 
-	if (menu->flags.buttoned && menu != w_global.menu.switch_menu) {
+	if (menu->flags.buttoned && menu != vscr->menu.switch_menu) {
 		buffer[0] = '\0';
 		ok = getMenuPath(menu, buffer, 510);
 
@@ -2200,7 +2204,7 @@ static Bool saveMenuRecurs(WMPropList *menus, WMenu *menu)
 
 	if (ok) {
 		for (i = 0; i < menu->cascade_no; i++) {
-			if (saveMenuRecurs(menus, menu->cascades[i]))
+			if (saveMenuRecurs(menus, menu->cascades[i], vscr))
 				save_menus = 1;
 		}
 	}
@@ -2250,7 +2254,7 @@ static int restoreMenu(WScreen *scr, WMPropList *menu)
 		return False;
 
 	OpenSwitchMenu(scr, x, y, False);
-	pmenu = w_global.menu.switch_menu;
+	pmenu = scr->vscr.menu.switch_menu;
 	if (pmenu) {
 		width = MENUW(pmenu);
 		height = MENUH(pmenu);
@@ -2355,10 +2359,10 @@ void wMenuRestoreState(WScreen *scr)
 	WMReleasePropList(skey);
 	restoreMenu(scr, menu);
 
-	if (!w_global.menu.root_menu) {
+	if (!scr->vscr.menu.root_menu) {
 		OpenRootMenu(scr, scr->scr_width * 2, 0, False);
-		wMenuUnmap(w_global.menu.root_menu);
+		wMenuUnmap(scr->vscr.menu.root_menu);
 	}
 
-	restoreMenuRecurs(scr, menus, w_global.menu.root_menu, "");
+	restoreMenuRecurs(scr, menus, scr->vscr.menu.root_menu, "");
 }

@@ -154,7 +154,6 @@ static void panelBtnCallback(WMWidget * self, void *data)
 	WMButton *btn = self;
 	AppSettingsPanel *panel = (AppSettingsPanel *) data;
 	char *text;
-	int done = 1;
 
 	if (panel->okBtn == btn) {
 		text = WMGetTextFieldText(panel->iconField);
@@ -171,8 +170,7 @@ static void panelBtnCallback(WMWidget * self, void *data)
 			snprintf(buf, len, _("Could not open specified icon file: %s"), text);
 			if (wMessageDialog(panel->wwin->screen_ptr, _("Error"), buf,
 					   _("OK"), _("Ignore"), NULL) == WAPRDefault) {
-				if (text)
-					wfree(text);
+				wfree(text);
 				wfree(buf);
 				return;
 			}
@@ -215,8 +213,7 @@ static void panelBtnCallback(WMWidget * self, void *data)
 		panel->editedIcon->lock = WMGetButtonSelected(panel->lockBtn);
 	}
 
-	if (done)
-		DestroyDockAppSettingsPanel(panel);
+	DestroyDockAppSettingsPanel(panel);
 }
 
 #define PWIDTH	295

@@ -34,6 +34,7 @@
 #include <ctype.h>
 #include <time.h>
 #include <dirent.h>
+#include <errno.h>
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -444,7 +445,7 @@ static void removeShortcutsForMenu(WMenu *menu)
 	}
 
 	shortcutList = newList;
-	w_global.menu.flags.root_menu_changed_shortcuts = 1;
+	menu->menu->screen_ptr->vscr.menu.flags.root_menu_changed_shortcuts = 1;
 }
 
 static Bool addShortcut(const char *file, const char *shortcutDefinition, WMenu *menu, WMenuEntry *entry)
@@ -500,7 +501,7 @@ static Bool addShortcut(const char *file, const char *shortcutDefinition, WMenu 
 	ptr->next = shortcutList;
 	shortcutList = ptr;
 
-	w_global.menu.flags.root_menu_changed_shortcuts = 1;
+	menu->menu->screen_ptr->vscr.menu.flags.root_menu_changed_shortcuts = 1;
 
 	return True;
 }
@@ -796,8 +797,8 @@ static void constructPLMenuFromPipe(WMenu * menu, WMenuEntry * entry)
 }
 static void cleanupWorkspaceMenu(WMenu *menu)
 {
-	if (w_global.workspace.menu == menu)
-		w_global.workspace.menu = NULL;
+	if (menu->frame->screen_ptr->vscr.workspace.menu == menu)
+		menu->frame->screen_ptr->vscr.workspace.menu = NULL;
 }
 
 static WMenuEntry *addWorkspaceMenu(WScreen *scr, WMenu *menu, const char *title)
@@ -805,30 +806,30 @@ static WMenuEntry *addWorkspaceMenu(WScreen *scr, WMenu *menu, const char *title
 	WMenu *wsmenu;
 	WMenuEntry *entry;
 
-	if (w_global.menu.flags.added_workspace_menu) {
+	if (scr->vscr.menu.flags.added_workspace_menu) {
 		wwarning(_
 			 ("There are more than one WORKSPACE_MENU commands in the applications menu. Only one is allowed."));
 		return NULL;
 	}
 
-	w_global.menu.flags.added_workspace_menu = 1;
+	scr->vscr.menu.flags.added_workspace_menu = 1;
 
 	wsmenu = wWorkspaceMenuMake(scr, True);
 	wsmenu->on_destroy = cleanupWorkspaceMenu;
 
-	w_global.workspace.menu = wsmenu;
+	scr->vscr.workspace.menu = wsmenu;
 	entry = wMenuAddCallback(menu, title, NULL, NULL);
 	wMenuEntrySetCascade(menu, entry, wsmenu);
 
-	wWorkspaceMenuUpdate(wsmenu);
+	wWorkspaceMenuUpdate(&(scr->vscr), wsmenu);
 
 	return entry;
 }
 
 static void cleanupWindowsMenu(WMenu *menu)
 {
-	if (w_global.menu.switch_menu == menu)
-		w_global.menu.switch_menu = NULL;
+	if (menu->frame->screen_ptr->vscr.menu.switch_menu == menu)
+		menu->frame->screen_ptr->vscr.menu.switch_menu = NULL;
 }
 
 static WMenuEntry *addWindowsMenu(WScreen *scr, WMenu *menu, const char *title)
@@ -837,17 +838,17 @@ static WMenuEntry *addWindowsMenu(WScreen *scr, WMenu *menu, const char *title)
 	WWindow *wwin;
 	WMenuEntry *entry;
 
-	if (w_global.menu.flags.added_window_menu) {
+	if (scr->vscr.menu.flags.added_window_menu) {
 		wwarning(_
 			 ("There are more than one WINDOWS_MENU commands in the applications menu. Only one is allowed."));
 		return NULL;
 	}
 
-	w_global.menu.flags.added_window_menu = 1;
+	scr->vscr.menu.flags.added_window_menu = 1;
 
 	wwmenu = wMenuCreate(scr, _("Window List"));
 	wwmenu->on_destroy = cleanupWindowsMenu;
-	w_global.menu.switch_menu = wwmenu;
+	scr->vscr.menu.switch_menu = wwmenu;
 	wwin = scr->focused_window;
 	while (wwin) {
 		UpdateSwitchMenu(scr, wwin, ACTION_ADD);
@@ -1097,13 +1098,37 @@ static WMenu *readMenuFile(WScreen *scr, const char *file_name)
 
 	file = fopen(file_name, "rb");
 	if (!file) {
-		werror(_("%s:could not open menu file"), file_name);
+		werror(_("could not open menu file \"%s\": %s"), file_name, strerror(errno));
 		return NULL;
 	}
 	menu = readMenu(scr, file_name, file);
 	fclose(file);
 
 	return menu;
+}
+
+static inline int generate_command_from_list(char *buffer, size_t buffer_size, char **command_elements)
+{
+	char *rd;
+	int wr_idx;
+	int i;
+
+	wr_idx = 0;
+	for (i = 0; command_elements[i] != NULL; i++) {
+
+		if (i > 0)
+			if (wr_idx < buffer_size - 1)
+				buffer[wr_idx++] = ' ';
+
+		for (rd = command_elements[i]; *rd != '\0'; rd++) {
+			if (wr_idx < buffer_size - 1)
+				buffer[wr_idx++] = *rd;
+			else
+				return 1;
+		}
+	}
+	buffer[wr_idx] = '\0';
+	return 0;
 }
 
 /************    Menu Configuration From Pipe      *************/
@@ -1113,13 +1138,11 @@ static WMenu *readPLMenuPipe(WScreen * scr, char **file_name)
 	WMenu *menu = NULL;
 	char *filename;
 	char flat_file[MAXLINE];
-	int i;
 
-	flat_file[0] = '\0';
-
-	for (i = 0; file_name[i] != NULL; i++) {
-		strcat(flat_file, file_name[i]);
-		strcat(flat_file, " ");
+	if (generate_command_from_list(flat_file, sizeof(flat_file), file_name)) {
+		werror(_("could not open menu file \"%s\": %s"),
+		       file_name[0], _("pipe command for PropertyList is too long"));
+		return NULL;
 	}
 	filename = flat_file + (flat_file[1] == '|' ? 2 : 1);
 
@@ -1145,19 +1168,23 @@ static WMenu *readMenuPipe(WScreen * scr, char **file_name)
 	FILE *file = NULL;
 	char *filename;
 	char flat_file[MAXLINE];
-	int i;
 
-	flat_file[0] = '\0';
-
-	for (i = 0; file_name[i] != NULL; i++) {
-		strcat(flat_file, file_name[i]);
-		strcat(flat_file, " ");
+	if (generate_command_from_list(flat_file, sizeof(flat_file), file_name)) {
+		werror(_("could not open menu file \"%s\": %s"),
+		       file_name[0], _("pipe command is too long"));
+		return NULL;
 	}
 	filename = flat_file + (flat_file[1] == '|' ? 2 : 1);
 
+	/*
+	 * In case of memory problem, 'popen' will not set the errno, so we initialise it
+	 * to be able to display a meaningful message. For other problems, 'popen' will
+	 * properly set errno, so we'll still get a good message
+	 */
+	errno = ENOMEM;
 	file = popen(filename, "r");
 	if (!file) {
-		werror(_("%s:could not open menu file"), filename);
+		werror(_("could not open menu file \"%s\": %s"), filename, strerror(errno));
 		return NULL;
 	}
 	menu = readMenu(scr, flat_file, file);
@@ -1363,8 +1390,7 @@ static WMenu *readMenuDirectory(WScreen *scr, const char *title, char **path, co
 		addMenuEntry(menu, M_(data->name), NULL, "OPEN_MENU", buffer, path[data->index]);
 
 		wfree(buffer);
-		if (data->name)
-			wfree(data->name);
+		wfree(data->name);
 		wfree(data);
 	}
 
@@ -1409,8 +1435,7 @@ static WMenu *readMenuDirectory(WScreen *scr, const char *title, char **path, co
 		addMenuEntry(menu, M_(data->name), NULL, "SHEXEC", buffer, path[data->index]);
 
 		wfree(buffer);
-		if (data->name)
-			wfree(data->name);
+		wfree(data->name);
 		wfree(data);
 	}
 
@@ -1481,9 +1506,9 @@ static WMenu *configureMenu(WScreen * scr, WMPropList * definition, Bool include
 			return NULL;
 		}
 
-		if (!w_global.menu.root_menu || stat_buf.st_mtime > w_global.menu.root_menu->timestamp
+		if (!scr->vscr.menu.root_menu || stat_buf.st_mtime > scr->vscr.menu.root_menu->timestamp
 		    /* if the pointer in WMRootMenu has changed */
-		    || w_global.domain.root_menu->timestamp > w_global.menu.root_menu->timestamp) {
+		    || w_global.domain.root_menu->timestamp > scr->vscr.menu.root_menu->timestamp) {
 			if (menu_is_default) {
 				wwarning(_
 					 ("using default menu file \"%s\" as the menu referenced in WMRootMenu could not be found "),
@@ -1614,12 +1639,12 @@ void OpenRootMenu(WScreen *scr, int x, int y, int keyboard)
 	WMenu *menu = NULL;
 	WMPropList *definition;
 
-	w_global.menu.flags.root_menu_changed_shortcuts = 0;
-	w_global.menu.flags.added_workspace_menu = 0;
-	w_global.menu.flags.added_window_menu = 0;
+	scr->vscr.menu.flags.root_menu_changed_shortcuts = 0;
+	scr->vscr.menu.flags.added_workspace_menu = 0;
+	scr->vscr.menu.flags.added_window_menu = 0;
 
-	if (w_global.menu.root_menu && w_global.menu.root_menu->flags.mapped) {
-		menu = w_global.menu.root_menu;
+	if (scr->vscr.menu.root_menu && scr->vscr.menu.root_menu->flags.mapped) {
+		menu = scr->vscr.menu.root_menu;
 		if (!menu->flags.buttoned) {
 			wMenuUnmap(menu);
 		} else {
@@ -1635,8 +1660,8 @@ void OpenRootMenu(WScreen *scr, int x, int y, int keyboard)
 
 	if (definition) {
 		if (WMIsPLArray(definition)) {
-			if (!w_global.menu.root_menu ||
-			    w_global.domain.root_menu->timestamp > w_global.menu.root_menu->timestamp) {
+			if (!scr->vscr.menu.root_menu ||
+			    w_global.domain.root_menu->timestamp > scr->vscr.menu.root_menu->timestamp) {
 				menu = configureMenu(scr, definition, True);
 				if (menu)
 					menu->timestamp = w_global.domain.root_menu->timestamp;
@@ -1650,22 +1675,22 @@ void OpenRootMenu(WScreen *scr, int x, int y, int keyboard)
 
 	if (!menu) {
 		/* menu hasn't changed or could not be read */
-		if (!w_global.menu.root_menu) {
+		if (!scr->vscr.menu.root_menu) {
 			wMessageDialog(scr, _("Error"),
 				       _("The applications menu could not be loaded. "
 					 "Look at the console output for a detailed "
 					 "description of the errors."), _("OK"), NULL, NULL);
 
 			menu = makeDefaultMenu(scr);
-			w_global.menu.root_menu = menu;
+			scr->vscr.menu.root_menu = menu;
 		}
-		menu = w_global.menu.root_menu;
+		menu = scr->vscr.menu.root_menu;
 	} else {
 		/* new root menu */
-		if (w_global.menu.root_menu)
-			wMenuDestroy(w_global.menu.root_menu, True);
+		if (scr->vscr.menu.root_menu)
+			wMenuDestroy(scr->vscr.menu.root_menu, True);
 
-		w_global.menu.root_menu = menu;
+		scr->vscr.menu.root_menu = menu;
 	}
 
 	if (menu) {
@@ -1683,6 +1708,6 @@ void OpenRootMenu(WScreen *scr, int x, int y, int keyboard)
 		wMenuMapAt(menu, newx, newy, keyboard);
 	}
 
-	if (w_global.menu.flags.root_menu_changed_shortcuts)
+	if (scr->vscr.menu.flags.root_menu_changed_shortcuts)
 		rebindKeygrabs(scr);
 }

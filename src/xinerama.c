@@ -286,7 +286,7 @@ WMRect wGetRectForHead(WScreen * scr, int head)
 	return rect;
 }
 
-WArea wGetUsableAreaForHead(WScreen * scr, int head, WArea * totalAreaPtr, Bool noicons)
+WArea wGetUsableAreaForHead(WScreen *scr, int head, WArea *totalAreaPtr, Bool noicons)
 {
 	WArea totalArea, usableArea;
 	WMRect rect = wGetRectForHead(scr, head);
@@ -299,31 +299,33 @@ WArea wGetUsableAreaForHead(WScreen * scr, int head, WArea * totalAreaPtr, Bool 
 	if (totalAreaPtr != NULL)
 		*totalAreaPtr = totalArea;
 
-	if (head < wXineramaHeads(scr)) {
+	if (head < wXineramaHeads(scr))
 		usableArea = noicons ? scr->totalUsableArea[head] : scr->usableArea[head];
-	} else
+	else
 		usableArea = totalArea;
 
 	if (noicons) {
 		/* check if user wants dock covered */
-		if (w_global.dock.dock && wPreferences.no_window_over_dock &&
-		    wAppIconTouchesHead(w_global.dock.dock->icon_array[0], head)) {
+		if (scr->vscr.dock.dock && wPreferences.no_window_over_dock &&
+		    wAppIconTouchesHead(scr->vscr.dock.dock->icon_array[0], head)) {
 			int offset = wPreferences.icon_size + DOCK_EXTRA_SPACE;
 
-			if (w_global.dock.dock->on_right_side)
+			if (scr->vscr.dock.dock->on_right_side)
 				usableArea.x2 -= offset;
 			else
 				usableArea.x1 += offset;
 		}
 
 		/* check if icons are on the same side as dock, and adjust if not done already */
-		if (w_global.dock.dock && wPreferences.no_window_over_icons && !wPreferences.no_window_over_dock && (wPreferences.icon_yard & IY_VERT)) {
+		if (scr->vscr.dock.dock && wPreferences.no_window_over_icons &&
+		    !wPreferences.no_window_over_dock && (wPreferences.icon_yard & IY_VERT)) {
 			int offset = wPreferences.icon_size + DOCK_EXTRA_SPACE;
 
-			if (w_global.dock.dock->on_right_side && (wPreferences.icon_yard & IY_RIGHT))
+			if (scr->vscr.dock.dock->on_right_side && (wPreferences.icon_yard & IY_RIGHT))
 				usableArea.x2 -= offset;
+
 			/* can't use IY_LEFT in if, it's 0 ... */
-			if (!w_global.dock.dock->on_right_side && !(wPreferences.icon_yard & IY_RIGHT))
+			if (!scr->vscr.dock.dock->on_right_side && !(wPreferences.icon_yard & IY_RIGHT))
 				usableArea.x1 += offset;
 		}
 	}

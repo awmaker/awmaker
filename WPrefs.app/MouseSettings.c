@@ -26,10 +26,51 @@
 #include <X11/XKBlib.h>
 
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <math.h>
 
 
 #define XSET	"xset"
+
+
+static const struct {
+	const char *db_key;
+	int default_action;
+	enum { T_BUTTON, T_WHEEL } type;
+	const char *display_label;
+} button_list[] = {
+	{ "MouseLeftButtonAction",     3, T_BUTTON, N_("Left Button") },
+	{ "MouseMiddleButtonAction",   2, T_BUTTON, N_("Middle Button") },
+	{ "MouseRightButtonAction",    1, T_BUTTON, N_("Right Button") },
+	{ "MouseBackwardButtonAction", 0, T_BUTTON, N_("Back Button") },
+	{ "MouseForwardButtonAction",  0, T_BUTTON, N_("Forward Button") },
+	{ "MouseWheelAction",          0, T_WHEEL,  N_("Mouse Wheel") },
+	{ "MouseWheelTiltAction",      0, T_WHEEL,  N_("Mouse Wheel Tilt") }
+};
+
+static const struct {
+	const char *db_value;
+	const char *label;
+} button_actions[] = {
+	{ "None",                  N_("None") },
+	{ "OpenApplicationsMenu",  N_("Applications Menu") },
+	{ "OpenWindowListMenu",    N_("Window List Menu") },
+	{ "SelectWindows",         N_("Select Windows") },
+	{ "MoveToPrevWorkspace",   N_("Previous Workspace") },
+	{ "MoveToNextWorkspace",   N_("Next Workspace") },
+	{ "MoveToPrevWindow",      N_("Previous Window") },
+	{ "MoveToNextWindow",      N_("Next Window") }
+};
+
+static const struct {
+	const char *db_value;
+	const char *label;
+} wheel_actions[] = {
+	{ "None",              N_("None") },
+	{ "SwitchWorkspaces",  N_("Switch Workspaces") },
+	{ "SwitchWindows",     N_("Switch Windows") }
+};
 
 typedef struct _Panel {
 	WMBox *box;
@@ -57,20 +98,10 @@ typedef struct _Panel {
 	DoubleTest *tester;
 
 	WMFrame *menuF;
-	WMLabel *button1L;
-	WMLabel *button2L;
-	WMLabel *button3L;
-	WMLabel *button8L;
-	WMLabel *button9L;
-	WMLabel *wheelL;
-	WMLabel *wheelTiltL;
-	WMPopUpButton *button1P;
-	WMPopUpButton *button2P;
-	WMPopUpButton *button3P;
-	WMPopUpButton *button8P;
-	WMPopUpButton *button9P;
-	WMPopUpButton *wheelP;
-	WMPopUpButton *wheelTiltP;
+	struct {
+		WMLabel *label;
+		WMPopUpButton *popup;
+	} mouse_action[wlengthof_nocheck(button_list)];
 
 	WMButton *disaB;
 
@@ -92,10 +123,6 @@ typedef struct _Panel {
 #include <WINGs/WINGsP.h>
 
 static char *modifierNames[8];
-
-static char *buttonActions[8];
-
-static char *wheelActions[3];
 
 #define DELAY(i)		((i)*75+170)
 
@@ -163,6 +190,22 @@ static void returnPressed(void *observerData, WMNotification * notification)
 	speedChange(NULL, panel);
 }
 
+static void toggle_disabling_of_mouse_actions(WMWidget *w, void *client_data)
+{
+	WMButton *button = (WMButton *) w;
+	Panel *panel = (Panel *) client_data;
+	Bool do_enable;
+	int i;
+
+	if (WMGetButtonSelected(button))
+		do_enable = False;
+	else
+		do_enable = True;
+
+	for (i = 0; i < wlengthof(panel->mouse_action); i++)
+		WMSetPopUpButtonEnabled(panel->mouse_action[i].popup, do_enable);
+}
+
 static void doubleClick(WMWidget * w, void *data)
 {
 	_Panel *panel = (_Panel *) data;
@@ -181,44 +224,32 @@ static void doubleClick(WMWidget * w, void *data)
 
 static int getButtonAction(const char *str)
 {
+	int i;
+
 	if (!str)
 		return -2;
 
-	if (strcasecmp(str, "None") == 0)
-		return 0;
-	else if (strcasecmp(str, "OpenApplicationsMenu") == 0)
-		return 1;
-	else if (strcasecmp(str, "OpenWindowListMenu") == 0)
-		return 2;
-	else if (strcasecmp(str, "SelectWindows") == 0)
-		return 3;
-	else if (strcasecmp(str, "MoveToPrevWorkspace") == 0)
-		return 4;
-	else if (strcasecmp(str, "MoveToNextWorkspace") == 0)
-		return 5;
-	else if (strcasecmp(str, "MoveToPrevWindow") == 0)
-		return 6;
-	else if (strcasecmp(str, "MoveToNextWindow") == 0)
-		return 7;
-	else
-		return -1;
+	for (i = 0; i < wlengthof(button_actions); i++) {
+		if (strcasecmp(str, button_actions[i].db_value) == 0)
+			return i;
+	}
 
+	return -1;
 }
 
 static int getWheelAction(const char *str)
 {
+	int i;
+
 	if (!str)
 		return -2;
 
-	if (strcasecmp(str, "None") == 0)
-		return 0;
-	else if (strcasecmp(str, "SwitchWorkspaces") == 0)
-		return 1;
-	else if (strcasecmp(str, "SwitchWindows") == 0)
-		return 2;
-	else
-		return -1;
+	for (i = 0; i < wlengthof(wheel_actions); i++) {
+		if (strcasecmp(str, wheel_actions[i].db_value) == 0)
+			return i;
+	}
 
+	return -1;
 }
 
 static void getMouseParameters(Display * dpy, float *accel, int *thre)
@@ -234,96 +265,30 @@ static void showData(_Panel * panel)
 {
 	char *str;
 	int i;
-	int a = -1, b = -1, c = -1, w = -1;
+	int a = -1, b = -1;
 	float accel;
 	char buffer[32];
 	Display *dpy = WMScreenDisplay(WMWidgetScreen(panel->parent));
 
-	str = GetStringForKey("MouseLeftButtonAction");
-	i = getButtonAction(str);
-	if (i < 0) {
-		a = 3;
-		if (i == -1) {
-			wwarning(_("bad value %s for option %s"), str, "MouseLeftButtonAction");
-		}
-	} else {
-		a = i;
-	}
-	WMSetPopUpButtonSelectedItem(panel->button1P, a);
+	for (i = 0; i < wlengthof(button_list); i++) {
+		int action;
 
-	str = GetStringForKey("MouseMiddleButtonAction");
-	i = getButtonAction(str);
-	if (i < 0) {
-		b = 2;
-		if (i == -1) {
-			wwarning(_("bad value %s for option %s"), str, "MouseMiddleButtonAction");
-		}
-	} else {
-		b = i;
-	}
-	WMSetPopUpButtonSelectedItem(panel->button2P, b);
+		str = GetStringForKey(button_list[i].db_key);
+		if (button_list[i].type == T_BUTTON)
+			action = getButtonAction(str);
+		else
+			action = getWheelAction(str);
 
-	str = GetStringForKey("MouseRightButtonAction");
-	i = getButtonAction(str);
-	if (i < 0) {
-		c = 1;
-		if (i == -1) {
-			wwarning(_("bad value %s for option %s"), str, "MouseRightButtonAction");
+		if (action < 0) {
+			if (action == -1)
+				wwarning(_("bad value %s for option %s"), str, button_list[i].db_key);
+			action = button_list[i].default_action;
 		}
-	} else {
-		c = i;
+		WMSetPopUpButtonSelectedItem(panel->mouse_action[i].popup, action);
 	}
-	WMSetPopUpButtonSelectedItem(panel->button3P, c);
-
-	str = GetStringForKey("MouseBackwardButtonAction");
-	i = getButtonAction(str);
-	if (i < 0) {
-		b = 0;
-		if (i == -1) {
-			wwarning(_("bad value %s for option %s"), str, "MouseBackwardButtonAction");
-		}
-	} else {
-		b = i;
-	}
-	WMSetPopUpButtonSelectedItem(panel->button8P, b);
-
-	str = GetStringForKey("MouseForwardButtonAction");
-	i = getButtonAction(str);
-	if (i < 0) {
-		b = 0;
-		if (i == -1) {
-			wwarning(_("bad value %s for option %s"), str, "MouseForwardButtonAction");
-		}
-	} else {
-		b = i;
-	}
-	WMSetPopUpButtonSelectedItem(panel->button9P, b);
-
-	str = GetStringForKey("MouseWheelAction");
-	i = getWheelAction(str);
-	if (i < 0) {
-		w = 0;
-		if (i == -1) {
-			wwarning(_("bad value %s for option %s"), str, "MouseWheelAction");
-		}
-	} else {
-		w = i;
-	}
-	WMSetPopUpButtonSelectedItem(panel->wheelP, w);
-
-	str = GetStringForKey("MouseWheelTiltAction");
-	i = getWheelAction(str);
-	if (i < 0) {
-		w = 0;
-		if (i == -1) {
-			wwarning(_("bad value %s for option %s"), str, "MouseWheelTiltAction");
-		}
-	} else {
-		w = i;
-	}
-	WMSetPopUpButtonSelectedItem(panel->wheelTiltP, w);
 
 	WMSetButtonSelected(panel->disaB, GetBoolForKey("DisableWSMouseActions"));
+	toggle_disabling_of_mouse_actions(panel->disaB, panel);
 
 	 /**/ getMouseParameters(dpy, &accel, &a);
 	panel->maxThreshold = WidthOfScreen(DefaultScreenOfDisplay(dpy));
@@ -488,13 +453,13 @@ static void createPanel(Panel * p)
 
     /**************** Mouse Speed ****************/
 	panel->speedF = WMCreateFrame(panel->box);
-	WMResizeWidget(panel->speedF, 225, 90);
-	WMMoveWidget(panel->speedF, 15, 5);
+	WMResizeWidget(panel->speedF, 219, 85);
+	WMMoveWidget(panel->speedF, 9, 54);
 	WMSetFrameTitle(panel->speedF, _("Mouse Speed"));
 
 	panel->speedL = WMCreateLabel(panel->speedF);
 	WMResizeWidget(panel->speedL, 40, 46);
-	WMMoveWidget(panel->speedL, 10, 14);
+	WMMoveWidget(panel->speedL, 8, 10);
 	WMSetLabelImagePosition(panel->speedL, WIPImageOnly);
 	path = LocateImage(SPEED_ICON_FILE);
 	if (path) {
@@ -510,7 +475,7 @@ static void createPanel(Panel * p)
 
 	panel->speedS = WMCreateSlider(panel->speedF);
 	WMResizeWidget(panel->speedS, 150, 15);
-	WMMoveWidget(panel->speedS, 60, 35);
+	WMMoveWidget(panel->speedS, 58, 30);
 	WMSetSliderMinValue(panel->speedS, 0);
 	WMSetSliderMaxValue(panel->speedS, 40);
 	WMSetSliderContinuous(panel->speedS, False);
@@ -518,32 +483,32 @@ static void createPanel(Panel * p)
 
 	panel->acceL = WMCreateLabel(panel->speedF);
 	WMResizeWidget(panel->acceL, 50, 16);
-	WMMoveWidget(panel->acceL, 10, 65);
+	WMMoveWidget(panel->acceL, 8, 58);
 	WMSetLabelTextAlignment(panel->acceL, WARight);
 	WMSetLabelText(panel->acceL, _("Accel.:"));
 
 	panel->acceT = WMCreateTextField(panel->speedF);
 	WMResizeWidget(panel->acceT, 40, 20);
-	WMMoveWidget(panel->acceT, 60, 63);
+	WMMoveWidget(panel->acceT, 58, 56);
 	WMAddNotificationObserver(returnPressed, panel, WMTextDidEndEditingNotification, panel->acceT);
 
 	panel->threL = WMCreateLabel(panel->speedF);
 	WMResizeWidget(panel->threL, 80, 16);
-	WMMoveWidget(panel->threL, 100, 65);
+	WMMoveWidget(panel->threL, 98, 58);
 	WMSetLabelTextAlignment(panel->threL, WARight);
 	WMSetLabelText(panel->threL, _("Threshold:"));
 
 	panel->threT = WMCreateTextField(panel->speedF);
 	WMResizeWidget(panel->threT, 30, 20);
-	WMMoveWidget(panel->threT, 180, 63);
+	WMMoveWidget(panel->threT, 178, 56);
 	WMAddNotificationObserver(returnPressed, panel, WMTextDidEndEditingNotification, panel->threT);
 
 	WMMapSubwidgets(panel->speedF);
 
 	/* ************** Grab Modifier **************** */
 	panel->grabF = WMCreateFrame(panel->box);
-	WMResizeWidget(panel->grabF, 225, 45);
-	WMMoveWidget(panel->grabF, 15, 95);
+	WMResizeWidget(panel->grabF, 219, 46);
+	WMMoveWidget(panel->grabF, 9, 5);
 	WMSetFrameTitle(panel->grabF, _("Mouse Grab Modifier"));
 
 	WMSetBalloonTextForView(_("Keyboard modifier to use for actions that\n"
@@ -551,8 +516,8 @@ static void createPanel(Panel * p)
 				  "clicking inside the window."), WMWidgetView(panel->grabF));
 
 	panel->grabP = WMCreatePopUpButton(panel->grabF);
-	WMResizeWidget(panel->grabP, 160, 20);
-	WMMoveWidget(panel->grabP, 50, 18);
+	WMResizeWidget(panel->grabP, 178, 20);
+	WMMoveWidget(panel->grabP, 20, 17);
 
 	fillModifierPopUp(panel->grabP);
 	WMMapSubwidgets(panel->grabF);
@@ -560,8 +525,8 @@ static void createPanel(Panel * p)
 	/***************** Doubleclick Delay ****************/
 
 	panel->ddelaF = WMCreateFrame(panel->box);
-	WMResizeWidget(panel->ddelaF, 225, 87);
-	WMMoveWidget(panel->ddelaF, 15, 140);
+	WMResizeWidget(panel->ddelaF, 219, 80);
+	WMMoveWidget(panel->ddelaF, 9, 142);
 	WMSetFrameTitle(panel->ddelaF, _("Double-Click Delay"));
 
 	buf1 = wmalloc(strlen(DELAY_ICON) + 2);
@@ -570,7 +535,7 @@ static void createPanel(Panel * p)
 	for (i = 0; i < wlengthof(panel->ddelaB); i++) {
 		panel->ddelaB[i] = WMCreateCustomButton(panel->ddelaF, WBBStateChangeMask);
 		WMResizeWidget(panel->ddelaB[i], 25, 25);
-		WMMoveWidget(panel->ddelaB[i], 20 + (40 * i), 20);
+		WMMoveWidget(panel->ddelaB[i], 18 + (40 * i), 18);
 		WMSetButtonBordered(panel->ddelaB[i], False);
 		WMSetButtonImagePosition(panel->ddelaB[i], WIPImageOnly);
 		WMSetButtonAction(panel->ddelaB[i], doubleClick, panel);
@@ -606,16 +571,16 @@ static void createPanel(Panel * p)
 	wfree(buf2);
 
 	panel->tester = CreateDoubleTest(panel->ddelaF, _("Test"));
-	WMResizeWidget(panel->tester, 84, 29);
-	WMMoveWidget(panel->tester, 25, 52);
+	WMResizeWidget(panel->tester, 84, 24);
+	WMMoveWidget(panel->tester, 20, 48);
 
 	panel->ddelaT = WMCreateTextField(panel->ddelaF);
 	WMResizeWidget(panel->ddelaT, 40, 20);
-	WMMoveWidget(panel->ddelaT, 130, 57);
+	WMMoveWidget(panel->ddelaT, 130, 50);
 
 	panel->ddelaL = WMCreateLabel(panel->ddelaF);
 	WMResizeWidget(panel->ddelaL, 40, 16);
-	WMMoveWidget(panel->ddelaL, 175, 63);
+	WMMoveWidget(panel->ddelaL, 173, 54);
 	{
 		WMFont *font;
 		WMColor *color;
@@ -627,105 +592,44 @@ static void createPanel(Panel * p)
 		WMReleaseFont(font);
 		WMReleaseColor(color);
 	}
-	WMSetLabelText(panel->ddelaL, _("msec"));
+	WMSetLabelText(panel->ddelaL, _("ms"));
 
 	WMMapSubwidgets(panel->ddelaF);
 
 	/* ************** Workspace Action Buttons **************** */
 
 	panel->menuF = WMCreateFrame(panel->box);
-	WMResizeWidget(panel->menuF, 260, 222);
-	WMMoveWidget(panel->menuF, 250, 5);
+	WMResizeWidget(panel->menuF, 276, 217);
+	WMMoveWidget(panel->menuF, 236, 5);
 	WMSetFrameTitle(panel->menuF, _("Workspace Mouse Actions"));
 
 	panel->disaB = WMCreateSwitchButton(panel->menuF);
-	WMResizeWidget(panel->disaB, 205, 18);
+	WMResizeWidget(panel->disaB, 254, 18);
 	WMMoveWidget(panel->disaB, 10, 15);
 	WMSetButtonText(panel->disaB, _("Disable mouse actions"));
+	WMSetButtonAction(panel->disaB, toggle_disabling_of_mouse_actions, panel);
 
-	panel->button1L = WMCreateLabel(panel->menuF);
-	WMResizeWidget(panel->button1L, 107, 20);
-	WMMoveWidget(panel->button1L, 5, 40);
-	WMSetLabelTextAlignment(panel->button1L, WARight);
-	WMSetLabelText(panel->button1L, _("Left Button"));
+	for (i = 0; i < wlengthof(button_list); i++) {
+		int j;
 
-	panel->button1P = WMCreatePopUpButton(panel->menuF);
-	WMResizeWidget(panel->button1P, 135, 20);
-	WMMoveWidget(panel->button1P, 115, 40);
+		panel->mouse_action[i].label = WMCreateLabel(panel->menuF);
+		WMResizeWidget(panel->mouse_action[i].label, 115, 20);
+		WMMoveWidget(panel->mouse_action[i].label, 4, 37 + 25 * i);
+		WMSetLabelTextAlignment(panel->mouse_action[i].label, WARight);
+		WMSetLabelText(panel->mouse_action[i].label, _(button_list[i].display_label));
 
-	panel->button2L = WMCreateLabel(panel->menuF);
-	WMResizeWidget(panel->button2L, 107, 20);
-	WMMoveWidget(panel->button2L, 5, 65);
-	WMSetLabelTextAlignment(panel->button2L, WARight);
-	WMSetLabelText(panel->button2L, _("Middle Button"));
+		panel->mouse_action[i].popup = WMCreatePopUpButton(panel->menuF);
+		WMResizeWidget(panel->mouse_action[i].popup, 145, 20);
+		WMMoveWidget(panel->mouse_action[i].popup, 121, 37 + 25 * i);
 
-	panel->button2P = WMCreatePopUpButton(panel->menuF);
-	WMResizeWidget(panel->button2P, 135, 20);
-	WMMoveWidget(panel->button2P, 115, 65);
-
-	panel->button3L = WMCreateLabel(panel->menuF);
-	WMResizeWidget(panel->button3L, 107, 20);
-	WMMoveWidget(panel->button3L, 5, 90);
-	WMSetLabelTextAlignment(panel->button3L, WARight);
-	WMSetLabelText(panel->button3L, _("Right Button"));
-
-	panel->button3P = WMCreatePopUpButton(panel->menuF);
-	WMResizeWidget(panel->button3P, 135, 20);
-	WMMoveWidget(panel->button3P, 115, 90);
-
-	panel->button8L = WMCreateLabel(panel->menuF);
-	WMResizeWidget(panel->button8L, 107, 20);
-	WMMoveWidget(panel->button8L, 5, 115);
-	WMSetLabelTextAlignment(panel->button8L, WARight);
-	WMSetLabelText(panel->button8L, _("Back Button"));
-
-	panel->button8P = WMCreatePopUpButton(panel->menuF);
-	WMResizeWidget(panel->button8P, 135, 20);
-	WMMoveWidget(panel->button8P, 115, 115);
-
-	panel->button9L = WMCreateLabel(panel->menuF);
-	WMResizeWidget(panel->button9L, 107, 20);
-	WMMoveWidget(panel->button9L, 5, 140);
-	WMSetLabelTextAlignment(panel->button9L, WARight);
-	WMSetLabelText(panel->button9L, _("Forward Button"));
-
-	panel->button9P = WMCreatePopUpButton(panel->menuF);
-	WMResizeWidget(panel->button9P, 135, 20);
-	WMMoveWidget(panel->button9P, 115, 140);
-
-	panel->wheelL = WMCreateLabel(panel->menuF);
-	WMResizeWidget(panel->wheelL, 107, 20);
-	WMMoveWidget(panel->wheelL, 5, 165);
-	WMSetLabelTextAlignment(panel->wheelL, WARight);
-	WMSetLabelText(panel->wheelL, _("Mouse Wheel"));
-
-	panel->wheelP = WMCreatePopUpButton(panel->menuF);
-	WMResizeWidget(panel->wheelP, 135, 20);
-	WMMoveWidget(panel->wheelP, 115, 165);
-
-	panel->wheelTiltL = WMCreateLabel(panel->menuF);
-	WMResizeWidget(panel->wheelTiltL, 107, 20);
-	WMMoveWidget(panel->wheelTiltL, 5, 190);
-	WMSetLabelTextAlignment(panel->wheelTiltL, WARight);
-	WMSetLabelText(panel->wheelTiltL, _("Mouse Wheel Tilt"));
-
-	panel->wheelTiltP = WMCreatePopUpButton(panel->menuF);
-	WMResizeWidget(panel->wheelTiltP, 135, 20);
-	WMMoveWidget(panel->wheelTiltP, 115, 190);
-
-	for (i = 0; i < wlengthof(buttonActions); i++) {
-		WMAddPopUpButtonItem(panel->button1P, buttonActions[i]);
-		WMAddPopUpButtonItem(panel->button2P, buttonActions[i]);
-		WMAddPopUpButtonItem(panel->button3P, buttonActions[i]);
-		WMAddPopUpButtonItem(panel->button8P, buttonActions[i]);
-		WMAddPopUpButtonItem(panel->button9P, buttonActions[i]);
+		if (button_list[i].type == T_BUTTON) {
+			for (j = 0; j < wlengthof(button_actions); j++)
+				WMAddPopUpButtonItem(panel->mouse_action[i].popup, _(button_actions[j].label));
+		} else {
+			for (j = 0; j < wlengthof(wheel_actions); j++)
+				WMAddPopUpButtonItem(panel->mouse_action[i].popup, _(wheel_actions[j].label));
+		}
 	}
-
-	for (i = 0; i < wlengthof(wheelActions); i++) {
-		WMAddPopUpButtonItem(panel->wheelP, wheelActions[i]);
-		WMAddPopUpButtonItem(panel->wheelTiltP, wheelActions[i]);
-	}
-
 	WMMapSubwidgets(panel->menuF);
 
 	WMRealizeWidget(panel->box);
@@ -739,6 +643,12 @@ static void storeCommandInScript(const char *cmd, const char *line)
 	char *path;
 	FILE *f;
 	char buffer[128];
+	mode_t permissions;
+
+	/* Calculate permission to be Executable but taking into account user's umask */
+	permissions = umask(0);
+	umask(permissions);
+	permissions = (S_IRWXU | S_IRWXG | S_IRWXO) & (~permissions);
 
 	path = wstrconcat(wusergnusteppath(), "/Library/WindowMaker/autostart");
 
@@ -798,9 +708,8 @@ static void storeCommandInScript(const char *cmd, const char *line)
 		}
 		wfree(tmppath);
 	}
-	sprintf(buffer, "chmod u+x %s", path);
-	if (system(buffer) == -1)
-		werror(_("could not execute command \"%s\""), buffer);
+	if (chmod(path, permissions) != 0)
+		wwarning(_("could not set permission 0%03o on file \"%s\""), permissions, path);
 
  end:
 	wfree(path);
@@ -815,9 +724,6 @@ static void storeData(_Panel * panel)
 	char buffer[64];
 	int i;
 	char *tmp, *p;
-	static char *button[8] = { "None", "OpenApplicationsMenu", "OpenWindowListMenu", "SelectWindows",
-						"MoveToPrevWorkspace", "MoveToNextWorkspace", "MoveToPrevWindow", "MoveToNextWindow" };
-	static char *wheel[3] = { "None", "SwitchWorkspaces", "SwitchWindows" };
 	WMUserDefaults *udb = WMGetStandardUserDefaults();
 
 	if (!WMGetUDBoolForKey(udb, "NoXSetStuff")) {
@@ -840,26 +746,17 @@ static void storeData(_Panel * panel)
 
 	SetBoolForKey(WMGetButtonSelected(panel->disaB), "DisableWSMouseActions");
 
-	i = WMGetPopUpButtonSelectedItem(panel->button1P);
-	SetStringForKey(button[i], "MouseLeftButtonAction");
+	for (i = 0; i < wlengthof(button_list); i++) {
+		const char *db_value;
+		int action;
 
-	i = WMGetPopUpButtonSelectedItem(panel->button2P);
-	SetStringForKey(button[i], "MouseMiddleButtonAction");
-
-	i = WMGetPopUpButtonSelectedItem(panel->button3P);
-	SetStringForKey(button[i], "MouseRightButtonAction");
-
-	i = WMGetPopUpButtonSelectedItem(panel->button8P);
-	SetStringForKey(button[i], "MouseBackwardButtonAction");
-
-	i = WMGetPopUpButtonSelectedItem(panel->button9P);
-	SetStringForKey(button[i], "MouseForwardButtonAction");
-
-	i = WMGetPopUpButtonSelectedItem(panel->wheelP);
-	SetStringForKey(wheel[i], "MouseWheelAction");
-
-	i = WMGetPopUpButtonSelectedItem(panel->wheelTiltP);
-	SetStringForKey(wheel[i], "MouseWheelTiltAction");
+		action = WMGetPopUpButtonSelectedItem(panel->mouse_action[i].popup);
+		if (button_list[i].type == T_BUTTON)
+			db_value = button_actions[action].db_value;
+		else
+			db_value = wheel_actions[action].db_value;
+		SetStringForKey(db_value, button_list[i].db_key);
+	}
 
 	tmp = WMGetPopUpButtonItem(panel->grabP, WMGetPopUpButtonSelectedItem(panel->grabP));
 	tmp = wstrdup(tmp);
@@ -884,19 +781,6 @@ Panel *InitMouseSettings(WMWidget *parent)
 	modifierNames[5] = wstrdup(_("Mod3"));
 	modifierNames[6] = wstrdup(_("Mod4"));
 	modifierNames[7] = wstrdup(_("Mod5"));
-
-	buttonActions[0] = wstrdup(_("None"));
-	buttonActions[1] = wstrdup(_("Applications Menu"));
-	buttonActions[2] = wstrdup(_("Window List Menu"));
-	buttonActions[3] = wstrdup(_("Select Windows"));
-	buttonActions[4] = wstrdup(_("Previous Workspace"));
-	buttonActions[5] = wstrdup(_("Next Workspace"));
-	buttonActions[6] = wstrdup(_("Previous Window"));
-	buttonActions[7] = wstrdup(_("Next Window"));
-
-	wheelActions[0] = wstrdup(_("None"));
-	wheelActions[1] = wstrdup(_("Switch Workspaces"));
-	wheelActions[2] = wstrdup(_("Switch Windows"));
 
 	panel = wmalloc(sizeof(_Panel));
 

@@ -22,13 +22,18 @@
 #include "WPrefs.h"
 
 
+static const char *const clip_delay_frame_titles[] = {
+	N_("Clip autocollapsing delays"),
+	N_("Clip autoraising delays")
+};
+
 static const struct {
 	const char *key;
 	const char *string;
 } auto_delay[] = {
 	{ "ClipAutoexpandDelay",   N_("Before auto-expansion") },
 	{ "ClipAutocollapseDelay", N_("Before auto-collapsing") },
-	{ "ClipAutoraiseDelay",    N_("Before auto-raise") },
+	{ "ClipAutoraiseDelay",    N_("Before auto-raising") },
 	{ "ClipAutolowerDelay",    N_("Before auto-lowering") }
 };
 
@@ -37,10 +42,14 @@ static char *autoDelayPresetValues[5] = { "0", "100", "250", "600", "1000" };
 static const struct {
 	const char *disable_key;
 	const char *icon_file;
+	const char *balloon_text;
 } dock_config[] = {
-	{ "DisableDock", "dock" },
-	{ "DisableClip", "clip" },
-	{ "DisableDrawers", "drawer" }
+	{ "DisableDock", "dock",
+	  N_("Disable/enable the application Dock (the\nvertical icon bar in the side of the screen).") },
+	{ "DisableClip", "clip",
+	  N_("Disable/enable the Clip (that thing with\na paper clip icon).") },
+	{ "DisableDrawers", "drawer",
+	  N_("Disable/enable Drawers (a dock that stores\napplication icons horizontally). The dock is required.") }
 };
 
 typedef struct _Panel {
@@ -54,7 +63,7 @@ typedef struct _Panel {
 
 	WMWidget *parent;
 
-	WMFrame *autoDelayF[2];
+	WMFrame *autoDelayF[wlengthof_nocheck(clip_delay_frame_titles)];
 	WMLabel *autoDelayL[wlengthof_nocheck(auto_delay)];
 	WMButton *autoDelayB[wlengthof_nocheck(auto_delay)][wlengthof_nocheck(autoDelayPresetValues)];
 	WMTextField *autoDelayT[wlengthof_nocheck(auto_delay)];
@@ -170,29 +179,25 @@ static void createPanel(Panel *p)
 	buf1 = wmalloc(strlen(DELAY_ICON) + 1);
 	buf2 = wmalloc(strlen(DELAY_ICON_S) + 1);
 
-	for (k = 0; k < 2; k++)
+	for (k = 0; k < wlengthof(clip_delay_frame_titles); k++)
 	{
 		panel->autoDelayF[k] = WMCreateFrame(panel->box);
-		WMResizeWidget(panel->autoDelayF[k], 370, 100);
-		WMMoveWidget(panel->autoDelayF[k], 15, 10 + k * 110);
-		if (k == 0)
-			WMSetFrameTitle(panel->autoDelayF[k], _("Clip autocollapsing delays"));
-		else
-			WMSetFrameTitle(panel->autoDelayF[k], _("Clip autoraising delays"));
+		WMResizeWidget(panel->autoDelayF[k], 372, 100);
+		WMMoveWidget(panel->autoDelayF[k], 11, 10 + k * 110);
+		WMSetFrameTitle(panel->autoDelayF[k], _(clip_delay_frame_titles[k]));
 
 		for (i = 0; i < 2; i++)
 		{
 			panel->autoDelayL[i + k * 2] = WMCreateLabel(panel->autoDelayF[k]);
-			WMResizeWidget(panel->autoDelayL[i + k * 2], 155, 20);
-			WMMoveWidget(panel->autoDelayL[i + k * 2], 10, 27 + 40 * i);
+			WMResizeWidget(panel->autoDelayL[i + k * 2], 152, 20);
+			WMMoveWidget(panel->autoDelayL[i + k * 2], 8, 27 + 40 * i);
 			WMSetLabelText(panel->autoDelayL[i + k * 2], _(auto_delay[i + k * 2].string));
-			/* WMSetLabelTextAlignment(panel->autoDelayL[i + k * 2], WARight); */
 
 			for (j = 0; j < wlengthof(autoDelayPresetValues); j++)
 			{
 				panel->autoDelayB[i + k * 2][j] = WMCreateCustomButton(panel->autoDelayF[k], WBBStateChangeMask);
 				WMResizeWidget(panel->autoDelayB[i + k * 2][j], 25, 25);
-				WMMoveWidget(panel->autoDelayB[i + k * 2][j], 145 + (28 * j), 25 + 40 * i);
+				WMMoveWidget(panel->autoDelayB[i + k * 2][j], 160 + (26 * j), 25 + 40 * i);
 				WMSetButtonBordered(panel->autoDelayB[i + k * 2][j], False);
 				WMSetButtonImagePosition(panel->autoDelayB[i + k * 2][j], WIPImageOnly);
 				WMSetButtonAction(panel->autoDelayB[i + k * 2][j], pushAutoDelayButton, panel);
@@ -217,16 +222,16 @@ static void createPanel(Panel *p)
 			}
 
 			panel->autoDelayT[i + k * 2] = WMCreateTextField(panel->autoDelayF[k]);
-			WMResizeWidget(panel->autoDelayT[i + k * 2], 36, 20);
-			WMMoveWidget(panel->autoDelayT[i + k * 2], 287, 27 + 40 * i);
+			WMResizeWidget(panel->autoDelayT[i + k * 2], 41, 20);
+			WMMoveWidget(panel->autoDelayT[i + k * 2], 293, 27 + 40 * i);
 			WMAddNotificationObserver(autoDelayChanged, panel, WMTextDidChangeNotification, panel->autoDelayT[i + k * 2]);
 
 			color = WMDarkGrayColor(scr);
 			font = WMSystemFontOfSize(scr, 10);
 			panel->autoDelayMsL[i + k * 2] = WMCreateLabel(panel->autoDelayF[k]);
-			WMResizeWidget(panel->autoDelayMsL[i + k * 2], 36, 16);
-			WMMoveWidget(panel->autoDelayMsL[i + k * 2], 327, 33 + 40 *i);
-			WMSetLabelText(panel->autoDelayMsL[i + k * 2], _("msec"));
+			WMResizeWidget(panel->autoDelayMsL[i + k * 2], 26, 16);
+			WMMoveWidget(panel->autoDelayMsL[i + k * 2], 337, 30 + 40 * i);
+			WMSetLabelText(panel->autoDelayMsL[i + k * 2], _("ms"));
 			WMSetLabelTextColor(panel->autoDelayMsL[i + k * 2], color);
 			WMSetLabelFont(panel->autoDelayMsL[i + k * 2], font);
 			WMReleaseColor(color);
@@ -241,7 +246,7 @@ static void createPanel(Panel *p)
 	/***************** Enable/disable clip/dock/drawers *****************/
 	panel->dockF = WMCreateFrame(panel->box);
 	WMResizeWidget(panel->dockF, 115, 210);
-	WMMoveWidget(panel->dockF, 390, 10);
+	WMMoveWidget(panel->dockF, 394, 10);
 	WMSetFrameTitle(panel->dockF, _("Dock/Clip/Drawer"));
 
 	for (i = 0; i < wlengthof(dock_config); i++)
@@ -259,21 +264,7 @@ static void createPanel(Panel *p)
 			WMSetButtonAltImage(panel->docksB[i], icon1);
 			WMReleasePixmap(icon1);
 		}
-		switch(i)
-		{
-		case 0:
-			WMSetBalloonTextForView(_("Disable/enable the application Dock (the\n"
-						  "vertical icon bar in the side of the screen)."), WMWidgetView(panel->docksB[i]));
-			break;
-		case 1:
-			WMSetBalloonTextForView(_("Disable/enable the Clip (that thing with\n"
-						  "a paper clip icon)."), WMWidgetView(panel->docksB[i]));
-			break;
-		case 2:
-			WMSetBalloonTextForView(_("Disable/enable Drawers (a dock that stores\n"
-						  "application icons horizontally). The dock is required."), WMWidgetView(panel->docksB[i]));
-			break;
-		}
+		WMSetBalloonTextForView(_(dock_config[i].balloon_text), WMWidgetView(panel->docksB[i]));
 		WMSetButtonAction(panel->docksB[i], pushDockButton, panel);
 	}
 	

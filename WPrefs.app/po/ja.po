@@ -387,11 +387,11 @@ msgid "Show workspace title on Clip."
 msgstr "ワークスペースのタイトルをクリップに表示する"
 
 #: ../../WPrefs.app/Expert.c:97
-msgid "Bounce AppIcon when the application wants attention."
+msgid "Bounce when the application wants attention"
 msgstr "注意喚起のためにアイコンが飛び跳ねるようにする"
 
 #: ../../WPrefs.app/Expert.c:98
-msgid "Raise AppIcons when bouncing."
+msgid "Raise AppIcon when bouncing"
 msgstr "アイコンが飛び跳ねる時に前面表示にする"
 
 #: ../../WPrefs.app/Expert.c:99
@@ -425,23 +425,23 @@ msgid "Input Focus Mode"
 msgstr "インプット・フォーカスの設定"
 
 #: ../../WPrefs.app/Focus.c:200
-msgid "Manual:  Click on the window to set keyboard input focus."
+msgid "Manual:  Click on the window to set keyboard input focus"
 msgstr "手動：フォーカスする ウィンドウ上でクリックする"
 
 #: ../../WPrefs.app/Focus.c:206
-msgid "Auto:  Set keyboard input focus to the window under the mouse pointer."
+msgid "Auto:  Set keyboard input focus to the window under the mouse pointer"
 msgstr "自動：マウスポインタで 自動的にフォーカスを取得"
 
 #: ../../WPrefs.app/Focus.c:219
-msgid "Install colormap in the window..."
+msgid "Install colormap from the window..."
 msgstr "カラーマップのウィンドウへの設定は..."
 
 #: ../../WPrefs.app/Focus.c:224
-msgid "...that has the input focus."
+msgid "...that has the input focus"
 msgstr "...フォーカスが移動した時に"
 
 #: ../../WPrefs.app/Focus.c:229
-msgid "...that's under the mouse pointer."
+msgid "...that's under the mouse pointer"
 msgstr "...マウスポインタがある時に"
 
 #: ../../WPrefs.app/Focus.c:238
@@ -449,16 +449,16 @@ msgid "Automatic Window Raise Delay"
 msgstr "自動的に前面へ出すまでに"
 
 #: ../../WPrefs.app/Focus.c:293 ../../WPrefs.app/MouseSettings.c:555
-msgid "msec"
+msgid "ms"
 msgstr "ms"
 
 #: ../../WPrefs.app/Focus.c:310
-msgid "Do not let applications receive the click used to focus windows."
-msgstr "フォーカス移動のためのマウスクリックを アプリケーションに渡さない."
+msgid "Do not let applications receive the click used to focus windows"
+msgstr "フォーカス移動のためのマウスクリックを アプリケーションに渡さない"
 
 #: ../../WPrefs.app/Focus.c:315
-msgid "Automatically focus new windows."
-msgstr "新しいウィンドウに フォーカスを自動的に当てる."
+msgid "Automatically focus new windows"
+msgstr "新しいウィンドウに フォーカスを自動的に当てる"
 
 #: ../../WPrefs.app/Focus.c:332
 msgid "Window Focus Preferences"
@@ -1598,12 +1598,8 @@ msgid "internal help"
 msgstr "内部ヘルプ"
 
 #: ../../WPrefs.app/Preferences.c:277
-msgid ""
-"Raise window when switching\n"
-"focus with keyboard."
-msgstr ""
-"キーボードによりフォーカス\n"
-"されたときウィンドウを前面に"
+msgid "Raise window when switching focus with keyboard"
+msgstr "キーボードによりフォーカスされたときウィンドウを前面に"
 
 #: ../../WPrefs.app/Preferences.c:283
 msgid ""
@@ -1998,24 +1994,20 @@ msgid "Workspace Navigation"
 msgstr "ワークスペースの操作"
 
 #: ../../WPrefs.app/Workspace.c:167
-msgid "Wrap to the first workspace from the last workspace."
+msgid "Wrap to the first workspace from the last workspace"
 msgstr "最後のワークスペースから 最初のワークスペースに"
 
 #: ../../WPrefs.app/Workspace.c:186
-msgid "Switch workspaces while dragging windows."
+msgid "Switch workspaces while dragging windows"
 msgstr "ドラッグ中にワークスペースの切り替え"
 
 #: ../../WPrefs.app/Workspace.c:205
-msgid "Automatically create new workspaces."
+msgid "Automatically create new workspaces"
 msgstr "自動的に新しいワークスペースを作成"
 
 #: ../../WPrefs.app/Workspace.c:225
-msgid ""
-"Position of workspace\n"
-"name display"
-msgstr ""
-"ワークスペースの\n"
-"名前の表示位置"
+msgid "Position of workspace name display"
+msgstr "ワークスペースの名前の表示位置"
 
 #: ../../WPrefs.app/Workspace.c:244
 msgid "Disable"

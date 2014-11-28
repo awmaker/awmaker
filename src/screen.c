@@ -577,6 +577,11 @@ WScreen *wScreenInit(int screen_number)
 
 		scr->rcontext = RCreateContext(dpy, screen_number, &rattr);
 	}
+	if (scr->rcontext == NULL) {
+		wfatal(_("can't create Context on screen %d, %s"),
+		       screen_number, RMessageForError(RErrorCode));
+		goto abort_no_context;
+	}
 
 	scr->w_win = scr->rcontext->drawable;
 	scr->w_visual = scr->rcontext->visual;
@@ -589,6 +594,7 @@ WScreen *wScreenInit(int screen_number)
 	if (!scr->wmscreen) {
 		wfatal(_("could not initialize WINGs widget set"));
 		RDestroyContext(scr->rcontext);
+	abort_no_context:
 		WMFreeArray(scr->fakeGroupLeaders);
 		wfree(scr->totalUsableArea);
 		wfree(scr->usableArea);
@@ -758,16 +764,16 @@ void wScreenRestoreState(WScreen *scr)
 {
 	WMPropList *state;
 	char *path;
+	char buf[16];
 
 	OpenRootMenu(scr, -10000, -10000, False);
-	wMenuUnmap(w_global.menu.root_menu);
+	wMenuUnmap(scr->vscr.menu.root_menu);
 
 	make_keys();
 
 	if (w_global.screen_count == 1) {
 		path = wdefaultspathfordomain("WMState");
 	} else {
-		char buf[16];
 		snprintf(buf, sizeof(buf), "WMState.%i", scr->screen);
 		path = wdefaultspathfordomain(buf);
 	}
@@ -785,19 +791,21 @@ void wScreenRestoreState(WScreen *scr)
 
 	if (!wPreferences.flags.nodock) {
 		state = WMGetFromPLDictionary(w_global.session_state, dDock);
-		dock_map(w_global.dock.dock, scr, state);
+		scr->vscr.dock.dock = dock_create(&(scr->vscr));
+		dock_map(scr->vscr.dock.dock, scr, state);
 	}
 
 	if (!wPreferences.flags.nodrawer) {
-		if (!w_global.dock.dock->on_right_side) {
+		if (!scr->vscr.dock.dock->on_right_side) {
 			/* Drawer tile was created early in wScreenInit() -> wReadDefaults(). At
 			 * that time, scr->dock was NULL and the tile was created as if we were on
 			 * the right side. If we aren't, redo it now. */
 			assert(w_global.tile.drawer);
 			RReleaseImage(w_global.tile.drawer);
-			w_global.tile.drawer = wDrawerMakeTile(w_global.tile.icon);
+			w_global.tile.drawer = wDrawerMakeTile(&(scr->vscr), w_global.tile.icon);
 		}
-		wDrawersRestoreState();
+
+		wDrawersRestoreState(&(scr->vscr));
 		wDrawersRestoreState_map(scr);
 	}
 
@@ -805,11 +813,12 @@ void wScreenRestoreState(WScreen *scr)
 	wScreenUpdateUsableArea(scr);
 }
 
-void wScreenSaveState(WScreen * scr)
+void wScreenSaveState(WScreen *scr)
 {
 	WWindow *wwin;
 	char *str;
 	WMPropList *old_state, *foo;
+	char buf[16];
 
 	make_keys();
 
@@ -830,29 +839,26 @@ void wScreenSaveState(WScreen * scr)
 
 	/* save dock state to file */
 	if (!wPreferences.flags.nodock) {
-		wDockSaveState(old_state);
+		wDockSaveState(&(scr->vscr), old_state);
 	} else {
-		if ((foo = WMGetFromPLDictionary(old_state, dDock)) != NULL) {
+		if ((foo = WMGetFromPLDictionary(old_state, dDock)) != NULL)
 			WMPutInPLDictionary(w_global.session_state, dDock, foo);
-		}
 	}
 	if (!wPreferences.flags.noclip) {
-		wClipSaveState();
+		wClipSaveState(&(scr->vscr));
 	} else {
-		if ((foo = WMGetFromPLDictionary(old_state, dClip)) != NULL) {
+		if ((foo = WMGetFromPLDictionary(old_state, dClip)) != NULL)
 			WMPutInPLDictionary(w_global.session_state, dClip, foo);
-		}
 	}
 
-	wWorkspaceSaveState(old_state);
+	wWorkspaceSaveState(&(scr->vscr), old_state);
 
 	if (!wPreferences.flags.nodrawer) {
-		wDrawersSaveState();
+		wDrawersSaveState(&(scr->vscr));
 	} else {
 		if ((foo = WMGetFromPLDictionary(old_state, dDrawers)) != NULL)
 			WMPutInPLDictionary(w_global.session_state, dDrawers, foo);
 	}
-
 
 	if (wPreferences.save_session_on_exit) {
 		wSessionSaveState(scr);
@@ -867,18 +873,18 @@ void wScreenSaveState(WScreen * scr)
 	/* clean up */
 	WMPLSetCaseSensitive(False);
 
-	wMenuSaveState();
+	wMenuSaveState(&(scr->vscr));
 
 	if (w_global.screen_count == 1) {
 		str = wdefaultspathfordomain("WMState");
 	} else {
-		char buf[16];
 		snprintf(buf, sizeof(buf), "WMState.%i", scr->screen);
 		str = wdefaultspathfordomain(buf);
 	}
-	if (!WMWritePropListToFile(w_global.session_state, str)) {
+
+	if (!WMWritePropListToFile(w_global.session_state, str))
 		werror(_("could not save session state in %s"), str);
-	}
+
 	wfree(str);
 	WMReleasePropList(old_state);
 }

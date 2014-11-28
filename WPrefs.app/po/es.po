@@ -427,7 +427,7 @@ msgstr "Modo de Foco de Teclado"
 
 #: ../../WPrefs.app/Focus.c:222
 msgid "Manual:  Click on the window to set keyboard input focus"
-msgstr "Manual: Pinchar en la ventana para enfocar."
+msgstr "Manual: Pinchar en la ventana para enfocar"
 
 #: ../../WPrefs.app/Focus.c:229
 msgid "Auto:  Set keyboard input focus to the window under the mouse pointer"
@@ -435,38 +435,32 @@ msgstr ""
 "Auto: Dar foco a la ventana bajo el puntero del ratón"
 
 #: ../../WPrefs.app/Focus.c:243
-msgid "Install colormap in the window..."
+msgid "Install colormap from the window..."
 msgstr "Instalar el mapa de colores de la ventana..."
 
 #: ../../WPrefs.app/Focus.c:248
-msgid "...that has the input focus."
-msgstr "...que tiene el foco de teclado."
+msgid "...that has the input focus"
+msgstr "...que tiene el foco de teclado"
 
 #: ../../WPrefs.app/Focus.c:253
-msgid "...that is under the mouse pointer."
-msgstr "...que está bajo el ratón."
+msgid "...that's under the mouse pointer"
+msgstr "...que está bajo el ratón"
 
 #: ../../WPrefs.app/Focus.c:262
 msgid "Automatic Window Raise Delay"
 msgstr "Retraso en el Alzado de Ventanas"
 
 #: ../../WPrefs.app/Focus.c:319 ../../WPrefs.app/MouseSettings.c:601
-msgid "msec"
-msgstr "mseg"
+msgid "ms"
+msgstr "ms"
 
 #: ../../WPrefs.app/Focus.c:336
-msgid ""
-"Do not let applications receive\n"
-"the click used to focus windows."
-msgstr "No permitir a las aplicaciones recibir|n"
-"el click usado para darle foco."
+msgid "Do not let applications receive the click used to focus windows"
+msgstr "No permitir a las aplicaciones recibir el click usado para darle foco"
 
 #: ../../WPrefs.app/Focus.c:342
-msgid ""
-"Automatically focus new\n"
-"windows."
-msgstr "Dar foco automáticamente a las\n"
-"ventanas nuevas."
+msgid "Automatically focus new windows"
+msgstr "Dar foco automáticamente a las ventanas nuevas"
 
 #: ../../WPrefs.app/Focus.c:363
 msgid "Window Focus Preferences"
@@ -1587,12 +1581,8 @@ msgid "internal help"
 msgstr "ayuda interna"
 
 #: ../../WPrefs.app/Preferences.c:292
-msgid ""
-"Raise window when switching\n"
-"focus with keyboard."
-msgstr ""
-"Alzar ventana cuando se cambia\n"
-"el foco con teclado."
+msgid "Raise window when switching focus with keyboard"
+msgstr "Alzar ventana cuando se cambia el foco con teclado"
 
 #: ../../WPrefs.app/Preferences.c:298
 msgid ""
@@ -2013,28 +2003,20 @@ msgid "Workspace Navigation"
 msgstr "Navegación de Áreas"
 
 #: ../../WPrefs.app/Workspace.c:183
-msgid ""
-"wrap to the first workspace after the\n"
-"last workspace."
-msgstr ""
-"ir para la primera área de trabajo\n"
-"después de la última."
+msgid "Wrap to the first workspace from the last workspace"
+msgstr "Ir para la primera área de trabajo después de la última"
 
 #: ../../WPrefs.app/Workspace.c:205
-msgid "switch workspaces while dragging windows."
-msgstr "mover ventanas entre áreas de trabajo."
+msgid "Switch workspaces while dragging windows"
+msgstr "Mover ventanas entre áreas de trabajo"
 
 #: ../../WPrefs.app/Workspace.c:227
-msgid "automatically create new workspaces."
-msgstr "crear nuevas áreas de trabajo automáticamente."
+msgid "Automatically create new workspaces"
+msgstr "Crear nuevas áreas de trabajo automáticamente"
 
 #: ../../WPrefs.app/Workspace.c:250
-msgid ""
-"Position of workspace\n"
-"name display"
-msgstr ""
-"Posición del nombre del\n"
-"área de trabajo"
+msgid "Position of workspace name display"
+msgstr "Posición del nombre del área de trabajo"
 
 #: ../../WPrefs.app/Workspace.c:269
 msgid "Disable"
@@ -2146,15 +2128,6 @@ msgstr "no se pudo iniicalizar la aplicación"
 
 msgid "Disable cycling color highlighting of icons."
 msgstr "Deshabilitar cambio de color cíclico de los iconos."
-
-msgid ""
-"Set keyboard input focus to\n"
-"the window under the mouse pointer,\n"
-"including the root window."
-msgstr ""
-"Dar foco a la ventana\n"
-"bajo el puntero del ratón,\n"
-"incluyendo la ventana fondo."
 
 msgid "Click window to focus"
 msgstr "Pinchar la ventana"

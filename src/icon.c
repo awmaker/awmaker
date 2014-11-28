@@ -569,14 +569,16 @@ void set_icon_apercu(WIcon *icon, RImage *image)
 	RImage *scaled_apercu;
 	WScreen *scr = icon->core->screen_ptr;
 
-	scaled_apercu = RSmoothScaleImage(image, (wPreferences.icon_size - 1 - APERCU_BORDER) * wPreferences.apercu_size,
-						(wPreferences.icon_size - 1 - APERCU_BORDER) * wPreferences.apercu_size);
+	scaled_apercu = RSmoothScaleImage(image, wPreferences.apercu_size - 2 * APERCU_BORDER,
+					  wPreferences.apercu_size - 2 * APERCU_BORDER);
 
 	if (RConvertImage(scr->rcontext, scaled_apercu, &tmp)) {
 		if (icon->apercu != None)
 			XFreePixmap(dpy, icon->apercu);
+
 		icon->apercu = tmp;
 	}
+
 	RReleaseImage(scaled_apercu);
 }
 
@@ -837,7 +839,7 @@ static void miniwindowMouseDown(WObjDescriptor *desc, XEvent *event)
 		OpenMiniwindowMenu(wwin, event->xbutton.x_root, event->xbutton.y_root);
 
 		/* allow drag select of menu */
-		desc = &w_global.menu.window_menu->menu->descriptor;
+		desc = &wwin->screen_ptr->vscr.menu.window_menu->menu->descriptor;
 		event->xbutton.send_event = True;
 		(*desc->handle_mousedown) (desc, event);
 

@@ -50,6 +50,78 @@ typedef struct WReservedArea {
     struct WReservedArea *next;
 } WReservedArea;
 
+/* This virtual screen includes all items located in the screen */
+typedef struct virtual_screen {
+	int window_count;	       /* number of windows in window_list */
+
+        /* Clip & Dock & Drawer related */
+	int global_icon_count;         /* How many global icons do we have */
+	struct WDock *last_dock;
+
+	/* Menu related */
+	struct {
+		struct WMenu *root_menu;   /* root window menu */
+		struct WMenu *switch_menu; /* window list menu */
+		struct WMenu *icon_menu;   /* icon/appicon menu */
+		struct WMenu *window_menu; /* window command menu */
+
+		struct {
+			unsigned int root_menu_changed_shortcuts:1;
+			unsigned int added_workspace_menu:1; /* See w_global.workspace */
+			unsigned int added_window_menu:1;
+		} flags;
+	} menu;
+
+	/* Workspace related */
+	struct {
+		struct WWorkspace **array; /* data for the workspaces */
+
+		int count;	           /* number of workspaces */
+		int current;	           /* current workspace number */
+		int last_used;	           /* last used workspace number */
+
+		WMFont *font_for_name;     /* used during workspace switch */
+
+		/*
+		 * Ignore Workspace Change:
+		 * this variable is used to prevent workspace switch while certain
+		 * operations are ongoing.
+		 */
+		Bool ignore_change;
+
+		/* Menus */
+		struct WMenu *menu;     /* workspace operation */
+		struct WMenu *submenu;  /* workspace list for window_menu */
+	} workspace;
+
+	/* Clip related */
+	struct {
+		WAppIconChain *global_icons;  /* Omnipresent icons chain in clip */
+
+		struct WMenu *menu;           /* Menu for clips */
+		struct WMenu *submenu;        /* Workspace list for clips */
+		struct WMenu *opt_menu;       /* Options for Clip */
+		struct WMenu *ws_menu;        /* workspace menu for clip */
+	} clip;
+
+	/* Dock related */
+	struct {
+		struct WDock *dock;            /* Window Maker Dock. */
+		struct WMenu *pos_menu;        /* Menu for position of the dock */
+		struct WMenu *dock_menu;       /* Dock menu */
+		struct WMenu *drawer_menu;     /* Menu for the drawers */
+		struct WMenu *drawer_opt_menu; /* Options for drawers */
+	} dock;
+
+	/* Drawers related */
+	struct {
+		struct WDrawerChain *drawers;    /* List of drawers */
+		int drawer_count;                /* Nb of drawers that */
+		struct WDock *attracting_drawer; /* The drawer that auto-attracts icons,
+                                                  * or NULL */
+	} drawer;
+} virtual_screen;
+
 /* each WScreen is saved into a context associated with it's root window */
 typedef struct _WScreen {
     int	screen;			       /* screen number */
@@ -97,8 +169,6 @@ typedef struct _WScreen {
                                         * is ordered from the topmost to
                                         * the lowest window
                                         */
-
-    int window_count;		       /* number of windows in window_list */
 
     WReservedArea *reservedAreas;      /* used to build totalUsableArea */
 
@@ -241,9 +311,9 @@ typedef struct _WScreen {
         unsigned int jump_back_pending:1;
         unsigned int ignore_focus_events:1;
     } flags;
+
+    struct virtual_screen vscr;
 } WScreen;
-
-
 
 WScreen *wScreenInit(int screen_number);
 void wScreenSaveState(WScreen *scr);

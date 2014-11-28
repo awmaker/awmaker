@@ -60,8 +60,8 @@ typedef struct WDock {
     struct WDDomain *defaults;
 } WDock;
 
-WDock *clip_create(void);
-WDock *dock_create(void);
+WDock *clip_create(virtual_screen *vscr);
+WDock *dock_create(virtual_screen *vscr);
 void clip_map(WDock *dock, WScreen *scr, WMPropList *state);
 void dock_map(WDock *dock, WScreen *scr, WMPropList *dock_state);
 
@@ -74,7 +74,7 @@ void wDockShowIcons(WDock *dock);
 void wDockLower(WDock *dock);
 void wDockRaise(WDock *dock);
 void wDockRaiseLower(WDock *dock);
-void wDockSaveState(WMPropList *old_state);
+void wDockSaveState(virtual_screen *vscr, WMPropList *old_state);
 
 Bool wDockAttachIcon(WDock *dock, WAppIcon *icon, int x, int y, Bool update_icon);
 Bool wDockSnapIcon(WDock *dock, WAppIcon *icon, int req_x, int req_y,
@@ -98,19 +98,19 @@ int wDockReceiveDNDDrop(WScreen *scr, XEvent *event);
 #endif
 
 void wClipIconPaint(void);
-void wClipSaveState(void);
-WMPropList *wClipSaveWorkspaceState(int workspace);
+void wClipSaveState(virtual_screen *vscr);
+WMPropList *wClipSaveWorkspaceState(virtual_screen *vscr, int workspace);
 
 void wDrawerIconPaint(WAppIcon *dicon);
-void wDrawersSaveState(void);
-void wDrawersRestoreState(void);
+void wDrawersSaveState(virtual_screen *vscr);
+void wDrawersRestoreState(virtual_screen *vscr);
 void wDrawersRestoreState_map(WScreen *scr);
 int wIsADrawer(WAppIcon *aicon);
 
-void wClipUpdateForWorkspaceChange(int workspace);
+void wClipUpdateForWorkspaceChange(virtual_screen *vscr, int workspace);
 
 RImage *wClipMakeTile(RImage *normalTile);
-RImage *wDrawerMakeTile(RImage *normalTile);
+RImage *wDrawerMakeTile(virtual_screen *vscr, RImage *normalTile);
 
 #define WO_FAILED          0
 #define WO_NOT_APPLICABLE  1
@@ -124,8 +124,4 @@ typedef enum
 } dockPosition;
 
 int wClipMakeIconOmnipresent(WAppIcon *aicon, int omnipresent);
-
-WMenu *makeDockPositionMenu(void);
-WMenu *makeClipOptionsMenu(void);
-WMenu *dock_menu_create(void);
 #endif

@@ -28,10 +28,12 @@
 #include <string.h>
 #include <strings.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <stdarg.h>
 #include <pwd.h>
 #include <math.h>
 #include <time.h>
+#include <errno.h>
 
 #include <X11/XKBlib.h>
 
@@ -49,6 +51,8 @@
 #include "dialog.h"
 #include "xutil.h"
 #include "xmodifier.h"
+#include "main.h"
+#include "event.h"
 
 
 #define ICON_SIZE wPreferences.icon_size
@@ -511,9 +515,6 @@ char *ExpandOptions(WScreen *scr, const char *cmdline)
 	char *out, *nout;
 	char *selection = NULL;
 	char *user_input = NULL;
-#ifdef XDND
-	char *dropped_thing = NULL;
-#endif
 	char tmpbuf[TMPBUFSIZE];
 	int slen;
 
@@ -574,7 +575,7 @@ char *ExpandOptions(WScreen *scr, const char *cmdline)
 					olen += slen;
 					nout = realloc(out, olen);
 					if (!nout) {
-						wwarning(_("out of memory during expansion of \"%%w\""));
+						wwarning(_("out of memory during expansion of '%s' for command \"%s\""), "%w", cmdline);
 						goto error;
 					}
 					out = nout;
@@ -586,12 +587,12 @@ char *ExpandOptions(WScreen *scr, const char *cmdline)
 				break;
 
 			case 'W':
-				snprintf(tmpbuf, sizeof(tmpbuf), "0x%x", (unsigned int)w_global.workspace.current + 1);
+				snprintf(tmpbuf, sizeof(tmpbuf), "0x%x", (unsigned int) scr->vscr.workspace.current + 1);
 				slen = strlen(tmpbuf);
 				olen += slen;
 				nout = realloc(out, olen);
 				if (!nout) {
-					wwarning(_("out of memory during expansion of \"%%W\""));
+					wwarning(_("out of memory during expansion of '%s' for command \"%s\""), "%W", cmdline);
 					goto error;
 				}
 				out = nout;
@@ -608,7 +609,7 @@ char *ExpandOptions(WScreen *scr, const char *cmdline)
 					olen += slen;
 					nout = realloc(out, olen);
 					if (!nout) {
-						wwarning(_("out of memory during expansion of \"%%a\""));
+						wwarning(_("out of memory during expansion of '%s' for command \"%s\""), "%a", cmdline);
 						goto error;
 					}
 					out = nout;
@@ -623,22 +624,19 @@ char *ExpandOptions(WScreen *scr, const char *cmdline)
 
 #ifdef XDND
 			case 'd':
-				if (scr->xdestring) {
-					dropped_thing = wstrdup(scr->xdestring);
-				}
-				if (!dropped_thing) {
+				if (!scr->xdestring) {
 					scr->flags.dnd_data_convertion_status = 1;
 					goto error;
 				}
-				slen = strlen(dropped_thing);
+				slen = strlen(scr->xdestring);
 				olen += slen;
 				nout = realloc(out, olen);
 				if (!nout) {
-					wwarning(_("out of memory during expansion of \"%%d\""));
+					wwarning(_("out of memory during expansion of '%s' for command \"%s\""), "%d", cmdline);
 					goto error;
 				}
 				out = nout;
-				strcat(out, dropped_thing);
+				strcat(out, scr->xdestring);
 				optr += slen;
 				break;
 #endif				/* XDND */
@@ -655,7 +653,7 @@ char *ExpandOptions(WScreen *scr, const char *cmdline)
 				olen += slen;
 				nout = realloc(out, olen);
 				if (!nout) {
-					wwarning(_("out of memory during expansion of \"%%s\""));
+					wwarning(_("out of memory during expansion of '%s' for command \"%s\""), "%s", cmdline);
 					goto error;
 				}
 				out = nout;
@@ -761,21 +759,43 @@ char *GetShortcutString(const char *shortcut)
 
 char *GetShortcutKey(WShortKey key)
 {
-	char *tmp = NULL;
-	char *k = XKeysymToString(XkbKeycodeToKeysym(dpy, key.keycode, 0, 0));
-	if (!k) return NULL;
+	const char *key_name;
+	char buffer[256];
+	char *wr;
 
-	char **m = wPreferences.modifier_labels;
-	if (key.modifier & ControlMask) tmp = wstrappend(tmp, m[1] ? m[1] : "Control+");
-	if (key.modifier & ShiftMask)   tmp = wstrappend(tmp, m[0] ? m[0] : "Shift+");
-	if (key.modifier & Mod1Mask)    tmp = wstrappend(tmp, m[2] ? m[2] : "Mod1+");
-	if (key.modifier & Mod2Mask)    tmp = wstrappend(tmp, m[3] ? m[3] : "Mod2+");
-	if (key.modifier & Mod3Mask)    tmp = wstrappend(tmp, m[4] ? m[4] : "Mod3+");
-	if (key.modifier & Mod4Mask)    tmp = wstrappend(tmp, m[5] ? m[5] : "Mod4+");
-	if (key.modifier & Mod5Mask)    tmp = wstrappend(tmp, m[6] ? m[6] : "Mod5+");
-	tmp = wstrappend(tmp, k);
+	void append_string(const char *string)
+	{
+		while (*string) {
+			if (wr >= buffer + sizeof(buffer) - 1)
+				break;
+			*wr++ = *string++;
+		}
+	}
 
-	return GetShortcutString(tmp);
+	void append_modifier(int modifier_index, const char *fallback_name)
+	{
+		if (wPreferences.modifier_labels[modifier_index])
+			append_string(wPreferences.modifier_labels[modifier_index]);
+		else
+			append_string(fallback_name);
+	}
+
+	key_name = XKeysymToString(XkbKeycodeToKeysym(dpy, key.keycode, 0, 0));
+	if (!key_name)
+		return NULL;
+
+	wr = buffer;
+	if (key.modifier & ControlMask) append_modifier(1, "Control+");
+	if (key.modifier & ShiftMask)   append_modifier(0, "Shift+");
+	if (key.modifier & Mod1Mask)    append_modifier(2, "Mod1+");
+	if (key.modifier & Mod2Mask)    append_modifier(3, "Mod2+");
+	if (key.modifier & Mod3Mask)    append_modifier(4, "Mod3+");
+	if (key.modifier & Mod4Mask)    append_modifier(5, "Mod4+");
+	if (key.modifier & Mod5Mask)    append_modifier(6, "Mod5+");
+	append_string(key_name);
+	*wr = '\0';
+
+	return GetShortcutString(buffer);
 }
 
 char *EscapeWM_CLASS(const char *name, const char *class)
@@ -836,16 +856,14 @@ char *EscapeWM_CLASS(const char *name, const char *class)
 static void UnescapeWM_CLASS(const char *str, char **name, char **class)
 {
 	int i, j, k, dot;
+	int length_of_name;
 
 	j = strlen(str);
-	*name = wmalloc(j);
-	**name = 0;
-	*class = wmalloc(j);
-	**class = 0;
 
 	/* separate string in 2 parts */
+	length_of_name = 0;
 	dot = -1;
-	for (i = 0; i < j; i++) {
+	for (i = 0; i < j; i++, length_of_name++) {
 		if (str[i] == '\\') {
 			i++;
 			continue;
@@ -855,32 +873,104 @@ static void UnescapeWM_CLASS(const char *str, char **name, char **class)
 		}
 	}
 
-	/* unescape strings */
-	for (i = 0, k = 0; i < dot; i++) {
-		if (str[i] == '\\') {
-			continue;
-		} else {
-			(*name)[k++] = str[i];
+	/* unescape the name */
+	if (length_of_name > 0) {
+		*name = wmalloc(length_of_name + 1);
+		for (i = 0, k = 0; i < dot; i++) {
+			if (str[i] != '\\')
+				(*name)[k++] = str[i];
 		}
-	}
-	(*name)[k] = 0;
-
-	for (i = dot + 1, k = 0; i < j; i++) {
-		if (str[i] == '\\') {
-			continue;
-		} else {
-			(*class)[k++] = str[i];
-		}
-	}
-	(*class)[k] = 0;
-
-	if (!*name) {
-		wfree(*name);
+		(*name)[k] = '\0';
+	} else {
 		*name = NULL;
 	}
-	if (!*class) {
-		wfree(*class);
+
+	/* unescape the class */
+	if (dot < j-1) {
+		*class = wmalloc(j - (dot + 1) + 1);
+		for (i = dot + 1, k = 0; i < j; i++) {
+			if (str[i] != '\\')
+				(*class)[k++] = str[i];
+		}
+		(*class)[k] = 0;
+	} else {
 		*class = NULL;
+	}
+}
+
+static void track_bg_helper_death(pid_t pid, unsigned int status, void *client_data)
+{
+	WScreen *scr = (WScreen *) client_data;
+
+	/* Parameter not used, but tell the compiler that it is ok */
+	(void) pid;
+	(void) status;
+
+	close(scr->helper_fd);
+	scr->helper_fd = 0;
+	scr->helper_pid = 0;
+	scr->flags.backimage_helper_launched = 0;
+}
+
+Bool start_bg_helper(WScreen *scr)
+{
+	pid_t pid;
+	int filedes[2];
+
+	if (pipe(filedes) < 0) {
+		werror(_("%s failed, can't set workspace specific background image (%s)"),
+		       "pipe()", strerror(errno));
+		return False;
+	}
+
+	pid = fork();
+	if (pid < 0) {
+		werror(_("%s failed, can't set workspace specific background image (%s)"),
+		       "fork()", strerror(errno));
+		close(filedes[0]);
+		close(filedes[1]);
+		return False;
+
+	} else if (pid == 0) {
+		const char *dither;
+
+		/* We don't need this side of the pipe in the child process */
+		close(filedes[1]);
+
+		SetupEnvironment(scr);
+
+		close(STDIN_FILENO);
+		if (dup2(filedes[0], STDIN_FILENO) < 0) {
+			werror(_("%s failed, can't set workspace specific background image (%s)"),
+			       "dup2()", strerror(errno));
+			exit(1);
+		}
+		close(filedes[0]);
+
+		dither = wPreferences.no_dithering ? "-m" : "-d";
+		if (wPreferences.smooth_workspace_back)
+			execlp("wmsetbg", "wmsetbg", "-helper", "-S", dither, NULL);
+		else
+			execlp("wmsetbg", "wmsetbg", "-helper", dither, NULL);
+
+		werror(_("could not execute \"%s\": %s"), "wmsetbg", strerror(errno));
+		exit(1);
+
+	} else {
+		/* We don't need this side of the pipe in the parent process */
+		close(filedes[0]);
+
+		if (fcntl(filedes[1], F_SETFD, FD_CLOEXEC) < 0)
+			wwarning(_("could not set close-on-exec flag for bg_helper's communication file handle (%s)"),
+			         strerror(errno));
+
+		scr->helper_fd = filedes[1];
+		scr->helper_pid = pid;
+		scr->flags.backimage_helper_launched = 1;
+
+		wAddDeathHandler(pid, track_bg_helper_death, scr);
+
+		return True;
 	}
 }
 
