@@ -385,7 +385,7 @@ Bool wRootMenuPerformShortcut(XEvent * event)
 	modifiers = event->xkey.state & w_global.shortcut.modifiers_mask;
 
 	for (ptr = shortcutList; ptr != NULL; ptr = ptr->next) {
-		if (ptr->keycode == 0 || ptr->menu->menu->screen_ptr != scr)
+		if (ptr->keycode == 0 || ptr->menu->menu->vscr->screen_ptr != scr)
 			continue;
 
 		if (ptr->keycode == event->xkey.keycode && ptr->modifier == modifiers) {
@@ -415,7 +415,7 @@ void wRootMenuBindShortcuts(Window window)
 	}
 }
 
-static void rebindKeygrabs(WScreen * scr)
+static void rebindKeygrabs(WScreen *scr)
 {
 	WWindow *wwin;
 
@@ -449,7 +449,7 @@ static void removeShortcutsForMenu(WMenu *menu)
 	}
 
 	shortcutList = newList;
-	menu->menu->screen_ptr->vscr->menu.flags.root_menu_changed_shortcuts = 1;
+	menu->menu->vscr->menu.flags.root_menu_changed_shortcuts = 1;
 }
 
 static Bool addShortcut(const char *file, const char *shortcutDefinition, WMenu *menu, WMenuEntry *entry)
@@ -505,7 +505,7 @@ static Bool addShortcut(const char *file, const char *shortcutDefinition, WMenu 
 	ptr->next = shortcutList;
 	shortcutList = ptr;
 
-	menu->menu->screen_ptr->vscr->menu.flags.root_menu_changed_shortcuts = 1;
+	menu->menu->vscr->menu.flags.root_menu_changed_shortcuts = 1;
 
 	return True;
 }

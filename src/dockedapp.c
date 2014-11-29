@@ -223,7 +223,7 @@ static void panelBtnCallback(WMWidget *self, void *data)
 void ShowDockAppSettingsPanel(WAppIcon *aicon)
 {
 	AppSettingsPanel *panel;
-	WScreen *scr = aicon->icon->core->screen_ptr;
+	WScreen *scr = aicon->icon->core->vscr->screen_ptr;
 	Window parent;
 	WMFont *font;
 	int x, y;

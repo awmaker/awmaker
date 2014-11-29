@@ -466,12 +466,13 @@ static void showBalloon(WScreen *scr)
 static void frameBalloon(WObjDescriptor *object)
 {
 	WFrameWindow *fwin = (WFrameWindow *) object->parent;
-	WScreen *scr = fwin->core->screen_ptr;
+	WScreen *scr = fwin->core->vscr->screen_ptr;
 
 	if (fwin->titlebar != object->self || !fwin->flags.is_client_window_frame) {
 		wBalloonHide(scr);
 		return;
 	}
+
 	if (fwin->title && fwin->flags.incomplete_title) {
 		scr->balloon->h = (fwin->titlebar ? fwin->titlebar->height : 0);
 		scr->balloon->text = wstrdup(fwin->title);
@@ -483,12 +484,13 @@ static void frameBalloon(WObjDescriptor *object)
 static void miniwindowBalloon(WObjDescriptor *object)
 {
 	WIcon *icon = (WIcon *) object->parent;
-	WScreen *scr = icon->core->screen_ptr;
+	WScreen *scr = icon->core->vscr->screen_ptr;
 
 	if (!icon->icon_name) {
 		wBalloonHide(scr);
 		return;
 	}
+
 	scr->balloon->h = icon->core->height;
 	scr->balloon->text = wstrdup(icon->icon_name);
 	scr->balloon->apercu = icon->apercu;
@@ -506,13 +508,14 @@ static void miniwindowBalloon(WObjDescriptor *object)
 static void appiconBalloon(WObjDescriptor *object)
 {
 	WAppIcon *aicon = (WAppIcon *) object->parent;
-	WScreen *scr = aicon->icon->core->screen_ptr;
+	virtual_screen *vscr = aicon->icon->core->vscr;
+	WScreen *scr = vscr->screen_ptr;
 	char *tmp;
 
 	/* Show balloon if it is the Clip and the workspace name is > 5 chars */
 	if (object->parent == w_global.clip.icon) {
-		if (strlen(scr->vscr->workspace.array[scr->vscr->workspace.current]->name) > 5) {
-			scr->balloon->text = wstrdup(scr->vscr->workspace.array[scr->vscr->workspace.current]->name);
+		if (strlen(vscr->workspace.array[vscr->workspace.current]->name) > 5) {
+			scr->balloon->text = wstrdup(vscr->workspace.array[vscr->workspace.current]->name);
 		} else {
 			wBalloonHide(scr);
 			return;
@@ -564,8 +567,8 @@ static void appiconBalloon(WObjDescriptor *object)
 		wBalloonHide(scr);
 		return;
 	}
-	scr->balloon->h = aicon->icon->core->height - 2;
 
+	scr->balloon->h = aicon->icon->core->height - 2;
 	scr->balloon->objectWindow = aicon->icon->core->window;
 	if ((scr->balloon->prevType == object->parent_type || scr->balloon->prevType == WCLASS_MINIWINDOW)
 	    && scr->balloon->ignoreTimer) {

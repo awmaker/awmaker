@@ -223,7 +223,7 @@ static int matchWindow(const void *item, const void *cdata)
 
 static void killCallback(WMenu *menu, WMenuEntry *entry)
 {
-	WScreen *scr = menu->menu->screen_ptr;
+	WScreen *scr = menu->menu->vscr->screen_ptr;
 	WAppIcon *icon;
 	WFakeGroupLeader *fPtr;
 	char *buffer, *shortname, **argv;
@@ -324,7 +324,7 @@ static WMArray *getSelected(WDock *dock)
 static void paintClipButtons(WAppIcon *clipIcon, Bool lpushed, Bool rpushed)
 {
 	Window win = clipIcon->icon->core->window;
-	WScreen *scr = clipIcon->icon->core->screen_ptr;
+	WScreen *scr = clipIcon->icon->core->vscr->screen_ptr;
 	XPoint p[4];
 	int pt = CLIP_BUTTON_SIZE * ICON_SIZE / 64;
 	int tp = ICON_SIZE - pt;
@@ -461,6 +461,7 @@ static void omnipresentCallback(WMenu *menu, WMenuEntry *entry)
 		else if (aicon->icon->selected)
 			wIconSelect(aicon->icon);
 	}
+
 	WMFreeArray(selectedIcons);
 
 	/* If the screen is not painted, then we cannot show the dialog */
@@ -817,7 +818,7 @@ static void hideCallback(WMenu *menu, WMenuEntry *entry)
 	wapp = wApplicationOf(btn->icon->owner->main_window);
 
 	if (wapp->flags.hidden) {
-		wWorkspaceChange(btn->icon->core->screen_ptr, wapp->last_workspace);
+		wWorkspaceChange(btn->icon->core->vscr->screen_ptr, wapp->last_workspace);
 		wUnhideApplication(wapp, False, False);
 	} else {
 		wHideApplication(wapp);
@@ -840,7 +841,7 @@ static void unhideHereCallback(WMenu *menu, WMenuEntry *entry)
 static void switchWSCommand(WMenu *menu, WMenuEntry *entry)
 {
 	WAppIcon *btn, *icon = (WAppIcon *) entry->clientdata;
-	WScreen *scr = icon->icon->core->screen_ptr;
+	virtual_screen *vscr = icon->icon->core->vscr;
 	WDock *src, *dest;
 	WMArray *selectedIcons;
 	int x, y;
@@ -848,11 +849,11 @@ static void switchWSCommand(WMenu *menu, WMenuEntry *entry)
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) menu;
 
-	if (entry->order == scr->vscr->workspace.current)
+	if (entry->order == vscr->workspace.current)
 		return;
 
 	src = icon->dock;
-	dest = scr->vscr->workspace.array[entry->order]->clip;
+	dest = vscr->workspace.array[entry->order]->clip;
 
 	selectedIcons = getSelected(src);
 
@@ -877,7 +878,7 @@ static void switchWSCommand(WMenu *menu, WMenuEntry *entry)
 
 static void launchDockedApplication(WAppIcon *btn, Bool withSelection)
 {
-	WScreen *scr = btn->icon->core->screen_ptr;
+	virtual_screen *vscr = btn->icon->core->vscr;
 
 	if (!btn->launching &&
 	    ((!withSelection && btn->command != NULL) || (withSelection && btn->paste_command != NULL))) {
@@ -897,7 +898,7 @@ static void launchDockedApplication(WAppIcon *btn, Bool withSelection)
 		}
 		btn->drop_launch = 0;
 		btn->paste_launch = withSelection;
-		scr->vscr->last_dock = btn->dock;
+		vscr->last_dock = btn->dock;
 		btn->pid = execCommand(btn, (withSelection ? btn->paste_command : btn->command), NULL);
 		if (btn->pid > 0) {
 			if (btn->buggy_app) {
@@ -1457,7 +1458,7 @@ void dock_map(WDock *dock, virtual_screen *vscr, WMPropList *state)
 	if (!scr)
 		return;
 
-	wcore_map_toplevel(btn->icon->core, scr, 0, 0, 0, scr->w_depth,
+	wcore_map_toplevel(btn->icon->core, vscr, 0, 0, 0, scr->w_depth,
 			   scr->w_visual, scr->w_colormap, scr->white_pixel);
 
 	if (wPreferences.flags.clip_merged_in_dock)
@@ -1529,10 +1530,9 @@ void clip_icon_create(void)
 
 void clip_icon_map(virtual_screen *vscr)
 {
-	WScreen *scr = vscr->screen_ptr;
-
-	wcore_map_toplevel(w_global.clip.icon->icon->core, scr, 0, 0, 0, scr->w_depth,
-			   scr->w_visual, scr->w_colormap, scr->white_pixel);
+	wcore_map_toplevel(w_global.clip.icon->icon->core, vscr, 0, 0, 0,
+			   vscr->screen_ptr->w_depth, vscr->screen_ptr->w_visual,
+			   vscr->screen_ptr->w_colormap, vscr->screen_ptr->white_pixel);
 
 	map_icon_image(w_global.clip.icon->icon);
 
@@ -1652,14 +1652,10 @@ WDock *drawer_create(virtual_screen *vscr, const char *name)
 void drawer_map(WDock *dock, virtual_screen *vscr)
 {
 	WAppIcon *btn = dock->icon_array[0];
-	WScreen *scr = vscr->screen_ptr;
 
-	/* If not screen mapped, return */
-	if (!scr)
-		return;
-
-	wcore_map_toplevel(btn->icon->core, scr, 0, 0, 0, scr->w_depth,
-			   scr->w_visual, scr->w_colormap, scr->white_pixel);
+	wcore_map_toplevel(btn->icon->core, vscr, 0, 0, 0,
+			   vscr->screen_ptr->w_depth, vscr->screen_ptr->w_visual,
+			   vscr->screen_ptr->w_colormap, vscr->screen_ptr->white_pixel);
 
 	map_icon_image(btn->icon);
 
@@ -1724,8 +1720,9 @@ void wDockDestroy(WDock *dock)
 void wClipIconPaint(void)
 {
 	WAppIcon *aicon = w_global.clip.icon;
-	WScreen *scr = aicon->icon->core->screen_ptr;
-	WWorkspace *workspace = scr->vscr->workspace.array[scr->vscr->workspace.current];
+	virtual_screen *vscr = aicon->icon->core->vscr;
+	WScreen *scr = vscr->screen_ptr;
+	WWorkspace *workspace = vscr->workspace.array[vscr->workspace.current];
 	WMColor *color;
 	Window win = aicon->icon->core->window;
 	int length, nlength;
@@ -1737,7 +1734,7 @@ void wClipIconPaint(void)
 	length = strlen(workspace->name);
 	ws_name = wmalloc(length + 1);
 	snprintf(ws_name, length + 1, "%s", workspace->name);
-	snprintf(ws_number, sizeof(ws_number), "%i", scr->vscr->workspace.current + 1);
+	snprintf(ws_number, sizeof(ws_number), "%i", vscr->workspace.current + 1);
 	nlength = strlen(ws_number);
 
 	if (wPreferences.flags.noclip || !workspace->clip->collapsed)
@@ -2221,7 +2218,7 @@ static void set_attacheddocks_map(virtual_screen *vscr, WDock *dock)
 	for (; i < dock->max_icons; i++) {
 		aicon = dock->icon_array[i];
 		if (aicon) {
-			appicon_map(aicon, vscr->screen_ptr);
+			appicon_map(aicon, vscr);
 
 			if (dock->lowered)
 				ChangeStackingLevel(aicon->icon->core, WMNormalLevel);
@@ -3466,7 +3463,7 @@ static void swapDock(WDock *dock)
 
 static pid_t execCommand(WAppIcon *btn, const char *command, WSavedState *state)
 {
-	WScreen *scr = btn->icon->core->screen_ptr;
+	WScreen *scr = btn->icon->core->vscr->screen_ptr;
 	pid_t pid;
 	char **argv;
 	int argc;
@@ -4496,7 +4493,8 @@ static void iconMouseDown(WObjDescriptor *desc, XEvent *event)
 {
 	WAppIcon *aicon = desc->parent;
 	WDock *dock = aicon->dock;
-	WScreen *scr = aicon->icon->core->screen_ptr;
+	virtual_screen *vscr = aicon->icon->core->vscr;
+	WScreen *scr = vscr->screen_ptr;
 
 	if (aicon->editing || WCHECK_STATE(WSTATE_MODAL))
 		return;
@@ -4611,7 +4609,7 @@ static void clipEnterNotify(WObjDescriptor *desc, XEvent *event)
 {
 	WAppIcon *btn = (WAppIcon *) desc->parent;
 	WDock *dock, *tmp;
-	WScreen *scr;
+	virtual_screen *vscr;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) event;
@@ -4621,14 +4619,14 @@ static void clipEnterNotify(WObjDescriptor *desc, XEvent *event)
 	if (desc->parent_type != WCLASS_DOCK_ICON)
 		return;
 
-	scr = btn->icon->core->screen_ptr;
+	vscr = btn->icon->core->vscr;
 	dock = btn->dock;
 
 	if (dock == NULL)
 		return;
 
 	/* The auto raise/lower code */
-	tmp = (dock->type == WM_DRAWER ? scr->vscr->dock.dock : dock);
+	tmp = (dock->type == WM_DRAWER ? vscr->dock.dock : dock);
 	if (tmp->auto_lower_magic) {
 		WMDeleteTimerHandler(tmp->auto_lower_magic);
 		tmp->auto_lower_magic = NULL;
@@ -4761,18 +4759,18 @@ static void clipAutoRaise(void *cdata)
 
 static Bool iconCanBeOmnipresent(WAppIcon *aicon)
 {
-	WScreen *scr = aicon->icon->core->screen_ptr;
+	virtual_screen *vscr = aicon->icon->core->vscr;
 	WDock *clip;
 	WAppIcon *btn;
 	int i, j;
 
-	for (i = 0; i < scr->vscr->workspace.count; i++) {
-		clip = scr->vscr->workspace.array[i]->clip;
+	for (i = 0; i < vscr->workspace.count; i++) {
+		clip = vscr->workspace.array[i]->clip;
 
 		if (clip == aicon->dock)
 			continue;
 
-		if (clip->icon_count + scr->vscr->global_icon_count >= clip->max_icons)
+		if (clip->icon_count + vscr->global_icon_count >= clip->max_icons)
 			return False;	/* Clip is full in some workspace */
 
 		for (j = 0; j < clip->max_icons; j++) {
@@ -4787,11 +4785,11 @@ static Bool iconCanBeOmnipresent(WAppIcon *aicon)
 
 int wClipMakeIconOmnipresent(WAppIcon *aicon, int omnipresent)
 {
-	WScreen *scr = aicon->icon->core->screen_ptr;
+	virtual_screen *vscr = aicon->icon->core->vscr;
 	WAppIconChain *new_entry, *tmp, *tmp1;
 	int status = WO_SUCCESS;
 
-	if ((scr->vscr->dock.dock && aicon->dock == scr->vscr->dock.dock) || aicon == w_global.clip.icon)
+	if ((vscr->dock.dock && aicon->dock == vscr->dock.dock) || aicon == w_global.clip.icon)
 		return WO_NOT_APPLICABLE;
 
 	if (aicon->omnipresent == omnipresent)
@@ -4802,28 +4800,28 @@ int wClipMakeIconOmnipresent(WAppIcon *aicon, int omnipresent)
 			aicon->omnipresent = 1;
 			new_entry = wmalloc(sizeof(WAppIconChain));
 			new_entry->aicon = aicon;
-			new_entry->next = scr->vscr->clip.global_icons;
-			scr->vscr->clip.global_icons = new_entry;
-			scr->vscr->global_icon_count++;
+			new_entry->next = vscr->clip.global_icons;
+			vscr->clip.global_icons = new_entry;
+			vscr->global_icon_count++;
 		} else {
 			aicon->omnipresent = 0;
 			status = WO_FAILED;
 		}
 	} else {
 		aicon->omnipresent = 0;
-		if (aicon == scr->vscr->clip.global_icons->aicon) {
-			tmp = scr->vscr->clip.global_icons->next;
-			wfree(scr->vscr->clip.global_icons);
-			scr->vscr->clip.global_icons = tmp;
-			scr->vscr->global_icon_count--;
+		if (aicon == vscr->clip.global_icons->aicon) {
+			tmp = vscr->clip.global_icons->next;
+			wfree(vscr->clip.global_icons);
+			vscr->clip.global_icons = tmp;
+			vscr->global_icon_count--;
 		} else {
-			tmp = scr->vscr->clip.global_icons;
+			tmp = vscr->clip.global_icons;
 			while (tmp->next) {
 				if (tmp->next->aicon == aicon) {
 					tmp1 = tmp->next->next;
 					wfree(tmp->next);
 					tmp->next = tmp1;
-					scr->vscr->global_icon_count--;
+					vscr->global_icon_count--;
 					break;
 				}
 				tmp = tmp->next;
@@ -5075,7 +5073,8 @@ static void removeDrawerCallback(WMenu *menu, WMenuEntry *entry)
 void wDrawerIconPaint(WAppIcon *dicon)
 {
 	Window win = dicon->icon->core->window;
-	WScreen *scr = dicon->icon->core->screen_ptr;
+	virtual_screen *vscr = dicon->icon->core->vscr;
+	WScreen *scr = vscr->screen_ptr;
 	XPoint p[4];
 	GC gc = scr->draw_gc;
 	WMColor *color;

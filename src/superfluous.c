@@ -251,7 +251,7 @@ static int bounceDirection(WAppIcon *aicon)
 {
 	enum { left_e = 1, right_e = 2, top_e = 4, bottom_e = 8 };
 
-	WScreen *scr = aicon->icon->core->screen_ptr;
+	WScreen *scr = aicon->icon->core->vscr->screen_ptr;
 	WMRect rr, sr;
 	int l, r, t, b, h, v;
 	int dir = 0;

@@ -227,11 +227,11 @@ void menu_map(WMenu *menu, virtual_screen *screen)
 	menu->frame_y = 0;
 
 	wcore_map(menu->menu, menu->frame->core,
-		  menu->frame->core->screen_ptr, 0,
+		  menu->frame->core->vscr, 0,
 		  menu->frame->top_width, 0,
-		  menu->frame->core->screen_ptr->w_depth,
-		  menu->frame->core->screen_ptr->w_visual,
-		  menu->frame->core->screen_ptr->w_colormap);
+		  menu->frame->core->vscr->screen_ptr->w_depth,
+		  menu->frame->core->vscr->screen_ptr->w_visual,
+		  menu->frame->core->vscr->screen_ptr->w_colormap);
 
 	menu->menu->descriptor.parent = menu;
 	menu->menu->descriptor.parent_type = WCLASS_MENU;
@@ -420,7 +420,7 @@ static Pixmap renderTexture(WMenu *menu)
 	Pixmap pix;
 	int i;
 	RColor light, dark, mid;
-	WScreen *scr = menu->menu->screen_ptr;
+	WScreen *scr = menu->menu->vscr->screen_ptr;
 	WTexture *texture = scr->menu_item_texture;
 
 	if (wPreferences.menu_style == MS_NORMAL)
@@ -465,7 +465,7 @@ static Pixmap renderTexture(WMenu *menu)
 
 static void updateTexture(WMenu *menu)
 {
-	WScreen *scr = menu->menu->screen_ptr;
+	WScreen *scr = menu->menu->vscr->screen_ptr;
 
 	/* setup background texture */
 	if (scr->menu_item_texture->any.type != WTEX_SOLID) {
@@ -1341,7 +1341,7 @@ static void getPointerPosition(WScreen *scr, int *x, int *y)
 
 static void getScrollAmount(WMenu *menu, int *hamount, int *vamount)
 {
-	WScreen *scr = menu->menu->screen_ptr;
+	WScreen *scr = menu->menu->vscr->screen_ptr;
 	int menuX1 = menu->frame_x;
 	int menuY1 = menu->frame_y;
 	int menuX2 = menu->frame_x + MENUW(menu);
@@ -1380,7 +1380,7 @@ static void dragScrollMenuCallback(void *data)
 {
 	WMenu *menu = (WMenu *) data;
 	WMenu *parent = parentMenu(menu);
-	WScreen *scr = menu->menu->screen_ptr;
+	WScreen *scr = menu->menu->vscr->screen_ptr;
 	int hamount, vamount;
 	int x, y, newSelectedEntry;
 
@@ -1460,7 +1460,7 @@ static void callback_leaving(void *user_param)
 
 	wMenuMove(dl->menu, dl->ox, dl->oy, True);
 	dl->menu->jump_back = NULL;
-	dl->menu->menu->screen_ptr->flags.jump_back_pending = 0;
+	dl->menu->menu->vscr->screen_ptr->flags.jump_back_pending = 0;
 	wfree(dl);
 }
 
@@ -1590,7 +1590,7 @@ static void delaySelection(void *data)
 
 	d->magic = NULL;
 
-	menu = findMenu(d->menu->menu->screen_ptr, &x, &y);
+	menu = findMenu(d->menu->menu->vscr->screen_ptr, &x, &y);
 	if (menu && (d->menu == menu || d->delayed_select)) {
 		entry_no = getEntryAt(menu, x, y);
 		selectEntry(menu, entry_no);
