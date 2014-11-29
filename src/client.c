@@ -264,7 +264,7 @@ void wClientKill(WWindow * wwin)
  * TODO: _GNUSTEP_WM_ATTR
  *----------------------------------------------------------------------
  */
-void wClientCheckProperty(WWindow * wwin, XPropertyEvent * event)
+void wClientCheckProperty(WWindow *wwin, XPropertyEvent *event)
 {
 	XWindowAttributes attribs;
 	XWMHints *new_hints;
@@ -535,7 +535,8 @@ void wClientCheckProperty(WWindow * wwin, XPropertyEvent * event)
 				}
 
 				if (wwin->fake_group) {
-					WScreen *scr = wwin->vscr->screen_ptr;
+					virtual_screen *vscr = wwin->vscr;
+					WScreen *scr = vscr->screen_ptr;
 					WWindow *foo = scr->focused_window;
 					WFakeGroupLeader *fPtr = wwin->fake_group;
 
@@ -569,12 +570,12 @@ void wClientCheckProperty(WWindow * wwin, XPropertyEvent * event)
 
 					wapp = wApplicationOf(wwin->main_window);
 					if (wapp)
-						wapp->menu = wAppMenuGet(scr, wwin->main_window);
+						wapp->menu = wAppMenuGet(vscr, wwin->main_window);
 
 					if (wPreferences.auto_arrange_icons)
 						wArrangeIcons(wwin->vscr->screen_ptr, True);
 				} else {
-					wapp->menu = wAppMenuGet(wwin->vscr->screen_ptr, wwin->main_window);
+					wapp->menu = wAppMenuGet(wwin->vscr, wwin->main_window);
 				}
 
 				/* make the appmenu be mapped */

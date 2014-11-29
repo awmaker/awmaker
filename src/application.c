@@ -126,7 +126,7 @@ WApplication *wApplicationCreate(WWindow *wwin)
 	if (leader)
 		leader->main_window = main_window;
 
-	wapp->menu = wAppMenuGet(scr, main_window);
+	wapp->menu = wAppMenuGet(vscr, main_window);
 #ifdef USER_MENU
 	if (!wapp->menu)
 		wapp->menu = wUserMenuGet(vscr, wapp->main_window_desc);
