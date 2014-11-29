@@ -35,6 +35,7 @@
 #include <sys/stat.h>
 #include <dirent.h>
 #include <limits.h>
+#include <errno.h>
 
 #ifdef HAVE_MALLOC_H
 #include <malloc.h>
@@ -587,16 +588,11 @@ static void listPixmaps(virtual_screen *vscr, WMList *lPtr, const char *path)
 	dir = opendir(apath);
 
 	if (!dir) {
-		char *msg;
-		char *tmp;
-		tmp = _("Could not open directory ");
-		msg = wmalloc(strlen(tmp) + strlen(path) + 6);
-		strcpy(msg, tmp);
-		strcat(msg, path);
-
-		wMessageDialog(vscr, _("Error"), msg, _("OK"), NULL, NULL);
-		wfree(msg);
 		wfree(apath);
+		snprintf(pbuf, sizeof(pbuf),
+			 _("Could not open directory \"%s\":\n%s"),
+			 path, strerror(errno));
+		wMessageDialog(vscr, _("Error"), pbuf, _("OK"), NULL, NULL);
 		return;
 	}
 
