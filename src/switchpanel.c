@@ -41,7 +41,7 @@
 #endif
 
 struct SwitchPanel {
-	WScreen *scr;
+	virtual_screen *vscr;
 	WMWindow *win;
 	WMFrame *iconBox;
 
@@ -169,7 +169,7 @@ static void changeImage(WSwitchPanel *panel, int idecks, int selected, Bool dim,
 					   (back->width - image->width) / 2, (back->height - image->height) / 2,
 					   opaq);
 
-		RConvertImage(panel->scr->rcontext, back, &p);
+		RConvertImage(panel->vscr->screen_ptr->rcontext, back, &p);
 		XSetWindowBackgroundPixmap(dpy, WMWidgetXID(icon), p);
 		XClearWindow(dpy, WMWidgetXID(icon));
 		XFreePixmap(dpy, p);
@@ -193,7 +193,7 @@ static void addIconForWindow(WSwitchPanel *panel, WMWidget *parent, WWindow *wwi
 
 	/* get_icon_image() includes the default icon image */
 	if (!image)
-		image = get_icon_image(panel->scr, wwin->wm_instance, wwin->wm_class, ICON_TILE_SIZE);
+		image = get_icon_image(panel->vscr->screen_ptr, wwin->wm_instance, wwin->wm_class, ICON_TILE_SIZE);
 
 	/* We must resize the icon size (~64) to the switch panel icon size (~48) */
 	image = wIconValidateIconSize(image, ICON_SIZE);
@@ -343,7 +343,7 @@ static void drawTitle(WSwitchPanel *panel, int idecks, const char *title)
 
 		XClearWindow(dpy, WMWidgetXID(panel->win));
 		if (ntitle)
-			WMDrawString(panel->scr->wmscreen,
+			WMDrawString(panel->vscr->screen_ptr->wmscreen,
 				     WMWidgetXID(panel->win),
 				     panel->white, panel->font,
 				     x,
@@ -358,16 +358,16 @@ static void drawTitle(WSwitchPanel *panel, int idecks, const char *title)
 		free(ntitle);
 }
 
-static WMArray *makeWindowListArray(WScreen *scr, int include_unmapped, Bool class_only)
+static WMArray *makeWindowListArray(virtual_screen *vscr, int include_unmapped, Bool class_only)
 {
 	WMArray *windows = WMCreateArray(10);
-	WWindow *wwin = scr->focused_window;
+	WWindow *wwin = vscr->screen_ptr->focused_window;
 
 	while (wwin) {
 		if ((canReceiveFocus(wwin) != 0) &&
 		    (wwin->flags.mapped || wwin->flags.shaded || include_unmapped)) {
 			if (class_only)
-				if (!sameWindowClass(scr->focused_window, wwin))
+				if (!sameWindowClass(vscr->screen_ptr->focused_window, wwin))
 					continue;
 			if (!WFLAGP(wwin, skip_switchpanel))
 				WMAddToArray(windows, wwin);
@@ -388,16 +388,17 @@ static WMArray *makeWindowFlagsArray(int count)
 	return flags;
 }
 
-WSwitchPanel *wInitSwitchPanel(WScreen *scr, WWindow *curwin, Bool class_only)
+WSwitchPanel *wInitSwitchPanel(virtual_screen *vscr, WWindow *curwin, Bool class_only)
 {
 	WWindow *wwin;
 	WSwitchPanel *panel = wmalloc(sizeof(WSwitchPanel));
 	WMFrame *viewport;
 	int i, width, height, iconsThatFitCount, count;
-	WMRect rect = wGetRectForHead(scr, wGetHeadForPointerLocation(scr));
+	WMRect rect = wGetRectForHead(vscr->screen_ptr, wGetHeadForPointerLocation(vscr->screen_ptr));
+	WMPoint center;
 
-	panel->scr = scr;
-	panel->windows = makeWindowListArray(scr, wPreferences.swtileImage != NULL, class_only);
+	panel->vscr = vscr;
+	panel->windows = makeWindowListArray(vscr, wPreferences.swtileImage != NULL, class_only);
 	count = WMGetArrayItemCount(panel->windows);
 	if (count)
 		panel->flags = makeWindowFlagsArray(count);
@@ -440,16 +441,15 @@ WSwitchPanel *wInitSwitchPanel(WScreen *scr, WWindow *curwin, Bool class_only)
 		panel->tileTmp = NULL;
 	}
 
-	panel->white = WMWhiteColor(scr->wmscreen);
-	panel->font = WMBoldSystemFontOfSize(scr->wmscreen, 12);
+	panel->white = WMWhiteColor(vscr->screen_ptr->wmscreen);
+	panel->font = WMBoldSystemFontOfSize(vscr->screen_ptr->wmscreen, 12);
 	panel->icons = WMCreateArray(count);
 	panel->images = WMCreateArray(count);
 
-	panel->win = WMCreateWindow(scr->wmscreen, "");
-
+	panel->win = WMCreateWindow(vscr->screen_ptr->wmscreen, "");
 	if (!panel->bg) {
 		WMFrame *frame = WMCreateFrame(panel->win);
-		WMColor *darkGray = WMDarkGrayColor(scr->wmscreen);
+		WMColor *darkGray = WMDarkGrayColor(vscr->screen_ptr->wmscreen);
 		WMSetFrameRelief(frame, WRSimple);
 		WMSetViewExpandsToParent(WMWidgetView(frame), 0, 0, 0, 0);
 
@@ -491,7 +491,7 @@ WSwitchPanel *wInitSwitchPanel(WScreen *scr, WWindow *curwin, Bool class_only)
 	if (panel->bg) {
 		Pixmap pixmap, mask;
 
-		RConvertImageMask(scr->rcontext, panel->bg, &pixmap, &mask, 250);
+		RConvertImageMask(vscr->screen_ptr->rcontext, panel->bg, &pixmap, &mask, 250);
 
 		XSetWindowBackgroundPixmap(dpy, WMWidgetXID(panel->win), pixmap);
 
@@ -506,12 +506,9 @@ WSwitchPanel *wInitSwitchPanel(WScreen *scr, WWindow *curwin, Bool class_only)
 			XFreePixmap(dpy, mask);
 	}
 
-	{
-		WMPoint center;
-		center = wGetPointToCenterRectInHead(scr, wGetHeadForPointerLocation(scr),
-						     width + 2 * BORDER_SPACE, height + 2 * BORDER_SPACE);
-		WMMoveWidget(panel->win, center.x, center.y);
-	}
+	center = wGetPointToCenterRectInHead(vscr->screen_ptr, wGetHeadForPointerLocation(vscr->screen_ptr),
+					     width + 2 * BORDER_SPACE, height + 2 * BORDER_SPACE);
+	WMMoveWidget(panel->win, center.x, center.y);
 
 	panel->current = WMGetFirstInArray(panel->windows, curwin);
 	if (panel->current >= 0)
@@ -528,7 +525,7 @@ void wSwitchPanelDestroy(WSwitchPanel *panel)
 	RImage *image;
 
 	if (panel->win) {
-		Window info_win = panel->scr->info_window;
+		Window info_win = panel->vscr->screen_ptr->info_window;
 		XEvent ev;
 		ev.xclient.type = ClientMessage;
 		ev.xclient.message_type = w_global.atom.wm.ignore_focus_events;

@@ -23,7 +23,7 @@
 
 typedef struct SwitchPanel WSwitchPanel;
 
-WSwitchPanel *wInitSwitchPanel(WScreen *scr, WWindow *curwin, Bool class_only);
+WSwitchPanel *wInitSwitchPanel(virtual_screen *vscr, WWindow *curwin, Bool class_only);
 
 void wSwitchPanelDestroy(WSwitchPanel *panel);
 
