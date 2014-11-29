@@ -1051,10 +1051,9 @@ WWindow *wManageWindow(WScreen *scr, Window window)
 
 	wNETWMPositionSplash(wwin, &x, &y, width, height);
 
-	if (wwin->flags.urgent) {
+	if (wwin->flags.urgent)
 		if (!IS_OMNIPRESENT(wwin))
 			wwin->flags.omnipresent ^= 1;
-	}
 
 	/* Create frame, borders and do reparenting */
 	foo = WFF_LEFT_BUTTON | WFF_RIGHT_BUTTON;
@@ -1072,7 +1071,7 @@ WWindow *wManageWindow(WScreen *scr, Window window)
 		foo |= WFF_BORDER;
 
 	wwin->frame = wframewindow_create(width, height);
-	wframewindow_map(wwin->frame, scr, window_level, x, y,
+	wframewindow_map(wwin->frame, scr->vscr, window_level, x, y,
 		      &wPreferences.window_title_clearance,
 		      &wPreferences.window_title_min_height,
 		      &wPreferences.window_title_max_height,
@@ -1348,7 +1347,7 @@ WWindow *wManageInternalWindow(WScreen *scr, Window window, Window owner,
 #endif
 
 	wwin->frame = wframewindow_create(width, height);
-	wframewindow_map(wwin->frame, scr, WMFloatingLevel,
+	wframewindow_map(wwin->frame, scr->vscr, WMFloatingLevel,
 			 wwin->frame_x, wwin->frame_y,
 			 &wPreferences.window_title_clearance,
 			 &wPreferences.window_title_min_height,

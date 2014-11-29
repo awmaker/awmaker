@@ -105,7 +105,7 @@ static WMenu *parseMenuCommand(WScreen *scr, Window win, char **slist, int count
 	if (!menu)
 		return NULL;
 
-	menu_map(menu, scr);
+	menu_map(menu, scr->vscr);
 
 	*index += 1;
 	while (*index < count) {

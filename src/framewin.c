@@ -98,14 +98,14 @@ void wframewindow_destroy_wcorewindow(WCoreWindow *core)
 	wcore_destroy(core);
 }
 
-void wframewindow_map(WFrameWindow *fwin, WScreen *scr, int wlevel,
+void wframewindow_map(WFrameWindow *fwin, virtual_screen *vscr, int wlevel,
 		      int x, int y, int *clearance,
 		      int *title_min, int *title_max, int flags,
 		      WTexture **title_texture, WTexture **resize_texture,
 		      WMColor **color, WMFont **font, int depth,
 		      Visual *visual, Colormap colormap)
 {
-	fwin->screen_ptr = scr;
+	fwin->vscr = vscr;
 
 	fwin->flags.single_texture = (flags & WFF_SINGLE_STATE) ? 1 : 0;
 
@@ -125,10 +125,10 @@ void wframewindow_map(WFrameWindow *fwin, WScreen *scr, int wlevel,
 	fwin->visual = visual;
 	fwin->colormap = colormap;
 
-	wcore_map_toplevel(fwin->core, scr, x, y,
-			   (flags & WFF_BORDER) ? scr->frame_border_width : 0,
+	wcore_map_toplevel(fwin->core, vscr->screen_ptr, x, y,
+			   (flags & WFF_BORDER) ? vscr->screen_ptr->frame_border_width : 0,
 			   fwin->depth, fwin->visual,
-			   fwin->colormap, scr->frame_border_pixel);
+			   fwin->colormap, vscr->screen_ptr->frame_border_pixel);
 
 	/* setup stacking information */
 	fwin->core->stacking = wmalloc(sizeof(WStacking));
@@ -185,7 +185,8 @@ static void left_button_map(WFrameWindow *fwin, int theight, int bsize)
 {
 	int left_button_pos_width, left_button_pos_height;
 	int width = fwin->core->width;
-	WScreen *scr = fwin->screen_ptr;
+	virtual_screen *vscr = fwin->vscr;
+	WScreen *scr = vscr->screen_ptr;
 
 	if (wPreferences.new_style == TS_NEW) {
 		left_button_pos_width = 0;
@@ -300,7 +301,8 @@ static void right_button_map(WFrameWindow *fwin, int theight, int bsize)
 {
 	int right_button_pos_width, right_button_pos_height;
 	int width = fwin->core->width;
-	WScreen *scr = fwin->screen_ptr;
+	virtual_screen *vscr = fwin->vscr;
+	WScreen *scr = vscr->screen_ptr;
 
 	if (wPreferences.new_style == TS_NEW) {
 		right_button_pos_width = width - bsize + 1;
@@ -529,8 +531,8 @@ static void resizebar_unmap(WFrameWindow *fwin)
 void wFrameWindowUpdateBorders(WFrameWindow * fwin, int flags)
 {
 	int theight, bsize, width, height;
-
-	WScreen *scr = fwin->screen_ptr;
+	virtual_screen *vscr = fwin->vscr;
+	WScreen *scr = vscr->screen_ptr;
 
 	width = fwin->core->width;
 	if (flags & WFF_IS_SHADED)
@@ -568,6 +570,7 @@ void wFrameWindowUpdateBorders(WFrameWindow * fwin, int flags)
 		titlebar_create(fwin, theight, bsize, flags);
 		titlebar_map(fwin, theight, bsize, flags);
 	}
+
 	checkTitleSize(fwin);
 
 	if (fwin->resizebar) {
@@ -598,8 +601,7 @@ void wFrameWindowUpdateBorders(WFrameWindow * fwin, int flags)
 	if (flags & WFF_SELECTED) {
 		if (fwin->selected_border_pixel)
 			XSetWindowBorder(dpy, fwin->core->window, *fwin->selected_border_pixel);
-	}
-	else {
+	} else {
 		if (fwin->flags.state == WS_FOCUSED) {
 			if (fwin->focused_border_pixel)
 				XSetWindowBorder(dpy, fwin->core->window, *fwin->focused_border_pixel);
@@ -1029,7 +1031,7 @@ static void remakeTexture_titlebar(WFrameWindow *fwin, int state)
 
 			width = fwin->core->width + 1;
 
-			renderTexture(fwin->screen_ptr, fwin->title_texture[state],
+			renderTexture(fwin->vscr->screen_ptr, fwin->title_texture[state],
 				      width, fwin->titlebar->height,
 				      fwin->titlebar->height, fwin->titlebar->height,
 				      &pmap,
@@ -1059,7 +1061,7 @@ static void remakeTexture_resizebar(WFrameWindow *fwin, int state)
 	    && fwin->resizebar && fwin->flags.resizebar && state == 0) {
 		destroy_pixmap(fwin->resizebar_back[0]);
 		if (fwin->resizebar_texture[0]->any.type != WTEX_SOLID) {
-			renderResizebarTexture(fwin->screen_ptr,
+			renderResizebarTexture(fwin->vscr->screen_ptr,
 					       fwin->resizebar_texture[0],
 					       fwin->resizebar->width,
 					       fwin->resizebar->height, fwin->resizebar_corner_width, &pmap);
@@ -1072,7 +1074,8 @@ static void remakeTexture_resizebar(WFrameWindow *fwin, int state)
 static void paint_title(WFrameWindow *fwin, int lofs, int rofs, int state)
 {
 	Drawable buf;
-	WScreen *scr = fwin->screen_ptr;
+	virtual_screen *vscr = fwin->vscr;
+	WScreen *scr = vscr->screen_ptr;
 	char *title;
 	int w, h, x, y;
 	int titlelen;
@@ -1091,7 +1094,7 @@ static void paint_title(WFrameWindow *fwin, int lofs, int rofs, int state)
 		break;
 
 	default:
-			x = lofs + (fwin->titlebar->width - w - lofs - rofs) / 2;
+		x = lofs + (fwin->titlebar->width - w - lofs - rofs) / 2;
 	}
 
 	y = *fwin->title_clearance + TITLEBAR_EXTEND_SPACE;

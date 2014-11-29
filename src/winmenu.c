@@ -193,7 +193,7 @@ static void execMenuCommand(WMenu *menu, WMenuEntry *entry)
 	WWindow *wwin = (WWindow *) entry->clientdata;
 	WApplication *wapp;
 
-	CloseWindowMenu(menu->frame->screen_ptr->vscr);
+	CloseWindowMenu(menu->frame->vscr);
 
 	switch (entry->order) {
 	case MC_CLOSE:
@@ -205,7 +205,7 @@ static void execMenuCommand(WMenu *menu, WMenuEntry *entry)
 	case MC_KILL:
 		wretain(wwin);
 		if (wPreferences.dont_confirm_kill
-		    || wMessageDialog(menu->frame->screen_ptr, _("Kill Application"),
+		    || wMessageDialog(menu->frame->vscr->screen_ptr, _("Kill Application"),
 				      _
 				      ("This will kill the application.\nAny unsaved changes will be lost.\nPlease confirm."),
 				      _("Yes"), _("No"), NULL) == WAPRDefault) {
@@ -749,10 +749,12 @@ static void prepare_menu_position(WMenu *menu, int *x, int *y)
 {
 	WMRect rect;
 
-	rect = wGetRectForHead(menu->frame->screen_ptr,
-			       wGetHeadForPointerLocation(menu->frame->screen_ptr));
+	rect = wGetRectForHead(menu->frame->vscr->screen_ptr,
+			       wGetHeadForPointerLocation(menu->frame->vscr->screen_ptr));
+
 	if (*x < rect.pos.x - menu->frame->core->width / 2)
 		*x = rect.pos.x - menu->frame->core->width / 2;
+
 	if (*y < rect.pos.y)
 		*y = rect.pos.y;
 }

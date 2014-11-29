@@ -264,7 +264,7 @@ static void killCallback(WMenu *menu, WMenuEntry *entry)
 	}
 
 	if (wPreferences.dont_confirm_kill
-	    || wMessageDialog(menu->frame->screen_ptr, _("Kill Application"),
+	    || wMessageDialog(menu->frame->vscr->screen_ptr, _("Kill Application"),
 			      buffer, _("Yes"), _("No"), NULL) == WAPRDefault) {
 		if (fPtr != NULL) {
 			WWindow *wwin, *twin;
@@ -920,7 +920,7 @@ static void launchDockedApplication(WAppIcon *btn, Bool withSelection)
 
 static void updateWorkspaceMenu(WMenu *menu, WAppIcon *icon)
 {
-	WScreen *scr = menu->frame->screen_ptr;
+	WScreen *scr = menu->frame->vscr->screen_ptr;
 	char title[MAX_WORKSPACENAME_WIDTH + 1];
 	int i;
 
@@ -1251,16 +1251,16 @@ void clip_menu_create(virtual_screen *vscr)
 
 static void clip_menu_map(WMenu *menu, WScreen *scr)
 {
-	menu_map(menu, scr);
+	menu_map(menu, scr->vscr);
 
 	if (scr->vscr->clip.opt_menu) {
-		menu_map(scr->vscr->clip.opt_menu, scr);
+		menu_map(scr->vscr->clip.opt_menu, scr->vscr);
 		wMenuRealize(scr->vscr->clip.opt_menu);
 	}
 
 	wMenuEntrySetCascade_map(menu, scr->vscr->clip.opt_menu);
 	if (scr->vscr->clip.submenu) {
-		menu_map(scr->vscr->clip.submenu, scr);
+		menu_map(scr->vscr->clip.submenu, scr->vscr);
 		wMenuRealize(scr->vscr->clip.submenu);
 		wMenuEntrySetCascade_map(menu, scr->vscr->clip.submenu);
 	}
@@ -1322,10 +1322,10 @@ static void drawer_menu_create(virtual_screen *vscr)
 
 static void drawer_menu_map(WMenu *menu, WScreen *scr)
 {
-	menu_map(menu, scr);
+	menu_map(menu, scr->vscr);
 
 	if (scr->vscr->dock.drawer_opt_menu) {
-		menu_map(scr->vscr->dock.drawer_opt_menu, scr);
+		menu_map(scr->vscr->dock.drawer_opt_menu, scr->vscr);
 		wMenuRealize(scr->vscr->dock.drawer_opt_menu);
 	}
 
@@ -1372,10 +1372,10 @@ static WMenu *dock_menu_create(virtual_screen *vscr)
 
 static void dock_menu_map(WMenu *menu, WScreen *scr)
 {
-	menu_map(menu, scr);
+	menu_map(menu, scr->vscr);
 	wMenuEntrySetCascade_map(menu, scr->vscr->dock.pos_menu);
 	if (scr->vscr->dock.pos_menu) {
-		menu_map(scr->vscr->dock.pos_menu, scr);
+		menu_map(scr->vscr->dock.pos_menu, scr->vscr);
 		wMenuRealize(scr->vscr->dock.pos_menu);
 	}
 }

@@ -147,25 +147,26 @@ static Shortcut *shortcutList = NULL;
 
 /* menu commands */
 
-static void execCommand(WMenu * menu, WMenuEntry * entry)
+static void execCommand(WMenu *menu, WMenuEntry *entry)
 {
 	char *cmdline;
 
-	cmdline = ExpandOptions(menu->frame->screen_ptr, (char *)entry->clientdata);
+	cmdline = ExpandOptions(menu->frame->vscr->screen_ptr, (char *)entry->clientdata);
 
-	XGrabPointer(dpy, menu->frame->screen_ptr->root_win, True, 0,
+	XGrabPointer(dpy, menu->frame->vscr->screen_ptr->root_win, True, 0,
 		     GrabModeAsync, GrabModeAsync, None, wPreferences.cursor[WCUR_WAIT], CurrentTime);
 	XSync(dpy, 0);
 
 	if (cmdline) {
-		ExecuteShellCommand(menu->frame->screen_ptr, cmdline);
+		ExecuteShellCommand(menu->frame->vscr->screen_ptr, cmdline);
 		wfree(cmdline);
 	}
+
 	XUngrabPointer(dpy, CurrentTime);
 	XSync(dpy, 0);
 }
 
-static void exitCommand(WMenu * menu, WMenuEntry * entry)
+static void exitCommand(WMenu *menu, WMenuEntry *entry)
 {
 	static int inside = 0;
 	int result;
@@ -173,6 +174,7 @@ static void exitCommand(WMenu * menu, WMenuEntry * entry)
 	/* prevent reentrant calls */
 	if (inside)
 		return;
+
 	inside = 1;
 
 #define R_CANCEL 0
@@ -186,7 +188,7 @@ static void exitCommand(WMenu * menu, WMenuEntry * entry)
 		int r, oldSaveSessionFlag;
 
 		oldSaveSessionFlag = wPreferences.save_session_on_exit;
-		r = wExitDialog(menu->frame->screen_ptr, _("Exit"),
+		r = wExitDialog(menu->frame->vscr->screen_ptr, _("Exit"),
 				_("Exit window manager?"), _("Exit"), _("Cancel"), NULL);
 
 		if (r == WAPRDefault) {
@@ -197,6 +199,7 @@ static void exitCommand(WMenu * menu, WMenuEntry * entry)
 			wPreferences.save_session_on_exit = oldSaveSessionFlag;
 		}
 	}
+
 	if (result == R_EXIT)
 		Shutdown(WSExitMode);
 
@@ -205,7 +208,7 @@ static void exitCommand(WMenu * menu, WMenuEntry * entry)
 	inside = 0;
 }
 
-static void shutdownCommand(WMenu * menu, WMenuEntry * entry)
+static void shutdownCommand(WMenu *menu, WMenuEntry *entry)
 {
 	static int inside = 0;
 	int result;
@@ -213,6 +216,7 @@ static void shutdownCommand(WMenu * menu, WMenuEntry * entry)
 	/* prevent reentrant calls */
 	if (inside)
 		return;
+
 	inside = 1;
 
 #define R_CANCEL 0
@@ -227,7 +231,7 @@ static void shutdownCommand(WMenu * menu, WMenuEntry * entry)
 
 		oldSaveSessionFlag = wPreferences.save_session_on_exit;
 
-		r = wExitDialog(menu->frame->screen_ptr,
+		r = wExitDialog(menu->frame->vscr->screen_ptr,
 				_("Kill X session"),
 				_("Kill Window System session?\n"
 				  "(all applications will be closed)"), _("Kill"), _("Cancel"), NULL);
@@ -240,16 +244,16 @@ static void shutdownCommand(WMenu * menu, WMenuEntry * entry)
 		}
 	}
 
-	if (result != R_CANCEL) {
+	if (result != R_CANCEL)
 		Shutdown(WSKillMode);
-	}
+
 #undef R_CLOSE
 #undef R_CANCEL
 #undef R_KILL
 	inside = 0;
 }
 
-static void restartCommand(WMenu * menu, WMenuEntry * entry)
+static void restartCommand(WMenu *menu, WMenuEntry *entry)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) menu;
@@ -260,36 +264,36 @@ static void restartCommand(WMenu * menu, WMenuEntry * entry)
 	Restart(NULL, True);
 }
 
-static void refreshCommand(WMenu * menu, WMenuEntry * entry)
+static void refreshCommand(WMenu *menu, WMenuEntry *entry)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 
-	wRefreshDesktop(menu->frame->screen_ptr);
+	wRefreshDesktop(menu->frame->vscr->screen_ptr);
 }
 
-static void arrangeIconsCommand(WMenu * menu, WMenuEntry * entry)
+static void arrangeIconsCommand(WMenu *menu, WMenuEntry *entry)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 
-	wArrangeIcons(menu->frame->screen_ptr, True);
+	wArrangeIcons(menu->frame->vscr->screen_ptr, True);
 }
 
-static void showAllCommand(WMenu * menu, WMenuEntry * entry)
+static void showAllCommand(WMenu *menu, WMenuEntry *entry)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 
-	wShowAllWindows(menu->frame->screen_ptr);
+	wShowAllWindows(menu->frame->vscr->screen_ptr);
 }
 
-static void hideOthersCommand(WMenu * menu, WMenuEntry * entry)
+static void hideOthersCommand(WMenu *menu, WMenuEntry *entry)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 
-	wHideOtherApplications(menu->frame->screen_ptr->focused_window);
+	wHideOtherApplications(menu->frame->vscr->screen_ptr->focused_window);
 }
 
 static void saveSessionCommand(WMenu * menu, WMenuEntry * entry)
@@ -298,9 +302,9 @@ static void saveSessionCommand(WMenu * menu, WMenuEntry * entry)
 	(void) entry;
 
 	if (!wPreferences.save_session_on_exit)
-		wSessionSaveState(menu->frame->screen_ptr);
+		wSessionSaveState(menu->frame->vscr->screen_ptr);
 
-	wScreenSaveState(menu->frame->screen_ptr);
+	wScreenSaveState(menu->frame->vscr->screen_ptr);
 }
 
 static void clearSessionCommand(WMenu *menu, WMenuEntry *entry)
@@ -309,7 +313,7 @@ static void clearSessionCommand(WMenu *menu, WMenuEntry *entry)
 	(void) entry;
 
 	wSessionClearState();
-	wScreenSaveState(menu->frame->screen_ptr);
+	wScreenSaveState(menu->frame->vscr->screen_ptr);
 }
 
 static void infoPanelCommand(WMenu * menu, WMenuEntry * entry)
@@ -317,7 +321,7 @@ static void infoPanelCommand(WMenu * menu, WMenuEntry * entry)
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 
-	wShowInfoPanel(menu->frame->screen_ptr);
+	wShowInfoPanel(menu->frame->vscr->screen_ptr);
 }
 
 static void legalPanelCommand(WMenu * menu, WMenuEntry * entry)
@@ -325,7 +329,7 @@ static void legalPanelCommand(WMenu * menu, WMenuEntry * entry)
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 
-	wShowLegalPanel(menu->frame->screen_ptr);
+	wShowLegalPanel(menu->frame->vscr->screen_ptr);
 }
 
 /********************************************************************/
@@ -645,7 +649,7 @@ static void constructMenu(WMenu * menu, WMenuEntry * entry)
 		if (!menu->cascades[entry->cascade] || menu->cascades[entry->cascade]->timestamp == 0) {
 			/* parse pipe */
 
-			submenu = readMenuPipe(menu->frame->screen_ptr, path);
+			submenu = readMenuPipe(menu->frame->vscr->screen_ptr, path);
 
 			if (submenu != NULL) {
 				if (path[0][1] == '|')
@@ -660,7 +664,7 @@ static void constructMenu(WMenu * menu, WMenuEntry * entry)
 	} else {
 
 		/* try interpreting path as a proplist file */
-		submenu = constructPLMenu(menu->frame->screen_ptr, path[0]);
+		submenu = constructPLMenu(menu->frame->vscr->screen_ptr, path[0]);
 		/* if unsuccessful, try it as an old-style file */
 		if (!submenu) {
 
@@ -707,7 +711,7 @@ static void constructMenu(WMenu * menu, WMenuEntry * entry)
 
 				if (S_ISDIR(stat_buf.st_mode)) {
 					/* menu directory */
-					submenu = readMenuDirectory(menu->frame->screen_ptr, entry->text, path, cmd);
+					submenu = readMenuDirectory(menu->frame->vscr->screen_ptr, entry->text, path, cmd);
 					if (submenu)
 						submenu->timestamp = last;
 				} else if (S_ISREG(stat_buf.st_mode)) {
@@ -717,7 +721,7 @@ static void constructMenu(WMenu * menu, WMenuEntry * entry)
 						wwarning(_("too many parameters in OPEN_MENU: %s"),
 								(char *)entry->clientdata);
 
-					submenu = readMenuFile(menu->frame->screen_ptr, path[first]);
+					submenu = readMenuFile(menu->frame->vscr->screen_ptr, path[first]);
 					if (submenu)
 						submenu->timestamp = stat_buf.st_mtime;
 				} else {
@@ -770,7 +774,7 @@ static void constructPLMenuFromPipe(WMenu * menu, WMenuEntry * entry)
 		if (!menu->cascades[entry->cascade]
 		|| menu->cascades[entry->cascade]->timestamp == 0) {
 			/* parse pipe */
-			submenu = readPLMenuPipe(menu->frame->screen_ptr, path);
+			submenu = readPLMenuPipe(menu->frame->vscr->screen_ptr, path);
 
 			if (submenu != NULL) {
 				if (path[0][1] == '|')
@@ -797,8 +801,8 @@ static void constructPLMenuFromPipe(WMenu * menu, WMenuEntry * entry)
 }
 static void cleanupWorkspaceMenu(WMenu *menu)
 {
-	if (menu->frame->screen_ptr->vscr->workspace.menu == menu)
-		menu->frame->screen_ptr->vscr->workspace.menu = NULL;
+	if (menu->frame->vscr->screen_ptr->vscr->workspace.menu == menu)
+		menu->frame->vscr->screen_ptr->vscr->workspace.menu = NULL;
 }
 
 static WMenuEntry *addWorkspaceMenu(WScreen *scr, WMenu *menu, const char *title)
@@ -828,8 +832,8 @@ static WMenuEntry *addWorkspaceMenu(WScreen *scr, WMenu *menu, const char *title
 
 static void cleanupWindowsMenu(WMenu *menu)
 {
-	if (menu->frame->screen_ptr->vscr->menu.switch_menu == menu)
-		menu->frame->screen_ptr->vscr->menu.switch_menu = NULL;
+	if (menu->frame->vscr->screen_ptr->vscr->menu.switch_menu == menu)
+		menu->frame->vscr->screen_ptr->vscr->menu.switch_menu = NULL;
 }
 
 static WMenuEntry *addWindowsMenu(WScreen *scr, WMenu *menu, const char *title)
@@ -871,7 +875,7 @@ static WMenuEntry *addMenuEntry(WMenu *menu, const char *title, const char *shor
 
 	if (!menu)
 		return NULL;
-	scr = menu->frame->screen_ptr;
+	scr = menu->frame->vscr->screen_ptr;
 	if (strcmp(command, "OPEN_MENU") == 0) {
 		if (!params) {
 			wwarning(_("%s:missing parameter for menu command \"%s\""), file_name, command);

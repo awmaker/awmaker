@@ -666,9 +666,9 @@ void wWorkspaceForceChange(WScreen *scr, int workspace)
 	WMPostNotificationName(WMNWorkspaceChanged, scr, (void *)(uintptr_t) workspace);
 }
 
-static void switchWSCommand(WMenu * menu, WMenuEntry * entry)
+static void switchWSCommand(WMenu *menu, WMenuEntry *entry)
 {
-	wWorkspaceChange(menu->frame->screen_ptr, (long)entry->clientdata);
+	wWorkspaceChange(menu->frame->vscr->screen_ptr, (long)entry->clientdata);
 }
 
 static void lastWSCommand(WMenu *menu, WMenuEntry *entry)
@@ -676,7 +676,7 @@ static void lastWSCommand(WMenu *menu, WMenuEntry *entry)
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 
-	wWorkspaceChange(menu->frame->screen_ptr, menu->frame->screen_ptr->vscr->workspace.last_used);
+	wWorkspaceChange(menu->frame->vscr->screen_ptr, menu->frame->vscr->workspace.last_used);
 }
 
 static void deleteWSCommand(WMenu *menu, WMenuEntry *entry)
@@ -684,7 +684,7 @@ static void deleteWSCommand(WMenu *menu, WMenuEntry *entry)
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 
-	wWorkspaceDelete(menu->frame->screen_ptr, menu->frame->screen_ptr->vscr->workspace.count - 1);
+	wWorkspaceDelete(menu->frame->vscr->screen_ptr, menu->frame->vscr->workspace.count - 1);
 }
 
 static void newWSCommand(WMenu *menu, WMenuEntry *foo)
@@ -694,11 +694,11 @@ static void newWSCommand(WMenu *menu, WMenuEntry *foo)
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) foo;
 
-	ws = wWorkspaceNew(menu->frame->screen_ptr);
+	ws = wWorkspaceNew(menu->frame->vscr->screen_ptr);
 
 	/* autochange workspace */
 	if (ws >= 0)
-		wWorkspaceChange(menu->frame->screen_ptr, ws);
+		wWorkspaceChange(menu->frame->vscr->screen_ptr, ws);
 }
 
 void wWorkspaceRename(WScreen *scr, int workspace, const char *name)
@@ -712,11 +712,11 @@ void wWorkspaceRename(WScreen *scr, int workspace, const char *name)
 	/* trim white spaces */
 	tmp = wtrimspace(name);
 
-	if (strlen(tmp) == 0) {
+	if (strlen(tmp) == 0)
 		snprintf(buf, sizeof(buf), _("Workspace %i"), workspace + 1);
-	} else {
+	else
 		strncpy(buf, tmp, MAX_WORKSPACENAME_WIDTH);
-	}
+
 	buf[MAX_WORKSPACENAME_WIDTH] = 0;
 	wfree(tmp);
 
@@ -747,15 +747,15 @@ void wWorkspaceRename(WScreen *scr, int workspace, const char *name)
 }
 
 /* callback for when menu entry is edited */
-static void onMenuEntryEdited(WMenu * menu, WMenuEntry * entry)
+static void onMenuEntryEdited(WMenu *menu, WMenuEntry *entry)
 {
 	char *tmp;
 
 	tmp = entry->text;
-	wWorkspaceRename(menu->frame->screen_ptr, (long)entry->clientdata, tmp);
+	wWorkspaceRename(menu->frame->vscr->screen_ptr, (long)entry->clientdata, tmp);
 }
 
-WMenu *wWorkspaceMenuMake(WScreen * scr, Bool titled)
+WMenu *wWorkspaceMenuMake(WScreen *scr, Bool titled)
 {
 	WMenu *wsmenu;
 	WMenuEntry *entry;

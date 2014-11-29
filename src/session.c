@@ -199,7 +199,7 @@ static WMPropList *makeWindowState(WWindow *wwin, WApplication *wapp)
 		name = WMCreatePLString(buffer);
 		cmd = WMCreatePLString(command);
 
-		workspace = WMCreatePLString(wwin->frame->screen_ptr->vscr->workspace.array[wwin->frame->workspace]->name);
+		workspace = WMCreatePLString(wwin->frame->vscr->workspace.array[wwin->frame->workspace]->name);
 		shaded = wwin->flags.shaded ? sYes : sNo;
 		miniaturized = wwin->flags.miniaturized ? sYes : sNo;
 		hidden = wwin->flags.hidden ? sYes : sNo;
@@ -237,12 +237,12 @@ static WMPropList *makeWindowState(WWindow *wwin, WApplication *wapp)
 
 			/* Try the clips */
 			if (name == NULL) {
-				for (i = 0; i < wwin->frame->screen_ptr->vscr->workspace.count; i++)
-					if (wwin->frame->screen_ptr->vscr->workspace.array[i]->clip == wapp->app_icon->dock)
+				for (i = 0; i < wwin->frame->vscr->workspace.count; i++)
+					if (wwin->frame->vscr->workspace.array[i]->clip == wapp->app_icon->dock)
 						break;
 
-				if (i < wwin->frame->screen_ptr->vscr->workspace.count)
-					name = wwin->frame->screen_ptr->vscr->workspace.array[i]->name;
+				if (i < wwin->frame->vscr->workspace.count)
+					name = wwin->frame->vscr->workspace.array[i]->name;
 			}
 
 			/* Try the drawers */

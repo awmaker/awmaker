@@ -55,8 +55,8 @@
 #define MENU_SCROLL_STEP  menuScrollParameters[(int)wPreferences.menu_scroll_speed].steps
 #define MENU_SCROLL_DELAY menuScrollParameters[(int)wPreferences.menu_scroll_speed].delay
 
-#define MENUW(m)	((m)->frame->core->width+2*(m)->frame->screen_ptr->frame_border_width)
-#define MENUH(m)	((m)->frame->core->height+2*(m)->frame->screen_ptr->frame_border_width)
+#define MENUW(m)	((m)->frame->core->width+2*(m)->frame->vscr->screen_ptr->frame_border_width)
+#define MENUH(m)	((m)->frame->core->height+2*(m)->frame->vscr->screen_ptr->frame_border_width)
 
 #define getEntryAt(menu, x, y)   ((y)<0 ? -1 : (y)/(menu->entry_height))
 
@@ -193,7 +193,7 @@ void menu_destroy(WMenu *menu)
 	wfree(menu);
 }
 
-void menu_map(WMenu *menu, WScreen *screen)
+void menu_map(WMenu *menu, virtual_screen *screen)
 {
 	int tmp, flags;
 
@@ -211,9 +211,9 @@ void menu_map(WMenu *menu, WScreen *screen)
 			 &wPreferences.menu_title_clearance,
 			 &wPreferences.menu_title_min_height,
 			 &wPreferences.menu_title_max_height, flags,
-			 screen->menu_title_texture, NULL,
-			 screen->menu_title_color, &screen->menu_title_font,
-			 screen->w_depth, screen->w_visual, screen->w_colormap);
+			 screen->screen_ptr->menu_title_texture, NULL,
+			 screen->screen_ptr->menu_title_color, &screen->screen_ptr->menu_title_font,
+			 screen->screen_ptr->w_depth, screen->screen_ptr->w_visual, screen->screen_ptr->w_colormap);
 
 	menu->frame->core->descriptor.parent = menu;
 	menu->frame->core->descriptor.parent_type = WCLASS_MENU;
@@ -221,7 +221,7 @@ void menu_map(WMenu *menu, WScreen *screen)
 
 	wFrameWindowHideButton(menu->frame, WFF_RIGHT_BUTTON);
 
-	menu->frame->rbutton_image = screen->b_pixmaps[WBUT_CLOSE];
+	menu->frame->rbutton_image = screen->screen_ptr->b_pixmaps[WBUT_CLOSE];
 
 	menu->frame_x = 0;
 	menu->frame_y = 0;
@@ -265,7 +265,7 @@ WMenu *wMenuCreate(WScreen *screen, const char *title)
 	WMenu *menu;
 
 	menu = menu_create(title);
-	menu_map(menu, screen);
+	menu_map(menu, screen->vscr);
 
 	return menu;
 }
@@ -487,7 +487,7 @@ void wMenuRealize(WMenu *menu)
 	int width, rwidth, mrwidth = 0, mwidth = 0;
 	int theight = 0, twidth = 0, eheight;
 	char *text;
-	WScreen *scr = menu->frame->screen_ptr;
+	WScreen *scr = menu->frame->vscr->screen_ptr;
 
 	flags = WFF_SINGLE_STATE | WFF_BORDER;
 	if (menu->flags.titled)
@@ -628,7 +628,7 @@ static void drawFrame(WScreen *scr, Drawable win, int y, int w, int h, int type)
 
 static void paintEntry(WMenu *menu, int index, int selected)
 {
-	WScreen *scr = menu->frame->screen_ptr;
+	WScreen *scr = menu->frame->vscr->screen_ptr;
 	Window win = menu->menu->window;
 	WMenuEntry *entry = menu->entries[index];
 	GC light, dim, dark;
@@ -762,7 +762,7 @@ static void move_menus(WMenu *menu, int x, int y)
 
 static void makeVisible(WMenu *menu)
 {
-	WScreen *scr = menu->frame->screen_ptr;
+	WScreen *scr = menu->frame->vscr->screen_ptr;
 	int x1, y1, x2, y2, new_x, new_y;
 	WMRect rect = wGetRectForHead(scr, wGetHeadForPointerLocation(scr));
 
@@ -824,8 +824,8 @@ static int keyboardMenu(WMenu *menu)
 	int old_pos_x = menu->frame_x;
 	int old_pos_y = menu->frame_y;
 	int new_x = old_pos_x, new_y = old_pos_y;
-	WMRect rect = wGetRectForHead(menu->frame->screen_ptr,
-				      wGetHeadForPointerLocation(menu->frame->screen_ptr));
+	WMRect rect = wGetRectForHead(menu->frame->vscr->screen_ptr,
+				      wGetHeadForPointerLocation(menu->frame->vscr->screen_ptr));
 
 	if (menu->flags.editing)
 		return False;
@@ -1023,7 +1023,7 @@ void wMenuMapAt(WMenu *menu, int x, int y, int keyboard)
 
 	if (!menu->flags.mapped) {
 		if (wPreferences.wrap_menus) {
-			scr = menu->frame->screen_ptr;
+			scr = menu->frame->vscr->screen_ptr;
 			rect = wGetRectForHead(scr, wGetHeadForPointerLocation(scr));
 
 			if (x < rect.pos.x)
@@ -1176,7 +1176,7 @@ static void selectEntry(WMenu *menu, int entry_no)
 					}
 				} else {
 					x = menu->frame_x + MENUW(menu);
-					if (x + MENUW(submenu) >= menu->frame->screen_ptr->scr_width) {
+					if (x + MENUW(submenu) >= menu->frame->vscr->screen_ptr->scr_width) {
 						x = menu->frame_x - MENUW(submenu);
 						submenu->flags.open_to_left = 1;
 					}
@@ -1440,8 +1440,8 @@ static int isPointNearBoder(WMenu *menu, int x, int y)
 	int menuX2 = menu->frame_x + MENUW(menu);
 	int menuY2 = menu->frame_y + MENUH(menu);
 	int flag = 0;
-	int head = wGetHeadForPoint(menu->frame->screen_ptr, wmkpoint(x, y));
-	WMRect rect = wGetRectForHead(menu->frame->screen_ptr, head);
+	int head = wGetHeadForPoint(menu->frame->vscr->screen_ptr, wmkpoint(x, y));
+	WMRect rect = wGetRectForHead(menu->frame->vscr->screen_ptr, head);
 
 	/* XXX: handle screen joins properly !! */
 	if (x >= menuX1 && x <= menuX2 &&
@@ -1467,7 +1467,7 @@ static void callback_leaving(void *user_param)
 void wMenuScroll(WMenu *menu)
 {
 	WMenu *smenu, *omenu = parentMenu(menu);
-	WScreen *scr = menu->frame->screen_ptr;
+	WScreen *scr = menu->frame->vscr->screen_ptr;
 	int done = 0, jump_back = 0;
 	int old_frame_x = omenu->frame_x;
 	int old_frame_y = omenu->frame_y;
@@ -1623,7 +1623,7 @@ static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
 	WWindow *wwin;
 	XButtonEvent *bev = &event->xbutton;
 	WMenu *smenu, *menu = desc->parent;
-	WScreen *scr = menu->frame->screen_ptr;
+	WScreen *scr = menu->frame->vscr->screen_ptr;
 	WMenuEntry *entry = NULL;
 	XEvent ev;
 	int close_on_exit = 0;

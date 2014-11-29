@@ -587,7 +587,7 @@ static void killCallback(WMenu * menu, WMenuEntry * entry)
 
 	wretain(wapp->main_window_desc);
 	if (wPreferences.dont_confirm_kill
-	    || wMessageDialog(menu->frame->screen_ptr, _("Kill Application"),
+	    || wMessageDialog(menu->frame->vscr->screen_ptr, _("Kill Application"),
 			      buffer, _("Yes"), _("No"), NULL) == WAPRDefault) {
 		if (fPtr != NULL) {
 			WWindow *wwin, *twin;
@@ -648,7 +648,7 @@ static void openApplicationMenu(WApplication *wapp, int x, int y)
 
 	if (!scr->vscr->menu.icon_menu) {
 		scr->vscr->menu.icon_menu = createApplicationMenu();
-		menu_map(scr->vscr->menu.icon_menu, scr);
+		menu_map(scr->vscr->menu.icon_menu, scr->vscr);
 		wfree(scr->vscr->menu.icon_menu->entries[1]->text);
 	}
 

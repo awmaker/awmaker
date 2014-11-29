@@ -47,7 +47,7 @@
 #define WFF_IS_SHADED	(1<<16)
 
 typedef struct WFrameWindow {
-    WScreen *screen_ptr;	       /* pointer to the screen structure */
+    virtual_screen *vscr;	       /* pointer to the virtual screen structure */
 
     WCoreWindow *core;
 
@@ -158,21 +158,13 @@ typedef struct WFrameWindow {
 } WFrameWindow;
 
 void wFrameWindowUpdateBorders(WFrameWindow *fwin, int flags);
-
 void wFrameWindowDestroy(WFrameWindow *fwin);
-
 void wFrameWindowChangeState(WFrameWindow *fwin, int state);
-
 void wFrameWindowPaint(WFrameWindow *fwin);
-
 void wFrameWindowConfigure(WFrameWindow *fwin, int x, int y, int width, int height);
-
 void wFrameWindowResize(WFrameWindow *fwin, int width, int height);
-
 void wFrameWindowShowButton(WFrameWindow *fwin, int flags);
-
 void wFrameWindowHideButton(WFrameWindow *fwin, int flags);
-
 int wFrameWindowChangeTitle(WFrameWindow *fwin, const char *new_title);
 
 #ifdef XKB_BUTTON_HINT
@@ -180,7 +172,7 @@ void wFrameWindowUpdateLanguageButton(WFrameWindow *fwin);
 #endif
 
 WFrameWindow *wframewindow_create(int width, int height);
-void wframewindow_map(WFrameWindow *fwin, WScreen *scr, int wlevel,
+void wframewindow_map(WFrameWindow *fwin, virtual_screen *vscr, int wlevel,
                       int x, int y, int *clearance,
                       int *title_min, int *title_max, int flags,
                       WTexture **title_texture, WTexture **resize_texture,
