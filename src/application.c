@@ -129,7 +129,7 @@ WApplication *wApplicationCreate(WWindow *wwin)
 	wapp->menu = wAppMenuGet(scr, main_window);
 #ifdef USER_MENU
 	if (!wapp->menu)
-		wapp->menu = wUserMenuGet(scr, wapp->main_window_desc);
+		wapp->menu = wUserMenuGet(vscr, wapp->main_window_desc);
 #endif
 
 	/* Set application wide attributes from the leader */
