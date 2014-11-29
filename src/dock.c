@@ -1350,7 +1350,7 @@ static WMenu *dock_menu_create(virtual_screen *vscr)
 	wMenuEntrySetCascade_create(menu, entry, vscr->dock.pos_menu);
 
 	if (!wPreferences.flags.nodrawer)
-		entry = wMenuAddCallback(menu, _("Add a drawer"), addADrawerCallback, NULL);
+		wMenuAddCallback(menu, _("Add a drawer"), addADrawerCallback, NULL);
 
 	wMenuAddCallback(menu, _("Launch"), launchCallback, NULL);
 	wMenuAddCallback(menu, _("Unhide Here"), unhideHereCallback, NULL);
