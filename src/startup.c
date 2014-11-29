@@ -778,7 +778,7 @@ static void manageAllWindows(WScreen *scr, int crashRecovery)
 		if (children[i] == None)
 			continue;
 
-		wwin = wManageWindow(scr, children[i]);
+		wwin = wManageWindow(scr->vscr, children[i]);
 		if (wwin) {
 			/* apply states got from WSavedState */
 			/* shaded + minimized is not restored correctly */
@@ -786,6 +786,7 @@ static void manageAllWindows(WScreen *scr, int crashRecovery)
 				wwin->flags.shaded = 0;
 				wShadeWindow(wwin);
 			}
+
 			if (wwin->flags.miniaturized
 			    && (wwin->transient_for == None
 				|| wwin->transient_for == scr->root_win

@@ -284,7 +284,7 @@ void wUnshadeWindow(WWindow *wwin)
 	/* if the window is focused, set the focus again as it was disabled during
 	 * shading */
 	if (wwin->flags.focused)
-		wSetFocusTo(wwin->screen_ptr, wwin);
+		wSetFocusTo(wwin->vscr->screen_ptr, wwin);
 
 	WMPostNotificationName(WMNChangedState, wwin, "shade");
 }
@@ -315,7 +315,7 @@ static void remember_geometry(WWindow *wwin, int *x, int *y, int *w, int *h)
 	Bool same_head;
 
 	old_geom_rect = wmkrect(wwin->old_geometry.x, wwin->old_geometry.y, wwin->old_geometry.width, wwin->old_geometry.height);
-	old_head = wGetHeadForRect(wwin->screen_ptr, old_geom_rect);
+	old_head = wGetHeadForRect(wwin->vscr->screen_ptr, old_geom_rect);
 	same_head = (wGetHeadForWindow(wwin) == old_head);
 	*x = ((wwin->old_geometry.x || wwin->old_geometry.width) && same_head) ? wwin->old_geometry.x : wwin->frame_x;
 	*y = ((wwin->old_geometry.y || wwin->old_geometry.height) && same_head) ? wwin->old_geometry.y : wwin->frame_y;
@@ -356,7 +356,7 @@ void wMaximizeWindow(WWindow *wwin, int directions)
 	WArea usableArea, totalArea;
 	Bool has_border = 1;
 	int adj_size;
-	WScreen *scr = wwin->screen_ptr;
+	WScreen *scr = wwin->vscr->screen_ptr;
 
 	if (!IS_RESIZABLE(wwin))
 		return;
@@ -381,7 +381,7 @@ void wMaximizeWindow(WWindow *wwin, int directions)
 	usableArea = totalArea;
 
 	if (!(directions & MAX_IGNORE_XINERAMA)) {
-		WScreen *scr = wwin->screen_ptr;
+		WScreen *scr = wwin->vscr->screen_ptr;
 		int head;
 
 		if (directions & MAX_KEYBOARD)
@@ -587,8 +587,9 @@ static void find_Maximus_geometry(WWindow *wwin, WArea usableArea, int *new_x, i
 		remember_geometry(wwin, &orig.left, &orig.top, &orig.width, &orig.height);
 		orig.bottom = orig.top + orig.height;
 		orig.right = orig.left + orig.width;
-	} else
+	} else {
 		set_window_coords(wwin, &orig);
+	}
 
 	/* Try to fully maximize first, then readjust later */
 	new.left    = usableArea.x1;
@@ -598,10 +599,12 @@ static void find_Maximus_geometry(WWindow *wwin, WArea usableArea, int *new_x, i
 
 	if (HAS_TITLEBAR(wwin))
 		tbar_height_0 = TITLEBAR_HEIGHT;
+
 	if (HAS_RESIZEBAR(wwin))
 		rbar_height_0 = RESIZEBAR_HEIGHT;
+
 	if (HAS_BORDER(wwin))
-		bd_width_0 = wwin->screen_ptr->frame_border_width;
+		bd_width_0 = wwin->vscr->screen_ptr->frame_border_width;
 
 	/* the length to be subtracted if the window has titlebar, etc */
 	adjust_height = tbar_height_0 + 2 * bd_width_0 + rbar_height_0;
@@ -610,7 +613,7 @@ static void find_Maximus_geometry(WWindow *wwin, WArea usableArea, int *new_x, i
 	/* The focused window is always the last in the list */
 	while (tmp->prev) {
 		/* ignore windows in other workspaces etc */
-		if (tmp->prev->frame->workspace != wwin->screen_ptr->vscr->workspace.current ||
+		if (tmp->prev->frame->workspace != wwin->vscr->workspace.current ||
 		    tmp->prev->flags.miniaturized || tmp->prev->flags.hidden) {
 			tmp = tmp->prev;
 			continue;
@@ -637,7 +640,7 @@ static void find_Maximus_geometry(WWindow *wwin, WArea usableArea, int *new_x, i
 	tmp = wwin;
 	while (tmp->prev) {
 		/* ignore windows in other workspaces etc */
-		if (tmp->prev->frame->workspace != wwin->screen_ptr->vscr->workspace.current ||
+		if (tmp->prev->frame->workspace != wwin->vscr->workspace.current ||
 		    tmp->prev->flags.miniaturized || tmp->prev->flags.hidden) {
 			tmp = tmp->prev;
 			continue;
@@ -724,11 +727,11 @@ void wFullscreenWindow(WWindow *wwin)
 	wwin->bfs_geometry.height = wwin->frame->core->height;
 
 	head = wGetHeadForWindow(wwin);
-	rect = wGetRectForHead(wwin->screen_ptr, head);
+	rect = wGetRectForHead(wwin->vscr->screen_ptr, head);
 	wWindowConfigure(wwin, rect.pos.x, rect.pos.y, rect.size.width, rect.size.height);
 
-	wwin->screen_ptr->bfs_focused_window = wwin->screen_ptr->focused_window;
-	wSetFocusTo(wwin->screen_ptr, wwin);
+	wwin->vscr->screen_ptr->bfs_focused_window = wwin->vscr->screen_ptr->focused_window;
+	wSetFocusTo(wwin->vscr->screen_ptr, wwin);
 
 	WMPostNotificationName(WMNChangedState, wwin, "fullscreen");
 }
@@ -749,16 +752,12 @@ void wUnfullscreenWindow(WWindow *wwin)
 			 wwin->bfs_geometry.width, wwin->bfs_geometry.height);
 
 	wWindowConfigureBorders(wwin);
-	/*
-	   // seems unnecessary, but also harmless (doesn't generate flicker) -Dan
-	   wFrameWindowPaint(wwin->frame);
-	 */
 
 	WMPostNotificationName(WMNChangedState, wwin, "fullscreen");
 
-	if (wwin->screen_ptr->bfs_focused_window) {
-		wSetFocusTo(wwin->screen_ptr, wwin->screen_ptr->bfs_focused_window);
-		wwin->screen_ptr->bfs_focused_window = NULL;
+	if (wwin->vscr->screen_ptr->bfs_focused_window) {
+		wSetFocusTo(wwin->vscr->screen_ptr, wwin->vscr->screen_ptr->bfs_focused_window);
+		wwin->vscr->screen_ptr->bfs_focused_window = NULL;
 	}
 }
 
@@ -988,7 +987,7 @@ static void unmapTransientsFor(WWindow *wwin)
 {
 	WWindow *tmp;
 
-	tmp = wwin->screen_ptr->focused_window;
+	tmp = wwin->vscr->screen_ptr->focused_window;
 	while (tmp) {
 		/* unmap the transients for this transient */
 		if (tmp != wwin && tmp->transient_for == wwin->client_win
@@ -1012,7 +1011,7 @@ static void mapTransientsFor(WWindow *wwin)
 {
 	WWindow *tmp;
 
-	tmp = wwin->screen_ptr->focused_window;
+	tmp = wwin->vscr->screen_ptr->focused_window;
 	while (tmp) {
 		/* recursively map the transients for this transient */
 		if (tmp != wwin && tmp->transient_for == wwin->client_win && /*!tmp->flags.mapped */ tmp->flags.miniaturized
@@ -1023,12 +1022,9 @@ static void mapTransientsFor(WWindow *wwin)
 				wWindowMap(tmp);
 			else
 				XMapWindow(dpy, tmp->frame->core->window);
-			tmp->flags.semi_focused = 0;
-			/*
-			   if (!tmp->flags.shaded)
-			 */
-			wClientSetState(tmp, NormalState, None);
 
+			tmp->flags.semi_focused = 0;
+			wClientSetState(tmp, NormalState, None);
 			WMPostNotificationName(WMNChangedState, tmp, "iconify-transient");
 		}
 		tmp = tmp->prev;
@@ -1043,12 +1039,13 @@ static WWindow *recursiveTransientFor(WWindow *wwin)
 		return None;
 
 	/* hackish way to detect transient_for cycle */
-	i = wwin->screen_ptr->vscr->window_count + 1;
+	i = wwin->vscr->window_count + 1;
 
 	while (wwin && wwin->transient_for != None && i > 0) {
 		wwin = wWindowFor(wwin->transient_for);
 		i--;
 	}
+
 	if (i == 0 && wwin) {
 		wwarning("%s has a severely broken WM_TRANSIENT_FOR hint.", wwin->frame->title);
 		return NULL;
@@ -1077,10 +1074,11 @@ static int getAnimationGeometry(WWindow *wwin, int *ix, int *iy, int *iw, int *i
 		} else {
 			*ix = 0;
 			*iy = 0;
-			*iw = wwin->screen_ptr->scr_width;
-			*ih = wwin->screen_ptr->scr_height;
+			*iw = wwin->vscr->screen_ptr->scr_width;
+			*ih = wwin->vscr->screen_ptr->scr_height;
 		}
 	}
+
 	return 1;
 }
 
@@ -1095,25 +1093,25 @@ void wIconifyWindow(WWindow *wwin)
 	if (wwin->flags.miniaturized)
 		return; /* already miniaturized */
 
-	if (wwin->transient_for != None && wwin->transient_for != wwin->screen_ptr->root_win) {
+	if (wwin->transient_for != None && wwin->transient_for != wwin->vscr->screen_ptr->root_win) {
 		WWindow *owner = wWindowFor(wwin->transient_for);
 
 		if (owner && owner->flags.miniaturized)
 			return;
 	}
 
-	present = wwin->frame->workspace == wwin->screen_ptr->vscr->workspace.current;
+	present = wwin->frame->workspace == wwin->vscr->workspace.current;
 
 	/* if the window is in another workspace, simplify process */
 	if (present)
 		/* icon creation may take a while */
-		XGrabPointer(dpy, wwin->screen_ptr->root_win, False,
+		XGrabPointer(dpy, wwin->vscr->screen_ptr->root_win, False,
 			     ButtonMotionMask | ButtonReleaseMask, GrabModeAsync,
 			     GrabModeAsync, None, None, CurrentTime);
 
 	if (!wPreferences.disable_miniwindows && !wwin->flags.net_handle_icon) {
 		if (!wwin->flags.icon_moved)
-			PlaceIcon(wwin->screen_ptr, &wwin->icon_x, &wwin->icon_y, wGetHeadForWindow(wwin));
+			PlaceIcon(wwin->vscr->screen_ptr, &wwin->icon_x, &wwin->icon_y, wGetHeadForWindow(wwin));
 
 		wwin->icon = icon_create_core();
 		wwin->icon->owner = wwin;
@@ -1137,20 +1135,20 @@ void wIconifyWindow(WWindow *wwin)
 			Window baz;
 
 			XRaiseWindow(dpy, wwin->frame->core->window);
-			XTranslateCoordinates(dpy, wwin->client_win, wwin->screen_ptr->root_win, 0, 0, &x, &y, &baz);
+			XTranslateCoordinates(dpy, wwin->client_win, wwin->vscr->screen_ptr->root_win, 0, 0, &x, &y, &baz);
 
 			w = attribs.width;
 			h = attribs.height;
 
-			if (x - attribs.x + attribs.width > wwin->screen_ptr->scr_width)
-				w = wwin->screen_ptr->scr_width - x + attribs.x;
+			if (x - attribs.x + attribs.width > wwin->vscr->screen_ptr->scr_width)
+				w = wwin->vscr->screen_ptr->scr_width - x + attribs.x;
 
-			if (y - attribs.y + attribs.height > wwin->screen_ptr->scr_height)
-				h = wwin->screen_ptr->scr_height - y + attribs.y;
+			if (y - attribs.y + attribs.height > wwin->vscr->screen_ptr->scr_height)
+				h = wwin->vscr->screen_ptr->scr_height - y + attribs.y;
 
 			pimg = XGetImage(dpy, wwin->client_win, 0, 0, w, h, AllPlanes, ZPixmap);
 			if (pimg) {
-				apercu = RCreateImageFromXImage(wwin->screen_ptr->rcontext, pimg, NULL);
+				apercu = RCreateImageFromXImage(wwin->vscr->screen_ptr->rcontext, pimg, NULL);
 				XDestroyImage(pimg);
 
 				if (apercu) {
@@ -1187,7 +1185,7 @@ void wIconifyWindow(WWindow *wwin)
 		flushExpose();
 #ifdef ANIMATIONS
 		if (getAnimationGeometry(wwin, &ix, &iy, &iw, &ih))
-			animateResize(wwin->screen_ptr, wwin->frame_x, wwin->frame_y,
+			animateResize(wwin->vscr->screen_ptr, wwin->frame_x, wwin->frame_y,
 				      wwin->frame->core->width, wwin->frame->core->height, ix, iy, iw, ih);
 #endif
 	}
@@ -1195,7 +1193,7 @@ void wIconifyWindow(WWindow *wwin)
 	wwin->flags.skip_next_animation = 0;
 
 	if (!wPreferences.disable_miniwindows && !wwin->flags.net_handle_icon) {
-		if (wwin->screen_ptr->vscr->workspace.current == wwin->frame->workspace ||
+		if (wwin->vscr->workspace.current == wwin->frame->workspace ||
 		    IS_OMNIPRESENT(wwin) || wPreferences.sticky_icons)
 			XMapWindow(dpy, wwin->icon->core->window);
 
@@ -1204,13 +1202,8 @@ void wIconifyWindow(WWindow *wwin)
 	}
 
 	if (present) {
-		WWindow *owner = recursiveTransientFor(wwin->screen_ptr->focused_window);
+		WWindow *owner = recursiveTransientFor(wwin->vscr->screen_ptr->focused_window);
 
-		/*
-		 * It doesn't seem to be working and causes button event hangup
-		 * when deiconifying a transient window.
-		 setupIconGrabs(wwin->icon);
-		 */
 		if ((wwin->flags.focused || (owner && wwin->client_win == owner->client_win))
 		    && wPreferences.focus_mode == WKF_CLICK) {
 			WWindow *tmp;
@@ -1223,9 +1216,10 @@ void wIconifyWindow(WWindow *wwin)
 					break;
 				tmp = tmp->prev;
 			}
-			wSetFocusTo(wwin->screen_ptr, tmp);
+
+			wSetFocusTo(wwin->vscr->screen_ptr, tmp);
 		} else if (wPreferences.focus_mode != WKF_CLICK) {
-			wSetFocusTo(wwin->screen_ptr, NULL);
+			wSetFocusTo(wwin->vscr->screen_ptr, NULL);
 		}
 #ifdef ANIMATIONS
 		if (!w_global.startup.phase1) {
@@ -1251,34 +1245,34 @@ void wIconifyWindow(WWindow *wwin)
 	WMPostNotificationName(WMNChangedState, wwin, "iconify");
 
 	if (wPreferences.auto_arrange_icons)
-		wArrangeIcons(wwin->screen_ptr, True);
+		wArrangeIcons(wwin->vscr->screen_ptr, True);
 }
 
 void wDeiconifyWindow(WWindow *wwin)
 {
 	/* Let's avoid changing workspace while deiconifying */
-	wwin->screen_ptr->vscr->workspace.ignore_change = True;
+	wwin->vscr->workspace.ignore_change = True;
 
 	/* we're hiding for show_desktop */
 	int netwm_hidden = wwin->flags.net_show_desktop &&
-	    wwin->frame->workspace != wwin->screen_ptr->vscr->workspace.current;
+	    wwin->frame->workspace != wwin->vscr->workspace.current;
 
 	if (!netwm_hidden)
-		wWindowChangeWorkspace(wwin, wwin->screen_ptr->vscr->workspace.current);
+		wWindowChangeWorkspace(wwin, wwin->vscr->workspace.current);
 
 	if (!wwin->flags.miniaturized) {
-		wwin->screen_ptr->vscr->workspace.ignore_change = False;
+		wwin->vscr->workspace.ignore_change = False;
 		return;
 	}
 
-	if (wwin->transient_for != None && wwin->transient_for != wwin->screen_ptr->root_win) {
+	if (wwin->transient_for != None && wwin->transient_for != wwin->vscr->screen_ptr->root_win) {
 		WWindow *owner = recursiveTransientFor(wwin);
 
 		if (owner && owner->flags.miniaturized) {
 			wDeiconifyWindow(owner);
-			wSetFocusTo(wwin->screen_ptr, wwin);
+			wSetFocusTo(wwin->vscr->screen_ptr, wwin);
 			wRaiseFrame(wwin->frame->core);
-			wwin->screen_ptr->vscr->workspace.ignore_change = False;
+			wwin->vscr->workspace.ignore_change = False;
 			return;
 		}
 	}
@@ -1306,7 +1300,7 @@ void wDeiconifyWindow(WWindow *wwin)
 #ifdef ANIMATIONS
 		int ix, iy, iw, ih;
 		if (getAnimationGeometry(wwin, &ix, &iy, &iw, &ih))
-			animateResize(wwin->screen_ptr, ix, iy, iw, ih,
+			animateResize(wwin->vscr->screen_ptr, ix, iy, iw, ih,
 				      wwin->frame_x, wwin->frame_y,
 				      wwin->frame->core->width, wwin->frame->core->height);
 #endif
@@ -1326,7 +1320,7 @@ void wDeiconifyWindow(WWindow *wwin)
 	if (!wPreferences.disable_miniwindows && wwin->icon != NULL
 	    && !wwin->flags.net_handle_icon) {
 		RemoveFromStackList(wwin->icon->core);
-		wSetFocusTo(wwin->screen_ptr, wwin);
+		wSetFocusTo(wwin->vscr->screen_ptr, wwin);
 		wIconDestroy(wwin->icon);
 		wwin->icon = NULL;
 	}
@@ -1334,7 +1328,7 @@ void wDeiconifyWindow(WWindow *wwin)
 	if (!netwm_hidden) {
 		XUngrabServer(dpy);
 
-		wSetFocusTo(wwin->screen_ptr, wwin);
+		wSetFocusTo(wwin->vscr->screen_ptr, wwin);
 
 #ifdef ANIMATIONS
 		if (!w_global.startup.phase1) {
@@ -1345,7 +1339,7 @@ void wDeiconifyWindow(WWindow *wwin)
 
 			/* the window can disappear while ProcessPendingEvents() runs */
 			if (!wWindowFor(clientwin)) {
-				wwin->screen_ptr->vscr->workspace.ignore_change = False;
+				wwin->vscr->workspace.ignore_change = False;
 				return;
 			}
 		}
@@ -1353,7 +1347,7 @@ void wDeiconifyWindow(WWindow *wwin)
 	}
 
 	if (wPreferences.auto_arrange_icons)
-		wArrangeIcons(wwin->screen_ptr, True);
+		wArrangeIcons(wwin->vscr->screen_ptr, True);
 
 	WMPostNotificationName(WMNChangedState, wwin, "iconify");
 
@@ -1361,7 +1355,7 @@ void wDeiconifyWindow(WWindow *wwin)
 	if (!netwm_hidden)
 		wUnshadeWindow(wwin);
 
-	wwin->screen_ptr->vscr->workspace.ignore_change = False;
+	wwin->vscr->workspace.ignore_change = False;
 }
 
 static void hideWindow(WIcon *icon, int icon_x, int icon_y, WWindow *wwin, int animate)
@@ -1389,7 +1383,7 @@ static void hideWindow(WIcon *icon, int icon_x, int icon_y, WWindow *wwin, int a
 #ifdef ANIMATIONS
 	if (!w_global.startup.phase1 && !wPreferences.no_animations &&
 	    !wwin->flags.skip_next_animation && animate) {
-		animateResize(wwin->screen_ptr, wwin->frame_x, wwin->frame_y,
+		animateResize(wwin->vscr->screen_ptr, wwin->frame_x, wwin->frame_y,
 			      wwin->frame->core->width, wwin->frame->core->height,
 			      icon_x, icon_y, icon->core->width, icon->core->height);
 	}
@@ -1434,7 +1428,7 @@ void wHideAll(WScreen *scr)
 
 	for (i = 0; i < wcount; i++) {
 		wwin = windows[i];
-		if (wwin->frame->workspace == wwin->screen_ptr->vscr->workspace.current
+		if (wwin->frame->workspace == wwin->vscr->workspace.current
 		    && !(wwin->flags.miniaturized || wwin->flags.hidden)
 		    && !wwin->flags.internal_window
 		    && !WFLAGP(wwin, no_miniaturizable)) {
@@ -1454,10 +1448,10 @@ void wHideOtherApplications(WWindow *awin)
 	if (!awin)
 		return;
 
-	wwin = awin->screen_ptr->focused_window;
+	wwin = awin->vscr->screen_ptr->focused_window;
 	while (wwin) {
 		if (wwin != awin
-		    && wwin->frame->workspace == awin->screen_ptr->vscr->workspace.current
+		    && wwin->frame->workspace == awin->vscr->workspace.current
 		    && !(wwin->flags.miniaturized || wwin->flags.hidden)
 		    && !wwin->flags.internal_window
 		    && wGetWindowOfInspectorForWindow(wwin) != awin && !WFLAGP(wwin, no_hide_others)) {
@@ -1482,27 +1476,25 @@ void wHideOtherApplications(WWindow *awin)
 		}
 		wwin = wwin->prev;
 	}
-	/*
-	   wSetFocusTo(awin->screen_ptr, awin);
-	 */
 }
 
 void wHideApplication(WApplication *wapp)
 {
 	WScreen *scr;
 	WWindow *wlist;
-	int hadfocus;
-	int animate;
+	int hadfocus, animate;
 
 	if (!wapp) {
 		wwarning("trying to hide a non grouped window");
 		return;
 	}
+
 	if (!wapp->main_window_desc) {
 		wwarning("group leader not found for window group");
 		return;
 	}
-	scr = wapp->main_window_desc->screen_ptr;
+
+	scr = wapp->main_window_desc->vscr->screen_ptr;
 	hadfocus = 0;
 	wlist = scr->focused_window;
 	if (!wlist)
@@ -1559,26 +1551,27 @@ void wHideApplication(WApplication *wapp)
 static void unhideWindow(WIcon *icon, int icon_x, int icon_y, WWindow *wwin, int animate, int bringToCurrentWS)
 {
 	if (bringToCurrentWS)
-		wWindowChangeWorkspace(wwin, wwin->screen_ptr->vscr->workspace.current);
+		wWindowChangeWorkspace(wwin, wwin->vscr->workspace.current);
 
 	wwin->flags.hidden = 0;
 
 #ifdef ANIMATIONS
 	if (!w_global.startup.phase1 && !wPreferences.no_animations && animate) {
-		animateResize(wwin->screen_ptr, icon_x, icon_y,
+		animateResize(wwin->vscr->screen_ptr, icon_x, icon_y,
 			      icon->core->width, icon->core->height,
 			      wwin->frame_x, wwin->frame_y,
 			      wwin->frame->core->width, wwin->frame->core->height);
 	}
 #endif
 	wwin->flags.skip_next_animation = 0;
-	if (wwin->screen_ptr->vscr->workspace.current == wwin->frame->workspace) {
+	if (wwin->vscr->screen_ptr->vscr->workspace.current == wwin->frame->workspace) {
 		XMapWindow(dpy, wwin->client_win);
 		XMapWindow(dpy, wwin->frame->core->window);
 		wClientSetState(wwin, NormalState, None);
 		wwin->flags.mapped = 1;
 		wRaiseFrame(wwin->frame->core);
 	}
+
 	if (wwin->flags.inspector_open)
 		wUnhideInspectorForWindow(wwin);
 
@@ -1595,7 +1588,7 @@ void wUnhideApplication(WApplication *wapp, Bool miniwindows, Bool bringToCurren
 	if (!wapp)
 		return;
 
-	scr = wapp->main_window_desc->screen_ptr;
+	scr = wapp->main_window_desc->vscr->screen_ptr;
 	wlist = scr->focused_window;
 	if (!wlist)
 		return;
@@ -1878,7 +1871,7 @@ void wArrangeIcons(WScreen *scr, Bool arrangeAll)
 
 void wSelectWindow(WWindow *wwin, Bool flag)
 {
-	WScreen *scr = wwin->screen_ptr;
+	WScreen *scr = wwin->vscr->screen_ptr;
 
 	if (flag) {
 		wwin->flags.selected = 1;
@@ -1888,10 +1881,11 @@ void wSelectWindow(WWindow *wwin, Bool flag)
 			XSetWindowBorder(dpy, wwin->frame->core->window, scr->white_pixel);
 
 		if (!HAS_BORDER(wwin))
-			XSetWindowBorderWidth(dpy, wwin->frame->core->window, wwin->screen_ptr->frame_border_width);
+			XSetWindowBorderWidth(dpy, wwin->frame->core->window, wwin->vscr->screen_ptr->frame_border_width);
 
 		if (!scr->selected_windows)
 			scr->selected_windows = WMCreateArray(4);
+
 		WMAddToArray(scr->selected_windows, wwin);
 	} else {
 		wwin->flags.selected = 0;
@@ -1917,8 +1911,8 @@ void wSelectWindow(WWindow *wwin, Bool flag)
 
 void wMakeWindowVisible(WWindow *wwin)
 {
-	if (wwin->frame->workspace != wwin->screen_ptr->vscr->workspace.current)
-		wWorkspaceChange(wwin->screen_ptr, wwin->frame->workspace);
+	if (wwin->frame->workspace != wwin->vscr->workspace.current)
+		wWorkspaceChange(wwin->vscr->screen_ptr, wwin->frame->workspace);
 
 	if (wwin->flags.shaded)
 		wUnshadeWindow(wwin);
@@ -1938,7 +1932,7 @@ void wMakeWindowVisible(WWindow *wwin)
 		wDeiconifyWindow(wwin);
 	} else {
 		if (!WFLAGP(wwin, no_focusable))
-			wSetFocusTo(wwin->screen_ptr, wwin);
+			wSetFocusTo(wwin->vscr->screen_ptr, wwin);
 
 		wRaiseFrame(wwin->frame->core);
 	}
@@ -1965,6 +1959,7 @@ static void shade_animate(WWindow *wwin, Bool what)
 			s = h / SHADE_STEPS;
 			if (s < 1)
 				s = 1;
+
 			w = wwin->frame->core->width;
 			y = wwin->frame->top_width;
 			while (h > wwin->frame->top_width + 1) {
@@ -1979,9 +1974,11 @@ static void shade_animate(WWindow *wwin, Bool what)
 					wusleep(SHADE_DELAY * 1000L);
 				else
 					wusleep(10);
+
 				h -= s;
-			y -= s;
+				y -= s;
 			}
+
 			XMoveWindow(dpy, wwin->client_win, 0, wwin->frame->top_width);
 		}
 		break;
@@ -1992,6 +1989,7 @@ static void shade_animate(WWindow *wwin, Bool what)
 		s = abs(y) / SHADE_STEPS;
 		if (s < 1)
 			s = 1;
+
 		w = wwin->frame->core->width;
 		XMoveWindow(dpy, wwin->client_win, 0, y);
 		if (s > 0) {
@@ -2003,6 +2001,7 @@ static void shade_animate(WWindow *wwin, Bool what)
 					wusleep(SHADE_DELAY * 2000L / 3);
 				else
 					wusleep(10);
+
 				h += s;
 				y += s;
 
@@ -2010,6 +2009,7 @@ static void shade_animate(WWindow *wwin, Bool what)
 					break;
 			}
 		}
+
 		XMoveWindow(dpy, wwin->client_win, 0, wwin->frame->top_width);
 		break;
 	}

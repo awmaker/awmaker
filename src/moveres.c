@@ -135,32 +135,17 @@ static void moveGeometryDisplayCentered(WScreen * scr, int x, int y)
 	WMMoveWidget(scr->gview, x, y);
 }
 
-static void showPosition(WWindow * wwin, int x, int y)
+static void showPosition(WWindow *wwin, int x, int y)
 {
-	WScreen *scr = wwin->screen_ptr;
+	WScreen *scr = wwin->vscr->screen_ptr;
 
-	if (wPreferences.move_display == WDIS_NEW) {
-#if 0
-		int width = wwin->frame->core->width;
-		int height = wwin->frame->core->height;
-
-		GC lgc = scr->line_gc;
-		XSetForeground(dpy, lgc, scr->line_pixel);
-		sprintf(num, "%i", x);
-
-		XDrawLine(dpy, scr->root_win, lgc, 0, y - 1, scr->scr_width, y - 1);
-		XDrawLine(dpy, scr->root_win, lgc, 0, y + height + 2, scr->scr_width, y + height + 2);
-		XDrawLine(dpy, scr->root_win, lgc, x - 1, 0, x - 1, scr->scr_height);
-		XDrawLine(dpy, scr->root_win, lgc, x + width + 2, 0, x + width + 2, scr->scr_height);
-#endif
-	} else {
+	if (wPreferences.move_display != WDIS_NEW)
 		WSetGeometryViewShownPosition(scr->gview, x, y);
-	}
 }
 
-static void cyclePositionDisplay(WWindow * wwin, int x, int y, int w, int h)
+static void cyclePositionDisplay(WWindow *wwin, int x, int y, int w, int h)
 {
-	WScreen *scr = wwin->screen_ptr;
+	WScreen *scr = wwin->vscr->screen_ptr;
 	WMRect rect;
 
 	wPreferences.move_display++;
@@ -188,9 +173,9 @@ static void cyclePositionDisplay(WWindow * wwin, int x, int y, int w, int h)
 	}
 }
 
-static void mapPositionDisplay(WWindow * wwin, int x, int y, int w, int h)
+static void mapPositionDisplay(WWindow *wwin, int x, int y, int w, int h)
 {
-	WScreen *scr = wwin->screen_ptr;
+	WScreen *scr = wwin->vscr->screen_ptr;
 	WMRect rect;
 
 	if (wPreferences.move_display == WDIS_NEW || wPreferences.move_display == WDIS_NONE) {
@@ -205,13 +190,14 @@ static void mapPositionDisplay(WWindow * wwin, int x, int y, int w, int h)
 	} else if (wPreferences.move_display == WDIS_FRAME_CENTER) {
 		moveGeometryDisplayCentered(scr, x + w / 2, y + h / 2);
 	}
+
 	WMMapWidget(scr->gview);
 	WSetGeometryViewShownPosition(scr->gview, x, y);
 }
 
-static void showGeometry(WWindow * wwin, int x1, int y1, int x2, int y2, int direction)
+static void showGeometry(WWindow *wwin, int x1, int y1, int x2, int y2, int direction)
 {
-	WScreen *scr = wwin->screen_ptr;
+	WScreen *scr = wwin->vscr->screen_ptr;
 	Window root = scr->root_win;
 	GC gc = scr->line_gc;
 	int ty, by, my, x, y, mx, s;
@@ -248,6 +234,7 @@ static void showGeometry(WWindow * wwin, int x1, int y1, int x2, int y2, int dir
 			x = x1;
 			s = 15;
 		}
+
 		my = (ty + by) / 2;
 
 		/* top arrow & end bar */
@@ -309,6 +296,7 @@ static void showGeometry(WWindow * wwin, int x1, int y1, int x2, int y2, int dir
 			y = y1;
 			s = 15;
 		}
+
 		mx = x1 + (x2 - x1) / 2;
 		snprintf(num, sizeof(num), "%i", (x2 - x1 - wwin->normal_hints->base_width) /
 			 wwin->normal_hints->width_inc);
@@ -367,9 +355,9 @@ static void showGeometry(WWindow * wwin, int x1, int y1, int x2, int y2, int dir
 	}
 }
 
-static void cycleGeometryDisplay(WWindow * wwin, int x, int y, int w, int h, int dir)
+static void cycleGeometryDisplay(WWindow *wwin, int x, int y, int w, int h, int dir)
 {
-	WScreen *scr = wwin->screen_ptr;
+	WScreen *scr = wwin->vscr->screen_ptr;
 	WMRect rect;
 
 	wPreferences.size_display++;
@@ -388,14 +376,15 @@ static void cycleGeometryDisplay(WWindow * wwin, int x, int y, int w, int h, int
 		} else if (wPreferences.size_display == WDIS_FRAME_CENTER) {
 			moveGeometryDisplayCentered(scr, x + w / 2, y + h / 2);
 		}
+
 		WMMapWidget(scr->gview);
 		showGeometry(wwin, x, y, x + w, y + h, dir);
 	}
 }
 
-static void mapGeometryDisplay(WWindow * wwin, int x, int y, int w, int h)
+static void mapGeometryDisplay(WWindow *wwin, int x, int y, int w, int h)
 {
-	WScreen *scr = wwin->screen_ptr;
+	WScreen *scr = wwin->vscr->screen_ptr;
 	WMRect rect;
 
 	if (wPreferences.size_display == WDIS_NEW || wPreferences.size_display == WDIS_NONE)
@@ -411,14 +400,15 @@ static void mapGeometryDisplay(WWindow * wwin, int x, int y, int w, int h)
 	} else if (wPreferences.size_display == WDIS_FRAME_CENTER) {
 		moveGeometryDisplayCentered(scr, x + w / 2, y + h / 2);
 	}
+
 	WMMapWidget(scr->gview);
 	showGeometry(wwin, x, y, x + w, y + h, 0);
 }
 
-static void doWindowMove(WWindow * wwin, WMArray * array, int dx, int dy)
+static void doWindowMove(WWindow *wwin, WMArray *array, int dx, int dy)
 {
 	WWindow *tmpw;
-	WScreen *scr = wwin->screen_ptr;
+	WScreen *scr = wwin->vscr->screen_ptr;
 	int x, y;
 
 	if (!array || !WMGetArrayItemCount(array)) {
@@ -452,21 +442,21 @@ static void doWindowMove(WWindow * wwin, WMArray * array, int dx, int dy)
 	}
 }
 
-static void drawTransparentFrame(WWindow * wwin, int x, int y, int width, int height)
+static void drawTransparentFrame(WWindow *wwin, int x, int y, int width, int height)
 {
-	Window root = wwin->screen_ptr->root_win;
-	GC gc = wwin->screen_ptr->frame_gc;
+	Window root = wwin->vscr->screen_ptr->root_win;
+	GC gc = wwin->vscr->screen_ptr->frame_gc;
 	int h = 0;
 	int bottom = 0;
 
 	if (HAS_BORDER_WITH_SELECT(wwin)) {
-		x += wwin->screen_ptr->frame_border_width;
-		y += wwin->screen_ptr->frame_border_width;
+		x += wwin->vscr->screen_ptr->frame_border_width;
+		y += wwin->vscr->screen_ptr->frame_border_width;
 	}
 
 	if (HAS_TITLEBAR(wwin) && !wwin->flags.shaded) {
-		h = WMFontHeight(wwin->screen_ptr->title_font) + (wPreferences.window_title_clearance +
-								  TITLEBAR_EXTEND_SPACE) * 2;
+		h = WMFontHeight(wwin->vscr->screen_ptr->title_font) + 2 *
+		    (wPreferences.window_title_clearance + TITLEBAR_EXTEND_SPACE);
 
 		if (h > wPreferences.window_title_max_height)
 			h = wPreferences.window_title_max_height;
@@ -474,6 +464,7 @@ static void drawTransparentFrame(WWindow * wwin, int x, int y, int width, int he
 		if (h < wPreferences.window_title_min_height)
 			h = wPreferences.window_title_min_height;
 	}
+
 	if (HAS_RESIZEBAR(wwin) && !wwin->flags.shaded) {
 		/* Can't use wwin-frame->bottom_width because, in some cases
 		   (e.g. interactive placement), frame does not point to anything. */
@@ -481,28 +472,24 @@ static void drawTransparentFrame(WWindow * wwin, int x, int y, int width, int he
 	}
 	XDrawRectangle(dpy, root, gc, x - 1, y - 1, width + 1, height + 1);
 
-	if (h > 0) {
+	if (h > 0)
 		XDrawLine(dpy, root, gc, x, y + h - 1, x + width, y + h - 1);
-	}
-	if (bottom > 0) {
+
+	if (bottom > 0)
 		XDrawLine(dpy, root, gc, x, y + height - bottom, x + width, y + height - bottom);
-	}
 }
 
-static void drawFrames(WWindow * wwin, WMArray * array, int dx, int dy)
+static void drawFrames(WWindow *wwin, WMArray *array, int dx, int dy)
 {
 	WWindow *tmpw;
-	int scr_width = wwin->screen_ptr->scr_width;
-	int scr_height = wwin->screen_ptr->scr_height;
+	int scr_width = wwin->vscr->screen_ptr->scr_width;
+	int scr_height = wwin->vscr->screen_ptr->scr_height;
 	int x, y;
 
 	if (!array) {
-
 		x = wwin->frame_x + dx;
 		y = wwin->frame_y + dy;
-
 		drawTransparentFrame(wwin, x, y, wwin->frame->core->width, wwin->frame->core->height);
-
 	} else {
 		WMArrayIterator iter;
 
@@ -604,9 +591,9 @@ typedef struct {
 #define WTOP(w) (w)->frame_y
 #define WLEFT(w) (w)->frame_x
 #define WRIGHT(w) ((w)->frame_x + (int)(w)->frame->core->width - 1 + \
-    (HAS_BORDER_WITH_SELECT(w) ? 2*(w)->screen_ptr->frame_border_width : 0))
+    (HAS_BORDER_WITH_SELECT(w) ? 2*(w)->vscr->screen_ptr->frame_border_width : 0))
 #define WBOTTOM(w) ((w)->frame_y + (int)(w)->frame->core->height - 1 + \
-    (HAS_BORDER_WITH_SELECT(w) ? 2*(w)->screen_ptr->frame_border_width : 0))
+    (HAS_BORDER_WITH_SELECT(w) ? 2*(w)->vscr->screen_ptr->frame_border_width : 0))
 
 static int compareWTop(const void *a, const void *b)
 {
@@ -732,21 +719,24 @@ static void updateResistance(MoveData *data, int newX, int newY)
 	}
 }
 
-static void freeMoveData(MoveData * data)
+static void freeMoveData(MoveData *data)
 {
 	if (data->topList)
 		wfree(data->topList);
+
 	if (data->leftList)
 		wfree(data->leftList);
+
 	if (data->rightList)
 		wfree(data->rightList);
+
 	if (data->bottomList)
 		wfree(data->bottomList);
 }
 
-static void updateMoveData(WWindow * wwin, MoveData * data)
+static void updateMoveData(WWindow *wwin, MoveData *data)
 {
-	WScreen *scr = wwin->screen_ptr;
+	WScreen *scr = wwin->vscr->screen_ptr;
 	WWindow *tmp;
 	int i;
 
@@ -787,42 +777,41 @@ static void updateMoveData(WWindow * wwin, MoveData * data)
 	data->rightIndex = -1;
 	data->bottomIndex = -1;
 
-	if (WTOP(wwin) < WBOTTOM(data->bottomList[0])) {
+	if (WTOP(wwin) < WBOTTOM(data->bottomList[0]))
 		data->bottomIndex = 0;
-	}
-	if (WLEFT(wwin) < WRIGHT(data->rightList[0])) {
+
+	if (WLEFT(wwin) < WRIGHT(data->rightList[0]))
 		data->rightIndex = 0;
-	}
-	if (WRIGHT(wwin) > WLEFT(data->leftList[0])) {
+
+	if (WRIGHT(wwin) > WLEFT(data->leftList[0]))
 		data->leftIndex = 0;
-	}
-	if (WBOTTOM(wwin) > WTOP(data->topList[0])) {
+
+	if (WBOTTOM(wwin) > WTOP(data->topList[0]))
 		data->topIndex = 0;
-	}
+
 	for (i = 0; i < data->count; i++) {
-		if (WTOP(wwin) >= WBOTTOM(data->bottomList[i])) {
+		if (WTOP(wwin) >= WBOTTOM(data->bottomList[i]))
 			data->bottomIndex = i + 1;
-		}
-		if (WLEFT(wwin) >= WRIGHT(data->rightList[i])) {
+
+		if (WLEFT(wwin) >= WRIGHT(data->rightList[i]))
 			data->rightIndex = i + 1;
-		}
-		if (WRIGHT(wwin) <= WLEFT(data->leftList[i])) {
+
+		if (WRIGHT(wwin) <= WLEFT(data->leftList[i]))
 			data->leftIndex = i + 1;
-		}
-		if (WBOTTOM(wwin) <= WTOP(data->topList[i])) {
+
+		if (WBOTTOM(wwin) <= WTOP(data->topList[i]))
 			data->topIndex = i + 1;
-		}
 	}
 }
 
-static void initMoveData(WWindow * wwin, MoveData * data)
+static void initMoveData(WWindow *wwin, MoveData *data)
 {
 	int i;
 	WWindow *tmp;
 
 	memset(data, 0, sizeof(MoveData));
 
-	for (i = 0, tmp = wwin->screen_ptr->focused_window; tmp != NULL; tmp = tmp->prev, i++) ;
+	for (i = 0, tmp = wwin->vscr->screen_ptr->focused_window; tmp != NULL; tmp = tmp->prev, i++) ;
 
 	if (i > 1) {
 		data->topList = wmalloc(sizeof(WWindow *) * i);
@@ -838,15 +827,15 @@ static void initMoveData(WWindow * wwin, MoveData * data)
 	data->calcX = wwin->frame_x;
 	data->calcY = wwin->frame_y;
 
-	data->winWidth = wwin->frame->core->width + (HAS_BORDER_WITH_SELECT(wwin) ? 2 * wwin->screen_ptr->frame_border_width : 0);
-	data->winHeight = wwin->frame->core->height + (HAS_BORDER_WITH_SELECT(wwin) ? 2 * wwin->screen_ptr->frame_border_width : 0);
+	data->winWidth = wwin->frame->core->width + (HAS_BORDER_WITH_SELECT(wwin) ? 2 * wwin->vscr->screen_ptr->frame_border_width : 0);
+	data->winHeight = wwin->frame->core->height + (HAS_BORDER_WITH_SELECT(wwin) ? 2 * wwin->vscr->screen_ptr->frame_border_width : 0);
 
 	data->snap = SNAP_NONE;
 }
 
 static Bool checkWorkspaceChange(WWindow *wwin, MoveData *data, Bool opaqueMove)
 {
-	WScreen *scr = wwin->screen_ptr;
+	WScreen *scr = wwin->vscr->screen_ptr;
 	Bool changed = False;
 
 	if (data->mouseX <= 1) {
@@ -901,10 +890,10 @@ static void
 updateWindowPosition(WWindow *wwin, MoveData *data, Bool doResistance,
 		     Bool opaqueMove, int newMouseX, int newMouseY)
 {
-	WScreen *scr = wwin->screen_ptr;
-	int dx, dy;		/* how much mouse moved */
+	WScreen *scr = wwin->vscr->screen_ptr;
+	int dx, dy;			/* how much mouse moved */
 	int winL, winR, winT, winB;	/* requested new window position */
-	int newX, newY;		/* actual new window position */
+	int newX, newY;			/* actual new window position */
 	Bool hresist, vresist;
 	Bool attract;
 
@@ -1009,11 +998,6 @@ updateWindowPosition(WWindow *wwin, MoveData *data, Bool doResistance,
 						}
 					}
 			}
-
-			/*
-			   printf("%d %d\n",winL,winR);
-			   printf("l_ %d r_ %d _l %d _r %d\n",l_edge,r_edge,edge_l,edge_r);
-			 */
 
 			if ((winL - l_edge) < (r_edge - winL)) {
 				if (resist > 0) {
@@ -1156,10 +1140,9 @@ updateWindowPosition(WWindow *wwin, MoveData *data, Bool doResistance,
 		newY = data->calcY;
 
 	if (data->realX != newX || data->realY != newY) {
-
-		if (wPreferences.move_display == WDIS_NEW && !scr->selected_windows) {
+		if (wPreferences.move_display == WDIS_NEW && !scr->selected_windows)
 			showPosition(wwin, data->realX, data->realY);
-		}
+
 		if (opaqueMove) {
 			doWindowMove(wwin, scr->selected_windows, newX - wwin->frame_x, newY - wwin->frame_y);
 		} else {
@@ -1196,40 +1179,40 @@ static void drawSnapFrame(WWindow *wwin, int direction)
 {
 	WScreen *scr;
 
-	scr = wwin->screen_ptr;
+	scr = wwin->vscr->screen_ptr;
 
 	switch (direction) {
 	case SNAP_LEFT:
-		drawTransparentFrame(wwin, 0, 0, scr->scr_width/2, scr->scr_height);
+		drawTransparentFrame(wwin, 0, 0, scr->scr_width / 2, scr->scr_height);
 		break;
 
 	case SNAP_RIGHT:
-		drawTransparentFrame(wwin, scr->scr_width/2, 0, scr->scr_width/2, scr->scr_height);
+		drawTransparentFrame(wwin, scr->scr_width / 2, 0, scr->scr_width / 2, scr->scr_height);
 		break;
 
 	case SNAP_TOP:
-		drawTransparentFrame(wwin, 0, 0, scr->scr_width, scr->scr_height/2);
+		drawTransparentFrame(wwin, 0, 0, scr->scr_width, scr->scr_height / 2);
 		break;
 
 	case SNAP_BOTTOM:
-		drawTransparentFrame(wwin, 0, scr->scr_height/2, scr->scr_width, scr->scr_height/2);
+		drawTransparentFrame(wwin, 0, scr->scr_height / 2, scr->scr_width, scr->scr_height / 2);
 		break;
 
 	case SNAP_TOPLEFT:
-		drawTransparentFrame(wwin, 0, 0, scr->scr_width/2, scr->scr_height/2);
+		drawTransparentFrame(wwin, 0, 0, scr->scr_width / 2, scr->scr_height / 2);
 		break;
 
 	case SNAP_TOPRIGHT:
-		drawTransparentFrame(wwin, scr->scr_width/2, 0, scr->scr_width/2, scr->scr_height/2);
+		drawTransparentFrame(wwin, scr->scr_width / 2, 0, scr->scr_width / 2, scr->scr_height / 2);
 		break;
 
 	case SNAP_BOTTOMLEFT:
-		drawTransparentFrame(wwin, 0, scr->scr_height/2, scr->scr_width/2, scr->scr_height/2);
+		drawTransparentFrame(wwin, 0, scr->scr_height / 2, scr->scr_width / 2, scr->scr_height / 2);
 		break;
 
 	case SNAP_BOTTOMRIGHT:
-		drawTransparentFrame(wwin, scr->scr_width/2, scr->scr_height/2,
-				     scr->scr_width/2, scr->scr_height/2);
+		drawTransparentFrame(wwin, scr->scr_width / 2, scr->scr_height / 2,
+				     scr->scr_width / 2, scr->scr_height / 2);
 		break;
 	}
 }
@@ -1263,11 +1246,12 @@ static void doSnap(WWindow *wwin, MoveData *data, Bool opaqueMove)
 	WScreen *scr;
 
 	directions = 0;
-	scr = wwin->screen_ptr;
+	scr = wwin->vscr->screen_ptr;
 
 	/* erase frames */
 	if (!opaqueMove)
 		drawFrames(wwin, scr->selected_windows, data->realX - wwin->frame_x, data->realY - wwin->frame_y);
+
 	drawSnapFrame(wwin, data->snap);
 
 	switch (data->snap) {
@@ -1301,6 +1285,7 @@ static void doSnap(WWindow *wwin, MoveData *data, Bool opaqueMove)
 
 	if (directions)
 		handleMaximize(wwin, directions);
+
 	data->snap = SNAP_NONE;
 }
 
@@ -1309,15 +1294,15 @@ static void doSnap(WWindow *wwin, MoveData *data, Bool opaqueMove)
 #define MOVABLE_BIT	0x01
 #define RESIZABLE_BIT	0x02
 
-int wKeyboardMoveResizeWindow(WWindow * wwin)
+int wKeyboardMoveResizeWindow(WWindow *wwin)
 {
-	WScreen *scr = wwin->screen_ptr;
+	WScreen *scr = wwin->vscr->screen_ptr;
 	Window root = scr->root_win;
 	XEvent event;
 	int w = wwin->frame->core->width;
 	int h = wwin->frame->core->height;
-	int scr_width = wwin->screen_ptr->scr_width;
-	int scr_height = wwin->screen_ptr->scr_height;
+	int scr_width = wwin->vscr->screen_ptr->scr_width;
+	int scr_height = wwin->vscr->screen_ptr->scr_height;
 	int vert_border = wwin->frame->top_width + wwin->frame->bottom_width;
 	int src_x = wwin->frame_x;
 	int src_y = wwin->frame_y;
@@ -1339,17 +1324,16 @@ int wKeyboardMoveResizeWindow(WWindow * wwin)
 	shiftr = XKeysymToKeycode(dpy, XK_Shift_R);
 	ctrlmode = done = off_x = off_y = 0;
 
-	if (modes == RESIZABLE_BIT) {
+	if (modes == RESIZABLE_BIT)
 		ctrlmode = 1;
-	}
 
 	XSync(dpy, False);
 	wusleep(10000);
 	XGrabKeyboard(dpy, root, False, GrabModeAsync, GrabModeAsync, CurrentTime);
 
-	if (!wwin->flags.selected) {
+	if (!wwin->flags.selected)
 		wUnselectWindows(scr);
-	}
+
 	XGrabServer(dpy);
 	XGrabPointer(dpy, scr->root_win, True, PointerMotionMask
 		     | ButtonReleaseMask | ButtonPressMask, GrabModeAsync,
@@ -1367,17 +1351,13 @@ int wKeyboardMoveResizeWindow(WWindow * wwin)
 			drawTransparentFrame(wwin, src_x + off_x, src_y + off_y, w, h);
 		}
 	}
-	if ((wwin->flags.shaded || scr->selected_windows) && (!scr->selected_windows)) {
+
+	if ((wwin->flags.shaded || scr->selected_windows) && (!scr->selected_windows))
 		mapPositionDisplay(wwin, src_x, src_y, w, h);
 
-	}
 	ww = w;
 	wh = h;
 	while (1) {
-		/*
-		   looper.ox=off_x;
-		   looper.oy=off_y;
-		 */
 		do {
 			WMMaskEvent(dpy, KeyPressMask | ButtonReleaseMask
 				    | ButtonPressMask | ExposureMask, &event);
@@ -1415,6 +1395,7 @@ int wKeyboardMoveResizeWindow(WWindow * wwin)
 					kspeed++;
 				}
 			}
+
 			if (kspeed < _KS)
 				kspeed = _KS;
 			lastTime = event.xkey.time;
@@ -1426,6 +1407,7 @@ int wKeyboardMoveResizeWindow(WWindow * wwin)
 					ctrlmode = 0;
 				}
 			}
+
 			if (event.xkey.keycode == shiftl || event.xkey.keycode == shiftr) {
 				if (ctrlmode)
 					cycleGeometryDisplay(wwin, src_x + off_x, src_y + off_y, ww, wh, 0);
@@ -1670,9 +1652,9 @@ int wKeyboardMoveResizeWindow(WWindow * wwin)
  * 	The position display configuration may be changed.
  *----------------------------------------------------------------------
  */
-int wMouseMoveWindow(WWindow * wwin, XEvent * ev)
+int wMouseMoveWindow(WWindow *wwin, XEvent *ev)
 {
-	WScreen *scr = wwin->screen_ptr;
+	WScreen *scr = wwin->vscr->screen_ptr;
 	XEvent event;
 	Window root = scr->root_win;
 	KeyCode shiftl, shiftr;
@@ -1733,15 +1715,15 @@ int wMouseMoveWindow(WWindow * wwin, XEvent * ev)
 			if ((event.xkey.keycode == shiftl || event.xkey.keycode == shiftr)
 			    && started && !scr->selected_windows) {
 
-				if (!opaqueMove) {
+				if (!opaqueMove)
 					drawFrames(wwin, scr->selected_windows,
 						   moveData.realX - wwin->frame_x, moveData.realY - wwin->frame_y);
-				}
 
 				if (wPreferences.move_display == WDIS_NEW && !scr->selected_windows) {
 					showPosition(wwin, moveData.realX, moveData.realY);
 					XUngrabServer(dpy);
 				}
+
 				cyclePositionDisplay(wwin, moveData.realX, moveData.realY,
 						     moveData.winWidth, moveData.winHeight);
 
@@ -2027,10 +2009,10 @@ static int getResizeDirection(WWindow * wwin, int x, int y, int dy, int flags)
 	return dir;
 }
 
-void wMouseResizeWindow(WWindow * wwin, XEvent * ev)
+void wMouseResizeWindow(WWindow *wwin, XEvent *ev)
 {
 	XEvent event;
-	WScreen *scr = wwin->screen_ptr;
+	WScreen *scr = wwin->vscr->screen_ptr;
 	Window root = scr->root_win;
 	int vert_border = wwin->frame->top_width + wwin->frame->bottom_width;
 	int fw = wwin->frame->core->width;
@@ -2375,9 +2357,9 @@ void wSelectWindows(WScreen *scr, XEvent *ev)
 	}
 }
 
-void InteractivePlaceWindow(WWindow * wwin, int *x_ret, int *y_ret, unsigned width, unsigned height)
+void InteractivePlaceWindow(WWindow *wwin, int *x_ret, int *y_ret, unsigned width, unsigned height)
 {
-	WScreen *scr = wwin->screen_ptr;
+	WScreen *scr = wwin->vscr->screen_ptr;
 	Window root = scr->root_win;
 	int x, y, h = 0;
 	XEvent event;
@@ -2391,6 +2373,7 @@ void InteractivePlaceWindow(WWindow * wwin, int *x_ret, int *y_ret, unsigned wid
 		*y_ret = 0;
 		return;
 	}
+
 	if (HAS_TITLEBAR(wwin)) {
 		h = WMFontHeight(scr->title_font) + (wPreferences.window_title_clearance +
 						     TITLEBAR_EXTEND_SPACE) * 2;

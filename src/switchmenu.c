@@ -372,22 +372,21 @@ static void observer(void *self, WMNotification * notif)
 	if (!wwin)
 		return;
 
-	if (strcmp(name, WMNManaged) == 0)
-		UpdateSwitchMenu(wwin->screen_ptr, wwin, ACTION_ADD);
-	else if (strcmp(name, WMNUnmanaged) == 0)
-		UpdateSwitchMenu(wwin->screen_ptr, wwin, ACTION_REMOVE);
-	else if (strcmp(name, WMNChangedWorkspace) == 0)
-		UpdateSwitchMenu(wwin->screen_ptr, wwin, ACTION_CHANGE_WORKSPACE);
-	else if (strcmp(name, WMNChangedFocus) == 0)
-		UpdateSwitchMenu(wwin->screen_ptr, wwin, ACTION_CHANGE_STATE);
-	else if (strcmp(name, WMNChangedName) == 0)
-		UpdateSwitchMenu(wwin->screen_ptr, wwin, ACTION_CHANGE);
-	else if (strcmp(name, WMNChangedState) == 0) {
-		if (strcmp((char *)data, "omnipresent") == 0) {
-			UpdateSwitchMenu(wwin->screen_ptr, wwin, ACTION_CHANGE_WORKSPACE);
-		} else {
-			UpdateSwitchMenu(wwin->screen_ptr, wwin, ACTION_CHANGE_STATE);
-		}
+	if (strcmp(name, WMNManaged) == 0) {
+		UpdateSwitchMenu(wwin->vscr->screen_ptr, wwin, ACTION_ADD);
+	} else if (strcmp(name, WMNUnmanaged) == 0) {
+		UpdateSwitchMenu(wwin->vscr->screen_ptr, wwin, ACTION_REMOVE);
+	} else if (strcmp(name, WMNChangedWorkspace) == 0) {
+		UpdateSwitchMenu(wwin->vscr->screen_ptr, wwin, ACTION_CHANGE_WORKSPACE);
+	} else if (strcmp(name, WMNChangedFocus) == 0) {
+		UpdateSwitchMenu(wwin->vscr->screen_ptr, wwin, ACTION_CHANGE_STATE);
+	} else if (strcmp(name, WMNChangedName) == 0) {
+		UpdateSwitchMenu(wwin->vscr->screen_ptr, wwin, ACTION_CHANGE);
+	} else if (strcmp(name, WMNChangedState) == 0) {
+		if (strcmp((char *)data, "omnipresent") == 0)
+			UpdateSwitchMenu(wwin->vscr->screen_ptr, wwin, ACTION_CHANGE_WORKSPACE);
+		else
+			UpdateSwitchMenu(wwin->vscr->screen_ptr, wwin, ACTION_CHANGE_STATE);
 	}
 }
 

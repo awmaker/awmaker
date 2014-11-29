@@ -341,16 +341,17 @@ static int appIsUrgent(WApplication *wapp)
 		wwarning("group leader not found for window group");
 		return 0;
 	}
-	scr = wapp->main_window_desc->screen_ptr;
+
+	scr = wapp->main_window_desc->vscr->screen_ptr;
 	wlist = scr->focused_window;
 	if (!wlist)
 		return 0;
 
 	while (wlist) {
-		if (wlist->main_window == wapp->main_window) {
+		if (wlist->main_window == wapp->main_window)
 			if (wlist->flags.urgent)
 				return 1;
-		}
+
 		wlist = wlist->prev;
 	}
 

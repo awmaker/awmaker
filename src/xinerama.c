@@ -174,16 +174,14 @@ int wGetHeadForRect(WScreen * scr, WMRect rect)
 		}
 	}
 
-	/*
-	 * in case rect is in dead space, return valid head
-	 */
+	/* in case rect is in dead space, return valid head */
 	if (best == -1)
 		best = wGetHeadForPointerLocation(scr);
 
 	return best;
 }
 
-Bool wWindowTouchesHead(WWindow * wwin, int head)
+Bool wWindowTouchesHead(WWindow *wwin, int head)
 {
 	WScreen *scr;
 	WMRect rect;
@@ -192,7 +190,7 @@ Bool wWindowTouchesHead(WWindow * wwin, int head)
 	if (!wwin || !wwin->frame)
 		return False;
 
-	scr = wwin->screen_ptr;
+	scr = wwin->vscr->screen_ptr;
 	rect = wGetRectForHead(scr, head);
 	a = calcIntersectionArea(wwin->frame_x, wwin->frame_y,
 				 wwin->frame->core->width,
@@ -202,7 +200,7 @@ Bool wWindowTouchesHead(WWindow * wwin, int head)
 	return (a != 0);
 }
 
-Bool wAppIconTouchesHead(WAppIcon * aicon, int head)
+Bool wAppIconTouchesHead(WAppIcon *aicon, int head)
 {
 	WScreen *scr;
 	WMRect rect;
@@ -221,7 +219,7 @@ Bool wAppIconTouchesHead(WAppIcon * aicon, int head)
 	return (a != 0);
 }
 
-int wGetHeadForWindow(WWindow * wwin)
+int wGetHeadForWindow(WWindow *wwin)
 {
 	WMRect rect;
 
@@ -233,10 +231,10 @@ int wGetHeadForWindow(WWindow * wwin)
 	rect.size.width = wwin->frame->core->width;
 	rect.size.height = wwin->frame->core->height;
 
-	return wGetHeadForRect(wwin->screen_ptr, rect);
+	return wGetHeadForRect(wwin->vscr->screen_ptr, rect);
 }
 
-int wGetHeadForPoint(WScreen * scr, WMPoint point)
+int wGetHeadForPoint(WScreen *scr, WMPoint point)
 {
 	int i;
 
@@ -247,6 +245,7 @@ int wGetHeadForPoint(WScreen * scr, WMPoint point)
 		    (unsigned)(point.y - rect->pos.y) < rect->size.height)
 			return i;
 	}
+
 	return scr->xine_info.primary_head;
 }
 

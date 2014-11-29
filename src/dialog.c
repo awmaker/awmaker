@@ -82,7 +82,7 @@ int wMessageDialog(WScreen *scr, const char *title, const char *message, const c
 	XReparentWindow(dpy, WMWidgetXID(panel->win), parent, 0, 0);
 
 	center = getCenter(scr, 400, 180);
-	wwin = wManageInternalWindow(scr, parent, None, NULL, center.x, center.y, 400, 180);
+	wwin = wManageInternalWindow(scr->vscr, parent, None, NULL, center.x, center.y, 400, 180);
 	wwin->client_leader = WMWidgetXID(panel->win);
 
 	WMMapWidget(panel->win);
@@ -137,24 +137,16 @@ int wExitDialog(WScreen *scr, const char *title, const char *message, const char
 	XReparentWindow(dpy, WMWidgetXID(panel->win), parent, 0, 0);
 
 	center = getCenter(scr, 400, 180);
-	wwin = wManageInternalWindow(scr, parent, None, NULL, center.x, center.y, 400, 180);
+	wwin = wManageInternalWindow(scr->vscr, parent, None, NULL, center.x, center.y, 400, 180);
 
 	wwin->client_leader = WMWidgetXID(panel->win);
-
 	WMMapWidget(panel->win);
-
 	wWindowMap(wwin);
-
 	WMRunModalLoop(WMWidgetScreen(panel->win), WMWidgetView(panel->win));
-
 	result = panel->result;
-
 	WMUnmapWidget(panel->win);
-
 	wUnmanageWindow(wwin, False, False);
-
 	WMDestroyAlertPanel(panel);
-
 	XDestroyWindow(dpy, parent);
 
 	return result;
@@ -437,22 +429,20 @@ int wAdvancedInputDialog(WScreen *scr, const char *title, const char *message, c
 	XReparentWindow(dpy, WMWidgetXID(p->panel->win), parent, 0, 0);
 
 	center = getCenter(scr, 320, 160);
-	wwin = wManageInternalWindow(scr, parent, None, NULL, center.x, center.y, 320, 160);
+	wwin = wManageInternalWindow(scr->vscr, parent, None, NULL, center.x, center.y, 320, 160);
 
 	wwin->client_leader = WMWidgetXID(p->panel->win);
-
 	WMMapWidget(p->panel->win);
-
 	wWindowMap(wwin);
-
 	WMRunModalLoop(WMWidgetScreen(p->panel->win), WMWidgetView(p->panel->win));
 
 	if (p->panel->result == WAPRDefault) {
 		result = WMGetTextFieldText(p->panel->text);
 		wfree(WMReplaceInArray(p->history, 0, wstrdup(result)));
 		SaveHistory(p->history, filename);
-	} else
+	} else {
 		result = NULL;
+	}
 
 	wUnmanageWindow(wwin, False, False);
 
@@ -463,11 +453,12 @@ int wAdvancedInputDialog(WScreen *scr, const char *title, const char *message, c
 
 	XDestroyWindow(dpy, parent);
 
-	if (result == NULL)
+	if (result == NULL) {
 		return False;
-	else {
+	} else {
 		if (*text)
 			wfree(*text);
+
 		*text = result;
 
 		return True;
@@ -490,14 +481,12 @@ int wInputDialog(WScreen *scr, const char *title, const char *message, char **te
 	XReparentWindow(dpy, WMWidgetXID(panel->win), parent, 0, 0);
 
 	center = getCenter(scr, 320, 160);
-	wwin = wManageInternalWindow(scr, parent, None, NULL, center.x, center.y, 320, 160);
+	wwin = wManageInternalWindow(scr->vscr, parent, None, NULL, center.x, center.y, 320, 160);
 
 	wwin->client_leader = WMWidgetXID(panel->win);
 
 	WMMapWidget(panel->win);
-
 	wWindowMap(wwin);
-
 	WMRunModalLoop(WMWidgetScreen(panel->win), WMWidgetView(panel->win));
 
 	if (panel->result == WAPRDefault)
@@ -506,16 +495,15 @@ int wInputDialog(WScreen *scr, const char *title, const char *message, char **te
 		result = NULL;
 
 	wUnmanageWindow(wwin, False, False);
-
 	WMDestroyInputPanel(panel);
-
 	XDestroyWindow(dpy, parent);
 
-	if (result == NULL)
+	if (result == NULL) {
 		return False;
-	else {
+	} else {
 		if (*text)
 			wfree(*text);
+
 		*text = result;
 
 		return True;
@@ -1044,7 +1032,7 @@ Bool wIconChooserDialog(WScreen *scr, char **file, const char *instance, const c
 
 		center = getCenter(scr, 450, 280);
 
-		wwin = wManageInternalWindow(scr, parent, None, title, center.x, center.y, 450, 280);
+		wwin = wManageInternalWindow(scr->vscr, parent, None, title, center.x, center.y, 450, 280);
 		wfree(title);
 	}
 
@@ -1052,7 +1040,6 @@ Bool wIconChooserDialog(WScreen *scr, char **file, const char *instance, const c
 	listIconPaths(panel->dirList);
 
 	WMMapWidget(panel->win);
-
 	wWindowMap(wwin);
 
 	while (!panel->done) {
@@ -1074,6 +1061,7 @@ Bool wIconChooserDialog(WScreen *scr, char **file, const char *instance, const c
 		} else {
 			defaultPath = FindImage(wPreferences.icon_path, *file);
 			wantedPath = WMGetTextFieldText(panel->fileField);
+
 			/* if the file is not the default, use full path */
 			if (strcmp(wantedPath, defaultPath) != 0) {
 				*file = wantedPath;
@@ -1081,6 +1069,7 @@ Bool wIconChooserDialog(WScreen *scr, char **file, const char *instance, const c
 				*file = wstrdup(*file);
 				wfree(wantedPath);
 			}
+
 			wfree(defaultPath);
 		}
 	} else {
@@ -1088,17 +1077,11 @@ Bool wIconChooserDialog(WScreen *scr, char **file, const char *instance, const c
 	}
 
 	result = panel->result;
-
 	WMReleaseFont(panel->normalfont);
-
 	WMUnmapWidget(panel->win);
-
 	WMDestroyWidget(panel->win);
-
 	wUnmanageWindow(wwin, False, False);
-
 	wfree(panel);
-
 	XDestroyWindow(dpy, parent);
 
 	return result;
@@ -1369,7 +1352,7 @@ void wShowInfoPanel(WScreen *scr)
 	WMMapWidget(panel->win);
 
 	center = getCenter(scr, win_width, win_height);
-	wwin = wManageInternalWindow(scr, parent, None, _("Info"), center.x, center.y, win_width, win_height);
+	wwin = wManageInternalWindow(scr->vscr, parent, None, _("Info"), center.x, center.y, win_width, win_height);
 
 	WSETUFLAG(wwin, no_closable, 0);
 	WSETUFLAG(wwin, no_close_button, 0);
@@ -1464,7 +1447,7 @@ void wShowLegalPanel(WScreen *scr)
 	parent = XCreateSimpleWindow(dpy, scr->root_win, 0, 0, win_width, win_height, 0, 0, 0);
 	XReparentWindow(dpy, WMWidgetXID(panel->win), parent, 0, 0);
 	center = getCenter(scr, win_width, win_height);
-	wwin = wManageInternalWindow(scr, parent, None, _("Legal"), center.x, center.y, win_width, win_height);
+	wwin = wManageInternalWindow(scr->vscr, parent, None, _("Legal"), center.x, center.y, win_width, win_height);
 
 	WSETUFLAG(wwin, no_closable, 0);
 	WSETUFLAG(wwin, no_close_button, 0);

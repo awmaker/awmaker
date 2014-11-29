@@ -1695,7 +1695,7 @@ static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
 								event->xbutton.x_root,
 								event->xbutton.y_root, False);
 				wwin = (WWindow *)entry->clientdata;
-				desc = &wwin->screen_ptr->vscr->menu.window_menu->menu->descriptor;
+				desc = &wwin->vscr->menu.window_menu->menu->descriptor;
 				event->xany.send_event = True;
 				(*desc->handle_mousedown)(desc, event);
 
@@ -1707,10 +1707,9 @@ static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
 			}
 		}
 
-		if (!wPreferences.wrap_menus && !wPreferences.scrollable_menus) {
+		if (!wPreferences.wrap_menus && !wPreferences.scrollable_menus)
 			if (!menu->timer)
 				dragScrollMenuCallback(menu);
-		}
 	}
 
 	prevx = bev->x_root;

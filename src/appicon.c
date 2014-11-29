@@ -131,6 +131,7 @@ void unpaint_app_icon(WApplication *wapp)
 {
 	WAppIcon *aicon;
 	WScreen *scr;
+	virtual_screen *vscr;
 	WDock *clip;
 
 	if (!wapp || !wapp->app_icon)
@@ -142,8 +143,9 @@ void unpaint_app_icon(WApplication *wapp)
 	if (aicon->docked)
 		return;
 
-	scr = wapp->main_window_desc->screen_ptr;
-	clip = scr->vscr->workspace.array[scr->vscr->workspace.current]->clip;
+	vscr = wapp->main_window_desc->vscr;
+	scr = vscr->screen_ptr;
+	clip = vscr->workspace.array[vscr->workspace.current]->clip;
 
 	if (!clip || !aicon->attracted || !clip->collapsed)
 		XUnmapWindow(dpy, aicon->icon->core->window);
@@ -161,6 +163,7 @@ void paint_app_icon(WApplication *wapp)
 {
 	WIcon *icon;
 	WScreen *scr;
+	virtual_screen *vscr;
 	WDock *attracting_dock;
 	int x = 0, y = 0;
 	Bool update_icon = False;
@@ -169,16 +172,17 @@ void paint_app_icon(WApplication *wapp)
 		return;
 
 	icon = wapp->app_icon->icon;
-	scr = wapp->main_window_desc->screen_ptr;
+	vscr = wapp->main_window_desc->vscr;
+	scr = vscr->screen_ptr;
 	wapp->app_icon->main_window = wapp->main_window;
 
 	/* If the icon is docked, don't continue */
 	if (wapp->app_icon->docked)
 		return;
 
-	attracting_dock = scr->vscr->drawer.attracting_drawer != NULL ?
-		scr->vscr->drawer.attracting_drawer :
-		scr->vscr->workspace.array[scr->vscr->workspace.current]->clip;
+	attracting_dock = vscr->drawer.attracting_drawer != NULL ?
+		vscr->drawer.attracting_drawer :
+		vscr->workspace.array[vscr->workspace.current]->clip;
 	if (attracting_dock && attracting_dock->attract_icons &&
 		wDockFindFreeSlot(attracting_dock, &x, &y)) {
 		wapp->app_icon->attracted = 1;
@@ -250,7 +254,7 @@ void removeAppIconFor(WApplication *wapp)
 	wapp->app_icon = NULL;
 
 	if (wPreferences.auto_arrange_icons)
-		wArrangeIcons(wapp->main_window_desc->screen_ptr, True);
+		wArrangeIcons(wapp->main_window_desc->vscr->screen_ptr, True);
 }
 
 static WAppIcon *dock_icon_create_core(char *command, char *wm_class, char *wm_instance)
@@ -471,7 +475,7 @@ static void relaunchApplication(WApplication *wapp)
 	WScreen *scr;
 	WWindow *wlist, *next;
 
-	scr = wapp->main_window_desc->screen_ptr;
+	scr = wapp->main_window_desc->vscr->screen_ptr;
 	wlist = scr->focused_window;
 	if (! wlist)
 		return;
@@ -592,7 +596,7 @@ static void killCallback(WMenu * menu, WMenuEntry * entry)
 		if (fPtr != NULL) {
 			WWindow *wwin, *twin;
 
-			wwin = wapp->main_window_desc->screen_ptr->focused_window;
+			wwin = wapp->main_window_desc->vscr->screen_ptr->focused_window;
 			while (wwin) {
 				twin = wwin->prev;
 				if (wwin->fake_group == fPtr)
@@ -643,16 +647,17 @@ void appicon_map(WAppIcon *aicon, WScreen *scr)
 static void openApplicationMenu(WApplication *wapp, int x, int y)
 {
 	WMenu *menu;
-	WScreen *scr = wapp->main_window_desc->screen_ptr;
+	virtual_screen *vscr = wapp->main_window_desc->vscr;
+	WScreen *scr = vscr->screen_ptr;
 	int i;
 
-	if (!scr->vscr->menu.icon_menu) {
-		scr->vscr->menu.icon_menu = createApplicationMenu();
-		menu_map(scr->vscr->menu.icon_menu, scr->vscr);
-		wfree(scr->vscr->menu.icon_menu->entries[1]->text);
+	if (!vscr->menu.icon_menu) {
+		vscr->menu.icon_menu = createApplicationMenu();
+		menu_map(vscr->menu.icon_menu, vscr);
+		wfree(vscr->menu.icon_menu->entries[1]->text);
 	}
 
-	menu = scr->vscr->menu.icon_menu;
+	menu = vscr->menu.icon_menu;
 
 	if (wapp->flags.hidden)
 		menu->entries[1]->text = _("Unhide");
@@ -1172,22 +1177,22 @@ static WAppIcon *findDockIconFor(WDock *dock, Window main_window)
 
 static void create_appicon_from_dock(WWindow *wwin, WApplication *wapp)
 {
-	WScreen *scr = wwin->screen_ptr;
+	virtual_screen *vscr = wwin->vscr;
 	Window main_window = wapp->main_window;
 	wapp->app_icon = NULL;
 
-	if (scr->vscr->last_dock)
-		wapp->app_icon = findDockIconFor(scr->vscr->last_dock, main_window);
+	if (vscr->last_dock)
+		wapp->app_icon = findDockIconFor(vscr->last_dock, main_window);
 
 	/* check main dock if we did not find it in last dock */
-	if (!wapp->app_icon && scr->vscr->dock.dock)
-		wapp->app_icon = findDockIconFor(scr->vscr->dock.dock, main_window);
+	if (!wapp->app_icon && vscr->dock.dock)
+		wapp->app_icon = findDockIconFor(vscr->dock.dock, main_window);
 
 	/* check clips */
 	if (!wapp->app_icon) {
 		int i;
-		for (i = 0; i < scr->vscr->workspace.count; i++) {
-			WDock *dock = scr->vscr->workspace.array[i]->clip;
+		for (i = 0; i < vscr->workspace.count; i++) {
+			WDock *dock = vscr->workspace.array[i]->clip;
 
 			if (dock)
 				wapp->app_icon = findDockIconFor(dock, main_window);
@@ -1200,7 +1205,7 @@ static void create_appicon_from_dock(WWindow *wwin, WApplication *wapp)
 	/* Finally check drawers */
 	if (!wapp->app_icon) {
 		WDrawerChain *dc;
-		for (dc = scr->vscr->drawer.drawers; dc != NULL; dc = dc->next) {
+		for (dc = vscr->drawer.drawers; dc != NULL; dc = dc->next) {
 			wapp->app_icon = findDockIconFor(dc->adrawer, main_window);
 			if (wapp->app_icon)
 				break;

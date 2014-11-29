@@ -113,7 +113,7 @@ static int getSize(Drawable d, unsigned int *w, unsigned int *h, unsigned int *d
 void icon_for_wwindow_map(WIcon *icon)
 {
 	WWindow *wwin = icon->owner;
-	WScreen *scr = wwin->screen_ptr;
+	WScreen *scr = wwin->vscr->screen_ptr;
 
 	wcore_map_toplevel(icon->core, scr, wwin->icon_x, wwin->icon_y, 0, scr->w_depth,
 			   scr->w_visual, scr->w_colormap, scr->white_pixel);
@@ -839,7 +839,7 @@ static void miniwindowMouseDown(WObjDescriptor *desc, XEvent *event)
 		OpenMiniwindowMenu(wwin, event->xbutton.x_root, event->xbutton.y_root);
 
 		/* allow drag select of menu */
-		desc = &wwin->screen_ptr->vscr->menu.window_menu->menu->descriptor;
+		desc = &wwin->vscr->menu.window_menu->menu->descriptor;
 		event->xbutton.send_event = True;
 		(*desc->handle_mousedown) (desc, event);
 
@@ -850,6 +850,7 @@ static void miniwindowMouseDown(WObjDescriptor *desc, XEvent *event)
 			 | ButtonReleaseMask | ButtonPressMask, GrabModeAsync,
 			 GrabModeAsync, None, None, CurrentTime) != GrabSuccess) {
 	}
+
 	while (1) {
 		WMMaskEvent(dpy, PointerMotionMask | ButtonReleaseMask | ButtonPressMask
 			    | ButtonMotionMask | ExposureMask, &ev);
@@ -861,8 +862,8 @@ static void miniwindowMouseDown(WObjDescriptor *desc, XEvent *event)
 		case MotionNotify:
 			hasMoved = True;
 			if (!grabbed) {
-				if (abs(dx - ev.xmotion.x) >= MOVE_THRESHOLD
-				    || abs(dy - ev.xmotion.y) >= MOVE_THRESHOLD) {
+				if (abs(dx - ev.xmotion.x) >= MOVE_THRESHOLD ||
+				    abs(dy - ev.xmotion.y) >= MOVE_THRESHOLD) {
 					XChangeActivePointerGrab(dpy, ButtonMotionMask
 								 | ButtonReleaseMask | ButtonPressMask,
 								 wPreferences.cursor[WCUR_MOVE], CurrentTime);
@@ -887,15 +888,16 @@ static void miniwindowMouseDown(WObjDescriptor *desc, XEvent *event)
 				wwin->flags.icon_moved = 1;
 
 			XMoveWindow(dpy, icon->core->window, x, y);
-
 			wwin->icon_x = x;
 			wwin->icon_y = y;
 			XUngrabPointer(dpy, CurrentTime);
 
 			if (wPreferences.auto_arrange_icons)
-				wArrangeIcons(wwin->screen_ptr, True);
+				wArrangeIcons(wwin->vscr->screen_ptr, True);
+
 			if (wPreferences.single_click && !hasMoved)
 				miniwindowDblClick(desc, event);
+
 			return;
 
 		}

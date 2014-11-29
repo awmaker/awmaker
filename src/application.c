@@ -40,7 +40,7 @@
 
 /******** Local variables ********/
 
-static WWindow *makeMainWindow(WScreen * scr, Window window)
+static WWindow *makeMainWindow(virtual_screen *vscr, Window window)
 {
 	WWindow *wwin;
 	XWindowAttributes attr;
@@ -49,7 +49,7 @@ static WWindow *makeMainWindow(WScreen * scr, Window window)
 		return NULL;
 
 	wwin = wWindowCreate();
-	wwin->screen_ptr = scr;
+	wwin->vscr = vscr;
 	wwin->client_win = window;
 	wwin->main_window = window;
 	wwin->wm_hints = XGetWMHints(dpy, window);
@@ -69,29 +69,30 @@ WApplication *wApplicationOf(Window window)
 
 	if (window == None)
 		return NULL;
+
 	if (XFindContext(dpy, window, w_global.context.app_win, (XPointer *) & wapp) != XCSUCCESS)
 		return NULL;
+
 	return wapp;
 }
 
-WApplication *wApplicationCreate(WWindow * wwin)
+WApplication *wApplicationCreate(WWindow *wwin)
 {
-	WScreen *scr = wwin->screen_ptr;
+	virtual_screen *vscr = wwin->vscr;
+	WScreen *scr = vscr->screen_ptr;
 	Window main_window = wwin->main_window;
 	WApplication *wapp;
 	WWindow *leader;
+	Window root;
+	int foo;
+	unsigned int bar;
 
 	if (main_window == None || main_window == scr->root_win)
 		return NULL;
 
-	{
-		Window root;
-		int foo;
-		unsigned int bar;
-		/* check if the window is valid */
-		if (!XGetGeometry(dpy, main_window, &root, &foo, &foo, &bar, &bar, &bar, &bar))
-			return NULL;
-	}
+	/* check if the window is valid */
+	if (!XGetGeometry(dpy, main_window, &root, &foo, &foo, &bar, &bar, &bar, &bar))
+		return NULL;
 
 	wapp = wApplicationOf(main_window);
 	if (wapp) {
@@ -112,7 +113,7 @@ WApplication *wApplicationCreate(WWindow * wwin)
 	wapp->last_workspace = 0;
 
 	wapp->main_window = main_window;
-	wapp->main_window_desc = makeMainWindow(scr, main_window);
+	wapp->main_window_desc = makeMainWindow(vscr, main_window);
 	if (!wapp->main_window_desc) {
 		wfree(wapp);
 		return NULL;

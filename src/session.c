@@ -168,7 +168,7 @@ static unsigned getInt(WMPropList * value)
 
 static WMPropList *makeWindowState(WWindow *wwin, WApplication *wapp)
 {
-	WScreen *scr = wwin->screen_ptr;
+	virtual_screen *vscr = wwin->vscr;
 	Window win;
 	int i;
 	unsigned mask;
@@ -232,7 +232,7 @@ static WMPropList *makeWindowState(WWindow *wwin, WApplication *wapp)
 		if (wapp && wapp->app_icon && wapp->app_icon->dock) {
 			int i;
 			char *name = NULL;
-			if (wapp->app_icon->dock == scr->vscr->dock.dock)
+			if (wapp->app_icon->dock == vscr->dock.dock)
 				name = "Dock";
 
 			/* Try the clips */
@@ -248,13 +248,14 @@ static WMPropList *makeWindowState(WWindow *wwin, WApplication *wapp)
 			/* Try the drawers */
 			if (name == NULL) {
 				WDrawerChain *dc;
-				for (dc = scr->vscr->drawer.drawers; dc != NULL; dc = dc->next)
+				for (dc = vscr->drawer.drawers; dc != NULL; dc = dc->next)
 					if (dc->adrawer == wapp->app_icon->dock)
 						break;
 
 				assert(dc != NULL);
 				name = dc->adrawer->icon_array[0]->wm_instance;
 			}
+
 			dock = WMCreatePLString(name);
 			WMPutInPLDictionary(win_state, sDock, dock);
 			WMReleasePropList(dock);
@@ -296,10 +297,11 @@ void wSessionSaveState(WScreen *scr)
 		WApplication *wapp = wApplicationOf(wwin->main_window);
 		Window appId = wwin->orig_main_window;
 
-		if ((wwin->transient_for == None || wwin->transient_for == wwin->screen_ptr->root_win)
-		    && (WMGetFirstInArray(wapp_list, (void *)appId) == WANotFound
-			|| WFLAGP(wwin, shared_appicon))
-		    && !WFLAGP(wwin, dont_save_session)) {
+		if ((wwin->transient_for == None ||
+		     wwin->transient_for == wwin->vscr->screen_ptr->root_win) &&
+		    (WMGetFirstInArray(wapp_list, (void *)appId) == WANotFound ||
+		     WFLAGP(wwin, shared_appicon)) &&
+		    !WFLAGP(wwin, dont_save_session)) {
 			/* A entry for this application was not yet saved. Save one. */
 			if ((win_info = makeWindowState(wwin, wapp)) != NULL) {
 				WMAddToPLArray(list, win_info);

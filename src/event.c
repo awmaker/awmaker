@@ -575,26 +575,25 @@ static void handleMapRequest(XEvent * ev)
 	Window window = ev->xmaprequest.window;
 
 	if ((wwin = wWindowFor(window))) {
-		if (wwin->flags.shaded) {
+		if (wwin->flags.shaded)
 			wUnshadeWindow(wwin);
-		}
+
 		/* deiconify window */
 		if (wwin->flags.miniaturized) {
 			wDeiconifyWindow(wwin);
 		} else if (wwin->flags.hidden) {
 			WApplication *wapp = wApplicationOf(wwin->main_window);
 			/* go to the last workspace that the user worked on the app */
-			if (wapp) {
-				wWorkspaceChange(wwin->screen_ptr, wapp->last_workspace);
-			}
+			if (wapp)
+				wWorkspaceChange(wwin->vscr->screen_ptr, wapp->last_workspace);
+
 			wUnhideApplication(wapp, False, False);
 		}
 		return;
 	}
 
 	scr = wScreenForRootWindow(ev->xmaprequest.parent);
-
-	wwin = wManageWindow(scr, window);
+	wwin = wManageWindow(scr->vscr, window);
 
 	/*
 	 * This is to let the Dock know that the application it launched
@@ -611,31 +610,33 @@ static void handleMapRequest(XEvent * ev)
 
 	if (wwin) {
 		wClientSetState(wwin, NormalState, None);
-		if (wwin->flags.maximized) {
+		if (wwin->flags.maximized)
 			wMaximizeWindow(wwin, wwin->flags.maximized);
-		}
+
 		if (wwin->flags.shaded) {
 			wwin->flags.shaded = 0;
 			wwin->flags.skip_next_animation = 1;
 			wShadeWindow(wwin);
 		}
+
 		if (wwin->flags.miniaturized) {
 			wwin->flags.miniaturized = 0;
 			wwin->flags.skip_next_animation = 1;
 			wIconifyWindow(wwin);
 		}
+
 		if (wwin->flags.fullscreen) {
 			wwin->flags.fullscreen = 0;
 			wFullscreenWindow(wwin);
 		}
+
 		if (wwin->flags.hidden) {
 			WApplication *wapp = wApplicationOf(wwin->main_window);
 
 			wwin->flags.hidden = 0;
 			wwin->flags.skip_next_animation = 1;
-			if (wapp) {
+			if (wapp)
 				wHideApplication(wapp);
-			}
 		}
 	}
 }
@@ -649,9 +650,8 @@ static void handleDestroyNotify(XEvent * event)
 	int widx;
 
 	wwin = wWindowFor(window);
-	if (wwin) {
+	if (wwin)
 		wUnmanageWindow(wwin, False, True);
-	}
 
 	if (scr != NULL) {
 		while ((widx = WMFindInArray(scr->fakeGroupLeaders, matchWindow, (void *)window)) != WANotFound) {
@@ -674,11 +674,11 @@ static void handleDestroyNotify(XEvent * event)
 	if (app) {
 		if (window == app->main_window) {
 			app->refcount = 0;
-			wwin = app->main_window_desc->screen_ptr->focused_window;
+			wwin = app->main_window_desc->vscr->screen_ptr->focused_window;
 			while (wwin) {
-				if (wwin->main_window == window) {
+				if (wwin->main_window == window)
 					wwin->main_window = None;
-				}
+
 				wwin = wwin->prev;
 			}
 		}
@@ -686,20 +686,18 @@ static void handleDestroyNotify(XEvent * event)
 	}
 }
 
-static void handleExpose(XEvent * event)
+static void handleExpose(XEvent *event)
 {
 	WObjDescriptor *desc;
 	XEvent ev;
 
 	while (XCheckTypedWindowEvent(dpy, event->xexpose.window, Expose, &ev)) ;
 
-	if (XFindContext(dpy, event->xexpose.window, w_global.context.client_win, (XPointer *) & desc) == XCNOENT) {
+	if (XFindContext(dpy, event->xexpose.window, w_global.context.client_win, (XPointer *) & desc) == XCNOENT)
 		return;
-	}
 
-	if (desc->handle_expose) {
+	if (desc->handle_expose)
 		(*desc->handle_expose) (desc, event);
-	}
 }
 
 static void executeWheelAction(WScreen *scr, XEvent *event, int action)
@@ -872,14 +870,14 @@ static void handleUnmapNotify(XEvent *event)
 		return;
 
 	/* whether the event is a Withdrawal request */
-	if (event->xunmap.event == wwin->screen_ptr->root_win && event->xunmap.send_event)
+	if (event->xunmap.event == wwin->vscr->screen_ptr->root_win && event->xunmap.send_event)
 		withdraw = True;
 
 	if (wwin->client_win != event->xunmap.event && !withdraw)
 		return;
 
 	if (!wwin->flags.mapped && !withdraw
-	    && wwin->frame->workspace == wwin->screen_ptr->vscr->workspace.current
+	    && wwin->frame->workspace == wwin->vscr->workspace.current
 	    && !wwin->flags.miniaturized && !wwin->flags.hidden)
 		return;
 
@@ -1260,7 +1258,7 @@ static void handleColormapNotify(XEvent * event)
 	if (!wwin)
 		return;
 
-	scr = wwin->screen_ptr;
+	scr = wwin->vscr->screen_ptr;
 
 	do {
 		if (wwin) {
@@ -1291,32 +1289,31 @@ static void handleColormapNotify(XEvent * event)
 	} while (XCheckTypedEvent(dpy, ColormapNotify, event)
 		 && ((wwin = wWindowFor(event->xcolormap.window)) || 1));
 
-	if (reinstall && scr->current_colormap != None) {
+	if (reinstall && scr->current_colormap != None)
 		if (!scr->flags.colormap_stuff_blocked)
 			XInstallColormap(dpy, scr->current_colormap);
-	}
 }
 
-static void handleFocusIn(XEvent * event)
+static void handleFocusIn(XEvent *event)
 {
 	WWindow *wwin;
 
-	/*
-	 * For applications that like stealing the focus.
-	 */
+	/* For applications that like stealing the focus. */
 	while (XCheckTypedEvent(dpy, FocusIn, event)) ;
+
 	saveTimestamp(event);
-	if (event->xfocus.mode == NotifyUngrab
-	    || event->xfocus.mode == NotifyGrab || event->xfocus.detail > NotifyNonlinearVirtual) {
+
+	if (event->xfocus.mode == NotifyUngrab ||
+	    event->xfocus.mode == NotifyGrab ||
+	    event->xfocus.detail > NotifyNonlinearVirtual)
 		return;
-	}
 
 	wwin = wWindowFor(event->xfocus.window);
 	if (wwin && !wwin->flags.focused) {
 		if (wwin->flags.mapped)
-			wSetFocusTo(wwin->screen_ptr, wwin);
+			wSetFocusTo(wwin->vscr->screen_ptr, wwin);
 		else
-			wSetFocusTo(wwin->screen_ptr, NULL);
+			wSetFocusTo(wwin->vscr->screen_ptr, NULL);
 	} else if (!wwin) {
 		WScreen *scr = wScreenForWindow(event->xfocus.window);
 		if (scr)
@@ -1324,7 +1321,7 @@ static void handleFocusIn(XEvent * event)
 	}
 }
 
-static WWindow *windowUnderPointer(WScreen * scr)
+static WWindow *windowUnderPointer(WScreen *scr)
 {
 	unsigned int mask;
 	int foo;

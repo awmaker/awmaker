@@ -39,8 +39,10 @@
 #include "framewin.h"
 #include "xinerama.h"
 
+#define PWIDTH	295
+#define PHEIGHT	430
 
-static void updateCommand(WAppIcon * icon, char *command)
+static void updateCommand(WAppIcon *icon, char *command)
 {
 	if (icon->command)
 		wfree(icon->command);
@@ -116,7 +118,7 @@ static void updateSettingsPanelIcon(AppSettingsPanel * panel)
 	}
 }
 
-static void chooseIconCallback(WMWidget * self, void *clientData)
+static void chooseIconCallback(WMWidget *self, void *clientData)
 {
 	char *file;
 	AppSettingsPanel *panel = (AppSettingsPanel *) clientData;
@@ -129,7 +131,7 @@ static void chooseIconCallback(WMWidget * self, void *clientData)
 
 	WMSetButtonEnabled(panel->browseBtn, False);
 
-	result = wIconChooserDialog(panel->wwin->screen_ptr, &file,
+	result = wIconChooserDialog(panel->wwin->vscr->screen_ptr, &file,
 				    panel->editedIcon->wm_instance, panel->editedIcon->wm_class);
 
 	panel->choosingIcon = 0;
@@ -145,11 +147,12 @@ static void chooseIconCallback(WMWidget * self, void *clientData)
 		 * the icon chooser */
 		DestroyDockAppSettingsPanel(panel);
 	}
+
 	if (result)
 		wfree(file);
 }
 
-static void panelBtnCallback(WMWidget * self, void *data)
+static void panelBtnCallback(WMWidget *self, void *data)
 {
 	WMButton *btn = self;
 	AppSettingsPanel *panel = (AppSettingsPanel *) data;
@@ -168,12 +171,13 @@ static void panelBtnCallback(WMWidget * self, void *data)
 
 			buf = wmalloc(len);
 			snprintf(buf, len, _("Could not open specified icon file: %s"), text);
-			if (wMessageDialog(panel->wwin->screen_ptr, _("Error"), buf,
+			if (wMessageDialog(panel->wwin->vscr->screen_ptr, _("Error"), buf,
 					   _("OK"), _("Ignore"), NULL) == WAPRDefault) {
 				wfree(text);
 				wfree(buf);
 				return;
 			}
+
 			wfree(buf);
 		} else {
 			WAppIcon *aicon = panel->editedIcon;
@@ -188,6 +192,7 @@ static void panelBtnCallback(WMWidget * self, void *data)
 
 			wDefaultChangeIcon(aicon->wm_instance, aicon->wm_class, text);
 		}
+
 		if (text)
 			wfree(text);
 
@@ -198,6 +203,7 @@ static void panelBtnCallback(WMWidget * self, void *data)
 			wfree(text);
 			text = NULL;
 		}
+
 		updateCommand(panel->editedIcon, text);
 #ifdef XDND
 		/* cannot free text from this, because it will be not be duplicated
@@ -207,19 +213,14 @@ static void panelBtnCallback(WMWidget * self, void *data)
 #endif
 		text = WMGetTextFieldText(panel->pasteCommandField);
 		updatePasteCommand(panel->editedIcon, text);
-
 		panel->editedIcon->auto_launch = WMGetButtonSelected(panel->autoLaunchBtn);
-
 		panel->editedIcon->lock = WMGetButtonSelected(panel->lockBtn);
 	}
 
 	DestroyDockAppSettingsPanel(panel);
 }
 
-#define PWIDTH	295
-#define PHEIGHT	430
-
-void ShowDockAppSettingsPanel(WAppIcon * aicon)
+void ShowDockAppSettingsPanel(WAppIcon *aicon)
 {
 	AppSettingsPanel *panel;
 	WScreen *scr = aicon->icon->core->screen_ptr;
@@ -366,9 +367,7 @@ void ShowDockAppSettingsPanel(WAppIcon * aicon)
 
 	XReparentWindow(dpy, WMWidgetXID(panel->win), parent, 0, 0);
 
-	/*
-	 * make things relative to head
-	 */
+	/* make things relative to head */
 	{
 		WMRect rect = wGetRectForHead(scr, wGetHeadForPointerLocation(scr));
 
@@ -388,23 +387,21 @@ void ShowDockAppSettingsPanel(WAppIcon * aicon)
 		}
 	}
 
-	panel->wwin = wManageInternalWindow(scr, parent, None,
+	panel->wwin = wManageInternalWindow(scr->vscr, parent, None,
 					    _("Docked Application Settings"), x, y, PWIDTH, PHEIGHT);
 
 	panel->wwin->client_leader = WMWidgetXID(panel->win);
-
 	panel->parent = parent;
 
 	WMMapWidget(panel->win);
-
 	wWindowMap(panel->wwin);
 }
 
-void DestroyDockAppSettingsPanel(AppSettingsPanel * panel)
+void DestroyDockAppSettingsPanel(AppSettingsPanel *panel)
 {
 	if (!panel->destroyed) {
 		XUnmapWindow(dpy, panel->wwin->client_win);
-		XReparentWindow(dpy, panel->wwin->client_win, panel->wwin->screen_ptr->root_win, 0, 0);
+		XReparentWindow(dpy, panel->wwin->client_win, panel->wwin->vscr->screen_ptr->root_win, 0, 0);
 		wUnmanageWindow(panel->wwin, False, False);
 	}
 
@@ -420,11 +417,9 @@ void DestroyDockAppSettingsPanel(AppSettingsPanel * panel)
 		return;
 
 	WMDestroyWidget(panel->win);
-
 	XDestroyWindow(dpy, panel->parent);
 
 	panel->editedIcon->panel = NULL;
-
 	panel->editedIcon->editing = 0;
 
 	wfree(panel);
