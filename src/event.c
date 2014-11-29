@@ -700,10 +700,11 @@ static void handleExpose(XEvent *event)
 		(*desc->handle_expose) (desc, event);
 }
 
-static void executeWheelAction(WScreen *scr, XEvent *event, int action)
+static void executeWheelAction(virtual_screen *vscr, XEvent *event, int action)
 {
 	WWindow *wwin;
 	Bool next_direction = True;
+	WScreen *scr = vscr->screen_ptr;
 
 	if (event->xbutton.button == Button5 || event->xbutton.button == Button6)
 		next_direction = False;
@@ -725,44 +726,44 @@ static void executeWheelAction(WScreen *scr, XEvent *event, int action)
 	}
 }
 
-static void executeButtonAction(WScreen *scr, XEvent *event, int action)
+static void executeButtonAction(virtual_screen *vscr, XEvent *event, int action)
 {
 	WWindow *wwin;
 
 	switch (action) {
 	case WA_SELECT_WINDOWS:
-		wUnselectWindows(scr);
-		wSelectWindows(scr, event);
+		wUnselectWindows(vscr->screen_ptr);
+		wSelectWindows(vscr->screen_ptr, event);
 		break;
 	case WA_OPEN_APPMENU:
-		OpenRootMenu(scr, event->xbutton.x_root, event->xbutton.y_root, False);
-		if (scr->vscr->menu.root_menu)
-			event->xbutton.window = scr->vscr->menu.root_menu->frame->core->window;
+		OpenRootMenu(vscr, event->xbutton.x_root, event->xbutton.y_root, False);
+		if (vscr->menu.root_menu)
+			event->xbutton.window = vscr->menu.root_menu->frame->core->window;
 		break;
 	case WA_OPEN_WINLISTMENU:
-		OpenSwitchMenu(scr, event->xbutton.x_root, event->xbutton.y_root, False);
-		if (scr->vscr->menu.switch_menu)
-			event->xbutton.window = scr->vscr->menu.switch_menu->frame->core->window;
+		OpenSwitchMenu(vscr, event->xbutton.x_root, event->xbutton.y_root, False);
+		if (vscr->menu.switch_menu)
+			event->xbutton.window = vscr->menu.switch_menu->frame->core->window;
 		break;
 	case WA_MOVE_PREVWORKSPACE:
-		wWorkspaceRelativeChange(scr, -1);
+		wWorkspaceRelativeChange(vscr->screen_ptr, -1);
 		break;
 	case WA_MOVE_NEXTWORKSPACE:
-		wWorkspaceRelativeChange(scr, 1);
+		wWorkspaceRelativeChange(vscr->screen_ptr, 1);
 		break;
 	case WA_MOVE_PREVWINDOW:
-		wwin = scr->focused_window;
+		wwin = vscr->screen_ptr->focused_window;
 		wWindowFocusPrev(wwin, True);
 		break;
 	case WA_MOVE_NEXTWINDOW:
-		wwin = scr->focused_window;
+		wwin = vscr->screen_ptr->focused_window;
 		wWindowFocusNext(wwin, True);
 		break;
 	}
 }
 
 /* bindable */
-static void handleButtonPress(XEvent * event)
+static void handleButtonPress(XEvent *event)
 {
 	WObjDescriptor *desc;
 	WScreen *scr;
@@ -775,23 +776,23 @@ static void handleButtonPress(XEvent * event)
 
 	if (!wPreferences.disable_root_mouse && event->xbutton.window == scr->root_win) {
 		if (event->xbutton.button == Button1 && wPreferences.mouse_button1 != WA_NONE) {
-			executeButtonAction(scr, event, wPreferences.mouse_button1);
+			executeButtonAction(scr->vscr, event, wPreferences.mouse_button1);
 		} else if (event->xbutton.button == Button2 && wPreferences.mouse_button2 != WA_NONE) {
-			executeButtonAction(scr, event, wPreferences.mouse_button2);
+			executeButtonAction(scr->vscr, event, wPreferences.mouse_button2);
 		} else if (event->xbutton.button == Button3 && wPreferences.mouse_button3 != WA_NONE) {
-			executeButtonAction(scr, event, wPreferences.mouse_button3);
+			executeButtonAction(scr->vscr, event, wPreferences.mouse_button3);
 		} else if (event->xbutton.button == Button8 && wPreferences.mouse_button8 != WA_NONE) {
-			executeButtonAction(scr, event, wPreferences.mouse_button8);
-		}else if (event->xbutton.button == Button9 && wPreferences.mouse_button9 != WA_NONE) {
-			executeButtonAction(scr, event, wPreferences.mouse_button9);
+			executeButtonAction(scr->vscr, event, wPreferences.mouse_button8);
+		} else if (event->xbutton.button == Button9 && wPreferences.mouse_button9 != WA_NONE) {
+			executeButtonAction(scr->vscr, event, wPreferences.mouse_button9);
 		} else if (event->xbutton.button == Button4 && wPreferences.mouse_wheel_scroll != WA_NONE) {
-			executeWheelAction(scr, event, wPreferences.mouse_wheel_scroll);
+			executeWheelAction(scr->vscr, event, wPreferences.mouse_wheel_scroll);
 		} else if (event->xbutton.button == Button5 && wPreferences.mouse_wheel_scroll != WA_NONE) {
-			executeWheelAction(scr, event, wPreferences.mouse_wheel_scroll);
+			executeWheelAction(scr->vscr, event, wPreferences.mouse_wheel_scroll);
 		} else if (event->xbutton.button == Button6 && wPreferences.mouse_wheel_tilt != WA_NONE) {
-			executeWheelAction(scr, event, wPreferences.mouse_wheel_tilt);
+			executeWheelAction(scr->vscr, event, wPreferences.mouse_wheel_tilt);
 		} else if (event->xbutton.button == Button7 && wPreferences.mouse_wheel_tilt != WA_NONE) {
-			executeWheelAction(scr, event, wPreferences.mouse_wheel_tilt);
+			executeWheelAction(scr->vscr, event, wPreferences.mouse_wheel_tilt);
 		}
 	}
 
@@ -1393,14 +1394,14 @@ static void handleKeyPress(XEvent *event)
 		/*OpenRootMenu(scr, event->xkey.x_root, event->xkey.y_root, True); */
 		if (!CheckFullScreenWindowFocused(scr)) {
 			WMRect rect = wGetRectForHead(scr, wGetHeadForPointerLocation(scr));
-			OpenRootMenu(scr, rect.pos.x + rect.size.width / 2, rect.pos.y + rect.size.height / 2,
+			OpenRootMenu(scr->vscr, rect.pos.x + rect.size.width / 2, rect.pos.y + rect.size.height / 2,
 				     True);
 		}
 		break;
 	case WKBD_WINDOWLIST:
 		if (!CheckFullScreenWindowFocused(scr)) {
 			WMRect rect = wGetRectForHead(scr, wGetHeadForPointerLocation(scr));
-			OpenSwitchMenu(scr, rect.pos.x + rect.size.width / 2, rect.pos.y + rect.size.height / 2,
+			OpenSwitchMenu(scr->vscr, rect.pos.x + rect.size.width / 2, rect.pos.y + rect.size.height / 2,
 				       True);
 		}
 		break;

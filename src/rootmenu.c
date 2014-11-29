@@ -855,7 +855,7 @@ static WMenuEntry *addWindowsMenu(WScreen *scr, WMenu *menu, const char *title)
 	scr->vscr->menu.switch_menu = wwmenu;
 	wwin = scr->focused_window;
 	while (wwin) {
-		UpdateSwitchMenu(scr, wwin, ACTION_ADD);
+		UpdateSwitchMenu(scr->vscr, wwin, ACTION_ADD);
 
 		wwin = wwin->prev;
 	}
@@ -1638,17 +1638,17 @@ static WMenu *configureMenu(WScreen * scr, WMPropList * definition, Bool include
  * user map's them.
  *----------------------------------------------------------------------
  */
-void OpenRootMenu(WScreen *scr, int x, int y, int keyboard)
+void OpenRootMenu(virtual_screen *vscr, int x, int y, int keyboard)
 {
 	WMenu *menu = NULL;
 	WMPropList *definition;
 
-	scr->vscr->menu.flags.root_menu_changed_shortcuts = 0;
-	scr->vscr->menu.flags.added_workspace_menu = 0;
-	scr->vscr->menu.flags.added_window_menu = 0;
+	vscr->menu.flags.root_menu_changed_shortcuts = 0;
+	vscr->menu.flags.added_workspace_menu = 0;
+	vscr->menu.flags.added_window_menu = 0;
 
-	if (scr->vscr->menu.root_menu && scr->vscr->menu.root_menu->flags.mapped) {
-		menu = scr->vscr->menu.root_menu;
+	if (vscr->menu.root_menu && vscr->menu.root_menu->flags.mapped) {
+		menu = vscr->menu.root_menu;
 		if (!menu->flags.buttoned) {
 			wMenuUnmap(menu);
 		} else {
@@ -1664,37 +1664,37 @@ void OpenRootMenu(WScreen *scr, int x, int y, int keyboard)
 
 	if (definition) {
 		if (WMIsPLArray(definition)) {
-			if (!scr->vscr->menu.root_menu ||
-			    w_global.domain.root_menu->timestamp > scr->vscr->menu.root_menu->timestamp) {
-				menu = configureMenu(scr, definition, True);
+			if (!vscr->menu.root_menu ||
+			    w_global.domain.root_menu->timestamp > vscr->menu.root_menu->timestamp) {
+				menu = configureMenu(vscr->screen_ptr, definition, True);
 				if (menu)
 					menu->timestamp = w_global.domain.root_menu->timestamp;
 			} else {
 				menu = NULL;
 			}
 		} else {
-			menu = configureMenu(scr, definition, True);
+			menu = configureMenu(vscr->screen_ptr, definition, True);
 		}
 	}
 
 	if (!menu) {
 		/* menu hasn't changed or could not be read */
-		if (!scr->vscr->menu.root_menu) {
-			wMessageDialog(scr, _("Error"),
+		if (!vscr->menu.root_menu) {
+			wMessageDialog(vscr->screen_ptr, _("Error"),
 				       _("The applications menu could not be loaded. "
 					 "Look at the console output for a detailed "
 					 "description of the errors."), _("OK"), NULL, NULL);
 
-			menu = makeDefaultMenu(scr);
-			scr->vscr->menu.root_menu = menu;
+			menu = makeDefaultMenu(vscr->screen_ptr);
+			vscr->menu.root_menu = menu;
 		}
-		menu = scr->vscr->menu.root_menu;
+		menu = vscr->menu.root_menu;
 	} else {
 		/* new root menu */
-		if (scr->vscr->menu.root_menu)
-			wMenuDestroy(scr->vscr->menu.root_menu, True);
+		if (vscr->menu.root_menu)
+			wMenuDestroy(vscr->menu.root_menu, True);
 
-		scr->vscr->menu.root_menu = menu;
+		vscr->menu.root_menu = menu;
 	}
 
 	if (menu) {
@@ -1702,7 +1702,7 @@ void OpenRootMenu(WScreen *scr, int x, int y, int keyboard)
 
 		if (keyboard && x == 0 && y == 0) {
 			newx = newy = 0;
-		} else if (keyboard && x == scr->scr_width / 2 && y == scr->scr_height / 2) {
+		} else if (keyboard && x == vscr->screen_ptr->scr_width / 2 && y == vscr->screen_ptr->scr_height / 2) {
 			newx = x - menu->frame->core->width / 2;
 			newy = y - menu->frame->core->height / 2;
 		} else {
@@ -1712,6 +1712,6 @@ void OpenRootMenu(WScreen *scr, int x, int y, int keyboard)
 		wMenuMapAt(menu, newx, newy, keyboard);
 	}
 
-	if (scr->vscr->menu.flags.root_menu_changed_shortcuts)
-		rebindKeygrabs(scr);
+	if (vscr->menu.flags.root_menu_changed_shortcuts)
+		rebindKeygrabs(vscr->screen_ptr);
 }

@@ -94,7 +94,7 @@ static void updateTexture(WMenu *menu);
 static void selectEntry(WMenu *menu, int entry_no);
 static void closeCascade(WMenu *menu);
 static Bool saveMenuRecurs(WMPropList *menus, WMenu *menu, virtual_screen *vscr);
-static int restoreMenuRecurs(WScreen *scr, WMPropList *menus, WMenu *menu, const char *path);
+static int restoreMenuRecurs(virtual_screen *vscr, WMPropList *menus, WMenu *menu, const char *path);
 
 /****** Notification Observers ******/
 
@@ -2240,7 +2240,7 @@ static Bool getMenuInfo(WMPropList *info, int *x, int *y, Bool *lowered)
 	return True;
 }
 
-static int restoreMenu(WScreen *scr, WMPropList *menu)
+static int restoreMenu(virtual_screen *vscr, WMPropList *menu)
 {
 	int x, y, width, height;
 	Bool lowered = False;
@@ -2252,12 +2252,12 @@ static int restoreMenu(WScreen *scr, WMPropList *menu)
 	if (!getMenuInfo(menu, &x, &y, &lowered))
 		return False;
 
-	OpenSwitchMenu(scr, x, y, False);
-	pmenu = scr->vscr->menu.switch_menu;
+	OpenSwitchMenu(vscr, x, y, False);
+	pmenu = vscr->menu.switch_menu;
 	if (pmenu) {
 		width = MENUW(pmenu);
 		height = MENUH(pmenu);
-		WMRect rect = wGetRectForHead(scr, wGetHeadForPointerLocation(scr));
+		WMRect rect = wGetRectForHead(vscr->screen_ptr, wGetHeadForPointerLocation(vscr->screen_ptr));
 
 		if (lowered)
 			changeMenuLevels(pmenu, True);
@@ -2283,7 +2283,7 @@ static int restoreMenu(WScreen *scr, WMPropList *menu)
 	return False;
 }
 
-static int restoreMenuRecurs(WScreen *scr, WMPropList *menus, WMenu *menu, const char *path)
+static int restoreMenuRecurs(virtual_screen *vscr, WMPropList *menus, WMenu *menu, const char *path)
 {
 	WMPropList *key, *entry;
 	char buffer[512];
@@ -2302,7 +2302,7 @@ static int restoreMenuRecurs(WScreen *scr, WMPropList *menus, WMenu *menu, const
 		if (!menu->flags.mapped) {
 			width = MENUW(menu);
 			height = MENUH(menu);
-			WMRect rect = wGetRectForHead(scr, wGetHeadForPointerLocation(scr));
+			WMRect rect = wGetRectForHead(vscr->screen_ptr, wGetHeadForPointerLocation(vscr->screen_ptr));
 
 			wMenuMapAt(menu, x, y, False);
 
@@ -2330,15 +2330,14 @@ static int restoreMenuRecurs(WScreen *scr, WMPropList *menus, WMenu *menu, const
 
 	WMReleasePropList(key);
 
-	for (i = 0; i < menu->cascade_no; i++) {
-		if (restoreMenuRecurs(scr, menus, menu->cascades[i], buffer) != False)
+	for (i = 0; i < menu->cascade_no; i++)
+		if (restoreMenuRecurs(vscr, menus, menu->cascades[i], buffer) != False)
 			res = True;
-	}
 
 	return res;
 }
 
-void wMenuRestoreState(WScreen *scr)
+void wMenuRestoreState(virtual_screen *vscr)
 {
 	WMPropList *menus, *menu, *key, *skey;
 
@@ -2356,12 +2355,12 @@ void wMenuRestoreState(WScreen *scr)
 	skey = WMCreatePLString("SwitchMenu");
 	menu = WMGetFromPLDictionary(menus, skey);
 	WMReleasePropList(skey);
-	restoreMenu(scr, menu);
+	restoreMenu(vscr, menu);
 
-	if (!scr->vscr->menu.root_menu) {
-		OpenRootMenu(scr, scr->scr_width * 2, 0, False);
-		wMenuUnmap(scr->vscr->menu.root_menu);
+	if (!vscr->menu.root_menu) {
+		OpenRootMenu(vscr, vscr->screen_ptr->scr_width * 2, 0, False);
+		wMenuUnmap(vscr->menu.root_menu);
 	}
 
-	restoreMenuRecurs(scr, menus, scr->vscr->menu.root_menu, "");
+	restoreMenuRecurs(vscr, menus, vscr->menu.root_menu, "");
 }

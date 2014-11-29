@@ -704,7 +704,7 @@ static void applySettings(WMWidget *button, void *client_data)
 
 	if (WFLAGP(wwin, skip_window_list) != skip_window_list) {
 		WSETUFLAG(wwin, skip_window_list, skip_window_list);
-		UpdateSwitchMenu(wwin->vscr->screen_ptr, wwin, skip_window_list ? ACTION_REMOVE : ACTION_ADD);
+		UpdateSwitchMenu(wwin->vscr, wwin, skip_window_list ? ACTION_REMOVE : ACTION_ADD);
 	} else {
 		if (WFLAGP(wwin, omnipresent) != old_omnipresent)
 			WMPostNotificationName(WMNChangedState, wwin, "omnipresent");

@@ -768,7 +768,7 @@ void wScreenRestoreState(WScreen *scr)
 	char *path;
 	char buf[16];
 
-	OpenRootMenu(scr, -10000, -10000, False);
+	OpenRootMenu(scr->vscr, -10000, -10000, False);
 	wMenuUnmap(scr->vscr->menu.root_menu);
 
 	make_keys();

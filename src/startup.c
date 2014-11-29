@@ -664,7 +664,7 @@ void StartUp(Bool defaultScreenOnly)
 		manageAllWindows(wScreen[j], wPreferences.flags.restarting == 2);
 
 		/* restore saved menus */
-		wMenuRestoreState(wScreen[j]);
+		wMenuRestoreState(wScreen[j]->vscr);
 
 		/* If we're not restarting, restore session */
 		if (wPreferences.flags.restarting == 0 && !wPreferences.flags.norestore)
