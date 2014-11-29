@@ -26,10 +26,10 @@
 #include "appicon.h"
 
 typedef struct WDock {
-    WScreen *screen_ptr;
-    int x_pos, y_pos;		       /* position of the first icon */
+    virtual_screen *vscr;	/* pointer to the virtual_screen for the dock */
+    int x_pos, y_pos;		/* position of the first icon */
 
-    WAppIcon **icon_array;	       /* array of docked icons */
+    WAppIcon **icon_array;	/* array of docked icons */
     int max_icons;
 
     int icon_count;
@@ -62,11 +62,11 @@ typedef struct WDock {
 
 WDock *clip_create(virtual_screen *vscr);
 WDock *dock_create(virtual_screen *vscr);
-void clip_map(WDock *dock, WScreen *scr, WMPropList *state);
-void dock_map(WDock *dock, WScreen *scr, WMPropList *dock_state);
+void clip_map(WDock *dock, virtual_screen *scr, WMPropList *state);
+void dock_map(WDock *dock, virtual_screen *scr, WMPropList *dock_state);
 
 void clip_icon_create(void);
-void clip_icon_map(WScreen *scr);
+void clip_icon_map(virtual_screen *vscr);
 
 void wDockDestroy(WDock *dock);
 void wDockHideIcons(WDock *dock);
@@ -104,7 +104,7 @@ WMPropList *wClipSaveWorkspaceState(virtual_screen *vscr, int workspace);
 void wDrawerIconPaint(WAppIcon *dicon);
 void wDrawersSaveState(virtual_screen *vscr);
 void wDrawersRestoreState(virtual_screen *vscr);
-void wDrawersRestoreState_map(WScreen *scr);
+void wDrawersRestoreState_map(virtual_screen *vscr);
 int wIsADrawer(WAppIcon *aicon);
 
 void wClipUpdateForWorkspaceChange(virtual_screen *vscr, int workspace);

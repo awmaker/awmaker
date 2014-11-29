@@ -794,7 +794,7 @@ void wScreenRestoreState(WScreen *scr)
 	if (!wPreferences.flags.nodock) {
 		state = WMGetFromPLDictionary(w_global.session_state, dDock);
 		scr->vscr->dock.dock = dock_create(scr->vscr);
-		dock_map(scr->vscr->dock.dock, scr, state);
+		dock_map(scr->vscr->dock.dock, scr->vscr, state);
 	}
 
 	if (!wPreferences.flags.nodrawer) {
@@ -808,7 +808,7 @@ void wScreenRestoreState(WScreen *scr)
 		}
 
 		wDrawersRestoreState(scr->vscr);
-		wDrawersRestoreState_map(scr);
+		wDrawersRestoreState_map(scr->vscr);
 	}
 
 	wWorkspaceRestoreState(scr);

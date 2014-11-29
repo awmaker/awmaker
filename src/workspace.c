@@ -86,11 +86,11 @@ static void set_workspace_clip(WDock **clip, WScreen *scr, WMPropList *state) {
 	 * workspace, because the image is shared */
 	if (!w_global.clip.icon) {
 		clip_icon_create();
-		clip_icon_map(scr);
+		clip_icon_map(scr->vscr);
 	}
 
 	*clip = clip_create(scr->vscr);
-	clip_map(*clip, scr, state);
+	clip_map(*clip, scr->vscr, state);
 }
 
 int wWorkspaceNew(WScreen *scr)
