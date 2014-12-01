@@ -81,16 +81,16 @@ void wWorkspaceMake(virtual_screen *vscr, int count)
 	}
 }
 
-static void set_workspace_clip(WDock **clip, WScreen *scr, WMPropList *state) {
+static void set_workspace_clip(WDock **clip, virtual_screen *vscr, WMPropList *state) {
 	/* We should create and map the dock icon only in the first
 	 * workspace, because the image is shared */
 	if (!w_global.clip.icon) {
 		clip_icon_create();
-		clip_icon_map(scr->vscr);
+		clip_icon_map(vscr);
 	}
 
-	*clip = clip_create(scr->vscr);
-	clip_map(*clip, scr->vscr, state);
+	*clip = clip_create(vscr);
+	clip_map(*clip, vscr, state);
 }
 
 int wWorkspaceNew(virtual_screen *vscr)
@@ -133,7 +133,7 @@ int wWorkspaceNew(virtual_screen *vscr)
 	wspace->clip = NULL;
 	if (!wPreferences.flags.noclip) {
 		state = WMGetFromPLDictionary(w_global.session_state, dClip);
-		set_workspace_clip(&wspace->clip, vscr->screen_ptr, state);
+		set_workspace_clip(&wspace->clip, vscr, state);
 	}
 
 	list = wmalloc(sizeof(WWorkspace *) * vscr->workspace.count);
@@ -280,14 +280,14 @@ static void hideWorkspaceName(void *data)
 	}
 }
 
-static void showWorkspaceName(WScreen * scr, int workspace)
+static void showWorkspaceName(virtual_screen *vscr, int workspace)
 {
 	WorkspaceNameData *data;
 	RXImage *ximg;
 	Pixmap text, mask;
 	int w, h;
 	int px, py;
-	char *name = scr->vscr->workspace.array[workspace]->name;
+	char *name = vscr->workspace.array[workspace]->name;
 	int len = strlen(name);
 	int x, y;
 #ifdef USE_XINERAMA
@@ -296,38 +296,38 @@ static void showWorkspaceName(WScreen * scr, int workspace)
 	int xx, yy;
 #endif
 
-	if (wPreferences.workspace_name_display_position == WD_NONE || scr->vscr->workspace.count < 2)
+	if (wPreferences.workspace_name_display_position == WD_NONE || vscr->workspace.count < 2)
 		return;
 
-	if (scr->workspace_name_timer) {
-		WMDeleteTimerHandler(scr->workspace_name_timer);
-		XUnmapWindow(dpy, scr->workspace_name);
+	if (vscr->screen_ptr->workspace_name_timer) {
+		WMDeleteTimerHandler(vscr->screen_ptr->workspace_name_timer);
+		XUnmapWindow(dpy, vscr->screen_ptr->workspace_name);
 		XFlush(dpy);
 	}
-	scr->workspace_name_timer = WMAddTimerHandler(WORKSPACE_NAME_DELAY, hideWorkspaceName, scr);
 
-	if (scr->workspace_name_data) {
-		RReleaseImage(scr->workspace_name_data->back);
-		RReleaseImage(scr->workspace_name_data->text);
-		wfree(scr->workspace_name_data);
+	vscr->screen_ptr->workspace_name_timer = WMAddTimerHandler(WORKSPACE_NAME_DELAY, hideWorkspaceName, vscr->screen_ptr);
+
+	if (vscr->screen_ptr->workspace_name_data) {
+		RReleaseImage(vscr->screen_ptr->workspace_name_data->back);
+		RReleaseImage(vscr->screen_ptr->workspace_name_data->text);
+		wfree(vscr->screen_ptr->workspace_name_data);
 	}
 
 	data = wmalloc(sizeof(WorkspaceNameData));
 	data->back = NULL;
 
-	w = WMWidthOfString(scr->vscr->workspace.font_for_name, name, len);
-	h = WMFontHeight(scr->vscr->workspace.font_for_name);
+	w = WMWidthOfString(vscr->workspace.font_for_name, name, len);
+	h = WMFontHeight(vscr->workspace.font_for_name);
 
 #ifdef USE_XINERAMA
-	head = wGetHeadForPointerLocation(scr);
-	rect = wGetRectForHead(scr, head);
-	if (scr->xine_info.count) {
-		xx = rect.pos.x + (scr->xine_info.screens[head].size.width - (w + 4)) / 2;
-		yy = rect.pos.y + (scr->xine_info.screens[head].size.height - (h + 4)) / 2;
-	}
-	else {
-		xx = (scr->scr_width - (w + 4)) / 2;
-		yy = (scr->scr_height - (h + 4)) / 2;
+	head = wGetHeadForPointerLocation(vscr->screen_ptr);
+	rect = wGetRectForHead(vscr->screen_ptr, head);
+	if (vscr->screen_ptr->xine_info.count) {
+		xx = rect.pos.x + (vscr->screen_ptr->xine_info.screens[head].size.width - (w + 4)) / 2;
+		yy = rect.pos.y + (vscr->screen_ptr->xine_info.screens[head].size.height - (h + 4)) / 2;
+	} else {
+		xx = (vscr->screen_ptr->scr_width - (w + 4)) / 2;
+		yy = (vscr->screen_ptr->scr_height - (h + 4)) / 2;
 	}
 #endif
 
@@ -344,25 +344,25 @@ static void showWorkspaceName(WScreen * scr, int workspace)
 #ifdef USE_XINERAMA
 		px = xx;
 #else
-		px = (scr->scr_width - (w + 4)) / 2;
+		px = (vscr->screen_ptr->scr_width - (w + 4)) / 2;
 #endif
-		py = scr->scr_height - (h + 4 + WORKSPACE_NAME_DISPLAY_PADDING);
+		py = vscr->screen_ptr->scr_height - (h + 4 + WORKSPACE_NAME_DISPLAY_PADDING);
 		break;
 	case WD_TOPLEFT:
 		px = WORKSPACE_NAME_DISPLAY_PADDING;
 		py = WORKSPACE_NAME_DISPLAY_PADDING;
 		break;
 	case WD_TOPRIGHT:
-		px = scr->scr_width - (w + 4 + WORKSPACE_NAME_DISPLAY_PADDING);
+		px = vscr->screen_ptr->scr_width - (w + 4 + WORKSPACE_NAME_DISPLAY_PADDING);
 		py = WORKSPACE_NAME_DISPLAY_PADDING;
 		break;
 	case WD_BOTTOMLEFT:
 		px = WORKSPACE_NAME_DISPLAY_PADDING;
-		py = scr->scr_height - (h + 4 + WORKSPACE_NAME_DISPLAY_PADDING);
+		py = vscr->screen_ptr->scr_height - (h + 4 + WORKSPACE_NAME_DISPLAY_PADDING);
 		break;
 	case WD_BOTTOMRIGHT:
-		px = scr->scr_width - (w + 4 + WORKSPACE_NAME_DISPLAY_PADDING);
-		py = scr->scr_height - (h + 4 + WORKSPACE_NAME_DISPLAY_PADDING);
+		px = vscr->screen_ptr->scr_width - (w + 4 + WORKSPACE_NAME_DISPLAY_PADDING);
+		py = vscr->screen_ptr->scr_height - (h + 4 + WORKSPACE_NAME_DISPLAY_PADDING);
 		break;
 	case WD_CENTER:
 	default:
@@ -370,94 +370,88 @@ static void showWorkspaceName(WScreen * scr, int workspace)
 		px = xx;
 		py = yy;
 #else
-		px = (scr->scr_width - (w + 4)) / 2;
-		py = (scr->scr_height - (h + 4)) / 2;
+		px = (scr->screen_ptr->scr_width - (w + 4)) / 2;
+		py = (scr->screen_ptr->scr_height - (h + 4)) / 2;
 #endif
 		break;
 	}
-	XResizeWindow(dpy, scr->workspace_name, w + 4, h + 4);
-	XMoveWindow(dpy, scr->workspace_name, px, py);
 
-	text = XCreatePixmap(dpy, scr->w_win, w + 4, h + 4, scr->w_depth);
-	mask = XCreatePixmap(dpy, scr->w_win, w + 4, h + 4, 1);
+	XResizeWindow(dpy, vscr->screen_ptr->workspace_name, w + 4, h + 4);
+	XMoveWindow(dpy, vscr->screen_ptr->workspace_name, px, py);
 
-	/*XSetForeground(dpy, scr->mono_gc, 0);
-	   XFillRectangle(dpy, mask, scr->mono_gc, 0, 0, w+4, h+4); */
+	text = XCreatePixmap(dpy, vscr->screen_ptr->w_win, w + 4, h + 4, vscr->screen_ptr->w_depth);
+	mask = XCreatePixmap(dpy, vscr->screen_ptr->w_win, w + 4, h + 4, 1);
 
-	XFillRectangle(dpy, text, WMColorGC(scr->black), 0, 0, w + 4, h + 4);
+	XFillRectangle(dpy, text, WMColorGC(vscr->screen_ptr->black), 0, 0, w + 4, h + 4);
 
 	for (x = 0; x <= 4; x++)
 		for (y = 0; y <= 4; y++)
-			WMDrawString(scr->wmscreen, text, scr->white, scr->vscr->workspace.font_for_name, x, y, name, len);
+			WMDrawString(vscr->screen_ptr->wmscreen, text, vscr->screen_ptr->white, vscr->workspace.font_for_name, x, y, name, len);
 
-	XSetForeground(dpy, scr->mono_gc, 1);
-	XSetBackground(dpy, scr->mono_gc, 0);
-
-	XCopyPlane(dpy, text, mask, scr->mono_gc, 0, 0, w + 4, h + 4, 0, 0, 1 << (scr->w_depth - 1));
-
-	/*XSetForeground(dpy, scr->mono_gc, 1); */
-	XSetBackground(dpy, scr->mono_gc, 1);
-
-	XFillRectangle(dpy, text, WMColorGC(scr->black), 0, 0, w + 4, h + 4);
-
-	WMDrawString(scr->wmscreen, text, scr->white, scr->vscr->workspace.font_for_name, 2, 2, name, len);
+	XSetForeground(dpy, vscr->screen_ptr->mono_gc, 1);
+	XSetBackground(dpy, vscr->screen_ptr->mono_gc, 0);
+	XCopyPlane(dpy, text, mask, vscr->screen_ptr->mono_gc, 0, 0, w + 4, h + 4, 0, 0, 1 << (vscr->screen_ptr->w_depth - 1));
+	XSetBackground(dpy, vscr->screen_ptr->mono_gc, 1);
+	XFillRectangle(dpy, text, WMColorGC(vscr->screen_ptr->black), 0, 0, w + 4, h + 4);
+	WMDrawString(vscr->screen_ptr->wmscreen, text, vscr->screen_ptr->white, vscr->workspace.font_for_name, 2, 2, name, len);
 
 #ifdef USE_XSHAPE
 	if (w_global.xext.shape.supported)
-		XShapeCombineMask(dpy, scr->workspace_name, ShapeBounding, 0, 0, mask, ShapeSet);
+		XShapeCombineMask(dpy, vscr->screen_ptr->workspace_name, ShapeBounding, 0, 0, mask, ShapeSet);
 #endif
-	XSetWindowBackgroundPixmap(dpy, scr->workspace_name, text);
-	XClearWindow(dpy, scr->workspace_name);
+	XSetWindowBackgroundPixmap(dpy, vscr->screen_ptr->workspace_name, text);
+	XClearWindow(dpy, vscr->screen_ptr->workspace_name);
 
-	data->text = RCreateImageFromDrawable(scr->rcontext, text, None);
+	data->text = RCreateImageFromDrawable(vscr->screen_ptr->rcontext, text, None);
 
 	XFreePixmap(dpy, text);
 	XFreePixmap(dpy, mask);
 
 	if (!data->text) {
-		XMapRaised(dpy, scr->workspace_name);
+		XMapRaised(dpy, vscr->screen_ptr->workspace_name);
 		XFlush(dpy);
 
 		goto erro;
 	}
 
-	ximg = RGetXImage(scr->rcontext, scr->root_win, px, py, data->text->width, data->text->height);
+	ximg = RGetXImage(vscr->screen_ptr->rcontext, vscr->screen_ptr->root_win, px, py, data->text->width, data->text->height);
 	if (!ximg)
 		goto erro;
 
-	XMapRaised(dpy, scr->workspace_name);
+	XMapRaised(dpy, vscr->screen_ptr->workspace_name);
 	XFlush(dpy);
 
-	data->back = RCreateImageFromXImage(scr->rcontext, ximg->image, NULL);
-	RDestroyXImage(scr->rcontext, ximg);
+	data->back = RCreateImageFromXImage(vscr->screen_ptr->rcontext, ximg->image, NULL);
+	RDestroyXImage(vscr->screen_ptr->rcontext, ximg);
 
-	if (!data->back) {
+	if (!data->back)
 		goto erro;
-	}
 
 	data->count = 10;
 
 	/* set a timeout for the effect */
 	data->timeout = time(NULL) + 2 + (WORKSPACE_NAME_DELAY + WORKSPACE_NAME_FADE_DELAY * data->count) / 1000;
 
-	scr->workspace_name_data = data;
+	vscr->screen_ptr->workspace_name_data = data;
 
 	return;
 
  erro:
-	if (scr->workspace_name_timer)
-		WMDeleteTimerHandler(scr->workspace_name_timer);
+	if (vscr->screen_ptr->workspace_name_timer)
+		WMDeleteTimerHandler(vscr->screen_ptr->workspace_name_timer);
 
 	if (data->text)
 		RReleaseImage(data->text);
+
 	if (data->back)
 		RReleaseImage(data->back);
+
 	wfree(data);
 
-	scr->workspace_name_data = NULL;
+	vscr->screen_ptr->workspace_name_data = NULL;
 
-	scr->workspace_name_timer = WMAddTimerHandler(WORKSPACE_NAME_DELAY +
-						      10 * WORKSPACE_NAME_FADE_DELAY, hideWorkspaceName, scr);
+	vscr->screen_ptr->workspace_name_timer = WMAddTimerHandler(WORKSPACE_NAME_DELAY +
+						      10 * WORKSPACE_NAME_FADE_DELAY, hideWorkspaceName, vscr->screen_ptr);
 }
 
 void wWorkspaceChange(virtual_screen *vscr, int workspace)
@@ -657,7 +651,7 @@ void wWorkspaceForceChange(virtual_screen *vscr, int workspace)
 
 	wScreenUpdateUsableArea(vscr->screen_ptr);
 	wNETWMUpdateDesktop(vscr->screen_ptr);
-	showWorkspaceName(vscr->screen_ptr, workspace);
+	showWorkspaceName(vscr, workspace);
 
 	WMPostNotificationName(WMNWorkspaceChanged, vscr->screen_ptr, (void *)(uintptr_t) workspace);
 }
@@ -910,7 +904,7 @@ void wWorkspaceRestoreState(virtual_screen *vscr)
 			if (vscr->workspace.array[i]->clip)
 				wDockDestroy(vscr->workspace.array[i]->clip);
 
-			set_workspace_clip(&vscr->workspace.array[i]->clip, vscr->screen_ptr, clip_state);
+			set_workspace_clip(&vscr->workspace.array[i]->clip, vscr, clip_state);
 
 			if (i > 0)
 				wDockHideIcons(vscr->workspace.array[i]->clip);
