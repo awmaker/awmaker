@@ -863,7 +863,7 @@ void wScreenSaveState(WScreen *scr)
 	}
 
 	if (wPreferences.save_session_on_exit) {
-		wSessionSaveState(scr);
+		wSessionSaveState(scr->vscr);
 	} else {
 		if ((foo = WMGetFromPLDictionary(old_state, dApplications)) != NULL)
 			WMPutInPLDictionary(w_global.session_state, dApplications, foo);

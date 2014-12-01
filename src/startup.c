@@ -668,7 +668,7 @@ void StartUp(Bool defaultScreenOnly)
 
 		/* If we're not restarting, restore session */
 		if (wPreferences.flags.restarting == 0 && !wPreferences.flags.norestore)
-			wSessionRestoreState(wScreen[j]);
+			wSessionRestoreState(wScreen[j]->vscr);
 
 		if (!wPreferences.flags.noautolaunch) {
 			/* auto-launch apps */
@@ -702,7 +702,7 @@ void StartUp(Bool defaultScreenOnly)
 		if (lastDesktop >= 0)
 			wWorkspaceForceChange(wScreen[j]->vscr, lastDesktop);
 		else
-			wSessionRestoreLastWorkspace(wScreen[j]);
+			wSessionRestoreLastWorkspace(wScreen[j]->vscr);
 	}
 
 	if (w_global.screen_count == 0) {
