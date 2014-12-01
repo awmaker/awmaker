@@ -339,7 +339,7 @@ void wSessionClearState(void)
 	WMRemoveFromPLDictionary(w_global.session_state, sWorkspace);
 }
 
-static pid_t execCommand(WScreen *scr, char *command)
+static pid_t execCommand(virtual_screen *vscr, char *command)
 {
 	pid_t pid;
 	char **argv;
@@ -347,28 +347,30 @@ static pid_t execCommand(WScreen *scr, char *command)
 
 	wtokensplit(command, &argv, &argc);
 
-	if (!argc) {
+	if (!argc)
 		return 0;
-	}
 
 	if ((pid = fork()) == 0) {
 		char **args;
 		int i;
 
-		SetupEnvironment(scr);
+		SetupEnvironment(vscr->screen_ptr);
 
 		args = malloc(sizeof(char *) * (argc + 1));
 		if (!args)
 			exit(111);
-		for (i = 0; i < argc; i++) {
+
+		for (i = 0; i < argc; i++)
 			args[i] = argv[i];
-		}
+
 		args[argc] = NULL;
 		execvp(argv[0], args);
 		exit(111);
 	}
+
 	while (argc > 0)
 		wfree(argv[--argc]);
+
 	wfree(argv);
 	return pid;
 }
@@ -515,7 +517,7 @@ void wSessionRestoreState(virtual_screen *vscr)
 
 		if (found) {
 			wDockLaunchWithState(btn, state);
-		} else if ((pid = execCommand(vscr->screen_ptr, command)) > 0) {
+		} else if ((pid = execCommand(vscr, command)) > 0) {
 			wWindowAddSavedState(instance, class, command, pid, state);
 		} else {
 			wfree(state);
