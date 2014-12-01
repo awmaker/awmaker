@@ -850,13 +850,12 @@ static WMenuEntry *addWindowsMenu(WScreen *scr, WMenu *menu, const char *title)
 
 	scr->vscr->menu.flags.added_window_menu = 1;
 
-	wwmenu = wMenuCreate(scr, _("Window List"));
+	wwmenu = wMenuCreate(scr->vscr, _("Window List"));
 	wwmenu->on_destroy = cleanupWindowsMenu;
 	scr->vscr->menu.switch_menu = wwmenu;
 	wwin = scr->focused_window;
 	while (wwin) {
 		UpdateSwitchMenu(scr->vscr, wwin, ACTION_ADD);
-
 		wwin = wwin->prev;
 	}
 
@@ -884,10 +883,10 @@ static WMenuEntry *addMenuEntry(WMenu *menu, const char *title, const char *shor
 			char *path;
 
 			path = wfindfile(DEF_CONFIG_PATHS, params);
-			if (!path) {
+			if (!path)
 				path = wstrdup(params);
-			}
-			dummy = wMenuCreate(scr, title);
+
+			dummy = wMenuCreate(scr->vscr, title);
 			dummy->on_destroy = removeShortcutsForMenu;
 			entry = wMenuAddCallback(menu, title, constructMenu, path);
 			entry->free_cdata = wfree;
@@ -904,7 +903,7 @@ static WMenuEntry *addMenuEntry(WMenu *menu, const char *title, const char *shor
 			if (!path)
 				path = wstrdup(params);
 
-			dummy = wMenuCreate(scr, title);
+			dummy = wMenuCreate(scr->vscr, title);
 			dummy->on_destroy = removeShortcutsForMenu;
 			entry = wMenuAddCallback(menu, title, constructPLMenuFromPipe, path);
 			entry->free_cdata = wfree;
@@ -1032,14 +1031,13 @@ static WMenu *parseCascade(WScreen * scr, WMenu * menu, WMenuParser parser)
 			WMenu *cascade;
 
 			/* start submenu */
-
-			cascade = wMenuCreate(scr, M_(title));
+			cascade = wMenuCreate(scr->vscr, M_(title));
 			cascade->on_destroy = removeShortcutsForMenu;
-			if (!parseCascade(scr, cascade, parser)) {
+			if (!parseCascade(scr, cascade, parser))
 				wMenuDestroy(cascade, True);
-			} else {
+			else
 				wMenuEntrySetCascade(menu, wMenuAddCallback(menu, M_(title), NULL, NULL), cascade);
-			}
+
 		} else if (strcasecmp(command, "END") == 0) {
 			/* end of menu */
 			freeline(title, command, params, shortcut);
@@ -1048,6 +1046,7 @@ static WMenu *parseCascade(WScreen * scr, WMenu * menu, WMenuParser parser)
 			/* normal items */
 			addMenuEntry(menu, M_(title), shortcut, command, params, WMenuParserGetFilename(parser));
 		}
+
 		freeline(title, command, params, shortcut);
 	}
 
@@ -1073,13 +1072,15 @@ static WMenu *readMenu(WScreen *scr, const char *flat_file, FILE *file)
 			freeline(title, command, params, shortcut);
 			break;
 		}
+
 		if (strcasecmp(command, "MENU") == 0) {
-			menu = wMenuCreate(scr, M_(title));
+			menu = wMenuCreate(scr->vscr, M_(title));
 			menu->on_destroy = removeShortcutsForMenu;
 			if (!parseCascade(scr, menu, parser)) {
 				wMenuDestroy(menu, True);
 				menu = NULL;
 			}
+
 			freeline(title, command, params, shortcut);
 			break;
 		} else {
@@ -1355,7 +1356,7 @@ static WMenu *readMenuDirectory(WScreen *scr, const char *title, char **path, co
 	WMSortArray(dirs, myCompare);
 	WMSortArray(files, myCompare);
 
-	menu = wMenuCreate(scr, M_(title));
+	menu = wMenuCreate(scr->vscr, M_(title));
 	menu->on_destroy = removeShortcutsForMenu;
 
 	WM_ITERATE_ARRAY(dirs, data, iter) {
@@ -1451,11 +1452,11 @@ static WMenu *readMenuDirectory(WScreen *scr, const char *title, char **path, co
 
 /************  Menu Configuration From WMRootMenu   *************/
 
-static WMenu *makeDefaultMenu(WScreen * scr)
+static WMenu *makeDefaultMenu(WScreen *scr)
 {
 	WMenu *menu = NULL;
 
-	menu = wMenuCreate(scr, _("Commands"));
+	menu = wMenuCreate(scr->vscr, _("Commands"));
 	wMenuAddCallback(menu, M_("XTerm"), execCommand, "xterm");
 	wMenuAddCallback(menu, M_("rxvt"), execCommand, "rxvt");
 	wMenuAddCallback(menu, _("Restart"), restartCommand, NULL);
@@ -1542,9 +1543,10 @@ static WMenu *configureMenu(WScreen * scr, WMPropList * definition, Bool include
 		wfree(tmp);
 		return NULL;
 	}
+
 	mtitle = WMGetFromPLString(elem);
 
-	menu = wMenuCreate(scr, M_(mtitle));
+	menu = wMenuCreate(scr->vscr, M_(mtitle));
 	menu->on_destroy = removeShortcutsForMenu;
 
 #ifdef GLOBAL_SUBMENU_FILE

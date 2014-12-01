@@ -91,9 +91,9 @@ static const struct {
 	{ N_("Maximus: tiled maximization"), WKBD_MAXIMUS, MAX_MAXIMUS }
 };
 
-static void updateOptionsMenu(WMenu * menu, WWindow * wwin);
+static void updateOptionsMenu(WMenu *menu, WWindow *wwin);
 
-static void execWindowOptionCommand(WMenu * menu, WMenuEntry * entry)
+static void execWindowOptionCommand(WMenu *menu, WMenuEntry *entry)
 {
 	WWindow *wwin = (WWindow *) entry->clientdata;
 
@@ -121,7 +121,7 @@ static void execWindowOptionCommand(WMenu * menu, WMenuEntry * entry)
 	}
 }
 
-static void execMaximizeCommand(WMenu * menu, WMenuEntry * entry)
+static void execMaximizeCommand(WMenu *menu, WMenuEntry *entry)
 {
 	WWindow *wwin = (WWindow *) entry->clientdata;
 	
@@ -131,7 +131,7 @@ static void execMaximizeCommand(WMenu * menu, WMenuEntry * entry)
 	handleMaximize(wwin, menu_maximize_entries[entry->order].maxim_direction);
 }
 
-static void updateUnmaximizeShortcut(WMenuEntry * entry, int flags)
+static void updateUnmaximizeShortcut(WMenuEntry *entry, int flags)
 {
 	int key;
 
@@ -268,7 +268,7 @@ static void execMenuCommand(WMenu *menu, WMenuEntry *entry)
 	}
 }
 
-static void switchWSCommand(WMenu * menu, WMenuEntry * entry)
+static void switchWSCommand(WMenu *menu, WMenuEntry *entry)
 {
 	WWindow *wwin = (WWindow *) entry->clientdata;
 
@@ -419,12 +419,13 @@ static void updateMakeShortcutMenu(WMenu *menu, WWindow *wwin)
 		}
 		entry->clientdata = wwin;
 	}
+
 	wfree(buffer);
 	if (!smenu->flags.realized)
 		wMenuRealize(smenu);
 }
 
-static void updateOptionsMenu(WMenu * menu, WWindow * wwin)
+static void updateOptionsMenu(WMenu *menu, WWindow *wwin)
 {
 	WMenu *smenu = menu->cascades[menu->entries[MC_OPTIONS]->cascade];
 
@@ -448,7 +449,7 @@ static void updateOptionsMenu(WMenu * menu, WWindow * wwin)
 	wMenuRealize(smenu);
 }
 
-static void updateMaximizeMenu(WMenu * menu, WWindow * wwin)
+static void updateMaximizeMenu(WMenu *menu, WWindow *wwin)
 {
 	WMenu *smenu = menu->cascades[menu->entries[MC_OTHERMAX]->cascade];
 	int i;
@@ -466,7 +467,7 @@ static WMenu *makeWorkspaceMenu(WScreen *scr)
 {
 	WMenu *menu;
 
-	menu = wMenuCreate(scr, NULL);
+	menu = wMenuCreate(scr->vscr, NULL);
 	if (!menu) {
 		wwarning(_("could not create submenu for window menu"));
 		return NULL;
@@ -491,12 +492,12 @@ static WMenu *makeMakeShortcutMenu(WMenu *menu)
 	return menu;
 }
 
-static WMenu *makeOptionsMenu(WScreen * scr)
+static WMenu *makeOptionsMenu(WScreen *scr)
 {
 	WMenu *menu;
 	WMenuEntry *entry;
 
-	menu = wMenuCreate(scr, NULL);
+	menu = wMenuCreate(scr->vscr, NULL);
 	if (!menu) {
 		wwarning(_("could not create submenu for window menu"));
 		return NULL;
@@ -517,12 +518,12 @@ static WMenu *makeOptionsMenu(WScreen * scr)
 	return menu;
 }
 
-static WMenu *makeMaximizeMenu(WScreen * scr)
+static WMenu *makeMaximizeMenu(WScreen *scr)
 {
 	WMenu *menu;
 	int i;
 
-	menu = wMenuCreate(scr, NULL);
+	menu = wMenuCreate(scr->vscr, NULL);
 	if (!menu) {
 		wwarning(_("could not create submenu for window menu"));
 		return NULL;
@@ -539,7 +540,7 @@ static WMenu *createWindowMenu(virtual_screen *vscr)
 	WMenu *menu;
 	WMenuEntry *entry;
 
-	menu = wMenuCreate(vscr->screen_ptr, NULL);
+	menu = wMenuCreate(vscr, NULL);
 	/*
 	 * Warning: If you make some change that affects the order of the
 	 * entries, you must update the command enum in the top of

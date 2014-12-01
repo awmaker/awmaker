@@ -760,7 +760,7 @@ WMenu *wWorkspaceMenuMake(WScreen *scr, Bool titled)
 	WMenu *wsmenu;
 	WMenuEntry *entry;
 
-	wsmenu = wMenuCreate(scr, titled ? _("Workspaces") : NULL);
+	wsmenu = wMenuCreate(scr->vscr, titled ? _("Workspaces") : NULL);
 	if (!wsmenu) {
 		wwarning(_("could not create Workspace menu"));
 		return NULL;

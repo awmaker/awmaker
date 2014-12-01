@@ -260,12 +260,12 @@ void menu_map(WMenu *menu, virtual_screen *screen)
  * 	The created menu.
  *----------------------------------------------------------------------
  */
-WMenu *wMenuCreate(WScreen *screen, const char *title)
+WMenu *wMenuCreate(virtual_screen *vscr, const char *title)
 {
 	WMenu *menu;
 
 	menu = menu_create(title);
-	menu_map(menu, screen->vscr);
+	menu_map(menu, vscr);
 
 	return menu;
 }
