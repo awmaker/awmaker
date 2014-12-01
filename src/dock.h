@@ -94,7 +94,7 @@ void wDockDoAutoLaunch(WDock *dock, int workspace);
 void wDockLaunchWithState(WAppIcon *btn, WSavedState *state);
 
 #ifdef XDND
-int wDockReceiveDNDDrop(WScreen *scr, XEvent *event);
+int wDockReceiveDNDDrop(virtual_screen *vscr, XEvent *event);
 #endif
 
 void wClipIconPaint(void);

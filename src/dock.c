@@ -2477,13 +2477,13 @@ static WDock *findDock(virtual_screen *vscr, XEvent *event, int *icon_pos)
 	return NULL;
 }
 
-int wDockReceiveDNDDrop(WScreen *scr, XEvent *event)
+int wDockReceiveDNDDrop(virtual_screen *vscr, XEvent *event)
 {
 	WDock *dock;
 	WAppIcon *btn;
 	int icon_pos;
 
-	dock = findDock(scr->vscr, event, &icon_pos);
+	dock = findDock(vscr, event, &icon_pos);
 	if (!dock)
 		return False;
 
@@ -2496,7 +2496,7 @@ int wDockReceiveDNDDrop(WScreen *scr, XEvent *event)
 		return True;
 
 	if (dock->icon_array[icon_pos]->dnd_command != NULL) {
-		scr->flags.dnd_data_convertion_status = 0;
+		vscr->screen_ptr->flags.dnd_data_convertion_status = 0;
 
 		btn = dock->icon_array[icon_pos];
 
@@ -2517,7 +2517,7 @@ int wDockReceiveDNDDrop(WScreen *scr, XEvent *event)
 
 		btn->paste_launch = 0;
 		btn->drop_launch = 1;
-		scr->vscr->last_dock = dock;
+		vscr->last_dock = dock;
 		btn->pid = execCommand(btn, btn->dnd_command, NULL);
 		if (btn->pid > 0) {
 			dockIconPaint(btn);

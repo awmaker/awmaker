@@ -132,20 +132,20 @@ Bool wXDNDProcessSelection(XEvent *event)
 
 		/* search in string */
 		while (length--) {
-			if (retain[length] == '\r') {	/* useless char, nuke it */
+			if (retain[length] == '\r')	/* useless char, nuke it */
 				retain[length] = 0;
-			}
+
 			if (retain[length] == '\n') {
 				str_size = strlen(&retain[length + 1]);
 				if (str_size) {
 					WMAddToArray(items, wstrdup(&retain[length + 1]));
 					total_size += str_size + 3;	/* reserve for " \"\"" */
-					/* this is nonsense -- if (length)
-					   WMAppendArray(items, WMCreateArray(1)); */
 				}
+
 				retain[length] = 0;
 			}
 		}
+
 		/* final one */
 		WMAddToArray(items, wstrdup(retain));
 		total_size += strlen(retain) + 3;
@@ -167,7 +167,8 @@ Bool wXDNDProcessSelection(XEvent *event)
 		}
 		WMFreeArray(items);
 		if (scr->xdestring[0])
-			wDockReceiveDNDDrop(scr, event);
+			wDockReceiveDNDDrop(scr->vscr, event);
+
 		wfree(scr->xdestring);	/* this xdestring is not from Xlib (no XFree) */
 	}
 
