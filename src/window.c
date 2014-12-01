@@ -1948,7 +1948,7 @@ void wWindowChangeWorkspaceRelative(WWindow *wwin, int amount)
 			wWindowChangeWorkspace(wwin, w);
 		} else if (wPreferences.ws_advance) {
 			int workspace = WMIN(w, MAX_WORKSPACES - 1);
-			wWorkspaceMake(scr, workspace);
+			wWorkspaceMake(scr->vscr, workspace);
 			wWindowChangeWorkspace(wwin, workspace);
 		} else if (wPreferences.ws_cycle) {
 			wWindowChangeWorkspace(wwin, w % vscr->workspace.count);

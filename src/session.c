@@ -560,5 +560,5 @@ void wSessionRestoreLastWorkspace(WScreen *scr)
 	w = wGetWorkspaceNumber(scr->vscr, value);
 
 	if (w != scr->vscr->workspace.current && w < scr->vscr->workspace.count)
-		wWorkspaceChange(scr, w);
+		wWorkspaceChange(scr->vscr, w);
 }

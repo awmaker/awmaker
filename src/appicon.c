@@ -510,7 +510,7 @@ static void hideCallback(WMenu *menu, WMenuEntry *entry)
 	WApplication *wapp = (WApplication *) entry->clientdata;
 
 	if (wapp->flags.hidden) {
-		wWorkspaceChange(menu->menu->vscr->screen_ptr, wapp->last_workspace);
+		wWorkspaceChange(menu->menu->vscr, wapp->last_workspace);
 		wUnhideApplication(wapp, False, False);
 	} else {
 		wHideApplication(wapp);
@@ -699,7 +699,6 @@ static void iconDblClick(WObjDescriptor *desc, XEvent *event)
 	WAppIcon *aicon = desc->parent;
 	WApplication *wapp;
 	virtual_screen *vscr = aicon->icon->core->vscr;
-	WScreen *scr = vscr->screen_ptr;
 	int unhideHere;
 
 	assert(aicon->icon->owner != NULL);
@@ -714,7 +713,7 @@ static void iconDblClick(WObjDescriptor *desc, XEvent *event)
 	unhideHere = (event->xbutton.state & ShiftMask);
 	/* go to the last workspace that the user worked on the app */
 	if (!unhideHere && wapp->last_workspace != vscr->workspace.current)
-		wWorkspaceChange(scr, wapp->last_workspace);
+		wWorkspaceChange(vscr, wapp->last_workspace);
 
 	wUnhideApplication(wapp, event->xbutton.button == Button2, unhideHere);
 

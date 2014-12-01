@@ -585,7 +585,7 @@ static void handleMapRequest(XEvent * ev)
 			WApplication *wapp = wApplicationOf(wwin->main_window);
 			/* go to the last workspace that the user worked on the app */
 			if (wapp)
-				wWorkspaceChange(wwin->vscr->screen_ptr, wapp->last_workspace);
+				wWorkspaceChange(wwin->vscr, wapp->last_workspace);
 
 			wUnhideApplication(wapp, False, False);
 		}
@@ -712,9 +712,9 @@ static void executeWheelAction(virtual_screen *vscr, XEvent *event, int action)
 	switch (action) {
 	case WA_SWITCH_WORKSPACES:
 		if (next_direction)
-			wWorkspaceRelativeChange(scr, 1);
+			wWorkspaceRelativeChange(vscr, 1);
 		else
-			wWorkspaceRelativeChange(scr, -1);
+			wWorkspaceRelativeChange(vscr, -1);
 		break;
 	case WA_SWITCH_WINDOWS:
 		wwin = scr->focused_window;
@@ -746,10 +746,10 @@ static void executeButtonAction(virtual_screen *vscr, XEvent *event, int action)
 			event->xbutton.window = vscr->menu.switch_menu->frame->core->window;
 		break;
 	case WA_MOVE_PREVWORKSPACE:
-		wWorkspaceRelativeChange(vscr->screen_ptr, -1);
+		wWorkspaceRelativeChange(vscr, -1);
 		break;
 	case WA_MOVE_NEXTWORKSPACE:
-		wWorkspaceRelativeChange(vscr->screen_ptr, 1);
+		wWorkspaceRelativeChange(vscr, 1);
 		break;
 	case WA_MOVE_PREVWINDOW:
 		wwin = vscr->screen_ptr->focused_window;
@@ -1583,17 +1583,17 @@ static void handleKeyPress(XEvent *event)
 		widx = command - WKBD_WORKSPACE1;
 		i = (scr->vscr->workspace.current / 10) * 10 + widx;
 		if (wPreferences.ws_advance || i < scr->vscr->workspace.count)
-			wWorkspaceChange(scr, i);
+			wWorkspaceChange(scr->vscr, i);
 		break;
 
 	case WKBD_NEXTWORKSPACE:
-		wWorkspaceRelativeChange(scr, 1);
+		wWorkspaceRelativeChange(scr->vscr, 1);
 		break;
 	case WKBD_PREVWORKSPACE:
-		wWorkspaceRelativeChange(scr, -1);
+		wWorkspaceRelativeChange(scr->vscr, -1);
 		break;
 	case WKBD_LASTWORKSPACE:
-		wWorkspaceChange(scr, scr->vscr->workspace.last_used);
+		wWorkspaceChange(scr->vscr, scr->vscr->workspace.last_used);
 		break;
 	case WKBD_MOVE_WORKSPACE1 ... WKBD_MOVE_WORKSPACE10:
 		widx = command - WKBD_MOVE_WORKSPACE1;
@@ -1763,10 +1763,10 @@ static void handleKeyPress(XEvent *event)
 
 			if (command == WKBD_NEXTWSLAYER) {
 				if ((row + 1) * 10 < scr->vscr->workspace.count)
-					wWorkspaceChange(scr, column + (row + 1) * 10);
+					wWorkspaceChange(scr->vscr, column + (row + 1) * 10);
 			} else {
 				if (row > 0)
-					wWorkspaceChange(scr, column + (row - 1) * 10);
+					wWorkspaceChange(scr->vscr, column + (row - 1) * 10);
 			}
 		}
 		break;

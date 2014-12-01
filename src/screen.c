@@ -642,7 +642,7 @@ WScreen *wScreenInit(int screen_number)
 	wNETWMInitStuff(scr);
 
 	/* create initial workspace */
-	wWorkspaceNew(scr);
+	wWorkspaceNew(scr->vscr);
 
 	/* create shared pixmaps */
 	createPixmaps(scr);
@@ -811,7 +811,7 @@ void wScreenRestoreState(WScreen *scr)
 		wDrawersRestoreState_map(scr->vscr);
 	}
 
-	wWorkspaceRestoreState(scr);
+	wWorkspaceRestoreState(scr->vscr);
 	wScreenUpdateUsableArea(scr);
 }
 

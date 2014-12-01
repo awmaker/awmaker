@@ -565,7 +565,7 @@ static void wNETWMShowingDesktop(WScreen *scr, Bool show)
 		}
 
 		if (ws != scr->vscr->workspace.current)
-			wWorkspaceChange(scr, ws);
+			wWorkspaceChange(scr->vscr, ws);
 
 		wfree(scr->netdata->show_desktop);
 		scr->netdata->show_desktop = NULL;
@@ -1469,7 +1469,7 @@ static void handleDesktopNames(WScreen *scr)
 			names[n] = &data[i];
 		} else if (*names[n] == 0) {
 			names[n] = &data[i];
-			wWorkspaceRename(scr, n, names[n]);
+			wWorkspaceRename(scr->vscr, n, names[n]);
 		}
 	}
 }
@@ -1488,19 +1488,19 @@ Bool wNETWMProcessClientMessage(XClientMessageEvent *event)
 	if (scr) {
 		/* generic client messages */
 		if (event->message_type == net_current_desktop) {
-			wWorkspaceChange(scr, event->data.l[0]);
+			wWorkspaceChange(scr->vscr, event->data.l[0]);
 		} else if (event->message_type == net_number_of_desktops) {
 			long value;
 
 			value = event->data.l[0];
 			if (value > scr->vscr->workspace.count) {
-				wWorkspaceMake(scr, value - scr->vscr->workspace.count);
+				wWorkspaceMake(scr->vscr, value - scr->vscr->workspace.count);
 			} else if (value < scr->vscr->workspace.count) {
 				int i;
 				Bool rebuild = False;
 
 				for (i = scr->vscr->workspace.count - 1; i >= value; i--) {
-					if (!wWorkspaceDelete(scr, i)) {
+					if (!wWorkspaceDelete(scr->vscr, i)) {
 						rebuild = True;
 						break;
 					}

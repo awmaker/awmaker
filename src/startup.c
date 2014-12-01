@@ -700,7 +700,7 @@ void StartUp(Bool defaultScreenOnly)
 
 		/* go to workspace where we were before restart */
 		if (lastDesktop >= 0)
-			wWorkspaceForceChange(wScreen[j], lastDesktop);
+			wWorkspaceForceChange(wScreen[j]->vscr, lastDesktop);
 		else
 			wSessionRestoreLastWorkspace(wScreen[j]);
 	}
@@ -838,7 +838,7 @@ static void manageAllWindows(WScreen *scr, int crashRecovery)
 	}
 
 	scr->vscr->workspace.last_used = 0;
-	wWorkspaceForceChange(scr, 0);
+	wWorkspaceForceChange(scr->vscr, 0);
 	if (!wPreferences.flags.noclip)
 		wDockShowIcons(scr->vscr->workspace.array[scr->vscr->workspace.current]->clip);
 

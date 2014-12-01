@@ -818,7 +818,7 @@ static WMenuEntry *addWorkspaceMenu(WScreen *scr, WMenu *menu, const char *title
 
 	scr->vscr->menu.flags.added_workspace_menu = 1;
 
-	wsmenu = wWorkspaceMenuMake(scr, True);
+	wsmenu = wWorkspaceMenuMake(scr->vscr, True);
 	wsmenu->on_destroy = cleanupWorkspaceMenu;
 
 	scr->vscr->workspace.menu = wsmenu;

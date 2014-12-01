@@ -527,15 +527,16 @@ static void flushMotion(void)
 	while (XCheckMaskEvent(dpy, ButtonMotionMask, &ev)) ;
 }
 
-static void crossWorkspace(WScreen * scr, WWindow * wwin, int opaque_move, int new_workspace, int rewind)
+static void crossWorkspace(WScreen *scr, WWindow *wwin, int opaque_move, int new_workspace, int rewind)
 {
 	/* do not let window be unmapped */
 	if (opaque_move) {
 		wwin->flags.changing_workspace = 1;
 		wWindowChangeWorkspace(wwin, new_workspace);
 	}
+
 	/* go to new workspace */
-	wWorkspaceChange(scr, new_workspace);
+	wWorkspaceChange(scr->vscr, new_workspace);
 
 	wwin->flags.changing_workspace = 0;
 
@@ -867,7 +868,7 @@ static Bool checkWorkspaceChange(WWindow *wwin, MoveData *data, Bool opaqueMove)
 			/* create a new workspace */
 			if (abs(data->rubCount) > 2) {
 				/* go to next workspace */
-				wWorkspaceNew(scr);
+				wWorkspaceNew(scr->vscr);
 
 				crossWorkspace(scr, wwin, opaqueMove, scr->vscr->workspace.current + 1, False);
 				changed = True;
@@ -1490,16 +1491,16 @@ int wKeyboardMoveResizeWindow(WWindow *wwin)
 				if (wPreferences.ws_cycle) {
 					if (src_x + off_x + ww < 20) {
 						if (!scr->vscr->workspace.current)
-							wWorkspaceChange(scr, scr->vscr->workspace.count - 1);
+							wWorkspaceChange(scr->vscr, scr->vscr->workspace.count - 1);
 						else
-							wWorkspaceChange(scr, scr->vscr->workspace.current - 1);
+							wWorkspaceChange(scr->vscr, scr->vscr->workspace.current - 1);
 
 						off_x += scr_width;
 					} else if (src_x + off_x + 20 > scr_width) {
 						if (scr->vscr->workspace.current == scr->vscr->workspace.count - 1)
-							wWorkspaceChange(scr, 0);
+							wWorkspaceChange(scr->vscr, 0);
 						else
-							wWorkspaceChange(scr, scr->vscr->workspace.current + 1);
+							wWorkspaceChange(scr->vscr, scr->vscr->workspace.current + 1);
 
 						off_x -= scr_width;
 					}

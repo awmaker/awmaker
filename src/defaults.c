@@ -2556,7 +2556,7 @@ static int setWrapAppiconsInDock(WScreen *scr, WDefaultEntry *entry, void *tdata
 	return 0;
 }
 
-static int setStickyIcons(WScreen * scr, WDefaultEntry * entry, void *bar, void *foo)
+static int setStickyIcons(WScreen *scr, WDefaultEntry *entry, void *bar, void *foo)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
@@ -2564,7 +2564,7 @@ static int setStickyIcons(WScreen * scr, WDefaultEntry * entry, void *bar, void 
 	(void) foo;
 
 	if (scr->vscr->workspace.array) {
-		wWorkspaceForceChange(scr, scr->vscr->workspace.current);
+		wWorkspaceForceChange(scr->vscr, scr->vscr->workspace.current);
 		wArrangeIcons(scr, False);
 	}
 	return 0;

@@ -200,7 +200,7 @@ static void renameCallback(WMenu *menu, WMenuEntry *entry)
 
 	snprintf(buffer, sizeof(buffer), _("Type the name for workspace %i:"), wspace + 1);
 	if (wInputDialog(dock->vscr->screen_ptr, _("Rename Workspace"), buffer, &name))
-		wWorkspaceRename(dock->vscr->screen_ptr, wspace, name);
+		wWorkspaceRename(dock->vscr, wspace, name);
 
 	wfree(name);
 }
@@ -818,7 +818,7 @@ static void hideCallback(WMenu *menu, WMenuEntry *entry)
 	wapp = wApplicationOf(btn->icon->owner->main_window);
 
 	if (wapp->flags.hidden) {
-		wWorkspaceChange(btn->icon->core->vscr->screen_ptr, wapp->last_workspace);
+		wWorkspaceChange(btn->icon->core->vscr, wapp->last_workspace);
 		wUnhideApplication(wapp, False, False);
 	} else {
 		wHideApplication(wapp);
@@ -4164,7 +4164,7 @@ static void iconDblClick(WObjDescriptor *desc, XEvent *event)
 
 		/* go to the last workspace that the user worked on the app */
 		if (wapp->last_workspace != dock->vscr->workspace.current && !unhideHere)
-			wWorkspaceChange(dock->vscr->screen_ptr, wapp->last_workspace);
+			wWorkspaceChange(dock->vscr, wapp->last_workspace);
 
 		wUnhideApplication(wapp, event->xbutton.button == Button2, unhideHere);
 
@@ -4474,16 +4474,16 @@ static void handleClipChangeWorkspace(virtual_screen *vscr, XEvent *event)
 
 	if (direction == CLIP_FORWARD) {
 		if (vscr->workspace.current < vscr->workspace.count - 1)
-			wWorkspaceChange(vscr->screen_ptr, vscr->workspace.current + 1);
+			wWorkspaceChange(vscr, vscr->workspace.current + 1);
 		else if (new_ws && vscr->workspace.current < MAX_WORKSPACES - 1)
-			wWorkspaceChange(vscr->screen_ptr, vscr->workspace.current + 1);
+			wWorkspaceChange(vscr, vscr->workspace.current + 1);
 		else if (wPreferences.ws_cycle)
-			wWorkspaceChange(vscr->screen_ptr, 0);
+			wWorkspaceChange(vscr, 0);
 	} else if (direction == CLIP_REWIND) {
 		if (vscr->workspace.current > 0)
-			wWorkspaceChange(vscr->screen_ptr, vscr->workspace.current - 1);
+			wWorkspaceChange(vscr, vscr->workspace.current - 1);
 		else if (vscr->workspace.current == 0 && wPreferences.ws_cycle)
-			wWorkspaceChange(vscr->screen_ptr, vscr->workspace.count - 1);
+			wWorkspaceChange(vscr, vscr->workspace.count - 1);
 	}
 
 	wClipIconPaint();
@@ -4540,7 +4540,7 @@ static void iconMouseDown(WObjDescriptor *desc, XEvent *event)
 	case Button2:
 		if (aicon == w_global.clip.icon) {
 			if (!scr->vscr->clip.ws_menu)
-				scr->vscr->clip.ws_menu = wWorkspaceMenuMake(scr, False);
+				scr->vscr->clip.ws_menu = wWorkspaceMenuMake(vscr, False);
 
 			if (scr->vscr->clip.ws_menu) {
 				WMenu *wsMenu = scr->vscr->clip.ws_menu;
@@ -4597,11 +4597,11 @@ static void iconMouseDown(WObjDescriptor *desc, XEvent *event)
 		break;
 	case Button4:
 		if (dock->type == WM_CLIP)
-			wWorkspaceRelativeChange(scr, 1);
+			wWorkspaceRelativeChange(vscr, 1);
 		break;
 	case Button5:
 		if (dock->type == WM_CLIP)
-			wWorkspaceRelativeChange(scr, -1);
+			wWorkspaceRelativeChange(vscr, -1);
 	}
 }
 
