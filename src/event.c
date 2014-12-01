@@ -1802,7 +1802,7 @@ static void handleKeyPress(XEvent *event)
 	}
 }
 
-static void handleMotionNotify(XEvent * event)
+static void handleMotionNotify(XEvent *event)
 {
 	WScreen *scr = wScreenForRootWindow(event->xmotion.root);
 
@@ -1816,14 +1816,14 @@ static void handleMotionNotify(XEvent * event)
 		    p.y <= (rect.pos.y + 1) || p.y >= (rect.pos.y + rect.size.height - 2)) {
 			WMenu *menu;
 
-			menu = wMenuUnderPointer(scr);
+			menu = wMenuUnderPointer(scr->vscr);
 			if (menu != NULL)
 				wMenuScroll(menu);
 		}
 	}
 }
 
-static void handleVisibilityNotify(XEvent * event)
+static void handleVisibilityNotify(XEvent *event)
 {
 	WWindow *wwin;
 

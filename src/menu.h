@@ -126,7 +126,7 @@ void wMenuSetEnabled(WMenu *menu, int index, int enable);
 void wMenuMove(WMenu *menu, int x, int y, int submenus);
 void wMenuEntryRemoveCascade(WMenu *menu, WMenuEntry *entry);
 void wMenuScroll(WMenu *menu);
-WMenu *wMenuUnderPointer(WScreen *screen);
+WMenu *wMenuUnderPointer(virtual_screen *vscr);
 void wMenuSaveState(virtual_screen *vscr);
 void wMenuRestoreState(virtual_screen *vscr);
 

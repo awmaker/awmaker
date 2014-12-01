@@ -1309,14 +1309,14 @@ static void raiseMenus(WMenu *menu, int submenus)
 		raiseMenus(menu->parent, submenus);
 }
 
-WMenu *wMenuUnderPointer(WScreen *screen)
+WMenu *wMenuUnderPointer(virtual_screen *vscr)
 {
 	WObjDescriptor *desc;
 	Window root_ret, win;
 	int dummy;
 	unsigned int mask;
 
-	XQueryPointer(dpy, screen->root_win, &root_ret, &win, &dummy, &dummy, &dummy, &dummy, &mask);
+	XQueryPointer(dpy, vscr->screen_ptr->root_win, &root_ret, &win, &dummy, &dummy, &dummy, &dummy, &mask);
 
 	if (win == None)
 		return NULL;
@@ -1503,7 +1503,7 @@ void wMenuScroll(WMenu *menu)
 			 * and the screen border and is close enough to the border */
 			on_border = isPointNearBoder(menu, x, y);
 
-			smenu = wMenuUnderPointer(scr);
+			smenu = wMenuUnderPointer(scr->vscr);
 			if ((smenu == NULL && !on_border) || (smenu && parentMenu(smenu) != omenu)) {
 				done = 1;
 				break;
@@ -1537,7 +1537,7 @@ void wMenuScroll(WMenu *menu)
 			    ev.xbutton.y_root >= omenu->frame_y &&
 			    ev.xbutton.y_root <= omenu->frame_y + omenu->frame->top_width;
 			WMHandleEvent(&ev);
-			smenu = wMenuUnderPointer(scr);
+			smenu = wMenuUnderPointer(scr->vscr);
 			if (smenu == NULL || (smenu && smenu->flags.buttoned && smenu != omenu))
 				done = 1;
 			else if (smenu == omenu && on_title) {
