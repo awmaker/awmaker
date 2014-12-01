@@ -108,7 +108,7 @@ static void dockIconExpose(WObjDescriptor *desc, XEvent *event);
 
 static void clipLeave(WDock *dock);
 
-static void handleClipChangeWorkspace(WScreen *scr, XEvent *event);
+static void handleClipChangeWorkspace(virtual_screen *vscr, XEvent *event);
 
 static void clipEnterNotify(WObjDescriptor *desc, XEvent *event);
 static void clipLeaveNotify(WObjDescriptor *desc, XEvent *event);
@@ -1250,20 +1250,20 @@ void clip_menu_create(virtual_screen *vscr)
 	vscr->clip.menu = menu;
 }
 
-static void clip_menu_map(WMenu *menu, WScreen *scr)
+static void clip_menu_map(WMenu *menu, virtual_screen *vscr)
 {
-	menu_map(menu, scr->vscr);
+	menu_map(menu, vscr);
 
-	if (scr->vscr->clip.opt_menu) {
-		menu_map(scr->vscr->clip.opt_menu, scr->vscr);
-		wMenuRealize(scr->vscr->clip.opt_menu);
+	if (vscr->clip.opt_menu) {
+		menu_map(vscr->clip.opt_menu, vscr);
+		wMenuRealize(vscr->clip.opt_menu);
 	}
 
-	wMenuEntrySetCascade_map(menu, scr->vscr->clip.opt_menu);
-	if (scr->vscr->clip.submenu) {
-		menu_map(scr->vscr->clip.submenu, scr->vscr);
-		wMenuRealize(scr->vscr->clip.submenu);
-		wMenuEntrySetCascade_map(menu, scr->vscr->clip.submenu);
+	wMenuEntrySetCascade_map(menu, vscr->clip.opt_menu);
+	if (vscr->clip.submenu) {
+		menu_map(vscr->clip.submenu, vscr);
+		wMenuRealize(vscr->clip.submenu);
+		wMenuEntrySetCascade_map(menu, vscr->clip.submenu);
 	}
 }
 
@@ -1321,16 +1321,16 @@ static void drawer_menu_create(virtual_screen *vscr)
 	vscr->dock.drawer_menu = menu;
 }
 
-static void drawer_menu_map(WMenu *menu, WScreen *scr)
+static void drawer_menu_map(WMenu *menu, virtual_screen *vscr)
 {
-	menu_map(menu, scr->vscr);
+	menu_map(menu, vscr);
 
-	if (scr->vscr->dock.drawer_opt_menu) {
-		menu_map(scr->vscr->dock.drawer_opt_menu, scr->vscr);
-		wMenuRealize(scr->vscr->dock.drawer_opt_menu);
+	if (vscr->dock.drawer_opt_menu) {
+		menu_map(vscr->dock.drawer_opt_menu, vscr);
+		wMenuRealize(vscr->dock.drawer_opt_menu);
 	}
 
-	wMenuEntrySetCascade_map(menu, scr->vscr->dock.drawer_opt_menu);
+	wMenuEntrySetCascade_map(menu, vscr->dock.drawer_opt_menu);
 }
 
 static void drawer_menu_unmap(virtual_screen *vscr, WMenu *menu)
@@ -4177,7 +4177,7 @@ static void iconDblClick(WObjDescriptor *desc, XEvent *event)
 				toggleLowered(dock);
 			} else if (btn == w_global.clip.icon) {
 				if (getClipButton(event->xbutton.x, event->xbutton.y) != CLIP_IDLE) {
-					handleClipChangeWorkspace(dock->vscr->screen_ptr, event);
+					handleClipChangeWorkspace(dock->vscr, event);
 				} else if (wPreferences.flags.clip_merged_in_dock) {
 					/* Is actually the dock */
 					if (btn->command) {
@@ -4427,7 +4427,7 @@ static int getClipButton(int px, int py)
 	return CLIP_IDLE;
 }
 
-static void handleClipChangeWorkspace(WScreen *scr, XEvent *event)
+static void handleClipChangeWorkspace(virtual_screen *vscr, XEvent *event)
 {
 	XEvent ev;
 	int done, direction, new_ws;
@@ -4473,17 +4473,17 @@ static void handleClipChangeWorkspace(WScreen *scr, XEvent *event)
 	new_ws = wPreferences.ws_advance || (event->xbutton.state & ControlMask);
 
 	if (direction == CLIP_FORWARD) {
-		if (scr->vscr->workspace.current < scr->vscr->workspace.count - 1)
-			wWorkspaceChange(scr, scr->vscr->workspace.current + 1);
-		else if (new_ws && scr->vscr->workspace.current < MAX_WORKSPACES - 1)
-			wWorkspaceChange(scr, scr->vscr->workspace.current + 1);
+		if (vscr->workspace.current < vscr->workspace.count - 1)
+			wWorkspaceChange(vscr->screen_ptr, vscr->workspace.current + 1);
+		else if (new_ws && vscr->workspace.current < MAX_WORKSPACES - 1)
+			wWorkspaceChange(vscr->screen_ptr, vscr->workspace.current + 1);
 		else if (wPreferences.ws_cycle)
-			wWorkspaceChange(scr, 0);
+			wWorkspaceChange(vscr->screen_ptr, 0);
 	} else if (direction == CLIP_REWIND) {
-		if (scr->vscr->workspace.current > 0)
-			wWorkspaceChange(scr, scr->vscr->workspace.current - 1);
-		else if (scr->vscr->workspace.current == 0 && wPreferences.ws_cycle)
-			wWorkspaceChange(scr, scr->vscr->workspace.count - 1);
+		if (vscr->workspace.current > 0)
+			wWorkspaceChange(vscr->screen_ptr, vscr->workspace.current - 1);
+		else if (vscr->workspace.current == 0 && wPreferences.ws_cycle)
+			wWorkspaceChange(vscr->screen_ptr, vscr->workspace.count - 1);
 	}
 
 	wClipIconPaint();
@@ -4528,7 +4528,7 @@ static void iconMouseDown(WObjDescriptor *desc, XEvent *event)
 		if (aicon->yindex == 0 && aicon->xindex == 0) {
 			if (getClipButton(event->xbutton.x, event->xbutton.y) != CLIP_IDLE &&
 				(dock->type == WM_CLIP || (dock->type == WM_DOCK && wPreferences.flags.clip_merged_in_dock)))
-				handleClipChangeWorkspace(scr, event);
+				handleClipChangeWorkspace(vscr, event);
 			else
 				handleDockMove(dock, aicon, event);
 		} else {
@@ -4585,12 +4585,12 @@ static void iconMouseDown(WObjDescriptor *desc, XEvent *event)
 			dock_menu_unmap(scr->vscr, dock->menu);
 			break;
 		case WM_CLIP:
-			clip_menu_map(dock->menu, scr);
+			clip_menu_map(dock->menu, vscr);
 			open_menu_clip(dock, aicon, event);
 			clip_menu_unmap(scr->vscr, dock->menu);
 			break;
 		case WM_DRAWER:
-			drawer_menu_map(dock->menu, scr);
+			drawer_menu_map(dock->menu, vscr);
 			open_menu_drawer(dock, aicon, event);
 			drawer_menu_unmap(scr->vscr, dock->menu);
 		}
