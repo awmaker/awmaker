@@ -589,7 +589,7 @@ void wMenuDestroy(WMenu *menu, int recurse)
 	menu_destroy(menu);
 }
 
-static void drawFrame(WScreen *scr, Drawable win, int y, int w, int h, int type)
+static void drawFrame(virtual_screen *vscr, Drawable win, int y, int w, int h, int type)
 {
 	XSegment segs[2];
 	int i;
@@ -605,7 +605,7 @@ static void drawFrame(WScreen *scr, Drawable win, int y, int w, int h, int type)
 		segs[i].x2 = w - 1;
 		i++;
 	}
-	XDrawSegments(dpy, win, scr->menu_item_auxtexture->dim_gc, segs, i);
+	XDrawSegments(dpy, win, vscr->screen_ptr->menu_item_auxtexture->dim_gc, segs, i);
 
 	i = 0;
 	segs[i].x1 = 0;
@@ -620,10 +620,10 @@ static void drawFrame(WScreen *scr, Drawable win, int y, int w, int h, int type)
 		segs[i].y2 = y;
 		i++;
 	}
-	XDrawSegments(dpy, win, scr->menu_item_auxtexture->light_gc, segs, i);
+	XDrawSegments(dpy, win, vscr->screen_ptr->menu_item_auxtexture->light_gc, segs, i);
 
 	if (type != F_TOP && type != F_NONE)
-		XDrawLine(dpy, win, scr->menu_item_auxtexture->dark_gc, 0, y + h - 1, w - 1, y + h - 1);
+		XDrawLine(dpy, win, vscr->screen_ptr->menu_item_auxtexture->dark_gc, 0, y + h - 1, w - 1, y + h - 1);
 }
 
 static void paintEntry(WMenu *menu, int index, int selected)
@@ -661,12 +661,12 @@ static void paintEntry(WMenu *menu, int index, int selected)
 	if (selected) {
 		XFillRectangle(dpy, win, WMColorGC(scr->select_color), 1, y + 1, w - 2, h - 3);
 		if (scr->menu_item_texture->any.type == WTEX_SOLID)
-			drawFrame(scr, win, y, w, h, type);
+			drawFrame(scr->vscr, win, y, w, h, type);
 	} else {
 		if (scr->menu_item_texture->any.type == WTEX_SOLID) {
 			XClearArea(dpy, win, 0, y + 1, w - 1, h - 3, False);
 			/* draw the frame */
-			drawFrame(scr, win, y, w, h, type);
+			drawFrame(scr->vscr, win, y, w, h, type);
 		} else {
 			XClearArea(dpy, win, 0, y, w, h, False);
 		}
@@ -1203,7 +1203,7 @@ static void selectEntry(WMenu *menu, int entry_no)
 	}
 }
 
-static WMenu *findMenu(WScreen *scr, int *x_ret, int *y_ret)
+static WMenu *findMenu(virtual_screen *vscr, int *x_ret, int *y_ret)
 {
 	WMenu *menu;
 	WObjDescriptor *desc;
@@ -1211,7 +1211,7 @@ static WMenu *findMenu(WScreen *scr, int *x_ret, int *y_ret)
 	int x, y, wx, wy;
 	unsigned int mask;
 
-	XQueryPointer(dpy, scr->root_win, &root_ret, &win, &x, &y, &wx, &wy, &mask);
+	XQueryPointer(dpy, vscr->screen_ptr->root_win, &root_ret, &win, &x, &y, &wx, &wy, &mask);
 
 	if (win == None)
 		return NULL;
@@ -1330,13 +1330,13 @@ WMenu *wMenuUnderPointer(virtual_screen *vscr)
 	return (WMenu *) desc->parent;
 }
 
-static void getPointerPosition(WScreen *scr, int *x, int *y)
+static void getPointerPosition(virtual_screen *vscr, int *x, int *y)
 {
 	Window root_ret, win;
 	int wx, wy;
 	unsigned int mask;
 
-	XQueryPointer(dpy, scr->root_win, &root_ret, &win, x, y, &wx, &wy, &mask);
+	XQueryPointer(dpy, vscr->screen_ptr->root_win, &root_ret, &win, x, y, &wx, &wy, &mask);
 }
 
 static void getScrollAmount(WMenu *menu, int *hamount, int *vamount)
@@ -1352,7 +1352,7 @@ static void getScrollAmount(WMenu *menu, int *hamount, int *vamount)
 	*hamount = 0;
 	*vamount = 0;
 
-	getPointerPosition(scr, &xroot, &yroot);
+	getPointerPosition(scr->vscr, &xroot, &yroot);
 
 	if (xroot <= (rect.pos.x + 1) && menuX1 < rect.pos.x) {
 		/* scroll to the right */
@@ -1380,7 +1380,7 @@ static void dragScrollMenuCallback(void *data)
 {
 	WMenu *menu = (WMenu *) data;
 	WMenu *parent = parentMenu(menu);
-	WScreen *scr = menu->menu->vscr->screen_ptr;
+	virtual_screen *vscr = menu->menu->vscr;
 	int hamount, vamount;
 	int x, y, newSelectedEntry;
 
@@ -1388,7 +1388,7 @@ static void dragScrollMenuCallback(void *data)
 
 	if (hamount != 0 || vamount != 0) {
 		wMenuMove(parent, parent->frame_x + hamount, parent->frame_y + vamount, True);
-		if (findMenu(scr, &x, &y)) {
+		if (findMenu(vscr, &x, &y)) {
 			newSelectedEntry = getEntryAt(menu, x, y);
 			selectEntry(menu, newSelectedEntry);
 		} else {
@@ -1396,6 +1396,7 @@ static void dragScrollMenuCallback(void *data)
 			 * not a submenu, unselect it */
 			if (menu->selected_entry >= 0 && menu->entries[menu->selected_entry]->cascade < 0)
 				selectEntry(menu, -1);
+
 			newSelectedEntry = 0;
 		}
 
@@ -1406,7 +1407,7 @@ static void dragScrollMenuCallback(void *data)
 	} else {
 		/* don't need to scroll anymore */
 		menu->timer = NULL;
-		if (findMenu(scr, &x, &y)) {
+		if (findMenu(vscr, &x, &y)) {
 			newSelectedEntry = getEntryAt(menu, x, y);
 			selectEntry(menu, newSelectedEntry);
 		}
@@ -1590,7 +1591,7 @@ static void delaySelection(void *data)
 
 	d->magic = NULL;
 
-	menu = findMenu(d->menu->menu->vscr->screen_ptr, &x, &y);
+	menu = findMenu(d->menu->menu->vscr, &x, &y);
 	if (menu && (d->menu == menu || d->delayed_select)) {
 		entry_no = getEntryAt(menu, x, y);
 		selectEntry(menu, entry_no);
@@ -1600,19 +1601,19 @@ static void delaySelection(void *data)
 		*(d->delayed_select) = 0;
 }
 
-static void menu_rename_workspace(WScreen *scr, int entry_no)
+static void menu_rename_workspace(virtual_screen *vscr, int entry_no)
 {
 	char buffer[128];
 	char *name;
 	int number = entry_no - 3; /* Entries "New", "Destroy Last" and "Last Used" appear before workspaces */
 
-	name = wstrdup(scr->vscr->workspace.array[number]->name);
+	name = wstrdup(vscr->workspace.array[number]->name);
 	snprintf(buffer, sizeof(buffer), _("Type the name for workspace %i:"), number + 1);
 
-	wMenuUnmap(scr->vscr->menu.root_menu);
+	wMenuUnmap(vscr->menu.root_menu);
 
-	if (wInputDialog(scr, _("Rename Workspace"), buffer, &name))
-		wWorkspaceRename(scr, number, name);
+	if (wInputDialog(vscr->screen_ptr, _("Rename Workspace"), buffer, &name))
+		wWorkspaceRename(vscr->screen_ptr, number, name);
 
 	if (name)
 		wfree(name);
@@ -1623,7 +1624,8 @@ static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
 	WWindow *wwin;
 	XButtonEvent *bev = &event->xbutton;
 	WMenu *smenu, *menu = desc->parent;
-	WScreen *scr = menu->frame->vscr->screen_ptr;
+	virtual_screen *vscr = menu->frame->vscr;
+	WScreen *scr = vscr->screen_ptr;
 	WMenuEntry *entry = NULL;
 	XEvent ev;
 	int close_on_exit = 0;
@@ -1654,7 +1656,7 @@ static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
 
 	close_on_exit = (bev->send_event);
 
-	smenu = findMenu(scr, &x, &y);
+	smenu = findMenu(vscr, &x, &y);
 	if (!smenu) {
 		x = -1;
 		y = -1;
@@ -1670,7 +1672,7 @@ static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
 		entry = menu->entries[entry_no];
 
 		if (!close_on_exit && (bev->state & ControlMask) && smenu && entry->flags.editable) {
-			menu_rename_workspace(scr, entry_no);
+			menu_rename_workspace(vscr, entry_no);
 			goto byebye;
 		} else if (bev->state & ControlMask) {
 			goto byebye;
@@ -1722,7 +1724,7 @@ static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
 		WMMaskEvent(dpy, ExposureMask | ButtonMotionMask | ButtonReleaseMask | ButtonPressMask, &ev);
 		switch (ev.type) {
 		case MotionNotify:
-			smenu = findMenu(scr, &x, &y);
+			smenu = findMenu(vscr, &x, &y);
 
 			if (smenu == NULL) {
 				/* moved mouse out of menu */
