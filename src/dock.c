@@ -501,10 +501,11 @@ static void removeIcons(WMArray *icons, WDock *dock)
 				XMapWindow(dpy, aicon->icon->core->window);
 		}
 	}
+
 	WMFreeArray(icons);
 
 	if (wPreferences.auto_arrange_icons)
-		wArrangeIcons(dock->vscr->screen_ptr, True);
+		wArrangeIcons(dock->vscr, True);
 }
 
 static void removeIconsCallback(WMenu *menu, WMenuEntry *entry)
@@ -1705,7 +1706,7 @@ void wDockDestroy(WDock *dock)
 	}
 
 	if (wPreferences.auto_arrange_icons)
-		wArrangeIcons(dock->vscr->screen_ptr, True);
+		wArrangeIcons(dock->vscr, True);
 
 	wfree(dock->icon_array);
 	if (dock->menu && dock->type != WM_CLIP)
@@ -2631,7 +2632,7 @@ Bool wDockAttachIcon(WDock *dock, WAppIcon *icon, int x, int y, Bool update_icon
 	save_appicon(icon, True);
 
 	if (wPreferences.auto_arrange_icons)
-		wArrangeIcons(dock->vscr->screen_ptr, True);
+		wArrangeIcons(dock->vscr, True);
 
 #ifdef XDND			/* was OFFIX */
 	if (icon->command && !icon->dnd_command) {
@@ -2864,7 +2865,7 @@ void wDockDetach(WDock *dock, WAppIcon *icon)
 		wAppIconPaint(icon);
 
 		if (wPreferences.auto_arrange_icons)
-			wArrangeIcons(dock->vscr->screen_ptr, True);
+			wArrangeIcons(dock->vscr, True);
 	}
 
 	if (dock->auto_collapse || dock->auto_raise_lower)
@@ -4290,7 +4291,7 @@ static void handleDockMove(WDock *dock, WAppIcon *aicon, XEvent *event)
 				if (now_on_right != dock->on_right_side) {
 					dock->on_right_side = now_on_right;
 					swapDock(dock);
-					wArrangeIcons(scr, False);
+					wArrangeIcons(scr->vscr, False);
 				}
 
 				/* Also perform the vertical move */

@@ -2565,8 +2565,9 @@ static int setStickyIcons(WScreen *scr, WDefaultEntry *entry, void *bar, void *f
 
 	if (scr->vscr->workspace.array) {
 		wWorkspaceForceChange(scr->vscr, scr->vscr->workspace.current);
-		wArrangeIcons(scr, False);
+		wArrangeIcons(scr->vscr, False);
 	}
+
 	return 0;
 }
 
@@ -3226,7 +3227,7 @@ static int setIconPosition(WScreen * scr, WDefaultEntry * entry, void *bar, void
 	(void) foo;
 
 	wScreenUpdateUsableArea(scr);
-	wArrangeIcons(scr, True);
+	wArrangeIcons(scr->vscr, True);
 
 	return 0;
 }

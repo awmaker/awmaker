@@ -1154,8 +1154,9 @@ void wShowInfoPanel(WScreen *scr)
 	if (infoPanel) {
 		if (infoPanel->scr == scr) {
 			wRaiseFrame(infoPanel->wwin->frame->core);
-			wSetFocusTo(scr, infoPanel->wwin);
+			wSetFocusTo(scr->vscr, infoPanel->wwin);
 		}
+
 		return;
 	}
 
@@ -1167,9 +1168,9 @@ void wShowInfoPanel(WScreen *scr)
 	WMResizeWidget(panel->win, win_width, win_height);
 
 	logo = WMCreateApplicationIconBlendedPixmap(scr->wmscreen, (RColor *) NULL);
-	if (!logo) {
+	if (!logo)
 		logo = WMRetainPixmap(WMGetApplicationIconPixmap(scr->wmscreen));
-	}
+
 	if (logo) {
 		panel->logoL = WMCreateLabel(panel->win);
 		WMResizeWidget(panel->logoL, 64, 64);
@@ -1411,8 +1412,9 @@ void wShowLegalPanel(WScreen *scr)
 	if (legalPanel) {
 		if (legalPanel->scr == scr) {
 			wRaiseFrame(legalPanel->wwin->frame->core);
-			wSetFocusTo(scr, legalPanel->wwin);
+			wSetFocusTo(scr->vscr, legalPanel->wwin);
 		}
+
 		return;
 	}
 

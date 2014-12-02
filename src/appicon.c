@@ -130,7 +130,6 @@ void create_appicon_for_application(WApplication *wapp, WWindow *wwin)
 void unpaint_app_icon(WApplication *wapp)
 {
 	WAppIcon *aicon;
-	WScreen *scr;
 	virtual_screen *vscr;
 	WDock *clip;
 
@@ -144,7 +143,6 @@ void unpaint_app_icon(WApplication *wapp)
 		return;
 
 	vscr = wapp->main_window_desc->vscr;
-	scr = vscr->screen_ptr;
 	clip = vscr->workspace.array[vscr->workspace.current]->clip;
 
 	if (!clip || !aicon->attracted || !clip->collapsed)
@@ -156,7 +154,7 @@ void unpaint_app_icon(WApplication *wapp)
 	remove_from_appicon_list(aicon);
 
 	if (wPreferences.auto_arrange_icons && !aicon->attracted)
-		wArrangeIcons(scr, True);
+		wArrangeIcons(vscr, True);
 }
 
 void paint_app_icon(WApplication *wapp)
@@ -213,7 +211,7 @@ void paint_app_icon(WApplication *wapp)
 		XMapWindow(dpy, icon->core->window);
 
 	if (wPreferences.auto_arrange_icons && !wapp->app_icon->attracted)
-		wArrangeIcons(scr, True);
+		wArrangeIcons(vscr, True);
 }
 
 void removeAppIconFor(WApplication *wapp)
@@ -254,7 +252,7 @@ void removeAppIconFor(WApplication *wapp)
 	wapp->app_icon = NULL;
 
 	if (wPreferences.auto_arrange_icons)
-		wArrangeIcons(wapp->main_window_desc->vscr->screen_ptr, True);
+		wArrangeIcons(wapp->main_window_desc->vscr, True);
 }
 
 static WAppIcon *dock_icon_create_core(char *command, char *wm_class, char *wm_instance)
@@ -1120,7 +1118,8 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 			}
 			if (wPreferences.auto_arrange_icons && !(originalDock != NULL && docked))
 				/* Need to rearrange unless moving from dock to dock */
-				wArrangeIcons(scr, True);
+				wArrangeIcons(vscr, True);
+
 			return hasMoved;
 		}
 	}

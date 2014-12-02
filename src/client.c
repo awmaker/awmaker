@@ -573,14 +573,14 @@ void wClientCheckProperty(WWindow *wwin, XPropertyEvent *event)
 						wapp->menu = wAppMenuGet(vscr, wwin->main_window);
 
 					if (wPreferences.auto_arrange_icons)
-						wArrangeIcons(wwin->vscr->screen_ptr, True);
+						wArrangeIcons(wwin->vscr, True);
 				} else {
 					wapp->menu = wAppMenuGet(wwin->vscr, wwin->main_window);
 				}
 
 				/* make the appmenu be mapped */
-				wSetFocusTo(wwin->vscr->screen_ptr, NULL);
-				wSetFocusTo(wwin->vscr->screen_ptr, wwin->vscr->screen_ptr->focused_window);
+				wSetFocusTo(wwin->vscr, NULL);
+				wSetFocusTo(wwin->vscr, wwin->vscr->screen_ptr->focused_window);
 			}
 		} else if (event->atom == w_global.atom.gnustep.wm_attr) {
 			GNUstepWMAttributes *attr;

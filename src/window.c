@@ -231,7 +231,7 @@ void wWindowDestroy(WWindow *wwin)
 		RemoveFromStackList(wwin->icon->core);
 		wIconDestroy(wwin->icon);
 		if (wPreferences.auto_arrange_icons)
-			wArrangeIcons(wwin->vscr->screen_ptr, True);
+			wArrangeIcons(wwin->vscr, True);
 	}
 
 	if (wwin->net_icon_image)
@@ -1286,7 +1286,7 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 				same_screen = 1;
 
 			if (same_screen == 1 && same_head == 1)
-				wSetFocusTo(vscr->screen_ptr, wwin);
+				wSetFocusTo(vscr, wwin);
 		}
 	}
 	wWindowResetMouseGrabs(wwin);
@@ -1434,8 +1434,7 @@ WWindow *wManageInternalWindow(virtual_screen *vscr, Window window, Window owner
 	if (wwin->flags.is_gnustep == 0)
 		wFrameWindowChangeState(wwin->frame, WS_UNFOCUSED);
 
-	/*    if (wPreferences.auto_focus) */
-	wSetFocusTo(vscr->screen_ptr, wwin);
+	wSetFocusTo(vscr, wwin);
 	wWindowResetMouseGrabs(wwin);
 	wWindowSetKeyGrabs(wwin);
 
@@ -1553,7 +1552,7 @@ void wUnmanageWindow(WWindow *wwin, Bool restore, Bool destroyed)
 			if (wwin->flags.is_gnustep == 0)
 				wFrameWindowChangeState(owner->frame, WS_UNFOCUSED);
 
-		wSetFocusTo(scr, newFocusedWindow);
+		wSetFocusTo(scr->vscr, newFocusedWindow);
 	}
 
 	/* Close menu and unhighlight */
@@ -1884,7 +1883,6 @@ void wWindowCropSize(WWindow *wwin, unsigned int maxW, unsigned int maxH,
 void wWindowChangeWorkspace(WWindow *wwin, int workspace)
 {
 	virtual_screen *vscr = wwin->vscr;
-	WScreen *scr = vscr->screen_ptr;
 	WApplication *wapp;
 	int unmap = 0;
 
@@ -1908,7 +1906,7 @@ void wWindowChangeWorkspace(WWindow *wwin, int workspace)
 				}
 			} else {
 				unmap = 1;
-				wSetFocusTo(scr, NULL);
+				wSetFocusTo(vscr, NULL);
 			}
 		}
 	} else {
@@ -2718,7 +2716,7 @@ static void resizebarMouseDown(WCoreWindow *sender, void *data, XEvent *event)
 
 	if (wPreferences.focus_mode == WKF_CLICK && !(event->xbutton.state & ControlMask)
 	    && !WFLAGP(wwin, no_focusable))
-		wSetFocusTo(wwin->vscr->screen_ptr, wwin);
+		wSetFocusTo(wwin->vscr, wwin);
 
 	if (event->xbutton.button == Button1)
 		wRaiseFrame(wwin->frame->core);
@@ -2814,7 +2812,7 @@ static void frameMouseDown(WObjDescriptor *desc, XEvent *event)
 	CloseWindowMenu(wwin->vscr);
 
 	if (!(event->xbutton.state & ControlMask) && !WFLAGP(wwin, no_focusable))
-		wSetFocusTo(wwin->vscr->screen_ptr, wwin);
+		wSetFocusTo(wwin->vscr, wwin);
 
 	if (event->xbutton.button == Button1)
 		wRaiseFrame(wwin->frame->core);
@@ -2825,6 +2823,7 @@ static void frameMouseDown(WObjDescriptor *desc, XEvent *event)
 			wWindowConstrainSize(wwin, &new_width, &wwin->client.height);
 			wWindowConfigure(wwin, wwin->frame_x, wwin->frame_y, new_width, wwin->client.height);
 		}
+
 		if (event->xbutton.button == Button5) {
 			new_width = wwin->client.width + resize_width_increment;
 			wWindowConstrainSize(wwin, &new_width, &wwin->client.height);
@@ -2874,7 +2873,7 @@ static void titlebarMouseDown(WCoreWindow *sender, void *data, XEvent *event)
 
 	if (wPreferences.focus_mode == WKF_CLICK && !(event->xbutton.state & ControlMask)
 	    && !WFLAGP(wwin, no_focusable))
-		wSetFocusTo(wwin->vscr->screen_ptr, wwin);
+		wSetFocusTo(wwin->vscr, wwin);
 
 	if (event->xbutton.button == Button1 || event->xbutton.button == Button2) {
 		if (event->xbutton.button == Button1) {

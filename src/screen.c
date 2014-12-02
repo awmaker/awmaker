@@ -751,6 +751,7 @@ void wScreenUpdateUsableArea(WScreen *scr)
 				scr->totalUsableArea[i].x1 += size;
 				scr->totalUsableArea[i].x2 -= size;
 			}
+
 			if (position & WB_TOPBOTTOM) {
 				scr->totalUsableArea[i].y1 += size;
 				scr->totalUsableArea[i].y2 -= size;
@@ -759,7 +760,7 @@ void wScreenUpdateUsableArea(WScreen *scr)
 	}
 
 	if (wPreferences.auto_arrange_icons)
-		wArrangeIcons(scr, True);
+		wArrangeIcons(scr->vscr, True);
 }
 
 void wScreenRestoreState(WScreen *scr)

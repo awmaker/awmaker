@@ -1333,7 +1333,7 @@ int wKeyboardMoveResizeWindow(WWindow *wwin)
 	XGrabKeyboard(dpy, root, False, GrabModeAsync, GrabModeAsync, CurrentTime);
 
 	if (!wwin->flags.selected)
-		wUnselectWindows(scr);
+		wUnselectWindows(scr->vscr);
 
 	XGrabServer(dpy);
 	XGrabPointer(dpy, scr->root_win, True, PointerMotionMask
@@ -1392,9 +1392,8 @@ int wKeyboardMoveResizeWindow(WWindow *wwin)
 			if (event.xkey.time - lastTime > 50) {
 				kspeed /= (1 + (event.xkey.time - lastTime) / 100);
 			} else {
-				if (kspeed < 20) {
+				if (kspeed < 20)
 					kspeed++;
-				}
 			}
 
 			if (kspeed < _KS)
@@ -1403,7 +1402,7 @@ int wKeyboardMoveResizeWindow(WWindow *wwin)
 			if (modes == (MOVABLE_BIT | RESIZABLE_BIT)) {
 				if ((event.xkey.state & ControlMask) && !wwin->flags.shaded) {
 					ctrlmode = 1;
-					wUnselectWindows(scr);
+					wUnselectWindows(scr->vscr);
 				} else {
 					ctrlmode = 0;
 				}
@@ -1619,12 +1618,12 @@ int wKeyboardMoveResizeWindow(WWindow *wwin)
 					wWindowSynthConfigureNotify(wwin);
 				}
 				wWindowChangeWorkspace(wwin, scr->vscr->workspace.current);
-				wSetFocusTo(scr, wwin);
+				wSetFocusTo(scr->vscr, wwin);
 			}
 
 			if (wPreferences.auto_arrange_icons && wXineramaHeads(scr) > 1 &&
 			    head != wGetHeadForWindow(wwin))
-				wArrangeIcons(scr, True);
+				wArrangeIcons(scr->vscr, True);
 
 			update_saved_geometry(wwin);
 
@@ -1684,10 +1683,10 @@ int wMouseMoveWindow(WWindow *wwin, XEvent *ev)
 	moveData.mouseX = ev->xmotion.x_root;
 	moveData.mouseY = ev->xmotion.y_root;
 
-	if (!wwin->flags.selected) {
+	if (!wwin->flags.selected)
 		/* this window is not selected, unselect others and move only wwin */
-		wUnselectWindows(scr);
-	}
+		wUnselectWindows(scr->vscr);
+
 	shiftl = XKeysymToKeycode(dpy, XK_Shift_L);
 	shiftr = XKeysymToKeycode(dpy, XK_Shift_R);
 	while (!done) {
@@ -1882,7 +1881,7 @@ int wMouseMoveWindow(WWindow *wwin, XEvent *ev)
 				XUngrabServer(dpy);
 				if (!opaqueMove) {
 					wWindowChangeWorkspace(wwin, scr->vscr->workspace.current);
-					wSetFocusTo(scr, wwin);
+					wSetFocusTo(scr->vscr, wwin);
 				}
 
 				if (wPreferences.move_display == WDIS_NEW)
@@ -1940,9 +1939,8 @@ int wMouseMoveWindow(WWindow *wwin, XEvent *ev)
 	freeMoveData(&moveData);
 
 	if (started && wPreferences.auto_arrange_icons && wXineramaHeads(scr) > 1 &&
-	    head != wGetHeadForWindow(wwin)) {
-		wArrangeIcons(scr, True);
-	}
+	    head != wGetHeadForWindow(wwin))
+		wArrangeIcons(scr->vscr, True);
 
 	if (started)
 		update_saved_geometry(wwin);
@@ -2050,7 +2048,7 @@ void wMouseResizeWindow(WWindow *wwin, XEvent *ev)
 	orig_y = ev->xbutton.y_root;
 
 	started = 0;
-	wUnselectWindows(scr);
+	wUnselectWindows(scr->vscr);
 	rx1 = fx;
 	rx2 = fx + fw - 1;
 	ry1 = fy;
@@ -2244,7 +2242,7 @@ void wMouseResizeWindow(WWindow *wwin, XEvent *ev)
 	}
 
 	if (wPreferences.auto_arrange_icons && wXineramaHeads(scr) > 1 && head != wGetHeadForWindow(wwin))
-		wArrangeIcons(scr, True);
+		wArrangeIcons(scr->vscr, True);
 }
 
 #undef LEFT
@@ -2256,23 +2254,23 @@ void wMouseResizeWindow(WWindow *wwin, XEvent *ev)
 #undef HCONSTRAIN
 #undef RESIZEBAR
 
-void wUnselectWindows(WScreen * scr)
+void wUnselectWindows(virtual_screen *vscr)
 {
 	WWindow *wwin;
 
-	if (!scr->selected_windows)
+	if (!vscr->screen_ptr->selected_windows)
 		return;
 
-	while (WMGetArrayItemCount(scr->selected_windows)) {
-		wwin = WMGetFromArray(scr->selected_windows, 0);
+	while (WMGetArrayItemCount(vscr->screen_ptr->selected_windows)) {
+		wwin = WMGetFromArray(vscr->screen_ptr->selected_windows, 0);
 		if (wwin->flags.miniaturized && wwin->icon && wwin->icon->selected)
 			wIconSelect(wwin->icon);
 
 		wSelectWindow(wwin, False);
 	}
 
-	WMFreeArray(scr->selected_windows);
-	scr->selected_windows = NULL;
+	WMFreeArray(vscr->screen_ptr->selected_windows);
+	vscr->screen_ptr->selected_windows = NULL;
 }
 
 static void selectWindowsInside(WScreen *scr, int x1, int y1, int x2, int y2)
@@ -2295,25 +2293,24 @@ static void selectWindowsInside(WScreen *scr, int x1, int y1, int x2, int y2)
 	}
 }
 
-void wSelectWindows(WScreen *scr, XEvent *ev)
+void wSelectWindows(virtual_screen *vscr, XEvent *ev)
 {
 	XEvent event;
-	Window root = scr->root_win;
-	GC gc = scr->frame_gc;
+	Window root = vscr->screen_ptr->root_win;
+	GC gc = vscr->screen_ptr->frame_gc;
 	int xp = ev->xbutton.x_root;
 	int yp = ev->xbutton.y_root;
 	int w = 0, h = 0;
 	int x = xp, y = yp;
 
-	if (XGrabPointer(dpy, scr->root_win, False, ButtonMotionMask
+	if (XGrabPointer(dpy, vscr->screen_ptr->root_win, False, ButtonMotionMask
 			 | ButtonReleaseMask | ButtonPressMask, GrabModeAsync,
 			 GrabModeAsync, None, wPreferences.cursor[WCUR_NORMAL], CurrentTime) != Success) {
 		return;
 	}
+
 	XGrabServer(dpy);
-
-	wUnselectWindows(scr);
-
+	wUnselectWindows(vscr);
 	XDrawRectangle(dpy, root, gc, xp, yp, w, h);
 	while (1) {
 		WMMaskEvent(dpy, ButtonReleaseMask | PointerMotionMask | ButtonPressMask, &event);
@@ -2328,6 +2325,7 @@ void wSelectWindows(WScreen *scr, XEvent *ev)
 				w = x - xp;
 				x = xp;
 			}
+
 			y = event.xmotion.y_root;
 			if (y < yp) {
 				h = yp - y;
@@ -2335,6 +2333,7 @@ void wSelectWindows(WScreen *scr, XEvent *ev)
 				h = y - yp;
 				y = yp;
 			}
+
 			XDrawRectangle(dpy, root, gc, x, y, w, h);
 			break;
 
@@ -2348,7 +2347,7 @@ void wSelectWindows(WScreen *scr, XEvent *ev)
 			XDrawRectangle(dpy, root, gc, x, y, w, h);
 			XUngrabServer(dpy);
 			XUngrabPointer(dpy, CurrentTime);
-			selectWindowsInside(scr, x, y, x + w, y + h);
+			selectWindowsInside(vscr->screen_ptr, x, y, x + w, y + h);
 			return;
 
 		default:

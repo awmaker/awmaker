@@ -269,7 +269,7 @@ static void refreshCommand(WMenu *menu, WMenuEntry *entry)
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 
-	wRefreshDesktop(menu->frame->vscr->screen_ptr);
+	wRefreshDesktop(menu->frame->vscr);
 }
 
 static void arrangeIconsCommand(WMenu *menu, WMenuEntry *entry)
@@ -277,7 +277,7 @@ static void arrangeIconsCommand(WMenu *menu, WMenuEntry *entry)
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 
-	wArrangeIcons(menu->frame->vscr->screen_ptr, True);
+	wArrangeIcons(menu->frame->vscr, True);
 }
 
 static void showAllCommand(WMenu *menu, WMenuEntry *entry)
@@ -285,7 +285,7 @@ static void showAllCommand(WMenu *menu, WMenuEntry *entry)
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 
-	wShowAllWindows(menu->frame->vscr->screen_ptr);
+	wShowAllWindows(menu->frame->vscr);
 }
 
 static void hideOthersCommand(WMenu *menu, WMenuEntry *entry)

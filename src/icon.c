@@ -895,7 +895,7 @@ static void miniwindowMouseDown(WObjDescriptor *desc, XEvent *event)
 			XUngrabPointer(dpy, CurrentTime);
 
 			if (wPreferences.auto_arrange_icons)
-				wArrangeIcons(wwin->vscr->screen_ptr, True);
+				wArrangeIcons(wwin->vscr, True);
 
 			if (wPreferences.single_click && !hasMoved)
 				miniwindowDblClick(desc, event);

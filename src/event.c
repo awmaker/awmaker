@@ -732,8 +732,8 @@ static void executeButtonAction(virtual_screen *vscr, XEvent *event, int action)
 
 	switch (action) {
 	case WA_SELECT_WINDOWS:
-		wUnselectWindows(vscr->screen_ptr);
-		wSelectWindows(vscr->screen_ptr, event);
+		wUnselectWindows(vscr);
+		wSelectWindows(vscr, event);
 		break;
 	case WA_OPEN_APPMENU:
 		OpenRootMenu(vscr, event->xbutton.x_root, event->xbutton.y_root, False);
@@ -1140,7 +1140,7 @@ static void handleEnterNotify(XEvent * event)
 		    && wwin->frame->core->window == event->xcrossing.window && !scr->flags.doing_alt_tab) {
 
 			if (!wwin->flags.focused && !WFLAGP(wwin, no_focusable))
-				wSetFocusTo(scr, wwin);
+				wSetFocusTo(scr->vscr, wwin);
 
 			if (scr->autoRaiseTimer)
 				WMDeleteTimerHandler(scr->autoRaiseTimer);
@@ -1166,7 +1166,7 @@ static void handleEnterNotify(XEvent * event)
 	    && event->xcrossing.detail == NotifyNormal
 	    && event->xcrossing.detail != NotifyInferior && wPreferences.focus_mode != WKF_CLICK) {
 
-		wSetFocusTo(scr, scr->focused_window);
+		wSetFocusTo(scr->vscr, scr->focused_window);
 	}
 #ifdef BALLOON_TEXT
 	wBalloonEnteredObject(scr, desc);
@@ -1312,13 +1312,13 @@ static void handleFocusIn(XEvent *event)
 	wwin = wWindowFor(event->xfocus.window);
 	if (wwin && !wwin->flags.focused) {
 		if (wwin->flags.mapped)
-			wSetFocusTo(wwin->vscr->screen_ptr, wwin);
+			wSetFocusTo(wwin->vscr, wwin);
 		else
-			wSetFocusTo(wwin->vscr->screen_ptr, NULL);
+			wSetFocusTo(wwin->vscr, NULL);
 	} else if (!wwin) {
 		WScreen *scr = wScreenForWindow(event->xfocus.window);
 		if (scr)
-			wSetFocusTo(scr, NULL);
+			wSetFocusTo(scr->vscr, NULL);
 	}
 }
 
@@ -1412,7 +1412,7 @@ static void handleKeyPress(XEvent *event)
 		break;
 	case WKBD_MINIMIZEALL:
 		CloseWindowMenu(scr->vscr);
-		wHideAll(scr);
+		wHideAll(scr->vscr);
 		break;
 	case WKBD_MINIATURIZE:
 		if (ISMAPPED(wwin) && ISFOCUSED(wwin)
@@ -1656,7 +1656,7 @@ static void handleKeyPress(XEvent *event)
 			WMArrayIterator iter;
 			WWindow *wwin;
 
-			wUnselectWindows(scr);
+			wUnselectWindows(scr->vscr);
 			cw = scr->vscr->workspace.current;
 
 			WM_ETARETI_ARRAY(list, wwin, iter) {

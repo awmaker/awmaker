@@ -606,7 +606,7 @@ void wWorkspaceForceChange(virtual_screen *vscr, int workspace)
 			foc = vscr->screen_ptr->focused_window;
 
 		if (wPreferences.focus_mode == WKF_CLICK) {
-			wSetFocusTo(vscr->screen_ptr, foc);
+			wSetFocusTo(vscr, foc);
 		} else {
 			unsigned int mask;
 			int foo;
@@ -623,9 +623,9 @@ void wWorkspaceForceChange(virtual_screen *vscr, int workspace)
 			 * focused, or the root (depending on sloppiness)
 			 */
 			if (!tmp && wPreferences.focus_mode == WKF_SLOPPY)
-				wSetFocusTo(vscr->screen_ptr, foc);
+				wSetFocusTo(vscr, foc);
 			else
-				wSetFocusTo(vscr->screen_ptr, tmp);
+				wSetFocusTo(vscr, tmp);
 		}
 	}
 
@@ -635,7 +635,7 @@ void wWorkspaceForceChange(virtual_screen *vscr, int workspace)
 	 * This can be avoided if appicons are also workspace specific.
 	 */
 	if (!wPreferences.sticky_icons)
-		wArrangeIcons(vscr->screen_ptr, False);
+		wArrangeIcons(vscr, False);
 
 	if (vscr->dock.dock)
 		wAppIconPaint(vscr->dock.dock->icon_array[0]);
