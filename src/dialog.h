@@ -29,19 +29,18 @@ enum {
     WMStartAlternate
 };
 
-
-int wMessageDialog(WScreen *scr, const char *title, const char *message,
+int wMessageDialog(virtual_screen *vscr, const char *title, const char *message,
                    const char *defBtn, const char *altBtn, const char *othBtn);
-int wAdvancedInputDialog(WScreen *scr, const char *title, const char *message, const char *name, char **text);
-int wInputDialog(WScreen *scr, const char *title, const char *message, char **text);
+int wAdvancedInputDialog(virtual_screen *vscr, const char *title, const char *message, const char *name, char **text);
+int wInputDialog(virtual_screen *vscr, const char *title, const char *message, char **text);
 
-int wExitDialog(WScreen *scr, const char *title, const char *message, const char *defBtn,
+int wExitDialog(virtual_screen *vscr, const char *title, const char *message, const char *defBtn,
                 const char *altBtn, const char *othBtn);
 
-Bool wIconChooserDialog(WScreen *scr, char **file, const char *instance, const char *class);
+Bool wIconChooserDialog(virtual_screen *vscr, char **file, const char *instance, const char *class);
 
-void wShowInfoPanel(WScreen *scr);
-void wShowLegalPanel(WScreen *scr);
+void wShowInfoPanel(virtual_screen *vscr);
+void wShowLegalPanel(virtual_screen *vscr);
 int wShowCrashingDialogPanel(int whatSig);
 
 

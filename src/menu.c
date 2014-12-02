@@ -1612,7 +1612,7 @@ static void menu_rename_workspace(virtual_screen *vscr, int entry_no)
 
 	wMenuUnmap(vscr->menu.root_menu);
 
-	if (wInputDialog(vscr->screen_ptr, _("Rename Workspace"), buffer, &name))
+	if (wInputDialog(vscr, _("Rename Workspace"), buffer, &name))
 		wWorkspaceRename(vscr, number, name);
 
 	if (name)

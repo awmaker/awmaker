@@ -474,12 +474,12 @@ getuserinput(WScreen *scr, const char *line, int *ptr, Bool advanced)
 	name = parseuserinputpart(line, ptr, ")");
 
     if(advanced)
-        rv = wAdvancedInputDialog(scr,
+        rv = wAdvancedInputDialog(scr->vscr,
 		title ? _(title):_("Program Arguments"),
 		prompt ? _(prompt):_("Enter command arguments:"),
 		name, &ret);
     else
-        rv = wInputDialog(scr,
+        rv = wInputDialog(scr->vscr,
 		title ? _(title):_("Program Arguments"),
 		prompt ? _(prompt):_("Enter command arguments:"),
 		&ret);

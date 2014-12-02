@@ -338,7 +338,7 @@ static int showIconFor(WMScreen *scrPtr, InspectorPanel *panel, const char *wm_i
 
 			buf = wmalloc(len);
 			snprintf(buf, len, _("Could not find icon \"%s\" specified for this window"), file);
-			wMessageDialog(panel->frame->vscr->screen_ptr, _("Error"), buf, _("OK"), NULL, NULL);
+			wMessageDialog(panel->frame->vscr, _("Error"), buf, _("OK"), NULL, NULL);
 			wfree(buf);
 			wfree(file);
 			return -1;
@@ -354,7 +354,7 @@ static int showIconFor(WMScreen *scrPtr, InspectorPanel *panel, const char *wm_i
 			buf = wmalloc(len);
 			snprintf(buf, len, _("Could not open specified icon \"%s\":%s"),
 				 file, RMessageForError(RErrorCode));
-			wMessageDialog(panel->frame->vscr->screen_ptr, _("Error"), buf, _("OK"), NULL, NULL);
+			wMessageDialog(panel->frame->vscr, _("Error"), buf, _("OK"), NULL, NULL);
 			wfree(buf);
 			wfree(file);
 			return -1;
@@ -752,7 +752,7 @@ static void applySettings(WMWidget *button, void *client_data)
 
 			buf = wmalloc(len);
 			snprintf(buf, len, _("Ignore client supplied icon is set, but icon filename textbox is empty. Using client supplied icon"));
-			wMessageDialog(panel->frame->vscr->screen_ptr, _("Warning"), buf, _("OK"), NULL, NULL);
+			wMessageDialog(panel->frame->vscr, _("Warning"), buf, _("OK"), NULL, NULL);
 			wfree(buf);
 			wfree(file);
 
@@ -961,7 +961,7 @@ static void chooseIconCallback(WMWidget *self, void *clientData)
 
 	WMSetButtonEnabled(panel->browseIconBtn, False);
 
-	result = wIconChooserDialog(panel->frame->vscr->screen_ptr, &file,
+	result = wIconChooserDialog(panel->frame->vscr, &file,
 				    panel->inspected->wm_instance,
 				    panel->inspected->wm_class);
 

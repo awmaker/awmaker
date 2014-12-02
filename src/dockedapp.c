@@ -131,7 +131,7 @@ static void chooseIconCallback(WMWidget *self, void *clientData)
 
 	WMSetButtonEnabled(panel->browseBtn, False);
 
-	result = wIconChooserDialog(panel->wwin->vscr->screen_ptr, &file,
+	result = wIconChooserDialog(panel->wwin->vscr, &file,
 				    panel->editedIcon->wm_instance, panel->editedIcon->wm_class);
 
 	panel->choosingIcon = 0;
@@ -171,7 +171,7 @@ static void panelBtnCallback(WMWidget *self, void *data)
 
 			buf = wmalloc(len);
 			snprintf(buf, len, _("Could not open specified icon file: %s"), text);
-			if (wMessageDialog(panel->wwin->vscr->screen_ptr, _("Error"), buf,
+			if (wMessageDialog(panel->wwin->vscr, _("Error"), buf,
 					   _("OK"), _("Ignore"), NULL) == WAPRDefault) {
 				wfree(text);
 				wfree(buf);

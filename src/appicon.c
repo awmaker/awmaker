@@ -530,7 +530,7 @@ static void setIconCallback(WMenu *menu, WMenuEntry *entry)
 {
 	WAppIcon *icon = ((WApplication *) entry->clientdata)->app_icon;
 	char *file = NULL;
-	WScreen *scr;
+	virtual_screen *vscr;
 	int result;
 
 	/* Parameter not used, but tell the compiler that it is ok */
@@ -542,16 +542,16 @@ static void setIconCallback(WMenu *menu, WMenuEntry *entry)
 		return;
 
 	icon->editing = 1;
-	scr = icon->icon->core->vscr->screen_ptr;
+	vscr = icon->icon->core->vscr;
 
 	wretain(icon);
 
-	result = wIconChooserDialog(scr, &file, icon->wm_instance, icon->wm_class);
+	result = wIconChooserDialog(vscr, &file, icon->wm_instance, icon->wm_class);
 
 	if (result) {
 		if (!icon->destroyed) {
 			if (!wIconChangeImageFile(icon->icon, file)) {
-				wMessageDialog(scr, _("Error"),
+				wMessageDialog(vscr, _("Error"),
 				               _("Could not open specified icon file"),
 				               _("OK"), NULL, NULL);
 			} else {
@@ -592,7 +592,7 @@ static void killCallback(WMenu *menu, WMenuEntry *entry)
 
 	wretain(wapp->main_window_desc);
 	if (wPreferences.dont_confirm_kill
-	    || wMessageDialog(menu->frame->vscr->screen_ptr, _("Kill Application"),
+	    || wMessageDialog(menu->frame->vscr, _("Kill Application"),
 			      buffer, _("Yes"), _("No"), NULL) == WAPRDefault) {
 		if (fPtr != NULL) {
 			WWindow *wwin, *twin;

@@ -199,7 +199,7 @@ static void renameCallback(WMenu *menu, WMenuEntry *entry)
 	name = wstrdup(dock->vscr->workspace.array[wspace]->name);
 
 	snprintf(buffer, sizeof(buffer), _("Type the name for workspace %i:"), wspace + 1);
-	if (wInputDialog(dock->vscr->screen_ptr, _("Rename Workspace"), buffer, &name))
+	if (wInputDialog(dock->vscr, _("Rename Workspace"), buffer, &name))
 		wWorkspaceRename(dock->vscr, wspace, name);
 
 	wfree(name);
@@ -264,7 +264,7 @@ static void killCallback(WMenu *menu, WMenuEntry *entry)
 	}
 
 	if (wPreferences.dont_confirm_kill
-	    || wMessageDialog(menu->frame->vscr->screen_ptr, _("Kill Application"),
+	    || wMessageDialog(menu->frame->vscr, _("Kill Application"),
 			      buffer, _("Yes"), _("No"), NULL) == WAPRDefault) {
 		if (fPtr != NULL) {
 			WWindow *wwin, *twin;
@@ -467,14 +467,14 @@ static void omnipresentCallback(WMenu *menu, WMenuEntry *entry)
 	/* If the screen is not painted, then we cannot show the dialog */
 	if (dock->vscr->screen_ptr) {
 		if (failed > 1)
-			wMessageDialog(dock->vscr->screen_ptr, _("Warning"),
+			wMessageDialog(dock->vscr, _("Warning"),
 				       _("Some icons cannot be made omnipresent. "
 					 "Please make sure that no other icon is "
 					 "docked in the same positions on the other "
 					 "workspaces and the Clip is not full in "
 					 "some workspace."), _("OK"), NULL, NULL);
 		if (failed == 1)
-			wMessageDialog(dock->vscr->screen_ptr, _("Warning"),
+			wMessageDialog(dock->vscr, _("Warning"),
 				       _("Icon cannot be made omnipresent. "
 					 "Please make sure that no other icon is "
 					 "docked in the same position on the other "
@@ -530,7 +530,7 @@ static void removeIconsCallback(WMenu *menu, WMenuEntry *entry)
 	selectedIcons = getSelected(dock);
 
 	if (WMGetArrayItemCount(selectedIcons)) {
-		if (wMessageDialog(dock->vscr->screen_ptr,
+		if (wMessageDialog(dock->vscr,
 					dock->type == WM_CLIP ? _("Workspace Clip") : _("Drawer"),
 					_("All selected icons will be removed!"),
 					_("OK"), _("Cancel"), NULL) != WAPRDefault) {
@@ -574,7 +574,7 @@ static void keepIconsCallback(WMenu *menu, WMenuEntry *entry)
 
 		if (!clickedIcon->command && !clickedIcon->editing) {
 			clickedIcon->editing = 1;
-			if (wInputDialog(dock->vscr->screen_ptr, _("Keep Icon"),
+			if (wInputDialog(dock->vscr, _("Keep Icon"),
 					 _("Type the command used to launch the application"), &command)) {
 				if (command && (command[0] == 0 || (command[0] == '-' && command[1] == 0))) {
 					wfree(command);
@@ -2557,7 +2557,7 @@ Bool wDockAttachIcon(WDock *dock, WAppIcon *icon, int x, int y, Bool update_icon
 			/* icon->forced_dock = 1; */
 			if (dock->type != WM_CLIP || !icon->attracted) {
 				icon->editing = 1;
-				if (wInputDialog(dock->vscr->screen_ptr, _("Dock Icon"),
+				if (wInputDialog(dock->vscr, _("Dock Icon"),
 						 _("Type the command used to launch the application"), &command)) {
 
 					if (command && (command[0] == 0 || (command[0] == '-' && command[1] == 0))) {
@@ -2699,7 +2699,7 @@ Bool wDockMoveIconBetweenDocks(WDock *src, WDock *dest, WAppIcon *icon, int x, i
 		} else {
 			icon->editing = 1;
 			/* icon->forced_dock = 1; */
-			if (wInputDialog(src->vscr->screen_ptr, _("Dock Icon"),
+			if (wInputDialog(src->vscr, _("Dock Icon"),
 					 _("Type the command used to launch the application"), &command)) {
 
 				if (command && (command[0] == 0 || (command[0] == '-' && command[1] == 0))) {
@@ -3800,7 +3800,7 @@ static void trackDeadProcess(pid_t pid, unsigned char status, WDock *dock)
 
 				snprintf(msg, sizeof(msg), _("Could not execute command \"%s\""), cmd);
 
-				wMessageDialog(dock->vscr->screen_ptr, _("Error"), msg, _("OK"), NULL, NULL);
+				wMessageDialog(dock->vscr, _("Error"), msg, _("OK"), NULL, NULL);
 			}
 			break;
 		}
@@ -4185,7 +4185,7 @@ static void iconDblClick(WObjDescriptor *desc, XEvent *event)
 						if (!btn->launching && (!btn->running || (event->xbutton.state & ControlMask)))
 							launchDockedApplication(btn, False);
 					} else {
-						wShowInfoPanel(dock->vscr->screen_ptr);
+						wShowInfoPanel(dock->vscr);
 					}
 				} else {
 					toggleCollapsed(dock);
@@ -4196,7 +4196,7 @@ static void iconDblClick(WObjDescriptor *desc, XEvent *event)
 				if (!btn->launching && (!btn->running || (event->xbutton.state & ControlMask)))
 					launchDockedApplication(btn, False);
 			} else if (btn->xindex == 0 && btn->yindex == 0 && btn->dock->type == WM_DOCK) {
-				wShowInfoPanel(dock->vscr->screen_ptr);
+				wShowInfoPanel(dock->vscr);
 			}
 		}
 	}
@@ -5061,7 +5061,7 @@ static void removeDrawerCallback(WMenu *menu, WMenuEntry *entry)
 	assert(dock != NULL);
 
 	if (dock->icon_count > 2) {
-		if (wMessageDialog(dock->vscr->screen_ptr, _("Drawer"),
+		if (wMessageDialog(dock->vscr, _("Drawer"),
 					_("All icons in this drawer will be detached!"),
 					_("OK"), _("Cancel"), NULL) != WAPRDefault)
 			return;

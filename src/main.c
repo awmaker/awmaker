@@ -289,12 +289,8 @@ static void shellCommandHandler(pid_t pid, unsigned int status, void *client_dat
 
 		buffer = wstrconcat(_("Could not execute command: "), data->command);
 
-		wMessageDialog(data->scr, _("Error"), buffer, _("OK"), NULL, NULL);
+		wMessageDialog(data->scr->vscr, _("Error"), buffer, _("OK"), NULL, NULL);
 		wfree(buffer);
-	} else if (status != 127) {
-		/*
-		   printf("%s: %i\n", data->command, status);
-		 */
 	}
 
 	wfree(data->command);

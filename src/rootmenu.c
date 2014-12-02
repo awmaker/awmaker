@@ -62,11 +62,11 @@
 
 #define MAX_SHORTCUT_LENGTH 32
 
-static WMenu *readMenuPipe(WScreen * scr, char **file_name);
-static WMenu *readPLMenuPipe(WScreen * scr, char **file_name);
+static WMenu *readMenuPipe(WScreen *scr, char **file_name);
+static WMenu *readPLMenuPipe(WScreen *scr, char **file_name);
 static WMenu *readMenuFile(WScreen *scr, const char *file_name);
 static WMenu *readMenuDirectory(WScreen *scr, const char *title, char **file_name, const char *command);
-static WMenu *configureMenu(WScreen * scr, WMPropList * definition, Bool includeGlobals);
+static WMenu *configureMenu(WScreen *scr, WMPropList *definition, Bool includeGlobals);
 static void menu_parser_register_macros(WMenuParser parser);
 
 typedef struct Shortcut {
@@ -188,7 +188,7 @@ static void exitCommand(WMenu *menu, WMenuEntry *entry)
 		int r, oldSaveSessionFlag;
 
 		oldSaveSessionFlag = wPreferences.save_session_on_exit;
-		r = wExitDialog(menu->frame->vscr->screen_ptr, _("Exit"),
+		r = wExitDialog(menu->frame->vscr, _("Exit"),
 				_("Exit window manager?"), _("Exit"), _("Cancel"), NULL);
 
 		if (r == WAPRDefault) {
@@ -231,7 +231,7 @@ static void shutdownCommand(WMenu *menu, WMenuEntry *entry)
 
 		oldSaveSessionFlag = wPreferences.save_session_on_exit;
 
-		r = wExitDialog(menu->frame->vscr->screen_ptr,
+		r = wExitDialog(menu->frame->vscr,
 				_("Kill X session"),
 				_("Kill Window System session?\n"
 				  "(all applications will be closed)"), _("Kill"), _("Cancel"), NULL);
@@ -321,15 +321,15 @@ static void infoPanelCommand(WMenu *menu, WMenuEntry *entry)
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 
-	wShowInfoPanel(menu->frame->vscr->screen_ptr);
+	wShowInfoPanel(menu->frame->vscr);
 }
 
-static void legalPanelCommand(WMenu * menu, WMenuEntry * entry)
+static void legalPanelCommand(WMenu *menu, WMenuEntry *entry)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 
-	wShowLegalPanel(menu->frame->vscr->screen_ptr);
+	wShowLegalPanel(menu->frame->vscr);
 }
 
 /********************************************************************/
@@ -374,7 +374,7 @@ static char *getLocalizedMenuFile(const char *menu)
 	return NULL;
 }
 
-Bool wRootMenuPerformShortcut(XEvent * event)
+Bool wRootMenuPerformShortcut(XEvent *event)
 {
 	WScreen *scr = wScreenForRootWindow(event->xkey.root);
 	Shortcut *ptr;
@@ -620,7 +620,7 @@ static WMenu *constructPLMenu(WScreen *screen, const char *path)
 
 
 
-static void constructMenu(WMenu * menu, WMenuEntry * entry)
+static void constructMenu(WMenu *menu, WMenuEntry *entry)
 {
 	WMenu *submenu;
 	struct stat stat_buf;
@@ -1682,7 +1682,7 @@ void OpenRootMenu(virtual_screen *vscr, int x, int y, int keyboard)
 	if (!menu) {
 		/* menu hasn't changed or could not be read */
 		if (!vscr->menu.root_menu) {
-			wMessageDialog(vscr->screen_ptr, _("Error"),
+			wMessageDialog(vscr, _("Error"),
 				       _("The applications menu could not be loaded. "
 					 "Look at the console output for a detailed "
 					 "description of the errors."), _("OK"), NULL, NULL);
