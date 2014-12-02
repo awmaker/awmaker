@@ -763,7 +763,7 @@ void wUnfullscreenWindow(WWindow *wwin)
 }
 
 #ifdef ANIMATIONS
-static void animateResizeFlip(WScreen *scr, int x, int y, int w, int h, int fx, int fy, int fw, int fh, int steps)
+static void animateResizeFlip(virtual_screen *vscr, int x, int y, int w, int h, int fx, int fy, int fw, int fh, int steps)
 {
 #define FRAMES (MINIATURIZE_ANIMATION_FRAMES_F)
 	float cx, cy, cw, ch;
@@ -804,11 +804,11 @@ static void animateResizeFlip(WScreen *scr, int x, int y, int w, int h, int fx, 
 		points[4].y = points[0].y;
 
 		XGrabServer(dpy);
-		XDrawLines(dpy, scr->root_win, scr->frame_gc, points, 5, CoordModeOrigin);
+		XDrawLines(dpy, vscr->screen_ptr->root_win, vscr->screen_ptr->frame_gc, points, 5, CoordModeOrigin);
 		XFlush(dpy);
 		wusleep(MINIATURIZE_ANIMATION_DELAY_F);
 
-		XDrawLines(dpy, scr->root_win, scr->frame_gc, points, 5, CoordModeOrigin);
+		XDrawLines(dpy, vscr->screen_ptr->root_win, vscr->screen_ptr->frame_gc, points, 5, CoordModeOrigin);
 		XUngrabServer(dpy);
 		cx += xstep;
 		cy += ystep;
@@ -816,15 +816,15 @@ static void animateResizeFlip(WScreen *scr, int x, int y, int w, int h, int fx, 
 		ch += hstep;
 		if (angle >= final_angle)
 			break;
-
 	}
+
 	XFlush(dpy);
 }
 
 #undef FRAMES
 
 static void
-animateResizeTwist(WScreen *scr, int x, int y, int w, int h, int fx, int fy, int fw, int fh, int steps)
+animateResizeTwist(virtual_screen *vscr, int x, int y, int w, int h, int fx, int fy, int fw, int fh, int steps)
 {
 #define FRAMES (MINIATURIZE_ANIMATION_FRAMES_T)
 	float cx, cy, cw, ch;
@@ -867,11 +867,11 @@ animateResizeTwist(WScreen *scr, int x, int y, int w, int h, int fx, int fy, int
 		points[4].x = cx + cos(angle - a) * d;
 		points[4].y = cy + sin(angle - a) * d;
 		XGrabServer(dpy);
-		XDrawLines(dpy, scr->root_win, scr->frame_gc, points, 5, CoordModeOrigin);
+		XDrawLines(dpy, vscr->screen_ptr->root_win, vscr->screen_ptr->frame_gc, points, 5, CoordModeOrigin);
 		XFlush(dpy);
 		wusleep(MINIATURIZE_ANIMATION_DELAY_T);
 
-		XDrawLines(dpy, scr->root_win, scr->frame_gc, points, 5, CoordModeOrigin);
+		XDrawLines(dpy, vscr->screen_ptr->root_win, vscr->screen_ptr->frame_gc, points, 5, CoordModeOrigin);
 		XUngrabServer(dpy);
 		cx += xstep;
 		cy += ystep;
@@ -879,14 +879,14 @@ animateResizeTwist(WScreen *scr, int x, int y, int w, int h, int fx, int fy, int
 		ch += hstep;
 		if (angle >= final_angle)
 			break;
-
 	}
+
 	XFlush(dpy);
 }
 
 #undef FRAMES
 
-static void animateResizeZoom(WScreen *scr, int x, int y, int w, int h, int fx, int fy, int fw, int fh, int steps)
+static void animateResizeZoom(virtual_screen *vscr, int x, int y, int w, int h, int fx, int fy, int fw, int fh, int steps)
 {
 #define FRAMES (MINIATURIZE_ANIMATION_FRAMES_Z)
 	float cx[FRAMES], cy[FRAMES], cw[FRAMES], ch[FRAMES];
@@ -904,17 +904,18 @@ static void animateResizeZoom(WScreen *scr, int x, int y, int w, int h, int fx, 
 		cw[j] = (float)w;
 		ch[j] = (float)h;
 	}
+
 	XGrabServer(dpy);
 	for (i = 0; i < steps; i++) {
-		for (j = 0; j < FRAMES; j++) {
-			XDrawRectangle(dpy, scr->root_win, scr->frame_gc,
+		for (j = 0; j < FRAMES; j++)
+			XDrawRectangle(dpy, vscr->screen_ptr->root_win, vscr->screen_ptr->frame_gc,
 				       (int)cx[j], (int)cy[j], (int)cw[j], (int)ch[j]);
-		}
+
 		XFlush(dpy);
 		wusleep(MINIATURIZE_ANIMATION_DELAY_Z);
 
 		for (j = 0; j < FRAMES; j++) {
-			XDrawRectangle(dpy, scr->root_win, scr->frame_gc,
+			XDrawRectangle(dpy, vscr->screen_ptr->root_win, vscr->screen_ptr->frame_gc,
 				       (int)cx[j], (int)cy[j], (int)cw[j], (int)ch[j]);
 			if (j < FRAMES - 1) {
 				cx[j] = cx[j + 1];
@@ -931,12 +932,12 @@ static void animateResizeZoom(WScreen *scr, int x, int y, int w, int h, int fx, 
 	}
 
 	for (j = 0; j < FRAMES; j++)
-		XDrawRectangle(dpy, scr->root_win, scr->frame_gc, (int)cx[j], (int)cy[j], (int)cw[j], (int)ch[j]);
+		XDrawRectangle(dpy, vscr->screen_ptr->root_win, vscr->screen_ptr->frame_gc, (int)cx[j], (int)cy[j], (int)cw[j], (int)ch[j]);
 	XFlush(dpy);
 	wusleep(MINIATURIZE_ANIMATION_DELAY_Z);
 
 	for (j = 0; j < FRAMES; j++)
-		XDrawRectangle(dpy, scr->root_win, scr->frame_gc, (int)cx[j], (int)cy[j], (int)cw[j], (int)ch[j]);
+		XDrawRectangle(dpy, vscr->screen_ptr->root_win, vscr->screen_ptr->frame_gc, (int)cx[j], (int)cy[j], (int)cw[j], (int)ch[j]);
 
 	XUngrabServer(dpy);
 }
@@ -958,18 +959,18 @@ void animateResize(virtual_screen *vscr, int x, int y, int w, int h, int fx, int
 	case WIS_TWIST:
 		steps = MINIATURIZE_ANIMATION_STEPS_T;
 		if (steps > 0)
-			animateResizeTwist(vscr->screen_ptr, x, y, w, h, fx, fy, fw, fh, steps);
+			animateResizeTwist(vscr, x, y, w, h, fx, fy, fw, fh, steps);
 		break;
 	case WIS_FLIP:
 		steps = MINIATURIZE_ANIMATION_STEPS_F;
 		if (steps > 0)
-			animateResizeFlip(vscr->screen_ptr, x, y, w, h, fx, fy, fw, fh, steps);
+			animateResizeFlip(vscr, x, y, w, h, fx, fy, fw, fh, steps);
 		break;
 	case WIS_ZOOM:
 	default:
 		steps = MINIATURIZE_ANIMATION_STEPS_Z;
 		if (steps > 0)
-			animateResizeZoom(vscr->screen_ptr, x, y, w, h, fx, fy, fw, fh, steps);
+			animateResizeZoom(vscr, x, y, w, h, fx, fy, fw, fh, steps);
 		break;
 	}
 }
