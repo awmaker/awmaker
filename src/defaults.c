@@ -2601,7 +2601,7 @@ static int setIconTile(WScreen * scr, WDefaultEntry * entry, void *tdata, void *
 	w_global.tile.icon = img;
 
 	/* put the icon in the noticeboard hint */
-	PropSetIconTileHint(scr, img);
+	PropSetIconTileHint(scr->vscr, img);
 
 	if (!wPreferences.flags.noclip || wPreferences.flags.clip_merged_in_dock) {
 		if (w_global.tile.clip)
