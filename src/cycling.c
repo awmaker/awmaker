@@ -66,7 +66,7 @@ static WWindow *change_focus_and_raise(WWindow *newFocused, WWindow *oldFocused,
 	oldFocused = newFocused;
 
 	if (wPreferences.circ_raise) {
-		CommitStacking(scr);
+		CommitStacking(scr->vscr);
 
 		if (!esc_cancel)
 			raiseWindow(swpanel, newFocused);
@@ -244,7 +244,7 @@ void StartWindozeCycle(WWindow *wwin, XEvent *event, Bool next, Bool class_only)
 
 	if (newFocused && !esc_cancel) {
 		wRaiseFrame(newFocused->frame->core);
-		CommitStacking(scr);
+		CommitStacking(scr->vscr);
 		if (!newFocused->flags.mapped)
 			wMakeWindowVisible(newFocused);
 

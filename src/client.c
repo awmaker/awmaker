@@ -179,7 +179,7 @@ void wClientConfigure(WWindow * wwin, XConfigureRequestEvent * xcre)
 				 xcre->value_mask & (CWSibling | CWStackMode), &xwc);
 
 		/* fix stacking order */
-		RemakeStackList(wwin->vscr->screen_ptr);
+		RemakeStackList(wwin->vscr);
 	}
 
 	wClientGetGravityOffsets(wwin, &ofs_x, &ofs_y);
