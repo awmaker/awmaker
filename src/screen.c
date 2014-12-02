@@ -667,7 +667,7 @@ WScreen *wScreenInit(int screen_number)
 
 #ifdef BALLOON_TEXT
 	/* initialize balloon text stuff */
-	wBalloonInitialize(scr);
+	wBalloonInitialize(scr->vscr);
 #endif
 
 	scr->info_text_font = WMBoldSystemFontOfSize(scr->wmscreen, 12);

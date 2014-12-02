@@ -771,7 +771,7 @@ static void handleButtonPress(XEvent *event)
 	scr = wScreenForRootWindow(event->xbutton.root);
 
 #ifdef BALLOON_TEXT
-	wBalloonHide(scr);
+	wBalloonHide(scr->vscr);
 #endif
 
 	if (!wPreferences.disable_root_mouse && event->xbutton.window == scr->root_win) {
@@ -1169,22 +1169,21 @@ static void handleEnterNotify(XEvent * event)
 		wSetFocusTo(scr->vscr, scr->focused_window);
 	}
 #ifdef BALLOON_TEXT
-	wBalloonEnteredObject(scr, desc);
+	wBalloonEnteredObject(scr->vscr, desc);
 #endif
 }
 
-static void handleLeaveNotify(XEvent * event)
+static void handleLeaveNotify(XEvent *event)
 {
 	WObjDescriptor *desc = NULL;
 
-	if (XFindContext(dpy, event->xcrossing.window, w_global.context.client_win, (XPointer *) & desc) != XCNOENT) {
+	if (XFindContext(dpy, event->xcrossing.window, w_global.context.client_win, (XPointer *) & desc) != XCNOENT)
 		if (desc->handle_leavenotify)
 			(*desc->handle_leavenotify) (desc, event);
-	}
 }
 
 #ifdef USE_XSHAPE
-static void handleShapeNotify(XEvent * event)
+static void handleShapeNotify(XEvent *event)
 {
 	XShapeEvent *shev = (XShapeEvent *) event;
 	WWindow *wwin;

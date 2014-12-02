@@ -442,34 +442,35 @@ static void showApercu(WScreen *scr, int x, int y, const char *title, Pixmap ape
 	scr->balloon->mapped = 1;
 }
 
-static void showBalloon(WScreen *scr)
+static void showBalloon(virtual_screen *vscr)
 {
 	int x, y;
 	Window foow;
 	unsigned foo, w;
 
-	scr->balloon->timer = NULL;
-	scr->balloon->ignoreTimer = 1;
+	vscr->screen_ptr->balloon->timer = NULL;
+	vscr->screen_ptr->balloon->ignoreTimer = 1;
 
-	if (!XGetGeometry(dpy, scr->balloon->objectWindow, &foow, &x, &y, &w, &foo, &foo, &foo)) {
-		scr->balloon->prevType = 0;
+	if (!XGetGeometry(dpy, vscr->screen_ptr->balloon->objectWindow, &foow, &x, &y, &w, &foo, &foo, &foo)) {
+		vscr->screen_ptr->balloon->prevType = 0;
 		return;
 	}
 
-	if (wPreferences.miniwin_apercu_balloon && scr->balloon->apercu != None)
+	if (wPreferences.miniwin_apercu_balloon && vscr->screen_ptr->balloon->apercu != None)
 		/* used to display either the apercu alone or the apercu and the title */
-		showApercu(scr, x, y, scr->balloon->text, scr->balloon->apercu);
+		showApercu(vscr->screen_ptr, x, y, vscr->screen_ptr->balloon->text, vscr->screen_ptr->balloon->apercu);
 	else
-		showText(scr, x, y, scr->balloon->h, w, scr->balloon->text);
+		showText(vscr->screen_ptr, x, y, vscr->screen_ptr->balloon->h, w, vscr->screen_ptr->balloon->text);
 }
 
 static void frameBalloon(WObjDescriptor *object)
 {
 	WFrameWindow *fwin = (WFrameWindow *) object->parent;
-	WScreen *scr = fwin->core->vscr->screen_ptr;
+	virtual_screen *vscr = fwin->core->vscr;
+	WScreen *scr = vscr->screen_ptr;
 
 	if (fwin->titlebar != object->self || !fwin->flags.is_client_window_frame) {
-		wBalloonHide(scr);
+		wBalloonHide(vscr);
 		return;
 	}
 
@@ -484,10 +485,11 @@ static void frameBalloon(WObjDescriptor *object)
 static void miniwindowBalloon(WObjDescriptor *object)
 {
 	WIcon *icon = (WIcon *) object->parent;
-	WScreen *scr = icon->core->vscr->screen_ptr;
+	virtual_screen *vscr = icon->core->vscr;
+	WScreen *scr = vscr->screen_ptr;
 
 	if (!icon->icon_name) {
-		wBalloonHide(scr);
+		wBalloonHide(vscr);
 		return;
 	}
 
@@ -499,7 +501,7 @@ static void miniwindowBalloon(WObjDescriptor *object)
 	if ((scr->balloon->prevType == object->parent_type || scr->balloon->prevType == WCLASS_APPICON)
 	    && scr->balloon->ignoreTimer) {
 		XUnmapWindow(dpy, scr->balloon->window);
-		showBalloon(scr);
+		showBalloon(vscr);
 	} else {
 		scr->balloon->timer = WMAddTimerHandler(BALLOON_DELAY, (WMCallback *) showBalloon, scr);
 	}
@@ -517,7 +519,7 @@ static void appiconBalloon(WObjDescriptor *object)
 		if (strlen(vscr->workspace.array[vscr->workspace.current]->name) > 5) {
 			scr->balloon->text = wstrdup(vscr->workspace.array[vscr->workspace.current]->name);
 		} else {
-			wBalloonHide(scr);
+			wBalloonHide(vscr);
 			return;
 		}
 	} else if (aicon->command && aicon->wm_class) {
@@ -564,7 +566,7 @@ static void appiconBalloon(WObjDescriptor *object)
 		else
 			scr->balloon->text = wstrdup(aicon->wm_class);
 	} else {
-		wBalloonHide(scr);
+		wBalloonHide(vscr);
 		return;
 	}
 
@@ -573,17 +575,18 @@ static void appiconBalloon(WObjDescriptor *object)
 	if ((scr->balloon->prevType == object->parent_type || scr->balloon->prevType == WCLASS_MINIWINDOW)
 	    && scr->balloon->ignoreTimer) {
 		XUnmapWindow(dpy, scr->balloon->window);
-		showBalloon(scr);
+		showBalloon(vscr);
 	} else {
 		scr->balloon->timer = WMAddTimerHandler(BALLOON_DELAY, (WMCallback *) showBalloon, scr);
 	}
 }
 
-void wBalloonInitialize(WScreen *scr)
+void wBalloonInitialize(virtual_screen *vscr)
 {
 	WBalloon *bal;
 	XSetWindowAttributes attribs;
 	unsigned long vmask;
+	WScreen *scr = vscr->screen_ptr;
 
 	bal = wmalloc(sizeof(WBalloon));
 
@@ -598,15 +601,11 @@ void wBalloonInitialize(WScreen *scr)
 
 	bal->window = XCreateWindow(dpy, scr->root_win, 1, 1, 10, 10, 1,
 				    scr->w_depth, CopyFromParent, scr->w_visual, vmask, &attribs);
-#if 0
-	/* select EnterNotify to so that the balloon will be unmapped
-	 * when the pointer is moved over it */
-	XSelectInput(dpy, bal->window, EnterWindowMask);
-#endif
 }
 
-void wBalloonEnteredObject(WScreen *scr, WObjDescriptor *object)
+void wBalloonEnteredObject(virtual_screen *vscr, WObjDescriptor *object)
 {
+	WScreen *scr = vscr->screen_ptr;
 	WBalloon *balloon = scr->balloon;
 
 	if (balloon->timer) {
@@ -617,12 +616,12 @@ void wBalloonEnteredObject(WScreen *scr, WObjDescriptor *object)
 
 	if (scr->balloon->text)
 		wfree(scr->balloon->text);
-	scr->balloon->text = NULL;
 
+	scr->balloon->text = NULL;
 	scr->balloon->apercu = None;
 
 	if (!object) {
-		wBalloonHide(scr);
+		wBalloonHide(vscr);
 		balloon->ignoreTimer = 0;
 		return;
 	}
@@ -645,24 +644,27 @@ void wBalloonEnteredObject(WScreen *scr, WObjDescriptor *object)
 			appiconBalloon(object);
 		break;
 	default:
-		wBalloonHide(scr);
+		wBalloonHide(vscr);
 		break;
 	}
+
 	scr->balloon->prevType = object->parent_type;
 }
 
-void wBalloonHide(WScreen *scr)
+void wBalloonHide(virtual_screen *vscr)
 {
-	if (scr) {
-		if (scr->balloon->mapped) {
-			XUnmapWindow(dpy, scr->balloon->window);
-			scr->balloon->mapped = 0;
-		} else if (scr->balloon->timer) {
-			WMDeleteTimerHandler(scr->balloon->timer);
-			scr->balloon->timer = NULL;
-		}
-		scr->balloon->prevType = 0;
+	if (!vscr->screen_ptr)
+		return;
+
+	if (vscr->screen_ptr->balloon->mapped) {
+		XUnmapWindow(dpy, vscr->screen_ptr->balloon->window);
+		vscr->screen_ptr->balloon->mapped = 0;
+	} else if (vscr->screen_ptr->balloon->timer) {
+		WMDeleteTimerHandler(vscr->screen_ptr->balloon->timer);
+		vscr->screen_ptr->balloon->timer = NULL;
 	}
+
+	vscr->screen_ptr->balloon->prevType = 0;
 }
 
 #endif
