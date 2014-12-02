@@ -62,9 +62,9 @@
 #include "xinerama.h"
 
 
-static WMPoint getCenter(WScreen *scr, int width, int height)
+static WMPoint getCenter(virtual_screen *vscr, int width, int height)
 {
-	return wGetPointToCenterRectInHead(scr, wGetHeadForPointerLocation(scr), width, height);
+	return wGetPointToCenterRectInHead(vscr->screen_ptr, wGetHeadForPointerLocation(vscr->screen_ptr), width, height);
 }
 
 int wMessageDialog(virtual_screen *vscr, const char *title, const char *message, const char *defBtn, const char *altBtn, const char *othBtn)
@@ -82,7 +82,7 @@ int wMessageDialog(virtual_screen *vscr, const char *title, const char *message,
 
 	XReparentWindow(dpy, WMWidgetXID(panel->win), parent, 0, 0);
 
-	center = getCenter(scr, 400, 180);
+	center = getCenter(vscr, 400, 180);
 	wwin = wManageInternalWindow(vscr, parent, None, NULL, center.x, center.y, 400, 180);
 	wwin->client_leader = WMWidgetXID(panel->win);
 
@@ -138,7 +138,7 @@ int wExitDialog(virtual_screen *vscr, const char *title, const char *message, co
 
 	XReparentWindow(dpy, WMWidgetXID(panel->win), parent, 0, 0);
 
-	center = getCenter(scr, 400, 180);
+	center = getCenter(vscr, 400, 180);
 	wwin = wManageInternalWindow(vscr, parent, None, NULL, center.x, center.y, 400, 180);
 
 	wwin->client_leader = WMWidgetXID(panel->win);
@@ -431,7 +431,7 @@ int wAdvancedInputDialog(virtual_screen *vscr, const char *title, const char *me
 
 	XReparentWindow(dpy, WMWidgetXID(p->panel->win), parent, 0, 0);
 
-	center = getCenter(scr, 320, 160);
+	center = getCenter(vscr, 320, 160);
 	wwin = wManageInternalWindow(vscr, parent, None, NULL, center.x, center.y, 320, 160);
 
 	wwin->client_leader = WMWidgetXID(p->panel->win);
@@ -484,7 +484,7 @@ int wInputDialog(virtual_screen *vscr, const char *title, const char *message, c
 
 	XReparentWindow(dpy, WMWidgetXID(panel->win), parent, 0, 0);
 
-	center = getCenter(scr, 320, 160);
+	center = getCenter(vscr, 320, 160);
 	wwin = wManageInternalWindow(vscr, parent, None, NULL, center.x, center.y, 320, 160);
 
 	wwin->client_leader = WMWidgetXID(panel->win);
@@ -1027,7 +1027,7 @@ Bool wIconChooserDialog(virtual_screen *vscr, char **file, const char *instance,
 			strcat(title, "]");
 		}
 
-		center = getCenter(scr, 450, 280);
+		center = getCenter(vscr, 450, 280);
 
 		wwin = wManageInternalWindow(vscr, parent, None, title, center.x, center.y, 450, 280);
 		wfree(title);
@@ -1352,7 +1352,7 @@ void wShowInfoPanel(virtual_screen *vscr)
 
 	WMMapWidget(panel->win);
 
-	center = getCenter(vscr->screen_ptr, win_width, win_height);
+	center = getCenter(vscr, win_width, win_height);
 	wwin = wManageInternalWindow(vscr, parent, None, _("Info"), center.x, center.y, win_width, win_height);
 
 	WSETUFLAG(wwin, no_closable, 0);
@@ -1448,7 +1448,7 @@ void wShowLegalPanel(virtual_screen *vscr)
 
 	parent = XCreateSimpleWindow(dpy, vscr->screen_ptr->root_win, 0, 0, win_width, win_height, 0, 0, 0);
 	XReparentWindow(dpy, WMWidgetXID(panel->win), parent, 0, 0);
-	center = getCenter(vscr->screen_ptr, win_width, win_height);
+	center = getCenter(vscr, win_width, win_height);
 	wwin = wManageInternalWindow(vscr, parent, None, _("Legal"), center.x, center.y, win_width, win_height);
 
 	WSETUFLAG(wwin, no_closable, 0);
