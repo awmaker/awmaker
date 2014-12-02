@@ -35,11 +35,12 @@
 #include "misc.h"
 
 
-static void bevelImage(RImage * image, int relief);
-static RImage * get_texture_image(WScreen *scr, const char *pixmap_file);
+static void bevelImage(RImage *image, int relief);
+static RImage *get_texture_image(virtual_screen *vscr, const char *pixmap_file);
 
-WTexSolid *wTextureMakeSolid(WScreen * scr, XColor * color)
+WTexSolid *wTextureMakeSolid(virtual_screen *vscr, XColor *color)
 {
+	WScreen *scr = vscr->screen_ptr;
 	WTexSolid *texture;
 	int gcm;
 	XGCValues gcv;
@@ -108,7 +109,7 @@ WTexSolid *wTextureMakeSolid(WScreen * scr, XColor * color)
 	return texture;
 }
 
-static int dummyErrorHandler(Display * foo, XErrorEvent * bar)
+static int dummyErrorHandler(Display *foo, XErrorEvent *bar)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) foo;
@@ -117,15 +118,14 @@ static int dummyErrorHandler(Display * foo, XErrorEvent * bar)
 	return 0;
 }
 
-void wTextureDestroy(WScreen * scr, WTexture * texture)
+void wTextureDestroy(virtual_screen *vscr, WTexture *texture)
 {
+	WScreen *scr = vscr->screen_ptr;
 	int i;
 	int count = 0;
 	unsigned long colors[8];
 
-	/*
-	 * some stupid servers don't like white or black being freed...
-	 */
+	/* some stupid servers don't like white or black being freed... */
 #define CANFREE(c) (c!=scr->black_pixel && c!=scr->white_pixel && c!=0)
 	switch (texture->any.type) {
 	case WTEX_SOLID:
@@ -134,10 +134,13 @@ void wTextureDestroy(WScreen * scr, WTexture * texture)
 		XFreeGC(dpy, texture->solid.dim_gc);
 		if (CANFREE(texture->solid.light.pixel))
 			colors[count++] = texture->solid.light.pixel;
+
 		if (CANFREE(texture->solid.dim.pixel))
 			colors[count++] = texture->solid.dim.pixel;
+
 		if (CANFREE(texture->solid.dark.pixel))
 			colors[count++] = texture->solid.dark.pixel;
+
 		break;
 
 	case WTEX_PIXMAP:
@@ -147,9 +150,9 @@ void wTextureDestroy(WScreen * scr, WTexture * texture)
 	case WTEX_MHGRADIENT:
 	case WTEX_MVGRADIENT:
 	case WTEX_MDGRADIENT:
-		for (i = 0; texture->mgradient.colors[i] != NULL; i++) {
+		for (i = 0; texture->mgradient.colors[i] != NULL; i++)
 			wfree(texture->mgradient.colors[i]);
-		}
+
 		wfree(texture->mgradient.colors);
 		break;
 
@@ -162,6 +165,7 @@ void wTextureDestroy(WScreen * scr, WTexture * texture)
 
 	if (CANFREE(texture->any.color.pixel))
 		colors[count++] = texture->any.color.pixel;
+
 	if (count > 0) {
 		XErrorHandler oldhandler;
 
@@ -173,13 +177,15 @@ void wTextureDestroy(WScreen * scr, WTexture * texture)
 		XSync(dpy, 0);
 		XSetErrorHandler(oldhandler);
 	}
+
 	XFreeGC(dpy, texture->any.gc);
 	wfree(texture);
 #undef CANFREE
 }
 
-WTexGradient *wTextureMakeGradient(WScreen *scr, int style, const RColor *from, const RColor *to)
+WTexGradient *wTextureMakeGradient(virtual_screen *vscr, int style, const RColor *from, const RColor *to)
 {
+	WScreen *scr = vscr->screen_ptr;
 	WTexGradient *texture;
 	XGCValues gcv;
 
@@ -202,9 +208,10 @@ WTexGradient *wTextureMakeGradient(WScreen *scr, int style, const RColor *from, 
 	return texture;
 }
 
-WTexIGradient *wTextureMakeIGradient(WScreen *scr, int thickness1, const RColor colors1[2],
+WTexIGradient *wTextureMakeIGradient(virtual_screen *vscr, int thickness1, const RColor colors1[2],
 				     int thickness2, const RColor colors2[2])
 {
+	WScreen *scr = vscr->screen_ptr;
 	WTexIGradient *texture;
 	XGCValues gcv;
 	int i;
@@ -215,6 +222,7 @@ WTexIGradient *wTextureMakeIGradient(WScreen *scr, int thickness1, const RColor 
 		texture->colors1[i] = colors1[i];
 		texture->colors2[i] = colors2[i];
 	}
+
 	texture->thickness1 = thickness1;
 	texture->thickness2 = thickness2;
 	if (thickness1 >= thickness2) {
@@ -226,6 +234,7 @@ WTexIGradient *wTextureMakeIGradient(WScreen *scr, int thickness1, const RColor 
 		texture->normal.green = (colors2[0].green + colors2[1].green) << 7;
 		texture->normal.blue = (colors2[0].blue + colors2[1].blue) << 7;
 	}
+
 	XAllocColor(dpy, scr->w_colormap, &texture->normal);
 	gcv.background = gcv.foreground = texture->normal.pixel;
 	gcv.graphics_exposures = False;
@@ -234,8 +243,9 @@ WTexIGradient *wTextureMakeIGradient(WScreen *scr, int thickness1, const RColor 
 	return texture;
 }
 
-WTexMGradient *wTextureMakeMGradient(WScreen * scr, int style, RColor ** colors)
+WTexMGradient *wTextureMakeMGradient(virtual_screen *vscr, int style, RColor **colors)
 {
+	WScreen *scr = vscr->screen_ptr;
 	WTexMGradient *texture;
 	XGCValues gcv;
 	int i;
@@ -247,6 +257,7 @@ WTexMGradient *wTextureMakeMGradient(WScreen * scr, int style, RColor ** colors)
 	i = 0;
 	while (colors[i] != NULL)
 		i++;
+
 	i--;
 	texture->normal.red = (colors[0]->red << 8);
 	texture->normal.green = (colors[0]->green << 8);
@@ -262,13 +273,14 @@ WTexMGradient *wTextureMakeMGradient(WScreen * scr, int style, RColor ** colors)
 	return texture;
 }
 
-WTexPixmap *wTextureMakePixmap(WScreen *scr, int style, const char *pixmap_file, XColor *color)
+WTexPixmap *wTextureMakePixmap(virtual_screen *vscr, int style, const char *pixmap_file, XColor *color)
 {
+	WScreen *scr = vscr->screen_ptr;
 	WTexPixmap *texture;
 	XGCValues gcv;
 	RImage *image;
 
-	image = get_texture_image(scr, pixmap_file);
+	image = get_texture_image(vscr, pixmap_file);
 	if (!image)
 		return NULL;
 
@@ -288,14 +300,16 @@ WTexPixmap *wTextureMakePixmap(WScreen *scr, int style, const char *pixmap_file,
 	return texture;
 }
 
-WTexTGradient *wTextureMakeTGradient(WScreen *scr, int style, const RColor *from, const RColor *to,
+WTexTGradient *wTextureMakeTGradient(virtual_screen *vscr, int style,
+				     const RColor *from, const RColor *to,
 				     const char *pixmap_file, int opacity)
 {
+	WScreen *scr = vscr->screen_ptr;
 	WTexTGradient *texture;
 	XGCValues gcv;
 	RImage *image;
 
-	image = get_texture_image(scr, pixmap_file);
+	image = get_texture_image(vscr, pixmap_file);
 	if (!image)
 		return NULL;
 
@@ -321,8 +335,9 @@ WTexTGradient *wTextureMakeTGradient(WScreen *scr, int style, const RColor *from
 	return texture;
 }
 
-static RImage * get_texture_image(WScreen *scr, const char *pixmap_file)
+static RImage *get_texture_image(virtual_screen *vscr, const char *pixmap_file)
 {
+	WScreen *scr = vscr->screen_ptr;
 	char *file;
 	RImage *image;
 
@@ -331,18 +346,20 @@ static RImage * get_texture_image(WScreen *scr, const char *pixmap_file)
 		wwarning(_("image file \"%s\" used as texture could not be found."), pixmap_file);
 		return NULL;
 	}
+
 	image = RLoadImage(scr->rcontext, file, 0);
 	if (!image) {
 		wwarning(_("could not load texture pixmap \"%s\":%s"), file, RMessageForError(RErrorCode));
 		wfree(file);
 		return NULL;
 	}
+
 	wfree(file);
 
 	return image;
 }
 
-RImage *wTextureRenderImage(WTexture * texture, int width, int height, int relief)
+RImage *wTextureRenderImage(WTexture *texture, int width, int height, int relief)
 {
 	RImage *image = NULL;
 	RColor color1;
@@ -493,11 +510,10 @@ RImage *wTextureRenderImage(WTexture * texture, int width, int height, int relie
 		d = 0;
 	}
 
-	if (d > 0) {
+	if (d > 0)
 		RBevelImage(image, d);
-	} else if (d < 0) {
+	else if (d < 0)
 		bevelImage(image, -d);
-	}
 
 	return image;
 }

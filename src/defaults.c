@@ -1638,7 +1638,7 @@ static WTexture *parse_texture(virtual_screen *vscr, WMPropList *pl)
 			return NULL;
 		}
 
-		texture = (WTexture *) wTextureMakeSolid(vscr->screen_ptr, &color);
+		texture = (WTexture *) wTextureMakeSolid(vscr, &color);
 	} else if (strcasecmp(val, "dgradient") == 0
 		   || strcasecmp(val, "vgradient") == 0 || strcasecmp(val, "hgradient") == 0) {
 		RColor color1, color2;
@@ -1690,7 +1690,7 @@ static WTexture *parse_texture(virtual_screen *vscr, WMPropList *pl)
 		color2.green = xcolor.green >> 8;
 		color2.blue = xcolor.blue >> 8;
 
-		texture = (WTexture *) wTextureMakeGradient(vscr->screen_ptr, type, &color1, &color2);
+		texture = (WTexture *) wTextureMakeGradient(vscr, type, &color1, &color2);
 	} else if (strcasecmp(val, "igradient") == 0) {
 		RColor colors1[2], colors2[2];
 		int th1, th2;
@@ -1752,7 +1752,7 @@ static WTexture *parse_texture(virtual_screen *vscr, WMPropList *pl)
 
 		val = WMGetFromPLString(elem);
 		th2 = atoi(val);
-		texture = (WTexture *) wTextureMakeIGradient(vscr->screen_ptr, th1, colors1, th2, colors2);
+		texture = (WTexture *) wTextureMakeIGradient(vscr, th1, colors1, th2, colors2);
 	} else if (strcasecmp(val, "mhgradient") == 0
 		   || strcasecmp(val, "mvgradient") == 0 || strcasecmp(val, "mdgradient") == 0) {
 		XColor color;
@@ -1804,7 +1804,7 @@ static WTexture *parse_texture(virtual_screen *vscr, WMPropList *pl)
 		}
 
 		colors[i] = NULL;
-		texture = (WTexture *) wTextureMakeMGradient(vscr->screen_ptr, type, colors);
+		texture = (WTexture *) wTextureMakeMGradient(vscr, type, colors);
 	} else if (strcasecmp(val, "spixmap") == 0 ||
 		   strcasecmp(val, "cpixmap") == 0 || strcasecmp(val, "tpixmap") == 0) {
 		XColor color;
@@ -1839,7 +1839,7 @@ static WTexture *parse_texture(virtual_screen *vscr, WMPropList *pl)
 
 		val = WMGetFromPLString(elem);
 
-		texture = (WTexture *) wTextureMakePixmap(vscr->screen_ptr, type, val, &color);
+		texture = (WTexture *) wTextureMakePixmap(vscr, type, val, &color);
 	} else if (strcasecmp(val, "thgradient") == 0
 		   || strcasecmp(val, "tvgradient") == 0 || strcasecmp(val, "tdgradient") == 0) {
 		RColor color1, color2;
@@ -1911,7 +1911,7 @@ static WTexture *parse_texture(virtual_screen *vscr, WMPropList *pl)
 
 		val = WMGetFromPLString(elem);
 
-		texture = (WTexture *) wTextureMakeTGradient(vscr->screen_ptr, style, &color1, &color2, val, opacity);
+		texture = (WTexture *) wTextureMakeTGradient(vscr, style, &color1, &color2, val, opacity);
 	} else if (strcasecmp(val, "function") == 0) {
 		/* Leave this in to handle the unlikely case of
 		 * someone actually having function textures configured */
@@ -2605,7 +2605,7 @@ static int setIconTile(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, 
 	if (!img) {
 		wwarning(_("could not render texture for icon background"));
 		if (!entry->addr)
-			wTextureDestroy(vscr->screen_ptr, *texture);
+			wTextureDestroy(vscr, *texture);
 
 		return 0;
 	}
@@ -2645,13 +2645,13 @@ static int setIconTile(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, 
 	}
 
 	if (vscr->screen_ptr->icon_back_texture)
-		wTextureDestroy(vscr->screen_ptr, (WTexture *) vscr->screen_ptr->icon_back_texture);
+		wTextureDestroy(vscr, (WTexture *) vscr->screen_ptr->icon_back_texture);
 
-	vscr->screen_ptr->icon_back_texture = wTextureMakeSolid(vscr->screen_ptr, &((*texture)->any.color));
+	vscr->screen_ptr->icon_back_texture = wTextureMakeSolid(vscr, &((*texture)->any.color));
 
 	/* Free the texture as nobody else will use it, nor refer to it.  */
 	if (!entry->addr)
-		wTextureDestroy(vscr->screen_ptr, *texture);
+		wTextureDestroy(vscr, *texture);
 
 	return (reset ? REFRESH_ICON_TILE : 0);
 }
@@ -2915,9 +2915,9 @@ static int setIconTitleBack(virtual_screen *vscr, WDefaultEntry *entry, void *td
 	(void) foo;
 
 	if (vscr->screen_ptr->icon_title_texture)
-		wTextureDestroy(vscr->screen_ptr, (WTexture *) vscr->screen_ptr->icon_title_texture);
+		wTextureDestroy(vscr, (WTexture *) vscr->screen_ptr->icon_title_texture);
 
-	vscr->screen_ptr->icon_title_texture = wTextureMakeSolid(vscr->screen_ptr, color);
+	vscr->screen_ptr->icon_title_texture = wTextureMakeSolid(vscr, color);
 
 	return REFRESH_ICON_TITLE_BACK;
 }
@@ -3101,7 +3101,7 @@ static int setWidgetColor(virtual_screen *vscr, WDefaultEntry *entry, void *tdat
 	(void) foo;
 
 	if (vscr->screen_ptr->widget_texture)
-		wTextureDestroy(vscr->screen_ptr, (WTexture *) vscr->screen_ptr->widget_texture);
+		wTextureDestroy(vscr, (WTexture *) vscr->screen_ptr->widget_texture);
 
 	vscr->screen_ptr->widget_texture = *(WTexSolid **) texture;
 
@@ -3117,7 +3117,7 @@ static int setFTitleBack(virtual_screen *vscr, WDefaultEntry *entry, void *tdata
 	(void) foo;
 
 	if (vscr->screen_ptr->window_title_texture[WS_FOCUSED])
-		wTextureDestroy(vscr->screen_ptr, vscr->screen_ptr->window_title_texture[WS_FOCUSED]);
+		wTextureDestroy(vscr, vscr->screen_ptr->window_title_texture[WS_FOCUSED]);
 
 	vscr->screen_ptr->window_title_texture[WS_FOCUSED] = *texture;
 
@@ -3133,7 +3133,7 @@ static int setPTitleBack(virtual_screen *vscr, WDefaultEntry *entry, void *tdata
 	(void) foo;
 
 	if (vscr->screen_ptr->window_title_texture[WS_PFOCUSED])
-		wTextureDestroy(vscr->screen_ptr, vscr->screen_ptr->window_title_texture[WS_PFOCUSED]);
+		wTextureDestroy(vscr, vscr->screen_ptr->window_title_texture[WS_PFOCUSED]);
 
 	vscr->screen_ptr->window_title_texture[WS_PFOCUSED] = *texture;
 
@@ -3149,7 +3149,7 @@ static int setUTitleBack(virtual_screen *vscr, WDefaultEntry *entry, void *tdata
 	(void) foo;
 
 	if (vscr->screen_ptr->window_title_texture[WS_UNFOCUSED])
-		wTextureDestroy(vscr->screen_ptr, vscr->screen_ptr->window_title_texture[WS_UNFOCUSED]);
+		wTextureDestroy(vscr, vscr->screen_ptr->window_title_texture[WS_UNFOCUSED]);
 
 	vscr->screen_ptr->window_title_texture[WS_UNFOCUSED] = *texture;
 
@@ -3165,7 +3165,7 @@ static int setResizebarBack(virtual_screen *vscr, WDefaultEntry *entry, void *td
 	(void) foo;
 
 	if (vscr->screen_ptr->resizebar_texture[0])
-		wTextureDestroy(vscr->screen_ptr, vscr->screen_ptr->resizebar_texture[0]);
+		wTextureDestroy(vscr, vscr->screen_ptr->resizebar_texture[0]);
 
 	vscr->screen_ptr->resizebar_texture[0] = *texture;
 
@@ -3181,7 +3181,7 @@ static int setMenuTitleBack(virtual_screen *vscr, WDefaultEntry *entry, void *td
 	(void) foo;
 
 	if (vscr->screen_ptr->menu_title_texture[0])
-		wTextureDestroy(vscr->screen_ptr, vscr->screen_ptr->menu_title_texture[0]);
+		wTextureDestroy(vscr, vscr->screen_ptr->menu_title_texture[0]);
 
 	vscr->screen_ptr->menu_title_texture[0] = *texture;
 
@@ -3197,12 +3197,12 @@ static int setMenuTextBack(virtual_screen *vscr, WDefaultEntry *entry, void *tda
 	(void) foo;
 
 	if (vscr->screen_ptr->menu_item_texture) {
-		wTextureDestroy(vscr->screen_ptr, vscr->screen_ptr->menu_item_texture);
-		wTextureDestroy(vscr->screen_ptr, (WTexture *) vscr->screen_ptr->menu_item_auxtexture);
+		wTextureDestroy(vscr, vscr->screen_ptr->menu_item_texture);
+		wTextureDestroy(vscr, (WTexture *) vscr->screen_ptr->menu_item_auxtexture);
 	}
 
 	vscr->screen_ptr->menu_item_texture = *texture;
-	vscr->screen_ptr->menu_item_auxtexture = wTextureMakeSolid(vscr->screen_ptr, &vscr->screen_ptr->menu_item_texture->any.color);
+	vscr->screen_ptr->menu_item_auxtexture = wTextureMakeSolid(vscr, &vscr->screen_ptr->menu_item_texture->any.color);
 
 	return REFRESH_MENU_TEXTURE;
 }
