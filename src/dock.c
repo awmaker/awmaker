@@ -3683,7 +3683,7 @@ static int find_win_in_dock(WDock *dock, Window window, char *wm_class,
 
 		if (!wPreferences.no_animations && !icon->launching &&
 		    !w_global.startup.phase1 && !dock->collapsed)
-			move_appicon_to_dock(dock->vscr->screen_ptr, icon, wm_class, wm_instance);
+			move_appicon_to_dock(dock->vscr, icon, wm_class, wm_instance);
 
 		wDockFinishLaunch(icon);
 		return 1;

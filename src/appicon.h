@@ -75,7 +75,7 @@ void wAppIconDestroy(WAppIcon *aicon);
 void wAppIconPaint(WAppIcon *aicon);
 void wAppIconMove(WAppIcon *aicon, int x, int y);
 void create_appicon_for_application(WApplication *wapp, WWindow *wwin);
-void removeAppIconFor(WApplication * wapp);
+void removeAppIconFor(WApplication *wapp);
 void save_appicon(WAppIcon *aicon, Bool dock);
 void paint_app_icon(WApplication *wapp);
 void unpaint_app_icon(WApplication *wapp);
@@ -87,9 +87,9 @@ WAppIcon *create_appicon(char *command, char *wm_class, char *wm_instance);
 
 void appicon_map(WAppIcon *aicon, virtual_screen *vscr);
 
-void appIconMouseDown(WObjDescriptor * desc, XEvent * event);
+void appIconMouseDown(WObjDescriptor *desc, XEvent *event);
 void add_to_appicon_list(WAppIcon *appicon);
 
-void move_appicon_to_dock(WScreen *scr, WAppIcon *icon, char *wm_class, char *wm_instance);
+void move_appicon_to_dock(virtual_screen *vscr, WAppIcon *icon, char *wm_class, char *wm_instance);
 
 #endif
