@@ -144,8 +144,9 @@ static void drawMultiLineString(WMScreen *scr, Pixmap pixmap, WMColor *color,
 
 #define SPACE 12
 
-static void drawBalloon(WScreen *scr, Pixmap bitmap, Pixmap pix, int x, int y, int w, int h, int side)
+static void drawBalloon(virtual_screen *vscr, Pixmap bitmap, Pixmap pix, int x, int y, int w, int h, int side)
 {
+	WScreen *scr = vscr->screen_ptr;
 	GC bgc = scr->balloon->monoGC;
 	GC gc = scr->draw_gc;
 	int rad = h * 3 / 10;
@@ -202,9 +203,6 @@ static void drawBalloon(WScreen *scr, Pixmap bitmap, Pixmap pix, int x, int y, i
 		ipt[0].x = x + 1 + w - w1 + 2 * (w1 - 1) / 16;
 		ipt[1].x = x + 1 + w - w1 + 11 * (w1 - 1) / 16;
 		ipt[2].x = x + 1 + w - w1 + 7 * (w1 - 1) / 16;
-		/*ipt[0].x = pt[0].x+1;
-		   ipt[1].x = pt[1].x;
-		   ipt[2].x = pt[2].x; */
 	} else {
 		pt[0].x = x + w1 - 2 * w1 / 16;
 		pt[1].x = x + w1 - 11 * w1 / 16;
@@ -212,9 +210,6 @@ static void drawBalloon(WScreen *scr, Pixmap bitmap, Pixmap pix, int x, int y, i
 		ipt[0].x = x - 1 + w1 - 2 * (w1 - 1) / 16;
 		ipt[1].x = x - 1 + w1 - 11 * (w1 - 1) / 16;
 		ipt[2].x = x - 1 + w1 - 7 * (w1 - 1) / 16;
-		/*ipt[0].x = pt[0].x-1;
-		   ipt[1].x = pt[1].x;
-		   ipt[2].x = pt[2].x; */
 	}
 
 	XFillPolygon(dpy, bitmap, bgc, pt, 3, Convex, CoordModeOrigin);
@@ -231,11 +226,13 @@ static void drawBalloon(WScreen *scr, Pixmap bitmap, Pixmap pix, int x, int y, i
 		pt[0].x--;
 		pt[2].x++;
 	}
+
 	XDrawLines(dpy, pix, gc, pt, 3, CoordModeOrigin);
 }
 
-static Pixmap makePixmap(WScreen *scr, int width, int height, int side, Pixmap *mask)
+static Pixmap makePixmap(virtual_screen *vscr, int width, int height, int side, Pixmap *mask)
 {
+	WScreen *scr = vscr->screen_ptr;
 	WBalloon *bal = scr->balloon;
 	Pixmap bitmap;
 	Pixmap pixmap;
@@ -259,15 +256,16 @@ static Pixmap makePixmap(WScreen *scr, int width, int height, int side, Pixmap *
 		y = SPACE;
 	x = 0;
 
-	drawBalloon(scr, bitmap, pixmap, x, y, width, height, side);
+	drawBalloon(vscr, bitmap, pixmap, x, y, width, height, side);
 
 	*mask = bitmap;
 
 	return pixmap;
 }
 
-static void showText(WScreen *scr, int x, int y, int h, int w, const char *text)
+static void showText(virtual_screen *vscr, int x, int y, int h, int w, const char *text)
 {
+	WScreen *scr = vscr->screen_ptr;
 	int width;
 	int height;
 	Pixmap pixmap;
@@ -297,6 +295,7 @@ static void showText(WScreen *scr, int x, int y, int h, int w, const char *text)
 		side = LEFT;
 		bx = x + w / 2;
 	}
+
 	if (bx + width > scr->scr_width)
 		bx = scr->scr_width - width;
 
@@ -309,7 +308,8 @@ static void showText(WScreen *scr, int x, int y, int h, int w, const char *text)
 		by = y - (height + SPACE);
 		ty = 0;
 	}
-	pixmap = makePixmap(scr, width, height, side, &mask);
+
+	pixmap = makePixmap(vscr, width, height, side, &mask);
 
 	drawMultiLineString(scr->wmscreen, pixmap, scr->black, font, 8, ty + 2, text, strlen(text));
 
@@ -326,8 +326,9 @@ static void showText(WScreen *scr, int x, int y, int h, int w, const char *text)
 }
 #else				/* !SHAPED_BALLOON */
 
-static void showText(WScreen *scr, int x, int y, int h, int w, const char *text)
+static void showText(virtual_screen *vscr, int x, int y, int h, int w, const char *text)
 {
+	WScreen *scr = vscr->scr;
 	int width;
 	int height;
 	Pixmap pixmap;
@@ -376,8 +377,9 @@ static void showText(WScreen *scr, int x, int y, int h, int w, const char *text)
 }
 #endif				/* !SHAPED_BALLOON */
 
-static void showApercu(WScreen *scr, int x, int y, const char *title, Pixmap apercu)
+static void showApercu(virtual_screen *vscr, int x, int y, const char *title, Pixmap apercu)
 {
+	WScreen *scr = vscr->screen_ptr;
 	Pixmap pixmap;
 	WMFont *font = scr->info_text_font;
 	int width, height, titleHeight = 0;
@@ -458,9 +460,9 @@ static void showBalloon(virtual_screen *vscr)
 
 	if (wPreferences.miniwin_apercu_balloon && vscr->screen_ptr->balloon->apercu != None)
 		/* used to display either the apercu alone or the apercu and the title */
-		showApercu(vscr->screen_ptr, x, y, vscr->screen_ptr->balloon->text, vscr->screen_ptr->balloon->apercu);
+		showApercu(vscr, x, y, vscr->screen_ptr->balloon->text, vscr->screen_ptr->balloon->apercu);
 	else
-		showText(vscr->screen_ptr, x, y, vscr->screen_ptr->balloon->h, w, vscr->screen_ptr->balloon->text);
+		showText(vscr, x, y, vscr->screen_ptr->balloon->h, w, vscr->screen_ptr->balloon->text);
 }
 
 static void frameBalloon(WObjDescriptor *object)
