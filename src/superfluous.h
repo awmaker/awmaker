@@ -23,8 +23,8 @@
 
 #include "window.h"
 
-void DoKaboom(WScreen *scr, Window win, int x, int y);
-Pixmap MakeGhostIcon(WScreen *scr, Drawable drawable);
+void DoKaboom(virtual_screen *vscr, Window win, int x, int y);
+Pixmap MakeGhostIcon(virtual_screen *vscr, Drawable drawable);
 void DoWindowBirth(WWindow *wwin);
 
 #endif

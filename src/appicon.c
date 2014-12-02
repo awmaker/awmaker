@@ -857,7 +857,7 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 		allDocks[i++] = vscr->workspace.array[vscr->workspace.current]->clip;
 
 	for ( ; i < vscr->drawer.drawer_count + 2; i++) /* In case the clip, the dock, or both, are disabled */
-		allDocks[ i ] = NULL;
+		allDocks[i] = NULL;
 
 	wins[0] = icon->core->window;
 	wins[1] = scr->dock_shadow;
@@ -865,9 +865,9 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 	XMoveResizeWindow(dpy, scr->dock_shadow, aicon->x_pos, aicon->y_pos, ICON_SIZE, ICON_SIZE);
 	if (superfluous) {
 		if (icon->pixmap != None)
-			ghost = MakeGhostIcon(scr, icon->pixmap);
+			ghost = MakeGhostIcon(vscr, icon->pixmap);
 		else
-			ghost = MakeGhostIcon(scr, icon->core->window);
+			ghost = MakeGhostIcon(vscr, icon->core->window);
 
 		XSetWindowBackgroundPixmap(dpy, scr->dock_shadow, ghost);
 		XClearWindow(dpy, scr->dock_shadow);
@@ -1077,7 +1077,7 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 							if (aicon->icon->selected)
 								wIconSelect(aicon->icon);
 
-							DoKaboom(scr, aicon->icon->core->window, x, y);
+							DoKaboom(vscr, aicon->icon->core->window, x, y);
 						}
 					}
 

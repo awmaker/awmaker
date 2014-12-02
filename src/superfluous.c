@@ -50,10 +50,11 @@
 #define URGENT_BOUNCE_DELAY	3000
 
 
-void DoKaboom(WScreen * scr, Window win, int x, int y)
+void DoKaboom(virtual_screen *vscr, Window win, int x, int y)
 {
 #ifdef NORMAL_ICON_KABOOM
 	int i, j, k;
+	WScreen *scr = vscr->screen_ptr;
 	int sw = scr->scr_width, sh = scr->scr_height;
 	int px[PIECES];
 	short py[PIECES];
@@ -64,9 +65,9 @@ void DoKaboom(WScreen * scr, Window win, int x, int y)
 
 	XSetClipMask(dpy, scr->copy_gc, None);
 	tmp = XCreatePixmap(dpy, scr->root_win, wPreferences.icon_size, wPreferences.icon_size, scr->depth);
-	if (scr->w_visual == DefaultVisual(dpy, scr->screen))
+	if (scr->w_visual == DefaultVisual(dpy, scr->screen)) {
 		XCopyArea(dpy, win, tmp, scr->copy_gc, 0, 0, wPreferences.icon_size, wPreferences.icon_size, 0, 0);
-	else {
+	} else {
 		XImage *image;
 
 		image = XGetImage(dpy, win, 0, 0, wPreferences.icon_size,
@@ -75,6 +76,7 @@ void DoKaboom(WScreen * scr, Window win, int x, int y)
 			XUnmapWindow(dpy, win);
 			return;
 		}
+
 		XPutImage(dpy, tmp, scr->copy_gc, image, 0, 0, 0, 0,
 			  wPreferences.icon_size, wPreferences.icon_size);
 		XDestroyImage(image);
@@ -136,8 +138,9 @@ void DoKaboom(WScreen * scr, Window win, int x, int y)
 #endif	/* NORMAL_ICON_KABOOM */
 }
 
-Pixmap MakeGhostIcon(WScreen * scr, Drawable drawable)
+Pixmap MakeGhostIcon(virtual_screen *vscr, Drawable drawable)
 {
+	WScreen *scr = vscr->screen_ptr;
 	RImage *back;
 	RColor color;
 	Pixmap pixmap;

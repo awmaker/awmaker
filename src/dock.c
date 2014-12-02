@@ -4232,9 +4232,9 @@ static void handleDockMove(WDock *dock, WAppIcon *aicon, XEvent *event)
 
 		if (superfluous) {
 			if (icon->pixmap!=None)
-				ghost = MakeGhostIcon(scr, icon->pixmap);
+				ghost = MakeGhostIcon(vscr, icon->pixmap);
 			else
-				ghost = MakeGhostIcon(scr, icon->core->window);
+				ghost = MakeGhostIcon(vscr, icon->core->window);
 
 			XSetWindowBackgroundPixmap(dpy, scr->dock_shadow, ghost);
 			XClearWindow(dpy, scr->dock_shadow);
