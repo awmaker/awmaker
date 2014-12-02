@@ -21,9 +21,10 @@
 #ifndef WMSUPERFLUOUS_H
 #define WMSUPERFLUOUS_H
 
-#include "dock.h"
+#include "window.h"
 
 void DoKaboom(WScreen *scr, Window win, int x, int y);
 Pixmap MakeGhostIcon(WScreen *scr, Drawable drawable);
 void DoWindowBirth(WWindow *wwin);
+
 #endif
