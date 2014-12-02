@@ -339,7 +339,6 @@ RImage *wIconValidateIconSize(RImage *icon, int max_size)
 
 int wIconChangeImageFile(WIcon *icon, const char *file)
 {
-	WScreen *scr = icon->core->vscr->screen_ptr;
 	char *path;
 	RImage *image = NULL;
 
@@ -352,7 +351,7 @@ int wIconChangeImageFile(WIcon *icon, const char *file)
 	if (!path)
 		return 0;
 
-	image = get_rimage_from_file(scr, path, wPreferences.icon_size);
+	image = get_rimage_from_file(icon->core->vscr, path, wPreferences.icon_size);
 	if (!image) {
 		wfree(path);
 		return 0;
@@ -659,11 +658,12 @@ static void get_rimage_icon_from_user_icon(WIcon *icon)
 
 static void get_rimage_icon_from_default_icon(WIcon *icon)
 {
-	WScreen *scr = icon->core->vscr->screen_ptr;
+	virtual_screen *vscr = icon->core->vscr;
+	WScreen *scr = vscr->screen_ptr;
 
 	/* If the icon don't have image, we should use the default image. */
 	if (!scr->def_icon_rimage)
-		scr->def_icon_rimage = get_default_image(scr);
+		scr->def_icon_rimage = get_default_image(vscr);
 
 	/* Remove the icon image */
 	unset_icon_image(icon);
@@ -919,7 +919,7 @@ void set_icon_image_from_database(WIcon *icon, const char *wm_instance, const ch
 
 void map_icon_image(WIcon *icon)
 {
-	icon->file_image = get_rimage_from_file(icon->core->vscr->screen_ptr, icon->file_name, wPreferences.icon_size);
+	icon->file_image = get_rimage_from_file(icon->core->vscr, icon->file_name, wPreferences.icon_size);
 
 	/* Update the icon, because icon could be NULL */
 	wIconUpdate(icon);

@@ -847,7 +847,7 @@ static WMPropList *readGlobalDomain(const char *domainName, Bool requireDictiona
 }
 
 #if defined(GLOBAL_PREAMBLE_MENU_FILE) || defined(GLOBAL_EPILOGUE_MENU_FILE)
-static void prependMenu(WMPropList * destarr, WMPropList * array)
+static void prependMenu(WMPropList *destarr, WMPropList *array)
 {
 	WMPropList *item;
 	int i;
@@ -859,7 +859,7 @@ static void prependMenu(WMPropList * destarr, WMPropList * array)
 	}
 }
 
-static void appendMenu(WMPropList * destarr, WMPropList * array)
+static void appendMenu(WMPropList *destarr, WMPropList *array)
 {
 	WMPropList *item;
 	int i;
@@ -872,7 +872,7 @@ static void appendMenu(WMPropList * destarr, WMPropList * array)
 }
 #endif
 
-void wDefaultsMergeGlobalMenus(WDDomain * menuDomain)
+void wDefaultsMergeGlobalMenus(WDDomain *menuDomain)
 {
 	WMPropList *menu = menuDomain->dictionary;
 	WMPropList *submenu;
@@ -960,7 +960,7 @@ WDDomain *wDefaultsInitDomain(const char *domain, Bool requireDictionary)
 	return db;
 }
 
-void wReadStaticDefaults(WMPropList * dict)
+void wReadStaticDefaults(WMPropList *dict)
 {
 	WMPropList *plvalue;
 	WDefaultEntry *entry;
@@ -988,7 +988,7 @@ void wReadStaticDefaults(WMPropList * dict)
 	}
 }
 
-void wDefaultsCheckDomains(void* arg)
+void wDefaultsCheckDomains(void *arg)
 {
 	WScreen *scr;
 	struct stat stbuf;
@@ -1025,7 +1025,7 @@ void wDefaultsCheckDomains(void* arg)
 				for (i = 0; i < w_global.screen_count; i++) {
 					scr = wScreenWithNumber(i);
 					if (scr)
-						wReadDefaults(scr, dict);
+						wReadDefaults(scr->vscr, dict);
 				}
 
 				if (w_global.domain.wmaker->dictionary)
@@ -1068,7 +1068,7 @@ void wDefaultsCheckDomains(void* arg)
 				for (i = 0; i < w_global.screen_count; i++) {
 					scr = wScreenWithNumber(i);
 					if (scr) {
-						wDefaultUpdateIcons(scr);
+						wDefaultUpdateIcons(scr->vscr);
 
 						/* Update the panel image if changed */
 						/* Don't worry. If the image is the same these
@@ -1112,7 +1112,7 @@ void wDefaultsCheckDomains(void* arg)
 #endif
 }
 
-void wReadDefaults(WScreen * scr, WMPropList * new_dict)
+void wReadDefaults(virtual_screen *vscr, WMPropList *new_dict)
 {
 	WMPropList *plvalue, *old_value;
 	WDefaultEntry *entry;
@@ -1152,7 +1152,7 @@ void wReadDefaults(WScreen * scr, WMPropList * new_dict)
 			/* value has changed */
 		} else {
 			if (strcmp(entry->key, "WorkspaceBack") == 0
-			    && update_workspace_back && scr->flags.backimage_helper_launched) {
+			    && update_workspace_back && vscr->screen_ptr->flags.backimage_helper_launched) {
 			} else {
 				/* value was not changed since last time */
 				continue;
@@ -1161,7 +1161,7 @@ void wReadDefaults(WScreen * scr, WMPropList * new_dict)
 
 		if (plvalue) {
 			/* convert data */
-			if ((*entry->convert) (scr, entry, plvalue, entry->addr, &tdata)) {
+			if ((*entry->convert) (vscr->screen_ptr, entry, plvalue, entry->addr, &tdata)) {
 				/*
 				 * If the WorkspaceSpecificBack data has been changed
 				 * so that the helper will be launched now, we must be
@@ -1169,12 +1169,11 @@ void wReadDefaults(WScreen * scr, WMPropList * new_dict)
 				 * to the helper.
 				 */
 				if (strcmp(entry->key, "WorkspaceSpecificBack") == 0 &&
-				    !scr->flags.backimage_helper_launched)
+				    !vscr->screen_ptr->flags.backimage_helper_launched)
 					update_workspace_back = 1;
 
 				if (entry->update)
-					needs_refresh |= (*entry->update) (scr, entry, tdata, entry->extra_data);
-
+					needs_refresh |= (*entry->update) (vscr->screen_ptr, entry, tdata, entry->extra_data);
 			}
 		}
 	}
@@ -1245,23 +1244,23 @@ void wReadDefaults(WScreen * scr, WMPropList * new_dict)
 			WMPostNotificationName(WNIconTileSettingsChanged, NULL, NULL);
 
 		if (needs_refresh & REFRESH_WORKSPACE_MENU) {
-			if (scr->vscr->workspace.menu)
-				wWorkspaceMenuUpdate(scr->vscr, scr->vscr->workspace.menu);
-			if (scr->vscr->clip.ws_menu)
-				wWorkspaceMenuUpdate(scr->vscr, scr->vscr->clip.ws_menu);
-			if (scr->vscr->workspace.submenu)
-				scr->vscr->workspace.submenu->flags.realized = 0;
-			if (scr->vscr->clip.submenu)
-				scr->vscr->clip.submenu->flags.realized = 0;
+			if (vscr->workspace.menu)
+				wWorkspaceMenuUpdate(vscr, vscr->workspace.menu);
+			if (vscr->clip.ws_menu)
+				wWorkspaceMenuUpdate(vscr, vscr->clip.ws_menu);
+			if (vscr->workspace.submenu)
+				vscr->workspace.submenu->flags.realized = 0;
+			if (vscr->clip.submenu)
+				vscr->clip.submenu->flags.realized = 0;
 		}
 	}
 }
 
-void wDefaultUpdateIcons(WScreen *scr)
+void wDefaultUpdateIcons(virtual_screen *vscr)
 {
 	WAppIcon *aicon = w_global.app_icon_list;
 	WDrawerChain *dc;
-	WWindow *wwin = scr->focused_window;
+	WWindow *wwin = vscr->screen_ptr->focused_window;
 
 	while (aicon) {
 		/* Get the application icon, default included */
@@ -1273,7 +1272,7 @@ void wDefaultUpdateIcons(WScreen *scr)
 	if (!wPreferences.flags.noclip || wPreferences.flags.clip_merged_in_dock)
 		wClipIconPaint();
 
-	for (dc = scr->vscr->drawer.drawers; dc != NULL; dc = dc->next)
+	for (dc = vscr->drawer.drawers; dc != NULL; dc = dc->next)
 		wDrawerIconPaint(dc->adrawer->icon_array[0]);
 
 	while (wwin) {
@@ -1294,7 +1293,7 @@ void wDefaultUpdateIcons(WScreen *scr)
     } else var = WMGetFromPLString(value)\
 
 
-static int string2index(WMPropList *key, WMPropList *val, const char *def, WOptionEnumeration * values)
+static int string2index(WMPropList *key, WMPropList *val, const char *def, WOptionEnumeration *values)
 {
 	char *str;
 	WOptionEnumeration *v;
@@ -1334,7 +1333,7 @@ static int string2index(WMPropList *key, WMPropList *val, const char *def, WOpti
  * ret - is the address to store a pointer to a temporary buffer. ret
  * 	must not be freed and is used by the set functions
  */
-static int getBool(WScreen * scr, WDefaultEntry * entry, WMPropList * value, void *addr, void **ret)
+static int getBool(WScreen *scr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
 {
 	static char data;
 	const char *val;
@@ -1380,7 +1379,7 @@ static int getBool(WScreen * scr, WDefaultEntry * entry, WMPropList * value, voi
 	return True;
 }
 
-static int getInt(WScreen * scr, WDefaultEntry * entry, WMPropList * value, void *addr, void **ret)
+static int getInt(WScreen *scr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
 {
 	static int data;
 	const char *val;
@@ -1407,7 +1406,7 @@ static int getInt(WScreen * scr, WDefaultEntry * entry, WMPropList * value, void
 	return True;
 }
 
-static int getCoord(WScreen * scr, WDefaultEntry * entry, WMPropList * value, void *addr, void **ret)
+static int getCoord(WScreen *scr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
 {
 	static WCoord data;
 	char *val_x, *val_y;
@@ -1483,7 +1482,7 @@ static int getCoord(WScreen * scr, WDefaultEntry * entry, WMPropList * value, vo
 	return True;
 }
 
-static int getPropList(WScreen * scr, WDefaultEntry * entry, WMPropList * value, void *addr, void **ret)
+static int getPropList(WScreen *scr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) scr;
@@ -1497,7 +1496,7 @@ static int getPropList(WScreen * scr, WDefaultEntry * entry, WMPropList * value,
 	return True;
 }
 
-static int getPathList(WScreen * scr, WDefaultEntry * entry, WMPropList * value, void *addr, void **ret)
+static int getPathList(WScreen *scr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
 {
 	static char *data;
 	int i, count, len;
@@ -1566,7 +1565,7 @@ static int getPathList(WScreen * scr, WDefaultEntry * entry, WMPropList * value,
 	return True;
 }
 
-static int getEnum(WScreen * scr, WDefaultEntry * entry, WMPropList * value, void *addr, void **ret)
+static int getEnum(WScreen *scr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
 {
 	static signed char data;
 
@@ -1603,7 +1602,7 @@ static int getEnum(WScreen * scr, WDefaultEntry * entry, WMPropList * value, voi
  * (function <lib> <function> ...)
  */
 
-static WTexture *parse_texture(WScreen * scr, WMPropList * pl)
+static WTexture *parse_texture(WScreen *scr, WMPropList *pl)
 {
 	WMPropList *elem;
 	char *val;
@@ -1814,9 +1813,9 @@ static WTexture *parse_texture(WScreen * scr, WMPropList * pl)
 
 		/* get color */
 		elem = WMGetFromPLArray(pl, 2);
-		if (!elem || !WMIsPLString(elem)) {
+		if (!elem || !WMIsPLString(elem))
 			return NULL;
-		}
+
 		val = WMGetFromPLString(elem);
 
 		if (!XParseColor(dpy, scr->w_colormap, val, &color)) {
@@ -1828,6 +1827,7 @@ static WTexture *parse_texture(WScreen * scr, WMPropList * pl)
 		elem = WMGetFromPLArray(pl, 1);
 		if (!elem || !WMIsPLString(elem))
 			return NULL;
+
 		val = WMGetFromPLString(elem);
 
 		texture = (WTexture *) wTextureMakePixmap(scr, type, val, &color);
@@ -1912,7 +1912,7 @@ static WTexture *parse_texture(WScreen * scr, WMPropList * pl)
 	return texture;
 }
 
-static int getTexture(WScreen * scr, WDefaultEntry * entry, WMPropList * value, void *addr, void **ret)
+static int getTexture(WScreen *scr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
 {
 	static WTexture *texture;
 	int changed = 0;
@@ -1967,7 +1967,7 @@ static int getTexture(WScreen * scr, WDefaultEntry * entry, WMPropList * value, 
 	return True;
 }
 
-static int getWSBackground(WScreen * scr, WDefaultEntry * entry, WMPropList * value, void *addr, void **ret)
+static int getWSBackground(WScreen *scr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
 {
 	WMPropList *elem;
 	int changed = 0;
@@ -2017,7 +2017,7 @@ static int getWSBackground(WScreen * scr, WDefaultEntry * entry, WMPropList * va
 }
 
 static int
-getWSSpecificBackground(WScreen * scr, WDefaultEntry * entry, WMPropList * value, void *addr, void **ret)
+getWSSpecificBackground(WScreen *scr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
 {
 	WMPropList *elem;
 	int nelem;
@@ -2074,7 +2074,7 @@ getWSSpecificBackground(WScreen * scr, WDefaultEntry * entry, WMPropList * value
 	return True;
 }
 
-static int getFont(WScreen * scr, WDefaultEntry * entry, WMPropList * value, void *addr, void **ret)
+static int getFont(WScreen *scr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
 {
 	static WMFont *font;
 	const char *val;
@@ -2101,7 +2101,7 @@ static int getFont(WScreen * scr, WDefaultEntry * entry, WMPropList * value, voi
 	return True;
 }
 
-static int getColor(WScreen * scr, WDefaultEntry * entry, WMPropList * value, void *addr, void **ret)
+static int getColor(WScreen *scr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
 {
 	static XColor color;
 	const char *val;
@@ -2135,7 +2135,7 @@ static int getColor(WScreen * scr, WDefaultEntry * entry, WMPropList * value, vo
 	return True;
 }
 
-static int getKeybind(WScreen * scr, WDefaultEntry * entry, WMPropList * value, void *addr, void **ret)
+static int getKeybind(WScreen *scr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
 {
 	static WShortKey shortcut;
 	KeySym ksym;
@@ -2197,7 +2197,7 @@ static int getKeybind(WScreen * scr, WDefaultEntry * entry, WMPropList * value, 
 	return True;
 }
 
-static int getModMask(WScreen * scr, WDefaultEntry * entry, WMPropList * value, void *addr, void **ret)
+static int getModMask(WScreen *scr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
 {
 	static int mask;
 	const char *str;
@@ -2338,7 +2338,7 @@ static void check_bitmap_status(int status, const char *filename, Pixmap bitmap)
  * (builtin, <cursor_name>)
  * (bitmap, <cursor_bitmap>, <cursor_mask>)
  */
-static int parse_cursor(WScreen * scr, WMPropList * pl, Cursor * cursor)
+static int parse_cursor(WScreen *scr, WMPropList *pl, Cursor *cursor)
 {
 	WMPropList *elem;
 	char *val;
@@ -2346,13 +2346,13 @@ static int parse_cursor(WScreen * scr, WMPropList * pl, Cursor * cursor)
 	int status = 0;
 
 	nelem = WMGetPropListItemCount(pl);
-	if (nelem < 1) {
+	if (nelem < 1)
 		return (status);
-	}
+
 	elem = WMGetFromPLArray(pl, 0);
-	if (!elem || !WMIsPLString(elem)) {
+	if (!elem || !WMIsPLString(elem))
 		return (status);
-	}
+
 	val = WMGetFromPLString(elem);
 
 	if (strcasecmp(val, "none") == 0) {
@@ -2367,9 +2367,9 @@ static int parse_cursor(WScreen * scr, WMPropList * pl, Cursor * cursor)
 			return (status);
 		}
 		elem = WMGetFromPLArray(pl, 1);
-		if (!elem || !WMIsPLString(elem)) {
+		if (!elem || !WMIsPLString(elem))
 			return (status);
-		}
+
 		val = WMGetFromPLString(elem);
 
 		for (i = 0; cursor_table[i].name != NULL; i++) {
@@ -2378,6 +2378,7 @@ static int parse_cursor(WScreen * scr, WMPropList * pl, Cursor * cursor)
 				break;
 			}
 		}
+
 		if (CURSOR_ID_NONE == cursor_id) {
 			wwarning(_("unknown builtin cursor name \"%s\""), val);
 		} else {
@@ -2400,9 +2401,9 @@ static int parse_cursor(WScreen * scr, WMPropList * pl, Cursor * cursor)
 			return (status);
 		}
 		elem = WMGetFromPLArray(pl, 1);
-		if (!elem || !WMIsPLString(elem)) {
+		if (!elem || !WMIsPLString(elem))
 			return (status);
-		}
+
 		val = WMGetFromPLString(elem);
 		bitmap_name = FindImage(wPreferences.pixmap_path, val);
 		if (!bitmap_name) {
@@ -2439,7 +2440,7 @@ static int parse_cursor(WScreen * scr, WMPropList * pl, Cursor * cursor)
 	return (status);
 }
 
-static int getCursor(WScreen * scr, WDefaultEntry * entry, WMPropList * value, void *addr, void **ret)
+static int getCursor(WScreen *scr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
 {
 	static Cursor cursor;
 	int status;
@@ -2480,7 +2481,7 @@ static int getCursor(WScreen * scr, WDefaultEntry * entry, WMPropList * value, v
 #undef CURSOR_ID_NONE
 
 /* ---------------- value setting functions --------------- */
-static int setJustify(WScreen * scr, WDefaultEntry * entry, void *tdata, void *extra_data)
+static int setJustify(WScreen *scr, WDefaultEntry *entry, void *tdata, void *extra_data)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) scr;
@@ -2491,7 +2492,7 @@ static int setJustify(WScreen * scr, WDefaultEntry * entry, void *tdata, void *e
 	return REFRESH_WINDOW_TITLE_COLOR;
 }
 
-static int setClearance(WScreen * scr, WDefaultEntry * entry, void *bar, void *foo)
+static int setClearance(WScreen *scr, WDefaultEntry *entry, void *bar, void *foo)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) scr;
@@ -2502,7 +2503,7 @@ static int setClearance(WScreen * scr, WDefaultEntry * entry, void *bar, void *f
 	return REFRESH_WINDOW_FONT | REFRESH_BUTTON_IMAGES | REFRESH_MENU_TITLE_FONT | REFRESH_MENU_FONT;
 }
 
-static int setIfDockPresent(WScreen * scr, WDefaultEntry * entry, void *tdata, void *extra_data)
+static int setIfDockPresent(WScreen *scr, WDefaultEntry *entry, void *tdata, void *extra_data)
 {
 	char *flag = tdata;
 	long which = (long) extra_data;
@@ -2571,7 +2572,7 @@ static int setStickyIcons(WScreen *scr, WDefaultEntry *entry, void *bar, void *f
 	return 0;
 }
 
-static int setIconTile(WScreen * scr, WDefaultEntry * entry, void *tdata, void *foo)
+static int setIconTile(WScreen *scr, WDefaultEntry *entry, void *tdata, void *foo)
 {
 	Pixmap pixmap;
 	RImage *img;
@@ -2636,7 +2637,7 @@ static int setIconTile(WScreen * scr, WDefaultEntry * entry, void *tdata, void *
 	return (reset ? REFRESH_ICON_TILE : 0);
 }
 
-static int setWinTitleFont(WScreen * scr, WDefaultEntry * entry, void *tdata, void *foo)
+static int setWinTitleFont(WScreen *scr, WDefaultEntry *entry, void *tdata, void *foo)
 {
 	WMFont *font = tdata;
 
@@ -2652,7 +2653,7 @@ static int setWinTitleFont(WScreen * scr, WDefaultEntry * entry, void *tdata, vo
 	return REFRESH_WINDOW_FONT | REFRESH_BUTTON_IMAGES;
 }
 
-static int setMenuTitleFont(WScreen * scr, WDefaultEntry * entry, void *tdata, void *foo)
+static int setMenuTitleFont(WScreen *scr, WDefaultEntry *entry, void *tdata, void *foo)
 {
 	WMFont *font = tdata;
 
@@ -2669,7 +2670,7 @@ static int setMenuTitleFont(WScreen * scr, WDefaultEntry * entry, void *tdata, v
 	return REFRESH_MENU_TITLE_FONT;
 }
 
-static int setMenuTextFont(WScreen * scr, WDefaultEntry * entry, void *tdata, void *foo)
+static int setMenuTextFont(WScreen *scr, WDefaultEntry *entry, void *tdata, void *foo)
 {
 	WMFont *font = tdata;
 
@@ -2685,7 +2686,7 @@ static int setMenuTextFont(WScreen * scr, WDefaultEntry * entry, void *tdata, vo
 	return REFRESH_MENU_FONT;
 }
 
-static int setIconTitleFont(WScreen * scr, WDefaultEntry * entry, void *tdata, void *foo)
+static int setIconTitleFont(WScreen *scr, WDefaultEntry *entry, void *tdata, void *foo)
 {
 	WMFont *font = tdata;
 
@@ -2702,7 +2703,7 @@ static int setIconTitleFont(WScreen * scr, WDefaultEntry * entry, void *tdata, v
 	return REFRESH_ICON_FONT;
 }
 
-static int setClipTitleFont(WScreen * scr, WDefaultEntry * entry, void *tdata, void *foo)
+static int setClipTitleFont(WScreen *scr, WDefaultEntry *entry, void *tdata, void *foo)
 {
 	WMFont *font = tdata;
 
@@ -2736,7 +2737,7 @@ static int setLargeDisplayFont(WScreen *scr, WDefaultEntry *entry, void *tdata, 
 	return 0;
 }
 
-static int setHightlight(WScreen * scr, WDefaultEntry * entry, void *tdata, void *foo)
+static int setHightlight(WScreen *scr, WDefaultEntry *entry, void *tdata, void *foo)
 {
 	XColor *color = tdata;
 
@@ -2754,7 +2755,7 @@ static int setHightlight(WScreen * scr, WDefaultEntry * entry, void *tdata, void
 	return REFRESH_MENU_COLOR;
 }
 
-static int setHightlightText(WScreen * scr, WDefaultEntry * entry, void *tdata, void *foo)
+static int setHightlightText(WScreen *scr, WDefaultEntry *entry, void *tdata, void *foo)
 {
 	XColor *color = tdata;
 
@@ -2772,7 +2773,7 @@ static int setHightlightText(WScreen * scr, WDefaultEntry * entry, void *tdata, 
 	return REFRESH_MENU_COLOR;
 }
 
-static int setClipTitleColor(WScreen * scr, WDefaultEntry * entry, void *tdata, void *extra_data)
+static int setClipTitleColor(WScreen *scr, WDefaultEntry *entry, void *tdata, void *extra_data)
 {
 	XColor *color = tdata;
 	long widx = (long) extra_data;
@@ -2789,7 +2790,7 @@ static int setClipTitleColor(WScreen * scr, WDefaultEntry * entry, void *tdata, 
 	return REFRESH_ICON_TITLE_COLOR;
 }
 
-static int setWTitleColor(WScreen * scr, WDefaultEntry * entry, void *tdata, void *extra_data)
+static int setWTitleColor(WScreen *scr, WDefaultEntry *entry, void *tdata, void *extra_data)
 {
 	XColor *color = tdata;
 	long widx = (long) extra_data;
@@ -2808,7 +2809,7 @@ static int setWTitleColor(WScreen * scr, WDefaultEntry * entry, void *tdata, voi
 	return REFRESH_WINDOW_TITLE_COLOR;
 }
 
-static int setMenuTitleColor(WScreen * scr, WDefaultEntry * entry, void *tdata, void *extra_data)
+static int setMenuTitleColor(WScreen *scr, WDefaultEntry *entry, void *tdata, void *extra_data)
 {
 	XColor *color = tdata;
 
@@ -2826,7 +2827,7 @@ static int setMenuTitleColor(WScreen * scr, WDefaultEntry * entry, void *tdata, 
 	return REFRESH_MENU_TITLE_COLOR;
 }
 
-static int setMenuTextColor(WScreen * scr, WDefaultEntry * entry, void *tdata, void *foo)
+static int setMenuTextColor(WScreen *scr, WDefaultEntry *entry, void *tdata, void *foo)
 {
 	XColor *color = tdata;
 
@@ -2850,7 +2851,7 @@ static int setMenuTextColor(WScreen * scr, WDefaultEntry * entry, void *tdata, v
 	return REFRESH_MENU_COLOR;
 }
 
-static int setMenuDisabledColor(WScreen * scr, WDefaultEntry * entry, void *tdata, void *foo)
+static int setMenuDisabledColor(WScreen *scr, WDefaultEntry *entry, void *tdata, void *foo)
 {
 	XColor *color = tdata;
 
@@ -2874,7 +2875,7 @@ static int setMenuDisabledColor(WScreen * scr, WDefaultEntry * entry, void *tdat
 	return REFRESH_MENU_COLOR;
 }
 
-static int setIconTitleColor(WScreen * scr, WDefaultEntry * entry, void *tdata, void *foo)
+static int setIconTitleColor(WScreen *scr, WDefaultEntry *entry, void *tdata, void *foo)
 {
 	XColor *color = tdata;
 
@@ -2891,7 +2892,7 @@ static int setIconTitleColor(WScreen * scr, WDefaultEntry * entry, void *tdata, 
 	return REFRESH_ICON_TITLE_COLOR;
 }
 
-static int setIconTitleBack(WScreen * scr, WDefaultEntry * entry, void *tdata, void *foo)
+static int setIconTitleBack(WScreen *scr, WDefaultEntry *entry, void *tdata, void *foo)
 {
 	XColor *color = tdata;
 
@@ -2907,7 +2908,7 @@ static int setIconTitleBack(WScreen * scr, WDefaultEntry * entry, void *tdata, v
 	return REFRESH_ICON_TITLE_BACK;
 }
 
-static int setFrameBorderWidth(WScreen * scr, WDefaultEntry * entry, void *tdata, void *foo)
+static int setFrameBorderWidth(WScreen *scr, WDefaultEntry *entry, void *tdata, void *foo)
 {
 	int *value = tdata;
 
@@ -2920,7 +2921,7 @@ static int setFrameBorderWidth(WScreen * scr, WDefaultEntry * entry, void *tdata
 	return REFRESH_FRAME_BORDER;
 }
 
-static int setFrameBorderColor(WScreen * scr, WDefaultEntry * entry, void *tdata, void *foo)
+static int setFrameBorderColor(WScreen *scr, WDefaultEntry *entry, void *tdata, void *foo)
 {
 	XColor *color = tdata;
 
@@ -2954,7 +2955,7 @@ static int setFrameFocusedBorderColor(WScreen *scr, WDefaultEntry *entry, void *
 	return REFRESH_FRAME_BORDER;
 }
 
-static int setFrameSelectedBorderColor(WScreen * scr, WDefaultEntry * entry, void *tdata, void *foo)
+static int setFrameSelectedBorderColor(WScreen *scr, WDefaultEntry *entry, void *tdata, void *foo)
 {
 	XColor *color = tdata;
 
@@ -2971,7 +2972,7 @@ static int setFrameSelectedBorderColor(WScreen * scr, WDefaultEntry * entry, voi
 	return REFRESH_FRAME_BORDER;
 }
 
-static int setWorkspaceSpecificBack(WScreen * scr, WDefaultEntry * entry, void *tdata, void *bar)
+static int setWorkspaceSpecificBack(WScreen *scr, WDefaultEntry *entry, void *tdata, void *bar)
 {
 	WMPropList *value = tdata;
 	WMPropList *val;
@@ -3020,7 +3021,7 @@ static int setWorkspaceSpecificBack(WScreen * scr, WDefaultEntry * entry, void *
 	return 0;
 }
 
-static int setWorkspaceBack(WScreen * scr, WDefaultEntry * entry, void *tdata, void *bar)
+static int setWorkspaceBack(WScreen *scr, WDefaultEntry *entry, void *tdata, void *bar)
 {
 	WMPropList *value = tdata;
 
@@ -3071,7 +3072,7 @@ static int setWorkspaceBack(WScreen * scr, WDefaultEntry * entry, void *tdata, v
 	return 0;
 }
 
-static int setWidgetColor(WScreen * scr, WDefaultEntry * entry, void *tdata, void *foo)
+static int setWidgetColor(WScreen *scr, WDefaultEntry *entry, void *tdata, void *foo)
 {
 	WTexture **texture = tdata;
 
@@ -3079,15 +3080,15 @@ static int setWidgetColor(WScreen * scr, WDefaultEntry * entry, void *tdata, voi
 	(void) entry;
 	(void) foo;
 
-	if (scr->widget_texture) {
+	if (scr->widget_texture)
 		wTextureDestroy(scr, (WTexture *) scr->widget_texture);
-	}
+
 	scr->widget_texture = *(WTexSolid **) texture;
 
 	return 0;
 }
 
-static int setFTitleBack(WScreen * scr, WDefaultEntry * entry, void *tdata, void *foo)
+static int setFTitleBack(WScreen *scr, WDefaultEntry *entry, void *tdata, void *foo)
 {
 	WTexture **texture = tdata;
 
@@ -3095,15 +3096,15 @@ static int setFTitleBack(WScreen * scr, WDefaultEntry * entry, void *tdata, void
 	(void) entry;
 	(void) foo;
 
-	if (scr->window_title_texture[WS_FOCUSED]) {
+	if (scr->window_title_texture[WS_FOCUSED])
 		wTextureDestroy(scr, scr->window_title_texture[WS_FOCUSED]);
-	}
+
 	scr->window_title_texture[WS_FOCUSED] = *texture;
 
 	return REFRESH_WINDOW_TEXTURES;
 }
 
-static int setPTitleBack(WScreen * scr, WDefaultEntry * entry, void *tdata, void *foo)
+static int setPTitleBack(WScreen *scr, WDefaultEntry *entry, void *tdata, void *foo)
 {
 	WTexture **texture = tdata;
 
@@ -3119,7 +3120,7 @@ static int setPTitleBack(WScreen * scr, WDefaultEntry * entry, void *tdata, void
 	return REFRESH_WINDOW_TEXTURES;
 }
 
-static int setUTitleBack(WScreen * scr, WDefaultEntry * entry, void *tdata, void *foo)
+static int setUTitleBack(WScreen *scr, WDefaultEntry *entry, void *tdata, void *foo)
 {
 	WTexture **texture = tdata;
 
@@ -3127,15 +3128,15 @@ static int setUTitleBack(WScreen * scr, WDefaultEntry * entry, void *tdata, void
 	(void) entry;
 	(void) foo;
 
-	if (scr->window_title_texture[WS_UNFOCUSED]) {
+	if (scr->window_title_texture[WS_UNFOCUSED])
 		wTextureDestroy(scr, scr->window_title_texture[WS_UNFOCUSED]);
-	}
+
 	scr->window_title_texture[WS_UNFOCUSED] = *texture;
 
 	return REFRESH_WINDOW_TEXTURES;
 }
 
-static int setResizebarBack(WScreen * scr, WDefaultEntry * entry, void *tdata, void *foo)
+static int setResizebarBack(WScreen *scr, WDefaultEntry *entry, void *tdata, void *foo)
 {
 	WTexture **texture = tdata;
 
@@ -3151,7 +3152,7 @@ static int setResizebarBack(WScreen * scr, WDefaultEntry * entry, void *tdata, v
 	return REFRESH_WINDOW_TEXTURES;
 }
 
-static int setMenuTitleBack(WScreen * scr, WDefaultEntry * entry, void *tdata, void *foo)
+static int setMenuTitleBack(WScreen *scr, WDefaultEntry *entry, void *tdata, void *foo)
 {
 	WTexture **texture = tdata;
 
@@ -3167,7 +3168,7 @@ static int setMenuTitleBack(WScreen * scr, WDefaultEntry * entry, void *tdata, v
 	return REFRESH_MENU_TITLE_TEXTURE;
 }
 
-static int setMenuTextBack(WScreen * scr, WDefaultEntry * entry, void *tdata, void *foo)
+static int setMenuTextBack(WScreen *scr, WDefaultEntry *entry, void *tdata, void *foo)
 {
 	WTexture **texture = tdata;
 
@@ -3186,7 +3187,7 @@ static int setMenuTextBack(WScreen * scr, WDefaultEntry * entry, void *tdata, vo
 	return REFRESH_MENU_TEXTURE;
 }
 
-static int setKeyGrab(WScreen * scr, WDefaultEntry * entry, void *tdata, void *extra_data)
+static int setKeyGrab(WScreen *scr, WDefaultEntry *entry, void *tdata, void *extra_data)
 {
 	WShortKey *shortcut = tdata;
 	WWindow *wwin;
@@ -3202,9 +3203,9 @@ static int setKeyGrab(WScreen * scr, WDefaultEntry * entry, void *tdata, void *e
 	while (wwin != NULL) {
 		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
 
-		if (!WFLAGP(wwin, no_bind_keys)) {
+		if (!WFLAGP(wwin, no_bind_keys))
 			wWindowSetKeyGrabs(wwin);
-		}
+
 		wwin = wwin->prev;
 	}
 
@@ -3219,7 +3220,7 @@ static int setKeyGrab(WScreen * scr, WDefaultEntry * entry, void *tdata, void *e
 	return 0;
 }
 
-static int setIconPosition(WScreen * scr, WDefaultEntry * entry, void *bar, void *foo)
+static int setIconPosition(WScreen *scr, WDefaultEntry *entry, void *bar, void *foo)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
@@ -3232,7 +3233,7 @@ static int setIconPosition(WScreen * scr, WDefaultEntry * entry, void *bar, void
 	return 0;
 }
 
-static int updateUsableArea(WScreen * scr, WDefaultEntry * entry, void *bar, void *foo)
+static int updateUsableArea(WScreen *scr, WDefaultEntry *entry, void *bar, void *foo)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
@@ -3244,7 +3245,7 @@ static int updateUsableArea(WScreen * scr, WDefaultEntry * entry, void *bar, voi
 	return 0;
 }
 
-static int setMenuStyle(WScreen * scr, WDefaultEntry * entry, void *tdata, void *foo)
+static int setMenuStyle(WScreen *scr, WDefaultEntry *entry, void *tdata, void *foo)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) scr;
@@ -3255,7 +3256,7 @@ static int setMenuStyle(WScreen * scr, WDefaultEntry * entry, void *tdata, void 
 	return REFRESH_MENU_TEXTURE;
 }
 
-static RImage *chopOffImage(RImage * image, int x, int y, int w, int h)
+static RImage *chopOffImage(RImage *image, int x, int y, int w, int h)
 {
 	RImage *img = RCreateImage(w, h, image->format == RRGBAFormat);
 
@@ -3264,7 +3265,7 @@ static RImage *chopOffImage(RImage * image, int x, int y, int w, int h)
 	return img;
 }
 
-static int setSwPOptions(WScreen * scr, WDefaultEntry * entry, void *tdata, void *foo)
+static int setSwPOptions(WScreen *scr, WDefaultEntry *entry, void *tdata, void *foo)
 {
 	WMPropList *array = tdata;
 	char *path;
@@ -3383,7 +3384,7 @@ static int setSwPOptions(WScreen * scr, WDefaultEntry * entry, void *tdata, void
 	return 0;
 }
 
-static int setModifierKeyLabels(WScreen *scr, WDefaultEntry * entry, void *tdata, void *foo)
+static int setModifierKeyLabels(WScreen *scr, WDefaultEntry *entry, void *tdata, void *foo)
 {
 	WMPropList *array = tdata;
 	int i;
@@ -3432,7 +3433,7 @@ static int setDoubleClick(WScreen *scr, WDefaultEntry *entry, void *tdata, void 
 	return 0;
 }
 
-static int setCursor(WScreen * scr, WDefaultEntry * entry, void *tdata, void *extra_data)
+static int setCursor(WScreen *scr, WDefaultEntry *entry, void *tdata, void *extra_data)
 {
 	Cursor *cursor = tdata;
 	long widx = (long) extra_data;

@@ -398,7 +398,7 @@ static void createPixmaps(WScreen * scr)
 
 void create_logo_image(WScreen *scr)
 {
-	RImage *image = get_icon_image(scr, "Logo", "WMPanel", 128);
+	RImage *image = get_icon_image(scr->vscr, "Logo", "WMPanel", 128);
 
 	if (!image) {
 		wwarning(_("could not load logo image for panels: %s"), RMessageForError(RErrorCode));
@@ -624,7 +624,7 @@ WScreen *wScreenInit(int screen_number)
 	scr->info_window = XCreateSimpleWindow(dpy, scr->root_win, 0, 0, 10, 10, 0, 0, 0);
 
 	/* read defaults for this screen */
-	wReadDefaults(scr, w_global.domain.wmaker->dictionary);
+	wReadDefaults(scr->vscr, w_global.domain.wmaker->dictionary);
 
 	{
 		XColor xcol;
