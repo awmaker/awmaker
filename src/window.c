@@ -1294,7 +1294,7 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 		wWindowSetKeyGrabs(wwin);
 
 	WMPostNotificationName(WMNManaged, wwin, NULL);
-	wColormapInstallForWindow(vscr->screen_ptr, vscr->screen_ptr->cmap_window);
+	wColormapInstallForWindow(vscr, vscr->screen_ptr->cmap_window);
 
 	/* Setup Notification Observers */
 	WMAddNotificationObserver(appearanceObserver, wwin, WNWindowAppearanceSettingsChanged, wwin);

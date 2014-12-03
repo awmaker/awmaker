@@ -942,7 +942,7 @@ static void handlePropertyNotify(XEvent * event)
 	}
 }
 
-static void handleClientMessage(XEvent * event)
+static void handleClientMessage(XEvent *event)
 {
 	WWindow *wwin;
 	WObjDescriptor *desc;
@@ -954,19 +954,21 @@ static void handleClientMessage(XEvent * event)
 		wwin = wWindowFor(event->xclient.window);
 		if (!wwin)
 			return;
+
 		if (!wwin->flags.miniaturized)
 			wIconifyWindow(wwin);
+
 	} else if (event->xclient.message_type == w_global.atom.wm.colormap_notify && event->xclient.format == 32) {
 		WScreen *scr = wScreenForRootWindow(event->xclient.window);
 
 		if (!scr)
 			return;
 
-		if (event->xclient.data.l[1] == 1) {	/* starting */
-			wColormapAllowClientInstallation(scr, True);
-		} else {	/* stopping */
-			wColormapAllowClientInstallation(scr, False);
-		}
+		if (event->xclient.data.l[1] == 1)	/* starting */
+			wColormapAllowClientInstallation(scr->vscr, True);
+		else					/* stopping */
+			wColormapAllowClientInstallation(scr->vscr, False);
+
 	} else if (event->xclient.message_type == w_global.atom.wmaker.command) {
 
 		char *command;
@@ -1122,7 +1124,7 @@ static void handleEnterNotify(XEvent * event)
 	wwin = wWindowFor(event->xcrossing.window);
 	if (!wwin) {
 		if (wPreferences.colormap_mode == WCM_POINTER)
-			wColormapInstallForWindow(scr, NULL);
+			wColormapInstallForWindow(scr->vscr, NULL);
 
 		if (scr->autoRaiseTimer && event->xcrossing.root == event->xcrossing.window) {
 			WMDeleteTimerHandler(scr->autoRaiseTimer);
@@ -1156,16 +1158,15 @@ static void handleEnterNotify(XEvent * event)
 		 * is colormap_follows_mouse */
 		if (wPreferences.colormap_mode == WCM_POINTER) {
 			if (wwin->client_win == event->xcrossing.window)
-				wColormapInstallForWindow(scr, wwin);
+				wColormapInstallForWindow(scr->vscr, wwin);
 			else
-				wColormapInstallForWindow(scr, NULL);
+				wColormapInstallForWindow(scr->vscr, NULL);
 		}
 	}
 
 	if (event->xcrossing.window == event->xcrossing.root
 	    && event->xcrossing.detail == NotifyNormal
 	    && event->xcrossing.detail != NotifyInferior && wPreferences.focus_mode != WKF_CLICK) {
-
 		wSetFocusTo(scr->vscr, scr->focused_window);
 	}
 #ifdef BALLOON_TEXT

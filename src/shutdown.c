@@ -172,7 +172,7 @@ void RestoreDesktop(WScreen * scr)
 
 	XUngrabServer(dpy);
 	XSetInputFocus(dpy, PointerRoot, RevertToParent, CurrentTime);
-	wColormapInstallForWindow(scr, NULL);
+	wColormapInstallForWindow(scr->vscr, NULL);
 	PropCleanUp(scr->root_win);
 	wNETWMCleanup(scr);
 	XSync(dpy, 0);

@@ -522,7 +522,7 @@ void wClientCheckProperty(WWindow *wwin, XPropertyEvent *event)
 				wWindowUpdateButtonImages(wwin);
 		} else if (event->atom == w_global.atom.wm.colormap_windows) {
 			GetColormapWindows(wwin);
-			wColormapInstallForWindow(wwin->vscr->screen_ptr, wwin);
+			wColormapInstallForWindow(wwin->vscr, wwin);
 		} else if (event->atom == w_global.atom.wmaker.menu) {
 			WApplication *wapp;
 

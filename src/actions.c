@@ -160,7 +160,7 @@ void wSetFocusTo(virtual_screen *vscr, WWindow *wwin)
 	if (wwin->flags.mapped && !WFLAGP(wwin, no_focusable)) {
 		/* install colormap if colormap mode is lock mode */
 		if (wPreferences.colormap_mode == WCM_CLICK)
-			wColormapInstallForWindow(vscr->screen_ptr, wwin);
+			wColormapInstallForWindow(vscr, wwin);
 
 		/* set input focus */
 		switch (wwin->focus_mode) {
