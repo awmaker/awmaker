@@ -1393,14 +1393,14 @@ static void handleKeyPress(XEvent *event)
 	case WKBD_ROOTMENU:
 		/*OpenRootMenu(scr, event->xkey.x_root, event->xkey.y_root, True); */
 		if (!CheckFullScreenWindowFocused(scr)) {
-			WMRect rect = wGetRectForHead(scr, wGetHeadForPointerLocation(scr));
+			WMRect rect = wGetRectForHead(scr->vscr, wGetHeadForPointerLocation(scr->vscr));
 			OpenRootMenu(scr->vscr, rect.pos.x + rect.size.width / 2, rect.pos.y + rect.size.height / 2,
 				     True);
 		}
 		break;
 	case WKBD_WINDOWLIST:
 		if (!CheckFullScreenWindowFocused(scr)) {
-			WMRect rect = wGetRectForHead(scr, wGetHeadForPointerLocation(scr));
+			WMRect rect = wGetRectForHead(scr->vscr, wGetHeadForPointerLocation(scr->vscr));
 			OpenSwitchMenu(scr->vscr, rect.pos.x + rect.size.width / 2, rect.pos.y + rect.size.height / 2,
 				       True);
 		}
@@ -1808,7 +1808,7 @@ static void handleMotionNotify(XEvent *event)
 
 	if (wPreferences.scrollable_menus) {
 		WMPoint p = wmkpoint(event->xmotion.x_root, event->xmotion.y_root);
-		WMRect rect = wGetRectForHead(scr, wGetHeadForPoint(scr, p));
+		WMRect rect = wGetRectForHead(scr->vscr, wGetHeadForPoint(scr->vscr, p));
 
 		if (scr->flags.jump_back_pending ||
 		    p.x <= (rect.pos.x + 1) ||

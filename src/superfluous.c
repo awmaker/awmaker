@@ -254,7 +254,7 @@ static int bounceDirection(WAppIcon *aicon)
 {
 	enum { left_e = 1, right_e = 2, top_e = 4, bottom_e = 8 };
 
-	WScreen *scr = aicon->icon->core->vscr->screen_ptr;
+	virtual_screen *vscr = aicon->icon->core->vscr;
 	WMRect rr, sr;
 	int l, r, t, b, h, v;
 	int dir = 0;
@@ -263,7 +263,7 @@ static int bounceDirection(WAppIcon *aicon)
 	rr.pos.y = aicon->y_pos;
 	rr.size.width = rr.size.height = 64;
 
-	sr = wGetRectForHead(scr, wGetHeadForRect(scr, rr));
+	sr = wGetRectForHead(vscr, wGetHeadForRect(vscr, rr));
 
 	l = rr.pos.x - sr.pos.x;
 	r = sr.pos.x + sr.size.width - rr.pos.x - rr.size.width;

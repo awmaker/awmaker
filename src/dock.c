@@ -3121,7 +3121,7 @@ static int onScreen(virtual_screen *vscr, int x, int y)
 	rect.pos.y = y;
 	rect.size.width = rect.size.height = ICON_SIZE;
 
-	wGetRectPlacementInfo(vscr->screen_ptr, rect, &flags);
+	wGetRectPlacementInfo(vscr, rect, &flags);
 
 	return !(flags & (XFLAG_DEAD | XFLAG_PARTIAL));
 }

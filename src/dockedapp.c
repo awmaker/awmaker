@@ -369,7 +369,7 @@ void ShowDockAppSettingsPanel(WAppIcon *aicon)
 
 	/* make things relative to head */
 	{
-		WMRect rect = wGetRectForHead(scr, wGetHeadForPointerLocation(scr));
+		WMRect rect = wGetRectForHead(scr->vscr, wGetHeadForPointerLocation(scr->vscr));
 
 		y = aicon->y_pos;
 		if (y < 0)

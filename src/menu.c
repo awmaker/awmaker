@@ -762,9 +762,9 @@ static void move_menus(WMenu *menu, int x, int y)
 
 static void makeVisible(WMenu *menu)
 {
-	WScreen *scr = menu->frame->vscr->screen_ptr;
+	virtual_screen *vscr = menu->frame->vscr;
 	int x1, y1, x2, y2, new_x, new_y;
-	WMRect rect = wGetRectForHead(scr, wGetHeadForPointerLocation(scr));
+	WMRect rect = wGetRectForHead(vscr, wGetHeadForPointerLocation(vscr));
 
 	if (menu->entry_no < 0)
 		return;
@@ -824,8 +824,8 @@ static int keyboardMenu(WMenu *menu)
 	int old_pos_x = menu->frame_x;
 	int old_pos_y = menu->frame_y;
 	int new_x = old_pos_x, new_y = old_pos_y;
-	WMRect rect = wGetRectForHead(menu->frame->vscr->screen_ptr,
-				      wGetHeadForPointerLocation(menu->frame->vscr->screen_ptr));
+	WMRect rect = wGetRectForHead(menu->frame->vscr,
+				      wGetHeadForPointerLocation(menu->frame->vscr));
 
 	if (menu->flags.editing)
 		return False;
@@ -1013,7 +1013,7 @@ static int keyboardMenu(WMenu *menu)
 
 void wMenuMapAt(WMenu *menu, int x, int y, int keyboard)
 {
-	WScreen *scr;
+	virtual_screen *vscr;
 	WMRect rect;
 
 	if (!menu->flags.realized) {
@@ -1023,8 +1023,8 @@ void wMenuMapAt(WMenu *menu, int x, int y, int keyboard)
 
 	if (!menu->flags.mapped) {
 		if (wPreferences.wrap_menus) {
-			scr = menu->frame->vscr->screen_ptr;
-			rect = wGetRectForHead(scr, wGetHeadForPointerLocation(scr));
+			vscr = menu->frame->vscr;
+			rect = wGetRectForHead(vscr, wGetHeadForPointerLocation(vscr));
 
 			if (x < rect.pos.x)
 				x = rect.pos.x;
@@ -1341,13 +1341,14 @@ static void getPointerPosition(virtual_screen *vscr, int *x, int *y)
 
 static void getScrollAmount(WMenu *menu, int *hamount, int *vamount)
 {
-	WScreen *scr = menu->menu->vscr->screen_ptr;
+	virtual_screen *vscr = menu->menu->vscr;
+	WScreen *scr = vscr->screen_ptr;
 	int menuX1 = menu->frame_x;
 	int menuY1 = menu->frame_y;
 	int menuX2 = menu->frame_x + MENUW(menu);
 	int menuY2 = menu->frame_y + MENUH(menu);
 	int xroot, yroot;
-	WMRect rect = wGetRectForHead(scr, wGetHeadForPointerLocation(scr));
+	WMRect rect = wGetRectForHead(vscr, wGetHeadForPointerLocation(vscr));
 
 	*hamount = 0;
 	*vamount = 0;
@@ -1441,8 +1442,8 @@ static int isPointNearBoder(WMenu *menu, int x, int y)
 	int menuX2 = menu->frame_x + MENUW(menu);
 	int menuY2 = menu->frame_y + MENUH(menu);
 	int flag = 0;
-	int head = wGetHeadForPoint(menu->frame->vscr->screen_ptr, wmkpoint(x, y));
-	WMRect rect = wGetRectForHead(menu->frame->vscr->screen_ptr, head);
+	int head = wGetHeadForPoint(menu->frame->vscr, wmkpoint(x, y));
+	WMRect rect = wGetRectForHead(menu->frame->vscr, head);
 
 	/* XXX: handle screen joins properly !! */
 	if (x >= menuX1 && x <= menuX2 &&
@@ -1510,7 +1511,7 @@ void wMenuScroll(WMenu *menu)
 				break;
 			}
 
-			rect = wGetRectForHead(scr, wGetHeadForPoint(scr, wmkpoint(x, y)));
+			rect = wGetRectForHead(scr->vscr, wGetHeadForPoint(scr->vscr, wmkpoint(x, y)));
 			on_x_edge = x <= rect.pos.x + 1 || x >= rect.pos.x + rect.size.width - 2;
 			on_y_edge = y <= rect.pos.y + 1 || y >= rect.pos.y + rect.size.height - 2;
 			on_border = on_x_edge || on_y_edge;
@@ -1625,7 +1626,6 @@ static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
 	XButtonEvent *bev = &event->xbutton;
 	WMenu *smenu, *menu = desc->parent;
 	virtual_screen *vscr = menu->frame->vscr;
-	WScreen *scr = vscr->screen_ptr;
 	WMenuEntry *entry = NULL;
 	XEvent ev;
 	int close_on_exit = 0;
@@ -1691,7 +1691,7 @@ static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
 			}
 
 		} else if (!delayed_select) {
-			if (menu == scr->vscr->menu.switch_menu && event->xbutton.button == Button3) {
+			if (menu == vscr->menu.switch_menu && event->xbutton.button == Button3) {
 				selectEntry(menu, entry_no);
 				OpenWindowMenu2((WWindow *)entry->clientdata,
 								event->xbutton.x_root,
@@ -2259,7 +2259,7 @@ static int restoreMenu(virtual_screen *vscr, WMPropList *menu)
 	if (pmenu) {
 		width = MENUW(pmenu);
 		height = MENUH(pmenu);
-		WMRect rect = wGetRectForHead(vscr->screen_ptr, wGetHeadForPointerLocation(vscr->screen_ptr));
+		WMRect rect = wGetRectForHead(vscr, wGetHeadForPointerLocation(vscr));
 
 		if (lowered)
 			changeMenuLevels(pmenu, True);
@@ -2304,7 +2304,7 @@ static int restoreMenuRecurs(virtual_screen *vscr, WMPropList *menus, WMenu *men
 		if (!menu->flags.mapped) {
 			width = MENUW(menu);
 			height = MENUH(menu);
-			WMRect rect = wGetRectForHead(vscr->screen_ptr, wGetHeadForPointerLocation(vscr->screen_ptr));
+			WMRect rect = wGetRectForHead(vscr, wGetHeadForPointerLocation(vscr));
 
 			wMenuMapAt(menu, x, y, False);
 

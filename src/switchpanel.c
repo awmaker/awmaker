@@ -79,7 +79,7 @@ static int canReceiveFocus(WWindow *wwin)
 		return 0;
 
 	if (wPreferences.cycle_active_head_only &&
-	    wGetHeadForWindow(wwin) != wGetHeadForPointerLocation(wwin->vscr->screen_ptr))
+	    wGetHeadForWindow(wwin) != wGetHeadForPointerLocation(wwin->vscr))
 		return 0;
 
 	if (WFLAGP(wwin, no_focusable))
@@ -394,7 +394,7 @@ WSwitchPanel *wInitSwitchPanel(virtual_screen *vscr, WWindow *curwin, Bool class
 	WSwitchPanel *panel = wmalloc(sizeof(WSwitchPanel));
 	WMFrame *viewport;
 	int i, width, height, iconsThatFitCount, count;
-	WMRect rect = wGetRectForHead(vscr->screen_ptr, wGetHeadForPointerLocation(vscr->screen_ptr));
+	WMRect rect = wGetRectForHead(vscr, wGetHeadForPointerLocation(vscr));
 	WMPoint center;
 
 	panel->vscr = vscr;
@@ -506,7 +506,7 @@ WSwitchPanel *wInitSwitchPanel(virtual_screen *vscr, WWindow *curwin, Bool class
 			XFreePixmap(dpy, mask);
 	}
 
-	center = wGetPointToCenterRectInHead(vscr->screen_ptr, wGetHeadForPointerLocation(vscr->screen_ptr),
+	center = wGetPointToCenterRectInHead(vscr, wGetHeadForPointerLocation(vscr),
 					     width + 2 * BORDER_SPACE, height + 2 * BORDER_SPACE);
 	WMMoveWidget(panel->win, center.x, center.y);
 

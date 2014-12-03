@@ -486,6 +486,7 @@ static void createInternalWindows(WScreen * scr)
 WScreen *wScreenInit(int screen_number)
 {
 	WScreen *scr;
+	virtual_screen *vscr;
 	XIconSize icon_size[1];
 	RContextAttributes rattr;
 	long event_mask;
@@ -493,7 +494,8 @@ WScreen *wScreenInit(int screen_number)
 	int i;
 
 	scr = wmalloc(sizeof(WScreen));
-	scr->vscr = wmalloc(sizeof(virtual_screen));
+	vscr = wmalloc(sizeof(virtual_screen));
+	scr->vscr = vscr;
 	scr->vscr->screen_ptr = scr;
 
 	scr->stacking_list = WMCreateTreeBag();
@@ -507,13 +509,13 @@ WScreen *wScreenInit(int screen_number)
 	scr->scr_width = WidthOfScreen(ScreenOfDisplay(dpy, screen_number));
 	scr->scr_height = HeightOfScreen(ScreenOfDisplay(dpy, screen_number));
 
-	wInitXinerama(scr);
+	wInitXinerama(vscr);
 
 	scr->usableArea = (WArea *) wmalloc(sizeof(WArea) * wXineramaHeads(scr));
 	scr->totalUsableArea = (WArea *) wmalloc(sizeof(WArea) * wXineramaHeads(scr));
 
 	for (i = 0; i < wXineramaHeads(scr); ++i) {
-		WMRect rect = wGetRectForHead(scr, i);
+		WMRect rect = wGetRectForHead(vscr, i);
 		scr->usableArea[i].x1 = scr->totalUsableArea[i].x1 = rect.pos.x;
 		scr->usableArea[i].y1 = scr->totalUsableArea[i].y1 = rect.pos.y;
 		scr->usableArea[i].x2 = scr->totalUsableArea[i].x2 = rect.pos.x + rect.size.width;
@@ -691,6 +693,7 @@ void wScreenUpdateUsableArea(WScreen *scr)
 	 * scr->usableArea[] will be used for iconplacement, hence no iconyard nor
 	 * border.
 	 */
+	virtual_screen *vscr = scr->vscr;
 
 	WArea area;
 	int i;
@@ -699,7 +702,7 @@ void wScreenUpdateUsableArea(WScreen *scr)
 	unsigned int position = wPreferences.workspace_border_position;
 
 	for (i = 0; i < wXineramaHeads(scr); ++i) {
-		WMRect rect = wGetRectForHead(scr, i);
+		WMRect rect = wGetRectForHead(vscr, i);
 		scr->totalUsableArea[i].x1 = rect.pos.x;
 		scr->totalUsableArea[i].y1 = rect.pos.y;
 		scr->totalUsableArea[i].x2 = rect.pos.x + rect.size.width;
@@ -892,13 +895,12 @@ void wScreenSaveState(WScreen *scr)
 	WMReleasePropList(old_state);
 }
 
-int wScreenBringInside(WScreen * scr, int *x, int *y, int width, int height)
+int wScreenBringInside(WScreen *scr, int *x, int *y, int width, int height)
 {
+	virtual_screen *vscr = scr->vscr;
 	int moved = 0;
 	int tol_w, tol_h;
-	/*
-	 * With respect to the head that contains most of the window.
-	 */
+	/* With respect to the head that contains most of the window. */
 	int sx1, sy1, sx2, sy2;
 
 	WMRect rect;
@@ -909,32 +911,13 @@ int wScreenBringInside(WScreen * scr, int *x, int *y, int width, int height)
 	rect.size.width = width;
 	rect.size.height = height;
 
-	head = wGetRectPlacementInfo(scr, rect, &flags);
-	rect = wGetRectForHead(scr, head);
+	head = wGetRectPlacementInfo(vscr, rect, &flags);
+	rect = wGetRectForHead(vscr, head);
 
 	sx1 = rect.pos.x;
 	sy1 = rect.pos.y;
 	sx2 = sx1 + rect.size.width;
 	sy2 = sy1 + rect.size.height;
-
-#if 0				/* NOTE: gives funky group movement */
-	if (flags & XFLAG_MULTIPLE) {
-		/*
-		 * since we span multiple heads, pull window totaly inside
-		 */
-		if (*x < sx1)
-			*x = sx1, moved = 1;
-		else if (*x + width > sx2)
-			*x = sx2 - width, moved = 1;
-
-		if (*y < sy1)
-			*y = sy1, moved = 1;
-		else if (*y + height > sy2)
-			*y = sy2 - height, moved = 1;
-
-		return moved;
-	}
-#endif
 
 	if (width > 20)
 		tol_w = width / 2;
@@ -959,8 +942,9 @@ int wScreenBringInside(WScreen * scr, int *x, int *y, int width, int height)
 	return moved;
 }
 
-int wScreenKeepInside(WScreen * scr, int *x, int *y, int width, int height)
+int wScreenKeepInside(WScreen *scr, int *x, int *y, int width, int height)
 {
+	virtual_screen *vscr = scr->vscr;
 	int moved = 0;
 	int sx1, sy1, sx2, sy2;
 	WMRect rect;
@@ -971,8 +955,8 @@ int wScreenKeepInside(WScreen * scr, int *x, int *y, int width, int height)
 	rect.size.width = width;
 	rect.size.height = height;
 
-	head = wGetHeadForRect(scr, rect);
-	rect = wGetRectForHead(scr, head);
+	head = wGetHeadForRect(vscr, rect);
+	rect = wGetRectForHead(vscr, head);
 
 	sx1 = rect.pos.x;
 	sy1 = rect.pos.y;

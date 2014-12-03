@@ -320,8 +320,8 @@ static void showWorkspaceName(virtual_screen *vscr, int workspace)
 	h = WMFontHeight(vscr->workspace.font_for_name);
 
 #ifdef USE_XINERAMA
-	head = wGetHeadForPointerLocation(vscr->screen_ptr);
-	rect = wGetRectForHead(vscr->screen_ptr, head);
+	head = wGetHeadForPointerLocation(vscr);
+	rect = wGetRectForHead(vscr, head);
 	if (vscr->screen_ptr->xine_info.count) {
 		xx = rect.pos.x + (vscr->screen_ptr->xine_info.screens[head].size.width - (w + 4)) / 2;
 		yy = rect.pos.y + (vscr->screen_ptr->xine_info.screens[head].size.height - (h + 4)) / 2;

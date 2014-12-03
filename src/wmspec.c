@@ -710,12 +710,14 @@ void wNETWMUpdateWorkarea(WScreen *scr)
 
 Bool wNETWMGetUsableArea(WScreen *scr, int head, WArea *area)
 {
+	virtual_screen *vscr;
 	WReservedArea *cur;
 	WMRect rect;
 
 	if (!scr->netdata || !scr->netdata->strut)
 		return False;
 
+	vscr = scr->vscr;
 	area->x1 = area->y1 = area->x2 = area->y2 = 0;
 
 	for (cur = scr->netdata->strut; cur; cur = cur->next) {
@@ -735,7 +737,7 @@ Bool wNETWMGetUsableArea(WScreen *scr, int head, WArea *area)
 	if (area->x1 == 0 && area->x2 == 0 && area->y1 == 0 && area->y2 == 0)
 		return False;
 
-	rect = wGetRectForHead(scr, head);
+	rect = wGetRectForHead(vscr, head);
 
 	area->x1 = rect.pos.x + area->x1;
 	area->x2 = rect.pos.x + rect.size.width - area->x2;
@@ -1273,12 +1275,12 @@ static Bool handleWindowType(WWindow *wwin, Atom type, int *layer)
 
 void wNETWMPositionSplash(WWindow *wwin, int *x, int *y, int width, int height)
 {
-	WScreen *scr;
+	virtual_screen *vscr;
 	WMRect rect;
 
 	if (wwin->type == net_wm_window_type_splash) {
-		scr = wwin->vscr->screen_ptr;
-		rect = wGetRectForHead(scr, wGetHeadForPointerLocation(scr));
+		vscr = wwin->vscr;
+		rect = wGetRectForHead(vscr, wGetHeadForPointerLocation(vscr));
 
 		*x = rect.pos.x + (rect.size.width - width) / 2;
 		*y = rect.pos.y + (rect.size.height - height) / 2;

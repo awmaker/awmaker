@@ -64,7 +64,7 @@
 
 static WMPoint getCenter(virtual_screen *vscr, int width, int height)
 {
-	return wGetPointToCenterRectInHead(vscr->screen_ptr, wGetHeadForPointerLocation(vscr->screen_ptr), width, height);
+	return wGetPointToCenterRectInHead(vscr, wGetHeadForPointerLocation(vscr), width, height);
 }
 
 int wMessageDialog(virtual_screen *vscr, const char *title, const char *message, const char *defBtn, const char *altBtn, const char *othBtn)

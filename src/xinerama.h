@@ -26,7 +26,7 @@
 #include "window.h"
 #include <WINGs/WINGs.h>
 
-void wInitXinerama(WScreen *scr);
+void wInitXinerama(virtual_screen *vscr);
 
 #define wXineramaHeads(scr) ((scr)->xine_info.count ? (scr)->xine_info.count : 1)
 
@@ -35,26 +35,17 @@ void wInitXinerama(WScreen *scr);
 #define XFLAG_MULTIPLE	0x02
 #define XFLAG_PARTIAL	0x04
 
-int wGetRectPlacementInfo(WScreen *scr, WMRect rect, int *flags);
-
-int wGetHeadForRect(WScreen *scr, WMRect rect);
-
+int wGetRectPlacementInfo(virtual_screen *vscr, WMRect rect, int *flags);
+int wGetHeadForRect(virtual_screen *vscr, WMRect rect);
 int wGetHeadForWindow(WWindow *wwin);
+int wGetHeadForPoint(virtual_screen *vscr, WMPoint point);
+int wGetHeadForPointerLocation(virtual_screen *vscr);
 
-int wGetHeadForPoint(WScreen *scr, WMPoint point);
-
-int wGetHeadForPointerLocation(WScreen *scr);
-
-WMRect wGetRectForHead(WScreen *scr, int head);
-
-WArea wGetUsableAreaForHead(WScreen *scr, int head, WArea *totalAreaPtr, Bool noicons);
-
-WMPoint wGetPointToCenterRectInHead(WScreen *scr, int head, int width, int height);
+WMRect wGetRectForHead(virtual_screen *vscr, int head);
+WArea wGetUsableAreaForHead(virtual_screen *vscr, int head, WArea *totalAreaPtr, Bool noicons);
+WMPoint wGetPointToCenterRectInHead(virtual_screen *vscr, int head, int width, int height);
 
 Bool wWindowTouchesHead(WWindow *wwin, int head);
 Bool wAppIconTouchesHead(WAppIcon *aicon, int head);
 
 #endif
-
-
-

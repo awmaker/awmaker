@@ -110,7 +110,7 @@ void PlaceIcon(virtual_screen *vscr, int *x_ret, int *y_ret, int head)
 	int isize = wPreferences.icon_size;
 	int done = 0;
 	WMBagIterator iter;
-	WArea area = wGetUsableAreaForHead(vscr->screen_ptr, head, NULL, False);
+	WArea area = wGetUsableAreaForHead(vscr, head, NULL, False);
 
 	/* Find out screen boundaries. */
 
@@ -481,7 +481,8 @@ static void randomPlaceWindow(WWindow *wwin, int *x_ret, int *y_ret,
 
 void PlaceWindow(WWindow *wwin, int *x_ret, int *y_ret, unsigned width, unsigned height)
 {
-	WScreen *scr = wwin->vscr->screen_ptr;
+	virtual_screen *vscr = wwin->vscr;
+	WScreen *scr = vscr->screen_ptr;
 	int h = WMFontHeight(scr->title_font)
 		+ (wPreferences.window_title_clearance + TITLEBAR_EXTEND_SPACE) * 2;
 
@@ -491,7 +492,7 @@ void PlaceWindow(WWindow *wwin, int *x_ret, int *y_ret, unsigned width, unsigned
 	if (h < wPreferences.window_title_min_height)
 		h = wPreferences.window_title_min_height;
 
-	WArea usableArea = wGetUsableAreaForHead(scr, wGetHeadForPointerLocation(scr),
+	WArea usableArea = wGetUsableAreaForHead(vscr, wGetHeadForPointerLocation(vscr),
 						 NULL, True);
 
 	switch (wPreferences.window_placement) {

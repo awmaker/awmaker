@@ -969,8 +969,8 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 				rect.size.width = transientOwner->frame->core->width;
 				rect.size.height = transientOwner->frame->core->height;
 
-				head = wGetHeadForRect(vscr->screen_ptr, rect);
-				rect = wGetRectForHead(vscr->screen_ptr, head);
+				head = wGetHeadForRect(vscr, rect);
+				rect = wGetRectForHead(vscr, head);
 
 				if (x < rect.pos.x)
 					x = rect.pos.x;
@@ -1009,7 +1009,7 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 				rect.size.width = width;
 				rect.size.height = height;
 
-				head = wGetRectPlacementInfo(vscr->screen_ptr, rect, &flags);
+				head = wGetRectPlacementInfo(vscr, rect, &flags);
 
 				if (flags & XFLAG_DEAD)
 					reposition = 1;
@@ -1020,15 +1020,15 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 
 			switch (reposition) {
 			case 1:
-				head = wGetHeadForPointerLocation(vscr->screen_ptr);
-				rect = wGetRectForHead(vscr->screen_ptr, head);
+				head = wGetHeadForPointerLocation(vscr);
+				rect = wGetRectForHead(vscr, head);
 
 				x = rect.pos.x + (x * rect.size.width) / vscr->screen_ptr->scr_width;
 				y = rect.pos.y + (y * rect.size.height) / vscr->screen_ptr->scr_height;
 				break;
 
 			case 2:
-				rect = wGetRectForHead(vscr->screen_ptr, head);
+				rect = wGetRectForHead(vscr, head);
 
 				if (x < rect.pos.x)
 					x = rect.pos.x;

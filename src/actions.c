@@ -316,7 +316,7 @@ static void remember_geometry(WWindow *wwin, int *x, int *y, int *w, int *h)
 	Bool same_head;
 
 	old_geom_rect = wmkrect(wwin->old_geometry.x, wwin->old_geometry.y, wwin->old_geometry.width, wwin->old_geometry.height);
-	old_head = wGetHeadForRect(wwin->vscr->screen_ptr, old_geom_rect);
+	old_head = wGetHeadForRect(wwin->vscr, old_geom_rect);
 	same_head = (wGetHeadForWindow(wwin) == old_head);
 	*x = ((wwin->old_geometry.x || wwin->old_geometry.width) && same_head) ? wwin->old_geometry.x : wwin->frame_x;
 	*y = ((wwin->old_geometry.y || wwin->old_geometry.height) && same_head) ? wwin->old_geometry.y : wwin->frame_y;
@@ -382,15 +382,15 @@ void wMaximizeWindow(WWindow *wwin, int directions)
 	usableArea = totalArea;
 
 	if (!(directions & MAX_IGNORE_XINERAMA)) {
-		WScreen *scr = wwin->vscr->screen_ptr;
+		virtual_screen *vscr = wwin->vscr;
 		int head;
 
 		if (directions & MAX_KEYBOARD)
 			head = wGetHeadForWindow(wwin);
 		else
-			head = wGetHeadForPointerLocation(scr);
+			head = wGetHeadForPointerLocation(vscr);
 
-		usableArea = wGetUsableAreaForHead(scr, head, &totalArea, True);
+		usableArea = wGetUsableAreaForHead(vscr, head, &totalArea, True);
 	}
 
 
@@ -728,7 +728,7 @@ void wFullscreenWindow(WWindow *wwin)
 	wwin->bfs_geometry.height = wwin->frame->core->height;
 
 	head = wGetHeadForWindow(wwin);
-	rect = wGetRectForHead(wwin->vscr->screen_ptr, head);
+	rect = wGetRectForHead(wwin->vscr, head);
 	wWindowConfigure(wwin, rect.pos.x, rect.pos.y, rect.size.width, rect.size.height);
 
 	wwin->vscr->screen_ptr->bfs_focused_window = wwin->vscr->screen_ptr->focused_window;
@@ -1752,7 +1752,7 @@ void wArrangeIcons(virtual_screen *vscr, Bool arrangeAll)
 	vars = (struct HeadVars *)wmalloc(sizeof(struct HeadVars) * heads);
 
 	for (head = 0; head < heads; ++head) {
-		WArea area = wGetUsableAreaForHead(vscr->screen_ptr, head, NULL, False);
+		WArea area = wGetUsableAreaForHead(vscr, head, NULL, False);
 		WMRect rect;
 
 		if (vscr->dock.dock) {
