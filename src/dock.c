@@ -3462,19 +3462,22 @@ static void swapDock(WDock *dock)
 
 static pid_t execCommand(WAppIcon *btn, const char *command, WSavedState *state)
 {
-	WScreen *scr = btn->icon->core->vscr->screen_ptr;
+	virtual_screen *vscr = btn->icon->core->vscr;
+	WScreen *scr = vscr->screen_ptr;
 	pid_t pid;
 	char **argv;
 	int argc;
 	char *cmdline;
 
-	cmdline = ExpandOptions(scr, command);
+	cmdline = ExpandOptions(vscr, command);
 
 	if (scr->flags.dnd_data_convertion_status || !cmdline) {
 		if (cmdline)
 			wfree(cmdline);
+
 		if (state)
 			wfree(state);
+
 		return 0;
 	}
 
@@ -3483,8 +3486,10 @@ static pid_t execCommand(WAppIcon *btn, const char *command, WSavedState *state)
 	if (!argc) {
 		if (cmdline)
 			wfree(cmdline);
+
 		if (state)
 			wfree(state);
+
 		return 0;
 	}
 

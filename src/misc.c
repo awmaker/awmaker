@@ -509,7 +509,7 @@ getuserinput(WScreen *scr, const char *line, int *ptr, Bool advanced)
  * OPTION	etc.	NORMAL		%<input>
  */
 #define TMPBUFSIZE 64
-char *ExpandOptions(WScreen *scr, const char *cmdline)
+char *ExpandOptions(virtual_screen *vscr, const char *cmdline)
 {
 	int ptr, optr, state, len, olen;
 	char *out, *nout;
@@ -568,9 +568,9 @@ char *ExpandOptions(WScreen *scr, const char *cmdline)
 			state = S_NORMAL;
 			switch (cmdline[ptr]) {
 			case 'w':
-				if (scr->focused_window && scr->focused_window->flags.focused) {
+				if (vscr->screen_ptr->focused_window && vscr->screen_ptr->focused_window->flags.focused) {
 					snprintf(tmpbuf, sizeof(tmpbuf), "0x%x",
-						 (unsigned int)scr->focused_window->client_win);
+						 (unsigned int) vscr->screen_ptr->focused_window->client_win);
 					slen = strlen(tmpbuf);
 					olen += slen;
 					nout = realloc(out, olen);
@@ -587,7 +587,7 @@ char *ExpandOptions(WScreen *scr, const char *cmdline)
 				break;
 
 			case 'W':
-				snprintf(tmpbuf, sizeof(tmpbuf), "0x%x", (unsigned int) scr->vscr->workspace.current + 1);
+				snprintf(tmpbuf, sizeof(tmpbuf), "0x%x", (unsigned int) vscr->workspace.current + 1);
 				slen = strlen(tmpbuf);
 				olen += slen;
 				nout = realloc(out, olen);
@@ -603,7 +603,7 @@ char *ExpandOptions(WScreen *scr, const char *cmdline)
 			case 'a':
 			case 'A':
 				ptr++;
-				user_input = getuserinput(scr, cmdline, &ptr, cmdline[ptr-1] == 'A');
+				user_input = getuserinput(vscr->screen_ptr, cmdline, &ptr, cmdline[ptr-1] == 'A');
 				if (user_input) {
 					slen = strlen(user_input);
 					olen += slen;
@@ -624,26 +624,28 @@ char *ExpandOptions(WScreen *scr, const char *cmdline)
 
 #ifdef XDND
 			case 'd':
-				if (!scr->xdestring) {
-					scr->flags.dnd_data_convertion_status = 1;
+				if (!vscr->screen_ptr->xdestring) {
+					vscr->screen_ptr->flags.dnd_data_convertion_status = 1;
 					goto error;
 				}
-				slen = strlen(scr->xdestring);
+
+				slen = strlen(vscr->screen_ptr->xdestring);
 				olen += slen;
 				nout = realloc(out, olen);
 				if (!nout) {
 					wwarning(_("out of memory during expansion of '%s' for command \"%s\""), "%d", cmdline);
 					goto error;
 				}
+
 				out = nout;
-				strcat(out, scr->xdestring);
+				strcat(out, vscr->screen_ptr->xdestring);
 				optr += slen;
 				break;
 #endif				/* XDND */
 
 			case 's':
 				if (!selection) {
-					selection = getselection(scr);
+					selection = getselection(vscr->screen_ptr);
 				}
 				if (!selection) {
 					wwarning(_("selection not available"));
@@ -912,7 +914,7 @@ static void track_bg_helper_death(pid_t pid, unsigned int status, void *client_d
 	scr->flags.backimage_helper_launched = 0;
 }
 
-Bool start_bg_helper(WScreen *scr)
+Bool start_bg_helper(virtual_screen *vscr)
 {
 	pid_t pid;
 	int filedes[2];
@@ -937,7 +939,7 @@ Bool start_bg_helper(WScreen *scr)
 		/* We don't need this side of the pipe in the child process */
 		close(filedes[1]);
 
-		SetupEnvironment(scr);
+		SetupEnvironment(vscr->screen_ptr);
 
 		close(STDIN_FILENO);
 		if (dup2(filedes[0], STDIN_FILENO) < 0) {
@@ -964,26 +966,25 @@ Bool start_bg_helper(WScreen *scr)
 			wwarning(_("could not set close-on-exec flag for bg_helper's communication file handle (%s)"),
 			         strerror(errno));
 
-		scr->helper_fd = filedes[1];
-		scr->helper_pid = pid;
-		scr->flags.backimage_helper_launched = 1;
+		vscr->screen_ptr->helper_fd = filedes[1];
+		vscr->screen_ptr->helper_pid = pid;
+		vscr->screen_ptr->flags.backimage_helper_launched = 1;
 
-		wAddDeathHandler(pid, track_bg_helper_death, scr);
+		wAddDeathHandler(pid, track_bg_helper_death, vscr->screen_ptr);
 
 		return True;
 	}
 }
 
-void SendHelperMessage(WScreen *scr, char type, int workspace, const char *msg)
+void SendHelperMessage(virtual_screen *vscr, char type, int workspace, const char *msg)
 {
 	char *buffer;
 	int len;
 	int i;
 	char buf[16];
 
-	if (!scr->flags.backimage_helper_launched) {
+	if (!vscr->screen_ptr->flags.backimage_helper_launched)
 		return;
-	}
 
 	len = (msg ? strlen(msg) : 0) + (workspace >= 0 ? 4 : 0) + 1;
 	buffer = wmalloc(len + 5);
@@ -997,16 +998,17 @@ void SendHelperMessage(WScreen *scr, char type, int workspace, const char *msg)
 		i += 4;
 		buffer[i] = 0;
 	}
+
 	if (msg)
 		strcpy(&buffer[i], msg);
 
-	if (write(scr->helper_fd, buffer, len + 4) < 0) {
+	if (write(vscr->screen_ptr->helper_fd, buffer, len + 4) < 0)
 		werror(_("could not send message to background image helper"));
-	}
+
 	wfree(buffer);
 }
 
-Bool UpdateDomainFile(WDDomain * domain)
+Bool UpdateDomainFile(WDDomain *domain)
 {
 	struct stat stbuf;
 	char path[PATH_MAX];
@@ -1032,9 +1034,8 @@ Bool UpdateDomainFile(WDDomain * domain)
 
 	result = WMWritePropListToFile(dict, domain->path);
 
-	if (freeDict) {
+	if (freeDict)
 		WMReleasePropList(dict);
-	}
 
 	return result;
 }
@@ -1072,9 +1073,9 @@ static char *getCommandForWindow(Window win, int elements)
 				command = NULL;
 			}
 		}
-		if (argv) {
+
+		if (argv)
 			XFreeStringList(argv);
-		}
 	}
 
 	return command;

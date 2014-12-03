@@ -151,7 +151,7 @@ static void execCommand(WMenu *menu, WMenuEntry *entry)
 {
 	char *cmdline;
 
-	cmdline = ExpandOptions(menu->frame->vscr->screen_ptr, (char *)entry->clientdata);
+	cmdline = ExpandOptions(menu->frame->vscr, (char *)entry->clientdata);
 
 	XGrabPointer(dpy, menu->frame->vscr->screen_ptr->root_win, True, 0,
 		     GrabModeAsync, GrabModeAsync, None, wPreferences.cursor[WCUR_WAIT], CurrentTime);

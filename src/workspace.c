@@ -498,7 +498,7 @@ void wWorkspaceForceChange(virtual_screen *vscr, int workspace)
 	if (workspace >= MAX_WORKSPACES || workspace < 0)
 		return;
 
-	SendHelperMessage(vscr->screen_ptr, 'C', workspace + 1, NULL);
+	SendHelperMessage(vscr, 'C', workspace + 1, NULL);
 
 	if (workspace > vscr->workspace.count - 1)
 		wWorkspaceMake(vscr, workspace - vscr->workspace.count + 1);

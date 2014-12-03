@@ -27,7 +27,7 @@
 
 Bool wFetchName(Display *dpy, Window win, char **winname);
 Bool wGetIconName(Display *dpy, Window win, char **iconname);
-Bool UpdateDomainFile(WDDomain * domain);
+Bool UpdateDomainFile(WDDomain *domain);
 
 void move_window(Window win, int from_x, int from_y, int to_x, int to_y);
 void SlideWindow(Window win, int from_x, int from_y, int to_x, int to_y);
@@ -35,12 +35,12 @@ void SlideWindows(Window *wins[], int n, int from_x, int from_y, int to_x, int t
 void ParseWindowName(WMPropList *value, char **winstance, char **wclass, const char *where);
 
 /* Helper is a 'wmsetbg' subprocess with sets the background for the current workspace */
-Bool start_bg_helper(WScreen *scr);
-void SendHelperMessage(WScreen *scr, char type, int workspace, const char *msg);
+Bool start_bg_helper(virtual_screen *vscr);
+void SendHelperMessage(virtual_screen *vscr, char type, int workspace, const char *msg);
 
 char *ShrinkString(WMFont *font, const char *string, int width);
 char *FindImage(const char *paths, const char *file);
-char *ExpandOptions(WScreen * scr, const char *cmdline);
+char *ExpandOptions(virtual_screen *vscr, const char *cmdline);
 char *GetShortcutString(const char *text);
 char *GetShortcutKey(WShortKey key);
 char *EscapeWM_CLASS(const char *name, const char *class);

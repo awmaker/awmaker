@@ -1728,9 +1728,7 @@ static void handleKeyPress(XEvent *event)
 
 	case WKBD_RUN:
 	{
-		char *cmdline;
-
-		cmdline = ExpandOptions(scr, _("exec %a(Run,Type command to run:)"));
+		char *cmdline = ExpandOptions(scr->vscr, _("exec %a(Run,Type command to run:)"));
 
 		if (cmdline) {
 			XGrabPointer(dpy, scr->root_win, True, 0,

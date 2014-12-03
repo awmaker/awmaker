@@ -3002,8 +3002,8 @@ static int setWorkspaceSpecificBack(virtual_screen *vscr, WDefaultEntry *entry, 
 
 	if (vscr->screen_ptr->flags.backimage_helper_launched) {
 		if (WMGetPropListItemCount(value) == 0) {
-			SendHelperMessage(vscr->screen_ptr, 'C', 0, NULL);
-			SendHelperMessage(vscr->screen_ptr, 'K', 0, NULL);
+			SendHelperMessage(vscr, 'C', 0, NULL);
+			SendHelperMessage(vscr, 'K', 0, NULL);
 
 			WMReleasePropList(value);
 			return 0;
@@ -3012,22 +3012,22 @@ static int setWorkspaceSpecificBack(virtual_screen *vscr, WDefaultEntry *entry, 
 		if (WMGetPropListItemCount(value) == 0)
 			return 0;
 
-		if (!start_bg_helper(vscr->screen_ptr)) {
+		if (!start_bg_helper(vscr)) {
 			WMReleasePropList(value);
 			return 0;
 		}
 
-		SendHelperMessage(vscr->screen_ptr, 'P', -1, wPreferences.pixmap_path);
+		SendHelperMessage(vscr, 'P', -1, wPreferences.pixmap_path);
 	}
 
 	for (i = 0; i < WMGetPropListItemCount(value); i++) {
 		val = WMGetFromPLArray(value, i);
 		if (val && WMIsPLArray(val) && WMGetPropListItemCount(val) > 0) {
 			str = WMGetPropListDescription(val, False);
-			SendHelperMessage(vscr->screen_ptr, 'S', i + 1, str);
+			SendHelperMessage(vscr, 'S', i + 1, str);
 			wfree(str);
 		} else {
-			SendHelperMessage(vscr->screen_ptr, 'U', i + 1, NULL);
+			SendHelperMessage(vscr, 'U', i + 1, NULL);
 		}
 	}
 
@@ -3049,16 +3049,16 @@ static int setWorkspaceBack(virtual_screen *vscr, WDefaultEntry *entry, void *td
 		char *str;
 
 		if (WMGetPropListItemCount(value) == 0) {
-			SendHelperMessage(vscr->screen_ptr, 'U', 0, NULL);
+			SendHelperMessage(vscr, 'U', 0, NULL);
 		} else {
 			/* set the default workspace background to this one */
 			str = WMGetPropListDescription(value, False);
 			if (str) {
-				SendHelperMessage(vscr->screen_ptr, 'S', 0, str);
+				SendHelperMessage(vscr, 'S', 0, str);
 				wfree(str);
-				SendHelperMessage(vscr->screen_ptr, 'C', vscr->workspace.current + 1, NULL);
+				SendHelperMessage(vscr, 'C', vscr->workspace.current + 1, NULL);
 			} else {
-				SendHelperMessage(vscr->screen_ptr, 'U', 0, NULL);
+				SendHelperMessage(vscr, 'U', 0, NULL);
 			}
 		}
 	} else if (WMGetPropListItemCount(value) > 0) {
