@@ -42,7 +42,6 @@
 #include "GNUstep.h"
 #include "wcore.h"
 #include "framewin.h"
-#include "texture.h"
 #include "window.h"
 #include "winspector.h"
 #include "icon.h"

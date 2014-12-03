@@ -50,7 +50,6 @@
 
 #include "WindowMaker.h"
 #include "GNUstep.h"
-#include "texture.h"
 #include "screen.h"
 #include "window.h"
 #include "actions.h"

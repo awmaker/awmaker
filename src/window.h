@@ -25,7 +25,6 @@
 
 #include "wconfig.h"
 #include "GNUstep.h"
-#include "texture.h"
 #include "menu.h"
 #include "application.h"
 

@@ -33,7 +33,6 @@
 
 #include "WindowMaker.h"
 #include "GNUstep.h"
-#include "texture.h"
 #include "resources.h"
 #include "screen.h"
 #include "wcore.h"
