@@ -61,6 +61,59 @@
 #include "actions.h"
 #include "xinerama.h"
 
+#define COPYRIGHT_TEXT  \
+    "Copyright \xc2\xa9 1997-2006 Alfredo K. Kojima\n"\
+    "Copyright \xc2\xa9 1998-2006 Dan Pascu\n"\
+    "Copyright \xc2\xa9 2013-2014 Window Maker Developers Team"
+
+typedef struct IconPanel {
+	virtual_screen *vscr;
+	WMWindow *win;
+
+	WMLabel *dirLabel;
+	WMLabel *iconLabel;
+
+	WMList *dirList;
+	WMList *iconList;
+	WMFont *normalfont;
+
+	WMButton *previewButton;
+
+	WMLabel *iconView;
+
+	WMLabel *fileLabel;
+	WMTextField *fileField;
+
+	WMButton *okButton;
+	WMButton *cancelButton;
+
+	short done;
+	short result;
+	short preview;
+} IconPanel;
+
+typedef struct {
+	virtual_screen *vscr;
+	WWindow *wwin;
+	WMWindow *win;
+	WMLabel *licenseL;
+} LegalPanel;
+
+typedef struct {
+	virtual_screen *vscr;
+	WWindow *wwin;
+	WMWindow *win;
+	WMLabel *logoL;
+	WMLabel *name1L;
+	WMFrame *lineF;
+	WMLabel *name2L;
+	WMLabel *versionL;
+	WMLabel *infoL;
+	WMLabel *copyrL;
+} InfoPanel;
+
+static LegalPanel *legalPanel = NULL;
+static InfoPanel *infoPanel = NULL;
 
 static WMPoint getCenter(virtual_screen *vscr, int width, int height)
 {
@@ -520,34 +573,6 @@ int wInputDialog(virtual_screen *vscr, const char *title, const char *message, c
  *****************************************************************
  */
 
-typedef struct IconPanel {
-
-	WScreen *scr;
-
-	WMWindow *win;
-
-	WMLabel *dirLabel;
-	WMLabel *iconLabel;
-
-	WMList *dirList;
-	WMList *iconList;
-	WMFont *normalfont;
-
-	WMButton *previewButton;
-
-	WMLabel *iconView;
-
-	WMLabel *fileLabel;
-	WMTextField *fileField;
-
-	WMButton *okButton;
-	WMButton *cancelButton;
-
-	short done;
-	short result;
-	short preview;
-} IconPanel;
-
 static void listPixmaps(virtual_screen *vscr, WMList *lPtr, const char *path)
 {
 	struct dirent *dentry;
@@ -647,7 +672,7 @@ static void listCallback(void *self, void *data)
 		WMSetButtonEnabled(panel->okButton, False);
 
 		WMClearList(panel->iconList);
-		listPixmaps(panel->scr->vscr, panel->iconList, path);
+		listPixmaps(panel->vscr, panel->iconList, path);
 	} else {
 		char *tmp, *iconFile;
 		WMListItem *item = WMGetListSelectedItem(panel->dirList);
@@ -699,7 +724,7 @@ static void listIconPaths(WMList *lPtr)
 static void drawIconProc(WMList *lPtr, int index, Drawable d, char *text, int state, WMRect *rect)
 {
 	IconPanel *panel = WMGetHangedData(lPtr);
-	WScreen *scr = panel->scr;
+	WScreen *scr = panel->vscr->screen_ptr;
 	GC gc = scr->draw_gc;
 	GC copygc = scr->copy_gc;
 	char *file, *dirfile;
@@ -737,15 +762,11 @@ static void drawIconProc(WMList *lPtr, int index, Drawable d, char *text, int st
 	pixmap = WMCreateScaledBlendedPixmapFromFile(wmscr, file, &color, width - 2, height - 2);
 	wfree(file);
 
-	if (!pixmap) {
-		/*WMRemoveListItem(lPtr, index); */
+	if (!pixmap)
 		return;
-	}
 
 	XFillRectangle(dpy, d, WMColorGC(back), x, y, width, height);
-
 	XSetClipMask(dpy, gc, None);
-	/*XDrawRectangle(dpy, d, WMColorGC(white), x+5, y+5, width-10, 54); */
 	XDrawLine(dpy, d, WMColorGC(scr->white), x, y + height - 1, x + width, y + height - 1);
 
 	size = WMGetPixmapSize(pixmap);
@@ -799,22 +820,6 @@ static void buttonCallback(void *self, void *clientData)
 		/* for draw proc to access screen/gc */
 	/*** end preview ***/
 	}
-#if 0
-	else if (bPtr == panel->chooseButton) {
-		WMOpenPanel *op;
-
-		op = WMCreateOpenPanel(WMWidgetScreen(bPtr));
-
-		if (WMRunModalFilePanelForDirectory(op, NULL, "/usr/local", NULL, NULL)) {
-			char *path;
-			path = WMGetFilePanelFile(op);
-			WMSetTextFieldText(panel->fileField, path);
-			setViewedImage(panel, path);
-			wfree(path);
-		}
-		WMDestroyFilePanel(op);
-	}
-#endif
 }
 
 static void keyPressHandler(XEvent *event, void *data)
@@ -899,8 +904,7 @@ Bool wIconChooserDialog(virtual_screen *vscr, char **file, const char *instance,
 	Bool result;
 
 	panel = wmalloc(sizeof(IconPanel));
-
-	panel->scr = scr;
+	panel->vscr = vscr;
 
 	panel->win = WMCreateWindow(scr->wmscreen, "iconChooser");
 	WMResizeWidget(panel->win, 450, 280);
@@ -1090,26 +1094,6 @@ Bool wIconChooserDialog(virtual_screen *vscr, char **file, const char *instance,
  ***********************************************************************
  */
 
-typedef struct {
-	WScreen *scr;
-	WWindow *wwin;
-	WMWindow *win;
-	WMLabel *logoL;
-	WMLabel *name1L;
-	WMFrame *lineF;
-	WMLabel *name2L;
-	WMLabel *versionL;
-	WMLabel *infoL;
-	WMLabel *copyrL;
-} InfoPanel;
-
-#define COPYRIGHT_TEXT  \
-    "Copyright \xc2\xa9 1997-2006 Alfredo K. Kojima\n"\
-    "Copyright \xc2\xa9 1998-2006 Dan Pascu\n"\
-    "Copyright \xc2\xa9 2013-2014 Window Maker Developers Team"
-
-static InfoPanel *infoPanel = NULL;
-
 static void destroyInfoPanel(WCoreWindow *foo, void *data, XEvent *event)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
@@ -1149,7 +1133,7 @@ void wShowInfoPanel(virtual_screen *vscr)
 	};
 
 	if (infoPanel) {
-		if (infoPanel->scr == vscr->screen_ptr) {
+		if (infoPanel->vscr->screen_ptr == vscr->screen_ptr) {
 			wRaiseFrame(infoPanel->wwin->frame->core);
 			wSetFocusTo(vscr, infoPanel->wwin);
 		}
@@ -1158,8 +1142,7 @@ void wShowInfoPanel(virtual_screen *vscr)
 	}
 
 	panel = wmalloc(sizeof(InfoPanel));
-
-	panel->scr = vscr->screen_ptr;
+	panel->vscr = vscr;
 
 	panel->win = WMCreateWindow(vscr->screen_ptr->wmscreen, "info");
 	WMResizeWidget(panel->win, win_width, win_height);
@@ -1376,15 +1359,6 @@ void wShowInfoPanel(virtual_screen *vscr)
  ***********************************************************************
  */
 
-typedef struct {
-	WScreen *scr;
-	WWindow *wwin;
-	WMWindow *win;
-	WMLabel *licenseL;
-} LegalPanel;
-
-static LegalPanel *legalPanel = NULL;
-
 static void destroyLegalPanel(WCoreWindow *foo, void *data, XEvent *event)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
@@ -1410,7 +1384,7 @@ void wShowLegalPanel(virtual_screen *vscr)
 	WMPoint center;
 
 	if (legalPanel) {
-		if (legalPanel->scr == vscr->screen_ptr) {
+		if (legalPanel->vscr->screen_ptr == vscr->screen_ptr) {
 			wRaiseFrame(legalPanel->wwin->frame->core);
 			wSetFocusTo(vscr, legalPanel->wwin);
 		}
@@ -1419,7 +1393,8 @@ void wShowLegalPanel(virtual_screen *vscr)
 	}
 
 	panel = wmalloc(sizeof(LegalPanel));
-	panel->scr = vscr->screen_ptr;
+	panel->vscr = vscr;
+
 	panel->win = WMCreateWindow(vscr->screen_ptr->wmscreen, "legal");
 	WMResizeWidget(panel->win, win_width, win_height);
 
