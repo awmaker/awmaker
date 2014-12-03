@@ -1077,13 +1077,13 @@ static void handleClientMessage(XEvent *event)
 	}
 }
 
-static void raiseWindow(WScreen *scr)
+static void raiseWindow(virtual_screen *vscr)
 {
 	WWindow *wwin;
 
-	scr->autoRaiseTimer = NULL;
+	vscr->screen_ptr->autoRaiseTimer = NULL;
 
-	wwin = wWindowFor(scr->autoRaiseWindow);
+	wwin = wWindowFor(vscr->screen_ptr->autoRaiseWindow);
 	if (!wwin)
 		return;
 
@@ -1314,20 +1314,21 @@ static void handleFocusIn(XEvent *event)
 	}
 }
 
-static WWindow *windowUnderPointer(WScreen *scr)
+static WWindow *windowUnderPointer(virtual_screen *vscr)
 {
 	unsigned int mask;
 	int foo;
 	Window bar, win;
 
-	if (XQueryPointer(dpy, scr->root_win, &bar, &win, &foo, &foo, &foo, &foo, &mask))
+	if (XQueryPointer(dpy, vscr->screen_ptr->root_win, &bar, &win, &foo, &foo, &foo, &foo, &mask))
 		return wWindowFor(win);
+
 	return NULL;
 }
 
-static int CheckFullScreenWindowFocused(WScreen *scr)
+static int CheckFullScreenWindowFocused(virtual_screen *vscr)
 {
-	if (scr->focused_window && scr->focused_window->flags.fullscreen)
+	if (vscr->screen_ptr->focused_window && vscr->screen_ptr->focused_window->flags.fullscreen)
 		return 1;
 
 	return 0;
@@ -1383,14 +1384,14 @@ static void handleKeyPress(XEvent *event)
 	switch (command) {
 	case WKBD_ROOTMENU:
 		/*OpenRootMenu(scr, event->xkey.x_root, event->xkey.y_root, True); */
-		if (!CheckFullScreenWindowFocused(scr)) {
+		if (!CheckFullScreenWindowFocused(scr->vscr)) {
 			WMRect rect = wGetRectForHead(scr->vscr, wGetHeadForPointerLocation(scr->vscr));
 			OpenRootMenu(scr->vscr, rect.pos.x + rect.size.width / 2, rect.pos.y + rect.size.height / 2,
 				     True);
 		}
 		break;
 	case WKBD_WINDOWLIST:
-		if (!CheckFullScreenWindowFocused(scr)) {
+		if (!CheckFullScreenWindowFocused(scr->vscr)) {
 			WMRect rect = wGetRectForHead(scr->vscr, wGetHeadForPointerLocation(scr->vscr));
 			OpenSwitchMenu(scr->vscr, rect.pos.x + rect.size.width / 2, rect.pos.y + rect.size.height / 2,
 				       True);
@@ -1524,7 +1525,7 @@ static void handleKeyPress(XEvent *event)
 		/* raise or lower the window under the pointer, not the
 		 * focused one
 		 */
-		wwin = windowUnderPointer(scr);
+		wwin = windowUnderPointer(scr->vscr);
 		if (wwin)
 			wRaiseLowerFrame(wwin->frame->core);
 		break;
