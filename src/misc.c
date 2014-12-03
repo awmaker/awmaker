@@ -461,7 +461,7 @@ parseuserinputpart(const char *line, int *ptr, const char *endchars)
 }
 
 static char*
-getuserinput(WScreen *scr, const char *line, int *ptr, Bool advanced)
+getuserinput(virtual_screen *vscr, const char *line, int *ptr, Bool advanced)
 {
     char *ret = NULL, *title = NULL, *prompt = NULL, *name = NULL;
     int rv;
@@ -474,12 +474,12 @@ getuserinput(WScreen *scr, const char *line, int *ptr, Bool advanced)
 	name = parseuserinputpart(line, ptr, ")");
 
     if(advanced)
-        rv = wAdvancedInputDialog(scr->vscr,
+        rv = wAdvancedInputDialog(vscr,
 		title ? _(title):_("Program Arguments"),
 		prompt ? _(prompt):_("Enter command arguments:"),
 		name, &ret);
     else
-        rv = wInputDialog(scr->vscr,
+        rv = wInputDialog(vscr,
 		title ? _(title):_("Program Arguments"),
 		prompt ? _(prompt):_("Enter command arguments:"),
 		&ret);
@@ -603,7 +603,7 @@ char *ExpandOptions(virtual_screen *vscr, const char *cmdline)
 			case 'a':
 			case 'A':
 				ptr++;
-				user_input = getuserinput(vscr->screen_ptr, cmdline, &ptr, cmdline[ptr-1] == 'A');
+				user_input = getuserinput(vscr, cmdline, &ptr, cmdline[ptr-1] == 'A');
 				if (user_input) {
 					slen = strlen(user_input);
 					olen += slen;
