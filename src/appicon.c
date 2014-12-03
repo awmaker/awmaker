@@ -724,13 +724,12 @@ void appIconMouseDown(WObjDescriptor *desc, XEvent *event)
 {
 	WAppIcon *aicon = desc->parent;
 	virtual_screen *vscr = aicon->icon->core->vscr;
-	WScreen *scr = vscr->screen_ptr;
 	Bool hasMoved;
 
 	if (aicon->editing || WCHECK_STATE(WSTATE_MODAL))
 		return;
 
-	if (IsDoubleClick(scr, event)) {
+	if (IsDoubleClick(vscr, event)) {
 		/* Middle or right mouse actions were handled on first click */
 		if (event->xbutton.button == Button1)
 			iconDblClick(desc, event);

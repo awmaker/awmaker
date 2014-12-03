@@ -34,7 +34,7 @@ noreturn void EventLoop(void);
 void DispatchEvent(XEvent *event);
 void ProcessPendingEvents(void);
 WMagicNumber wAddDeathHandler(pid_t pid, WDeathHandler *callback, void *cdata);
-Bool IsDoubleClick(WScreen *scr, XEvent *event);
+Bool IsDoubleClick(virtual_screen *vscr, XEvent *event);
 
 /* called from the signal handler */
 void NotifyDeadProcess(pid_t pid, unsigned char status);

@@ -1536,12 +1536,12 @@ static void handleButtonExpose(WObjDescriptor *desc, XEvent *event)
 			    WMColorPixel(fwin->title_color[fwin->flags.state]), fwin->rbutton_image, False);
 }
 
-static void titlebarMouseDown(WObjDescriptor * desc, XEvent * event)
+static void titlebarMouseDown(WObjDescriptor *desc, XEvent *event)
 {
 	WFrameWindow *fwin = desc->parent;
 	WCoreWindow *titlebar = desc->self;
 
-	if (IsDoubleClick(fwin->core->vscr->screen_ptr, event)) {
+	if (IsDoubleClick(fwin->core->vscr, event)) {
 		if (fwin->on_dblclick_titlebar)
 			(*fwin->on_dblclick_titlebar) (titlebar, fwin->child, event);
 	} else {
@@ -1570,7 +1570,7 @@ static void buttonMouseDown(WObjDescriptor *desc, XEvent *event)
 	unsigned long pixel;
 	int clickButton = event->xbutton.button;
 
-	if (IsDoubleClick(fwin->core->vscr->screen_ptr, event)) {
+	if (IsDoubleClick(fwin->core->vscr, event)) {
 		if (button == fwin->right_button && fwin->on_dblclick_right)
 			(*fwin->on_dblclick_right) (button, fwin->child, event);
 

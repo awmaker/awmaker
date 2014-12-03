@@ -132,7 +132,7 @@ typedef struct DeathHandler {
 
 static WMArray *deathHandlers = NULL;
 
-WMagicNumber wAddDeathHandler(pid_t pid, WDeathHandler * callback, void *cdata)
+WMagicNumber wAddDeathHandler(pid_t pid, WDeathHandler *callback, void *cdata)
 {
 	DeathHandler *handler;
 
@@ -163,7 +163,7 @@ static void wdelete_death_handler(WMagicNumber id)
 	WMRemoveFromArray(deathHandlers, handler);
 }
 
-void DispatchEvent(XEvent * event)
+void DispatchEvent(XEvent *event)
 {
 	if (deathHandlers)
 		handleDeadProcess();
@@ -397,6 +397,7 @@ noreturn void EventLoop(void)
 				w_global.inotify.fd_event_queue = -1;
 				continue;
 			}
+
 			if (FD_ISSET(w_global.inotify.fd_event_queue, &rfds))
 				handle_inotify_events();
 		}
@@ -436,16 +437,16 @@ void ProcessPendingEvents(void)
 	}
 }
 
-Bool IsDoubleClick(WScreen * scr, XEvent * event)
+Bool IsDoubleClick(virtual_screen *vscr, XEvent *event)
 {
-	if ((scr->last_click_time > 0) &&
-	    (event->xbutton.time - scr->last_click_time <= wPreferences.dblclick_time)
-	    && (event->xbutton.button == scr->last_click_button)
-	    && (event->xbutton.window == scr->last_click_window)) {
+	if ((vscr->screen_ptr->last_click_time > 0) &&
+	    (event->xbutton.time - vscr->screen_ptr->last_click_time <= wPreferences.dblclick_time)
+	    && (event->xbutton.button == vscr->screen_ptr->last_click_button)
+	    && (event->xbutton.window == vscr->screen_ptr->last_click_window)) {
 
-		scr->flags.next_click_is_not_double = 1;
-		scr->last_click_time = 0;
-		scr->last_click_window = event->xbutton.window;
+		vscr->screen_ptr->flags.next_click_is_not_double = 1;
+		vscr->screen_ptr->last_click_time = 0;
+		vscr->screen_ptr->last_click_window = event->xbutton.window;
 
 		return True;
 	}
@@ -470,9 +471,8 @@ static void handleDeadProcess(void)
 	DeathHandler *tmp;
 	int i;
 
-	for (i = 0; i < deadProcessPtr; i++) {
+	for (i = 0; i < deadProcessPtr; i++)
 		wWindowDeleteSavedStatesForPID(deadProcesses[i].pid);
-	}
 
 	if (!deathHandlers) {
 		deadProcessPtr = 0;
@@ -497,7 +497,7 @@ static void handleDeadProcess(void)
 	}
 }
 
-static void saveTimestamp(XEvent * event)
+static void saveTimestamp(XEvent *event)
 {
 	/*
 	 * Never save CurrentTime as LastTimestamp because CurrentTime
@@ -543,7 +543,7 @@ static int matchWindow(const void *item, const void *cdata)
 	return (((WFakeGroupLeader *) item)->origLeader == (Window) cdata);
 }
 
-static void handleExtensions(XEvent * event)
+static void handleExtensions(XEvent *event)
 {
 #ifdef USE_XSHAPE
 	if (w_global.xext.shape.supported && event->type == (w_global.xext.shape.event_base + ShapeNotify)) {
@@ -568,7 +568,7 @@ static void handleExtensions(XEvent * event)
 #endif
 }
 
-static void handleMapRequest(XEvent * ev)
+static void handleMapRequest(XEvent *ev)
 {
 	WWindow *wwin;
 	WScreen *scr = NULL;
@@ -641,7 +641,7 @@ static void handleMapRequest(XEvent * ev)
 	}
 }
 
-static void handleDestroyNotify(XEvent * event)
+static void handleDestroyNotify(XEvent *event)
 {
 	WWindow *wwin;
 	WApplication *app;
@@ -809,13 +809,12 @@ static void handleButtonPress(XEvent *event)
 		if (event->xbutton.state & ( MOD_MASK | ControlMask )) {
 			XAllowEvents(dpy, AsyncPointer, CurrentTime);
 		} else {
-			/*      if (wPreferences.focus_mode == WKF_CLICK) { */
-			if (wPreferences.ignore_focus_click) {
+			if (wPreferences.ignore_focus_click)
 				XAllowEvents(dpy, AsyncPointer, CurrentTime);
-			}
+
 			XAllowEvents(dpy, ReplayPointer, CurrentTime);
-			/*      } */
 		}
+
 		XSync(dpy, 0);
 	} else if (desc->parent_type == WCLASS_APPICON
 		   || desc->parent_type == WCLASS_MINIWINDOW || desc->parent_type == WCLASS_DOCK_ICON) {
@@ -826,9 +825,8 @@ static void handleButtonPress(XEvent *event)
 		}
 	}
 
-	if (desc->handle_mousedown != NULL) {
+	if (desc->handle_mousedown != NULL)
 		(*desc->handle_mousedown) (desc, event);
-	}
 
 	/* save double-click information */
 	if (scr->flags.next_click_is_not_double) {
@@ -840,7 +838,7 @@ static void handleButtonPress(XEvent *event)
 	}
 }
 
-static void handleMapNotify(XEvent * event)
+static void handleMapNotify(XEvent *event)
 {
 	WWindow *wwin;
 
@@ -907,21 +905,18 @@ static void handleUnmapNotify(XEvent *event)
 	XUngrabServer(dpy);
 }
 
-static void handleConfigureRequest(XEvent * event)
+static void handleConfigureRequest(XEvent *event)
 {
 	WWindow *wwin;
 
-	if (!(wwin = wWindowFor(event->xconfigurerequest.window))) {
-		/*
-		 * Configure request for unmapped window
-		 */
+	if (!(wwin = wWindowFor(event->xconfigurerequest.window)))
+		/* Configure request for unmapped window */
 		wClientConfigure(NULL, &(event->xconfigurerequest));
-	} else {
+	else
 		wClientConfigure(wwin, &(event->xconfigurerequest));
-	}
 }
 
-static void handlePropertyNotify(XEvent * event)
+static void handlePropertyNotify(XEvent *event)
 {
 	WWindow *wwin;
 	WApplication *wapp;
@@ -931,15 +926,15 @@ static void handlePropertyNotify(XEvent * event)
 
 	wwin = wWindowFor(event->xproperty.window);
 	if (wwin) {
-		if (!XGetGeometry(dpy, wwin->client_win, &jr, &ji, &ji, &ju, &ju, &ju, &ju)) {
+		if (!XGetGeometry(dpy, wwin->client_win, &jr, &ji, &ji, &ju, &ju, &ju, &ju))
 			return;
-		}
+
 		wClientCheckProperty(wwin, &event->xproperty);
 	}
+
 	wapp = wApplicationOf(event->xproperty.window);
-	if (wapp) {
+	if (wapp)
 		wClientCheckProperty(wapp->main_window_desc, &event->xproperty);
-	}
 }
 
 static void handleClientMessage(XEvent *event)
@@ -960,7 +955,6 @@ static void handleClientMessage(XEvent *event)
 
 	} else if (event->xclient.message_type == w_global.atom.wm.colormap_notify && event->xclient.format == 32) {
 		WScreen *scr = wScreenForRootWindow(event->xclient.window);
-
 		if (!scr)
 			return;
 
@@ -1027,9 +1021,8 @@ static void handleClientMessage(XEvent *event)
 			{
 				int level = (int)event->xclient.data.l[1];
 
-				if (WINDOW_LEVEL(wwin) != level) {
+				if (WINDOW_LEVEL(wwin) != level)
 					ChangeStackingLevel(wwin->frame->core, level);
-				}
 			}
 			break;
 		}
@@ -1052,6 +1045,7 @@ static void handleClientMessage(XEvent *event)
 		WScreen *scr = wScreenForRootWindow(event->xclient.window);
 		if (!scr)
 			return;
+
 		scr->flags.ignore_focus_events = event->xclient.data.l[0] ? 1 : 0;
 	} else if (wNETWMProcessClientMessage(&event->xclient)) {
 		/* do nothing */
@@ -1068,11 +1062,11 @@ static void handleClientMessage(XEvent *event)
 		if (XFindContext(dpy, event->xbutton.window, w_global.context.client_win, (XPointer *) & desc) != XCNOENT) {
 			struct WIcon *icon = NULL;
 
-			if (desc->parent_type == WCLASS_MINIWINDOW) {
+			if (desc->parent_type == WCLASS_MINIWINDOW)
 				icon = (WIcon *) desc->parent;
-			} else if (desc->parent_type == WCLASS_DOCK_ICON || desc->parent_type == WCLASS_APPICON) {
+			else if (desc->parent_type == WCLASS_DOCK_ICON || desc->parent_type == WCLASS_APPICON)
 				icon = ((WAppIcon *) desc->parent)->icon;
-			}
+
 			if (icon && (wwin = icon->owner)) {
 				if (wwin->client_win != event->xclient.window) {
 					event->xclient.window = wwin->client_win;
@@ -1083,7 +1077,7 @@ static void handleClientMessage(XEvent *event)
 	}
 }
 
-static void raiseWindow(WScreen * scr)
+static void raiseWindow(WScreen *scr)
 {
 	WWindow *wwin;
 
@@ -1100,7 +1094,7 @@ static void raiseWindow(WScreen * scr)
 	}
 }
 
-static void handleEnterNotify(XEvent * event)
+static void handleEnterNotify(XEvent *event)
 {
 	WWindow *wwin;
 	WObjDescriptor *desc = NULL;
@@ -1110,15 +1104,13 @@ static void handleEnterNotify(XEvent * event)
 	if (XCheckTypedWindowEvent(dpy, event->xcrossing.window, LeaveNotify, &ev)) {
 		/* already left the window... */
 		saveTimestamp(&ev);
-		if (ev.xcrossing.mode == event->xcrossing.mode && ev.xcrossing.detail == event->xcrossing.detail) {
+		if (ev.xcrossing.mode == event->xcrossing.mode && ev.xcrossing.detail == event->xcrossing.detail)
 			return;
-		}
 	}
 
-	if (XFindContext(dpy, event->xcrossing.window, w_global.context.client_win, (XPointer *) & desc) != XCNOENT) {
+	if (XFindContext(dpy, event->xcrossing.window, w_global.context.client_win, (XPointer *) & desc) != XCNOENT)
 		if (desc->handle_enternotify)
 			(*desc->handle_enternotify) (desc, event);
-	}
 
 	/* enter to window */
 	wwin = wWindowFor(event->xcrossing.window);
@@ -1146,6 +1138,7 @@ static void handleEnterNotify(XEvent * event)
 
 			if (scr->autoRaiseTimer)
 				WMDeleteTimerHandler(scr->autoRaiseTimer);
+
 			scr->autoRaiseTimer = NULL;
 
 			if (wPreferences.raise_delay && !WFLAGP(wwin, no_focusable)) {
@@ -1240,16 +1233,15 @@ static void handleXkbIndicatorStateNotify(XkbEvent *event)
 				wwin->frame->languagemode = staterec.group;
 			}
 #ifdef XKB_BUTTON_HINT
-			if (wwin->frame->titlebar && wwin->frame->flags.titlebar) {
+			if (wwin->frame->titlebar && wwin->frame->flags.titlebar)
 				wFrameWindowPaint(wwin->frame);
-			}
 #endif
 		}
 	}
 }
 #endif				/*KEEP_XKB_LOCK_STATUS */
 
-static void handleColormapNotify(XEvent * event)
+static void handleColormapNotify(XEvent *event)
 {
 	WWindow *wwin;
 	WScreen *scr;
@@ -1333,12 +1325,12 @@ static WWindow *windowUnderPointer(WScreen *scr)
 	return NULL;
 }
 
-static int CheckFullScreenWindowFocused(WScreen * scr)
+static int CheckFullScreenWindowFocused(WScreen *scr)
 {
 	if (scr->focused_window && scr->focused_window->flags.fullscreen)
 		return 1;
-	else
-		return 0;
+
+	return 0;
 }
 
 static void handleKeyPress(XEvent *event)
@@ -1358,8 +1350,7 @@ static void handleKeyPress(XEvent *event)
 		if (wKeyBindings[i].keycode == 0)
 			continue;
 
-		if (wKeyBindings[i].keycode == event->xkey.keycode && (	/*wKeyBindings[i].modifier==0
-									   || */ wKeyBindings[i].modifier ==
+		if (wKeyBindings[i].keycode == event->xkey.keycode && (wKeyBindings[i].modifier ==
 									      modifiers)) {
 			command = i;
 			break;
@@ -1720,17 +1711,18 @@ static void handleKeyPress(XEvent *event)
 				if (wScreenWithNumber(i) == scr)
 					break;
 			}
+
 			i++;
-			if (i >= w_global.screen_count) {
+			if (i >= w_global.screen_count)
 				i = 0;
-			}
+
 			scr2 = wScreenWithNumber(i);
 
-			if (scr2) {
+			if (scr2)
 				XWarpPointer(dpy, scr->root_win, scr2->root_win, 0, 0, 0, 0,
 					     scr2->scr_width / 2, scr2->scr_height / 2);
-			}
 		}
+
 		break;
 
 	case WKBD_RUN:
@@ -1830,5 +1822,6 @@ static void handleVisibilityNotify(XEvent *event)
 	wwin = wWindowFor(event->xvisibility.window);
 	if (!wwin)
 		return;
+
 	wwin->flags.obscured = (event->xvisibility.state == VisibilityFullyObscured);
 }

@@ -821,7 +821,7 @@ static void miniwindowMouseDown(WObjDescriptor *desc, XEvent *event)
 	if (WCHECK_STATE(WSTATE_MODAL))
 		return;
 
-	if (IsDoubleClick(icon->core->vscr->screen_ptr, event)) {
+	if (IsDoubleClick(icon->core->vscr, event)) {
 		miniwindowDblClick(desc, event);
 		return;
 	}

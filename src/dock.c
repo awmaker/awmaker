@@ -4503,7 +4503,7 @@ static void iconMouseDown(WObjDescriptor *desc, XEvent *event)
 	if (dock->menu->flags.mapped)
 		wMenuUnmap(dock->menu);
 
-	if (IsDoubleClick(scr, event)) {
+	if (IsDoubleClick(vscr, event)) {
 		/* double-click was not in the main clip icon */
 		if (dock->type != WM_CLIP || aicon->xindex != 0 || aicon->yindex != 0
 		    || getClipButton(event->xbutton.x, event->xbutton.y) == CLIP_IDLE) {
