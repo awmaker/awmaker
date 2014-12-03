@@ -31,6 +31,6 @@ typedef enum {
 } WShutdownMode;
 
 void Shutdown(WShutdownMode mode);
-void RestoreDesktop(WScreen *scr);
+void RestoreDesktop(virtual_screen *vscr);
 
 #endif  /* SHUTDOWN_H */

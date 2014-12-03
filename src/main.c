@@ -415,8 +415,9 @@ noreturn void wAbort(Bool dumpCore)
 	for (i = 0; i < w_global.screen_count; i++) {
 		scr = wScreenWithNumber(i);
 		if (scr)
-			RestoreDesktop(scr);
+			RestoreDesktop(scr->vscr);
 	}
+
 	printf(_("%s aborted.\n"), ProgName);
 	if (dumpCore)
 		abort();
@@ -455,12 +456,11 @@ static void check_defaults(void)
 	if (access(path, R_OK) != 0) {
 		wwarning(_("could not find user GNUstep directory (%s)."), path);
 
-		if (system("wmaker.inst --batch") != 0) {
+		if (system("wmaker.inst --batch") != 0)
 			wwarning(_("There was an error while creating GNUstep directory, please "
 				   "make sure you have installed Window Maker correctly and run wmaker.inst"));
-		} else {
+		else
 			wwarning(_("%s directory created with default configuration."), path);
-		}
 	}
 
 	wfree(path);
@@ -608,9 +608,9 @@ static int real_main(int argc, char **argv)
 
 	ArgCount = argc;
 	Arguments = wmalloc(sizeof(char *) * (ArgCount + 1));
-	for (i = 0; i < argc; i++) {
+	for (i = 0; i < argc; i++)
 		Arguments[i] = argv[i];
-	}
+
 	/* add the extra option to signal that we're just restarting wmaker */
 	Arguments[argc - 1] = "--for-real=";
 	Arguments[argc] = NULL;
