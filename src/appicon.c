@@ -161,7 +161,6 @@ void unpaint_app_icon(WApplication *wapp)
 void paint_app_icon(WApplication *wapp)
 {
 	WIcon *icon;
-	WScreen *scr;
 	virtual_screen *vscr;
 	WDock *attracting_dock;
 	int x = 0, y = 0;
@@ -172,7 +171,6 @@ void paint_app_icon(WApplication *wapp)
 
 	icon = wapp->app_icon->icon;
 	vscr = wapp->main_window_desc->vscr;
-	scr = vscr->screen_ptr;
 	wapp->app_icon->main_window = wapp->main_window;
 
 	/* If the icon is docked, don't continue */
@@ -182,6 +180,7 @@ void paint_app_icon(WApplication *wapp)
 	attracting_dock = vscr->drawer.attracting_drawer != NULL ?
 		vscr->drawer.attracting_drawer :
 		vscr->workspace.array[vscr->workspace.current]->clip;
+
 	if (attracting_dock && attracting_dock->attract_icons &&
 		wDockFindFreeSlot(attracting_dock, &x, &y)) {
 		wapp->app_icon->attracted = 1;
@@ -189,13 +188,14 @@ void paint_app_icon(WApplication *wapp)
 			icon->shadowed = 1;
 			update_icon = True;
 		}
+
 		wDockAttachIcon(attracting_dock, wapp->app_icon, x, y, update_icon);
 	} else {
 		/* We must know if the icon is painted in the screen,
 		 * because if painted, then PlaceIcon will return the next
 		 * space on the screen, and the icon will move */
 		if (wapp->app_icon->next == NULL && wapp->app_icon->prev == NULL) {
-			PlaceIcon(scr->vscr, &x, &y, wGetHeadForWindow(wapp->main_window_desc));
+			PlaceIcon(vscr, &x, &y, wGetHeadForWindow(wapp->main_window_desc));
 			wAppIconMove(wapp->app_icon, x, y);
 			wLowerFrame(icon->core);
 		}
@@ -410,7 +410,8 @@ static void updateDockNumbers(virtual_screen *vscr)
 void wAppIconPaint(WAppIcon *aicon)
 {
 	WApplication *wapp;
-	WScreen *scr = aicon->icon->core->vscr->screen_ptr;
+	virtual_screen *vscr = aicon->icon->core->vscr;
+	WScreen *scr = vscr->screen_ptr;
 
 	if (aicon->icon->owner)
 		wapp = wApplicationOf(aicon->icon->owner->main_window);
@@ -421,7 +422,7 @@ void wAppIconPaint(WAppIcon *aicon)
 
 # ifdef WS_INDICATOR
 	if (aicon->docked && scr->dock && scr->dock == aicon->dock && aicon->yindex == 0)
-		updateDockNumbers(scr->vscr);
+		updateDockNumbers(vscr);
 # endif
 	if (aicon->docked && !aicon->running && aicon->command != NULL) {
 		XSetClipMask(dpy, scr->copy_gc, scr->dock_dots->mask);
