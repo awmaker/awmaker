@@ -104,7 +104,7 @@ static void make_keys(void)
  * 	CantManageScreen is set to 1;
  *----------------------------------------------------------------------
  */
-static int alreadyRunningError(Display * dpy, XErrorEvent * error)
+static int alreadyRunningError(Display *dpy, XErrorEvent *error)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) dpy;
@@ -129,83 +129,94 @@ static int alreadyRunningError(Display * dpy, XErrorEvent * error)
  * not be freed by anybody.
  *----------------------------------------------------------------------
  */
-static void allocButtonPixmaps(WScreen * scr)
+static void allocButtonPixmaps(WScreen *scr)
 {
 	WPixmap *pix;
 
 	/* create predefined pixmaps */
-	if (wPreferences.new_style == TS_NEXT) {
+	if (wPreferences.new_style == TS_NEXT)
 		pix = wPixmapCreateFromXPMData(scr, NEXT_CLOSE_XPM);
-	} else {
+	else
 		pix = wPixmapCreateFromXPMData(scr, PRED_CLOSE_XPM);
-	}
+
 	if (pix)
 		pix->shared = 1;
+
 	scr->b_pixmaps[WBUT_CLOSE] = pix;
 
-	if (wPreferences.new_style == TS_NEXT) {
+	if (wPreferences.new_style == TS_NEXT)
 		pix = wPixmapCreateFromXPMData(scr, NEXT_BROKEN_CLOSE_XPM);
-	} else {
+	else
 		pix = wPixmapCreateFromXPMData(scr, PRED_BROKEN_CLOSE_XPM);
-	}
+
 	if (pix)
 		pix->shared = 1;
+
 	scr->b_pixmaps[WBUT_BROKENCLOSE] = pix;
 
-	if (wPreferences.new_style == TS_NEXT) {
+	if (wPreferences.new_style == TS_NEXT)
 		pix = wPixmapCreateFromXPMData(scr, NEXT_ICONIFY_XPM);
-	} else {
+	else
 		pix = wPixmapCreateFromXPMData(scr, PRED_ICONIFY_XPM);
-	}
+
 	if (pix)
 		pix->shared = 1;
+
 	scr->b_pixmaps[WBUT_ICONIFY] = pix;
+
 #ifdef XKB_BUTTON_HINT
-	if (wPreferences.new_style == TS_NEXT) {
+	if (wPreferences.new_style == TS_NEXT)
 		pix = wPixmapCreateFromXPMData(scr, NEXT_XKBGROUP1_XPM);
-	} else {
+	else
 		pix = wPixmapCreateFromXPMData(scr, PRED_XKBGROUP1_XPM);
-	}
+
 	if (pix)
 		pix->shared = 1;
+
 	scr->b_pixmaps[WBUT_XKBGROUP1] = pix;
-	if (wPreferences.new_style == TS_NEXT) {
+
+	if (wPreferences.new_style == TS_NEXT)
 		pix = wPixmapCreateFromXPMData(scr, NEXT_XKBGROUP2_XPM);
-	} else {
+	else
 		pix = wPixmapCreateFromXPMData(scr, PRED_XKBGROUP2_XPM);
-	}
+
 	if (pix)
 		pix->shared = 1;
+
 	scr->b_pixmaps[WBUT_XKBGROUP2] = pix;
-	if (wPreferences.new_style == TS_NEXT) {
+
+	if (wPreferences.new_style == TS_NEXT)
 		pix = wPixmapCreateFromXPMData(scr, NEXT_XKBGROUP3_XPM);
-	} else {
+	else
 		pix = wPixmapCreateFromXPMData(scr, PRED_XKBGROUP3_XPM);
-	}
+
 	if (pix)
 		pix->shared = 1;
+
 	scr->b_pixmaps[WBUT_XKBGROUP3] = pix;
-	if (wPreferences.new_style == TS_NEXT) {
+
+	if (wPreferences.new_style == TS_NEXT)
 		pix = wPixmapCreateFromXPMData(scr, NEXT_XKBGROUP4_XPM);
-	} else {
+	else
 		pix = wPixmapCreateFromXPMData(scr, PRED_XKBGROUP4_XPM);
-	}
+
 	if (pix)
 		pix->shared = 1;
+
 	scr->b_pixmaps[WBUT_XKBGROUP4] = pix;
 #endif
-
-	if (wPreferences.new_style == TS_NEXT) {
+	if (wPreferences.new_style == TS_NEXT)
 		pix = wPixmapCreateFromXPMData(scr, NEXT_KILL_XPM);
-	} else {
+	else
 		pix = wPixmapCreateFromXPMData(scr, PRED_KILL_XPM);
-	}
+
 	if (pix)
 		pix->shared = 1;
+
 	scr->b_pixmaps[WBUT_KILL] = pix;
 }
 
-static void draw_dot(WScreen * scr, Drawable d, int x, int y, GC gc)
+static void draw_dot(WScreen *scr, Drawable d, int x, int y, GC gc)
 {
 	XSetForeground(dpy, gc, scr->black_pixel);
 	XDrawLine(dpy, d, gc, x, y, x + 1, y);
@@ -215,7 +226,7 @@ static void draw_dot(WScreen * scr, Drawable d, int x, int y, GC gc)
 	XDrawPoint(dpy, d, gc, x + 1, y + 1);
 }
 
-static WPixmap *make3Dots(WScreen * scr)
+static WPixmap *make3Dots(WScreen *scr)
 {
 	WPixmap *wpix;
 	GC gc2, gc;
@@ -249,7 +260,7 @@ static WPixmap *make3Dots(WScreen * scr)
 	return wpix;
 }
 
-static void allocGCs(WScreen * scr)
+static void allocGCs(WScreen *scr)
 {
 	XGCValues gcv;
 	XColor color;
@@ -282,7 +293,6 @@ static void allocGCs(WScreen * scr)
 	gcm |= GCDashOffset | GCDashList;
 
 	scr->icon_select_gc = XCreateGC(dpy, scr->w_win, gcm, &gcv);
-
 	scr->menu_title_color[0] = WMRetainColor(scr->white);
 
 	/* don't retain scr->black here because we may alter its alpha */
@@ -292,6 +302,7 @@ static void allocGCs(WScreen * scr)
 	/* frame GC */
 	wGetColor(scr, DEF_FRAME_COLOR, &color);
 	gcv.function = GXxor;
+
 	/* this will raise the probability of the XORed color being different
 	 * of the original color in PseudoColor when not all color cells are
 	 * initialized */
@@ -299,9 +310,11 @@ static void allocGCs(WScreen * scr)
 		gcv.plane_mask = (1 << (scr->depth - 1)) | 1;
 	else
 		gcv.plane_mask = AllPlanes;
+
 	gcv.foreground = color.pixel;
 	if (gcv.foreground == 0)
 		gcv.foreground = 1;
+
 	gcv.line_width = DEF_FRAME_THICKNESS;
 	gcv.subwindow_mode = IncludeInferiors;
 	gcv.graphics_exposures = False;
@@ -323,7 +336,6 @@ static void allocGCs(WScreen * scr)
 	gcv.graphics_exposures = False;
 	gcm = GCForeground | GCFunction | GCSubwindowMode | GCLineWidth | GCCapStyle | GCGraphicsExposures;
 	scr->line_gc = XCreateGC(dpy, scr->root_win, gcm, &gcv);
-
 	scr->line_pixel = gcv.foreground;
 
 	/* copy GC */
@@ -343,7 +355,7 @@ static void allocGCs(WScreen * scr)
 	scr->mono_gc = XCreateGC(dpy, scr->stipple_bitmap, gcm, &gcv);
 }
 
-static void createPixmaps(WScreen * scr)
+static void createPixmaps(WScreen *scr)
 {
 	WPixmap *pix;
 
@@ -354,6 +366,7 @@ static void createPixmaps(WScreen * scr)
 				       MENU_RADIO_INDICATOR_XBM_SIZE, scr->black_pixel, scr->white_pixel);
 	if (pix != NULL)
 		pix->shared = 1;
+
 	scr->menu_radio_indicator = pix;
 
 	pix = wPixmapCreateFromXBMData(scr, (char *)MENU_CHECK_INDICATOR_XBM_DATA,
@@ -362,6 +375,7 @@ static void createPixmaps(WScreen * scr)
 				       MENU_CHECK_INDICATOR_XBM_SIZE, scr->black_pixel, scr->white_pixel);
 	if (pix != NULL)
 		pix->shared = 1;
+
 	scr->menu_check_indicator = pix;
 
 	pix = wPixmapCreateFromXBMData(scr, (char *)MENU_MINI_INDICATOR_XBM_DATA,
@@ -370,6 +384,7 @@ static void createPixmaps(WScreen * scr)
 				       MENU_MINI_INDICATOR_XBM_SIZE, scr->black_pixel, scr->white_pixel);
 	if (pix != NULL)
 		pix->shared = 1;
+
 	scr->menu_mini_indicator = pix;
 
 	pix = wPixmapCreateFromXBMData(scr, (char *)MENU_HIDE_INDICATOR_XBM_DATA,
@@ -378,6 +393,7 @@ static void createPixmaps(WScreen * scr)
 				       MENU_HIDE_INDICATOR_XBM_SIZE, scr->black_pixel, scr->white_pixel);
 	if (pix != NULL)
 		pix->shared = 1;
+
 	scr->menu_hide_indicator = pix;
 
 	pix = wPixmapCreateFromXBMData(scr, (char *)MENU_SHADE_INDICATOR_XBM_DATA,
@@ -386,6 +402,7 @@ static void createPixmaps(WScreen * scr)
 				       MENU_SHADE_INDICATOR_XBM_SIZE, scr->black_pixel, scr->white_pixel);
 	if (pix != NULL)
 		pix->shared = 1;
+
 	scr->menu_shade_indicator = pix;
 
 	create_logo_image(scr);
@@ -423,7 +440,7 @@ void create_logo_image(WScreen *scr)
  * window background.
  *----------------------------------------------------------------------
  */
-static void createInternalWindows(WScreen * scr)
+static void createInternalWindows(WScreen *scr)
 {
 	int vmask;
 	XSetWindowAttributes attribs;
@@ -436,7 +453,6 @@ static void createInternalWindows(WScreen * scr)
 					  InputOnly, CopyFromParent, vmask, &attribs);
 	XSelectInput(dpy, scr->no_focus_win, KeyPressMask | KeyReleaseMask);
 	XMapWindow(dpy, scr->no_focus_win);
-
 	XSetInputFocus(dpy, scr->no_focus_win, RevertToParent, CurrentTime);
 
 	/* shadow window for dock buttons */
@@ -449,9 +465,11 @@ static void createInternalWindows(WScreen * scr)
 	attribs.cursor = wPreferences.cursor[WCUR_NORMAL];
 	vmask |= CWColormap;
 	attribs.colormap = scr->w_colormap;
-	scr->dock_shadow =
-	    XCreateWindow(dpy, scr->root_win, 0, 0, wPreferences.icon_size,
-			  wPreferences.icon_size, 0, scr->w_depth, CopyFromParent, scr->w_visual, vmask, &attribs);
+	scr->dock_shadow = XCreateWindow(dpy, scr->root_win, 0, 0,
+					 wPreferences.icon_size,
+					 wPreferences.icon_size, 0,
+					 scr->w_depth, CopyFromParent,
+					 scr->w_visual, vmask, &attribs);
 
 	/* workspace name */
 	vmask = CWBackPixel | CWSaveUnder | CWOverrideRedirect | CWColormap | CWBorderPixel;
@@ -460,9 +478,10 @@ static void createInternalWindows(WScreen * scr)
 	attribs.colormap = scr->w_colormap;
 	attribs.background_pixel = scr->icon_back_texture->normal.pixel;
 	attribs.border_pixel = 0;	/* do not care */
-	scr->workspace_name =
-	    XCreateWindow(dpy, scr->root_win, 0, 0, 10, 10, 0, scr->w_depth,
-			  CopyFromParent, scr->w_visual, vmask, &attribs);
+	scr->workspace_name = XCreateWindow(dpy, scr->root_win, 0, 0,
+					    10, 10, 0, scr->w_depth,
+					    CopyFromParent, scr->w_visual,
+					    vmask, &attribs);
 }
 
 /*
@@ -534,9 +553,8 @@ WScreen *wScreenInit(int screen_number)
 	/* Only GroupLock doesn't work correctly in my system since right-alt
 	 * can change mode while holding it too - ]d
 	 */
-	if (w_global.xext.xkb.supported) {
+	if (w_global.xext.xkb.supported)
 		XkbSelectEvents(dpy, XkbUseCoreKbd, XkbStateNotifyMask, XkbStateNotifyMask);
-	}
 #endif				/* KEEP_XKB_LOCK_STATUS */
 
 #ifdef USE_RANDR
@@ -581,10 +599,16 @@ WScreen *wScreenInit(int screen_number)
 
 		scr->rcontext = RCreateContext(dpy, screen_number, &rattr);
 	}
+
 	if (scr->rcontext == NULL) {
 		wfatal(_("can't create Context on screen %d, %s"),
 		       screen_number, RMessageForError(RErrorCode));
-		goto abort_no_context;
+		WMFreeArray(scr->fakeGroupLeaders);
+		wfree(scr->totalUsableArea);
+		wfree(scr->usableArea);
+		WMFreeBag(scr->stacking_list);
+		wfree(scr);
+		return NULL;
 	}
 
 	scr->w_win = scr->rcontext->drawable;
@@ -598,7 +622,6 @@ WScreen *wScreenInit(int screen_number)
 	if (!scr->wmscreen) {
 		wfatal(_("could not initialize WINGs widget set"));
 		RDestroyContext(scr->rcontext);
-	abort_no_context:
 		WMFreeArray(scr->fakeGroupLeaders);
 		wfree(scr->totalUsableArea);
 		wfree(scr->usableArea);
@@ -850,6 +873,7 @@ void wScreenSaveState(virtual_screen *vscr)
 		if ((foo = WMGetFromPLDictionary(old_state, dDock)) != NULL)
 			WMPutInPLDictionary(w_global.session_state, dDock, foo);
 	}
+
 	if (!wPreferences.flags.noclip) {
 		wClipSaveState(vscr);
 	} else {
