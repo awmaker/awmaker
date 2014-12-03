@@ -304,7 +304,7 @@ static void saveSessionCommand(WMenu *menu, WMenuEntry *entry)
 	if (!wPreferences.save_session_on_exit)
 		wSessionSaveState(menu->frame->vscr);
 
-	wScreenSaveState(menu->frame->vscr->screen_ptr);
+	wScreenSaveState(menu->frame->vscr);
 }
 
 static void clearSessionCommand(WMenu *menu, WMenuEntry *entry)
@@ -313,7 +313,7 @@ static void clearSessionCommand(WMenu *menu, WMenuEntry *entry)
 	(void) entry;
 
 	wSessionClearState();
-	wScreenSaveState(menu->frame->vscr->screen_ptr);
+	wScreenSaveState(menu->frame->vscr);
 }
 
 static void infoPanelCommand(WMenu *menu, WMenuEntry *entry)

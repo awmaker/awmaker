@@ -320,8 +320,8 @@ struct WScreen {
 };
 
 WScreen *wScreenInit(int screen_number);
-void wScreenSaveState(WScreen *scr);
-void wScreenRestoreState(WScreen *scr);
+void wScreenSaveState(virtual_screen *vscr);
+void wScreenRestoreState(virtual_screen *vscr);
 
 int wScreenBringInside(WScreen *scr, int *x, int *y, int width, int height);
 int wScreenKeepInside(WScreen *scr, int *x, int *y, int width, int height);

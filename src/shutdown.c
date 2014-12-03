@@ -75,7 +75,7 @@ void Shutdown(WShutdownMode mode)
 				if (scr->helper_pid)
 					kill(scr->helper_pid, SIGKILL);
 
-				wScreenSaveState(scr);
+				wScreenSaveState(scr->vscr);
 
 				if (mode == WSKillMode)
 					wipeDesktop(scr->vscr);
@@ -103,7 +103,7 @@ void Shutdown(WShutdownMode mode)
 				if (scr->helper_pid)
 					kill(scr->helper_pid, SIGKILL);
 
-				wScreenSaveState(scr);
+				wScreenSaveState(scr->vscr);
 				RestoreDesktop(scr->vscr);
 			}
 		}

@@ -654,7 +654,7 @@ void StartUp(Bool defaultScreenOnly)
 
 		lastDesktop = wNETWMGetCurrentDesktopFromHint(wScreen[j]);
 
-		wScreenRestoreState(wScreen[j]);
+		wScreenRestoreState(wScreen[j]->vscr);
 
 		/* manage all windows that were already here before us */
 		if (!wPreferences.flags.nodock && wScreen[j]->vscr->dock.dock)
