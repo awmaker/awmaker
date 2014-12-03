@@ -98,24 +98,19 @@ iconPosition(WCoreWindow *wcore, int sx1, int sy1, int sx2, int sy2,
 	return ok;
 }
 
-void PlaceIcon(WScreen *scr, int *x_ret, int *y_ret, int head)
+void PlaceIcon(virtual_screen *vscr, int *x_ret, int *y_ret, int head)
 {
 	int pf;			/* primary axis */
 	int sf;			/* secondary axis */
-	int fullW;
-	int fullH;
+	int fullW, fullH, pi, si;
 	char *map;
-	int pi, si;
 	WCoreWindow *obj;
 	int sx1, sx2, sy1, sy2;	/* screen boundary */
-	int sw, sh;
-	int xo, yo;
-	int xs, ys;
-	int x, y;
+	int sw, sh, xo, yo, xs, ys, x, y;
 	int isize = wPreferences.icon_size;
 	int done = 0;
 	WMBagIterator iter;
-	WArea area = wGetUsableAreaForHead(scr, head, NULL, False);
+	WArea area = wGetUsableAreaForHead(vscr->screen_ptr, head, NULL, False);
 
 	/* Find out screen boundaries. */
 
@@ -167,12 +162,12 @@ void PlaceIcon(WScreen *scr, int *x_ret, int *y_ret, int head)
 
 #define INDEX(x,y)	(((y)+1)*(sw+2) + (x) + 1)
 
-	WM_ETARETI_BAG(scr->stacking_list, obj, iter) {
+	WM_ETARETI_BAG(vscr->screen_ptr->stacking_list, obj, iter) {
 
 		while (obj) {
 			int x, y;
 
-			if (iconPosition(obj, sx1, sy1, sx2, sy2, scr->vscr->workspace.current, &x, &y)) {
+			if (iconPosition(obj, sx1, sy1, sx2, sy2, vscr->workspace.current, &x, &y)) {
 				int xdi, ydi;	/* rounded down */
 				int xui, yui;	/* rounded up */
 
@@ -209,6 +204,7 @@ void PlaceIcon(WScreen *scr, int *x_ret, int *y_ret, int head)
 				break;
 			}
 		}
+
 		if (done)
 			break;
 	}

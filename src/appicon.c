@@ -195,7 +195,7 @@ void paint_app_icon(WApplication *wapp)
 		 * because if painted, then PlaceIcon will return the next
 		 * space on the screen, and the icon will move */
 		if (wapp->app_icon->next == NULL && wapp->app_icon->prev == NULL) {
-			PlaceIcon(scr, &x, &y, wGetHeadForWindow(wapp->main_window_desc));
+			PlaceIcon(scr->vscr, &x, &y, wGetHeadForWindow(wapp->main_window_desc));
 			wAppIconMove(wapp->app_icon, x, y);
 			wLowerFrame(icon->core);
 		}
@@ -1283,7 +1283,7 @@ void move_appicon_to_dock(virtual_screen *vscr, WAppIcon *icon, char *wm_class, 
 	appicon_map(aicon, vscr);
 
 	/* Map it on the screen, in the right possition */
-	PlaceIcon(vscr->screen_ptr, &x0, &y0, wGetHeadForWindow(aicon->icon->owner));
+	PlaceIcon(vscr, &x0, &y0, wGetHeadForWindow(aicon->icon->owner));
 	wAppIconMove(aicon, x0, y0);
 	XMapWindow(dpy, aicon->icon->core->window);
 	aicon->launching = 1;

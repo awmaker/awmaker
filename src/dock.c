@@ -493,8 +493,7 @@ static void removeIcons(WMArray *icons, WDock *dock)
 		keepit = aicon->running && wApplicationOf(aicon->main_window);
 		wDockDetach(dock, aicon);
 		if (keepit) {
-			/* XXX: can: aicon->icon == NULL ? */
-			PlaceIcon(dock->vscr->screen_ptr, &aicon->x_pos, &aicon->y_pos,
+			PlaceIcon(dock->vscr, &aicon->x_pos, &aicon->y_pos,
 				wGetHeadForWindow(aicon->icon->owner));
 			XMoveWindow(dpy, aicon->icon->core->window, aicon->x_pos, aicon->y_pos);
 			if (!dock->mapped || dock->collapsed)
@@ -1695,8 +1694,7 @@ void wDockDestroy(WDock *dock)
 			int keepit = aicon->running && wApplicationOf(aicon->main_window);
 			wDockDetach(dock, aicon);
 			if (keepit) {
-				/* XXX: can: aicon->icon == NULL ? */
-				PlaceIcon(dock->vscr->screen_ptr, &aicon->x_pos, &aicon->y_pos,
+				PlaceIcon(dock->vscr, &aicon->x_pos, &aicon->y_pos,
 					  wGetHeadForWindow(aicon->icon->owner));
 				XMoveWindow(dpy, aicon->icon->core->window, aicon->x_pos, aicon->y_pos);
 				if (!dock->mapped || dock->collapsed)

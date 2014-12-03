@@ -1113,7 +1113,7 @@ void wIconifyWindow(WWindow *wwin)
 
 	if (!wPreferences.disable_miniwindows && !wwin->flags.net_handle_icon) {
 		if (!wwin->flags.icon_moved)
-			PlaceIcon(wwin->vscr->screen_ptr, &wwin->icon_x, &wwin->icon_y, wGetHeadForWindow(wwin));
+			PlaceIcon(wwin->vscr, &wwin->icon_x, &wwin->icon_y, wGetHeadForWindow(wwin));
 
 		wwin->icon = icon_create_core();
 		wwin->icon->owner = wwin;
@@ -1617,7 +1617,7 @@ void wUnhideApplication(WApplication *wapp, Bool miniwindows, Bool bringToCurren
 					if (!wlist->icon->mapped) {
 						int x, y;
 
-						PlaceIcon(vscr->screen_ptr, &x, &y, wGetHeadForWindow(wlist));
+						PlaceIcon(vscr, &x, &y, wGetHeadForWindow(wlist));
 						if (wlist->icon_x != x || wlist->icon_y != y)
 							XMoveWindow(dpy, wlist->icon->core->window, x, y);
 

@@ -23,7 +23,7 @@
 #ifndef PLACEMENT_H
 #define PLACEMENT_H
 
-void PlaceIcon(WScreen *scr, int *x_ret, int *y_ret, int head);
+void PlaceIcon(virtual_screen *vscr, int *x_ret, int *y_ret, int head);
 
 /* Computes the intersecting length of two line sections */
 int calcIntersectionLength(int p1, int l1, int p2, int l2);
@@ -33,9 +33,9 @@ int calcIntersectionArea(int x1, int y1, int w1, int h1, int x2, int y2, int w2,
 
 void PlaceWindow(WWindow *wwin, int *x_ret, int *y_ret, unsigned width, unsigned height);
 
-void InteractivePlaceWindow(WWindow * wwin, int *x_ret, int *y_ret, unsigned width, unsigned height);
+void InteractivePlaceWindow(WWindow *wwin, int *x_ret, int *y_ret, unsigned width, unsigned height);
 
 /* Set the points x and y inside the screen */
-void get_right_position_on_screen(WScreen *scr, int *x, int *y, int size_x, int size_y);
+void get_right_position_on_screen(virtual_screen *vscr, int *x, int *y, int size_x, int size_y);
 
 #endif  /* PLACEMENT_H */
