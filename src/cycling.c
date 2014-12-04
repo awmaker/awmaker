@@ -131,7 +131,7 @@ void StartWindozeCycle(WWindow *wwin, XEvent *event, Bool next, Bool class_only)
 
 		oldFocused = change_focus_and_raise(newFocused, oldFocused, swpanel, vscr, False);
 	} else {
-		if (wwin->frame->workspace == scr->vscr->workspace.current)
+		if (wwin->frame->workspace == vscr->workspace.current)
 			newFocused = wwin;
 		else
 			newFocused = NULL;
@@ -244,11 +244,11 @@ void StartWindozeCycle(WWindow *wwin, XEvent *event, Bool next, Bool class_only)
 
 	if (newFocused && !esc_cancel) {
 		wRaiseFrame(newFocused->frame->core);
-		CommitStacking(scr->vscr);
+		CommitStacking(vscr);
 		if (!newFocused->flags.mapped)
 			wMakeWindowVisible(newFocused);
 
-		wSetFocusTo(scr->vscr, newFocused);
+		wSetFocusTo(vscr, newFocused);
 	}
 
 	scr->flags.doing_alt_tab = 0;
