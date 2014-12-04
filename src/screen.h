@@ -333,7 +333,7 @@ virtual_screen *wScreenForRootWindow(Window window);   /* window must be valid *
 virtual_screen *wScreenForWindow(Window window);       /* slower than above functions */
 
 void wScreenFinish(WScreen *scr);
-void wScreenUpdateUsableArea(WScreen *scr);
+void wScreenUpdateUsableArea(virtual_screen *vscr);
 
 void create_logo_image(WScreen *scr);
 #endif

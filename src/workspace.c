@@ -649,7 +649,7 @@ void wWorkspaceForceChange(virtual_screen *vscr, int workspace)
 		wClipIconPaint();
 	}
 
-	wScreenUpdateUsableArea(vscr->screen_ptr);
+	wScreenUpdateUsableArea(vscr);
 	wNETWMUpdateDesktop(vscr->screen_ptr);
 	showWorkspaceName(vscr, workspace);
 

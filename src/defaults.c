@@ -3247,7 +3247,7 @@ static int setIconPosition(virtual_screen *vscr, WDefaultEntry *entry, void *bar
 	(void) bar;
 	(void) foo;
 
-	wScreenUpdateUsableArea(vscr->screen_ptr);
+	wScreenUpdateUsableArea(vscr);
 	wArrangeIcons(vscr, True);
 
 	return 0;
@@ -3260,7 +3260,7 @@ static int updateUsableArea(virtual_screen *vscr, WDefaultEntry *entry, void *ba
 	(void) bar;
 	(void) foo;
 
-	wScreenUpdateUsableArea(vscr->screen_ptr);
+	wScreenUpdateUsableArea(vscr);
 
 	return 0;
 }

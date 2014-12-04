@@ -628,7 +628,7 @@ void wNETWMInitStuff(WScreen *scr)
 	updateWorkspaceNames(scr->vscr);
 	updateShowDesktop(scr, False);
 
-	wScreenUpdateUsableArea(scr);
+	wScreenUpdateUsableArea(scr->vscr);
 }
 
 void wNETWMCleanup(WScreen *scr)
@@ -1365,7 +1365,7 @@ void wNETWMCheckClientHints(WWindow *wwin, int *layer, int *workspace)
 	updateStrut(wwin->vscr->screen_ptr, wwin->client_win, False);
 	updateStrut(wwin->vscr->screen_ptr, wwin->client_win, True);
 
-	wScreenUpdateUsableArea(wwin->vscr->screen_ptr);
+	wScreenUpdateUsableArea(wwin->vscr);
 }
 
 static Bool updateNetIconInfo(WWindow *wwin)
@@ -1602,7 +1602,7 @@ void wNETWMCheckClientHintChange(WWindow *wwin, XPropertyEvent *event)
 	if (event->atom == net_wm_strut || event->atom == net_wm_strut_partial) {
 		updateStrut(wwin->vscr->screen_ptr, wwin->client_win, False);
 		updateStrut(wwin->vscr->screen_ptr, wwin->client_win, True);
-		wScreenUpdateUsableArea(wwin->vscr->screen_ptr);
+		wScreenUpdateUsableArea(wwin->vscr);
 	} else if (event->atom == net_wm_handled_icons || event->atom == net_wm_icon_geometry) {
 		updateNetIconInfo(wwin);
 	} else if (event->atom == net_wm_window_type) {
@@ -1692,7 +1692,7 @@ static void observer(void *self, WMNotification *notif)
 
 		updateStrut(wwin->vscr->screen_ptr, wwin->client_win, False);
 		updateStrut(wwin->vscr->screen_ptr, wwin->client_win, True);
-		wScreenUpdateUsableArea(wwin->vscr->screen_ptr);
+		wScreenUpdateUsableArea(wwin->vscr);
 	} else if (strcmp(name, WMNUnmanaged) == 0 && wwin) {
 		updateClientList(wwin->vscr->screen_ptr);
 		updateClientListStacking(wwin->vscr->screen_ptr, wwin);
@@ -1701,7 +1701,7 @@ static void observer(void *self, WMNotification *notif)
 		wNETWMUpdateActions(wwin, True);
 
 		updateStrut(wwin->vscr->screen_ptr, wwin->client_win, False);
-		wScreenUpdateUsableArea(wwin->vscr->screen_ptr);
+		wScreenUpdateUsableArea(wwin->vscr);
 	} else if (strcmp(name, WMNResetStacking) == 0 && wwin) {
 		updateClientListStacking(wwin->vscr->screen_ptr, NULL);
 		updateStateHint(wwin, False, False);

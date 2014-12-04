@@ -3457,7 +3457,7 @@ static void swapDock(WDock *dock)
 		}
 	}
 
-	wScreenUpdateUsableArea(scr);
+	wScreenUpdateUsableArea(vscr);
 }
 
 static pid_t execCommand(WAppIcon *btn, const char *command, WSavedState *state)
@@ -3846,7 +3846,7 @@ static void toggleLowered(WDock *dock)
 		for (dc = dock->vscr->drawer.drawers; dc != NULL; dc = dc->next)
 			toggleLowered(dc->adrawer);
 
-		wScreenUpdateUsableArea(dock->vscr->screen_ptr);
+		wScreenUpdateUsableArea(dock->vscr);
 	}
 }
 

@@ -704,19 +704,19 @@ WScreen *wScreenInit(int screen_number)
 	scr->gview = WCreateGeometryView(scr->wmscreen);
 	WMRealizeWidget(scr->gview);
 
-	wScreenUpdateUsableArea(scr);
+	wScreenUpdateUsableArea(vscr);
 
 	return scr;
 }
 
-void wScreenUpdateUsableArea(WScreen *scr)
+void wScreenUpdateUsableArea(virtual_screen *vscr)
 {
 	/*
 	 * scr->totalUsableArea[] will become the usableArea used for Windowplacement,
 	 * scr->usableArea[] will be used for iconplacement, hence no iconyard nor
 	 * border.
 	 */
-	virtual_screen *vscr = scr->vscr;
+	WScreen *scr = vscr->screen_ptr;
 
 	WArea area;
 	int i;
@@ -786,7 +786,7 @@ void wScreenUpdateUsableArea(WScreen *scr)
 	}
 
 	if (wPreferences.auto_arrange_icons)
-		wArrangeIcons(scr->vscr, True);
+		wArrangeIcons(vscr, True);
 }
 
 void wScreenRestoreState(virtual_screen *vscr)
@@ -839,7 +839,7 @@ void wScreenRestoreState(virtual_screen *vscr)
 	}
 
 	wWorkspaceRestoreState(vscr);
-	wScreenUpdateUsableArea(vscr->screen_ptr);
+	wScreenUpdateUsableArea(vscr);
 }
 
 void wScreenSaveState(virtual_screen *vscr)
