@@ -649,7 +649,7 @@ WScreen *wScreenInit(int screen_number)
 	scr->info_window = XCreateSimpleWindow(dpy, scr->root_win, 0, 0, 10, 10, 0, 0, 0);
 
 	/* read defaults for this screen */
-	wReadDefaults(scr->vscr, w_global.domain.wmaker->dictionary);
+	wReadDefaults(vscr, w_global.domain.wmaker->dictionary);
 
 	{
 		XColor xcol;
@@ -667,7 +667,7 @@ WScreen *wScreenInit(int screen_number)
 	wNETWMInitStuff(scr);
 
 	/* create initial workspace */
-	wWorkspaceNew(scr->vscr);
+	wWorkspaceNew(vscr);
 
 	/* create shared pixmaps */
 	createPixmaps(scr);
@@ -692,7 +692,7 @@ WScreen *wScreenInit(int screen_number)
 
 #ifdef BALLOON_TEXT
 	/* initialize balloon text stuff */
-	wBalloonInitialize(scr->vscr);
+	wBalloonInitialize(vscr);
 #endif
 
 	scr->info_text_font = WMBoldSystemFontOfSize(scr->wmscreen, 12);
