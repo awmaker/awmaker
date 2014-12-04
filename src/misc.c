@@ -987,7 +987,7 @@ Bool start_bg_helper(virtual_screen *vscr)
 		/* We don't need this side of the pipe in the child process */
 		close(filedes[1]);
 
-		SetupEnvironment(vscr->screen_ptr);
+		SetupEnvironment(vscr);
 
 		close(STDIN_FILENO);
 		if (dup2(filedes[0], STDIN_FILENO) < 0) {

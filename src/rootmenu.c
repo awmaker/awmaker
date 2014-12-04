@@ -158,7 +158,7 @@ static void execCommand(WMenu *menu, WMenuEntry *entry)
 	XSync(dpy, 0);
 
 	if (cmdline) {
-		ExecuteShellCommand(menu->frame->vscr->screen_ptr, cmdline);
+		ExecuteShellCommand(menu->frame->vscr, cmdline);
 		wfree(cmdline);
 	}
 

@@ -1731,7 +1731,7 @@ static void handleKeyPress(XEvent *event)
 			     GrabModeAsync, GrabModeAsync, None, wPreferences.cursor[WCUR_WAIT], CurrentTime);
 			XSync(dpy, False);
 
-			ExecuteShellCommand(vscr->screen_ptr, cmdline);
+			ExecuteShellCommand(vscr, cmdline);
 			wfree(cmdline);
 
 			XUngrabPointer(dpy, CurrentTime);

@@ -237,7 +237,7 @@ void Restart(char *manager, Bool abortOnFailure)
 		exit(7);
 }
 
-void SetupEnvironment(WScreen * scr)
+void SetupEnvironment(virtual_screen *vscr)
 {
 	char *tmp, *ptr;
 	char buf[16];
@@ -262,18 +262,18 @@ void SetupEnvironment(WScreen * scr)
 			if (ptr)
 				*ptr = 0;
 		}
-		snprintf(buf, sizeof(buf), ".%i", scr->screen);
+		snprintf(buf, sizeof(buf), ".%i", vscr->screen_ptr->screen);
 		strcat(tmp, buf);
 		putenv(tmp);
 	}
 	tmp = wmalloc(60);
-	snprintf(tmp, 60, "WRASTER_COLOR_RESOLUTION%i=%i", scr->screen,
-		 scr->rcontext->attribs->colors_per_channel);
+	snprintf(tmp, 60, "WRASTER_COLOR_RESOLUTION%i=%i", vscr->screen_ptr->screen,
+		 vscr->screen_ptr->rcontext->attribs->colors_per_channel);
 	putenv(tmp);
 }
 
 typedef struct {
-	WScreen *scr;
+	virtual_screen *vscr;
 	char *command;
 } _tuple;
 
@@ -289,7 +289,7 @@ static void shellCommandHandler(pid_t pid, unsigned int status, void *client_dat
 
 		buffer = wstrconcat(_("Could not execute command: "), data->command);
 
-		wMessageDialog(data->scr->vscr, _("Error"), buffer, _("OK"), NULL, NULL);
+		wMessageDialog(data->vscr, _("Error"), buffer, _("OK"), NULL, NULL);
 		wfree(buffer);
 	}
 
@@ -297,7 +297,7 @@ static void shellCommandHandler(pid_t pid, unsigned int status, void *client_dat
 	wfree(data);
 }
 
-void ExecuteShellCommand(WScreen *scr, const char *command)
+void ExecuteShellCommand(virtual_screen *vscr, const char *command)
 {
 	static char *shell = NULL;
 	pid_t pid;
@@ -318,7 +318,7 @@ void ExecuteShellCommand(WScreen *scr, const char *command)
 
 	if (pid == 0) {
 
-		SetupEnvironment(scr);
+		SetupEnvironment(vscr);
 
 #ifdef HAVE_SETSID
 		setsid();
@@ -331,7 +331,7 @@ void ExecuteShellCommand(WScreen *scr, const char *command)
 	} else {
 		_tuple *data = wmalloc(sizeof(_tuple));
 
-		data->scr = scr;
+		data->vscr = vscr;
 		data->command = wstrdup(command);
 
 		wAddDeathHandler(pid, shellCommandHandler, data);
@@ -362,7 +362,7 @@ Bool RelaunchWindow(WWindow *wwin)
 
 	pid_t pid = fork();
 	if (pid == 0) {
-		SetupEnvironment(wwin->vscr->screen_ptr);
+		SetupEnvironment(wwin->vscr);
 #ifdef HAVE_SETSID
 		setsid();
 #endif
@@ -389,7 +389,7 @@ Bool RelaunchWindow(WWindow *wwin)
 	} else {
 		_tuple *data = wmalloc(sizeof(_tuple));
 
-		data->scr = wwin->vscr->screen_ptr;
+		data->vscr = wwin->vscr;
 		data->command = wtokenjoin(argv, argc);
 
 		/* not actually a shell command */

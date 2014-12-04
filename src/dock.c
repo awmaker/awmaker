@@ -3497,7 +3497,7 @@ static pid_t execCommand(WAppIcon *btn, const char *command, WSavedState *state)
 		char **args;
 		int i;
 
-		SetupEnvironment(scr);
+		SetupEnvironment(vscr);
 
 #ifdef HAVE_SETSID
 		setsid();

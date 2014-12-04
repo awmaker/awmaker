@@ -3078,7 +3078,7 @@ static int setWorkspaceBack(virtual_screen *vscr, WDefaultEntry *entry, void *td
 			else
 				snprintf(command, len, "wmsetbg %s -p '%s' &", dither, text);
 
-			ExecuteShellCommand(vscr->screen_ptr, command);
+			ExecuteShellCommand(vscr, command);
 			wfree(command);
 		} else {
 			wwarning(_("Invalid arguments for background \"%s\""), text);

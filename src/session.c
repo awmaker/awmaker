@@ -354,7 +354,7 @@ static pid_t execCommand(virtual_screen *vscr, char *command)
 		char **args;
 		int i;
 
-		SetupEnvironment(vscr->screen_ptr);
+		SetupEnvironment(vscr);
 
 		args = malloc(sizeof(char *) * (argc + 1));
 		if (!args)
