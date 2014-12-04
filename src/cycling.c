@@ -57,7 +57,7 @@ static void raiseWindow(WSwitchPanel * swpanel, WWindow * wwin)
 }
 
 static WWindow *change_focus_and_raise(WWindow *newFocused, WWindow *oldFocused,
-				       WSwitchPanel *swpanel, WScreen *scr, Bool esc_cancel)
+				       WSwitchPanel *swpanel, virtual_screen *vscr, Bool esc_cancel)
 {
 	if (!newFocused)
 		return oldFocused;
@@ -66,7 +66,7 @@ static WWindow *change_focus_and_raise(WWindow *newFocused, WWindow *oldFocused,
 	oldFocused = newFocused;
 
 	if (wPreferences.circ_raise) {
-		CommitStacking(scr->vscr);
+		CommitStacking(vscr);
 
 		if (!esc_cancel)
 			raiseWindow(swpanel, newFocused);
@@ -120,7 +120,7 @@ void StartWindozeCycle(WWindow *wwin, XEvent *event, Bool next, Bool class_only)
 
 	scr->flags.doing_alt_tab = 1;
 
-	swpanel = wInitSwitchPanel(scr->vscr, wwin, class_only);
+	swpanel = wInitSwitchPanel(vscr, wwin, class_only);
 	oldFocused = wwin;
 
 	if (swpanel) {
@@ -129,7 +129,7 @@ void StartWindozeCycle(WWindow *wwin, XEvent *event, Bool next, Bool class_only)
 		else
 			newFocused = wSwitchPanelSelectFirst(swpanel, False);
 
-		oldFocused = change_focus_and_raise(newFocused, oldFocused, swpanel, scr, False);
+		oldFocused = change_focus_and_raise(newFocused, oldFocused, swpanel, vscr, False);
 	} else {
 		if (wwin->frame->workspace == scr->vscr->workspace.current)
 			newFocused = wwin;
@@ -156,7 +156,7 @@ void StartWindozeCycle(WWindow *wwin, XEvent *event, Bool next, Bool class_only)
 			    || ev.xkey.keycode == rightKey) {
 
 				newFocused = wSwitchPanelSelectNext(swpanel, False, ev.xkey.keycode != rightKey, (!class_only && wKeyBindings[WKBD_GROUPNEXT].keycode == ev.xkey.keycode && wKeyBindings[WKBD_GROUPNEXT].modifier == modifiers));
-				oldFocused = change_focus_and_raise(newFocused, oldFocused, swpanel, scr, False);
+				oldFocused = change_focus_and_raise(newFocused, oldFocused, swpanel, vscr, False);
 
 			} else if ((wKeyBindings[WKBD_FOCUSPREV].keycode == ev.xkey.keycode
 				    && wKeyBindings[WKBD_FOCUSPREV].modifier == modifiers)
@@ -165,18 +165,18 @@ void StartWindozeCycle(WWindow *wwin, XEvent *event, Bool next, Bool class_only)
 				   || ev.xkey.keycode == leftKey) {
 
 				newFocused = wSwitchPanelSelectNext(swpanel, True, ev.xkey.keycode != leftKey, (!class_only && wKeyBindings[WKBD_GROUPPREV].keycode == ev.xkey.keycode && wKeyBindings[WKBD_GROUPPREV].modifier == modifiers));
-				oldFocused = change_focus_and_raise(newFocused, oldFocused, swpanel, scr, False);
+				oldFocused = change_focus_and_raise(newFocused, oldFocused, swpanel, vscr, False);
 
 			} else if (ev.xkey.keycode == homeKey || ev.xkey.keycode == endKey) {
 
 				newFocused = wSwitchPanelSelectFirst(swpanel, ev.xkey.keycode != homeKey);
-				oldFocused = change_focus_and_raise(newFocused, oldFocused, swpanel, scr, False);
+				oldFocused = change_focus_and_raise(newFocused, oldFocused, swpanel, vscr, False);
 
 			} else if (ev.xkey.keycode == escapeKey) {
 
 				/* Focus the first window of the swpanel, despite the 'False' */
 				newFocused = wSwitchPanelSelectFirst(swpanel, False);
-				oldFocused = change_focus_and_raise(newFocused, oldFocused, swpanel, scr, True);
+				oldFocused = change_focus_and_raise(newFocused, oldFocused, swpanel, vscr, True);
 				esc_cancel = True;
 				done = True;
 
@@ -222,7 +222,7 @@ void StartWindozeCycle(WWindow *wwin, XEvent *event, Bool next, Bool class_only)
 				tmp = wSwitchPanelHandleEvent(swpanel, &ev);
 				if (tmp) {
 					newFocused = tmp;
-					oldFocused = change_focus_and_raise(newFocused, oldFocused, swpanel, scr, False);
+					oldFocused = change_focus_and_raise(newFocused, oldFocused, swpanel, vscr, False);
 
 					if (ev.type == ButtonRelease)
 						done = True;
