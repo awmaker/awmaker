@@ -328,9 +328,9 @@ int wScreenKeepInside(WScreen *scr, int *x, int *y, int width, int height);
 
 
 /* in startup.c */
-WScreen *wScreenWithNumber(int i);
-WScreen *wScreenForRootWindow(Window window);   /* window must be valid */
-WScreen *wScreenForWindow(Window window);   /* slower than above functions */
+virtual_screen *wScreenWithNumber(int i);
+virtual_screen *wScreenForRootWindow(Window window);   /* window must be valid */
+virtual_screen *wScreenForWindow(Window window);       /* slower than above functions */
 
 void wScreenFinish(WScreen *scr);
 void wScreenUpdateUsableArea(WScreen *scr);

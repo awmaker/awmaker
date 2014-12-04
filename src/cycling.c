@@ -79,25 +79,25 @@ void StartWindozeCycle(WWindow *wwin, XEvent *event, Bool next, Bool class_only)
 {
 
 	WShortKey binding;
-	WSwitchPanel    *swpanel       = NULL;
-	WScreen         *scr           = wScreenForRootWindow(event->xkey.root);
-	KeyCode         leftKey        = XKeysymToKeycode(dpy, XK_Left);
-	KeyCode         rightKey       = XKeysymToKeycode(dpy, XK_Right);
-	KeyCode         homeKey        = XKeysymToKeycode(dpy, XK_Home);
-	KeyCode         endKey         = XKeysymToKeycode(dpy, XK_End);
-	KeyCode         shiftLKey      = XKeysymToKeycode(dpy, XK_Shift_L);
-	KeyCode         shiftRKey      = XKeysymToKeycode(dpy, XK_Shift_R);
-	KeyCode         escapeKey      = XKeysymToKeycode(dpy, XK_Escape);
-	KeyCode         returnKey      = XKeysymToKeycode(dpy, XK_Return);
-	Bool            esc_cancel     = False;
-	Bool            somethingElse  = False;
-	Bool            done           = False;
-	Bool            hasModifier;
-	int             modifiers;
-	WWindow         *newFocused;
-	WWindow         *oldFocused;
-	XEvent          ev;
+	WSwitchPanel	*swpanel	= NULL;
+	virtual_screen	*vscr		= wScreenForRootWindow(event->xkey.root);
+	KeyCode		leftKey		= XKeysymToKeycode(dpy, XK_Left);
+	KeyCode		rightKey	= XKeysymToKeycode(dpy, XK_Right);
+	KeyCode		homeKey		= XKeysymToKeycode(dpy, XK_Home);
+	KeyCode		endKey		= XKeysymToKeycode(dpy, XK_End);
+	KeyCode		shiftLKey	= XKeysymToKeycode(dpy, XK_Shift_L);
+	KeyCode		shiftRKey	= XKeysymToKeycode(dpy, XK_Shift_R);
+	KeyCode		escapeKey	= XKeysymToKeycode(dpy, XK_Escape);
+	KeyCode		returnKey	= XKeysymToKeycode(dpy, XK_Return);
+	Bool		esc_cancel	= False;
+	Bool		somethingElse	= False;
+	Bool		done		= False;
+	Bool		hasModifier;
 
+	int		modifiers;
+	WWindow	*newFocused, *oldFocused;
+	WScreen *scr = vscr->screen_ptr;
+	XEvent ev;
 
 	if (!wwin)
 		return;

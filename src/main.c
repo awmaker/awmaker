@@ -410,15 +410,16 @@ Bool RelaunchWindow(WWindow *wwin)
 noreturn void wAbort(Bool dumpCore)
 {
 	int i;
-	WScreen *scr;
+	virtual_screen *vscr;
 
 	for (i = 0; i < w_global.screen_count; i++) {
-		scr = wScreenWithNumber(i);
-		if (scr)
-			RestoreDesktop(scr->vscr);
+		vscr = wScreenWithNumber(i);
+		if (vscr->screen_ptr)
+			RestoreDesktop(vscr);
 	}
 
 	printf(_("%s aborted.\n"), ProgName);
+
 	if (dumpCore)
 		abort();
 	else

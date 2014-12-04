@@ -1478,6 +1478,7 @@ static void handleDesktopNames(WScreen *scr)
 
 Bool wNETWMProcessClientMessage(XClientMessageEvent *event)
 {
+	virtual_screen *vscr;
 	WScreen *scr;
 	WWindow *wwin;
 	Bool done = True;
@@ -1486,23 +1487,24 @@ Bool wNETWMProcessClientMessage(XClientMessageEvent *event)
 	wmessage("processClientMessage type %s", XGetAtomName(dpy, event->message_type));
 #endif
 
-	scr = wScreenForWindow(event->window);
+	vscr = wScreenForWindow(event->window);
+	scr = vscr->screen_ptr;
 	if (scr) {
 		/* generic client messages */
 		if (event->message_type == net_current_desktop) {
-			wWorkspaceChange(scr->vscr, event->data.l[0]);
+			wWorkspaceChange(vscr, event->data.l[0]);
 		} else if (event->message_type == net_number_of_desktops) {
 			long value;
 
 			value = event->data.l[0];
-			if (value > scr->vscr->workspace.count) {
-				wWorkspaceMake(scr->vscr, value - scr->vscr->workspace.count);
-			} else if (value < scr->vscr->workspace.count) {
+			if (value > vscr->workspace.count) {
+				wWorkspaceMake(vscr, value - vscr->workspace.count);
+			} else if (value < vscr->workspace.count) {
 				int i;
 				Bool rebuild = False;
 
-				for (i = scr->vscr->workspace.count - 1; i >= value; i--) {
-					if (!wWorkspaceDelete(scr->vscr, i)) {
+				for (i = vscr->workspace.count - 1; i >= value; i--) {
+					if (!wWorkspaceDelete(vscr, i)) {
 						rebuild = True;
 						break;
 					}
@@ -1537,7 +1539,7 @@ Bool wNETWMProcessClientMessage(XClientMessageEvent *event)
 		 * - giving the client the focus does not cause a change in
 		 *   the active workspace (XXX: or the active head if Xinerama)
 		 */
-		if (wwin->frame->workspace == scr->vscr->workspace.current /* No workspace change */
+		if (wwin->frame->workspace == vscr->workspace.current /* No workspace change */
 		    || event->data.l[0] == 2 /* Requested by pager */
 		    || WFLAGP(wwin, focus_across_wksp) /* Explicitly allowed */) {
 				wNETWMShowingDesktop(scr, False);

@@ -376,7 +376,7 @@ static char *getLocalizedMenuFile(const char *menu)
 
 Bool wRootMenuPerformShortcut(XEvent *event)
 {
-	WScreen *scr = wScreenForRootWindow(event->xkey.root);
+	virtual_screen *vscr = wScreenForRootWindow(event->xkey.root);
 	Shortcut *ptr;
 	int modifiers;
 	int done = 0;
@@ -385,7 +385,7 @@ Bool wRootMenuPerformShortcut(XEvent *event)
 	modifiers = event->xkey.state & w_global.shortcut.modifiers_mask;
 
 	for (ptr = shortcutList; ptr != NULL; ptr = ptr->next) {
-		if (ptr->keycode == 0 || ptr->menu->menu->vscr->screen_ptr != scr)
+		if (ptr->keycode == 0 || ptr->menu->menu->vscr != vscr)
 			continue;
 
 		if (ptr->keycode == event->xkey.keycode && ptr->modifier == modifiers) {

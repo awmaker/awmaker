@@ -571,7 +571,7 @@ static void handleExtensions(XEvent *event)
 static void handleMapRequest(XEvent *ev)
 {
 	WWindow *wwin;
-	WScreen *scr = NULL;
+	virtual_screen *vscr = NULL;
 	Window window = ev->xmaprequest.window;
 
 	if ((wwin = wWindowFor(window))) {
@@ -592,8 +592,8 @@ static void handleMapRequest(XEvent *ev)
 		return;
 	}
 
-	scr = wScreenForRootWindow(ev->xmaprequest.parent);
-	wwin = wManageWindow(scr->vscr, window);
+	vscr = wScreenForRootWindow(ev->xmaprequest.parent);
+	wwin = wManageWindow(vscr, window);
 
 	/*
 	 * This is to let the Dock know that the application it launched
@@ -601,11 +601,11 @@ static void handleMapRequest(XEvent *ev)
 	 * It is not necessary for normally docked apps, but is needed for
 	 * apps that were forcedly docked (like with dockit).
 	 */
-	if (scr->vscr->last_dock) {
+	if (vscr->last_dock) {
 		if (wwin && wwin->main_window != None && wwin->main_window != window)
-			wDockTrackWindowLaunch(scr->vscr->last_dock, wwin->main_window);
+			wDockTrackWindowLaunch(vscr->last_dock, wwin->main_window);
 		else
-			wDockTrackWindowLaunch(scr->vscr->last_dock, window);
+			wDockTrackWindowLaunch(vscr->last_dock, window);
 	}
 
 	if (wwin) {
@@ -646,7 +646,8 @@ static void handleDestroyNotify(XEvent *event)
 	WWindow *wwin;
 	WApplication *app;
 	Window window = event->xdestroywindow.window;
-	WScreen *scr = wScreenForRootWindow(event->xdestroywindow.event);
+	virtual_screen *vscr = wScreenForRootWindow(event->xdestroywindow.event);
+	WScreen *scr = vscr->screen_ptr;
 	int widx;
 
 	wwin = wWindowFor(window);
@@ -766,42 +767,42 @@ static void executeButtonAction(virtual_screen *vscr, XEvent *event, int action)
 static void handleButtonPress(XEvent *event)
 {
 	WObjDescriptor *desc;
+	virtual_screen *vscr;
 	WScreen *scr;
 
-	scr = wScreenForRootWindow(event->xbutton.root);
+	vscr = wScreenForRootWindow(event->xbutton.root);
+	scr = vscr->screen_ptr;
 
 #ifdef BALLOON_TEXT
-	wBalloonHide(scr->vscr);
+	wBalloonHide(vscr);
 #endif
 
 	if (!wPreferences.disable_root_mouse && event->xbutton.window == scr->root_win) {
 		if (event->xbutton.button == Button1 && wPreferences.mouse_button1 != WA_NONE) {
-			executeButtonAction(scr->vscr, event, wPreferences.mouse_button1);
+			executeButtonAction(vscr, event, wPreferences.mouse_button1);
 		} else if (event->xbutton.button == Button2 && wPreferences.mouse_button2 != WA_NONE) {
-			executeButtonAction(scr->vscr, event, wPreferences.mouse_button2);
+			executeButtonAction(vscr, event, wPreferences.mouse_button2);
 		} else if (event->xbutton.button == Button3 && wPreferences.mouse_button3 != WA_NONE) {
-			executeButtonAction(scr->vscr, event, wPreferences.mouse_button3);
+			executeButtonAction(vscr, event, wPreferences.mouse_button3);
 		} else if (event->xbutton.button == Button8 && wPreferences.mouse_button8 != WA_NONE) {
-			executeButtonAction(scr->vscr, event, wPreferences.mouse_button8);
+			executeButtonAction(vscr, event, wPreferences.mouse_button8);
 		} else if (event->xbutton.button == Button9 && wPreferences.mouse_button9 != WA_NONE) {
-			executeButtonAction(scr->vscr, event, wPreferences.mouse_button9);
+			executeButtonAction(vscr, event, wPreferences.mouse_button9);
 		} else if (event->xbutton.button == Button4 && wPreferences.mouse_wheel_scroll != WA_NONE) {
-			executeWheelAction(scr->vscr, event, wPreferences.mouse_wheel_scroll);
+			executeWheelAction(vscr, event, wPreferences.mouse_wheel_scroll);
 		} else if (event->xbutton.button == Button5 && wPreferences.mouse_wheel_scroll != WA_NONE) {
-			executeWheelAction(scr->vscr, event, wPreferences.mouse_wheel_scroll);
+			executeWheelAction(vscr, event, wPreferences.mouse_wheel_scroll);
 		} else if (event->xbutton.button == Button6 && wPreferences.mouse_wheel_tilt != WA_NONE) {
-			executeWheelAction(scr->vscr, event, wPreferences.mouse_wheel_tilt);
+			executeWheelAction(vscr, event, wPreferences.mouse_wheel_tilt);
 		} else if (event->xbutton.button == Button7 && wPreferences.mouse_wheel_tilt != WA_NONE) {
-			executeWheelAction(scr->vscr, event, wPreferences.mouse_wheel_tilt);
+			executeWheelAction(vscr, event, wPreferences.mouse_wheel_tilt);
 		}
 	}
 
 	desc = NULL;
-	if (XFindContext(dpy, event->xbutton.subwindow, w_global.context.client_win, (XPointer *) & desc) == XCNOENT) {
-		if (XFindContext(dpy, event->xbutton.window, w_global.context.client_win, (XPointer *) & desc) == XCNOENT) {
+	if (XFindContext(dpy, event->xbutton.subwindow, w_global.context.client_win, (XPointer *) & desc) == XCNOENT)
+		if (XFindContext(dpy, event->xbutton.window, w_global.context.client_win, (XPointer *) & desc) == XCNOENT)
 			return;
-		}
-	}
 
 	if (desc->parent_type == WCLASS_WINDOW) {
 		XSync(dpy, 0);
@@ -941,11 +942,16 @@ static void handleClientMessage(XEvent *event)
 {
 	WWindow *wwin;
 	WObjDescriptor *desc;
+	virtual_screen *vscr;
+	struct WIcon *icon = NULL;
+	WApplication *wapp;
+	int done = 0;
+	char *command;
+	size_t len;
 
 	/* handle transition from Normal to Iconic state */
 	if (event->xclient.message_type == w_global.atom.wm.change_state
 	    && event->xclient.format == 32 && event->xclient.data.l[0] == IconicState) {
-
 		wwin = wWindowFor(event->xclient.window);
 		if (!wwin)
 			return;
@@ -954,20 +960,16 @@ static void handleClientMessage(XEvent *event)
 			wIconifyWindow(wwin);
 
 	} else if (event->xclient.message_type == w_global.atom.wm.colormap_notify && event->xclient.format == 32) {
-		WScreen *scr = wScreenForRootWindow(event->xclient.window);
-		if (!scr)
+		vscr = wScreenForRootWindow(event->xclient.window);
+		if (!vscr->screen_ptr)
 			return;
 
 		if (event->xclient.data.l[1] == 1)	/* starting */
-			wColormapAllowClientInstallation(scr->vscr, True);
+			wColormapAllowClientInstallation(vscr, True);
 		else					/* stopping */
-			wColormapAllowClientInstallation(scr->vscr, False);
+			wColormapAllowClientInstallation(vscr, False);
 
 	} else if (event->xclient.message_type == w_global.atom.wmaker.command) {
-
-		char *command;
-		size_t len;
-
 		len = sizeof(event->xclient.data.b) + 1;
 		command = wmalloc(len);
 		strncpy(command, event->xclient.data.b, sizeof(event->xclient.data.b));
@@ -980,10 +982,7 @@ static void handleClientMessage(XEvent *event)
 		}
 
 		wfree(command);
-
 	} else if (event->xclient.message_type == w_global.atom.wmaker.wm_function) {
-		WApplication *wapp;
-		int done = 0;
 		wapp = wApplicationOf(event->xclient.window);
 		if (wapp) {
 			switch (event->xclient.data.l[0]) {
@@ -1042,11 +1041,11 @@ static void handleClientMessage(XEvent *event)
 			break;
 		}
 	} else if (event->xclient.message_type == w_global.atom.wm.ignore_focus_events) {
-		WScreen *scr = wScreenForRootWindow(event->xclient.window);
-		if (!scr)
+		vscr = wScreenForRootWindow(event->xclient.window);
+		if (!vscr->screen_ptr)
 			return;
 
-		scr->flags.ignore_focus_events = event->xclient.data.l[0] ? 1 : 0;
+		vscr->screen_ptr->flags.ignore_focus_events = event->xclient.data.l[0] ? 1 : 0;
 	} else if (wNETWMProcessClientMessage(&event->xclient)) {
 		/* do nothing */
 #ifdef XDND
@@ -1060,8 +1059,6 @@ static void handleClientMessage(XEvent *event)
 		 * that should have gone to the icon_window.
 		 */
 		if (XFindContext(dpy, event->xbutton.window, w_global.context.client_win, (XPointer *) & desc) != XCNOENT) {
-			struct WIcon *icon = NULL;
-
 			if (desc->parent_type == WCLASS_MINIWINDOW)
 				icon = (WIcon *) desc->parent;
 			else if (desc->parent_type == WCLASS_DOCK_ICON || desc->parent_type == WCLASS_APPICON)
@@ -1099,7 +1096,7 @@ static void handleEnterNotify(XEvent *event)
 	WWindow *wwin;
 	WObjDescriptor *desc = NULL;
 	XEvent ev;
-	WScreen *scr = wScreenForRootWindow(event->xcrossing.root);
+	virtual_screen *vscr = wScreenForRootWindow(event->xcrossing.root);
 
 	if (XCheckTypedWindowEvent(dpy, event->xcrossing.window, LeaveNotify, &ev)) {
 		/* already left the window... */
@@ -1116,11 +1113,11 @@ static void handleEnterNotify(XEvent *event)
 	wwin = wWindowFor(event->xcrossing.window);
 	if (!wwin) {
 		if (wPreferences.colormap_mode == WCM_POINTER)
-			wColormapInstallForWindow(scr->vscr, NULL);
+			wColormapInstallForWindow(vscr, NULL);
 
-		if (scr->autoRaiseTimer && event->xcrossing.root == event->xcrossing.window) {
-			WMDeleteTimerHandler(scr->autoRaiseTimer);
-			scr->autoRaiseTimer = NULL;
+		if (vscr->screen_ptr->autoRaiseTimer && event->xcrossing.root == event->xcrossing.window) {
+			WMDeleteTimerHandler(vscr->screen_ptr->autoRaiseTimer);
+			vscr->screen_ptr->autoRaiseTimer = NULL;
 		}
 	} else {
 		/* set auto raise timer even if in focus-follows-mouse mode
@@ -1131,39 +1128,39 @@ static void handleEnterNotify(XEvent *event)
 		 * set focus if in focus-follows-mouse mode and the event
 		 * is for the frame window and window doesn't have focus yet */
 		if (wPreferences.focus_mode == WKF_SLOPPY
-		    && wwin->frame->core->window == event->xcrossing.window && !scr->flags.doing_alt_tab) {
-
+		    && wwin->frame->core->window == event->xcrossing.window && !vscr->screen_ptr->flags.doing_alt_tab) {
 			if (!wwin->flags.focused && !WFLAGP(wwin, no_focusable))
-				wSetFocusTo(scr->vscr, wwin);
+				wSetFocusTo(vscr, wwin);
 
-			if (scr->autoRaiseTimer)
-				WMDeleteTimerHandler(scr->autoRaiseTimer);
+			if (vscr->screen_ptr->autoRaiseTimer)
+				WMDeleteTimerHandler(vscr->screen_ptr->autoRaiseTimer);
 
-			scr->autoRaiseTimer = NULL;
+			vscr->screen_ptr->autoRaiseTimer = NULL;
 
 			if (wPreferences.raise_delay && !WFLAGP(wwin, no_focusable)) {
-				scr->autoRaiseWindow = wwin->frame->core->window;
-				scr->autoRaiseTimer
-				    = WMAddTimerHandler(wPreferences.raise_delay, (WMCallback *) raiseWindow, scr);
+				vscr->screen_ptr->autoRaiseWindow = wwin->frame->core->window;
+				vscr->screen_ptr->autoRaiseTimer
+				    = WMAddTimerHandler(wPreferences.raise_delay, (WMCallback *) raiseWindow, vscr->screen_ptr);
 			}
 		}
 		/* Install colormap for window, if the colormap installation mode
 		 * is colormap_follows_mouse */
 		if (wPreferences.colormap_mode == WCM_POINTER) {
 			if (wwin->client_win == event->xcrossing.window)
-				wColormapInstallForWindow(scr->vscr, wwin);
+				wColormapInstallForWindow(vscr, wwin);
 			else
-				wColormapInstallForWindow(scr->vscr, NULL);
+				wColormapInstallForWindow(vscr, NULL);
 		}
 	}
 
-	if (event->xcrossing.window == event->xcrossing.root
-	    && event->xcrossing.detail == NotifyNormal
-	    && event->xcrossing.detail != NotifyInferior && wPreferences.focus_mode != WKF_CLICK) {
-		wSetFocusTo(scr->vscr, scr->focused_window);
-	}
+	if (event->xcrossing.window == event->xcrossing.root &&
+	    event->xcrossing.detail == NotifyNormal &&
+	    event->xcrossing.detail != NotifyInferior &&
+	    wPreferences.focus_mode != WKF_CLICK)
+		wSetFocusTo(vscr, vscr->screen_ptr->focused_window);
+
 #ifdef BALLOON_TEXT
-	wBalloonEnteredObject(scr->vscr, desc);
+	wBalloonEnteredObject(vscr, desc);
 #endif
 }
 
@@ -1308,9 +1305,9 @@ static void handleFocusIn(XEvent *event)
 		else
 			wSetFocusTo(wwin->vscr, NULL);
 	} else if (!wwin) {
-		WScreen *scr = wScreenForWindow(event->xfocus.window);
-		if (scr)
-			wSetFocusTo(scr->vscr, NULL);
+		virtual_screen *vscr = wScreenForWindow(event->xfocus.window);
+		if (vscr->screen_ptr)
+			wSetFocusTo(vscr, NULL);
 	}
 }
 
@@ -1336,8 +1333,8 @@ static int CheckFullScreenWindowFocused(virtual_screen *vscr)
 
 static void handleKeyPress(XEvent *event)
 {
-	WScreen *scr = wScreenForRootWindow(event->xkey.root);
-	WWindow *wwin = scr->focused_window;
+	virtual_screen *vscr = wScreenForRootWindow(event->xkey.root);
+	WWindow *wwin = vscr->screen_ptr->focused_window;
 	short i, widx;
 	int modifiers, command = -1;
 #ifdef KEEP_XKB_LOCK_STATUS
@@ -1383,17 +1380,16 @@ static void handleKeyPress(XEvent *event)
 
 	switch (command) {
 	case WKBD_ROOTMENU:
-		/*OpenRootMenu(scr, event->xkey.x_root, event->xkey.y_root, True); */
-		if (!CheckFullScreenWindowFocused(scr->vscr)) {
-			WMRect rect = wGetRectForHead(scr->vscr, wGetHeadForPointerLocation(scr->vscr));
-			OpenRootMenu(scr->vscr, rect.pos.x + rect.size.width / 2, rect.pos.y + rect.size.height / 2,
+		if (!CheckFullScreenWindowFocused(vscr)) {
+			WMRect rect = wGetRectForHead(vscr, wGetHeadForPointerLocation(vscr));
+			OpenRootMenu(vscr, rect.pos.x + rect.size.width / 2, rect.pos.y + rect.size.height / 2,
 				     True);
 		}
 		break;
 	case WKBD_WINDOWLIST:
-		if (!CheckFullScreenWindowFocused(scr->vscr)) {
-			WMRect rect = wGetRectForHead(scr->vscr, wGetHeadForPointerLocation(scr->vscr));
-			OpenSwitchMenu(scr->vscr, rect.pos.x + rect.size.width / 2, rect.pos.y + rect.size.height / 2,
+		if (!CheckFullScreenWindowFocused(vscr)) {
+			WMRect rect = wGetRectForHead(vscr, wGetHeadForPointerLocation(vscr));
+			OpenSwitchMenu(vscr, rect.pos.x + rect.size.width / 2, rect.pos.y + rect.size.height / 2,
 				       True);
 		}
 		break;
@@ -1403,13 +1399,13 @@ static void handleKeyPress(XEvent *event)
 			OpenWindowMenu(wwin, wwin->frame_x, wwin->frame_y + wwin->frame->top_width, True);
 		break;
 	case WKBD_MINIMIZEALL:
-		CloseWindowMenu(scr->vscr);
-		wHideAll(scr->vscr);
+		CloseWindowMenu(vscr);
+		wHideAll(vscr);
 		break;
 	case WKBD_MINIATURIZE:
 		if (ISMAPPED(wwin) && ISFOCUSED(wwin)
 		    && !WFLAGP(wwin, no_miniaturizable)) {
-			CloseWindowMenu(scr->vscr);
+			CloseWindowMenu(vscr);
 
 			if (wwin->protocols.MINIATURIZE_WINDOW)
 				wClientSendProtocol(wwin, w_global.atom.gnustep.wm_miniaturize_window, event->xbutton.time);
@@ -1420,104 +1416,104 @@ static void handleKeyPress(XEvent *event)
 	case WKBD_HIDE:
 		if (ISMAPPED(wwin) && ISFOCUSED(wwin)) {
 			WApplication *wapp = wApplicationOf(wwin->main_window);
-			CloseWindowMenu(scr->vscr);
+			CloseWindowMenu(vscr);
 			if (wapp && !WFLAGP(wapp->main_window_desc, no_appicon))
 				wHideApplication(wapp);
 		}
 		break;
 	case WKBD_HIDE_OTHERS:
 		if (ISMAPPED(wwin) && ISFOCUSED(wwin)) {
-			CloseWindowMenu(scr->vscr);
+			CloseWindowMenu(vscr);
 			wHideOtherApplications(wwin);
 		}
 		break;
 	case WKBD_MAXIMIZE:
 		if (ISMAPPED(wwin) && ISFOCUSED(wwin) && IS_RESIZABLE(wwin)) {
-			CloseWindowMenu(scr->vscr);
+			CloseWindowMenu(vscr);
 			handleMaximize(wwin, MAX_VERTICAL | MAX_HORIZONTAL | MAX_KEYBOARD);
 		}
 		break;
 	case WKBD_VMAXIMIZE:
 		if (ISMAPPED(wwin) && ISFOCUSED(wwin) && IS_RESIZABLE(wwin)) {
-			CloseWindowMenu(scr->vscr);
+			CloseWindowMenu(vscr);
 			handleMaximize(wwin, MAX_VERTICAL | MAX_KEYBOARD);
 		}
 		break;
 	case WKBD_HMAXIMIZE:
 		if (ISMAPPED(wwin) && ISFOCUSED(wwin) && IS_RESIZABLE(wwin)) {
-			CloseWindowMenu(scr->vscr);
+			CloseWindowMenu(vscr);
 			handleMaximize(wwin, MAX_HORIZONTAL | MAX_KEYBOARD);
 		}
 		break;
 	case WKBD_LHMAXIMIZE:
 		if (ISMAPPED(wwin) && ISFOCUSED(wwin) && IS_RESIZABLE(wwin)) {
-			CloseWindowMenu(scr->vscr);
+			CloseWindowMenu(vscr);
 			handleMaximize(wwin, MAX_VERTICAL | MAX_LEFTHALF | MAX_KEYBOARD);
 		}
 		break;
 	case WKBD_RHMAXIMIZE:
 		if (ISMAPPED(wwin) && ISFOCUSED(wwin) && IS_RESIZABLE(wwin)) {
-			CloseWindowMenu(scr->vscr);
+			CloseWindowMenu(vscr);
 			handleMaximize(wwin, MAX_VERTICAL | MAX_RIGHTHALF | MAX_KEYBOARD);
 		}
 		break;
 	case WKBD_THMAXIMIZE:
 		if (ISMAPPED(wwin) && ISFOCUSED(wwin) && IS_RESIZABLE(wwin)) {
-			CloseWindowMenu(scr->vscr);
+			CloseWindowMenu(vscr);
 			handleMaximize(wwin, MAX_HORIZONTAL | MAX_TOPHALF | MAX_KEYBOARD);
 		}
 		break;
 	case WKBD_BHMAXIMIZE:
 		if (ISMAPPED(wwin) && ISFOCUSED(wwin) && IS_RESIZABLE(wwin)) {
-			CloseWindowMenu(scr->vscr);
+			CloseWindowMenu(vscr);
 			handleMaximize(wwin, MAX_HORIZONTAL | MAX_BOTTOMHALF | MAX_KEYBOARD);
 		}
 		break;
 	case WKBD_LTCMAXIMIZE:
 		if (ISMAPPED(wwin) && ISFOCUSED(wwin) && IS_RESIZABLE(wwin)) {
-			CloseWindowMenu(scr->vscr);
+			CloseWindowMenu(vscr);
 			handleMaximize(wwin, MAX_LEFTHALF | MAX_TOPHALF | MAX_KEYBOARD);
 		}
 		break;
 	case WKBD_RTCMAXIMIZE:
 		if (ISMAPPED(wwin) && ISFOCUSED(wwin) && IS_RESIZABLE(wwin)) {
-			CloseWindowMenu(scr->vscr);
+			CloseWindowMenu(vscr);
 			handleMaximize(wwin, MAX_RIGHTHALF | MAX_TOPHALF | MAX_KEYBOARD);
 		}
 		break;
 	case WKBD_LBCMAXIMIZE:
 		if (ISMAPPED(wwin) && ISFOCUSED(wwin) && IS_RESIZABLE(wwin)) {
-			CloseWindowMenu(scr->vscr);
+			CloseWindowMenu(vscr);
 			handleMaximize(wwin, MAX_LEFTHALF | MAX_BOTTOMHALF | MAX_KEYBOARD);
 		}
 		 break;
 	case WKBD_RBCMAXIMIZE:
 		if (ISMAPPED(wwin) && ISFOCUSED(wwin) && IS_RESIZABLE(wwin)) {
-			CloseWindowMenu(scr->vscr);
+			CloseWindowMenu(vscr);
 			handleMaximize(wwin, MAX_RIGHTHALF | MAX_BOTTOMHALF | MAX_KEYBOARD);
 		}
 		break;
 	case WKBD_MAXIMUS:
 		if (ISMAPPED(wwin) && ISFOCUSED(wwin) && IS_RESIZABLE(wwin)) {
-			CloseWindowMenu(scr->vscr);
+			CloseWindowMenu(vscr);
 			handleMaximize(wwin, MAX_MAXIMUS | MAX_KEYBOARD);
 		}
 		break;
 	case WKBD_OMNIPRESENT:
 		if (ISMAPPED(wwin) && ISFOCUSED(wwin)) {
-			CloseWindowMenu(scr->vscr);
+			CloseWindowMenu(vscr);
 			wWindowSetOmnipresent(wwin, !wwin->flags.omnipresent);
 		}
 		break;
 	case WKBD_RAISE:
 		if (ISMAPPED(wwin) && ISFOCUSED(wwin)) {
-			CloseWindowMenu(scr->vscr);
+			CloseWindowMenu(vscr);
 			wRaiseFrame(wwin->frame->core);
 		}
 		break;
 	case WKBD_LOWER:
 		if (ISMAPPED(wwin) && ISFOCUSED(wwin)) {
-			CloseWindowMenu(scr->vscr);
+			CloseWindowMenu(vscr);
 			wLowerFrame(wwin->frame->core);
 		}
 		break;
@@ -1525,7 +1521,7 @@ static void handleKeyPress(XEvent *event)
 		/* raise or lower the window under the pointer, not the
 		 * focused one
 		 */
-		wwin = windowUnderPointer(scr->vscr);
+		wwin = windowUnderPointer(vscr);
 		if (wwin)
 			wRaiseLowerFrame(wwin->frame->core);
 		break;
@@ -1539,13 +1535,13 @@ static void handleKeyPress(XEvent *event)
 		break;
 	case WKBD_MOVERESIZE:
 		if (ISMAPPED(wwin) && ISFOCUSED(wwin) && (IS_RESIZABLE(wwin) || IS_MOVABLE(wwin))) {
-			CloseWindowMenu(scr->vscr);
+			CloseWindowMenu(vscr);
 			wKeyboardMoveResizeWindow(wwin);
 		}
 		break;
 	case WKBD_CLOSE:
 		if (ISMAPPED(wwin) && ISFOCUSED(wwin) && !WFLAGP(wwin, no_closable)) {
-			CloseWindowMenu(scr->vscr);
+			CloseWindowMenu(vscr);
 			if (wwin->protocols.DELETE_WINDOW)
 				wClientSendProtocol(wwin, w_global.atom.wm.delete_window, event->xkey.time);
 		}
@@ -1573,24 +1569,24 @@ static void handleKeyPress(XEvent *event)
 
 	case WKBD_WORKSPACE1 ... WKBD_WORKSPACE10:
 		widx = command - WKBD_WORKSPACE1;
-		i = (scr->vscr->workspace.current / 10) * 10 + widx;
-		if (wPreferences.ws_advance || i < scr->vscr->workspace.count)
-			wWorkspaceChange(scr->vscr, i);
+		i = (vscr->workspace.current / 10) * 10 + widx;
+		if (wPreferences.ws_advance || i < vscr->workspace.count)
+			wWorkspaceChange(vscr, i);
 		break;
 
 	case WKBD_NEXTWORKSPACE:
-		wWorkspaceRelativeChange(scr->vscr, 1);
+		wWorkspaceRelativeChange(vscr, 1);
 		break;
 	case WKBD_PREVWORKSPACE:
-		wWorkspaceRelativeChange(scr->vscr, -1);
+		wWorkspaceRelativeChange(vscr, -1);
 		break;
 	case WKBD_LASTWORKSPACE:
-		wWorkspaceChange(scr->vscr, scr->vscr->workspace.last_used);
+		wWorkspaceChange(vscr, vscr->workspace.last_used);
 		break;
 	case WKBD_MOVE_WORKSPACE1 ... WKBD_MOVE_WORKSPACE10:
 		widx = command - WKBD_MOVE_WORKSPACE1;
-		i = (scr->vscr->workspace.current / 10) * 10 + widx;
-		if (wwin && (wPreferences.ws_advance || i < scr->vscr->workspace.count))
+		i = (vscr->workspace.current / 10) * 10 + widx;
+		if (wwin && (wPreferences.ws_advance || i < vscr->workspace.count))
 			wWindowChangeWorkspace(wwin, i);
 
 		break;
@@ -1604,7 +1600,7 @@ static void handleKeyPress(XEvent *event)
 		break;
 	case WKBD_MOVE_LASTWORKSPACE:
 		if (wwin)
-			wWindowChangeWorkspace(wwin, scr->vscr->workspace.last_used);
+			wWindowChangeWorkspace(wwin, vscr->workspace.last_used);
 		break;
 
 	case WKBD_MOVE_NEXTWSLAYER:
@@ -1613,11 +1609,11 @@ static void handleKeyPress(XEvent *event)
 			if (wwin) {
 				int row, column;
 
-				row = scr->vscr->workspace.current / 10;
-				column = scr->vscr->workspace.current % 10;
+				row = vscr->workspace.current / 10;
+				column = vscr->workspace.current % 10;
 
 				if (command == WKBD_MOVE_NEXTWSLAYER) {
-					if ((row + 1) * 10 < scr->vscr->workspace.count)
+					if ((row + 1) * 10 < vscr->workspace.count)
 						wWindowChangeWorkspace(wwin, column + (row + 1) * 10);
 				} else {
 					if (row > 0)
@@ -1648,8 +1644,8 @@ static void handleKeyPress(XEvent *event)
 			WMArrayIterator iter;
 			WWindow *wwin;
 
-			wUnselectWindows(scr->vscr);
-			cw = scr->vscr->workspace.current;
+			wUnselectWindows(vscr);
+			cw = vscr->workspace.current;
 
 			WM_ETARETI_ARRAY(list, wwin, iter) {
 				if (count > 1)
@@ -1672,8 +1668,8 @@ static void handleKeyPress(XEvent *event)
 				w_global.shortcut.windows[widx] = NULL;
 			}
 
-			if (wwin->flags.selected && scr->selected_windows) {
-				w_global.shortcut.windows[widx] = WMDuplicateArray(scr->selected_windows);
+			if (wwin->flags.selected && vscr->screen_ptr->selected_windows) {
+				w_global.shortcut.windows[widx] = WMDuplicateArray(vscr->screen_ptr->selected_windows);
 			} else {
 				w_global.shortcut.windows[widx] = WMCreateArray(4);
 				WMAddToArray(w_global.shortcut.windows[widx], wwin);
@@ -1685,12 +1681,12 @@ static void handleKeyPress(XEvent *event)
 			wSelectWindow(wwin, !wwin->flags.selected);
 			XFlush(dpy);
 
-		} else if (scr->selected_windows && WMGetArrayItemCount(scr->selected_windows)) {
-			if (wwin->flags.selected && scr->selected_windows) {
+		} else if (vscr->screen_ptr->selected_windows && WMGetArrayItemCount(vscr->screen_ptr->selected_windows)) {
+			if (wwin->flags.selected && vscr->screen_ptr->selected_windows) {
 				if (w_global.shortcut.windows[widx])
 					WMFreeArray(w_global.shortcut.windows[widx]);
 
-				w_global.shortcut.windows[widx] = WMDuplicateArray(scr->selected_windows);
+				w_global.shortcut.windows[widx] = WMDuplicateArray(vscr->screen_ptr->selected_windows);
 			}
 		}
 
@@ -1704,12 +1700,13 @@ static void handleKeyPress(XEvent *event)
 
 	case WKBD_SWITCH_SCREEN:
 		if (w_global.screen_count > 1) {
-			WScreen *scr2;
+			virtual_screen *vscr1, *vscr2;
 			int i;
 
 			/* find index of this screen */
 			for (i = 0; i < w_global.screen_count; i++) {
-				if (wScreenWithNumber(i) == scr)
+				vscr1 = wScreenWithNumber(i);
+				if (vscr1->screen_ptr == vscr->screen_ptr)
 					break;
 			}
 
@@ -1717,25 +1714,24 @@ static void handleKeyPress(XEvent *event)
 			if (i >= w_global.screen_count)
 				i = 0;
 
-			scr2 = wScreenWithNumber(i);
-
-			if (scr2)
-				XWarpPointer(dpy, scr->root_win, scr2->root_win, 0, 0, 0, 0,
-					     scr2->scr_width / 2, scr2->scr_height / 2);
+			vscr2 = wScreenWithNumber(i);
+			if (vscr2->screen_ptr)
+				XWarpPointer(dpy, vscr->screen_ptr->root_win, vscr2->screen_ptr->root_win, 0, 0, 0, 0,
+					     vscr2->screen_ptr->scr_width / 2, vscr2->screen_ptr->scr_height / 2);
 		}
 
 		break;
 
 	case WKBD_RUN:
 	{
-		char *cmdline = ExpandOptions(scr->vscr, _("exec %a(Run,Type command to run:)"));
+		char *cmdline = ExpandOptions(vscr, _("exec %a(Run,Type command to run:)"));
 
 		if (cmdline) {
-			XGrabPointer(dpy, scr->root_win, True, 0,
+			XGrabPointer(dpy, vscr->screen_ptr->root_win, True, 0,
 			     GrabModeAsync, GrabModeAsync, None, wPreferences.cursor[WCUR_WAIT], CurrentTime);
 			XSync(dpy, False);
 
-			ExecuteShellCommand(scr, cmdline);
+			ExecuteShellCommand(vscr->screen_ptr, cmdline);
 			wfree(cmdline);
 
 			XUngrabPointer(dpy, CurrentTime);
@@ -1749,26 +1745,26 @@ static void handleKeyPress(XEvent *event)
 		{
 			int row, column;
 
-			row = scr->vscr->workspace.current / 10;
-			column = scr->vscr->workspace.current % 10;
+			row = vscr->workspace.current / 10;
+			column = vscr->workspace.current % 10;
 
 			if (command == WKBD_NEXTWSLAYER) {
-				if ((row + 1) * 10 < scr->vscr->workspace.count)
-					wWorkspaceChange(scr->vscr, column + (row + 1) * 10);
+				if ((row + 1) * 10 < vscr->workspace.count)
+					wWorkspaceChange(vscr, column + (row + 1) * 10);
 			} else {
 				if (row > 0)
-					wWorkspaceChange(scr->vscr, column + (row - 1) * 10);
+					wWorkspaceChange(vscr, column + (row - 1) * 10);
 			}
 		}
 		break;
 	case WKBD_CLIPRAISELOWER:
 		if (!wPreferences.flags.noclip)
-			wDockRaiseLower(scr->vscr->workspace.array[scr->vscr->workspace.current]->clip);
+			wDockRaiseLower(vscr->workspace.array[vscr->workspace.current]->clip);
 
 		break;
 	case WKBD_DOCKRAISELOWER:
 		if (!wPreferences.flags.nodock)
-			wDockRaiseLower(scr->vscr->dock.dock);
+			wDockRaiseLower(vscr->dock.dock);
 
 		break;
 #ifdef KEEP_XKB_LOCK_STATUS
@@ -1795,19 +1791,19 @@ static void handleKeyPress(XEvent *event)
 
 static void handleMotionNotify(XEvent *event)
 {
-	WScreen *scr = wScreenForRootWindow(event->xmotion.root);
+	virtual_screen *vscr = wScreenForRootWindow(event->xmotion.root);
 
 	if (wPreferences.scrollable_menus) {
 		WMPoint p = wmkpoint(event->xmotion.x_root, event->xmotion.y_root);
-		WMRect rect = wGetRectForHead(scr->vscr, wGetHeadForPoint(scr->vscr, p));
+		WMRect rect = wGetRectForHead(vscr, wGetHeadForPoint(vscr, p));
 
-		if (scr->flags.jump_back_pending ||
+		if (vscr->screen_ptr->flags.jump_back_pending ||
 		    p.x <= (rect.pos.x + 1) ||
 		    p.x >= (rect.pos.x + rect.size.width - 2) ||
 		    p.y <= (rect.pos.y + 1) || p.y >= (rect.pos.y + rect.size.height - 2)) {
 			WMenu *menu;
 
-			menu = wMenuUnderPointer(scr->vscr);
+			menu = wMenuUnderPointer(vscr);
 			if (menu != NULL)
 				wMenuScroll(menu);
 		}

@@ -53,6 +53,7 @@ static void wipeDesktop(virtual_screen *vscr);
  */
 void Shutdown(WShutdownMode mode)
 {
+	virtual_screen *vscr;
 	int i;
 
 	switch (mode) {
@@ -68,19 +69,17 @@ void Shutdown(WShutdownMode mode)
 		}
 #endif
 		for (i = 0; i < w_global.screen_count; i++) {
-			WScreen *scr;
+			vscr = wScreenWithNumber(i);
+			if (vscr->screen_ptr) {
+				if (vscr->screen_ptr->helper_pid)
+					kill(vscr->screen_ptr->helper_pid, SIGKILL);
 
-			scr = wScreenWithNumber(i);
-			if (scr) {
-				if (scr->helper_pid)
-					kill(scr->helper_pid, SIGKILL);
-
-				wScreenSaveState(scr->vscr);
+				wScreenSaveState(vscr);
 
 				if (mode == WSKillMode)
-					wipeDesktop(scr->vscr);
+					wipeDesktop(vscr);
 				else
-					RestoreDesktop(scr->vscr);
+					RestoreDesktop(vscr);
 			}
 		}
 
@@ -90,21 +89,19 @@ void Shutdown(WShutdownMode mode)
 
 	case WSRestartPreparationMode:
 		for (i = 0; i < w_global.screen_count; i++) {
-			WScreen *scr;
-
 #ifdef HAVE_INOTIFY
 			if (w_global.inotify.fd_event_queue >= 0) {
 				close(w_global.inotify.fd_event_queue);
 				w_global.inotify.fd_event_queue = -1;
 			}
 #endif
-			scr = wScreenWithNumber(i);
-			if (scr) {
-				if (scr->helper_pid)
-					kill(scr->helper_pid, SIGKILL);
+			vscr = wScreenWithNumber(i);
+			if (vscr->screen_ptr) {
+				if (vscr->screen_ptr->helper_pid)
+					kill(vscr->screen_ptr->helper_pid, SIGKILL);
 
-				wScreenSaveState(scr->vscr);
-				RestoreDesktop(scr->vscr);
+				wScreenSaveState(vscr);
+				RestoreDesktop(vscr);
 			}
 		}
 		break;

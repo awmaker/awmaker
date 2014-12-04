@@ -990,7 +990,7 @@ void wReadStaticDefaults(WMPropList *dict)
 
 void wDefaultsCheckDomains(void *arg)
 {
-	WScreen *scr;
+	virtual_screen *vscr;
 	struct stat stbuf;
 	WMPropList *shared_dict = NULL;
 	WMPropList *dict;
@@ -1023,9 +1023,9 @@ void wDefaultsCheckDomains(void *arg)
 				}
 
 				for (i = 0; i < w_global.screen_count; i++) {
-					scr = wScreenWithNumber(i);
-					if (scr)
-						wReadDefaults(scr->vscr, dict);
+					vscr = wScreenWithNumber(i);
+					if (vscr->screen_ptr)
+						wReadDefaults(vscr, dict);
 				}
 
 				if (w_global.domain.wmaker->dictionary)
@@ -1066,14 +1066,14 @@ void wDefaultsCheckDomains(void *arg)
 
 				w_global.domain.window_attr->dictionary = dict;
 				for (i = 0; i < w_global.screen_count; i++) {
-					scr = wScreenWithNumber(i);
-					if (scr) {
-						wDefaultUpdateIcons(scr->vscr);
+					vscr = wScreenWithNumber(i);
+					if (vscr->screen_ptr) {
+						wDefaultUpdateIcons(vscr);
 
 						/* Update the panel image if changed */
 						/* Don't worry. If the image is the same these
 						 * functions will have no performance impact. */
-						create_logo_image(scr);
+						create_logo_image(vscr->screen_ptr);
 					}
 				}
 			}

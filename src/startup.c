@@ -334,36 +334,36 @@ wHackedGrabButton(unsigned int button, unsigned int modifiers,
 #endif				/* NUMLOCK_HACK */
 }
 
-WScreen *wScreenWithNumber(int i)
+virtual_screen *wScreenWithNumber(int i)
 {
 	assert(i < w_global.screen_count);
 
-	return wScreen[i];
+	return wScreen[i]->vscr;
 }
 
-WScreen *wScreenForRootWindow(Window window)
+virtual_screen *wScreenForRootWindow(Window window)
 {
 	int i;
 
 	if (w_global.screen_count == 1)
-		return wScreen[0];
+		return wScreen[0]->vscr;
 
 	/* Since the number of heads will probably be small (normally 2),
 	 * it should be faster to use this than a hash table, because
 	 * of the overhead. */
 	for (i = 0; i < w_global.screen_count; i++)
 		if (wScreen[i]->root_win == window)
-			return wScreen[i];
+			return wScreen[i]->vscr;
 
 	return wScreenForWindow(window);
 }
 
-WScreen *wScreenForWindow(Window window)
+virtual_screen *wScreenForWindow(Window window)
 {
 	XWindowAttributes attr;
 
 	if (w_global.screen_count == 1)
-		return wScreen[0];
+		return wScreen[0]->vscr;
 
 	if (XGetWindowAttributes(dpy, window, &attr))
 		return wScreenForRootWindow(attr.root);

@@ -90,7 +90,8 @@ static void wXDNDDecodeURI(char *uri)
 
 Bool wXDNDProcessSelection(XEvent *event)
 {
-	WScreen *scr = wScreenForWindow(event->xselection.requestor);
+	virtual_screen *vscr = wScreenForWindow(event->xselection.requestor);
+	WScreen *scr = vscr->screen_ptr;
 	char *retain;
 	Atom ret_type;
 	int ret_format;
@@ -167,7 +168,7 @@ Bool wXDNDProcessSelection(XEvent *event)
 		}
 		WMFreeArray(items);
 		if (scr->xdestring[0])
-			wDockReceiveDNDDrop(scr->vscr, event);
+			wDockReceiveDNDDrop(vscr, event);
 
 		wfree(scr->xdestring);	/* this xdestring is not from Xlib (no XFree) */
 	}
@@ -198,8 +199,8 @@ static Bool isAwareXDND(Window window)
 
 static Bool acceptXDND(Window window)
 {
-	WScreen *scr = wScreenForWindow(window);
-	WDock *dock = scr->vscr->dock.dock;
+	virtual_screen *vscr = wScreenForWindow(window);
+	WDock *dock = vscr->dock.dock;
 	int i, icon_pos = -1;
 
 	if (dock) {
@@ -213,7 +214,7 @@ static Bool acceptXDND(Window window)
 	}
 
 	if (icon_pos < 0) {
-		dock = scr->vscr->workspace.array[scr->vscr->workspace.current]->clip;
+		dock = vscr->workspace.array[vscr->workspace.current]->clip;
 		if (dock) {
 			for (i = 0; i < dock->max_icons; i++) {
 				if (dock->icon_array[i]
