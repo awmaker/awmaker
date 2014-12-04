@@ -45,8 +45,8 @@
 	 (w)->wm_gnustep_attr->window_level == WMSubmenuWindowLevel))
 
 static int initialized = 0;
-static void observer(void *self, WMNotification * notif);
-static void wsobserver(void *self, WMNotification * notif);
+static void observer(void *self, WMNotification *notif);
+static void wsobserver(void *self, WMNotification *notif);
 
 /*
  * FocusWindow
@@ -392,7 +392,7 @@ static void observer(void *self, WMNotification * notif)
 
 static void wsobserver(void *self, WMNotification *notif)
 {
-	WScreen *scr = (WScreen *) WMGetNotificationObject(notif);
+	virtual_screen *vscr = (virtual_screen *) WMGetNotificationObject(notif);
 	const char *name = WMGetNotificationName(notif);
 	void *data = WMGetNotificationClientData(notif);
 
@@ -400,5 +400,5 @@ static void wsobserver(void *self, WMNotification *notif)
 	(void) self;
 
 	if (strcmp(name, WMNWorkspaceNameChanged) == 0)
-		UpdateSwitchMenuWorkspace(scr->vscr, (uintptr_t) data);
+		UpdateSwitchMenuWorkspace(vscr, (uintptr_t) data);
 }

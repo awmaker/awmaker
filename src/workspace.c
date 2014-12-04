@@ -150,7 +150,7 @@ int wWorkspaceNew(virtual_screen *vscr)
 	wWorkspaceMenuUpdate(vscr, vscr->workspace.menu);
 	wWorkspaceMenuUpdate(vscr, vscr->clip.ws_menu);
 	wNETWMUpdateDesktop(vscr->screen_ptr);
-	WMPostNotificationName(WMNWorkspaceCreated, vscr->screen_ptr, (void *)(uintptr_t) (vscr->workspace.count - 1));
+	WMPostNotificationName(WMNWorkspaceCreated, vscr, (void *)(uintptr_t) (vscr->workspace.count - 1));
 	XFlush(dpy);
 
 	return vscr->workspace.count - 1;
@@ -224,7 +224,7 @@ Bool wWorkspaceDelete(virtual_screen *vscr, int workspace)
 	}
 
 	wNETWMUpdateDesktop(vscr->screen_ptr);
-	WMPostNotificationName(WMNWorkspaceDestroyed, vscr->screen_ptr, (void *)(uintptr_t) (vscr->workspace.count - 1));
+	WMPostNotificationName(WMNWorkspaceDestroyed, vscr, (void *)(uintptr_t) (vscr->workspace.count - 1));
 
 	if (vscr->workspace.current >= vscr->workspace.count)
 		wWorkspaceChange(vscr, vscr->workspace.count - 1);
@@ -653,7 +653,7 @@ void wWorkspaceForceChange(virtual_screen *vscr, int workspace)
 	wNETWMUpdateDesktop(vscr->screen_ptr);
 	showWorkspaceName(vscr, workspace);
 
-	WMPostNotificationName(WMNWorkspaceChanged, vscr->screen_ptr, (void *)(uintptr_t) workspace);
+	WMPostNotificationName(WMNWorkspaceChanged, vscr, (void *)(uintptr_t) workspace);
 }
 
 static void switchWSCommand(WMenu *menu, WMenuEntry *entry)
@@ -733,7 +733,7 @@ void wWorkspaceRename(virtual_screen *vscr, int workspace, const char *name)
 	if (w_global.clip.icon)
 		wClipIconPaint();
 
-	WMPostNotificationName(WMNWorkspaceNameChanged, vscr->screen_ptr, (void *)(uintptr_t) workspace);
+	WMPostNotificationName(WMNWorkspaceNameChanged, vscr, (void *)(uintptr_t) workspace);
 }
 
 /* callback for when menu entry is edited */
@@ -949,7 +949,7 @@ void wWorkspaceRestoreState(virtual_screen *vscr)
 			vscr->workspace.array[0]->clip->icon_count += added_omnipresent_icons;
 		}
 
-		WMPostNotificationName(WMNWorkspaceNameChanged, vscr->screen_ptr, (void *)(uintptr_t) i);
+		WMPostNotificationName(WMNWorkspaceNameChanged, vscr, (void *)(uintptr_t) i);
 	}
 }
 

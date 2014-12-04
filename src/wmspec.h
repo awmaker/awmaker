@@ -30,7 +30,7 @@
 
 void wNETWMInitStuff(WScreen *scr);
 void wNETWMCleanup(WScreen *scr);
-void wNETWMUpdateWorkarea(WScreen *scr);
+void wNETWMUpdateWorkarea(virtual_screen *vscr);
 Bool wNETWMGetUsableArea(WScreen *scr, int head, WArea *area);
 void wNETWMCheckInitialClientState(WWindow *wwin);
 void wNETWMCheckInitialFrameState(WWindow *wwin);

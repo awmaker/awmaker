@@ -235,9 +235,9 @@ static void wsobserver(void *self, WMNotification *notif);
 static void updateClientList(WScreen *scr);
 static void updateClientListStacking(WScreen *scr, WWindow *);
 
-static void updateWorkspaceNames(WScreen *scr);
-static void updateCurrentWorkspace(WScreen *scr);
-static void updateWorkspaceCount(WScreen *scr);
+static void updateWorkspaceNames(virtual_screen *vscr);
+static void updateCurrentWorkspace(virtual_screen *vscr);
+static void updateWorkspaceCount(virtual_screen *vscr);
 static void wNETWMShowingDesktop(WScreen *scr, Bool show);
 
 typedef struct NetData {
@@ -624,8 +624,8 @@ void wNETWMInitStuff(WScreen *scr)
 
 	updateClientList(scr);
 	updateClientListStacking(scr, NULL);
-	updateWorkspaceCount(scr);
-	updateWorkspaceNames(scr);
+	updateWorkspaceCount(scr->vscr);
+	updateWorkspaceNames(scr->vscr);
 	updateShowDesktop(scr, False);
 
 	wScreenUpdateUsableArea(scr);
@@ -685,26 +685,28 @@ void wNETWMUpdateActions(WWindow *wwin, Bool del)
 			XA_ATOM, 32, PropModeReplace, (unsigned char *)action, i);
 }
 
-void wNETWMUpdateWorkarea(WScreen *scr)
+void wNETWMUpdateWorkarea(virtual_screen *vscr)
 {
 	long *area;
 	int count, i;
 
-	if (!scr->netdata || scr->vscr->workspace.count == 0 || !scr->usableArea)
+	if (!vscr->screen_ptr->netdata ||
+	    vscr->workspace.count == 0 ||
+	    !vscr->screen_ptr->usableArea)
 		return;
 
-	count = scr->vscr->workspace.count * 4;
+	count = vscr->workspace.count * 4;
 	area = wmalloc(sizeof(long) * count);
 
-	for (i = 0; i < scr->vscr->workspace.count; i++) {
-		area[4 * i + 0] = scr->usableArea[0].x1;
-		area[4 * i + 1] = scr->usableArea[0].y1;
-		area[4 * i + 2] = scr->usableArea[0].x2 - scr->usableArea[0].x1;
-		area[4 * i + 3] = scr->usableArea[0].y2 - scr->usableArea[0].y1;
+	for (i = 0; i < vscr->workspace.count; i++) {
+		area[4 * i + 0] = vscr->screen_ptr->usableArea[0].x1;
+		area[4 * i + 1] = vscr->screen_ptr->usableArea[0].y1;
+		area[4 * i + 2] = vscr->screen_ptr->usableArea[0].x2 - vscr->screen_ptr->usableArea[0].x1;
+		area[4 * i + 3] = vscr->screen_ptr->usableArea[0].y2 - vscr->screen_ptr->usableArea[0].y1;
 	}
 
-	XChangeProperty(dpy, scr->root_win, net_workarea, XA_CARDINAL, 32,
-				PropModeReplace, (unsigned char *)area, count);
+	XChangeProperty(dpy, vscr->screen_ptr->root_win, net_workarea, XA_CARDINAL, 32,
+				PropModeReplace, (unsigned char *) area, count);
 	wfree(area);
 }
 
@@ -807,41 +809,41 @@ static void updateClientListStacking(WScreen *scr, WWindow *wwin_excl)
 	XFlush(dpy);
 }
 
-static void updateWorkspaceCount(WScreen *scr)
+static void updateWorkspaceCount(virtual_screen *vscr)
 {				/* changeable */
 	long count;
 
-	count = scr->vscr->workspace.count;
+	count = vscr->workspace.count;
 
-	XChangeProperty(dpy, scr->root_win, net_number_of_desktops, XA_CARDINAL,
+	XChangeProperty(dpy, vscr->screen_ptr->root_win, net_number_of_desktops, XA_CARDINAL,
 			32, PropModeReplace, (unsigned char *)&count, 1);
 }
 
-static void updateCurrentWorkspace(WScreen *scr)
+static void updateCurrentWorkspace(virtual_screen *vscr)
 {				/* changeable */
 	long count;
 
-	count = scr->vscr->workspace.current;
+	count = vscr->workspace.current;
 
-	XChangeProperty(dpy, scr->root_win, net_current_desktop, XA_CARDINAL, 32,
+	XChangeProperty(dpy, vscr->screen_ptr->root_win, net_current_desktop, XA_CARDINAL, 32,
 			PropModeReplace, (unsigned char *)&count, 1);
 }
 
-static void updateWorkspaceNames(WScreen *scr)
+static void updateWorkspaceNames(virtual_screen *vscr)
 {
 	char buf[MAX_WORKSPACES * (MAX_WORKSPACENAME_WIDTH + 1)], *pos;
 	unsigned int i, len, curr_size;
 
 	pos = buf;
 	len = 0;
-	for (i = 0; i < scr->vscr->workspace.count; i++) {
-		curr_size = strlen(scr->vscr->workspace.array[i]->name);
-		strcpy(pos, scr->vscr->workspace.array[i]->name);
+	for (i = 0; i < vscr->workspace.count; i++) {
+		curr_size = strlen(vscr->workspace.array[i]->name);
+		strcpy(pos, vscr->workspace.array[i]->name);
 		pos += (curr_size + 1);
 		len += (curr_size + 1);
 	}
 
-	XChangeProperty(dpy, scr->root_win, net_desktop_names, utf8_string, 8,
+	XChangeProperty(dpy, vscr->screen_ptr->root_win, net_desktop_names, utf8_string, 8,
 			PropModeReplace, (unsigned char *)buf, len);
 }
 
@@ -1511,7 +1513,7 @@ Bool wNETWMProcessClientMessage(XClientMessageEvent *event)
 				}
 
 				if (rebuild)
-					updateWorkspaceCount(scr);
+					updateWorkspaceCount(vscr);
 			}
 		} else if (event->message_type == net_showing_desktop) {
 			wNETWMShowingDesktop(scr, event->data.l[0]);
@@ -1718,24 +1720,24 @@ static void observer(void *self, WMNotification *notif)
 
 static void wsobserver(void *self, WMNotification *notif)
 {
-	WScreen *scr = (WScreen *) WMGetNotificationObject(notif);
+	virtual_screen *vscr = (virtual_screen *) WMGetNotificationObject(notif);
 	const char *name = WMGetNotificationName(notif);
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) self;
 
 	if (strcmp(name, WMNWorkspaceCreated) == 0) {
-		updateWorkspaceCount(scr);
-		updateWorkspaceNames(scr);
-		wNETWMUpdateWorkarea(scr);
+		updateWorkspaceCount(vscr);
+		updateWorkspaceNames(vscr);
+		wNETWMUpdateWorkarea(vscr);
 	} else if (strcmp(name, WMNWorkspaceDestroyed) == 0) {
-		updateWorkspaceCount(scr);
-		updateWorkspaceNames(scr);
-		wNETWMUpdateWorkarea(scr);
+		updateWorkspaceCount(vscr);
+		updateWorkspaceNames(vscr);
+		wNETWMUpdateWorkarea(vscr);
 	} else if (strcmp(name, WMNWorkspaceChanged) == 0) {
-		updateCurrentWorkspace(scr);
+		updateCurrentWorkspace(vscr);
 	} else if (strcmp(name, WMNWorkspaceNameChanged) == 0) {
-		updateWorkspaceNames(scr);
+		updateWorkspaceNames(vscr);
 	}
 }
 
