@@ -62,11 +62,11 @@
 
 #define MAX_SHORTCUT_LENGTH 32
 
-static WMenu *readMenuPipe(WScreen *scr, char **file_name);
-static WMenu *readPLMenuPipe(WScreen *scr, char **file_name);
-static WMenu *readMenuFile(WScreen *scr, const char *file_name);
-static WMenu *readMenuDirectory(WScreen *scr, const char *title, char **file_name, const char *command);
-static WMenu *configureMenu(WScreen *scr, WMPropList *definition, Bool includeGlobals);
+static WMenu *readMenuPipe(virtual_screen *vscr, char **file_name);
+static WMenu *readPLMenuPipe(virtual_screen *vscr, char **file_name);
+static WMenu *readMenuFile(virtual_screen *vscr, const char *file_name);
+static WMenu *readMenuDirectory(virtual_screen *vscr, const char *title, char **file_name, const char *command);
+static WMenu *configureMenu(virtual_screen *vscr, WMPropList *definition, Bool includeGlobals);
 static void menu_parser_register_macros(WMenuParser parser);
 
 typedef struct Shortcut {
@@ -424,9 +424,9 @@ static void rebindKeygrabs(WScreen *scr)
 	while (wwin != NULL) {
 		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
 
-		if (!WFLAGP(wwin, no_bind_keys)) {
+		if (!WFLAGP(wwin, no_bind_keys))
 			wWindowSetKeyGrabs(wwin);
-		}
+
 		wwin = wwin->prev;
 	}
 }
@@ -595,7 +595,7 @@ static void separateCommand(char *line, char ***file, char **command)
 	WMFreeArray(array);
 }
 
-static WMenu *constructPLMenu(WScreen *screen, const char *path)
+static WMenu *constructPLMenu(virtual_screen *vscr, const char *path)
 {
 	WMPropList *pl = NULL;
 	WMenu *menu = NULL;
@@ -607,7 +607,7 @@ static WMenu *constructPLMenu(WScreen *screen, const char *path)
 	if (!pl)
 		return NULL;
 
-	menu = configureMenu(screen, pl, False);
+	menu = configureMenu(vscr, pl, False);
 
 	WMReleasePropList(pl);
 
@@ -645,11 +645,9 @@ static void constructMenu(WMenu *menu, WMenuEntry *entry)
 
 	if (path[0][0] == '|') {
 		/* pipe menu */
-
 		if (!menu->cascades[entry->cascade] || menu->cascades[entry->cascade]->timestamp == 0) {
 			/* parse pipe */
-
-			submenu = readMenuPipe(menu->frame->vscr->screen_ptr, path);
+			submenu = readMenuPipe(menu->frame->vscr, path);
 
 			if (submenu != NULL) {
 				if (path[0][1] == '|')
@@ -660,14 +658,12 @@ static void constructMenu(WMenu *menu, WMenuEntry *entry)
 		} else {
 			submenu = NULL;
 		}
-
 	} else {
-
 		/* try interpreting path as a proplist file */
-		submenu = constructPLMenu(menu->frame->vscr->screen_ptr, path[0]);
+		submenu = constructPLMenu(menu->frame->vscr, path[0]);
+
 		/* if unsuccessful, try it as an old-style file */
 		if (!submenu) {
-
 			i = 0;
 			while (path[i] != NULL) {
 				char *tmp;
@@ -711,7 +707,7 @@ static void constructMenu(WMenu *menu, WMenuEntry *entry)
 
 				if (S_ISDIR(stat_buf.st_mode)) {
 					/* menu directory */
-					submenu = readMenuDirectory(menu->frame->vscr->screen_ptr, entry->text, path, cmd);
+					submenu = readMenuDirectory(menu->frame->vscr, entry->text, path, cmd);
 					if (submenu)
 						submenu->timestamp = last;
 				} else if (S_ISREG(stat_buf.st_mode)) {
@@ -721,7 +717,7 @@ static void constructMenu(WMenu *menu, WMenuEntry *entry)
 						wwarning(_("too many parameters in OPEN_MENU: %s"),
 								(char *)entry->clientdata);
 
-					submenu = readMenuFile(menu->frame->vscr->screen_ptr, path[first]);
+					submenu = readMenuFile(menu->frame->vscr, path[first]);
 					if (submenu)
 						submenu->timestamp = stat_buf.st_mtime;
 				} else {
@@ -774,7 +770,7 @@ static void constructPLMenuFromPipe(WMenu * menu, WMenuEntry * entry)
 		if (!menu->cascades[entry->cascade]
 		|| menu->cascades[entry->cascade]->timestamp == 0) {
 			/* parse pipe */
-			submenu = readPLMenuPipe(menu->frame->vscr->screen_ptr, path);
+			submenu = readPLMenuPipe(menu->frame->vscr, path);
 
 			if (submenu != NULL) {
 				if (path[0][1] == '|')
@@ -805,27 +801,26 @@ static void cleanupWorkspaceMenu(WMenu *menu)
 		menu->frame->vscr->screen_ptr->vscr->workspace.menu = NULL;
 }
 
-static WMenuEntry *addWorkspaceMenu(WScreen *scr, WMenu *menu, const char *title)
+static WMenuEntry *addWorkspaceMenu(virtual_screen *vscr, WMenu *menu, const char *title)
 {
 	WMenu *wsmenu;
 	WMenuEntry *entry;
 
-	if (scr->vscr->menu.flags.added_workspace_menu) {
+	if (vscr->menu.flags.added_workspace_menu) {
 		wwarning(_
 			 ("There are more than one WORKSPACE_MENU commands in the applications menu. Only one is allowed."));
 		return NULL;
 	}
 
-	scr->vscr->menu.flags.added_workspace_menu = 1;
+	vscr->menu.flags.added_workspace_menu = 1;
 
-	wsmenu = wWorkspaceMenuMake(scr->vscr, True);
+	wsmenu = wWorkspaceMenuMake(vscr, True);
 	wsmenu->on_destroy = cleanupWorkspaceMenu;
 
-	scr->vscr->workspace.menu = wsmenu;
+	vscr->workspace.menu = wsmenu;
 	entry = wMenuAddCallback(menu, title, NULL, NULL);
 	wMenuEntrySetCascade(menu, entry, wsmenu);
-
-	wWorkspaceMenuUpdate(scr->vscr, wsmenu);
+	wWorkspaceMenuUpdate(vscr, wsmenu);
 
 	return entry;
 }
@@ -836,26 +831,26 @@ static void cleanupWindowsMenu(WMenu *menu)
 		menu->frame->vscr->screen_ptr->vscr->menu.switch_menu = NULL;
 }
 
-static WMenuEntry *addWindowsMenu(WScreen *scr, WMenu *menu, const char *title)
+static WMenuEntry *addWindowsMenu(virtual_screen *vscr, WMenu *menu, const char *title)
 {
 	WMenu *wwmenu;
 	WWindow *wwin;
 	WMenuEntry *entry;
 
-	if (scr->vscr->menu.flags.added_window_menu) {
+	if (vscr->menu.flags.added_window_menu) {
 		wwarning(_
 			 ("There are more than one WINDOWS_MENU commands in the applications menu. Only one is allowed."));
 		return NULL;
 	}
 
-	scr->vscr->menu.flags.added_window_menu = 1;
+	vscr->menu.flags.added_window_menu = 1;
 
-	wwmenu = wMenuCreate(scr->vscr, _("Window List"));
+	wwmenu = wMenuCreate(vscr, _("Window List"));
 	wwmenu->on_destroy = cleanupWindowsMenu;
-	scr->vscr->menu.switch_menu = wwmenu;
-	wwin = scr->focused_window;
+	vscr->menu.switch_menu = wwmenu;
+	wwin = vscr->screen_ptr->focused_window;
 	while (wwin) {
-		UpdateSwitchMenu(scr->vscr, wwin, ACTION_ADD);
+		UpdateSwitchMenu(vscr, wwin, ACTION_ADD);
 		wwin = wwin->prev;
 	}
 
@@ -868,13 +863,14 @@ static WMenuEntry *addWindowsMenu(WScreen *scr, WMenu *menu, const char *title)
 static WMenuEntry *addMenuEntry(WMenu *menu, const char *title, const char *shortcut, const char *command,
 				const char *params, const char *file_name)
 {
-	WScreen *scr;
+	virtual_screen *vscr;
 	WMenuEntry *entry = NULL;
 	Bool shortcutOk = False;
 
 	if (!menu)
 		return NULL;
-	scr = menu->frame->vscr->screen_ptr;
+
+	vscr = menu->frame->vscr;
 	if (strcmp(command, "OPEN_MENU") == 0) {
 		if (!params) {
 			wwarning(_("%s:missing parameter for menu command \"%s\""), file_name, command);
@@ -886,7 +882,7 @@ static WMenuEntry *addMenuEntry(WMenu *menu, const char *title, const char *shor
 			if (!path)
 				path = wstrdup(params);
 
-			dummy = wMenuCreate(scr->vscr, title);
+			dummy = wMenuCreate(vscr, title);
 			dummy->on_destroy = removeShortcutsForMenu;
 			entry = wMenuAddCallback(menu, title, constructMenu, path);
 			entry->free_cdata = wfree;
@@ -903,7 +899,7 @@ static WMenuEntry *addMenuEntry(WMenu *menu, const char *title, const char *shor
 			if (!path)
 				path = wstrdup(params);
 
-			dummy = wMenuCreate(scr->vscr, title);
+			dummy = wMenuCreate(vscr, title);
 			dummy->on_destroy = removeShortcutsForMenu;
 			entry = wMenuAddCallback(menu, title, constructPLMenuFromPipe, path);
 			entry->free_cdata = wfree;
@@ -946,11 +942,11 @@ static WMenuEntry *addMenuEntry(WMenu *menu, const char *title, const char *shor
 
 		shortcutOk = True;
 	} else if (strcmp(command, "WORKSPACE_MENU") == 0) {
-		entry = addWorkspaceMenu(scr, menu, title);
+		entry = addWorkspaceMenu(vscr, menu, title);
 
 		shortcutOk = True;
 	} else if (strcmp(command, "WINDOWS_MENU") == 0) {
-		entry = addWindowsMenu(scr, menu, title);
+		entry = addWindowsMenu(vscr, menu, title);
 
 		shortcutOk = True;
 	} else if (strcmp(command, "ARRANGE_ICONS") == 0) {
@@ -1015,7 +1011,7 @@ static void freeline(char *title, char *command, char *parameter, char *shortcut
 	wfree(shortcut);
 }
 
-static WMenu *parseCascade(WScreen * scr, WMenu * menu, WMenuParser parser)
+static WMenu *parseCascade(virtual_screen *vscr, WMenu *menu, WMenuParser parser)
 {
 	char *command, *params, *shortcut, *title;
 
@@ -1031,9 +1027,9 @@ static WMenu *parseCascade(WScreen * scr, WMenu * menu, WMenuParser parser)
 			WMenu *cascade;
 
 			/* start submenu */
-			cascade = wMenuCreate(scr->vscr, M_(title));
+			cascade = wMenuCreate(vscr, M_(title));
 			cascade->on_destroy = removeShortcutsForMenu;
-			if (!parseCascade(scr, cascade, parser))
+			if (!parseCascade(vscr, cascade, parser))
 				wMenuDestroy(cascade, True);
 			else
 				wMenuEntrySetCascade(menu, wMenuAddCallback(menu, M_(title), NULL, NULL), cascade);
@@ -1056,7 +1052,7 @@ static WMenu *parseCascade(WScreen * scr, WMenu * menu, WMenuParser parser)
 	return NULL;
 }
 
-static WMenu *readMenu(WScreen *scr, const char *flat_file, FILE *file)
+static WMenu *readMenu(virtual_screen *vscr, const char *flat_file, FILE *file)
 {
 	WMenu *menu = NULL;
 	WMenuParser parser;
@@ -1074,9 +1070,9 @@ static WMenu *readMenu(WScreen *scr, const char *flat_file, FILE *file)
 		}
 
 		if (strcasecmp(command, "MENU") == 0) {
-			menu = wMenuCreate(scr->vscr, M_(title));
+			menu = wMenuCreate(vscr, M_(title));
 			menu->on_destroy = removeShortcutsForMenu;
-			if (!parseCascade(scr, menu, parser)) {
+			if (!parseCascade(vscr, menu, parser)) {
 				wMenuDestroy(menu, True);
 				menu = NULL;
 			}
@@ -1096,7 +1092,7 @@ static WMenu *readMenu(WScreen *scr, const char *flat_file, FILE *file)
 	return menu;
 }
 
-static WMenu *readMenuFile(WScreen *scr, const char *file_name)
+static WMenu *readMenuFile(virtual_screen *vscr, const char *file_name)
 {
 	WMenu *menu = NULL;
 	FILE *file = NULL;
@@ -1106,7 +1102,8 @@ static WMenu *readMenuFile(WScreen *scr, const char *file_name)
 		werror(_("could not open menu file \"%s\": %s"), file_name, strerror(errno));
 		return NULL;
 	}
-	menu = readMenu(scr, file_name, file);
+
+	menu = readMenu(vscr, file_name, file);
 	fclose(file);
 
 	return menu;
@@ -1137,7 +1134,7 @@ static inline int generate_command_from_list(char *buffer, size_t buffer_size, c
 }
 
 /************    Menu Configuration From Pipe      *************/
-static WMenu *readPLMenuPipe(WScreen * scr, char **file_name)
+static WMenu *readPLMenuPipe(virtual_screen *vscr, char **file_name)
 {
 	WMPropList *plist = NULL;
 	WMenu *menu = NULL;
@@ -1149,14 +1146,13 @@ static WMenu *readPLMenuPipe(WScreen * scr, char **file_name)
 		       file_name[0], _("pipe command for PropertyList is too long"));
 		return NULL;
 	}
+
 	filename = flat_file + (flat_file[1] == '|' ? 2 : 1);
-
 	plist = WMReadPropListFromPipe(filename);
-
 	if (!plist)
 		return NULL;
 
-	menu = configureMenu(scr, plist, False);
+	menu = configureMenu(vscr, plist, False);
 
 	WMReleasePropList(plist);
 
@@ -1167,7 +1163,7 @@ static WMenu *readPLMenuPipe(WScreen * scr, char **file_name)
 	return menu;
 }
 
-static WMenu *readMenuPipe(WScreen * scr, char **file_name)
+static WMenu *readMenuPipe(virtual_screen *vscr, char **file_name)
 {
 	WMenu *menu = NULL;
 	FILE *file = NULL;
@@ -1179,6 +1175,7 @@ static WMenu *readMenuPipe(WScreen * scr, char **file_name)
 		       file_name[0], _("pipe command is too long"));
 		return NULL;
 	}
+
 	filename = flat_file + (flat_file[1] == '|' ? 2 : 1);
 
 	/*
@@ -1192,7 +1189,8 @@ static WMenu *readMenuPipe(WScreen * scr, char **file_name)
 		werror(_("could not open menu file \"%s\": %s"), filename, strerror(errno));
 		return NULL;
 	}
-	menu = readMenu(scr, flat_file, file);
+
+	menu = readMenu(vscr, flat_file, file);
 	pclose(file);
 
 	return menu;
@@ -1250,14 +1248,13 @@ static Bool isFilePackage(const char *file)
 
 	l = strlen(file);
 
-	if (l > 7 && strcmp(&(file[l - 7]), ".themed") == 0) {
+	if (l > 7 && strcmp(&(file[l - 7]), ".themed") == 0)
 		return True;
-	} else {
-		return False;
-	}
+
+	return False;
 }
 
-static WMenu *readMenuDirectory(WScreen *scr, const char *title, char **path, const char *command)
+static WMenu *readMenuDirectory(virtual_screen *vscr, const char *title, char **path, const char *command)
 {
 	DIR *dir;
 	struct dirent *dentry;
@@ -1356,7 +1353,7 @@ static WMenu *readMenuDirectory(WScreen *scr, const char *title, char **path, co
 	WMSortArray(dirs, myCompare);
 	WMSortArray(files, myCompare);
 
-	menu = wMenuCreate(scr->vscr, M_(title));
+	menu = wMenuCreate(vscr, M_(title));
 	menu->on_destroy = removeShortcutsForMenu;
 
 	WM_ITERATE_ARRAY(dirs, data, iter) {
@@ -1452,11 +1449,11 @@ static WMenu *readMenuDirectory(WScreen *scr, const char *title, char **path, co
 
 /************  Menu Configuration From WMRootMenu   *************/
 
-static WMenu *makeDefaultMenu(WScreen *scr)
+static WMenu *makeDefaultMenu(virtual_screen *vscr)
 {
 	WMenu *menu = NULL;
 
-	menu = wMenuCreate(scr->vscr, _("Commands"));
+	menu = wMenuCreate(vscr, _("Commands"));
 	wMenuAddCallback(menu, M_("XTerm"), execCommand, "xterm");
 	wMenuAddCallback(menu, M_("rxvt"), execCommand, "rxvt");
 	wMenuAddCallback(menu, _("Restart"), restartCommand, NULL);
@@ -1471,7 +1468,7 @@ static WMenu *makeDefaultMenu(WScreen *scr)
  *
  *----------------------------------------------------------------------
  */
-static WMenu *configureMenu(WScreen * scr, WMPropList * definition, Bool includeGlobals)
+static WMenu *configureMenu(virtual_screen *vscr, WMPropList *definition, Bool includeGlobals)
 {
 	WMenu *menu = NULL;
 	WMPropList *elem;
@@ -1511,16 +1508,16 @@ static WMenu *configureMenu(WScreen * scr, WMPropList * definition, Bool include
 			return NULL;
 		}
 
-		if (!scr->vscr->menu.root_menu || stat_buf.st_mtime > scr->vscr->menu.root_menu->timestamp
+		if (!vscr->menu.root_menu || stat_buf.st_mtime > vscr->menu.root_menu->timestamp
 		    /* if the pointer in WMRootMenu has changed */
-		    || w_global.domain.root_menu->timestamp > scr->vscr->menu.root_menu->timestamp) {
+		    || w_global.domain.root_menu->timestamp > vscr->menu.root_menu->timestamp) {
 			if (menu_is_default) {
 				wwarning(_
 					 ("using default menu file \"%s\" as the menu referenced in WMRootMenu could not be found "),
 					 path);
 			}
 
-			menu = readMenuFile(scr, path);
+			menu = readMenuFile(vscr, path);
 			if (menu)
 				menu->timestamp = WMAX(stat_buf.st_mtime, w_global.domain.root_menu->timestamp);
 		} else {
@@ -1546,7 +1543,7 @@ static WMenu *configureMenu(WScreen * scr, WMPropList * definition, Bool include
 
 	mtitle = WMGetFromPLString(elem);
 
-	menu = wMenuCreate(scr->vscr, M_(mtitle));
+	menu = wMenuCreate(vscr, M_(mtitle));
 	menu->on_destroy = removeShortcutsForMenu;
 
 #ifdef GLOBAL_SUBMENU_FILE
@@ -1584,7 +1581,7 @@ static WMenu *configureMenu(WScreen * scr, WMPropList * definition, Bool include
 			WMenuEntry *mentry;
 
 			/* submenu */
-			submenu = configureMenu(scr, elem, True);
+			submenu = configureMenu(vscr, elem, True);
 			if (submenu) {
 				mentry = wMenuAddCallback(menu, submenu->frame->title, NULL, NULL);
 				wMenuEntrySetCascade(menu, mentry, submenu);
@@ -1668,14 +1665,14 @@ void OpenRootMenu(virtual_screen *vscr, int x, int y, int keyboard)
 		if (WMIsPLArray(definition)) {
 			if (!vscr->menu.root_menu ||
 			    w_global.domain.root_menu->timestamp > vscr->menu.root_menu->timestamp) {
-				menu = configureMenu(vscr->screen_ptr, definition, True);
+				menu = configureMenu(vscr, definition, True);
 				if (menu)
 					menu->timestamp = w_global.domain.root_menu->timestamp;
 			} else {
 				menu = NULL;
 			}
 		} else {
-			menu = configureMenu(vscr->screen_ptr, definition, True);
+			menu = configureMenu(vscr, definition, True);
 		}
 	}
 
@@ -1687,7 +1684,7 @@ void OpenRootMenu(virtual_screen *vscr, int x, int y, int keyboard)
 					 "Look at the console output for a detailed "
 					 "description of the errors."), _("OK"), NULL, NULL);
 
-			menu = makeDefaultMenu(vscr->screen_ptr);
+			menu = makeDefaultMenu(vscr);
 			vscr->menu.root_menu = menu;
 		}
 		menu = vscr->menu.root_menu;
