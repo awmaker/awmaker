@@ -921,30 +921,30 @@ static void launchDockedApplication(WAppIcon *btn, Bool withSelection)
 
 static void updateWorkspaceMenu(WMenu *menu, WAppIcon *icon)
 {
-	WScreen *scr = menu->frame->vscr->screen_ptr;
+	virtual_screen *vscr = menu->frame->vscr;
 	char title[MAX_WORKSPACENAME_WIDTH + 1];
 	int i;
 
 	if (!menu || !icon)
 		return;
 
-	for (i = 0; i < scr->vscr->workspace.count; i++) {
+	for (i = 0; i < vscr->workspace.count; i++) {
 		if (i < menu->entry_no) {
-			if (strcmp(menu->entries[i]->text, scr->vscr->workspace.array[i]->name) != 0) {
+			if (strcmp(menu->entries[i]->text, vscr->workspace.array[i]->name) != 0) {
 				wfree(menu->entries[i]->text);
-				strcpy(title, scr->vscr->workspace.array[i]->name);
+				strcpy(title, vscr->workspace.array[i]->name);
 				menu->entries[i]->text = wstrdup(title);
 				menu->flags.realized = 0;
 			}
 
 			menu->entries[i]->clientdata = (void *)icon;
 		} else {
-			strcpy(title, scr->vscr->workspace.array[i]->name);
+			strcpy(title, vscr->workspace.array[i]->name);
 			wMenuAddCallback(menu, title, switchWSCommand, (void *)icon);
 			menu->flags.realized = 0;
 		}
 
-		if (i == scr->vscr->workspace.current)
+		if (i == vscr->workspace.current)
 			wMenuSetEnabled(menu, i, False);
 		else
 			wMenuSetEnabled(menu, i, True);
@@ -1371,13 +1371,13 @@ static WMenu *dock_menu_create(virtual_screen *vscr)
 	return menu;
 }
 
-static void dock_menu_map(WMenu *menu, WScreen *scr)
+static void dock_menu_map(WMenu *menu, virtual_screen *vscr)
 {
-	menu_map(menu, scr->vscr);
-	wMenuEntrySetCascade_map(menu, scr->vscr->dock.pos_menu);
-	if (scr->vscr->dock.pos_menu) {
-		menu_map(scr->vscr->dock.pos_menu, scr->vscr);
-		wMenuRealize(scr->vscr->dock.pos_menu);
+	menu_map(menu, vscr);
+	wMenuEntrySetCascade_map(menu, vscr->dock.pos_menu);
+	if (vscr->dock.pos_menu) {
+		menu_map(vscr->dock.pos_menu, vscr);
+		wMenuRealize(vscr->dock.pos_menu);
 	}
 }
 
@@ -3523,10 +3523,10 @@ static pid_t execCommand(WAppIcon *btn, const char *command, WSavedState *state)
 			state->hidden = -1;
 			state->miniaturized = -1;
 			state->shaded = -1;
-			if (btn->dock == scr->vscr->dock.dock || btn->dock->type == WM_DRAWER || btn->omnipresent)
+			if (btn->dock == vscr->dock.dock || btn->dock->type == WM_DRAWER || btn->omnipresent)
 				state->workspace = -1;
 			else
-				state->workspace = scr->vscr->workspace.current;
+				state->workspace = vscr->workspace.current;
 		}
 
 		wWindowAddSavedState(btn->wm_instance, btn->wm_class, cmdline, pid, state);
@@ -4294,7 +4294,7 @@ static void handleDockMove(WDock *dock, WAppIcon *aicon, XEvent *event)
 				if (now_on_right != dock->on_right_side) {
 					dock->on_right_side = now_on_right;
 					swapDock(dock);
-					wArrangeIcons(scr->vscr, False);
+					wArrangeIcons(vscr, False);
 				}
 
 				/* Also perform the vertical move */
@@ -4503,7 +4503,7 @@ static void iconMouseDown(WObjDescriptor *desc, XEvent *event)
 	if (aicon->editing || WCHECK_STATE(WSTATE_MODAL))
 		return;
 
-	scr->vscr->last_dock = dock;
+	vscr->last_dock = dock;
 
 	if (dock->menu->flags.mapped)
 		wMenuUnmap(dock->menu);
@@ -4543,14 +4543,14 @@ static void iconMouseDown(WObjDescriptor *desc, XEvent *event)
 		break;
 	case Button2:
 		if (aicon == w_global.clip.icon) {
-			if (!scr->vscr->clip.ws_menu)
-				scr->vscr->clip.ws_menu = wWorkspaceMenuMake(vscr, False);
+			if (!vscr->clip.ws_menu)
+				vscr->clip.ws_menu = wWorkspaceMenuMake(vscr, False);
 
-			if (scr->vscr->clip.ws_menu) {
-				WMenu *wsMenu = scr->vscr->clip.ws_menu;
+			if (vscr->clip.ws_menu) {
+				WMenu *wsMenu = vscr->clip.ws_menu;
 				int xpos;
 
-				wWorkspaceMenuUpdate(scr->vscr, wsMenu);
+				wWorkspaceMenuUpdate(vscr, wsMenu);
 
 				xpos = event->xbutton.x_root - wsMenu->frame->core->width / 2 - 1;
 				if (xpos < 0)
@@ -4584,19 +4584,19 @@ static void iconMouseDown(WObjDescriptor *desc, XEvent *event)
 
 		switch (dock->type) {
 		case WM_DOCK:
-			dock_menu_map(dock->menu, scr);
+			dock_menu_map(dock->menu, vscr);
 			open_menu_dock(dock, aicon, event);
-			dock_menu_unmap(scr->vscr, dock->menu);
+			dock_menu_unmap(vscr, dock->menu);
 			break;
 		case WM_CLIP:
 			clip_menu_map(dock->menu, vscr);
 			open_menu_clip(dock, aicon, event);
-			clip_menu_unmap(scr->vscr, dock->menu);
+			clip_menu_unmap(vscr, dock->menu);
 			break;
 		case WM_DRAWER:
 			drawer_menu_map(dock->menu, vscr);
 			open_menu_drawer(dock, aicon, event);
-			drawer_menu_unmap(scr->vscr, dock->menu);
+			drawer_menu_unmap(vscr, dock->menu);
 		}
 		break;
 	case Button4:
