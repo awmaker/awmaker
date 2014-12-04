@@ -4,6 +4,7 @@
  *
  *  Copyright (c) 1997-2003 Alfredo K. Kojima
  *  Copyright (c) 1998-2003 Dan Pascu
+ *  Copyright (c) 2014 Window Maker Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -144,6 +145,7 @@ static WDECallbackUpdate setHightlightText;
 static WDECallbackUpdate setKeyGrab;
 static WDECallbackUpdate setDoubleClick;
 static WDECallbackUpdate setIconPosition;
+static WDECallbackUpdate setWorkspaceMapBackground;
 
 static WDECallbackUpdate setClipTitleFont;
 static WDECallbackUpdate setClipTitleColor;
@@ -348,7 +350,9 @@ WDefaultEntry staticOptionList[] = {
 	{"ClipMergedInDock", "NO", NULL,
 	    NULL, getBool, setClipMergedInDock, NULL, NULL},
 	{"DisableMiniwindows", "NO", NULL,
-	    &wPreferences.disable_miniwindows, getBool, NULL, NULL, NULL}
+	    &wPreferences.disable_miniwindows, getBool, NULL, NULL, NULL},
+	{"DisableWorkspacePager", "NO", NULL,
+	    &wPreferences.disable_workspace_pager, getBool, NULL, NULL, NULL}
 };
 
 #define NUM2STRING_(x) #x
@@ -598,6 +602,8 @@ WDefaultEntry optionList[] = {
 	    NULL, getColor, setFrameFocusedBorderColor, NULL, NULL},
 	{"FrameSelectedBorderColor", "white", NULL,
 	    NULL, getColor, setFrameSelectedBorderColor, NULL, NULL},
+	{"WorkspaceMapBack", "(solid, black)", NULL,
+	    NULL, getTexture, setWorkspaceMapBackground, NULL, NULL},
 
 	/* keybindings */
 
@@ -658,6 +664,8 @@ WDefaultEntry optionList[] = {
 	{"ShadeKey", "None", (void *)WKBD_SHADE,
 	    NULL, getKeybind, setKeyGrab, NULL, NULL},
 	{"SelectKey", "None", (void *)WKBD_SELECT,
+	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	{"WorkspaceMapKey", "None", (void *)WKBD_WORKSPACEMAP,
 	    NULL, getKeybind, setKeyGrab, NULL, NULL},
 	{"FocusNextKey", "None", (void *)WKBD_FOCUSNEXT,
 	    NULL, getKeybind, setKeyGrab, NULL, NULL},
@@ -3264,6 +3272,23 @@ static int updateUsableArea(virtual_screen *vscr, WDefaultEntry *entry, void *ba
 
 	return 0;
 }
+
+static int setWorkspaceMapBackground(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+{
+	WTexture **texture = tdata;
+
+	/* Parameter not used, but tell the compiler that it is ok */
+	(void) entry;
+	(void) foo;
+
+	if (wPreferences.wsmbackTexture)
+		wTextureDestroy(vscr, wPreferences.wsmbackTexture);
+
+	wPreferences.wsmbackTexture = *texture;
+
+	return REFRESH_WINDOW_TEXTURES;
+}
+
 
 static int setMenuStyle(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
 {
