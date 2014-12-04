@@ -1044,7 +1044,8 @@ static void selectWindow(WMWidget *bPtr, void *data)
 
 static InspectorPanel *createInspectorForWindow(WWindow *wwin, int xpos, int ypos, Bool showSelectPanel)
 {
-	WScreen *scr = wwin->vscr->screen_ptr;
+	virtual_screen *vscr = wwin->vscr;
+	WScreen *scr = vscr->screen_ptr;
 	InspectorPanel *panel;
 	Window parent;
 	char *str = NULL, *tmp = NULL;
@@ -1228,7 +1229,7 @@ static InspectorPanel *createInspectorForWindow(WWindow *wwin, int xpos, int ypo
 		y = ypos;
 	}
 
-	panel->frame = wManageInternalWindow(scr->vscr, parent, wwin->client_win, "Inspector", x, y, PWIDTH, PHEIGHT);
+	panel->frame = wManageInternalWindow(vscr, parent, wwin->client_win, "Inspector", x, y, PWIDTH, PHEIGHT);
 
 	if (!selectedBtn)
 		selectedBtn = panel->defaultRb;
