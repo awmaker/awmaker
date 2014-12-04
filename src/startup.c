@@ -89,9 +89,9 @@ static virtual_screen **vscreens = NULL;
 
 static unsigned int _NumLockMask = 0;
 static unsigned int _ScrollLockMask = 0;
-static void manageAllWindows(WScreen * scr, int crashed);
+static void manageAllWindows(virtual_screen *scr, int crashed);
 
-static int catchXError(Display * dpy, XErrorEvent * error)
+static int catchXError(Display *dpy, XErrorEvent *error)
 {
 	char buffer[MAXLINE];
 
@@ -126,7 +126,7 @@ static int catchXError(Display * dpy, XErrorEvent * error)
  * 	Handle X shutdowns and other stuff.
  *----------------------------------------------------------------------
  */
-static int handleXIO(Display * xio_dpy)
+static int handleXIO(Display *xio_dpy)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) xio_dpy;
@@ -660,7 +660,7 @@ void StartUp(Bool defaultScreenOnly)
 		if (!wPreferences.flags.nodock && wScreen[j]->vscr->dock.dock)
 			wScreen[j]->vscr->last_dock = wScreen[j]->vscr->dock.dock;
 
-		manageAllWindows(wScreen[j], wPreferences.flags.restarting == 2);
+		manageAllWindows(wScreen[j]->vscr, wPreferences.flags.restarting == 2);
 
 		/* restore saved menus */
 		wMenuRestoreState(wScreen[j]->vscr);
@@ -717,7 +717,7 @@ void StartUp(Bool defaultScreenOnly)
 
 }
 
-static Bool windowInList(Window window, Window * list, int count)
+static Bool windowInList(Window window, Window *list, int count)
 {
 	for (; count >= 0; count--) {
 		if (window == list[count])
@@ -737,8 +737,9 @@ static Bool windowInList(Window window, Window * list, int count)
  * reparented/managed.
  *-----------------------------------------------------------------------
  */
-static void manageAllWindows(WScreen *scr, int crashRecovery)
+static void manageAllWindows(virtual_screen *vscr, int crashRecovery)
 {
+	WScreen *scr = vscr->screen_ptr;
 	Window root, parent;
 	Window *children;
 	unsigned int nchildren;
@@ -777,7 +778,7 @@ static void manageAllWindows(WScreen *scr, int crashRecovery)
 		if (children[i] == None)
 			continue;
 
-		wwin = wManageWindow(scr->vscr, children[i]);
+		wwin = wManageWindow(vscr, children[i]);
 		if (wwin) {
 			/* apply states got from WSavedState */
 			/* shaded + minimized is not restored correctly */
@@ -836,10 +837,10 @@ static void manageAllWindows(WScreen *scr, int crashRecovery)
 		WMHandleEvent(&ev);
 	}
 
-	scr->vscr->workspace.last_used = 0;
-	wWorkspaceForceChange(scr->vscr, 0);
+	vscr->workspace.last_used = 0;
+	wWorkspaceForceChange(vscr, 0);
 	if (!wPreferences.flags.noclip)
-		wDockShowIcons(scr->vscr->workspace.array[scr->vscr->workspace.current]->clip);
+		wDockShowIcons(vscr->workspace.array[vscr->workspace.current]->clip);
 
 	w_global.startup.phase2 = 0;
 }
