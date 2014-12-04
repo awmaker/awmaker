@@ -463,17 +463,17 @@ static void updateMaximizeMenu(WMenu *menu, WWindow *wwin)
 	wMenuRealize(smenu);
 }
 
-static WMenu *makeWorkspaceMenu(WScreen *scr)
+static WMenu *makeWorkspaceMenu(virtual_screen *vscr)
 {
 	WMenu *menu;
 
-	menu = wMenuCreate(scr->vscr, NULL);
+	menu = wMenuCreate(vscr, NULL);
 	if (!menu) {
 		wwarning(_("could not create submenu for window menu"));
 		return NULL;
 	}
 
-	updateWorkspaceMenu(scr->vscr, menu);
+	updateWorkspaceMenu(vscr, menu);
 
 	return menu;
 }
@@ -492,12 +492,12 @@ static WMenu *makeMakeShortcutMenu(WMenu *menu)
 	return menu;
 }
 
-static WMenu *makeOptionsMenu(WScreen *scr)
+static WMenu *makeOptionsMenu(virtual_screen *vscr)
 {
 	WMenu *menu;
 	WMenuEntry *entry;
 
-	menu = wMenuCreate(scr->vscr, NULL);
+	menu = wMenuCreate(vscr, NULL);
 	if (!menu) {
 		wwarning(_("could not create submenu for window menu"));
 		return NULL;
@@ -518,12 +518,12 @@ static WMenu *makeOptionsMenu(WScreen *scr)
 	return menu;
 }
 
-static WMenu *makeMaximizeMenu(WScreen *scr)
+static WMenu *makeMaximizeMenu(virtual_screen *vscr)
 {
 	WMenu *menu;
 	int i;
 
-	menu = wMenuCreate(scr->vscr, NULL);
+	menu = wMenuCreate(vscr, NULL);
 	if (!menu) {
 		wwarning(_("could not create submenu for window menu"));
 		return NULL;
@@ -548,7 +548,7 @@ static WMenu *createWindowMenu(virtual_screen *vscr)
 	 */
 	entry = wMenuAddCallback(menu, _("Maximize"), execMenuCommand, NULL);
 	entry = wMenuAddCallback(menu, _("Other maximization"), NULL, NULL);
-	wMenuEntrySetCascade(menu, entry, makeMaximizeMenu(vscr->screen_ptr));
+	wMenuEntrySetCascade(menu, entry, makeMaximizeMenu(vscr));
 
 	entry = wMenuAddCallback(menu, _("Miniaturize"), execMenuCommand, NULL);
 	entry = wMenuAddCallback(menu, _("Shade"), execMenuCommand, NULL);
@@ -556,13 +556,13 @@ static WMenu *createWindowMenu(virtual_screen *vscr)
 	entry = wMenuAddCallback(menu, _("Resize/Move"), execMenuCommand, NULL);
 	entry = wMenuAddCallback(menu, _("Select"), execMenuCommand, NULL);
 	entry = wMenuAddCallback(menu, _("Move To"), NULL, NULL);
-	vscr->workspace.submenu = makeWorkspaceMenu(vscr->screen_ptr);
+	vscr->workspace.submenu = makeWorkspaceMenu(vscr);
 	if (vscr->workspace.submenu)
 		wMenuEntrySetCascade(menu, entry, vscr->workspace.submenu);
 
 	entry = wMenuAddCallback(menu, _("Attributes..."), execMenuCommand, NULL);
 	entry = wMenuAddCallback(menu, _("Options"), NULL, NULL);
-	wMenuEntrySetCascade(menu, entry, makeMakeShortcutMenu(makeOptionsMenu(vscr->screen_ptr)));
+	wMenuEntrySetCascade(menu, entry, makeMakeShortcutMenu(makeOptionsMenu(vscr)));
 
 	entry = wMenuAddCallback(menu, _("Launch"), execMenuCommand, NULL);
 	entry = wMenuAddCallback(menu, _("Close"), execMenuCommand, NULL);
@@ -591,7 +591,7 @@ void CloseWindowMenu(virtual_screen *vscr)
 static void updateMenuForWindow(WMenu *menu, WWindow *wwin)
 {
 	WApplication *wapp = wApplicationOf(wwin->main_window);
-	WScreen *scr = wwin->vscr->screen_ptr;
+	virtual_screen *vscr = wwin->vscr;
 	int i;
 
 	updateOptionsMenu(menu, wwin);
@@ -693,13 +693,13 @@ static void updateMenuForWindow(WMenu *menu, WWindow *wwin)
 	for (i = 0; i < menu->entry_no; i++)
 		menu->entries[i]->clientdata = wwin;
 
-	for (i = 0; i < scr->vscr->workspace.submenu->entry_no; i++) {
-		scr->vscr->workspace.submenu->entries[i]->clientdata = wwin;
+	for (i = 0; i < vscr->workspace.submenu->entry_no; i++) {
+		vscr->workspace.submenu->entries[i]->clientdata = wwin;
 
-		if (i == scr->vscr->workspace.current)
-			wMenuSetEnabled(scr->vscr->workspace.submenu, i, False);
+		if (i == vscr->workspace.current)
+			wMenuSetEnabled(vscr->workspace.submenu, i, False);
 		else
-			wMenuSetEnabled(scr->vscr->workspace.submenu, i, True);
+			wMenuSetEnabled(vscr->workspace.submenu, i, True);
 	}
 
 	menu->flags.realized = 0;
