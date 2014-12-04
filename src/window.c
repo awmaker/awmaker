@@ -295,7 +295,8 @@ static void setupGNUstepHints(WWindow *wwin, GNUstepWMAttributes *gs_hints)
 
 void wWindowSetupInitialAttributes(WWindow *wwin, int *level, int *workspace)
 {
-	WScreen *scr = wwin->vscr->screen_ptr;
+	virtual_screen *vscr = wwin->vscr;
+	WScreen *scr = vscr->screen_ptr;
 
 	/* sets global default stuff */
 	wDefaultFillAttributes(wwin->wm_instance, wwin->wm_class, &wwin->client_flags, NULL, True);
@@ -378,7 +379,7 @@ void wWindowSetupInitialAttributes(WWindow *wwin, int *level, int *workspace)
 		}
 
 		if (tmp_workspace >= 0)
-			*workspace = tmp_workspace % scr->vscr->workspace.count;
+			*workspace = tmp_workspace % vscr->workspace.count;
 	}
 
 	/*
@@ -1459,7 +1460,8 @@ void wUnmanageWindow(WWindow *wwin, Bool restore, Bool destroyed)
 	WWindow *owner = NULL;
 	WWindow *newFocusedWindow = NULL;
 	int wasFocused;
-	WScreen *scr = wwin->vscr->screen_ptr;
+	virtual_screen *vscr = wwin->vscr;
+	WScreen *scr = vscr->screen_ptr;
 
 	/* First close attribute editor window if open */
 	if (wwin->flags.inspector_open)
@@ -1551,7 +1553,7 @@ void wUnmanageWindow(WWindow *wwin, Bool restore, Bool destroyed)
 			if (wwin->flags.is_gnustep == 0)
 				wFrameWindowChangeState(owner->frame, WS_UNFOCUSED);
 
-		wSetFocusTo(scr->vscr, newFocusedWindow);
+		wSetFocusTo(vscr, newFocusedWindow);
 	}
 
 	/* Close menu and unhighlight */
@@ -1932,7 +1934,6 @@ void wWindowChangeWorkspace(WWindow *wwin, int workspace)
 void wWindowChangeWorkspaceRelative(WWindow *wwin, int amount)
 {
 	virtual_screen *vscr = wwin->vscr;
-	WScreen *scr = vscr->screen_ptr;
 	int w = vscr->workspace.current + amount;
 
 	if (amount < 0) {
@@ -1945,7 +1946,7 @@ void wWindowChangeWorkspaceRelative(WWindow *wwin, int amount)
 			wWindowChangeWorkspace(wwin, w);
 		} else if (wPreferences.ws_advance) {
 			int workspace = WMIN(w, MAX_WORKSPACES - 1);
-			wWorkspaceMake(scr->vscr, workspace);
+			wWorkspaceMake(vscr, workspace);
 			wWindowChangeWorkspace(wwin, workspace);
 		} else if (wPreferences.ws_cycle) {
 			wWindowChangeWorkspace(wwin, w % vscr->workspace.count);
