@@ -628,7 +628,8 @@ static void drawFrame(virtual_screen *vscr, Drawable win, int y, int w, int h, i
 
 static void paintEntry(WMenu *menu, int index, int selected)
 {
-	WScreen *scr = menu->frame->vscr->screen_ptr;
+	virtual_screen *vscr = menu->frame->vscr;
+	WScreen *scr = vscr->screen_ptr;
 	Window win = menu->menu->window;
 	WMenuEntry *entry = menu->entries[index];
 	GC light, dim, dark;
@@ -661,12 +662,12 @@ static void paintEntry(WMenu *menu, int index, int selected)
 	if (selected) {
 		XFillRectangle(dpy, win, WMColorGC(scr->select_color), 1, y + 1, w - 2, h - 3);
 		if (scr->menu_item_texture->any.type == WTEX_SOLID)
-			drawFrame(scr->vscr, win, y, w, h, type);
+			drawFrame(vscr, win, y, w, h, type);
 	} else {
 		if (scr->menu_item_texture->any.type == WTEX_SOLID) {
 			XClearArea(dpy, win, 0, y + 1, w - 1, h - 3, False);
 			/* draw the frame */
-			drawFrame(scr->vscr, win, y, w, h, type);
+			drawFrame(vscr, win, y, w, h, type);
 		} else {
 			XClearArea(dpy, win, 0, y, w, h, False);
 		}
@@ -1342,7 +1343,6 @@ static void getPointerPosition(virtual_screen *vscr, int *x, int *y)
 static void getScrollAmount(WMenu *menu, int *hamount, int *vamount)
 {
 	virtual_screen *vscr = menu->menu->vscr;
-	WScreen *scr = vscr->screen_ptr;
 	int menuX1 = menu->frame_x;
 	int menuY1 = menu->frame_y;
 	int menuX2 = menu->frame_x + MENUW(menu);
@@ -1353,7 +1353,7 @@ static void getScrollAmount(WMenu *menu, int *hamount, int *vamount)
 	*hamount = 0;
 	*vamount = 0;
 
-	getPointerPosition(scr->vscr, &xroot, &yroot);
+	getPointerPosition(vscr, &xroot, &yroot);
 
 	if (xroot <= (rect.pos.x + 1) && menuX1 < rect.pos.x) {
 		/* scroll to the right */
@@ -1469,7 +1469,8 @@ static void callback_leaving(void *user_param)
 void wMenuScroll(WMenu *menu)
 {
 	WMenu *smenu, *omenu = parentMenu(menu);
-	WScreen *scr = menu->frame->vscr->screen_ptr;
+	virtual_screen *vscr = menu->frame->vscr;
+	WScreen *scr = vscr->screen_ptr;
 	int done = 0, jump_back = 0;
 	int old_frame_x = omenu->frame_x;
 	int old_frame_y = omenu->frame_y;
@@ -1505,13 +1506,13 @@ void wMenuScroll(WMenu *menu)
 			 * and the screen border and is close enough to the border */
 			on_border = isPointNearBoder(menu, x, y);
 
-			smenu = wMenuUnderPointer(scr->vscr);
+			smenu = wMenuUnderPointer(vscr);
 			if ((smenu == NULL && !on_border) || (smenu && parentMenu(smenu) != omenu)) {
 				done = 1;
 				break;
 			}
 
-			rect = wGetRectForHead(scr->vscr, wGetHeadForPoint(scr->vscr, wmkpoint(x, y)));
+			rect = wGetRectForHead(vscr, wGetHeadForPoint(vscr, wmkpoint(x, y)));
 			on_x_edge = x <= rect.pos.x + 1 || x >= rect.pos.x + rect.size.width - 2;
 			on_y_edge = y <= rect.pos.y + 1 || y >= rect.pos.y + rect.size.height - 2;
 			on_border = on_x_edge || on_y_edge;
@@ -1539,7 +1540,7 @@ void wMenuScroll(WMenu *menu)
 			    ev.xbutton.y_root >= omenu->frame_y &&
 			    ev.xbutton.y_root <= omenu->frame_y + omenu->frame->top_width;
 			WMHandleEvent(&ev);
-			smenu = wMenuUnderPointer(scr->vscr);
+			smenu = wMenuUnderPointer(vscr);
 			if (smenu == NULL || (smenu && smenu->flags.buttoned && smenu != omenu))
 				done = 1;
 			else if (smenu == omenu && on_title) {
