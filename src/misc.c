@@ -88,6 +88,7 @@ Bool wFetchName(Display *dpy, Window win, char **winname)
 			/* the title is set, but it was set to none */
 			*winname = wstrdup("");
 		}
+
 		return True;
 	} else {
 		/* the hint is probably not set */
@@ -105,20 +106,24 @@ Bool wGetIconName(Display *dpy, Window win, char **iconname)
 	int num;
 
 	if (XGetWMIconName(dpy, win, &text_prop) != 0 && text_prop.value && text_prop.nitems > 0) {
-		if (text_prop.encoding == XA_STRING)
-			*iconname = (char *)text_prop.value;
-		else {
-			text_prop.nitems = strlen((char *)text_prop.value);
+		if (text_prop.encoding == XA_STRING) {
+			*iconname = (char *) text_prop.value;
+		} else {
+			text_prop.nitems = strlen((char *) text_prop.value);
 			if (XmbTextPropertyToTextList(dpy, &text_prop, &list, &num) >= Success && num > 0 && *list) {
 				XFree(text_prop.value);
 				*iconname = wstrdup(*list);
 				XFreeStringList(list);
-			} else
-				*iconname = (char *)text_prop.value;
+			} else {
+				*iconname = (char *) text_prop.value;
+			}
 		}
+
 		return True;
 	}
+
 	*iconname = NULL;
+
 	return False;
 }
 
@@ -127,10 +132,10 @@ static void eatExpose(void)
 	XEvent event, foo;
 
 	/* compress all expose events into a single one */
-
 	if (XCheckMaskEvent(dpy, ExposureMask, &event)) {
 		/* ignore other exposure events for this window */
 		while (XCheckWindowEvent(dpy, event.xexpose.window, ExposureMask, &foo)) ;
+
 		/* eat exposes for other windows */
 		eatExpose();
 
@@ -193,79 +198,86 @@ void SlideWindows(Window *wins[], int n, int from_x, int from_y, int to_x, int t
 	dx = (float) dx_int;
 	dy = (float) dy_int;
 
-	if (abs(dx_int) > abs(dy_int)) {
+	if (abs(dx_int) > abs(dy_int))
 		dx_is_bigger = 1;
-	}
 
 	if (dx_is_bigger) {
 		px = dx / slide_slowdown;
+
 		if (px < slide_steps && px > 0)
 			px = slide_steps;
 		else if (px > -slide_steps && px < 0)
 			px = -slide_steps;
+
 		py = (is_dx_nul ? 0.0 : px * dy / dx);
 	} else {
 		py = dy / slide_slowdown;
+
 		if (py < slide_steps && py > 0)
 			py = slide_steps;
 		else if (py > -slide_steps && py < 0)
 			py = -slide_steps;
+
 		px = (is_dy_nul ? 0.0 : py * dx / dy);
 	}
 
-	while (((int)x) != to_x ||
-			 ((int)y) != to_y) {
+	while (((int) x) != to_x || ((int) y) != to_y) {
 		x += px;
 		y += py;
-		if ((px < 0 && (int)x < to_x) || (px > 0 && (int)x > to_x))
-			x = (float)to_x;
-		if ((py < 0 && (int)y < to_y) || (py > 0 && (int)y > to_y))
-			y = (float)to_y;
+
+		if ((px < 0 && (int) x < to_x) || (px > 0 && (int) x > to_x))
+			x = (float) to_x;
+
+		if ((py < 0 && (int) y < to_y) || (py > 0 && (int) y > to_y))
+			y = (float) to_y;
 
 		if (dx_is_bigger) {
-			px = px * (1.0 - 1 / (float)slide_slowdown);
+			px = px * (1.0 - 1 / (float) slide_slowdown);
+
 			if (px < slide_steps && px > 0)
 				px = slide_steps;
 			else if (px > -slide_steps && px < 0)
 				px = -slide_steps;
+
 			py = (is_dx_nul ? 0.0 : px * dy / dx);
 		} else {
-			py = py * (1.0 - 1 / (float)slide_slowdown);
+			py = py * (1.0 - 1 / (float) slide_slowdown);
+
 			if (py < slide_steps && py > 0)
 				py = slide_steps;
 			else if (py > -slide_steps && py < 0)
 				py = -slide_steps;
+
 			px = (is_dy_nul ? 0.0 : py * dx / dy);
 		}
 
-		for (i = 0; i < n; i++) {
-			XMoveWindow(dpy, *wins[i], (int)x + i * ICON_SIZE, (int)y);
-		}
+		for (i = 0; i < n; i++)
+			XMoveWindow(dpy, *wins[i], (int) x + i * ICON_SIZE, (int) y);
+
 		XFlush(dpy);
-		if (slide_delay > 0) {
+
+		if (slide_delay > 0)
 			wusleep(slide_delay * 1000L);
-		} else {
+		else
 			wusleep(10);
-		}
+
 		if (time(NULL) - time0 > MAX_ANIMATION_TIME)
 			break;
 	}
-	for (i = 0; i < n; i++) {
+
+	for (i = 0; i < n; i++)
 		XMoveWindow(dpy, *wins[i], to_x + i * ICON_SIZE, to_y);
-	}
 
 	XSync(dpy, 0);
+
 	/* compress expose events */
 	eatExpose();
 }
 
 char *ShrinkString(WMFont *font, const char *string, int width)
 {
-	int w, w1 = 0;
-	int p;
-	char *pos;
-	char *text;
-	int p1, p2, t;
+	int p1, p2, t, p, w, w1 = 0;
+	char *pos, *text;
 
 	p = strlen(string);
 	w = WMWidthOfString(font, string, p);
@@ -282,6 +294,7 @@ char *ShrinkString(WMFont *font, const char *string, int width)
 		*pos = 0;
 		p = strlen(text);
 		w1 = WMWidthOfString(font, text, p);
+
 		if (w1 > width) {
 			p = 0;
 			*pos = ' ';
@@ -291,17 +304,20 @@ char *ShrinkString(WMFont *font, const char *string, int width)
 			width -= w1;
 			p++;
 		}
+
 		string += p;
 		p = strlen(string);
 	} else {
 		*text = 0;
 	}
+
 	strcat(text, "...");
 	width -= WMWidthOfString(font, "...", 3);
 
 	p1 = 0;
 	p2 = p;
 	t = (p2 - p1) / 2;
+
 	while (p2 > p1 && p1 != t) {
 		w = WMWidthOfString(font, &string[p - t], t);
 		if (w > width) {
@@ -310,9 +326,11 @@ char *ShrinkString(WMFont *font, const char *string, int width)
 		} else if (w < width) {
 			p1 = t;
 			t = p1 + (p2 - p1) / 2;
-		} else
+		} else {
 			p2 = p1 = t;
+		}
 	}
+
 	strcat(text, &string[p - p1]);
 
 	return text;
@@ -328,6 +346,7 @@ char *FindImage(const char *paths, const char *file)
 		path = wfindfile(paths, file);
 		*tmp = ':';
 	}
+
 	if (!tmp || !path)
 		path = wfindfile(paths, file);
 
@@ -336,12 +355,19 @@ char *FindImage(const char *paths, const char *file)
 
 static void timeoutHandler(void *data)
 {
-	*(int *)data = 1;
+	*(int *) data = 1;
 }
 
-static char *getTextSelection(WScreen * screen, Atom selection)
+static char *getTextSelection(WScreen *screen, Atom selection)
 {
-	int buffer = -1;
+	int size, bits, buffer = -1;
+	int timeout = 0;
+	unsigned long len, bytes;
+	char *data;
+	static Atom clipboard = 0;
+	Atom rtype;
+	WMHandlerID timer;
+	XEvent ev;
 
 	switch (selection) {
 	case XA_CUT_BUFFER0:
@@ -369,75 +395,61 @@ static char *getTextSelection(WScreen * screen, Atom selection)
 		buffer = 7;
 		break;
 	}
-	if (buffer >= 0) {
-		char *data;
-		int size;
 
-		data = XFetchBuffer(dpy, &size, buffer);
+	if (buffer >= 0)
+		return XFetchBuffer(dpy, &size, buffer);
 
-		return data;
-	} else {
-		char *data;
-		int bits;
-		Atom rtype;
-		unsigned long len, bytes;
-		WMHandlerID timer;
-		int timeout = 0;
-		XEvent ev;
-		static Atom clipboard = 0;
+	if (!clipboard)
+		clipboard = XInternAtom(dpy, "CLIPBOARD", False);
 
-		if (!clipboard)
-			clipboard = XInternAtom(dpy, "CLIPBOARD", False);
+	XDeleteProperty(dpy, screen->info_window, clipboard);
+	XConvertSelection(dpy, selection, XA_STRING, clipboard, screen->info_window, CurrentTime);
 
-		XDeleteProperty(dpy, screen->info_window, clipboard);
+	timer = WMAddTimerHandler(1000, timeoutHandler, &timeout);
 
-		XConvertSelection(dpy, selection, XA_STRING, clipboard, screen->info_window, CurrentTime);
+	while (!XCheckTypedWindowEvent(dpy, screen->info_window, SelectionNotify, &ev) && !timeout) ;
 
-		timer = WMAddTimerHandler(1000, timeoutHandler, &timeout);
-
-		while (!XCheckTypedWindowEvent(dpy, screen->info_window, SelectionNotify, &ev) && !timeout) ;
-
-		if (!timeout) {
-			WMDeleteTimerHandler(timer);
-		} else {
-			wwarning("selection retrieval timed out");
-			return NULL;
-		}
-
-		/* nobody owns the selection or the current owner has
-		 * nothing to do with what we need */
-		if (ev.xselection.property == None) {
-			return NULL;
-		}
-
-		if (XGetWindowProperty(dpy, screen->info_window,
-				       clipboard, 0, 1024,
-				       False, XA_STRING, &rtype, &bits, &len,
-				       &bytes, (unsigned char **)&data) != Success) {
-			return NULL;
-		}
-		if (rtype != XA_STRING || bits != 8) {
-			wwarning("invalid data in text selection");
-			if (data)
-				XFree(data);
-			return NULL;
-		}
-		return data;
+	if (timeout) {
+		wwarning("selection retrieval timed out");
+		return NULL;
 	}
+
+	WMDeleteTimerHandler(timer);
+
+	/* nobody owns the selection or the current owner has
+	 * nothing to do with what we need */
+	if (ev.xselection.property == None)
+		return NULL;
+
+	if (XGetWindowProperty(dpy, screen->info_window,
+			       clipboard, 0, 1024,
+			       False, XA_STRING, &rtype, &bits, &len,
+			       &bytes, (unsigned char **)&data) != Success)
+		return NULL;
+
+	if (rtype != XA_STRING || bits != 8) {
+		wwarning("invalid data in text selection");
+		if (data)
+			XFree(data);
+
+		return NULL;
+	}
+
+	return data;
 }
 
-static char *getselection(WScreen * scr)
+static char *getselection(WScreen *scr)
 {
 	char *tmp;
 
 	tmp = getTextSelection(scr, XA_PRIMARY);
 	if (!tmp)
 		tmp = getTextSelection(scr, XA_CUT_BUFFER0);
+
 	return tmp;
 }
 
-static char*
-parseuserinputpart(const char *line, int *ptr, const char *endchars)
+static char *parseuserinputpart(const char *line, int *ptr, const char *endchars)
 {
 	int depth = 0, begin;
 	char *value = NULL;
@@ -454,41 +466,48 @@ parseuserinputpart(const char *line, int *ptr, const char *endchars)
 			value[*ptr - begin] = '\0';
 			break;
 		}
+
 		++*ptr;
 	}
 
 	return value;
 }
 
-static char*
-getuserinput(WScreen *scr, const char *line, int *ptr, Bool advanced)
+static char *getuserinput(virtual_screen *vscr, const char *line, int *ptr, Bool advanced)
 {
-    char *ret = NULL, *title = NULL, *prompt = NULL, *name = NULL;
-    int rv;
+	char *ret = NULL, *title = NULL, *prompt = NULL, *name = NULL;
+	int rv;
 
-    if(line[*ptr] == '(')
-	title = parseuserinputpart(line, ptr, ",)");
-    if(title != NULL && line[*ptr] == ',')
-	prompt = parseuserinputpart(line, ptr, ",)");
-    if(prompt != NULL && line[*ptr] == ',')
-	name = parseuserinputpart(line, ptr, ")");
+	if (line[*ptr] == '(')
+		title = parseuserinputpart(line, ptr, ",)");
 
-    if(advanced)
-        rv = wAdvancedInputDialog(scr,
+	if (title != NULL && line[*ptr] == ',')
+		prompt = parseuserinputpart(line, ptr, ",)");
+
+	if (prompt != NULL && line[*ptr] == ',')
+		name = parseuserinputpart(line, ptr, ")");
+
+	if (advanced)
+		rv = wAdvancedInputDialog(vscr,
 		title ? _(title):_("Program Arguments"),
 		prompt ? _(prompt):_("Enter command arguments:"),
 		name, &ret);
-    else
-        rv = wInputDialog(scr,
+	else
+		rv = wInputDialog(vscr,
 		title ? _(title):_("Program Arguments"),
 		prompt ? _(prompt):_("Enter command arguments:"),
 		&ret);
 
-    if(title) wfree(title);
-    if(prompt) wfree(prompt);
-    if(name) wfree(name);
+	if (title)
+		wfree(title);
 
-    return rv ? ret : NULL;
+	if (prompt)
+		wfree(prompt);
+
+	if (name)
+		wfree(name);
+
+	return rv ? ret : NULL;
 }
 
 #define S_NORMAL 0
@@ -509,7 +528,7 @@ getuserinput(WScreen *scr, const char *line, int *ptr, Bool advanced)
  * OPTION	etc.	NORMAL		%<input>
  */
 #define TMPBUFSIZE 64
-char *ExpandOptions(WScreen *scr, const char *cmdline)
+char *ExpandOptions(virtual_screen *vscr, const char *cmdline)
 {
 	int ptr, optr, state, len, olen;
 	char *out, *nout;
@@ -525,6 +544,7 @@ char *ExpandOptions(WScreen *scr, const char *cmdline)
 		wwarning(_("out of memory during expansion of \"%s\""), cmdline);
 		return NULL;
 	}
+
 	*out = 0;
 	ptr = 0;		/* input line pointer */
 	optr = 0;		/* output line pointer */
@@ -544,6 +564,7 @@ char *ExpandOptions(WScreen *scr, const char *cmdline)
 				out[optr++] = cmdline[ptr];
 				break;
 			}
+
 			break;
 		case S_ESCAPE:
 			switch (cmdline[ptr]) {
@@ -562,39 +583,51 @@ char *ExpandOptions(WScreen *scr, const char *cmdline)
 			default:
 				out[optr++] = cmdline[ptr];
 			}
+
 			state = S_NORMAL;
 			break;
 		case S_OPTION:
 			state = S_NORMAL;
 			switch (cmdline[ptr]) {
 			case 'w':
-				if (scr->focused_window && scr->focused_window->flags.focused) {
+				if (vscr->screen_ptr->focused_window && vscr->screen_ptr->focused_window->flags.focused) {
 					snprintf(tmpbuf, sizeof(tmpbuf), "0x%x",
-						 (unsigned int)scr->focused_window->client_win);
+						 (unsigned int) vscr->screen_ptr->focused_window->client_win);
 					slen = strlen(tmpbuf);
 					olen += slen;
 					nout = realloc(out, olen);
 					if (!nout) {
 						wwarning(_("out of memory during expansion of '%s' for command \"%s\""), "%w", cmdline);
-						goto error;
+						wfree(out);
+						if (selection)
+							XFree(selection);
+
+						return NULL;
 					}
+
 					out = nout;
 					strcat(out, tmpbuf);
 					optr += slen;
 				} else {
 					out[optr++] = ' ';
 				}
+
 				break;
 
 			case 'W':
-				snprintf(tmpbuf, sizeof(tmpbuf), "0x%x", (unsigned int) scr->vscr.workspace.current + 1);
+				snprintf(tmpbuf, sizeof(tmpbuf), "0x%x", (unsigned int) vscr->workspace.current + 1);
 				slen = strlen(tmpbuf);
 				olen += slen;
 				nout = realloc(out, olen);
 				if (!nout) {
 					wwarning(_("out of memory during expansion of '%s' for command \"%s\""), "%W", cmdline);
-					goto error;
+					wfree(out);
+					if (selection)
+						XFree(selection);
+
+					return NULL;
 				}
+
 				out = nout;
 				strcat(out, tmpbuf);
 				optr += slen;
@@ -603,14 +636,18 @@ char *ExpandOptions(WScreen *scr, const char *cmdline)
 			case 'a':
 			case 'A':
 				ptr++;
-				user_input = getuserinput(scr, cmdline, &ptr, cmdline[ptr-1] == 'A');
+				user_input = getuserinput(vscr, cmdline, &ptr, cmdline[ptr-1] == 'A');
 				if (user_input) {
 					slen = strlen(user_input);
 					olen += slen;
 					nout = realloc(out, olen);
 					if (!nout) {
 						wwarning(_("out of memory during expansion of '%s' for command \"%s\""), "%a", cmdline);
-						goto error;
+						wfree(out);
+						if (selection)
+							XFree(selection);
+
+						return NULL;
 					}
 					out = nout;
 					strcat(out, user_input);
@@ -618,44 +655,68 @@ char *ExpandOptions(WScreen *scr, const char *cmdline)
 				} else {
 					/* Not an error, but user has Canceled the dialog box.
 					 * This will make the command to not be performed. */
-					goto error;
+					wfree(out);
+					if (selection)
+						XFree(selection);
+
+					return NULL;
 				}
 				break;
 
 #ifdef XDND
 			case 'd':
-				if (!scr->xdestring) {
-					scr->flags.dnd_data_convertion_status = 1;
-					goto error;
+				if (!vscr->screen_ptr->xdestring) {
+					vscr->screen_ptr->flags.dnd_data_convertion_status = 1;
+					wfree(out);
+					if (selection)
+						XFree(selection);
+
+					return NULL;
 				}
-				slen = strlen(scr->xdestring);
+
+				slen = strlen(vscr->screen_ptr->xdestring);
 				olen += slen;
 				nout = realloc(out, olen);
 				if (!nout) {
 					wwarning(_("out of memory during expansion of '%s' for command \"%s\""), "%d", cmdline);
-					goto error;
+					wfree(out);
+					if (selection)
+						XFree(selection);
+
+					return NULL;
 				}
+
 				out = nout;
-				strcat(out, scr->xdestring);
+				strcat(out, vscr->screen_ptr->xdestring);
 				optr += slen;
 				break;
 #endif				/* XDND */
 
 			case 's':
-				if (!selection) {
-					selection = getselection(scr);
-				}
+				if (!selection)
+					selection = getselection(vscr->screen_ptr);
+
 				if (!selection) {
 					wwarning(_("selection not available"));
-					goto error;
+					wfree(out);
+					if (selection)
+						XFree(selection);
+
+					return NULL;
 				}
+
 				slen = strlen(selection);
 				olen += slen;
 				nout = realloc(out, olen);
 				if (!nout) {
 					wwarning(_("out of memory during expansion of '%s' for command \"%s\""), "%s", cmdline);
-					goto error;
+					wfree(out);
+					if (selection)
+						XFree(selection);
+
+					return NULL;
 				}
+
 				out = nout;
 				strcat(out, selection);
 				optr += slen;
@@ -670,15 +731,11 @@ char *ExpandOptions(WScreen *scr, const char *cmdline)
 		out[optr] = 0;
 		ptr++;
 	}
-	if (selection)
-		XFree(selection);
-	return out;
 
- error:
-	wfree(out);
 	if (selection)
 		XFree(selection);
-	return NULL;
+
+	return out;
 }
 
 void ParseWindowName(WMPropList *value, char **winstance, char **wclass, const char *where)
@@ -701,35 +758,9 @@ void ParseWindowName(WMPropList *value, char **winstance, char **wclass, const c
 	UnescapeWM_CLASS(name, winstance, wclass);
 }
 
-#if 0
-static char *keysymToString(KeySym keysym, unsigned int state)
-{
-	XKeyEvent kev;
-	char *buf = wmalloc(20);
-	int count;
-
-	kev.display = dpy;
-	kev.type = KeyPress;
-	kev.send_event = False;
-	kev.window = DefaultRootWindow(dpy);
-	kev.root = DefaultRootWindow(dpy);
-	kev.same_screen = True;
-	kev.subwindow = kev.root;
-	kev.serial = 0x12344321;
-	kev.time = CurrentTime;
-	kev.state = state;
-	kev.keycode = XKeysymToKeycode(dpy, keysym);
-	count = XLookupString(&kev, buf, 19, NULL, NULL);
-	buf[count] = 0;
-
-	return buf;
-}
-#endif
-
 char *GetShortcutString(const char *shortcut)
 {
-	char *buffer = NULL;
-	char *k, *tmp, *text;
+	char *k, *tmp, *text, *buffer = NULL;
 
 	tmp = text = wstrdup(shortcut);
 
@@ -740,14 +771,15 @@ char *GetShortcutString(const char *shortcut)
 
 		*k = 0;
 		mod = wXModifierFromKey(text);
-		if (mod < 0) {
+		if (mod < 0)
 			return wstrdup("bug");
-		}
+
 		lbl = wXModifierToShortcutLabel(mod);
 		if (lbl)
 			buffer = wstrappend(buffer, lbl);
 		else
 			buffer = wstrappend(buffer, text);
+
 		text = k + 1;
 	}
 
@@ -768,6 +800,7 @@ char *GetShortcutKey(WShortKey key)
 		while (*string) {
 			if (wr >= buffer + sizeof(buffer) - 1)
 				break;
+
 			*wr++ = *string++;
 		}
 	}
@@ -785,13 +818,27 @@ char *GetShortcutKey(WShortKey key)
 		return NULL;
 
 	wr = buffer;
-	if (key.modifier & ControlMask) append_modifier(1, "Control+");
-	if (key.modifier & ShiftMask)   append_modifier(0, "Shift+");
-	if (key.modifier & Mod1Mask)    append_modifier(2, "Mod1+");
-	if (key.modifier & Mod2Mask)    append_modifier(3, "Mod2+");
-	if (key.modifier & Mod3Mask)    append_modifier(4, "Mod3+");
-	if (key.modifier & Mod4Mask)    append_modifier(5, "Mod4+");
-	if (key.modifier & Mod5Mask)    append_modifier(6, "Mod5+");
+	if (key.modifier & ControlMask)
+		append_modifier(1, "Control+");
+
+	if (key.modifier & ShiftMask)
+		append_modifier(0, "Shift+");
+
+	if (key.modifier & Mod1Mask)
+		append_modifier(2, "Mod1+");
+
+	if (key.modifier & Mod2Mask)
+		append_modifier(3, "Mod2+");
+
+	if (key.modifier & Mod3Mask)
+		append_modifier(4, "Mod3+");
+
+	if (key.modifier & Mod4Mask)
+		append_modifier(5, "Mod4+");
+
+	if (key.modifier & Mod5Mask)
+		append_modifier(6, "Mod5+");
+
 	append_string(key_name);
 	*wr = '\0';
 
@@ -800,9 +847,8 @@ char *GetShortcutKey(WShortKey key)
 
 char *EscapeWM_CLASS(const char *name, const char *class)
 {
-	char *ret;
-	char *ename = NULL, *eclass = NULL;
-	int i, j, l;
+	char *ret, *ename = NULL, *eclass = NULL;
+	int i, j, l, len;
 
 	if (!name && !class)
 		return NULL;
@@ -811,33 +857,38 @@ char *EscapeWM_CLASS(const char *name, const char *class)
 		l = strlen(name);
 		ename = wmalloc(l * 2 + 1);
 		j = 0;
+
 		for (i = 0; i < l; i++) {
-			if (name[i] == '\\') {
+			if (name[i] == '\\')
 				ename[j++] = '\\';
-			} else if (name[i] == '.') {
+			else if (name[i] == '.')
 				ename[j++] = '\\';
-			}
+
 			ename[j++] = name[i];
 		}
+
 		ename[j] = 0;
 	}
+
 	if (class) {
 		l = strlen(class);
 		eclass = wmalloc(l * 2 + 1);
 		j = 0;
+
 		for (i = 0; i < l; i++) {
-			if (class[i] == '\\') {
+			if (class[i] == '\\')
 				eclass[j++] = '\\';
-			} else if (class[i] == '.') {
+			else if (class[i] == '.')
 				eclass[j++] = '\\';
-			}
+
 			eclass[j++] = class[i];
 		}
+
 		eclass[j] = 0;
 	}
 
 	if (ename && eclass) {
-		int len = strlen(ename) + strlen(eclass) + 4;
+		len = strlen(ename) + strlen(eclass) + 4;
 		ret = wmalloc(len);
 		snprintf(ret, len, "%s.%s", ename, eclass);
 		wfree(ename);
@@ -876,10 +927,10 @@ static void UnescapeWM_CLASS(const char *str, char **name, char **class)
 	/* unescape the name */
 	if (length_of_name > 0) {
 		*name = wmalloc(length_of_name + 1);
-		for (i = 0, k = 0; i < dot; i++) {
+		for (i = 0, k = 0; i < dot; i++)
 			if (str[i] != '\\')
 				(*name)[k++] = str[i];
-		}
+
 		(*name)[k] = '\0';
 	} else {
 		*name = NULL;
@@ -888,10 +939,10 @@ static void UnescapeWM_CLASS(const char *str, char **name, char **class)
 	/* unescape the class */
 	if (dot < j-1) {
 		*class = wmalloc(j - (dot + 1) + 1);
-		for (i = dot + 1, k = 0; i < j; i++) {
+		for (i = dot + 1, k = 0; i < j; i++)
 			if (str[i] != '\\')
 				(*class)[k++] = str[i];
-		}
+
 		(*class)[k] = 0;
 	} else {
 		*class = NULL;
@@ -912,10 +963,11 @@ static void track_bg_helper_death(pid_t pid, unsigned int status, void *client_d
 	scr->flags.backimage_helper_launched = 0;
 }
 
-Bool start_bg_helper(WScreen *scr)
+Bool start_bg_helper(virtual_screen *vscr)
 {
 	pid_t pid;
 	int filedes[2];
+	const char *dither;
 
 	if (pipe(filedes) < 0) {
 		werror(_("%s failed, can't set workspace specific background image (%s)"),
@@ -932,12 +984,10 @@ Bool start_bg_helper(WScreen *scr)
 		return False;
 
 	} else if (pid == 0) {
-		const char *dither;
-
 		/* We don't need this side of the pipe in the child process */
 		close(filedes[1]);
 
-		SetupEnvironment(scr);
+		SetupEnvironment(vscr);
 
 		close(STDIN_FILENO);
 		if (dup2(filedes[0], STDIN_FILENO) < 0) {
@@ -945,6 +995,7 @@ Bool start_bg_helper(WScreen *scr)
 			       "dup2()", strerror(errno));
 			exit(1);
 		}
+
 		close(filedes[0]);
 
 		dither = wPreferences.no_dithering ? "-m" : "-d";
@@ -955,7 +1006,6 @@ Bool start_bg_helper(WScreen *scr)
 
 		werror(_("could not execute \"%s\": %s"), "wmsetbg", strerror(errno));
 		exit(1);
-
 	} else {
 		/* We don't need this side of the pipe in the parent process */
 		close(filedes[0]);
@@ -964,26 +1014,24 @@ Bool start_bg_helper(WScreen *scr)
 			wwarning(_("could not set close-on-exec flag for bg_helper's communication file handle (%s)"),
 			         strerror(errno));
 
-		scr->helper_fd = filedes[1];
-		scr->helper_pid = pid;
-		scr->flags.backimage_helper_launched = 1;
+		vscr->screen_ptr->helper_fd = filedes[1];
+		vscr->screen_ptr->helper_pid = pid;
+		vscr->screen_ptr->flags.backimage_helper_launched = 1;
 
-		wAddDeathHandler(pid, track_bg_helper_death, scr);
+		wAddDeathHandler(pid, track_bg_helper_death, vscr->screen_ptr);
 
 		return True;
 	}
 }
 
-void SendHelperMessage(WScreen *scr, char type, int workspace, const char *msg)
+void SendHelperMessage(virtual_screen *vscr, char type, int workspace, const char *msg)
 {
 	char *buffer;
-	int len;
-	int i;
+	int len, i;
 	char buf[16];
 
-	if (!scr->flags.backimage_helper_launched) {
+	if (!vscr->screen_ptr->flags.backimage_helper_launched)
 		return;
-	}
 
 	len = (msg ? strlen(msg) : 0) + (workspace >= 0 ? 4 : 0) + 1;
 	buffer = wmalloc(len + 5);
@@ -997,16 +1045,17 @@ void SendHelperMessage(WScreen *scr, char type, int workspace, const char *msg)
 		i += 4;
 		buffer[i] = 0;
 	}
+
 	if (msg)
 		strcpy(&buffer[i], msg);
 
-	if (write(scr->helper_fd, buffer, len + 4) < 0) {
+	if (write(vscr->screen_ptr->helper_fd, buffer, len + 4) < 0)
 		werror(_("could not send message to background image helper"));
-	}
+
 	wfree(buffer);
 }
 
-Bool UpdateDomainFile(WDDomain * domain)
+Bool UpdateDomainFile(WDDomain *domain)
 {
 	struct stat stbuf;
 	char path[PATH_MAX];
@@ -1032,9 +1081,8 @@ Bool UpdateDomainFile(WDDomain * domain)
 
 	result = WMWritePropListToFile(dict, domain->path);
 
-	if (freeDict) {
+	if (freeDict)
 		WMReleasePropList(dict);
-	}
 
 	return result;
 }
@@ -1046,6 +1094,7 @@ char *StrConcatDot(const char *a, const char *b)
 
 	if (!a)
 		a = "";
+
 	if (!b)
 		b = "";
 
@@ -1066,15 +1115,16 @@ static char *getCommandForWindow(Window win, int elements)
 		if (argc > 0 && argv != NULL) {
 			if (elements == 0)
 				elements = argc;
+
 			command = wtokenjoin(argv, WMIN(argc, elements));
 			if (command[0] == 0) {
 				wfree(command);
 				command = NULL;
 			}
 		}
-		if (argv) {
+
+		if (argv)
 			XFreeStringList(argv);
-		}
 	}
 
 	return command;

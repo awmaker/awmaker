@@ -33,7 +33,6 @@
 
 #include "WindowMaker.h"
 #include "GNUstep.h"
-#include "texture.h"
 #include "resources.h"
 #include "screen.h"
 #include "wcore.h"
@@ -98,14 +97,14 @@ void wframewindow_destroy_wcorewindow(WCoreWindow *core)
 	wcore_destroy(core);
 }
 
-void wframewindow_map(WFrameWindow *fwin, WScreen *scr, int wlevel,
+void wframewindow_map(WFrameWindow *fwin, virtual_screen *vscr, int wlevel,
 		      int x, int y, int *clearance,
 		      int *title_min, int *title_max, int flags,
 		      WTexture **title_texture, WTexture **resize_texture,
 		      WMColor **color, WMFont **font, int depth,
 		      Visual *visual, Colormap colormap)
 {
-	fwin->screen_ptr = scr;
+	fwin->vscr = vscr;
 
 	fwin->flags.single_texture = (flags & WFF_SINGLE_STATE) ? 1 : 0;
 
@@ -125,10 +124,10 @@ void wframewindow_map(WFrameWindow *fwin, WScreen *scr, int wlevel,
 	fwin->visual = visual;
 	fwin->colormap = colormap;
 
-	wcore_map_toplevel(fwin->core, scr, x, y,
-			   (flags & WFF_BORDER) ? scr->frame_border_width : 0,
+	wcore_map_toplevel(fwin->core, vscr, x, y,
+			   (flags & WFF_BORDER) ? vscr->screen_ptr->frame_border_width : 0,
 			   fwin->depth, fwin->visual,
-			   fwin->colormap, scr->frame_border_pixel);
+			   fwin->colormap, vscr->screen_ptr->frame_border_pixel);
 
 	/* setup stacking information */
 	fwin->core->stacking = wmalloc(sizeof(WStacking));
@@ -185,33 +184,33 @@ static void left_button_map(WFrameWindow *fwin, int theight, int bsize)
 {
 	int left_button_pos_width, left_button_pos_height;
 	int width = fwin->core->width;
-	WScreen *scr = fwin->screen_ptr;
+	virtual_screen *vscr = fwin->vscr;
+	WScreen *scr = vscr->screen_ptr;
 
 	if (wPreferences.new_style == TS_NEW) {
 		left_button_pos_width = 0;
 		left_button_pos_height = 0;
 		wcore_map(fwin->left_button, fwin->core,
-			  fwin->core->screen_ptr,
+			  fwin->core->vscr,
 			  left_button_pos_width, left_button_pos_height, 0,
-			  fwin->core->screen_ptr->w_depth,
-			  fwin->core->screen_ptr->w_visual,
-			  fwin->core->screen_ptr->w_colormap);
+			  fwin->core->vscr->screen_ptr->w_depth,
+			  fwin->core->vscr->screen_ptr->w_visual,
+			  fwin->core->vscr->screen_ptr->w_colormap);
 
 		if (width < theight * 4)
 			fwin->flags.lbutton_dont_fit = 1;
 		else
 			XMapRaised(dpy, fwin->left_button->window);
-
 	} else {
 		left_button_pos_width = 3;
 		left_button_pos_height = (theight - bsize) / 2;
 
 		wcore_map(fwin->left_button, fwin->titlebar,
-			  fwin->titlebar->screen_ptr,
+			  fwin->titlebar->vscr,
 			  left_button_pos_width, left_button_pos_height, 0,
-			  fwin->titlebar->screen_ptr->w_depth,
-			  fwin->titlebar->screen_ptr->w_visual,
-			  fwin->titlebar->screen_ptr->w_colormap);
+			  fwin->titlebar->vscr->screen_ptr->w_depth,
+			  fwin->titlebar->vscr->screen_ptr->w_visual,
+			  fwin->titlebar->vscr->screen_ptr->w_colormap);
 
 		if (wPreferences.new_style == TS_OLD)
 			XSetWindowBackground(dpy, fwin->left_button->window,
@@ -300,26 +299,27 @@ static void right_button_map(WFrameWindow *fwin, int theight, int bsize)
 {
 	int right_button_pos_width, right_button_pos_height;
 	int width = fwin->core->width;
-	WScreen *scr = fwin->screen_ptr;
+	virtual_screen *vscr = fwin->vscr;
+	WScreen *scr = vscr->screen_ptr;
 
 	if (wPreferences.new_style == TS_NEW) {
 		right_button_pos_width = width - bsize + 1;
 		right_button_pos_height = 0;
 		wcore_map(fwin->right_button, fwin->core,
-			  fwin->core->screen_ptr,
+			  fwin->core->vscr,
 			  right_button_pos_width, right_button_pos_height, 0,
-			  fwin->core->screen_ptr->w_depth,
-			  fwin->core->screen_ptr->w_visual,
-			  fwin->core->screen_ptr->w_colormap);
+			  fwin->core->vscr->screen_ptr->w_depth,
+			  fwin->core->vscr->screen_ptr->w_visual,
+			  fwin->core->vscr->screen_ptr->w_colormap);
 	} else {
 		right_button_pos_width = width - bsize - 3;
 		right_button_pos_height = (theight - bsize) / 2;
 		wcore_map(fwin->right_button, fwin->titlebar,
-			  fwin->titlebar->screen_ptr,
+			  fwin->titlebar->vscr,
 			  right_button_pos_width, right_button_pos_height, 0,
-			  fwin->titlebar->screen_ptr->w_depth,
-			  fwin->titlebar->screen_ptr->w_visual,
-			  fwin->titlebar->screen_ptr->w_colormap);
+			  fwin->titlebar->vscr->screen_ptr->w_depth,
+			  fwin->titlebar->vscr->screen_ptr->w_visual,
+			  fwin->titlebar->vscr->screen_ptr->w_colormap);
 
 		if (wPreferences.new_style == TS_OLD)
 			XSetWindowBackground(dpy, fwin->right_button->window,
@@ -377,11 +377,11 @@ static void titlebar_map(WFrameWindow *fwin, int theight, int bsize, int flags)
 		fwin->top_width = theight;
 
 		wcore_map(fwin->titlebar, fwin->core,
-			  fwin->core->screen_ptr,
+			  fwin->core->vscr,
 			  0, 0, 0,
-			  fwin->core->screen_ptr->w_depth,
-			  fwin->core->screen_ptr->w_visual,
-			  fwin->core->screen_ptr->w_colormap);
+			  fwin->core->vscr->screen_ptr->w_depth,
+			  fwin->core->vscr->screen_ptr->w_visual,
+			  fwin->core->vscr->screen_ptr->w_colormap);
 
 		if (flags & WFF_LEFT_BUTTON)
 			left_button_map(fwin, theight, bsize);
@@ -490,11 +490,11 @@ static void resizebar_destroy(WFrameWindow *fwin)
 static void resizebar_map(WFrameWindow *fwin, int width, int height)
 {
 	fwin->bottom_width = RESIZEBAR_HEIGHT;
-	wcore_map(fwin->resizebar, fwin->core, fwin->core->screen_ptr,
+	wcore_map(fwin->resizebar, fwin->core, fwin->core->vscr,
 		  0, height + fwin->top_width, 0,
-		  fwin->core->screen_ptr->w_depth,
-		  fwin->core->screen_ptr->w_visual,
-		  fwin->core->screen_ptr->w_colormap);
+		  fwin->core->vscr->screen_ptr->w_depth,
+		  fwin->core->vscr->screen_ptr->w_visual,
+		  fwin->core->vscr->screen_ptr->w_colormap);
 
 	fwin->resizebar_corner_width = RESIZEBAR_CORNER_WIDTH;
 	if (width < RESIZEBAR_CORNER_WIDTH * 2 + RESIZEBAR_MIN_WIDTH) {
@@ -529,8 +529,8 @@ static void resizebar_unmap(WFrameWindow *fwin)
 void wFrameWindowUpdateBorders(WFrameWindow * fwin, int flags)
 {
 	int theight, bsize, width, height;
-
-	WScreen *scr = fwin->screen_ptr;
+	virtual_screen *vscr = fwin->vscr;
+	WScreen *scr = vscr->screen_ptr;
 
 	width = fwin->core->width;
 	if (flags & WFF_IS_SHADED)
@@ -568,6 +568,7 @@ void wFrameWindowUpdateBorders(WFrameWindow * fwin, int flags)
 		titlebar_create(fwin, theight, bsize, flags);
 		titlebar_map(fwin, theight, bsize, flags);
 	}
+
 	checkTitleSize(fwin);
 
 	if (fwin->resizebar) {
@@ -598,8 +599,7 @@ void wFrameWindowUpdateBorders(WFrameWindow * fwin, int flags)
 	if (flags & WFF_SELECTED) {
 		if (fwin->selected_border_pixel)
 			XSetWindowBorder(dpy, fwin->core->window, *fwin->selected_border_pixel);
-	}
-	else {
+	} else {
 		if (fwin->flags.state == WS_FOCUSED) {
 			if (fwin->focused_border_pixel)
 				XSetWindowBorder(dpy, fwin->core->window, *fwin->focused_border_pixel);
@@ -1029,7 +1029,7 @@ static void remakeTexture_titlebar(WFrameWindow *fwin, int state)
 
 			width = fwin->core->width + 1;
 
-			renderTexture(fwin->screen_ptr, fwin->title_texture[state],
+			renderTexture(fwin->vscr->screen_ptr, fwin->title_texture[state],
 				      width, fwin->titlebar->height,
 				      fwin->titlebar->height, fwin->titlebar->height,
 				      &pmap,
@@ -1059,7 +1059,7 @@ static void remakeTexture_resizebar(WFrameWindow *fwin, int state)
 	    && fwin->resizebar && fwin->flags.resizebar && state == 0) {
 		destroy_pixmap(fwin->resizebar_back[0]);
 		if (fwin->resizebar_texture[0]->any.type != WTEX_SOLID) {
-			renderResizebarTexture(fwin->screen_ptr,
+			renderResizebarTexture(fwin->vscr->screen_ptr,
 					       fwin->resizebar_texture[0],
 					       fwin->resizebar->width,
 					       fwin->resizebar->height, fwin->resizebar_corner_width, &pmap);
@@ -1072,7 +1072,8 @@ static void remakeTexture_resizebar(WFrameWindow *fwin, int state)
 static void paint_title(WFrameWindow *fwin, int lofs, int rofs, int state)
 {
 	Drawable buf;
-	WScreen *scr = fwin->screen_ptr;
+	virtual_screen *vscr = fwin->vscr;
+	WScreen *scr = vscr->screen_ptr;
 	char *title;
 	int w, h, x, y;
 	int titlelen;
@@ -1091,7 +1092,7 @@ static void paint_title(WFrameWindow *fwin, int lofs, int rofs, int state)
 		break;
 
 	default:
-			x = lofs + (fwin->titlebar->width - w - lofs - rofs) / 2;
+		x = lofs + (fwin->titlebar->width - w - lofs - rofs) / 2;
 	}
 
 	y = *fwin->title_clearance + TITLEBAR_EXTEND_SPACE;
@@ -1409,9 +1410,9 @@ static void checkTitleSize(WFrameWindow *fwin)
 		fwin->flags.incomplete_title = 0;
 }
 
-static void paintButton(WCoreWindow * button, WTexture * texture, unsigned long color, WPixmap * image, int pushed)
+static void paintButton(WCoreWindow *button, WTexture *texture, unsigned long color, WPixmap *image, int pushed)
 {
-	WScreen *scr = button->screen_ptr;
+	WScreen *scr = button->vscr->screen_ptr;
 	GC copy_gc = scr->copy_gc;
 	int x = 0, y = 0, d = 0;
 	int left = 0, width = 0;
@@ -1535,12 +1536,12 @@ static void handleButtonExpose(WObjDescriptor *desc, XEvent *event)
 			    WMColorPixel(fwin->title_color[fwin->flags.state]), fwin->rbutton_image, False);
 }
 
-static void titlebarMouseDown(WObjDescriptor * desc, XEvent * event)
+static void titlebarMouseDown(WObjDescriptor *desc, XEvent *event)
 {
 	WFrameWindow *fwin = desc->parent;
 	WCoreWindow *titlebar = desc->self;
 
-	if (IsDoubleClick(fwin->core->screen_ptr, event)) {
+	if (IsDoubleClick(fwin->core->vscr, event)) {
 		if (fwin->on_dblclick_titlebar)
 			(*fwin->on_dblclick_titlebar) (titlebar, fwin->child, event);
 	} else {
@@ -1569,7 +1570,7 @@ static void buttonMouseDown(WObjDescriptor *desc, XEvent *event)
 	unsigned long pixel;
 	int clickButton = event->xbutton.button;
 
-	if (IsDoubleClick(fwin->core->screen_ptr, event)) {
+	if (IsDoubleClick(fwin->core->vscr, event)) {
 		if (button == fwin->right_button && fwin->on_dblclick_right)
 			(*fwin->on_dblclick_right) (button, fwin->child, event);
 

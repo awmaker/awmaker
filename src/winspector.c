@@ -338,7 +338,7 @@ static int showIconFor(WMScreen *scrPtr, InspectorPanel *panel, const char *wm_i
 
 			buf = wmalloc(len);
 			snprintf(buf, len, _("Could not find icon \"%s\" specified for this window"), file);
-			wMessageDialog(panel->frame->screen_ptr, _("Error"), buf, _("OK"), NULL, NULL);
+			wMessageDialog(panel->frame->vscr, _("Error"), buf, _("OK"), NULL, NULL);
 			wfree(buf);
 			wfree(file);
 			return -1;
@@ -354,7 +354,7 @@ static int showIconFor(WMScreen *scrPtr, InspectorPanel *panel, const char *wm_i
 			buf = wmalloc(len);
 			snprintf(buf, len, _("Could not open specified icon \"%s\":%s"),
 				 file, RMessageForError(RErrorCode));
-			wMessageDialog(panel->frame->screen_ptr, _("Error"), buf, _("OK"), NULL, NULL);
+			wMessageDialog(panel->frame->vscr, _("Error"), buf, _("OK"), NULL, NULL);
 			wfree(buf);
 			wfree(file);
 			return -1;
@@ -499,8 +499,8 @@ static void saveSettings(WMWidget *button, void *client_data)
 	}
 
 	i = WMGetPopUpButtonSelectedItem(panel->wsP) - 1;
-	if (i >= 0 && i < panel->frame->screen_ptr->vscr.workspace.count) {
-		value = WMCreatePLString(panel->frame->screen_ptr->vscr.workspace.array[i]->name);
+	if (i >= 0 && i < panel->frame->vscr->workspace.count) {
+		value = WMCreatePLString(panel->frame->vscr->workspace.array[i]->name);
 		different |= insertAttribute(dict, winDic, AStartWorkspace, value, flags);
 		WMReleasePropList(value);
 	}
@@ -704,7 +704,7 @@ static void applySettings(WMWidget *button, void *client_data)
 
 	if (WFLAGP(wwin, skip_window_list) != skip_window_list) {
 		WSETUFLAG(wwin, skip_window_list, skip_window_list);
-		UpdateSwitchMenu(wwin->screen_ptr, wwin, skip_window_list ? ACTION_REMOVE : ACTION_ADD);
+		UpdateSwitchMenu(wwin->vscr, wwin, skip_window_list ? ACTION_REMOVE : ACTION_ADD);
 	} else {
 		if (WFLAGP(wwin, omnipresent) != old_omnipresent)
 			WMPostNotificationName(WMNChangedState, wwin, "omnipresent");
@@ -752,7 +752,7 @@ static void applySettings(WMWidget *button, void *client_data)
 
 			buf = wmalloc(len);
 			snprintf(buf, len, _("Ignore client supplied icon is set, but icon filename textbox is empty. Using client supplied icon"));
-			wMessageDialog(panel->frame->screen_ptr, _("Warning"), buf, _("OK"), NULL, NULL);
+			wMessageDialog(panel->frame->vscr, _("Warning"), buf, _("OK"), NULL, NULL);
 			wfree(buf);
 			wfree(file);
 
@@ -938,9 +938,9 @@ static void revertSettings(WMWidget *button, void *client_data)
 
 	showIconFor(WMWidgetScreen(panel->alwChk), panel, wm_instance, wm_class, REVERT_TO_DEFAULT);
 
-	n = wDefaultGetStartWorkspace(&(wwin->screen_ptr->vscr), wm_instance, wm_class);
+	n = wDefaultGetStartWorkspace(wwin->vscr, wm_instance, wm_class);
 
-	if (n >= 0 && n < wwin->screen_ptr->vscr.workspace.count)
+	if (n >= 0 && n < wwin->vscr->workspace.count)
 		WMSetPopUpButtonSelectedItem(panel->wsP, n + 1);
 	else
 		WMSetPopUpButtonSelectedItem(panel->wsP, 0);
@@ -961,7 +961,7 @@ static void chooseIconCallback(WMWidget *self, void *clientData)
 
 	WMSetButtonEnabled(panel->browseIconBtn, False);
 
-	result = wIconChooserDialog(panel->frame->screen_ptr, &file,
+	result = wIconChooserDialog(panel->frame->vscr, &file,
 				    panel->inspected->wm_instance,
 				    panel->inspected->wm_class);
 
@@ -1013,7 +1013,7 @@ static void selectWindow(WMWidget *bPtr, void *data)
 {
 	InspectorPanel *panel = (InspectorPanel *) data;
 	WWindow *wwin = panel->inspected;
-	WScreen *scr = wwin->screen_ptr;
+	WScreen *scr = wwin->vscr->screen_ptr;
 	XEvent event;
 	WWindow *iwin;
 
@@ -1044,7 +1044,8 @@ static void selectWindow(WMWidget *bPtr, void *data)
 
 static InspectorPanel *createInspectorForWindow(WWindow *wwin, int xpos, int ypos, Bool showSelectPanel)
 {
-	WScreen *scr = wwin->screen_ptr;
+	virtual_screen *vscr = wwin->vscr;
+	WScreen *scr = vscr->screen_ptr;
 	InspectorPanel *panel;
 	Window parent;
 	char *str = NULL, *tmp = NULL;
@@ -1228,7 +1229,7 @@ static InspectorPanel *createInspectorForWindow(WWindow *wwin, int xpos, int ypo
 		y = ypos;
 	}
 
-	panel->frame = wManageInternalWindow(scr, parent, wwin->client_win, "Inspector", x, y, PWIDTH, PHEIGHT);
+	panel->frame = wManageInternalWindow(vscr, parent, wwin->client_win, "Inspector", x, y, PWIDTH, PHEIGHT);
 
 	if (!selectedBtn)
 		selectedBtn = panel->defaultRb;
@@ -1257,7 +1258,7 @@ void wShowInspectorForWindow(WWindow *wwin)
 	if (wwin->flags.inspector_open)
 		return;
 
-	WMSetBalloonEnabled(wwin->screen_ptr->wmscreen, wPreferences.help_balloon);
+	WMSetBalloonEnabled(wwin->vscr->screen_ptr->wmscreen, wPreferences.help_balloon);
 
 	make_keys();
 	wwin->flags.inspector_open = 1;
@@ -1534,11 +1535,11 @@ static void create_tab_icon_workspace(WWindow *wwin, InspectorPanel *panel)
 	WMResizeWidget(panel->wsP, PWIDTH - (2 * 15) - (2 * 20), 20);
 	WMAddPopUpButtonItem(panel->wsP, _("Nowhere in particular"));
 
-	for (i = 0; i < wwin->screen_ptr->vscr.workspace.count; i++)
-		WMAddPopUpButtonItem(panel->wsP, wwin->screen_ptr->vscr.workspace.array[i]->name);
+	for (i = 0; i < wwin->vscr->workspace.count; i++)
+		WMAddPopUpButtonItem(panel->wsP, wwin->vscr->workspace.array[i]->name);
 
-	i = wDefaultGetStartWorkspace(&(wwin->screen_ptr->vscr), wwin->wm_instance, wwin->wm_class);
-	if (i >= 0 && i <= wwin->screen_ptr->vscr.workspace.count)
+	i = wDefaultGetStartWorkspace(wwin->vscr, wwin->wm_instance, wwin->wm_class);
+	if (i >= 0 && i <= wwin->vscr->workspace.count)
 		WMSetPopUpButtonSelectedItem(panel->wsP, i + 1);
 	else
 		WMSetPopUpButtonSelectedItem(panel->wsP, 0);
@@ -1546,7 +1547,7 @@ static void create_tab_icon_workspace(WWindow *wwin, InspectorPanel *panel)
 
 static void create_tab_app_specific(WWindow *wwin, InspectorPanel *panel, int frame_width)
 {
-	WScreen *scr = wwin->screen_ptr;
+	WScreen *scr = wwin->vscr->screen_ptr;
 	int i = 0, flag = 0, tmp;
 	char *caption = NULL, *descr = NULL;
 

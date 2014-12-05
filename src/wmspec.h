@@ -28,17 +28,17 @@
 #include "window.h"
 #include <X11/Xlib.h>
 
-void wNETWMInitStuff(WScreen *scr);
+void wNETWMInitStuff(virtual_screen *vscr);
 void wNETWMCleanup(WScreen *scr);
-void wNETWMUpdateWorkarea(WScreen *scr);
-Bool wNETWMGetUsableArea(WScreen *scr, int head, WArea *area);
+void wNETWMUpdateWorkarea(virtual_screen *vscr);
+Bool wNETWMGetUsableArea(virtual_screen *vscr, int head, WArea *area);
 void wNETWMCheckInitialClientState(WWindow *wwin);
 void wNETWMCheckInitialFrameState(WWindow *wwin);
 Bool wNETWMProcessClientMessage(XClientMessageEvent *event);
 void wNETWMCheckClientHints(WWindow *wwin, int *layer, int *workspace);
 void wNETWMCheckClientHintChange(WWindow *wwin, XPropertyEvent *event);
 void wNETWMUpdateActions(WWindow *wwin, Bool del);
-void wNETWMUpdateDesktop(WScreen *scr);
+void wNETWMUpdateDesktop(virtual_screen *vscr);
 void wNETWMPositionSplash(WWindow *wwin, int *x, int *y, int width, int height);
 int wNETWMGetPidForWindow(Window window);
 int wNETWMGetCurrentDesktopFromHint(WScreen *scr);

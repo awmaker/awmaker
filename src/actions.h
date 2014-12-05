@@ -39,7 +39,7 @@
 #define SAVE_GEOMETRY_HEIGHT   (1 << 3)
 #define SAVE_GEOMETRY_ALL      SAVE_GEOMETRY_X | SAVE_GEOMETRY_Y | SAVE_GEOMETRY_WIDTH | SAVE_GEOMETRY_HEIGHT
 
-void wSetFocusTo(WScreen *scr, WWindow *wwin);
+void wSetFocusTo(virtual_screen *vscr, WWindow *wwin);
 
 int wMouseMoveWindow(WWindow *wwin, XEvent *ev);
 int wKeyboardMoveResizeWindow(WWindow *wwin);
@@ -52,33 +52,33 @@ void wUnshadeWindow(WWindow *wwin);
 void wIconifyWindow(WWindow *wwin);
 void wDeiconifyWindow(WWindow *wwin);
 
-void wSelectWindows(WScreen *scr, XEvent *ev);
+void wSelectWindows(virtual_screen *vscr, XEvent *ev);
 
 void wSelectWindow(WWindow *wwin, Bool flag);
-void wUnselectWindows(WScreen *scr);
+void wUnselectWindows(virtual_screen *vscr);
 
 void wMaximizeWindow(WWindow *wwin, int directions);
 void wUnmaximizeWindow(WWindow *wwin);
 void handleMaximize(WWindow *wwin, int directions);
 
-void wHideAll(WScreen *src);
+void wHideAll(virtual_screen *vsrc);
 void wHideOtherApplications(WWindow *wwin);
-void wShowAllWindows(WScreen *scr);
+void wShowAllWindows(virtual_screen *vscr);
 
 void wHideApplication(WApplication *wapp);
 void wUnhideApplication(WApplication *wapp, Bool miniwindows,
                         Bool bringToCurrentWS);
 
-void wRefreshDesktop(WScreen *scr);
+void wRefreshDesktop(virtual_screen *vscr);
 
-void wArrangeIcons(WScreen *scr, Bool arrangeAll);
+void wArrangeIcons(virtual_screen *vscr, Bool arrangeAll);
 
 void wMakeWindowVisible(WWindow *wwin);
 
 void wFullscreenWindow(WWindow *wwin);
 void wUnfullscreenWindow(WWindow *wwin);
 
-void animateResize(WScreen *scr, int x, int y, int w, int h, int fx, int fy, int fw, int fh);
+void animateResize(virtual_screen *vscr, int x, int y, int w, int h, int fx, int fy, int fw, int fh);
 void update_saved_geometry(WWindow *wwin);
 
 #endif

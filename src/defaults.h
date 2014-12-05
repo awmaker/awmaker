@@ -28,32 +28,32 @@ typedef struct WDDomain {
 	time_t timestamp;
 } WDDomain;
 
-WDDomain * wDefaultsInitDomain(const char *domain, Bool requireDictionary);
+WDDomain *wDefaultsInitDomain(const char *domain, Bool requireDictionary);
 
 void wDefaultsMergeGlobalMenus(WDDomain *menuDomain);
 
-void wReadDefaults(WScreen *scr, WMPropList *new_dict);
-void wDefaultUpdateIcons(WScreen *scr);
+void wReadDefaults(virtual_screen *vscr, WMPropList *new_dict);
+void wDefaultUpdateIcons(virtual_screen *vscr);
 void wReadStaticDefaults(WMPropList *dict);
 void wDefaultsCheckDomains(void *arg);
-void wSaveDefaults(WScreen *scr);
+void wSaveDefaults(virtual_screen *vscr);
 void wDefaultFillAttributes(const char *instance, const char *class,
                             WWindowAttributes *attr, WWindowAttributes *mask,
                             Bool useGlobalDefault);
 
 char *get_default_image_path(void);
-RImage *get_default_image(WScreen *scr);
+RImage *get_default_image(virtual_screen *vscr);
 
 char *wDefaultGetIconFile(const char *instance, const char *class, Bool default_icon);
 
-RImage *get_icon_image(WScreen *scr, const char *winstance, const char *wclass, int max_size);
+RImage *get_icon_image(virtual_screen *vscr, const char *winstance, const char *wclass, int max_size);
 char *get_icon_filename(const char *winstance, const char *wclass, const char *command,
 			Bool default_icon);
 
 
 int wDefaultGetStartWorkspace(virtual_screen *vscr, const char *instance, const char *class);
-void wDefaultChangeIcon(const char *instance, const char* class, const char *file);
-RImage *get_rimage_from_file(WScreen *scr, const char *file_name, int max_size);
+void wDefaultChangeIcon(const char *instance, const char *class, const char *file);
+RImage *get_rimage_from_file(virtual_screen *vscr, const char *file_name, int max_size);
 
 void wDefaultPurgeInfo(const char *instance, const char *class);
 

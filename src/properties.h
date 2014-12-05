@@ -36,7 +36,7 @@ int PropGetGNUstepWMAttr(Window window, GNUstepWMAttributes **attr);
 
 void PropSetWMakerProtocols(Window root);
 void PropCleanUp(Window root);
-void PropSetIconTileHint(WScreen *scr, RImage *image);
+void PropSetIconTileHint(virtual_screen *vscr, RImage *image);
 
 Window PropGetClientLeader(Window window);
 

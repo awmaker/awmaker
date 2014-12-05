@@ -45,8 +45,8 @@
 	 (w)->wm_gnustep_attr->window_level == WMSubmenuWindowLevel))
 
 static int initialized = 0;
-static void observer(void *self, WMNotification * notif);
-static void wsobserver(void *self, WMNotification * notif);
+static void observer(void *self, WMNotification *notif);
+static void wsobserver(void *self, WMNotification *notif);
 
 /*
  * FocusWindow
@@ -89,9 +89,9 @@ void InitializeSwitchMenu(void)
 }
 
 /* Open switch menu */
-void OpenSwitchMenu(WScreen *scr, int x, int y, int keyboard)
+void OpenSwitchMenu(virtual_screen *vscr, int x, int y, int keyboard)
 {
-	WMenu *switchmenu = scr->vscr.menu.switch_menu;
+	WMenu *switchmenu = vscr->menu.switch_menu;
 	WWindow *wwin;
 
 	if (switchmenu) {
@@ -105,20 +105,20 @@ void OpenSwitchMenu(WScreen *scr, int x, int y, int keyboard)
 					wMenuMapAt(switchmenu, 0, 0, True);
 			}
 		} else {
-			if (keyboard && x == scr->scr_width / 2 && y == scr->scr_height / 2) {
+			if (keyboard && x == vscr->screen_ptr->scr_width / 2 && y == vscr->screen_ptr->scr_height / 2)
 				y = y - switchmenu->frame->core->height / 2;
-			}
+
 			wMenuMapAt(switchmenu, x - switchmenu->frame->core->width / 2, y, keyboard);
 		}
 		return;
 	}
-	switchmenu = wMenuCreate(scr, _("Windows"));
-	scr->vscr.menu.switch_menu = switchmenu;
 
-	wwin = scr->focused_window;
+	switchmenu = wMenuCreate(vscr, _("Windows"));
+	vscr->menu.switch_menu = switchmenu;
+
+	wwin = vscr->screen_ptr->focused_window;
 	while (wwin) {
-		UpdateSwitchMenu(scr, wwin, ACTION_ADD);
-
+		UpdateSwitchMenu(vscr, wwin, ACTION_ADD);
 		wwin = wwin->prev;
 	}
 
@@ -130,7 +130,7 @@ void OpenSwitchMenu(WScreen *scr, int x, int y, int keyboard)
 
 		if (keyboard && x == 0 && y == 0) {
 			newx = newy = 0;
-		} else if (keyboard && x == scr->scr_width / 2 && y == scr->scr_height / 2) {
+		} else if (keyboard && x == vscr->screen_ptr->scr_width / 2 && y == vscr->screen_ptr->scr_height / 2) {
 			newx = x - switchmenu->frame->core->width / 2;
 			newy = y - switchmenu->frame->core->height / 2;
 		} else {
@@ -170,16 +170,16 @@ static int menuIndexForWindow(WMenu * menu, WWindow * wwin, int old_pos)
 }
 
 /* Update switch menu */
-void UpdateSwitchMenu(WScreen *scr, WWindow *wwin, int action)
+void UpdateSwitchMenu(virtual_screen *vscr, WWindow *wwin, int action)
 {
-	WMenu *switchmenu = scr->vscr.menu.switch_menu;
+	WMenu *switchmenu = vscr->menu.switch_menu;
 	WMenuEntry *entry;
 	char title[MAX_MENU_TEXT_LENGTH + 6];
 	int len = sizeof(title);
 	int i;
 	int checkVisibility = 0;
 
-	if (!scr->vscr.menu.switch_menu)
+	if (!vscr->menu.switch_menu)
 		return;
 	/*
 	 *  This menu is updated under the following conditions:
@@ -194,15 +194,15 @@ void UpdateSwitchMenu(WScreen *scr, WWindow *wwin, int action)
 		char *t;
 		int idx;
 
-		if (wwin->flags.internal_window || WFLAGP(wwin, skip_window_list) || IS_GNUSTEP_MENU(wwin)) {
+		if (wwin->flags.internal_window || WFLAGP(wwin, skip_window_list) || IS_GNUSTEP_MENU(wwin))
 			return;
-		}
 
 		if (wwin->frame->title)
 			snprintf(title, len, "%s", wwin->frame->title);
 		else
 			snprintf(title, len, "%s", DEF_WINDOW_TITLE);
-		t = ShrinkString(scr->menu_entry_font, title, MAX_WINDOWLIST_WIDTH);
+
+		t = ShrinkString(vscr->screen_ptr->menu_entry_font, title, MAX_WINDOWLIST_WIDTH);
 
 		if (IS_OMNIPRESENT(wwin))
 			idx = -1;
@@ -219,7 +219,7 @@ void UpdateSwitchMenu(WScreen *scr, WWindow *wwin, int action)
 			snprintf(entry->rtext, MAX_WORKSPACENAME_WIDTH, "[*]");
 		else
 			snprintf(entry->rtext, MAX_WORKSPACENAME_WIDTH, "[%s]",
-				 scr->vscr.workspace.array[wwin->frame->workspace]->name);
+				 vscr->workspace.array[wwin->frame->workspace]->name);
 
 		if (wwin->flags.hidden) {
 			entry->flags.indicator_type = MI_HIDDEN;
@@ -259,7 +259,7 @@ void UpdateSwitchMenu(WScreen *scr, WWindow *wwin, int action)
 					else
 						snprintf(title, MAX_MENU_TEXT_LENGTH, "%s", DEF_WINDOW_TITLE);
 
-					t = ShrinkString(scr->menu_entry_font, title, MAX_WINDOWLIST_WIDTH);
+					t = ShrinkString(vscr->screen_ptr->menu_entry_font, title, MAX_WINDOWLIST_WIDTH);
 					entry->text = t;
 
 					wMenuRealize(switchmenu);
@@ -275,7 +275,7 @@ void UpdateSwitchMenu(WScreen *scr, WWindow *wwin, int action)
 							snprintf(entry->rtext, MAX_WORKSPACENAME_WIDTH, "[*]");
 						else
 							snprintf(entry->rtext, MAX_WORKSPACENAME_WIDTH, "[%s]",
-								 scr->vscr.workspace.array[wwin->frame->workspace]->name);
+								 vscr->workspace.array[wwin->frame->workspace]->name);
 
 						rt = entry->rtext;
 						entry->rtext = NULL;
@@ -372,28 +372,27 @@ static void observer(void *self, WMNotification * notif)
 	if (!wwin)
 		return;
 
-	if (strcmp(name, WMNManaged) == 0)
-		UpdateSwitchMenu(wwin->screen_ptr, wwin, ACTION_ADD);
-	else if (strcmp(name, WMNUnmanaged) == 0)
-		UpdateSwitchMenu(wwin->screen_ptr, wwin, ACTION_REMOVE);
-	else if (strcmp(name, WMNChangedWorkspace) == 0)
-		UpdateSwitchMenu(wwin->screen_ptr, wwin, ACTION_CHANGE_WORKSPACE);
-	else if (strcmp(name, WMNChangedFocus) == 0)
-		UpdateSwitchMenu(wwin->screen_ptr, wwin, ACTION_CHANGE_STATE);
-	else if (strcmp(name, WMNChangedName) == 0)
-		UpdateSwitchMenu(wwin->screen_ptr, wwin, ACTION_CHANGE);
-	else if (strcmp(name, WMNChangedState) == 0) {
-		if (strcmp((char *)data, "omnipresent") == 0) {
-			UpdateSwitchMenu(wwin->screen_ptr, wwin, ACTION_CHANGE_WORKSPACE);
-		} else {
-			UpdateSwitchMenu(wwin->screen_ptr, wwin, ACTION_CHANGE_STATE);
-		}
+	if (strcmp(name, WMNManaged) == 0) {
+		UpdateSwitchMenu(wwin->vscr, wwin, ACTION_ADD);
+	} else if (strcmp(name, WMNUnmanaged) == 0) {
+		UpdateSwitchMenu(wwin->vscr, wwin, ACTION_REMOVE);
+	} else if (strcmp(name, WMNChangedWorkspace) == 0) {
+		UpdateSwitchMenu(wwin->vscr, wwin, ACTION_CHANGE_WORKSPACE);
+	} else if (strcmp(name, WMNChangedFocus) == 0) {
+		UpdateSwitchMenu(wwin->vscr, wwin, ACTION_CHANGE_STATE);
+	} else if (strcmp(name, WMNChangedName) == 0) {
+		UpdateSwitchMenu(wwin->vscr, wwin, ACTION_CHANGE);
+	} else if (strcmp(name, WMNChangedState) == 0) {
+		if (strcmp((char *)data, "omnipresent") == 0)
+			UpdateSwitchMenu(wwin->vscr, wwin, ACTION_CHANGE_WORKSPACE);
+		else
+			UpdateSwitchMenu(wwin->vscr, wwin, ACTION_CHANGE_STATE);
 	}
 }
 
 static void wsobserver(void *self, WMNotification *notif)
 {
-	WScreen *scr = (WScreen *) WMGetNotificationObject(notif);
+	virtual_screen *vscr = (virtual_screen *) WMGetNotificationObject(notif);
 	const char *name = WMGetNotificationName(notif);
 	void *data = WMGetNotificationClientData(notif);
 
@@ -401,5 +400,5 @@ static void wsobserver(void *self, WMNotification *notif)
 	(void) self;
 
 	if (strcmp(name, WMNWorkspaceNameChanged) == 0)
-		UpdateSwitchMenuWorkspace(&(scr->vscr), (uintptr_t) data);
+		UpdateSwitchMenuWorkspace(vscr, (uintptr_t) data);
 }

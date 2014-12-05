@@ -418,14 +418,14 @@ char *get_icon_filename(const char *winstance, const char *wclass, const char *c
 }
 
 /* This function returns the image picture for the file_name file */
-RImage *get_rimage_from_file(WScreen *scr, const char *file_name, int max_size)
+RImage *get_rimage_from_file(virtual_screen *vscr, const char *file_name, int max_size)
 {
 	RImage *image = NULL;
 
 	if (!file_name)
 		return NULL;
 
-	image = RLoadImage(scr->rcontext, file_name, 0);
+	image = RLoadImage(vscr->screen_ptr->rcontext, file_name, 0);
 	if (!image)
 		wwarning(_("error loading image file \"%s\": %s"), file_name,
 			 RMessageForError(RErrorCode));
@@ -450,7 +450,7 @@ char *get_default_image_path(void)
 }
 
 /* This function creates the RImage using the default icon */
-RImage *get_default_image(WScreen *scr)
+RImage *get_default_image(virtual_screen *vscr)
 {
 	RImage *image = NULL;
 	char *path = NULL;
@@ -461,7 +461,7 @@ RImage *get_default_image(WScreen *scr)
 		return NULL;
 
 	/* Get the default icon */
-	image = get_rimage_from_file(scr, path, wPreferences.icon_size);
+	image = get_rimage_from_file(vscr, path, wPreferences.icon_size);
 	if (!image)
 		wwarning(_("could not find default icon \"%s\""), path);
 
@@ -472,14 +472,14 @@ RImage *get_default_image(WScreen *scr)
 	return image;
 }
 
-RImage *get_icon_image(WScreen *scr, const char *winstance, const char *wclass, int max_size)
+RImage *get_icon_image(virtual_screen *vscr, const char *winstance, const char *wclass, int max_size)
 {
 	char *file_name = NULL;
 
 	/* Get the file name of the image, using instance and class */
 	file_name = get_icon_filename(winstance, wclass, NULL, True);
 
-	return get_rimage_from_file(scr, file_name, max_size);
+	return get_rimage_from_file(vscr, file_name, max_size);
 }
 
 int wDefaultGetStartWorkspace(virtual_screen *vscr, const char *instance, const char *class)

@@ -39,84 +39,91 @@
 #include "framewin.h"
 #include "xinerama.h"
 
+#define PWIDTH	295
+#define PHEIGHT	430
 
-static void updateCommand(WAppIcon * icon, char *command)
+static void updateCommand(WAppIcon *icon, char *command)
 {
 	if (icon->command)
 		wfree(icon->command);
+
 	if (command && (command[0] == 0 || (command[0] == '-' && command[1] == 0))) {
 		wfree(command);
 		command = NULL;
 	}
+
 	icon->command = command;
 
-	if (!icon->wm_class && !icon->wm_instance && icon->command && strlen(icon->command) > 0) {
+	if (!icon->wm_class && !icon->wm_instance && icon->command && strlen(icon->command) > 0)
 		icon->forced_dock = 1;
-	}
 }
 
-static void updatePasteCommand(WAppIcon * icon, char *command)
+static void updatePasteCommand(WAppIcon *icon, char *command)
 {
 	if (icon->paste_command)
 		wfree(icon->paste_command);
+
 	if (command && (command[0] == 0 || (command[0] == '-' && command[1] == 0))) {
 		wfree(command);
 		command = NULL;
 	}
+
 	icon->paste_command = command;
 }
 
 #ifdef XDND
-static void updateDNDCommand(WAppIcon * icon, char *command)
+static void updateDNDCommand(WAppIcon *icon, char *command)
 {
 	if (icon->dnd_command)
 		wfree(icon->dnd_command);
+
 	if (command && (command[0] == 0 || (command[0] == '-' && command[1] == 0))) {
 		wfree(command);
 		command = NULL;
 	}
+
 	icon->dnd_command = command;
 }
 #endif				/* XDND */
 
-static void updateSettingsPanelIcon(AppSettingsPanel * panel)
+static void updateSettingsPanelIcon(AppSettingsPanel *panel)
 {
-	char *file;
+	char *file, *path;
+	WMPixmap *pixmap;
+	RColor color;
 
 	file = WMGetTextFieldText(panel->iconField);
-	if (!file)
+	if (!file) {
 		WMSetLabelImage(panel->iconLabel, NULL);
-	else {
-		char *path;
-
-		path = FindImage(wPreferences.icon_path, file);
-		if (!path) {
-			wwarning(_("could not find icon %s, used in a docked application"), file);
-			wfree(file);
-			WMSetLabelImage(panel->iconLabel, NULL);
-			return;
-		} else {
-			WMPixmap *pixmap;
-			RColor color;
-
-			color.red = 0xae;
-			color.green = 0xaa;
-			color.blue = 0xae;
-			color.alpha = 0;
-			pixmap = WMCreateScaledBlendedPixmapFromFile(WMWidgetScreen(panel->win), path, &color, 64, 64);
-			if (!pixmap) {
-				WMSetLabelImage(panel->iconLabel, NULL);
-			} else {
-				WMSetLabelImage(panel->iconLabel, pixmap);
-				WMReleasePixmap(pixmap);
-			}
-		}
-		wfree(file);
-		wfree(path);
+		return;
 	}
+
+	path = FindImage(wPreferences.icon_path, file);
+	if (!path) {
+		wwarning(_("could not find icon %s, used in a docked application"), file);
+		wfree(file);
+		WMSetLabelImage(panel->iconLabel, NULL);
+		return;
+	}
+
+	color.red = 0xae;
+	color.green = 0xaa;
+	color.blue = 0xae;
+	color.alpha = 0;
+
+	pixmap = WMCreateScaledBlendedPixmapFromFile(WMWidgetScreen(panel->win), path, &color, 64, 64);
+	if (!pixmap) {
+		WMSetLabelImage(panel->iconLabel, NULL);
+	} else {
+		WMSetLabelImage(panel->iconLabel, pixmap);
+		WMReleasePixmap(pixmap);
+	}
+
+	wfree(file);
+	wfree(path);
 }
 
-static void chooseIconCallback(WMWidget * self, void *clientData)
+static void chooseIconCallback(WMWidget *self, void *clientData)
 {
 	char *file;
 	AppSettingsPanel *panel = (AppSettingsPanel *) clientData;
@@ -129,7 +136,7 @@ static void chooseIconCallback(WMWidget * self, void *clientData)
 
 	WMSetButtonEnabled(panel->browseBtn, False);
 
-	result = wIconChooserDialog(panel->wwin->screen_ptr, &file,
+	result = wIconChooserDialog(panel->wwin->vscr, &file,
 				    panel->editedIcon->wm_instance, panel->editedIcon->wm_class);
 
 	panel->choosingIcon = 0;
@@ -145,15 +152,18 @@ static void chooseIconCallback(WMWidget * self, void *clientData)
 		 * the icon chooser */
 		DestroyDockAppSettingsPanel(panel);
 	}
+
 	if (result)
 		wfree(file);
 }
 
-static void panelBtnCallback(WMWidget * self, void *data)
+static void panelBtnCallback(WMWidget *self, void *data)
 {
 	WMButton *btn = self;
 	AppSettingsPanel *panel = (AppSettingsPanel *) data;
-	char *text;
+	WAppIcon *aicon;
+	char *text, *buf;
+	int len;
 
 	if (panel->okBtn == btn) {
 		text = WMGetTextFieldText(panel->iconField);
@@ -163,22 +173,20 @@ static void panelBtnCallback(WMWidget * self, void *data)
 		}
 
 		if (!wIconChangeImageFile(panel->editedIcon->icon, text)) {
-			char *buf;
-			int len = strlen(text) + 64;
-
+			len = strlen(text) + 64;
 			buf = wmalloc(len);
 			snprintf(buf, len, _("Could not open specified icon file: %s"), text);
-			if (wMessageDialog(panel->wwin->screen_ptr, _("Error"), buf,
+			if (wMessageDialog(panel->wwin->vscr, _("Error"), buf,
 					   _("OK"), _("Ignore"), NULL) == WAPRDefault) {
 				wfree(text);
 				wfree(buf);
 				return;
 			}
+
 			wfree(buf);
 		} else {
-			WAppIcon *aicon = panel->editedIcon;
+			aicon = panel->editedIcon;
 
-			// Cf dock.c:dockIconPaint(WAppIcon *aicon)?
 			if (aicon == w_global.clip.icon)
 				wClipIconPaint();
 			else if (wIsADrawer(aicon))
@@ -188,6 +196,7 @@ static void panelBtnCallback(WMWidget * self, void *data)
 
 			wDefaultChangeIcon(aicon->wm_instance, aicon->wm_class, text);
 		}
+
 		if (text)
 			wfree(text);
 
@@ -198,6 +207,7 @@ static void panelBtnCallback(WMWidget * self, void *data)
 			wfree(text);
 			text = NULL;
 		}
+
 		updateCommand(panel->editedIcon, text);
 #ifdef XDND
 		/* cannot free text from this, because it will be not be duplicated
@@ -207,26 +217,23 @@ static void panelBtnCallback(WMWidget * self, void *data)
 #endif
 		text = WMGetTextFieldText(panel->pasteCommandField);
 		updatePasteCommand(panel->editedIcon, text);
-
 		panel->editedIcon->auto_launch = WMGetButtonSelected(panel->autoLaunchBtn);
-
 		panel->editedIcon->lock = WMGetButtonSelected(panel->lockBtn);
 	}
 
 	DestroyDockAppSettingsPanel(panel);
 }
 
-#define PWIDTH	295
-#define PHEIGHT	430
-
-void ShowDockAppSettingsPanel(WAppIcon * aicon)
+void ShowDockAppSettingsPanel(WAppIcon *aicon)
 {
 	AppSettingsPanel *panel;
-	WScreen *scr = aicon->icon->core->screen_ptr;
+	virtual_screen *vscr = aicon->icon->core->vscr;
+	WScreen *scr = vscr->screen_ptr;
 	Window parent;
 	WMFont *font;
 	int x, y;
-	WMBox *vbox;
+	WMBox *vbox, *hbox;
+	WMRect rect;
 
 	panel = wmalloc(sizeof(AppSettingsPanel));
 
@@ -250,6 +257,7 @@ void ShowDockAppSettingsPanel(WAppIcon * aicon)
 	font = WMBoldSystemFontOfSize(scr->wmscreen, 14);
 	WMSetLabelFont(panel->nameLabel, font);
 	WMReleaseFont(font);
+
 	if (aicon->wm_class && strcmp(aicon->wm_class, "DockApp") == 0)
 		WMSetLabelText(panel->nameLabel, aicon->wm_instance);
 	else
@@ -334,25 +342,23 @@ void ShowDockAppSettingsPanel(WAppIcon * aicon)
 	WMSetButtonText(panel->browseBtn, _("Browse..."));
 	WMSetButtonAction(panel->browseBtn, chooseIconCallback, panel);
 
-	{
-		WMBox *hbox;
+	/* hbox */
+	hbox = WMCreateBox(vbox);
+	WMSetBoxHorizontal(hbox, True);
+	WMAddBoxSubview(vbox, WMWidgetView(hbox), False, True, 24, 24, 0);
 
-		hbox = WMCreateBox(vbox);
-		WMSetBoxHorizontal(hbox, True);
-		WMAddBoxSubview(vbox, WMWidgetView(hbox), False, True, 24, 24, 0);
+	panel->okBtn = WMCreateCommandButton(hbox);
+	WMSetButtonText(panel->okBtn, _("OK"));
+	WMSetButtonAction(panel->okBtn, panelBtnCallback, panel);
+	WMAddBoxSubviewAtEnd(hbox, WMWidgetView(panel->okBtn), False, True, 80, 80, 0);
 
-		panel->okBtn = WMCreateCommandButton(hbox);
-		WMSetButtonText(panel->okBtn, _("OK"));
-		WMSetButtonAction(panel->okBtn, panelBtnCallback, panel);
-		WMAddBoxSubviewAtEnd(hbox, WMWidgetView(panel->okBtn), False, True, 80, 80, 0);
+	panel->cancelBtn = WMCreateCommandButton(hbox);
+	WMSetButtonText(panel->cancelBtn, _("Cancel"));
+	WMSetButtonAction(panel->cancelBtn, panelBtnCallback, panel);
+	WMAddBoxSubviewAtEnd(hbox, WMWidgetView(panel->cancelBtn), False, True, 80, 80, 5);
 
-		panel->cancelBtn = WMCreateCommandButton(hbox);
-		WMSetButtonText(panel->cancelBtn, _("Cancel"));
-		WMSetButtonAction(panel->cancelBtn, panelBtnCallback, panel);
-		WMAddBoxSubviewAtEnd(hbox, WMWidgetView(panel->cancelBtn), False, True, 80, 80, 5);
-
-		WMMapSubwidgets(hbox);
-	}
+	WMMapSubwidgets(hbox);
+	/* End hbox */
 
 	WMRealizeWidget(panel->win);
 	WMMapSubwidgets(panel->win);
@@ -366,45 +372,39 @@ void ShowDockAppSettingsPanel(WAppIcon * aicon)
 
 	XReparentWindow(dpy, WMWidgetXID(panel->win), parent, 0, 0);
 
-	/*
-	 * make things relative to head
-	 */
-	{
-		WMRect rect = wGetRectForHead(scr, wGetHeadForPointerLocation(scr));
+	/* make things relative to head */
+	rect = wGetRectForHead(vscr, wGetHeadForPointerLocation(vscr));
 
-		y = aicon->y_pos;
-		if (y < 0)
-			y = 0;
-		else if (y + PHEIGHT > rect.pos.y + rect.size.height)
-			y = rect.pos.y + rect.size.height - PHEIGHT - 30;
+	y = aicon->y_pos;
+	if (y < 0)
+		y = 0;
+	else if (y + PHEIGHT > rect.pos.y + rect.size.height)
+		y = rect.pos.y + rect.size.height - PHEIGHT - 30;
 
-		if (aicon->dock && aicon->dock->type == WM_DOCK) {
-			if (aicon->dock->on_right_side)
-				x = rect.pos.x + rect.size.width / 2;
-			else
-				x = rect.pos.x + rect.size.width / 2 - PWIDTH - 2;
-		} else {
-			x = rect.pos.x + (rect.size.width - PWIDTH) / 2;
-		}
+	if (aicon->dock && aicon->dock->type == WM_DOCK) {
+		if (aicon->dock->on_right_side)
+			x = rect.pos.x + rect.size.width / 2;
+		else
+			x = rect.pos.x + rect.size.width / 2 - PWIDTH - 2;
+	} else {
+		x = rect.pos.x + (rect.size.width - PWIDTH) / 2;
 	}
 
-	panel->wwin = wManageInternalWindow(scr, parent, None,
+	panel->wwin = wManageInternalWindow(vscr, parent, None,
 					    _("Docked Application Settings"), x, y, PWIDTH, PHEIGHT);
 
 	panel->wwin->client_leader = WMWidgetXID(panel->win);
-
 	panel->parent = parent;
 
 	WMMapWidget(panel->win);
-
 	wWindowMap(panel->wwin);
 }
 
-void DestroyDockAppSettingsPanel(AppSettingsPanel * panel)
+void DestroyDockAppSettingsPanel(AppSettingsPanel *panel)
 {
 	if (!panel->destroyed) {
 		XUnmapWindow(dpy, panel->wwin->client_win);
-		XReparentWindow(dpy, panel->wwin->client_win, panel->wwin->screen_ptr->root_win, 0, 0);
+		XReparentWindow(dpy, panel->wwin->client_win, panel->wwin->vscr->screen_ptr->root_win, 0, 0);
 		wUnmanageWindow(panel->wwin, False, False);
 	}
 
@@ -420,11 +420,9 @@ void DestroyDockAppSettingsPanel(AppSettingsPanel * panel)
 		return;
 
 	WMDestroyWidget(panel->win);
-
 	XDestroyWindow(dpy, panel->parent);
 
 	panel->editedIcon->panel = NULL;
-
 	panel->editedIcon->editing = 0;
 
 	wfree(panel);

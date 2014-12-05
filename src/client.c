@@ -52,27 +52,10 @@
  *
  *--------------------------------------------------------------------
  */
-void wClientRestore(WWindow * wwin)
+void wClientRestore(WWindow *wwin)
 {
-#if 0
-	int gx, gy;
-
-	wClientGetGravityOffsets(wwin, &gx, &gy);
-	/* set the position of the frame on screen */
-	wwin->frame_x -= gx * wwin->screen_ptr->frame_border_width;
-	wwin->frame_y -= gy * wwin->screen_ptr->frame_border_width;
-	/* if gravity is to the south, account for the border sizes */
-	if (gy > 0)
-		wwin->frame_y += (wwin->frame->top_width + wwin->frame->bottom_width);
-#endif
 	XSetWindowBorderWidth(dpy, wwin->client_win, wwin->old_border_width);
-	XReparentWindow(dpy, wwin->client_win, wwin->screen_ptr->root_win, wwin->frame_x, wwin->frame_y);
-
-	/* don't let the window get iconified after restart */
-	/*
-	   if (wwin->flags.shaded)
-	   wClientSetState(wwin, NormalState, None);
-	 */
+	XReparentWindow(dpy, wwin->client_win, wwin->vscr->screen_ptr->root_win, wwin->frame_x, wwin->frame_y);
 }
 
 /*
@@ -190,40 +173,31 @@ void wClientConfigure(WWindow * wwin, XConfigureRequestEvent * xcre)
 		} else {
 			xwc.sibling = xcre->above;
 		}
+
 		xwc.stack_mode = xcre->detail;
 		XConfigureWindow(dpy, wwin->frame->core->window,
 				 xcre->value_mask & (CWSibling | CWStackMode), &xwc);
+
 		/* fix stacking order */
-		RemakeStackList(wwin->screen_ptr);
+		RemakeStackList(wwin->vscr);
 	}
 
 	wClientGetGravityOffsets(wwin, &ofs_x, &ofs_y);
 
-	if (xcre->value_mask & CWBorderWidth) {
+	if (xcre->value_mask & CWBorderWidth)
 		wwin->old_border_width = xcre->border_width;
-	}
 
 	if (!wwin->flags.shaded) {
 		/* If the window is shaded, wrong height will be set for the window */
-		if (xcre->value_mask & CWX) {
+		if (xcre->value_mask & CWX)
 			nx = xcre->x;
-			/* Subtracting the border makes the window shift by 1 pixel -Dan */
-			/*if (HAS_BORDER(wwin)) {
-			   nx -= wwin->screen_ptr->frame_border_width;
-			   } */
-		} else {
+		else
 			nx = wwin->frame_x;
-		}
 
-		if (xcre->value_mask & CWY) {
+		if (xcre->value_mask & CWY)
 			ny = xcre->y - ((ofs_y < 0) ? 0 : wwin->frame->top_width);
-			/* Subtracting the border makes the window shift by 1 pixel -Dan */
-			/*if (HAS_BORDER(wwin)) {
-			   ny -= wwin->screen_ptr->frame_border_width;
-			   } */
-		} else {
+		else
 			ny = wwin->frame_y;
-		}
 
 		if (xcre->value_mask & CWWidth)
 			nwidth = xcre->width;
@@ -241,6 +215,7 @@ void wClientConfigure(WWindow * wwin, XConfigureRequestEvent * xcre)
 
 		if (nwidth != wwin->old_geometry.width)
 			wwin->flags.maximized &= ~(MAX_HORIZONTAL | MAX_TOPHALF | MAX_BOTTOMHALF | MAX_MAXIMUS);
+
 		if (nheight != wwin->old_geometry.height)
 			wwin->flags.maximized &= ~(MAX_VERTICAL | MAX_LEFTHALF | MAX_RIGHTHALF | MAX_MAXIMUS);
 
@@ -252,7 +227,7 @@ void wClientConfigure(WWindow * wwin, XConfigureRequestEvent * xcre)
 	}
 }
 
-void wClientSendProtocol(WWindow * wwin, Atom protocol, Time time)
+void wClientSendProtocol(WWindow *wwin, Atom protocol, Time time)
 {
 	XEvent event;
 
@@ -289,7 +264,7 @@ void wClientKill(WWindow * wwin)
  * TODO: _GNUSTEP_WM_ATTR
  *----------------------------------------------------------------------
  */
-void wClientCheckProperty(WWindow * wwin, XPropertyEvent * event)
+void wClientCheckProperty(WWindow *wwin, XPropertyEvent *event)
 {
 	XWindowAttributes attribs;
 	XWMHints *new_hints;
@@ -498,10 +473,10 @@ void wClientCheckProperty(WWindow * wwin, XPropertyEvent * event)
 			if (!XGetTransientForHint(dpy, wwin->client_win, &new_owner)) {
 				new_owner = None;
 			} else {
-				if (new_owner == 0 || new_owner == wwin->client_win) {
-					new_owner = wwin->screen_ptr->root_win;
-				}
+				if (new_owner == 0 || new_owner == wwin->client_win)
+					new_owner = wwin->vscr->screen_ptr->root_win;
 			}
+
 			if (new_owner != wwin->transient_for) {
 				owner = wWindowFor(wwin->transient_for);
 				if (owner) {
@@ -541,19 +516,13 @@ void wClientCheckProperty(WWindow * wwin, XPropertyEvent * event)
 
 	default:
 		if (event->atom == w_global.atom.wm.protocols) {
-
 			PropGetProtocols(wwin->client_win, &wwin->protocols);
-
 			WSETUFLAG(wwin, kill_close, !wwin->protocols.DELETE_WINDOW);
-
 			if (wwin->frame)
 				wWindowUpdateButtonImages(wwin);
-
 		} else if (event->atom == w_global.atom.wm.colormap_windows) {
-
 			GetColormapWindows(wwin);
-			wColormapInstallForWindow(wwin->screen_ptr, wwin);
-
+			wColormapInstallForWindow(wwin->vscr, wwin);
 		} else if (event->atom == w_global.atom.wmaker.menu) {
 			WApplication *wapp;
 
@@ -564,8 +533,10 @@ void wClientCheckProperty(WWindow * wwin, XPropertyEvent * event)
 					/* TODO: remake appmenu update */
 					wAppMenuDestroy(wapp->menu);
 				}
+
 				if (wwin->fake_group) {
-					WScreen *scr = wwin->screen_ptr;
+					virtual_screen *vscr = wwin->vscr;
+					WScreen *scr = vscr->screen_ptr;
 					WWindow *foo = scr->focused_window;
 					WFakeGroupLeader *fPtr = wwin->fake_group;
 
@@ -592,31 +563,29 @@ void wClientCheckProperty(WWindow * wwin, XPropertyEvent * event)
 
 					if (fPtr->leader != None)
 						XDestroyWindow(dpy, fPtr->leader);
+
 					fPtr->retainCount = 0;
 					fPtr->leader = None;
 					fPtr->origLeader = None;
 
 					wapp = wApplicationOf(wwin->main_window);
-					if (wapp) {
-						wapp->menu = wAppMenuGet(scr, wwin->main_window);
-					}
-					if (wPreferences.auto_arrange_icons) {
-						wArrangeIcons(wwin->screen_ptr, True);
-					}
+					if (wapp)
+						wapp->menu = wAppMenuGet(vscr, wwin->main_window);
+
+					if (wPreferences.auto_arrange_icons)
+						wArrangeIcons(wwin->vscr, True);
 				} else {
-					wapp->menu = wAppMenuGet(wwin->screen_ptr, wwin->main_window);
+					wapp->menu = wAppMenuGet(wwin->vscr, wwin->main_window);
 				}
+
 				/* make the appmenu be mapped */
-				wSetFocusTo(wwin->screen_ptr, NULL);
-				wSetFocusTo(wwin->screen_ptr, wwin->screen_ptr->focused_window);
+				wSetFocusTo(wwin->vscr, NULL);
+				wSetFocusTo(wwin->vscr, wwin->vscr->screen_ptr->focused_window);
 			}
 		} else if (event->atom == w_global.atom.gnustep.wm_attr) {
 			GNUstepWMAttributes *attr;
-
 			PropGetGNUstepWMAttr(wwin->client_win, &attr);
-
 			wWindowUpdateGNUstepAttr(wwin, attr);
-
 			XFree(attr);
 		} else {
 			wNETWMCheckClientHintChange(wwin, event);
@@ -646,29 +615,31 @@ wClientGetNormalHints(WWindow * wwin, XWindowAttributes * wattribs, Bool geometr
 	if (!wwin->normal_hints)
 		wwin->normal_hints = XAllocSizeHints();
 
-	if (!PropGetNormalHints(wwin->client_win, wwin->normal_hints, &pre_icccm)) {
+	if (!PropGetNormalHints(wwin->client_win, wwin->normal_hints, &pre_icccm))
 		wwin->normal_hints->flags = 0;
-	}
+
 	*x = wattribs->x;
 	*y = wattribs->y;
 
 	*width = wattribs->width;
 	*height = wattribs->height;
 
-	if (!(wwin->normal_hints->flags & PWinGravity)) {
+	if (!(wwin->normal_hints->flags & PWinGravity))
 		wwin->normal_hints->win_gravity = NorthWestGravity;
-	}
+
 	if (!(wwin->normal_hints->flags & PMinSize)) {
 		wwin->normal_hints->min_width = MIN_WINDOW_SIZE;
 		wwin->normal_hints->min_height = MIN_WINDOW_SIZE;
 	}
+
 	if (!(wwin->normal_hints->flags & PBaseSize)) {
 		wwin->normal_hints->base_width = 0;
 		wwin->normal_hints->base_height = 0;
 	}
+
 	if (!(wwin->normal_hints->flags & PMaxSize)) {
-		wwin->normal_hints->max_width = wwin->screen_ptr->scr_width * 2;
-		wwin->normal_hints->max_height = wwin->screen_ptr->scr_height * 2;
+		wwin->normal_hints->max_width = wwin->vscr->screen_ptr->scr_width * 2;
+		wwin->normal_hints->max_height = wwin->vscr->screen_ptr->scr_height * 2;
 	}
 
 	/* some buggy apps set weird hints.. */
@@ -690,6 +661,7 @@ wClientGetNormalHints(WWindow * wwin, XWindowAttributes * wattribs, Bool geometr
 	} else {
 		if (wwin->normal_hints->width_inc <= 0)
 			wwin->normal_hints->width_inc = 1;
+
 		if (wwin->normal_hints->height_inc <= 0)
 			wwin->normal_hints->height_inc = 1;
 	}
@@ -697,21 +669,23 @@ wClientGetNormalHints(WWindow * wwin, XWindowAttributes * wattribs, Bool geometr
 	if (wwin->normal_hints->flags & PAspect) {
 		if (wwin->normal_hints->min_aspect.x < 1)
 			wwin->normal_hints->min_aspect.x = 1;
+
 		if (wwin->normal_hints->min_aspect.y < 1)
 			wwin->normal_hints->min_aspect.y = 1;
 
 		if (wwin->normal_hints->max_aspect.x < 1)
 			wwin->normal_hints->max_aspect.x = 1;
+
 		if (wwin->normal_hints->max_aspect.y < 1)
 			wwin->normal_hints->max_aspect.y = 1;
 	}
 
-	if (wwin->normal_hints->min_height > wwin->normal_hints->max_height) {
+	if (wwin->normal_hints->min_height > wwin->normal_hints->max_height)
 		wwin->normal_hints->min_height = wwin->normal_hints->max_height;
-	}
-	if (wwin->normal_hints->min_width > wwin->normal_hints->max_width) {
+
+	if (wwin->normal_hints->min_width > wwin->normal_hints->max_width)
 		wwin->normal_hints->min_width = wwin->normal_hints->max_width;
-	}
+
 #ifdef IGNORE_PPOSITION
 	wwin->normal_hints->flags &= ~PPosition;
 #endif

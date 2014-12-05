@@ -158,17 +158,15 @@ typedef union WTexture {
 } WTexture;
 
 
-WTexSolid *wTextureMakeSolid(WScreen*, XColor*);
-WTexGradient *wTextureMakeGradient(WScreen*, int, const RColor*, const RColor*);
-WTexMGradient *wTextureMakeMGradient(WScreen*, int, RColor**);
-WTexTGradient *wTextureMakeTGradient(WScreen*, int, const RColor*, const RColor*, const char *, int);
-WTexIGradient *wTextureMakeIGradient(WScreen*, int, const RColor[], int, const RColor[]);
-WTexPixmap *wTextureMakePixmap(WScreen *scr, int style, const char *pixmap_file,
-                               XColor *color);
-void wTextureDestroy(WScreen*, WTexture*);
-void wTexturePaint(WTexture *, Pixmap *, WCoreWindow*, int, int);
-void wTextureRender(WScreen*, WTexture*, Pixmap*, int, int, int);
-struct RImage *wTextureRenderImage(WTexture*, int, int, int);
+WTexSolid *wTextureMakeSolid(virtual_screen *vscr, XColor *color);
+WTexGradient *wTextureMakeGradient(virtual_screen *vscr, int, const RColor *from, const RColor *to);
+WTexMGradient *wTextureMakeMGradient(virtual_screen *vscr, int style, RColor **colors);
+WTexTGradient *wTextureMakeTGradient(virtual_screen *vscr, int style, const RColor *from, const RColor *to,
+				     const char *pixmap_file, int opacity);
+WTexIGradient *wTextureMakeIGradient(virtual_screen *vscr, int thickness1, const RColor colors1[], int thickness2, const RColor colors2[]);
+WTexPixmap *wTextureMakePixmap(virtual_screen *vscr, int style, const char *pixmap_file, XColor *color);
+void wTextureDestroy(virtual_screen *vscr, WTexture *texture);
+struct RImage *wTextureRenderImage(WTexture *texture, int width, int height, int relief);
 
 void wDrawBevel(Drawable d, unsigned width, unsigned height, WTexSolid *texture, int relief);
 void wDrawBevel_resizebar(Drawable d, unsigned width, unsigned height, WTexSolid *texture, int corner_width);

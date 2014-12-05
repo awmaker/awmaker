@@ -33,11 +33,8 @@ typedef struct WPixmap {
     unsigned int client_owned_mask:1;
 } WPixmap;
 
-
 WPixmap *wPixmapCreate(Pixmap image, Pixmap mask);
-
 WPixmap *wPixmapCreateFromXPMData(WScreen *scr, char **data);
-
 WPixmap *wPixmapCreateFromXBMData(WScreen *scr, char *data, char *mask,
                                   int width, int height, unsigned long fg,
                                   unsigned long bg);

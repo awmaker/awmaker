@@ -90,7 +90,8 @@ static void wXDNDDecodeURI(char *uri)
 
 Bool wXDNDProcessSelection(XEvent *event)
 {
-	WScreen *scr = wScreenForWindow(event->xselection.requestor);
+	virtual_screen *vscr = wScreenForWindow(event->xselection.requestor);
+	WScreen *scr = vscr->screen_ptr;
 	char *retain;
 	Atom ret_type;
 	int ret_format;
@@ -132,20 +133,20 @@ Bool wXDNDProcessSelection(XEvent *event)
 
 		/* search in string */
 		while (length--) {
-			if (retain[length] == '\r') {	/* useless char, nuke it */
+			if (retain[length] == '\r')	/* useless char, nuke it */
 				retain[length] = 0;
-			}
+
 			if (retain[length] == '\n') {
 				str_size = strlen(&retain[length + 1]);
 				if (str_size) {
 					WMAddToArray(items, wstrdup(&retain[length + 1]));
 					total_size += str_size + 3;	/* reserve for " \"\"" */
-					/* this is nonsense -- if (length)
-					   WMAppendArray(items, WMCreateArray(1)); */
 				}
+
 				retain[length] = 0;
 			}
 		}
+
 		/* final one */
 		WMAddToArray(items, wstrdup(retain));
 		total_size += strlen(retain) + 3;
@@ -167,7 +168,8 @@ Bool wXDNDProcessSelection(XEvent *event)
 		}
 		WMFreeArray(items);
 		if (scr->xdestring[0])
-			wDockReceiveDNDDrop(scr, event);
+			wDockReceiveDNDDrop(vscr, event);
+
 		wfree(scr->xdestring);	/* this xdestring is not from Xlib (no XFree) */
 	}
 
@@ -197,8 +199,8 @@ static Bool isAwareXDND(Window window)
 
 static Bool acceptXDND(Window window)
 {
-	WScreen *scr = wScreenForWindow(window);
-	WDock *dock = scr->vscr.dock.dock;
+	virtual_screen *vscr = wScreenForWindow(window);
+	WDock *dock = vscr->dock.dock;
 	int i, icon_pos = -1;
 
 	if (dock) {
@@ -212,7 +214,7 @@ static Bool acceptXDND(Window window)
 	}
 
 	if (icon_pos < 0) {
-		dock = scr->vscr.workspace.array[scr->vscr.workspace.current]->clip;
+		dock = vscr->workspace.array[vscr->workspace.current]->clip;
 		if (dock) {
 			for (i = 0; i < dock->max_icons; i++) {
 				if (dock->icon_array[i]

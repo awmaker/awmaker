@@ -71,8 +71,8 @@
 
 
 typedef struct _WDefaultEntry  WDefaultEntry;
-typedef int (WDECallbackConvert) (WScreen *scr, WDefaultEntry *entry, WMPropList *plvalue, void *addr, void **tdata);
-typedef int (WDECallbackUpdate) (WScreen *scr, WDefaultEntry *entry, void *tdata, void *extra_data);
+typedef int (WDECallbackConvert) (virtual_screen *vscr, WDefaultEntry *entry, WMPropList *plvalue, void *addr, void **tdata);
+typedef int (WDECallbackUpdate) (virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data);
 
 struct _WDefaultEntry {
 	const char *key;
@@ -847,7 +847,7 @@ static WMPropList *readGlobalDomain(const char *domainName, Bool requireDictiona
 }
 
 #if defined(GLOBAL_PREAMBLE_MENU_FILE) || defined(GLOBAL_EPILOGUE_MENU_FILE)
-static void prependMenu(WMPropList * destarr, WMPropList * array)
+static void prependMenu(WMPropList *destarr, WMPropList *array)
 {
 	WMPropList *item;
 	int i;
@@ -859,7 +859,7 @@ static void prependMenu(WMPropList * destarr, WMPropList * array)
 	}
 }
 
-static void appendMenu(WMPropList * destarr, WMPropList * array)
+static void appendMenu(WMPropList *destarr, WMPropList *array)
 {
 	WMPropList *item;
 	int i;
@@ -872,7 +872,7 @@ static void appendMenu(WMPropList * destarr, WMPropList * array)
 }
 #endif
 
-void wDefaultsMergeGlobalMenus(WDDomain * menuDomain)
+void wDefaultsMergeGlobalMenus(WDDomain *menuDomain)
 {
 	WMPropList *menu = menuDomain->dictionary;
 	WMPropList *submenu;
@@ -960,7 +960,7 @@ WDDomain *wDefaultsInitDomain(const char *domain, Bool requireDictionary)
 	return db;
 }
 
-void wReadStaticDefaults(WMPropList * dict)
+void wReadStaticDefaults(WMPropList *dict)
 {
 	WMPropList *plvalue;
 	WDefaultEntry *entry;
@@ -988,9 +988,9 @@ void wReadStaticDefaults(WMPropList * dict)
 	}
 }
 
-void wDefaultsCheckDomains(void* arg)
+void wDefaultsCheckDomains(void *arg)
 {
-	WScreen *scr;
+	virtual_screen *vscr;
 	struct stat stbuf;
 	WMPropList *shared_dict = NULL;
 	WMPropList *dict;
@@ -1023,9 +1023,9 @@ void wDefaultsCheckDomains(void* arg)
 				}
 
 				for (i = 0; i < w_global.screen_count; i++) {
-					scr = wScreenWithNumber(i);
-					if (scr)
-						wReadDefaults(scr, dict);
+					vscr = wScreenWithNumber(i);
+					if (vscr->screen_ptr)
+						wReadDefaults(vscr, dict);
 				}
 
 				if (w_global.domain.wmaker->dictionary)
@@ -1066,14 +1066,14 @@ void wDefaultsCheckDomains(void* arg)
 
 				w_global.domain.window_attr->dictionary = dict;
 				for (i = 0; i < w_global.screen_count; i++) {
-					scr = wScreenWithNumber(i);
-					if (scr) {
-						wDefaultUpdateIcons(scr);
+					vscr = wScreenWithNumber(i);
+					if (vscr->screen_ptr) {
+						wDefaultUpdateIcons(vscr);
 
 						/* Update the panel image if changed */
 						/* Don't worry. If the image is the same these
 						 * functions will have no performance impact. */
-						create_logo_image(scr);
+						create_logo_image(vscr);
 					}
 				}
 			}
@@ -1112,7 +1112,7 @@ void wDefaultsCheckDomains(void* arg)
 #endif
 }
 
-void wReadDefaults(WScreen * scr, WMPropList * new_dict)
+void wReadDefaults(virtual_screen *vscr, WMPropList *new_dict)
 {
 	WMPropList *plvalue, *old_value;
 	WDefaultEntry *entry;
@@ -1152,7 +1152,7 @@ void wReadDefaults(WScreen * scr, WMPropList * new_dict)
 			/* value has changed */
 		} else {
 			if (strcmp(entry->key, "WorkspaceBack") == 0
-			    && update_workspace_back && scr->flags.backimage_helper_launched) {
+			    && update_workspace_back && vscr->screen_ptr->flags.backimage_helper_launched) {
 			} else {
 				/* value was not changed since last time */
 				continue;
@@ -1161,7 +1161,7 @@ void wReadDefaults(WScreen * scr, WMPropList * new_dict)
 
 		if (plvalue) {
 			/* convert data */
-			if ((*entry->convert) (scr, entry, plvalue, entry->addr, &tdata)) {
+			if ((*entry->convert) (vscr, entry, plvalue, entry->addr, &tdata)) {
 				/*
 				 * If the WorkspaceSpecificBack data has been changed
 				 * so that the helper will be launched now, we must be
@@ -1169,12 +1169,11 @@ void wReadDefaults(WScreen * scr, WMPropList * new_dict)
 				 * to the helper.
 				 */
 				if (strcmp(entry->key, "WorkspaceSpecificBack") == 0 &&
-				    !scr->flags.backimage_helper_launched)
+				    !vscr->screen_ptr->flags.backimage_helper_launched)
 					update_workspace_back = 1;
 
 				if (entry->update)
-					needs_refresh |= (*entry->update) (scr, entry, tdata, entry->extra_data);
-
+					needs_refresh |= (*entry->update) (vscr, entry, tdata, entry->extra_data);
 			}
 		}
 	}
@@ -1245,23 +1244,23 @@ void wReadDefaults(WScreen * scr, WMPropList * new_dict)
 			WMPostNotificationName(WNIconTileSettingsChanged, NULL, NULL);
 
 		if (needs_refresh & REFRESH_WORKSPACE_MENU) {
-			if (scr->vscr.workspace.menu)
-				wWorkspaceMenuUpdate(&(scr->vscr), scr->vscr.workspace.menu);
-			if (scr->vscr.clip.ws_menu)
-				wWorkspaceMenuUpdate(&(scr->vscr), scr->vscr.clip.ws_menu);
-			if (scr->vscr.workspace.submenu)
-				scr->vscr.workspace.submenu->flags.realized = 0;
-			if (scr->vscr.clip.submenu)
-				scr->vscr.clip.submenu->flags.realized = 0;
+			if (vscr->workspace.menu)
+				wWorkspaceMenuUpdate(vscr, vscr->workspace.menu);
+			if (vscr->clip.ws_menu)
+				wWorkspaceMenuUpdate(vscr, vscr->clip.ws_menu);
+			if (vscr->workspace.submenu)
+				vscr->workspace.submenu->flags.realized = 0;
+			if (vscr->clip.submenu)
+				vscr->clip.submenu->flags.realized = 0;
 		}
 	}
 }
 
-void wDefaultUpdateIcons(WScreen *scr)
+void wDefaultUpdateIcons(virtual_screen *vscr)
 {
 	WAppIcon *aicon = w_global.app_icon_list;
 	WDrawerChain *dc;
-	WWindow *wwin = scr->focused_window;
+	WWindow *wwin = vscr->screen_ptr->focused_window;
 
 	while (aicon) {
 		/* Get the application icon, default included */
@@ -1273,7 +1272,7 @@ void wDefaultUpdateIcons(WScreen *scr)
 	if (!wPreferences.flags.noclip || wPreferences.flags.clip_merged_in_dock)
 		wClipIconPaint();
 
-	for (dc = scr->vscr.drawer.drawers; dc != NULL; dc = dc->next)
+	for (dc = vscr->drawer.drawers; dc != NULL; dc = dc->next)
 		wDrawerIconPaint(dc->adrawer->icon_array[0]);
 
 	while (wwin) {
@@ -1294,7 +1293,7 @@ void wDefaultUpdateIcons(WScreen *scr)
     } else var = WMGetFromPLString(value)\
 
 
-static int string2index(WMPropList *key, WMPropList *val, const char *def, WOptionEnumeration * values)
+static int string2index(WMPropList *key, WMPropList *val, const char *def, WOptionEnumeration *values)
 {
 	char *str;
 	WOptionEnumeration *v;
@@ -1334,14 +1333,14 @@ static int string2index(WMPropList *key, WMPropList *val, const char *def, WOpti
  * ret - is the address to store a pointer to a temporary buffer. ret
  * 	must not be freed and is used by the set functions
  */
-static int getBool(WScreen * scr, WDefaultEntry * entry, WMPropList * value, void *addr, void **ret)
+static int getBool(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
 {
 	static char data;
 	const char *val;
 	int second_pass = 0;
 
 	/* Parameter not used, but tell the compiler that it is ok */
-	(void) scr;
+	(void) vscr;
 
 	GET_STRING_OR_DEFAULT("Boolean", val);
 
@@ -1380,13 +1379,13 @@ static int getBool(WScreen * scr, WDefaultEntry * entry, WMPropList * value, voi
 	return True;
 }
 
-static int getInt(WScreen * scr, WDefaultEntry * entry, WMPropList * value, void *addr, void **ret)
+static int getInt(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
 {
 	static int data;
 	const char *val;
 
 	/* Parameter not used, but tell the compiler that it is ok */
-	(void) scr;
+	(void) vscr;
 
 	GET_STRING_OR_DEFAULT("Integer", val);
 
@@ -1407,7 +1406,7 @@ static int getInt(WScreen * scr, WDefaultEntry * entry, WMPropList * value, void
 	return True;
 }
 
-static int getCoord(WScreen * scr, WDefaultEntry * entry, WMPropList * value, void *addr, void **ret)
+static int getCoord(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
 {
 	static WCoord data;
 	char *val_x, *val_y;
@@ -1468,25 +1467,26 @@ static int getCoord(WScreen * scr, WDefaultEntry * entry, WMPropList * value, vo
 
 	if (data.x < 0)
 		data.x = 0;
-	else if (data.x > scr->scr_width / 3)
-		data.x = scr->scr_width / 3;
+	else if (data.x > vscr->screen_ptr->scr_width / 3)
+		data.x = vscr->screen_ptr->scr_width / 3;
 	if (data.y < 0)
 		data.y = 0;
-	else if (data.y > scr->scr_height / 3)
-		data.y = scr->scr_height / 3;
+	else if (data.y > vscr->screen_ptr->scr_height / 3)
+		data.y = vscr->screen_ptr->scr_height / 3;
 
 	if (ret)
 		*ret = &data;
+
 	if (addr)
 		*(WCoord *) addr = data;
 
 	return True;
 }
 
-static int getPropList(WScreen * scr, WDefaultEntry * entry, WMPropList * value, void *addr, void **ret)
+static int getPropList(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
-	(void) scr;
+	(void) vscr;
 	(void) entry;
 	(void) addr;
 
@@ -1497,7 +1497,7 @@ static int getPropList(WScreen * scr, WDefaultEntry * entry, WMPropList * value,
 	return True;
 }
 
-static int getPathList(WScreen * scr, WDefaultEntry * entry, WMPropList * value, void *addr, void **ret)
+static int getPathList(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
 {
 	static char *data;
 	int i, count, len;
@@ -1506,7 +1506,7 @@ static int getPathList(WScreen * scr, WDefaultEntry * entry, WMPropList * value,
 	int changed = 0;
 
 	/* Parameter not used, but tell the compiler that it is ok */
-	(void) scr;
+	(void) vscr;
 	(void) ret;
 
  again:
@@ -1566,12 +1566,12 @@ static int getPathList(WScreen * scr, WDefaultEntry * entry, WMPropList * value,
 	return True;
 }
 
-static int getEnum(WScreen * scr, WDefaultEntry * entry, WMPropList * value, void *addr, void **ret)
+static int getEnum(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
 {
 	static signed char data;
 
 	/* Parameter not used, but tell the compiler that it is ok */
-	(void) scr;
+	(void) vscr;
 
 	data = string2index(entry->plkey, value, entry->default_value, (WOptionEnumeration *) entry->extra_data);
 	if (data < 0)
@@ -1579,6 +1579,7 @@ static int getEnum(WScreen * scr, WDefaultEntry * entry, WMPropList * value, voi
 
 	if (ret)
 		*ret = &data;
+
 	if (addr)
 		*(signed char *)addr = data;
 
@@ -1603,7 +1604,7 @@ static int getEnum(WScreen * scr, WDefaultEntry * entry, WMPropList * value, voi
  * (function <lib> <function> ...)
  */
 
-static WTexture *parse_texture(WScreen * scr, WMPropList * pl)
+static WTexture *parse_texture(virtual_screen *vscr, WMPropList *pl)
 {
 	WMPropList *elem;
 	char *val;
@@ -1632,12 +1633,12 @@ static WTexture *parse_texture(WScreen * scr, WMPropList * pl)
 			return NULL;
 		val = WMGetFromPLString(elem);
 
-		if (!XParseColor(dpy, scr->w_colormap, val, &color)) {
+		if (!XParseColor(dpy, vscr->screen_ptr->w_colormap, val, &color)) {
 			wwarning(_("\"%s\" is not a valid color name"), val);
 			return NULL;
 		}
 
-		texture = (WTexture *) wTextureMakeSolid(scr, &color);
+		texture = (WTexture *) wTextureMakeSolid(vscr, &color);
 	} else if (strcasecmp(val, "dgradient") == 0
 		   || strcasecmp(val, "vgradient") == 0 || strcasecmp(val, "hgradient") == 0) {
 		RColor color1, color2;
@@ -1662,10 +1663,11 @@ static WTexture *parse_texture(WScreen * scr, WMPropList * pl)
 			return NULL;
 		val = WMGetFromPLString(elem);
 
-		if (!XParseColor(dpy, scr->w_colormap, val, &xcolor)) {
+		if (!XParseColor(dpy, vscr->screen_ptr->w_colormap, val, &xcolor)) {
 			wwarning(_("\"%s\" is not a valid color name"), val);
 			return NULL;
 		}
+
 		color1.alpha = 255;
 		color1.red = xcolor.red >> 8;
 		color1.green = xcolor.green >> 8;
@@ -1673,22 +1675,22 @@ static WTexture *parse_texture(WScreen * scr, WMPropList * pl)
 
 		/* get to color */
 		elem = WMGetFromPLArray(pl, 2);
-		if (!elem || !WMIsPLString(elem)) {
+		if (!elem || !WMIsPLString(elem))
 			return NULL;
-		}
+
 		val = WMGetFromPLString(elem);
 
-		if (!XParseColor(dpy, scr->w_colormap, val, &xcolor)) {
+		if (!XParseColor(dpy, vscr->screen_ptr->w_colormap, val, &xcolor)) {
 			wwarning(_("\"%s\" is not a valid color name"), val);
 			return NULL;
 		}
+
 		color2.alpha = 255;
 		color2.red = xcolor.red >> 8;
 		color2.green = xcolor.green >> 8;
 		color2.blue = xcolor.blue >> 8;
 
-		texture = (WTexture *) wTextureMakeGradient(scr, type, &color1, &color2);
-
+		texture = (WTexture *) wTextureMakeGradient(vscr, type, &color1, &color2);
 	} else if (strcasecmp(val, "igradient") == 0) {
 		RColor colors1[2], colors2[2];
 		int th1, th2;
@@ -1707,18 +1709,21 @@ static WTexture *parse_texture(WScreen * scr, WMPropList * pl)
 				return NULL;
 			val = WMGetFromPLString(elem);
 
-			if (!XParseColor(dpy, scr->w_colormap, val, &xcolor)) {
+			if (!XParseColor(dpy, vscr->screen_ptr->w_colormap, val, &xcolor)) {
 				wwarning(_("\"%s\" is not a valid color name"), val);
 				return NULL;
 			}
+
 			colors1[i].alpha = 255;
 			colors1[i].red = xcolor.red >> 8;
 			colors1[i].green = xcolor.green >> 8;
 			colors1[i].blue = xcolor.blue >> 8;
 		}
+
 		elem = WMGetFromPLArray(pl, 3);
 		if (!elem || !WMIsPLString(elem))
 			return NULL;
+
 		val = WMGetFromPLString(elem);
 		th1 = atoi(val);
 
@@ -1727,25 +1732,27 @@ static WTexture *parse_texture(WScreen * scr, WMPropList * pl)
 			elem = WMGetFromPLArray(pl, 4 + i);
 			if (!elem || !WMIsPLString(elem))
 				return NULL;
+
 			val = WMGetFromPLString(elem);
 
-			if (!XParseColor(dpy, scr->w_colormap, val, &xcolor)) {
+			if (!XParseColor(dpy, vscr->screen_ptr->w_colormap, val, &xcolor)) {
 				wwarning(_("\"%s\" is not a valid color name"), val);
 				return NULL;
 			}
+
 			colors2[i].alpha = 255;
 			colors2[i].red = xcolor.red >> 8;
 			colors2[i].green = xcolor.green >> 8;
 			colors2[i].blue = xcolor.blue >> 8;
 		}
+
 		elem = WMGetFromPLArray(pl, 6);
 		if (!elem || !WMIsPLString(elem))
 			return NULL;
+
 		val = WMGetFromPLString(elem);
 		th2 = atoi(val);
-
-		texture = (WTexture *) wTextureMakeIGradient(scr, th1, colors1, th2, colors2);
-
+		texture = (WTexture *) wTextureMakeIGradient(vscr, th1, colors1, th2, colors2);
 	} else if (strcasecmp(val, "mhgradient") == 0
 		   || strcasecmp(val, "mvgradient") == 0 || strcasecmp(val, "mdgradient") == 0) {
 		XColor color;
@@ -1772,19 +1779,20 @@ static WTexture *parse_texture(WScreen * scr, WMPropList * pl)
 		for (i = 0; i < count; i++) {
 			elem = WMGetFromPLArray(pl, i + 1);
 			if (!elem || !WMIsPLString(elem)) {
-				for (--i; i >= 0; --i) {
+				for (--i; i >= 0; --i)
 					wfree(colors[i]);
-				}
+
 				wfree(colors);
 				return NULL;
 			}
+
 			val = WMGetFromPLString(elem);
 
-			if (!XParseColor(dpy, scr->w_colormap, val, &color)) {
+			if (!XParseColor(dpy, vscr->screen_ptr->w_colormap, val, &color)) {
 				wwarning(_("\"%s\" is not a valid color name"), val);
-				for (--i; i >= 0; --i) {
+				for (--i; i >= 0; --i)
 					wfree(colors[i]);
-				}
+
 				wfree(colors);
 				return NULL;
 			} else {
@@ -1794,9 +1802,9 @@ static WTexture *parse_texture(WScreen * scr, WMPropList * pl)
 				colors[i]->blue = color.blue >> 8;
 			}
 		}
-		colors[i] = NULL;
 
-		texture = (WTexture *) wTextureMakeMGradient(scr, type, colors);
+		colors[i] = NULL;
+		texture = (WTexture *) wTextureMakeMGradient(vscr, type, colors);
 	} else if (strcasecmp(val, "spixmap") == 0 ||
 		   strcasecmp(val, "cpixmap") == 0 || strcasecmp(val, "tpixmap") == 0) {
 		XColor color;
@@ -1814,12 +1822,12 @@ static WTexture *parse_texture(WScreen * scr, WMPropList * pl)
 
 		/* get color */
 		elem = WMGetFromPLArray(pl, 2);
-		if (!elem || !WMIsPLString(elem)) {
+		if (!elem || !WMIsPLString(elem))
 			return NULL;
-		}
+
 		val = WMGetFromPLString(elem);
 
-		if (!XParseColor(dpy, scr->w_colormap, val, &color)) {
+		if (!XParseColor(dpy, vscr->screen_ptr->w_colormap, val, &color)) {
 			wwarning(_("\"%s\" is not a valid color name"), val);
 			return NULL;
 		}
@@ -1828,9 +1836,10 @@ static WTexture *parse_texture(WScreen * scr, WMPropList * pl)
 		elem = WMGetFromPLArray(pl, 1);
 		if (!elem || !WMIsPLString(elem))
 			return NULL;
+
 		val = WMGetFromPLString(elem);
 
-		texture = (WTexture *) wTextureMakePixmap(scr, type, val, &color);
+		texture = (WTexture *) wTextureMakePixmap(vscr, type, val, &color);
 	} else if (strcasecmp(val, "thgradient") == 0
 		   || strcasecmp(val, "tvgradient") == 0 || strcasecmp(val, "tdgradient") == 0) {
 		RColor color1, color2;
@@ -1856,10 +1865,11 @@ static WTexture *parse_texture(WScreen * scr, WMPropList * pl)
 			return NULL;
 		val = WMGetFromPLString(elem);
 
-		if (!XParseColor(dpy, scr->w_colormap, val, &xcolor)) {
+		if (!XParseColor(dpy, vscr->screen_ptr->w_colormap, val, &xcolor)) {
 			wwarning(_("\"%s\" is not a valid color name"), val);
 			return NULL;
 		}
+
 		color1.alpha = 255;
 		color1.red = xcolor.red >> 8;
 		color1.green = xcolor.green >> 8;
@@ -1867,15 +1877,16 @@ static WTexture *parse_texture(WScreen * scr, WMPropList * pl)
 
 		/* get to color */
 		elem = WMGetFromPLArray(pl, 4);
-		if (!elem || !WMIsPLString(elem)) {
+		if (!elem || !WMIsPLString(elem))
 			return NULL;
-		}
+
 		val = WMGetFromPLString(elem);
 
-		if (!XParseColor(dpy, scr->w_colormap, val, &xcolor)) {
+		if (!XParseColor(dpy, vscr->screen_ptr->w_colormap, val, &xcolor)) {
 			wwarning(_("\"%s\" is not a valid color name"), val);
 			return NULL;
 		}
+
 		color2.alpha = 255;
 		color2.red = xcolor.red >> 8;
 		color2.green = xcolor.green >> 8;
@@ -1897,9 +1908,10 @@ static WTexture *parse_texture(WScreen * scr, WMPropList * pl)
 		elem = WMGetFromPLArray(pl, 1);
 		if (!elem || !WMIsPLString(elem))
 			return NULL;
+
 		val = WMGetFromPLString(elem);
 
-		texture = (WTexture *) wTextureMakeTGradient(scr, style, &color1, &color2, val, opacity);
+		texture = (WTexture *) wTextureMakeTGradient(vscr, style, &color1, &color2, val, opacity);
 	} else if (strcasecmp(val, "function") == 0) {
 		/* Leave this in to handle the unlikely case of
 		 * someone actually having function textures configured */
@@ -1909,10 +1921,11 @@ static WTexture *parse_texture(WScreen * scr, WMPropList * pl)
 		wwarning(_("invalid texture type %s"), val);
 		return NULL;
 	}
+
 	return texture;
 }
 
-static int getTexture(WScreen * scr, WDefaultEntry * entry, WMPropList * value, void *addr, void **ret)
+static int getTexture(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
 {
 	static WTexture *texture;
 	int changed = 0;
@@ -1945,7 +1958,7 @@ static int getTexture(WScreen * scr, WDefaultEntry * entry, WMPropList * value, 
 		}
 	}
 
-	texture = parse_texture(scr, value);
+	texture = parse_texture(vscr, value);
 
 	if (!texture) {
 		wwarning(_("Error in texture specification for key \"%s\""), entry->key);
@@ -1967,7 +1980,7 @@ static int getTexture(WScreen * scr, WDefaultEntry * entry, WMPropList * value, 
 	return True;
 }
 
-static int getWSBackground(WScreen * scr, WDefaultEntry * entry, WMPropList * value, void *addr, void **ret)
+static int getWSBackground(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
 {
 	WMPropList *elem;
 	int changed = 0;
@@ -1975,7 +1988,7 @@ static int getWSBackground(WScreen * scr, WDefaultEntry * entry, WMPropList * va
 	int nelem;
 
 	/* Parameter not used, but tell the compiler that it is ok */
-	(void) scr;
+	(void) vscr;
 	(void) addr;
 
  again:
@@ -2017,14 +2030,14 @@ static int getWSBackground(WScreen * scr, WDefaultEntry * entry, WMPropList * va
 }
 
 static int
-getWSSpecificBackground(WScreen * scr, WDefaultEntry * entry, WMPropList * value, void *addr, void **ret)
+getWSSpecificBackground(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
 {
 	WMPropList *elem;
 	int nelem;
 	int changed = 0;
 
 	/* Parameter not used, but tell the compiler that it is ok */
-	(void) scr;
+	(void) vscr;
 	(void) addr;
 
  again:
@@ -2074,7 +2087,7 @@ getWSSpecificBackground(WScreen * scr, WDefaultEntry * entry, WMPropList * value
 	return True;
 }
 
-static int getFont(WScreen * scr, WDefaultEntry * entry, WMPropList * value, void *addr, void **ret)
+static int getFont(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
 {
 	static WMFont *font;
 	const char *val;
@@ -2083,9 +2096,9 @@ static int getFont(WScreen * scr, WDefaultEntry * entry, WMPropList * value, voi
 
 	GET_STRING_OR_DEFAULT("Font", val);
 
-	font = WMCreateFont(scr->wmscreen, val);
+	font = WMCreateFont(vscr->screen_ptr->wmscreen, val);
 	if (!font)
-		font = WMCreateFont(scr->wmscreen, "fixed");
+		font = WMCreateFont(vscr->screen_ptr->wmscreen, "fixed");
 
 	if (!font) {
 		wfatal(_("could not load any usable font!!!"));
@@ -2101,7 +2114,7 @@ static int getFont(WScreen * scr, WDefaultEntry * entry, WMPropList * value, voi
 	return True;
 }
 
-static int getColor(WScreen * scr, WDefaultEntry * entry, WMPropList * value, void *addr, void **ret)
+static int getColor(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
 {
 	static XColor color;
 	const char *val;
@@ -2112,7 +2125,7 @@ static int getColor(WScreen * scr, WDefaultEntry * entry, WMPropList * value, vo
 	GET_STRING_OR_DEFAULT("Color", val);
 
  again:
-	if (!wGetColor(scr, val, &color)) {
+	if (!wGetColor(vscr->screen_ptr, val, &color)) {
 		wwarning(_("could not get color for key \"%s\""), entry->key);
 		if (second_pass == 0) {
 			val = WMGetFromPLString(entry->plvalue);
@@ -2127,15 +2140,11 @@ static int getColor(WScreen * scr, WDefaultEntry * entry, WMPropList * value, vo
 		*ret = &color;
 
 	assert(addr == NULL);
-	/*
-	   if (addr)
-	   *(unsigned long*)addr = pixel;
-	 */
 
 	return True;
 }
 
-static int getKeybind(WScreen * scr, WDefaultEntry * entry, WMPropList * value, void *addr, void **ret)
+static int getKeybind(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
 {
 	static WShortKey shortcut;
 	KeySym ksym;
@@ -2144,7 +2153,7 @@ static int getKeybind(WScreen * scr, WDefaultEntry * entry, WMPropList * value, 
 	char buf[MAX_SHORTCUT_LENGTH], *b;
 
 	/* Parameter not used, but tell the compiler that it is ok */
-	(void) scr;
+	(void) vscr;
 	(void) addr;
 
 	GET_STRING_OR_DEFAULT("Key spec", val);
@@ -2197,13 +2206,13 @@ static int getKeybind(WScreen * scr, WDefaultEntry * entry, WMPropList * value, 
 	return True;
 }
 
-static int getModMask(WScreen * scr, WDefaultEntry * entry, WMPropList * value, void *addr, void **ret)
+static int getModMask(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
 {
 	static int mask;
 	const char *str;
 
 	/* Parameter not used, but tell the compiler that it is ok */
-	(void) scr;
+	(void) vscr;
 
 	GET_STRING_OR_DEFAULT("Modifier Key", str);
 
@@ -2338,7 +2347,7 @@ static void check_bitmap_status(int status, const char *filename, Pixmap bitmap)
  * (builtin, <cursor_name>)
  * (bitmap, <cursor_bitmap>, <cursor_mask>)
  */
-static int parse_cursor(WScreen * scr, WMPropList * pl, Cursor * cursor)
+static int parse_cursor(virtual_screen *vscr, WMPropList *pl, Cursor *cursor)
 {
 	WMPropList *elem;
 	char *val;
@@ -2346,13 +2355,13 @@ static int parse_cursor(WScreen * scr, WMPropList * pl, Cursor * cursor)
 	int status = 0;
 
 	nelem = WMGetPropListItemCount(pl);
-	if (nelem < 1) {
+	if (nelem < 1)
 		return (status);
-	}
+
 	elem = WMGetFromPLArray(pl, 0);
-	if (!elem || !WMIsPLString(elem)) {
+	if (!elem || !WMIsPLString(elem))
 		return (status);
-	}
+
 	val = WMGetFromPLString(elem);
 
 	if (strcasecmp(val, "none") == 0) {
@@ -2367,9 +2376,9 @@ static int parse_cursor(WScreen * scr, WMPropList * pl, Cursor * cursor)
 			return (status);
 		}
 		elem = WMGetFromPLArray(pl, 1);
-		if (!elem || !WMIsPLString(elem)) {
+		if (!elem || !WMIsPLString(elem))
 			return (status);
-		}
+
 		val = WMGetFromPLString(elem);
 
 		for (i = 0; cursor_table[i].name != NULL; i++) {
@@ -2378,6 +2387,7 @@ static int parse_cursor(WScreen * scr, WMPropList * pl, Cursor * cursor)
 				break;
 			}
 		}
+
 		if (CURSOR_ID_NONE == cursor_id) {
 			wwarning(_("unknown builtin cursor name \"%s\""), val);
 		} else {
@@ -2400,20 +2410,22 @@ static int parse_cursor(WScreen * scr, WMPropList * pl, Cursor * cursor)
 			return (status);
 		}
 		elem = WMGetFromPLArray(pl, 1);
-		if (!elem || !WMIsPLString(elem)) {
+		if (!elem || !WMIsPLString(elem))
 			return (status);
-		}
+
 		val = WMGetFromPLString(elem);
 		bitmap_name = FindImage(wPreferences.pixmap_path, val);
 		if (!bitmap_name) {
 			wwarning(_("could not find cursor bitmap file \"%s\""), val);
 			return (status);
 		}
+
 		elem = WMGetFromPLArray(pl, 2);
 		if (!elem || !WMIsPLString(elem)) {
 			wfree(bitmap_name);
 			return (status);
 		}
+
 		val = WMGetFromPLString(elem);
 		mask_name = FindImage(wPreferences.pixmap_path, val);
 		if (!mask_name) {
@@ -2421,25 +2433,28 @@ static int parse_cursor(WScreen * scr, WMPropList * pl, Cursor * cursor)
 			wwarning(_("could not find cursor bitmap file \"%s\""), val);
 			return (status);
 		}
-		mask_status = XReadBitmapFile(dpy, scr->w_win, mask_name, &w, &h, &mask, &x, &y);
-		bitmap_status = XReadBitmapFile(dpy, scr->w_win, bitmap_name, &w, &h, &bitmap, &x, &y);
+
+		mask_status = XReadBitmapFile(dpy, vscr->screen_ptr->w_win, mask_name, &w, &h, &mask, &x, &y);
+		bitmap_status = XReadBitmapFile(dpy, vscr->screen_ptr->w_win, bitmap_name, &w, &h, &bitmap, &x, &y);
 		if ((BitmapSuccess == bitmap_status) && (BitmapSuccess == mask_status)) {
-			fg.pixel = scr->black_pixel;
-			bg.pixel = scr->white_pixel;
-			XQueryColor(dpy, scr->w_colormap, &fg);
-			XQueryColor(dpy, scr->w_colormap, &bg);
+			fg.pixel = vscr->screen_ptr->black_pixel;
+			bg.pixel = vscr->screen_ptr->white_pixel;
+			XQueryColor(dpy, vscr->screen_ptr->w_colormap, &fg);
+			XQueryColor(dpy, vscr->screen_ptr->w_colormap, &bg);
 			*cursor = XCreatePixmapCursor(dpy, bitmap, mask, &fg, &bg, x, y);
 			status = 1;
 		}
+
 		check_bitmap_status(bitmap_status, bitmap_name, bitmap);
 		check_bitmap_status(mask_status, mask_name, mask);
 		wfree(bitmap_name);
 		wfree(mask_name);
 	}
+
 	return (status);
 }
 
-static int getCursor(WScreen * scr, WDefaultEntry * entry, WMPropList * value, void *addr, void **ret)
+static int getCursor(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
 {
 	static Cursor cursor;
 	int status;
@@ -2457,7 +2472,8 @@ static int getCursor(WScreen * scr, WDefaultEntry * entry, WMPropList * value, v
 		}
 		return (False);
 	}
-	status = parse_cursor(scr, value, &cursor);
+
+	status = parse_cursor(vscr, value, &cursor);
 	if (!status) {
 		wwarning(_("Error in cursor specification for key \"%s\""), entry->key);
 		if (!changed) {
@@ -2466,24 +2482,26 @@ static int getCursor(WScreen * scr, WDefaultEntry * entry, WMPropList * value, v
 			wwarning(_("using default \"%s\" instead"), entry->default_value);
 			goto again;
 		}
+
 		return (False);
 	}
-	if (ret) {
+
+	if (ret)
 		*ret = &cursor;
-	}
-	if (addr) {
+
+	if (addr)
 		*(Cursor *) addr = cursor;
-	}
+
 	return (True);
 }
 
 #undef CURSOR_ID_NONE
 
 /* ---------------- value setting functions --------------- */
-static int setJustify(WScreen * scr, WDefaultEntry * entry, void *tdata, void *extra_data)
+static int setJustify(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
-	(void) scr;
+	(void) vscr;
 	(void) entry;
 	(void) tdata;
 	(void) extra_data;
@@ -2491,10 +2509,10 @@ static int setJustify(WScreen * scr, WDefaultEntry * entry, void *tdata, void *e
 	return REFRESH_WINDOW_TITLE_COLOR;
 }
 
-static int setClearance(WScreen * scr, WDefaultEntry * entry, void *bar, void *foo)
+static int setClearance(virtual_screen *vscr, WDefaultEntry *entry, void *bar, void *foo)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
-	(void) scr;
+	(void) vscr;
 	(void) entry;
 	(void) bar;
 	(void) foo;
@@ -2502,13 +2520,13 @@ static int setClearance(WScreen * scr, WDefaultEntry * entry, void *bar, void *f
 	return REFRESH_WINDOW_FONT | REFRESH_BUTTON_IMAGES | REFRESH_MENU_TITLE_FONT | REFRESH_MENU_FONT;
 }
 
-static int setIfDockPresent(WScreen * scr, WDefaultEntry * entry, void *tdata, void *extra_data)
+static int setIfDockPresent(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data)
 {
 	char *flag = tdata;
 	long which = (long) extra_data;
 
 	/* Parameter not used, but tell the compiler that it is ok */
-	(void) scr;
+	(void) vscr;
 	(void) entry;
 
 	switch (which) {
@@ -2529,12 +2547,12 @@ static int setIfDockPresent(WScreen * scr, WDefaultEntry * entry, void *tdata, v
 	return 0;
 }
 
-static int setClipMergedInDock(WScreen *scr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setClipMergedInDock(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
 {
 	char *flag = tdata;
 
 	/* Parameter not used, but tell the compiler that it is ok */
-	(void) scr;
+	(void) vscr;
 	(void) entry;
 	(void) foo;
 
@@ -2543,12 +2561,12 @@ static int setClipMergedInDock(WScreen *scr, WDefaultEntry *entry, void *tdata, 
 	return 0;
 }
 
-static int setWrapAppiconsInDock(WScreen *scr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setWrapAppiconsInDock(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
 {
 	char *flag = tdata;
 
 	/* Parameter not used, but tell the compiler that it is ok */
-	(void) scr;
+	(void) vscr;
 	(void) entry;
 	(void) foo;
 
@@ -2556,21 +2574,22 @@ static int setWrapAppiconsInDock(WScreen *scr, WDefaultEntry *entry, void *tdata
 	return 0;
 }
 
-static int setStickyIcons(WScreen * scr, WDefaultEntry * entry, void *bar, void *foo)
+static int setStickyIcons(virtual_screen *vscr, WDefaultEntry *entry, void *bar, void *foo)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 	(void) bar;
 	(void) foo;
 
-	if (scr->vscr.workspace.array) {
-		wWorkspaceForceChange(scr, scr->vscr.workspace.current);
-		wArrangeIcons(scr, False);
+	if (vscr->workspace.array) {
+		wWorkspaceForceChange(vscr, vscr->workspace.current);
+		wArrangeIcons(vscr, False);
 	}
+
 	return 0;
 }
 
-static int setIconTile(WScreen * scr, WDefaultEntry * entry, void *tdata, void *foo)
+static int setIconTile(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
 {
 	Pixmap pixmap;
 	RImage *img;
@@ -2586,21 +2605,23 @@ static int setIconTile(WScreen * scr, WDefaultEntry * entry, void *tdata, void *
 	if (!img) {
 		wwarning(_("could not render texture for icon background"));
 		if (!entry->addr)
-			wTextureDestroy(scr, *texture);
+			wTextureDestroy(vscr, *texture);
+
 		return 0;
 	}
-	RConvertImage(scr->rcontext, img, &pixmap);
+
+	RConvertImage(vscr->screen_ptr->rcontext, img, &pixmap);
 
 	if (w_global.tile.icon) {
 		reset = 1;
 		RReleaseImage(w_global.tile.icon);
-		XFreePixmap(dpy, scr->icon_tile_pixmap);
+		XFreePixmap(dpy, vscr->screen_ptr->icon_tile_pixmap);
 	}
 
 	w_global.tile.icon = img;
 
 	/* put the icon in the noticeboard hint */
-	PropSetIconTileHint(scr, img);
+	PropSetIconTileHint(vscr, img);
 
 	if (!wPreferences.flags.noclip || wPreferences.flags.clip_merged_in_dock) {
 		if (w_global.tile.clip)
@@ -2613,29 +2634,29 @@ static int setIconTile(WScreen * scr, WDefaultEntry * entry, void *tdata, void *
 		if (w_global.tile.drawer)
 			RReleaseImage(w_global.tile.drawer);
 
-		w_global.tile.drawer= wDrawerMakeTile(&(scr->vscr), img);
+		w_global.tile.drawer= wDrawerMakeTile(vscr, img);
 	}
 
-	scr->icon_tile_pixmap = pixmap;
+	vscr->screen_ptr->icon_tile_pixmap = pixmap;
 
-	if (scr->def_icon_rimage) {
-		RReleaseImage(scr->def_icon_rimage);
-		scr->def_icon_rimage = NULL;
+	if (vscr->screen_ptr->def_icon_rimage) {
+		RReleaseImage(vscr->screen_ptr->def_icon_rimage);
+		vscr->screen_ptr->def_icon_rimage = NULL;
 	}
 
-	if (scr->icon_back_texture)
-		wTextureDestroy(scr, (WTexture *) scr->icon_back_texture);
+	if (vscr->screen_ptr->icon_back_texture)
+		wTextureDestroy(vscr, (WTexture *) vscr->screen_ptr->icon_back_texture);
 
-	scr->icon_back_texture = wTextureMakeSolid(scr, &((*texture)->any.color));
+	vscr->screen_ptr->icon_back_texture = wTextureMakeSolid(vscr, &((*texture)->any.color));
 
 	/* Free the texture as nobody else will use it, nor refer to it.  */
 	if (!entry->addr)
-		wTextureDestroy(scr, *texture);
+		wTextureDestroy(vscr, *texture);
 
 	return (reset ? REFRESH_ICON_TILE : 0);
 }
 
-static int setWinTitleFont(WScreen * scr, WDefaultEntry * entry, void *tdata, void *foo)
+static int setWinTitleFont(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
 {
 	WMFont *font = tdata;
 
@@ -2643,15 +2664,15 @@ static int setWinTitleFont(WScreen * scr, WDefaultEntry * entry, void *tdata, vo
 	(void) entry;
 	(void) foo;
 
-	if (scr->title_font) {
-		WMReleaseFont(scr->title_font);
-	}
-	scr->title_font = font;
+	if (vscr->screen_ptr->title_font)
+		WMReleaseFont(vscr->screen_ptr->title_font);
+
+	vscr->screen_ptr->title_font = font;
 
 	return REFRESH_WINDOW_FONT | REFRESH_BUTTON_IMAGES;
 }
 
-static int setMenuTitleFont(WScreen * scr, WDefaultEntry * entry, void *tdata, void *foo)
+static int setMenuTitleFont(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
 {
 	WMFont *font = tdata;
 
@@ -2659,16 +2680,15 @@ static int setMenuTitleFont(WScreen * scr, WDefaultEntry * entry, void *tdata, v
 	(void) entry;
 	(void) foo;
 
-	if (scr->menu_title_font) {
-		WMReleaseFont(scr->menu_title_font);
-	}
+	if (vscr->screen_ptr->menu_title_font)
+		WMReleaseFont(vscr->screen_ptr->menu_title_font);
 
-	scr->menu_title_font = font;
+	vscr->screen_ptr->menu_title_font = font;
 
 	return REFRESH_MENU_TITLE_FONT;
 }
 
-static int setMenuTextFont(WScreen * scr, WDefaultEntry * entry, void *tdata, void *foo)
+static int setMenuTextFont(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
 {
 	WMFont *font = tdata;
 
@@ -2676,15 +2696,15 @@ static int setMenuTextFont(WScreen * scr, WDefaultEntry * entry, void *tdata, vo
 	(void) entry;
 	(void) foo;
 
-	if (scr->menu_entry_font) {
-		WMReleaseFont(scr->menu_entry_font);
-	}
-	scr->menu_entry_font = font;
+	if (vscr->screen_ptr->menu_entry_font)
+		WMReleaseFont(vscr->screen_ptr->menu_entry_font);
+
+	vscr->screen_ptr->menu_entry_font = font;
 
 	return REFRESH_MENU_FONT;
 }
 
-static int setIconTitleFont(WScreen * scr, WDefaultEntry * entry, void *tdata, void *foo)
+static int setIconTitleFont(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
 {
 	WMFont *font = tdata;
 
@@ -2692,16 +2712,15 @@ static int setIconTitleFont(WScreen * scr, WDefaultEntry * entry, void *tdata, v
 	(void) entry;
 	(void) foo;
 
-	if (scr->icon_title_font) {
-		WMReleaseFont(scr->icon_title_font);
-	}
+	if (vscr->screen_ptr->icon_title_font)
+		WMReleaseFont(vscr->screen_ptr->icon_title_font);
 
-	scr->icon_title_font = font;
+	vscr->screen_ptr->icon_title_font = font;
 
 	return REFRESH_ICON_FONT;
 }
 
-static int setClipTitleFont(WScreen * scr, WDefaultEntry * entry, void *tdata, void *foo)
+static int setClipTitleFont(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
 {
 	WMFont *font = tdata;
 
@@ -2709,33 +2728,31 @@ static int setClipTitleFont(WScreen * scr, WDefaultEntry * entry, void *tdata, v
 	(void) entry;
 	(void) foo;
 
-	if (scr->clip_title_font) {
-		WMReleaseFont(scr->clip_title_font);
-	}
+	if (vscr->screen_ptr->clip_title_font)
+		WMReleaseFont(vscr->screen_ptr->clip_title_font);
 
-	scr->clip_title_font = font;
+	vscr->screen_ptr->clip_title_font = font;
 
 	return REFRESH_ICON_FONT;
 }
 
-static int setLargeDisplayFont(WScreen *scr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setLargeDisplayFont(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
 {
 	WMFont *font = tdata;
 
 	/* Parameter not used, but tell the compiler that it is ok */
-	(void) scr;
 	(void) entry;
 	(void) foo;
 
-	if (scr->vscr.workspace.font_for_name)
-		WMReleaseFont(scr->vscr.workspace.font_for_name);
+	if (vscr->workspace.font_for_name)
+		WMReleaseFont(vscr->workspace.font_for_name);
 
-	scr->vscr.workspace.font_for_name = font;
+	vscr->workspace.font_for_name = font;
 
 	return 0;
 }
 
-static int setHightlight(WScreen * scr, WDefaultEntry * entry, void *tdata, void *foo)
+static int setHightlight(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
 {
 	XColor *color = tdata;
 
@@ -2743,17 +2760,17 @@ static int setHightlight(WScreen * scr, WDefaultEntry * entry, void *tdata, void
 	(void) entry;
 	(void) foo;
 
-	if (scr->select_color)
-		WMReleaseColor(scr->select_color);
+	if (vscr->screen_ptr->select_color)
+		WMReleaseColor(vscr->screen_ptr->select_color);
 
-	scr->select_color = WMCreateRGBColor(scr->wmscreen, color->red, color->green, color->blue, True);
+	vscr->screen_ptr->select_color = WMCreateRGBColor(vscr->screen_ptr->wmscreen, color->red, color->green, color->blue, True);
 
-	wFreeColor(scr, color->pixel);
+	wFreeColor(vscr->screen_ptr, color->pixel);
 
 	return REFRESH_MENU_COLOR;
 }
 
-static int setHightlightText(WScreen * scr, WDefaultEntry * entry, void *tdata, void *foo)
+static int setHightlightText(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
 {
 	XColor *color = tdata;
 
@@ -2761,17 +2778,17 @@ static int setHightlightText(WScreen * scr, WDefaultEntry * entry, void *tdata, 
 	(void) entry;
 	(void) foo;
 
-	if (scr->select_text_color)
-		WMReleaseColor(scr->select_text_color);
+	if (vscr->screen_ptr->select_text_color)
+		WMReleaseColor(vscr->screen_ptr->select_text_color);
 
-	scr->select_text_color = WMCreateRGBColor(scr->wmscreen, color->red, color->green, color->blue, True);
+	vscr->screen_ptr->select_text_color = WMCreateRGBColor(vscr->screen_ptr->wmscreen, color->red, color->green, color->blue, True);
 
-	wFreeColor(scr, color->pixel);
+	wFreeColor(vscr->screen_ptr, color->pixel);
 
 	return REFRESH_MENU_COLOR;
 }
 
-static int setClipTitleColor(WScreen * scr, WDefaultEntry * entry, void *tdata, void *extra_data)
+static int setClipTitleColor(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data)
 {
 	XColor *color = tdata;
 	long widx = (long) extra_data;
@@ -2779,16 +2796,16 @@ static int setClipTitleColor(WScreen * scr, WDefaultEntry * entry, void *tdata, 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 
-	if (scr->clip_title_color[widx])
-		WMReleaseColor(scr->clip_title_color[widx]);
+	if (vscr->screen_ptr->clip_title_color[widx])
+		WMReleaseColor(vscr->screen_ptr->clip_title_color[widx]);
 
-	scr->clip_title_color[widx] = WMCreateRGBColor(scr->wmscreen, color->red, color->green, color->blue, True);
-	wFreeColor(scr, color->pixel);
+	vscr->screen_ptr->clip_title_color[widx] = WMCreateRGBColor(vscr->screen_ptr->wmscreen, color->red, color->green, color->blue, True);
+	wFreeColor(vscr->screen_ptr, color->pixel);
 
 	return REFRESH_ICON_TITLE_COLOR;
 }
 
-static int setWTitleColor(WScreen * scr, WDefaultEntry * entry, void *tdata, void *extra_data)
+static int setWTitleColor(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data)
 {
 	XColor *color = tdata;
 	long widx = (long) extra_data;
@@ -2796,18 +2813,18 @@ static int setWTitleColor(WScreen * scr, WDefaultEntry * entry, void *tdata, voi
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 
-	if (scr->window_title_color[widx])
-		WMReleaseColor(scr->window_title_color[widx]);
+	if (vscr->screen_ptr->window_title_color[widx])
+		WMReleaseColor(vscr->screen_ptr->window_title_color[widx]);
 
-	scr->window_title_color[widx] =
-	    WMCreateRGBColor(scr->wmscreen, color->red, color->green, color->blue, True);
+	vscr->screen_ptr->window_title_color[widx] =
+	    WMCreateRGBColor(vscr->screen_ptr->wmscreen, color->red, color->green, color->blue, True);
 
-	wFreeColor(scr, color->pixel);
+	wFreeColor(vscr->screen_ptr, color->pixel);
 
 	return REFRESH_WINDOW_TITLE_COLOR;
 }
 
-static int setMenuTitleColor(WScreen * scr, WDefaultEntry * entry, void *tdata, void *extra_data)
+static int setMenuTitleColor(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data)
 {
 	XColor *color = tdata;
 
@@ -2815,17 +2832,17 @@ static int setMenuTitleColor(WScreen * scr, WDefaultEntry * entry, void *tdata, 
 	(void) entry;
 	(void) extra_data;
 
-	if (scr->menu_title_color[0])
-		WMReleaseColor(scr->menu_title_color[0]);
+	if (vscr->screen_ptr->menu_title_color[0])
+		WMReleaseColor(vscr->screen_ptr->menu_title_color[0]);
 
-	scr->menu_title_color[0] = WMCreateRGBColor(scr->wmscreen, color->red, color->green, color->blue, True);
+	vscr->screen_ptr->menu_title_color[0] = WMCreateRGBColor(vscr->screen_ptr->wmscreen, color->red, color->green, color->blue, True);
 
-	wFreeColor(scr, color->pixel);
+	wFreeColor(vscr->screen_ptr, color->pixel);
 
 	return REFRESH_MENU_TITLE_COLOR;
 }
 
-static int setMenuTextColor(WScreen * scr, WDefaultEntry * entry, void *tdata, void *foo)
+static int setMenuTextColor(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
 {
 	XColor *color = tdata;
 
@@ -2833,23 +2850,22 @@ static int setMenuTextColor(WScreen * scr, WDefaultEntry * entry, void *tdata, v
 	(void) entry;
 	(void) foo;
 
-	if (scr->mtext_color)
-		WMReleaseColor(scr->mtext_color);
+	if (vscr->screen_ptr->mtext_color)
+		WMReleaseColor(vscr->screen_ptr->mtext_color);
 
-	scr->mtext_color = WMCreateRGBColor(scr->wmscreen, color->red, color->green, color->blue, True);
+	vscr->screen_ptr->mtext_color = WMCreateRGBColor(vscr->screen_ptr->wmscreen, color->red, color->green, color->blue, True);
 
-	if (WMColorPixel(scr->dtext_color) == WMColorPixel(scr->mtext_color)) {
-		WMSetColorAlpha(scr->dtext_color, 0x7fff);
-	} else {
-		WMSetColorAlpha(scr->dtext_color, 0xffff);
-	}
+	if (WMColorPixel(vscr->screen_ptr->dtext_color) == WMColorPixel(vscr->screen_ptr->mtext_color))
+		WMSetColorAlpha(vscr->screen_ptr->dtext_color, 0x7fff);
+	else
+		WMSetColorAlpha(vscr->screen_ptr->dtext_color, 0xffff);
 
-	wFreeColor(scr, color->pixel);
+	wFreeColor(vscr->screen_ptr, color->pixel);
 
 	return REFRESH_MENU_COLOR;
 }
 
-static int setMenuDisabledColor(WScreen * scr, WDefaultEntry * entry, void *tdata, void *foo)
+static int setMenuDisabledColor(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
 {
 	XColor *color = tdata;
 
@@ -2857,23 +2873,22 @@ static int setMenuDisabledColor(WScreen * scr, WDefaultEntry * entry, void *tdat
 	(void) entry;
 	(void) foo;
 
-	if (scr->dtext_color)
-		WMReleaseColor(scr->dtext_color);
+	if (vscr->screen_ptr->dtext_color)
+		WMReleaseColor(vscr->screen_ptr->dtext_color);
 
-	scr->dtext_color = WMCreateRGBColor(scr->wmscreen, color->red, color->green, color->blue, True);
+	vscr->screen_ptr->dtext_color = WMCreateRGBColor(vscr->screen_ptr->wmscreen, color->red, color->green, color->blue, True);
 
-	if (WMColorPixel(scr->dtext_color) == WMColorPixel(scr->mtext_color)) {
-		WMSetColorAlpha(scr->dtext_color, 0x7fff);
-	} else {
-		WMSetColorAlpha(scr->dtext_color, 0xffff);
-	}
+	if (WMColorPixel(vscr->screen_ptr->dtext_color) == WMColorPixel(vscr->screen_ptr->mtext_color))
+		WMSetColorAlpha(vscr->screen_ptr->dtext_color, 0x7fff);
+	else
+		WMSetColorAlpha(vscr->screen_ptr->dtext_color, 0xffff);
 
-	wFreeColor(scr, color->pixel);
+	wFreeColor(vscr->screen_ptr, color->pixel);
 
 	return REFRESH_MENU_COLOR;
 }
 
-static int setIconTitleColor(WScreen * scr, WDefaultEntry * entry, void *tdata, void *foo)
+static int setIconTitleColor(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
 {
 	XColor *color = tdata;
 
@@ -2881,16 +2896,17 @@ static int setIconTitleColor(WScreen * scr, WDefaultEntry * entry, void *tdata, 
 	(void) entry;
 	(void) foo;
 
-	if (scr->icon_title_color)
-		WMReleaseColor(scr->icon_title_color);
-	scr->icon_title_color = WMCreateRGBColor(scr->wmscreen, color->red, color->green, color->blue, True);
+	if (vscr->screen_ptr->icon_title_color)
+		WMReleaseColor(vscr->screen_ptr->icon_title_color);
 
-	wFreeColor(scr, color->pixel);
+	vscr->screen_ptr->icon_title_color = WMCreateRGBColor(vscr->screen_ptr->wmscreen, color->red, color->green, color->blue, True);
+
+	wFreeColor(vscr->screen_ptr, color->pixel);
 
 	return REFRESH_ICON_TITLE_COLOR;
 }
 
-static int setIconTitleBack(WScreen * scr, WDefaultEntry * entry, void *tdata, void *foo)
+static int setIconTitleBack(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
 {
 	XColor *color = tdata;
 
@@ -2898,15 +2914,15 @@ static int setIconTitleBack(WScreen * scr, WDefaultEntry * entry, void *tdata, v
 	(void) entry;
 	(void) foo;
 
-	if (scr->icon_title_texture) {
-		wTextureDestroy(scr, (WTexture *) scr->icon_title_texture);
-	}
-	scr->icon_title_texture = wTextureMakeSolid(scr, color);
+	if (vscr->screen_ptr->icon_title_texture)
+		wTextureDestroy(vscr, (WTexture *) vscr->screen_ptr->icon_title_texture);
+
+	vscr->screen_ptr->icon_title_texture = wTextureMakeSolid(vscr, color);
 
 	return REFRESH_ICON_TITLE_BACK;
 }
 
-static int setFrameBorderWidth(WScreen * scr, WDefaultEntry * entry, void *tdata, void *foo)
+static int setFrameBorderWidth(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
 {
 	int *value = tdata;
 
@@ -2914,12 +2930,12 @@ static int setFrameBorderWidth(WScreen * scr, WDefaultEntry * entry, void *tdata
 	(void) entry;
 	(void) foo;
 
-	scr->frame_border_width = *value;
+	vscr->screen_ptr->frame_border_width = *value;
 
 	return REFRESH_FRAME_BORDER;
 }
 
-static int setFrameBorderColor(WScreen * scr, WDefaultEntry * entry, void *tdata, void *foo)
+static int setFrameBorderColor(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
 {
 	XColor *color = tdata;
 
@@ -2927,16 +2943,17 @@ static int setFrameBorderColor(WScreen * scr, WDefaultEntry * entry, void *tdata
 	(void) entry;
 	(void) foo;
 
-	if (scr->frame_border_color)
-		WMReleaseColor(scr->frame_border_color);
-	scr->frame_border_color = WMCreateRGBColor(scr->wmscreen, color->red, color->green, color->blue, True);
+	if (vscr->screen_ptr->frame_border_color)
+		WMReleaseColor(vscr->screen_ptr->frame_border_color);
 
-	wFreeColor(scr, color->pixel);
+	vscr->screen_ptr->frame_border_color = WMCreateRGBColor(vscr->screen_ptr->wmscreen, color->red, color->green, color->blue, True);
+
+	wFreeColor(vscr->screen_ptr, color->pixel);
 
 	return REFRESH_FRAME_BORDER;
 }
 
-static int setFrameFocusedBorderColor(WScreen *scr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setFrameFocusedBorderColor(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
 {
 	XColor *color = tdata;
 
@@ -2944,16 +2961,17 @@ static int setFrameFocusedBorderColor(WScreen *scr, WDefaultEntry *entry, void *
 	(void) entry;
 	(void) foo;
 
-	if (scr->frame_focused_border_color)
-		WMReleaseColor(scr->frame_focused_border_color);
-	scr->frame_focused_border_color = WMCreateRGBColor(scr->wmscreen, color->red, color->green, color->blue, True);
+	if (vscr->screen_ptr->frame_focused_border_color)
+		WMReleaseColor(vscr->screen_ptr->frame_focused_border_color);
 
-	wFreeColor(scr, color->pixel);
+	vscr->screen_ptr->frame_focused_border_color = WMCreateRGBColor(vscr->screen_ptr->wmscreen, color->red, color->green, color->blue, True);
+
+	wFreeColor(vscr->screen_ptr, color->pixel);
 
 	return REFRESH_FRAME_BORDER;
 }
 
-static int setFrameSelectedBorderColor(WScreen * scr, WDefaultEntry * entry, void *tdata, void *foo)
+static int setFrameSelectedBorderColor(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
 {
 	XColor *color = tdata;
 
@@ -2961,16 +2979,17 @@ static int setFrameSelectedBorderColor(WScreen * scr, WDefaultEntry * entry, voi
 	(void) entry;
 	(void) foo;
 
-	if (scr->frame_selected_border_color)
-		WMReleaseColor(scr->frame_selected_border_color);
-	scr->frame_selected_border_color = WMCreateRGBColor(scr->wmscreen, color->red, color->green, color->blue, True);
+	if (vscr->screen_ptr->frame_selected_border_color)
+		WMReleaseColor(vscr->screen_ptr->frame_selected_border_color);
 
-	wFreeColor(scr, color->pixel);
+	vscr->screen_ptr->frame_selected_border_color = WMCreateRGBColor(vscr->screen_ptr->wmscreen, color->red, color->green, color->blue, True);
+
+	wFreeColor(vscr->screen_ptr, color->pixel);
 
 	return REFRESH_FRAME_BORDER;
 }
 
-static int setWorkspaceSpecificBack(WScreen * scr, WDefaultEntry * entry, void *tdata, void *bar)
+static int setWorkspaceSpecificBack(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *bar)
 {
 	WMPropList *value = tdata;
 	WMPropList *val;
@@ -2981,10 +3000,10 @@ static int setWorkspaceSpecificBack(WScreen * scr, WDefaultEntry * entry, void *
 	(void) entry;
 	(void) bar;
 
-	if (scr->flags.backimage_helper_launched) {
+	if (vscr->screen_ptr->flags.backimage_helper_launched) {
 		if (WMGetPropListItemCount(value) == 0) {
-			SendHelperMessage(scr, 'C', 0, NULL);
-			SendHelperMessage(scr, 'K', 0, NULL);
+			SendHelperMessage(vscr, 'C', 0, NULL);
+			SendHelperMessage(vscr, 'K', 0, NULL);
 
 			WMReleasePropList(value);
 			return 0;
@@ -2993,33 +3012,32 @@ static int setWorkspaceSpecificBack(WScreen * scr, WDefaultEntry * entry, void *
 		if (WMGetPropListItemCount(value) == 0)
 			return 0;
 
-		if (!start_bg_helper(scr)) {
+		if (!start_bg_helper(vscr)) {
 			WMReleasePropList(value);
 			return 0;
 		}
 
-		SendHelperMessage(scr, 'P', -1, wPreferences.pixmap_path);
+		SendHelperMessage(vscr, 'P', -1, wPreferences.pixmap_path);
 	}
 
 	for (i = 0; i < WMGetPropListItemCount(value); i++) {
 		val = WMGetFromPLArray(value, i);
 		if (val && WMIsPLArray(val) && WMGetPropListItemCount(val) > 0) {
 			str = WMGetPropListDescription(val, False);
-
-			SendHelperMessage(scr, 'S', i + 1, str);
-
+			SendHelperMessage(vscr, 'S', i + 1, str);
 			wfree(str);
 		} else {
-			SendHelperMessage(scr, 'U', i + 1, NULL);
+			SendHelperMessage(vscr, 'U', i + 1, NULL);
 		}
 	}
+
 	sleep(1);
 
 	WMReleasePropList(value);
 	return 0;
 }
 
-static int setWorkspaceBack(WScreen * scr, WDefaultEntry * entry, void *tdata, void *bar)
+static int setWorkspaceBack(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *bar)
 {
 	WMPropList *value = tdata;
 
@@ -3027,20 +3045,20 @@ static int setWorkspaceBack(WScreen * scr, WDefaultEntry * entry, void *tdata, v
 	(void) entry;
 	(void) bar;
 
-	if (scr->flags.backimage_helper_launched) {
+	if (vscr->screen_ptr->flags.backimage_helper_launched) {
 		char *str;
 
 		if (WMGetPropListItemCount(value) == 0) {
-			SendHelperMessage(scr, 'U', 0, NULL);
+			SendHelperMessage(vscr, 'U', 0, NULL);
 		} else {
 			/* set the default workspace background to this one */
 			str = WMGetPropListDescription(value, False);
 			if (str) {
-				SendHelperMessage(scr, 'S', 0, str);
+				SendHelperMessage(vscr, 'S', 0, str);
 				wfree(str);
-				SendHelperMessage(scr, 'C', scr->vscr.workspace.current + 1, NULL);
+				SendHelperMessage(vscr, 'C', vscr->workspace.current + 1, NULL);
 			} else {
-				SendHelperMessage(scr, 'U', 0, NULL);
+				SendHelperMessage(vscr, 'U', 0, NULL);
 			}
 		}
 	} else if (WMGetPropListItemCount(value) > 0) {
@@ -3059,18 +3077,22 @@ static int setWorkspaceBack(WScreen * scr, WDefaultEntry * entry, void *tdata, v
 				snprintf(command, len, "wmsetbg %s -S -p '%s' &", dither, text);
 			else
 				snprintf(command, len, "wmsetbg %s -p '%s' &", dither, text);
-			ExecuteShellCommand(scr, command);
+
+			ExecuteShellCommand(vscr, command);
 			wfree(command);
-		} else
+		} else {
 			wwarning(_("Invalid arguments for background \"%s\""), text);
+		}
+
 		wfree(text);
 	}
+
 	WMReleasePropList(value);
 
 	return 0;
 }
 
-static int setWidgetColor(WScreen * scr, WDefaultEntry * entry, void *tdata, void *foo)
+static int setWidgetColor(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
 {
 	WTexture **texture = tdata;
 
@@ -3078,15 +3100,15 @@ static int setWidgetColor(WScreen * scr, WDefaultEntry * entry, void *tdata, voi
 	(void) entry;
 	(void) foo;
 
-	if (scr->widget_texture) {
-		wTextureDestroy(scr, (WTexture *) scr->widget_texture);
-	}
-	scr->widget_texture = *(WTexSolid **) texture;
+	if (vscr->screen_ptr->widget_texture)
+		wTextureDestroy(vscr, (WTexture *) vscr->screen_ptr->widget_texture);
+
+	vscr->screen_ptr->widget_texture = *(WTexSolid **) texture;
 
 	return 0;
 }
 
-static int setFTitleBack(WScreen * scr, WDefaultEntry * entry, void *tdata, void *foo)
+static int setFTitleBack(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
 {
 	WTexture **texture = tdata;
 
@@ -3094,15 +3116,15 @@ static int setFTitleBack(WScreen * scr, WDefaultEntry * entry, void *tdata, void
 	(void) entry;
 	(void) foo;
 
-	if (scr->window_title_texture[WS_FOCUSED]) {
-		wTextureDestroy(scr, scr->window_title_texture[WS_FOCUSED]);
-	}
-	scr->window_title_texture[WS_FOCUSED] = *texture;
+	if (vscr->screen_ptr->window_title_texture[WS_FOCUSED])
+		wTextureDestroy(vscr, vscr->screen_ptr->window_title_texture[WS_FOCUSED]);
+
+	vscr->screen_ptr->window_title_texture[WS_FOCUSED] = *texture;
 
 	return REFRESH_WINDOW_TEXTURES;
 }
 
-static int setPTitleBack(WScreen * scr, WDefaultEntry * entry, void *tdata, void *foo)
+static int setPTitleBack(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
 {
 	WTexture **texture = tdata;
 
@@ -3110,15 +3132,15 @@ static int setPTitleBack(WScreen * scr, WDefaultEntry * entry, void *tdata, void
 	(void) entry;
 	(void) foo;
 
-	if (scr->window_title_texture[WS_PFOCUSED]) {
-		wTextureDestroy(scr, scr->window_title_texture[WS_PFOCUSED]);
-	}
-	scr->window_title_texture[WS_PFOCUSED] = *texture;
+	if (vscr->screen_ptr->window_title_texture[WS_PFOCUSED])
+		wTextureDestroy(vscr, vscr->screen_ptr->window_title_texture[WS_PFOCUSED]);
+
+	vscr->screen_ptr->window_title_texture[WS_PFOCUSED] = *texture;
 
 	return REFRESH_WINDOW_TEXTURES;
 }
 
-static int setUTitleBack(WScreen * scr, WDefaultEntry * entry, void *tdata, void *foo)
+static int setUTitleBack(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
 {
 	WTexture **texture = tdata;
 
@@ -3126,15 +3148,15 @@ static int setUTitleBack(WScreen * scr, WDefaultEntry * entry, void *tdata, void
 	(void) entry;
 	(void) foo;
 
-	if (scr->window_title_texture[WS_UNFOCUSED]) {
-		wTextureDestroy(scr, scr->window_title_texture[WS_UNFOCUSED]);
-	}
-	scr->window_title_texture[WS_UNFOCUSED] = *texture;
+	if (vscr->screen_ptr->window_title_texture[WS_UNFOCUSED])
+		wTextureDestroy(vscr, vscr->screen_ptr->window_title_texture[WS_UNFOCUSED]);
+
+	vscr->screen_ptr->window_title_texture[WS_UNFOCUSED] = *texture;
 
 	return REFRESH_WINDOW_TEXTURES;
 }
 
-static int setResizebarBack(WScreen * scr, WDefaultEntry * entry, void *tdata, void *foo)
+static int setResizebarBack(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
 {
 	WTexture **texture = tdata;
 
@@ -3142,15 +3164,15 @@ static int setResizebarBack(WScreen * scr, WDefaultEntry * entry, void *tdata, v
 	(void) entry;
 	(void) foo;
 
-	if (scr->resizebar_texture[0]) {
-		wTextureDestroy(scr, scr->resizebar_texture[0]);
-	}
-	scr->resizebar_texture[0] = *texture;
+	if (vscr->screen_ptr->resizebar_texture[0])
+		wTextureDestroy(vscr, vscr->screen_ptr->resizebar_texture[0]);
+
+	vscr->screen_ptr->resizebar_texture[0] = *texture;
 
 	return REFRESH_WINDOW_TEXTURES;
 }
 
-static int setMenuTitleBack(WScreen * scr, WDefaultEntry * entry, void *tdata, void *foo)
+static int setMenuTitleBack(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
 {
 	WTexture **texture = tdata;
 
@@ -3158,15 +3180,15 @@ static int setMenuTitleBack(WScreen * scr, WDefaultEntry * entry, void *tdata, v
 	(void) entry;
 	(void) foo;
 
-	if (scr->menu_title_texture[0]) {
-		wTextureDestroy(scr, scr->menu_title_texture[0]);
-	}
-	scr->menu_title_texture[0] = *texture;
+	if (vscr->screen_ptr->menu_title_texture[0])
+		wTextureDestroy(vscr, vscr->screen_ptr->menu_title_texture[0]);
+
+	vscr->screen_ptr->menu_title_texture[0] = *texture;
 
 	return REFRESH_MENU_TITLE_TEXTURE;
 }
 
-static int setMenuTextBack(WScreen * scr, WDefaultEntry * entry, void *tdata, void *foo)
+static int setMenuTextBack(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
 {
 	WTexture **texture = tdata;
 
@@ -3174,18 +3196,18 @@ static int setMenuTextBack(WScreen * scr, WDefaultEntry * entry, void *tdata, vo
 	(void) entry;
 	(void) foo;
 
-	if (scr->menu_item_texture) {
-		wTextureDestroy(scr, scr->menu_item_texture);
-		wTextureDestroy(scr, (WTexture *) scr->menu_item_auxtexture);
+	if (vscr->screen_ptr->menu_item_texture) {
+		wTextureDestroy(vscr, vscr->screen_ptr->menu_item_texture);
+		wTextureDestroy(vscr, (WTexture *) vscr->screen_ptr->menu_item_auxtexture);
 	}
-	scr->menu_item_texture = *texture;
 
-	scr->menu_item_auxtexture = wTextureMakeSolid(scr, &scr->menu_item_texture->any.color);
+	vscr->screen_ptr->menu_item_texture = *texture;
+	vscr->screen_ptr->menu_item_auxtexture = wTextureMakeSolid(vscr, &vscr->screen_ptr->menu_item_texture->any.color);
 
 	return REFRESH_MENU_TEXTURE;
 }
 
-static int setKeyGrab(WScreen * scr, WDefaultEntry * entry, void *tdata, void *extra_data)
+static int setKeyGrab(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data)
 {
 	WShortKey *shortcut = tdata;
 	WWindow *wwin;
@@ -3196,14 +3218,14 @@ static int setKeyGrab(WScreen * scr, WDefaultEntry * entry, void *tdata, void *e
 
 	wKeyBindings[widx] = *shortcut;
 
-	wwin = scr->focused_window;
+	wwin = vscr->screen_ptr->focused_window;
 
 	while (wwin != NULL) {
 		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
 
-		if (!WFLAGP(wwin, no_bind_keys)) {
+		if (!WFLAGP(wwin, no_bind_keys))
 			wWindowSetKeyGrabs(wwin);
-		}
+
 		wwin = wwin->prev;
 	}
 
@@ -3218,35 +3240,35 @@ static int setKeyGrab(WScreen * scr, WDefaultEntry * entry, void *tdata, void *e
 	return 0;
 }
 
-static int setIconPosition(WScreen * scr, WDefaultEntry * entry, void *bar, void *foo)
+static int setIconPosition(virtual_screen *vscr, WDefaultEntry *entry, void *bar, void *foo)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 	(void) bar;
 	(void) foo;
 
-	wScreenUpdateUsableArea(scr);
-	wArrangeIcons(scr, True);
+	wScreenUpdateUsableArea(vscr);
+	wArrangeIcons(vscr, True);
 
 	return 0;
 }
 
-static int updateUsableArea(WScreen * scr, WDefaultEntry * entry, void *bar, void *foo)
+static int updateUsableArea(virtual_screen *vscr, WDefaultEntry *entry, void *bar, void *foo)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 	(void) bar;
 	(void) foo;
 
-	wScreenUpdateUsableArea(scr);
+	wScreenUpdateUsableArea(vscr);
 
 	return 0;
 }
 
-static int setMenuStyle(WScreen * scr, WDefaultEntry * entry, void *tdata, void *foo)
+static int setMenuStyle(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
-	(void) scr;
+	(void) vscr;
 	(void) entry;
 	(void) tdata;
 	(void) foo;
@@ -3254,7 +3276,7 @@ static int setMenuStyle(WScreen * scr, WDefaultEntry * entry, void *tdata, void 
 	return REFRESH_MENU_TEXTURE;
 }
 
-static RImage *chopOffImage(RImage * image, int x, int y, int w, int h)
+static RImage *chopOffImage(RImage *image, int x, int y, int w, int h)
 {
 	RImage *img = RCreateImage(w, h, image->format == RRGBAFormat);
 
@@ -3263,7 +3285,7 @@ static RImage *chopOffImage(RImage * image, int x, int y, int w, int h)
 	return img;
 }
 
-static int setSwPOptions(WScreen * scr, WDefaultEntry * entry, void *tdata, void *foo)
+static int setSwPOptions(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
 {
 	WMPropList *array = tdata;
 	char *path;
@@ -3292,7 +3314,7 @@ static int setSwPOptions(WScreen * scr, WDefaultEntry * entry, void *tdata, void
 			wwarning(_("Could not find image \"%s\" for option \"%s\""),
 				 WMGetFromPLString(WMGetFromPLArray(array, 1)), entry->key);
 		} else {
-			bgimage = RLoadImage(scr->rcontext, path, 0);
+			bgimage = RLoadImage(vscr->screen_ptr->rcontext, path, 0);
 			if (!bgimage) {
 				wwarning(_("Could not load image \"%s\" for option \"%s\""), path, entry->key);
 				wfree(path);
@@ -3354,8 +3376,9 @@ static int setSwPOptions(WScreen * scr, WDefaultEntry * entry, void *tdata, void
 		if (!WMIsPLString(WMGetFromPLArray(array, 0))) {
 			wwarning(_("Invalid arguments for option \"%s\""), entry->key);
 			break;
-		} else
+		} else {
 			path = FindImage(wPreferences.pixmap_path, WMGetFromPLString(WMGetFromPLArray(array, 0)));
+		}
 
 		if (!path) {
 			wwarning(_("Could not find image \"%s\" for option \"%s\""),
@@ -3364,10 +3387,10 @@ static int setSwPOptions(WScreen * scr, WDefaultEntry * entry, void *tdata, void
 			if (prefs->swtileImage)
 				RReleaseImage(prefs->swtileImage);
 
-			prefs->swtileImage = RLoadImage(scr->rcontext, path, 0);
-			if (!prefs->swtileImage) {
+			prefs->swtileImage = RLoadImage(vscr->screen_ptr->rcontext, path, 0);
+			if (!prefs->swtileImage)
 				wwarning(_("Could not load image \"%s\" for option \"%s\""), path, entry->key);
-			}
+
 			wfree(path);
 		}
 		break;
@@ -3382,13 +3405,11 @@ static int setSwPOptions(WScreen * scr, WDefaultEntry * entry, void *tdata, void
 	return 0;
 }
 
-static int setModifierKeyLabels(WScreen *scr, WDefaultEntry * entry, void *tdata, void *foo)
+static int setModifierKeyLabels(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
 {
 	WMPropList *array = tdata;
 	int i;
 	struct WPreferences *prefs = foo;
-
-	(void) scr;
 
 	if (!WMIsPLArray(array) || WMGetPropListItemCount(array) != 7) {
 		wwarning(_("Value for option \"%s\" must be an array of 7 strings"), entry->key);
@@ -3396,7 +3417,7 @@ static int setModifierKeyLabels(WScreen *scr, WDefaultEntry * entry, void *tdata
 		return 0;
 	}
 
-	DestroyWindowMenu(&(scr->vscr));
+	DestroyWindowMenu(vscr);
 
 	for (i = 0; i < 7; i++) {
 		if (prefs->modifier_labels[i])
@@ -3415,13 +3436,13 @@ static int setModifierKeyLabels(WScreen *scr, WDefaultEntry * entry, void *tdata
 	return 0;
 }
 
-static int setDoubleClick(WScreen *scr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setDoubleClick(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
 {
 	int *value = tdata;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
-	(void) scr;
+	(void) vscr;
 
 	if (*value <= 0)
 		*(int *)foo = 1;
@@ -3431,7 +3452,7 @@ static int setDoubleClick(WScreen *scr, WDefaultEntry *entry, void *tdata, void 
 	return 0;
 }
 
-static int setCursor(WScreen * scr, WDefaultEntry * entry, void *tdata, void *extra_data)
+static int setCursor(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data)
 {
 	Cursor *cursor = tdata;
 	long widx = (long) extra_data;
@@ -3439,15 +3460,13 @@ static int setCursor(WScreen * scr, WDefaultEntry * entry, void *tdata, void *ex
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 
-	if (wPreferences.cursor[widx] != None) {
+	if (wPreferences.cursor[widx] != None)
 		XFreeCursor(dpy, wPreferences.cursor[widx]);
-	}
 
 	wPreferences.cursor[widx] = *cursor;
 
-	if (widx == WCUR_ROOT && *cursor != None) {
-		XDefineCursor(dpy, scr->root_win, *cursor);
-	}
+	if (widx == WCUR_ROOT && *cursor != None)
+		XDefineCursor(dpy, vscr->screen_ptr->root_win, *cursor);
 
 	return 0;
 }

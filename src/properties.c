@@ -32,7 +32,7 @@
 #include "properties.h"
 
 
-int PropGetNormalHints(Window window, XSizeHints * size_hints, int *pre_iccm)
+int PropGetNormalHints(Window window, XSizeHints *size_hints, int *pre_iccm)
 {
 	long supplied_hints;
 
@@ -69,7 +69,7 @@ int PropGetWMClass(Window window, char **wm_class, char **wm_instance)
 	return True;
 }
 
-void PropGetProtocols(Window window, WProtocols * prots)
+void PropGetProtocols(Window window, WProtocols *prots)
 {
 	Atom *protocols;
 	int count, i;
@@ -123,7 +123,7 @@ unsigned char *PropGetCheckProperty(Window window, Atom hint, Atom type, int for
 	return data;
 }
 
-int PropGetGNUstepWMAttr(Window window, GNUstepWMAttributes ** attr)
+int PropGetGNUstepWMAttr(Window window, GNUstepWMAttributes **attr)
 {
 	unsigned long *data;
 
@@ -166,13 +166,13 @@ void PropSetWMakerProtocols(Window root)
 			32, PropModeReplace, (unsigned char *)protocols, count);
 }
 
-void PropSetIconTileHint(WScreen * scr, RImage * image)
+void PropSetIconTileHint(virtual_screen *vscr, RImage *image)
 {
 	static Atom imageAtom = 0;
 	unsigned char *tmp;
 	int x, y;
 
-	if (scr->info_window == None)
+	if (vscr->screen_ptr->info_window == None)
 		return;
 
 	if (!imageAtom) {
@@ -210,7 +210,7 @@ void PropSetIconTileHint(WScreen * scr, RImage * image)
 		}
 	}
 
-	XChangeProperty(dpy, scr->info_window, w_global.atom.wmaker.icon_tile,
+	XChangeProperty(dpy, vscr->screen_ptr->info_window, w_global.atom.wmaker.icon_tile,
 			imageAtom, 8, PropModeReplace, tmp, image->width * image->height * 4 + 4);
 	wfree(tmp);
 
@@ -226,7 +226,7 @@ Window PropGetClientLeader(Window window)
 	if (!win)
 		return None;
 
-	leader = (Window) * win;
+	leader = (Window) *win;
 	XFree(win);
 
 	return leader;

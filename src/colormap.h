@@ -21,7 +21,7 @@
 #ifndef WMCOLORMAP_H
 #define WMCOLORMAP_H
 
-void wColormapInstallForWindow(WScreen *scr, WWindow *wwin);
-void wColormapAllowClientInstallation(WScreen * scr, Bool starting);
+void wColormapInstallForWindow(virtual_screen *vscr, WWindow *wwin);
+void wColormapAllowClientInstallation(virtual_screen *vscr, Bool starting);
 
 #endif /* WMCOLORMAP_H */

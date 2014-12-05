@@ -33,16 +33,16 @@
 #include "colormap.h"
 
 
-void wColormapInstallForWindow(WScreen *scr, WWindow *wwin)
+void wColormapInstallForWindow(virtual_screen *vscr, WWindow *wwin)
 {
 	int i, done = 0;
 	XWindowAttributes attributes;
 	Window xwin = None;
 
-	scr->cmap_window = wwin;
+	vscr->screen_ptr->cmap_window = wwin;
 
-	if (scr->root_colormap_install_count > 0) {
-		scr->original_cmap_window = wwin;
+	if (vscr->screen_ptr->root_colormap_install_count > 0) {
+		vscr->screen_ptr->original_cmap_window = wwin;
 		return;
 	}
 
@@ -57,16 +57,16 @@ void wColormapInstallForWindow(WScreen *scr, WWindow *wwin)
 
 			XGetWindowAttributes(dpy, w, &attributes);
 			if (attributes.colormap == None)
-				attributes.colormap = scr->colormap;
+				attributes.colormap = vscr->screen_ptr->colormap;
 
-			if (scr->current_colormap != attributes.colormap) {
-				scr->current_colormap = attributes.colormap;
+			if (vscr->screen_ptr->current_colormap != attributes.colormap) {
+				vscr->screen_ptr->current_colormap = attributes.colormap;
 				/*
 				 * ICCCM 2.0: some client requested permission
 				 * to install colormaps by itself and we granted.
 				 * So, we can't install any colormaps.
 				 */
-				if (!scr->flags.colormap_stuff_blocked)
+				if (!vscr->screen_ptr->flags.colormap_stuff_blocked)
 					XInstallColormap(dpy, attributes.colormap);
 			}
 		}
@@ -76,7 +76,7 @@ void wColormapInstallForWindow(WScreen *scr, WWindow *wwin)
 		if (wwin)
 			xwin = wwin->client_win;
 		else
-			xwin = scr->root_win;
+			xwin = vscr->screen_ptr->root_win;
 
 		attributes.colormap = None;
 
@@ -84,11 +84,11 @@ void wColormapInstallForWindow(WScreen *scr, WWindow *wwin)
 			XGetWindowAttributes(dpy, xwin, &attributes);
 
 		if (attributes.colormap == None)
-			attributes.colormap = scr->colormap;
+			attributes.colormap = vscr->screen_ptr->colormap;
 
-		if (scr->current_colormap != attributes.colormap) {
-			scr->current_colormap = attributes.colormap;
-			if (!scr->flags.colormap_stuff_blocked)
+		if (vscr->screen_ptr->current_colormap != attributes.colormap) {
+			vscr->screen_ptr->current_colormap = attributes.colormap;
+			if (!vscr->screen_ptr->flags.colormap_stuff_blocked)
 				XInstallColormap(dpy, attributes.colormap);
 		}
 	}
@@ -96,16 +96,16 @@ void wColormapInstallForWindow(WScreen *scr, WWindow *wwin)
 	XSync(dpy, False);
 }
 
-void wColormapAllowClientInstallation(WScreen * scr, Bool starting)
+void wColormapAllowClientInstallation(virtual_screen *vscr, Bool starting)
 {
-	scr->flags.colormap_stuff_blocked = starting;
+	vscr->screen_ptr->flags.colormap_stuff_blocked = starting;
 	/*
 	 * Client stopped managing the colormap stuff. Restore the colormap
 	 * that would be installed if the client did not request colormap
 	 * stuff.
 	 */
 	if (!starting) {
-		XInstallColormap(dpy, scr->current_colormap);
+		XInstallColormap(dpy, vscr->screen_ptr->current_colormap);
 		XSync(dpy, False);
 	}
 }

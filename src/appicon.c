@@ -30,6 +30,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <errno.h>
+#include <stdio.h>
 
 #include "WindowMaker.h"
 #include "window.h"
@@ -63,8 +64,8 @@
 #define MOD_MASK       wPreferences.modifier_mask
 #define ICON_SIZE      wPreferences.icon_size
 
-static void iconDblClick(WObjDescriptor * desc, XEvent * event);
-static void iconExpose(WObjDescriptor * desc, XEvent * event);
+static void iconDblClick(WObjDescriptor *desc, XEvent *event);
+static void iconExpose(WObjDescriptor *desc, XEvent *event);
 static void wApplicationSaveIconPathFor(const char *iconPath, const char *wm_instance, const char *wm_class);
 static WAppIcon *wAppIcon_create(WWindow *leader_win);
 static void wAppIcon_map(WAppIcon *aicon);
@@ -130,7 +131,7 @@ void create_appicon_for_application(WApplication *wapp, WWindow *wwin)
 void unpaint_app_icon(WApplication *wapp)
 {
 	WAppIcon *aicon;
-	WScreen *scr;
+	virtual_screen *vscr;
 	WDock *clip;
 
 	if (!wapp || !wapp->app_icon)
@@ -142,8 +143,8 @@ void unpaint_app_icon(WApplication *wapp)
 	if (aicon->docked)
 		return;
 
-	scr = wapp->main_window_desc->screen_ptr;
-	clip = scr->vscr.workspace.array[scr->vscr.workspace.current]->clip;
+	vscr = wapp->main_window_desc->vscr;
+	clip = vscr->workspace.array[vscr->workspace.current]->clip;
 
 	if (!clip || !aicon->attracted || !clip->collapsed)
 		XUnmapWindow(dpy, aicon->icon->core->window);
@@ -154,13 +155,13 @@ void unpaint_app_icon(WApplication *wapp)
 	remove_from_appicon_list(aicon);
 
 	if (wPreferences.auto_arrange_icons && !aicon->attracted)
-		wArrangeIcons(scr, True);
+		wArrangeIcons(vscr, True);
 }
 
 void paint_app_icon(WApplication *wapp)
 {
 	WIcon *icon;
-	WScreen *scr;
+	virtual_screen *vscr;
 	WDock *attracting_dock;
 	int x = 0, y = 0;
 	Bool update_icon = False;
@@ -169,16 +170,17 @@ void paint_app_icon(WApplication *wapp)
 		return;
 
 	icon = wapp->app_icon->icon;
-	scr = wapp->main_window_desc->screen_ptr;
+	vscr = wapp->main_window_desc->vscr;
 	wapp->app_icon->main_window = wapp->main_window;
 
 	/* If the icon is docked, don't continue */
 	if (wapp->app_icon->docked)
 		return;
 
-	attracting_dock = scr->vscr.drawer.attracting_drawer != NULL ?
-		scr->vscr.drawer.attracting_drawer :
-		scr->vscr.workspace.array[scr->vscr.workspace.current]->clip;
+	attracting_dock = vscr->drawer.attracting_drawer != NULL ?
+		vscr->drawer.attracting_drawer :
+		vscr->workspace.array[vscr->workspace.current]->clip;
+
 	if (attracting_dock && attracting_dock->attract_icons &&
 		wDockFindFreeSlot(attracting_dock, &x, &y)) {
 		wapp->app_icon->attracted = 1;
@@ -186,13 +188,14 @@ void paint_app_icon(WApplication *wapp)
 			icon->shadowed = 1;
 			update_icon = True;
 		}
+
 		wDockAttachIcon(attracting_dock, wapp->app_icon, x, y, update_icon);
 	} else {
 		/* We must know if the icon is painted in the screen,
 		 * because if painted, then PlaceIcon will return the next
 		 * space on the screen, and the icon will move */
 		if (wapp->app_icon->next == NULL && wapp->app_icon->prev == NULL) {
-			PlaceIcon(scr, &x, &y, wGetHeadForWindow(wapp->main_window_desc));
+			PlaceIcon(vscr, &x, &y, wGetHeadForWindow(wapp->main_window_desc));
 			wAppIconMove(wapp->app_icon, x, y);
 			wLowerFrame(icon->core);
 		}
@@ -209,7 +212,7 @@ void paint_app_icon(WApplication *wapp)
 		XMapWindow(dpy, icon->core->window);
 
 	if (wPreferences.auto_arrange_icons && !wapp->app_icon->attracted)
-		wArrangeIcons(scr, True);
+		wArrangeIcons(vscr, True);
 }
 
 void removeAppIconFor(WApplication *wapp)
@@ -250,7 +253,7 @@ void removeAppIconFor(WApplication *wapp)
 	wapp->app_icon = NULL;
 
 	if (wPreferences.auto_arrange_icons)
-		wArrangeIcons(wapp->main_window_desc->screen_ptr, True);
+		wArrangeIcons(wapp->main_window_desc->vscr, True);
 }
 
 static WAppIcon *dock_icon_create_core(char *command, char *wm_class, char *wm_instance)
@@ -357,9 +360,9 @@ void wAppIconDestroy(WAppIcon *aicon)
 	wrelease(aicon);
 }
 
-static void drawCorner(WIcon * icon)
+static void drawCorner(WIcon *icon)
 {
-	WScreen *scr = icon->core->screen_ptr;
+	WScreen *scr = icon->core->vscr->screen_ptr;
 	XPoint points[3];
 
 	points[0].x = 1;
@@ -374,7 +377,7 @@ static void drawCorner(WIcon * icon)
 	XDrawLine(dpy, icon->core->window, scr->icon_title_texture->light_gc, 0, 0, 12, 0);
 }
 
-void wAppIconMove(WAppIcon * aicon, int x, int y)
+void wAppIconMove(WAppIcon *aicon, int x, int y)
 {
 	XMoveWindow(dpy, aicon->icon->core->window, x, y);
 	aicon->x_pos = x;
@@ -382,23 +385,23 @@ void wAppIconMove(WAppIcon * aicon, int x, int y)
 }
 
 #ifdef WS_INDICATOR
-static void updateDockNumbers(WScreen *scr)
+static void updateDockNumbers(virtual_screen *vscr)
 {
 	int length;
 	char *ws_numbers;
-	WAppIcon *dicon = scr->dock->icon_array[0];
+	WAppIcon *dicon = vscr->dock.dock->icon_array[0];
 
 	ws_numbers = wmalloc(20);
-	snprintf(ws_numbers, 20, "%i [ %i ]", scr->vscr.workspace.current + 1, ((scr->vscr.workspace.current / 10) + 1));
+	snprintf(ws_numbers, 20, "%i [ %i ]", vscr->workspace.current + 1, ((vscr->workspace.current / 10) + 1));
 	length = strlen(ws_numbers);
 
-	XClearArea(dpy, dicon->icon->core->window, 2, 2, 50, WMFontHeight(scr->icon_title_font) + 1, False);
+	XClearArea(dpy, dicon->icon->core->window, 2, 2, 50, WMFontHeight(vscr->screen_ptr->icon_title_font) + 1, False);
 
-	WMDrawString(scr->wmscreen, dicon->icon->core->window, scr->black,
-		     scr->icon_title_font, 4, 3, ws_numbers, length);
+	WMDrawString(vscr->screen_ptr->wmscreen, dicon->icon->core->window, vscr->screen_ptr->black,
+		     vscr->screen_ptr->icon_title_font, 4, 3, ws_numbers, length);
 
-	WMDrawString(scr->wmscreen, dicon->icon->core->window, scr->white,
-		     scr->icon_title_font, 3, 2, ws_numbers, length);
+	WMDrawString(vscr->screen_ptr->wmscreen, dicon->icon->core->window, vscr->screen_ptr->white,
+		     vscr->screen_ptr->icon_title_font, 3, 2, ws_numbers, length);
 
 	wfree(ws_numbers);
 }
@@ -407,7 +410,8 @@ static void updateDockNumbers(WScreen *scr)
 void wAppIconPaint(WAppIcon *aicon)
 {
 	WApplication *wapp;
-	WScreen *scr = aicon->icon->core->screen_ptr;
+	virtual_screen *vscr = aicon->icon->core->vscr;
+	WScreen *scr = vscr->screen_ptr;
 
 	if (aicon->icon->owner)
 		wapp = wApplicationOf(aicon->icon->owner->main_window);
@@ -418,7 +422,7 @@ void wAppIconPaint(WAppIcon *aicon)
 
 # ifdef WS_INDICATOR
 	if (aicon->docked && scr->dock && scr->dock == aicon->dock && aicon->yindex == 0)
-		updateDockNumbers(scr);
+		updateDockNumbers(vscr);
 # endif
 	if (aicon->docked && !aicon->running && aicon->command != NULL) {
 		XSetClipMask(dpy, scr->copy_gc, scr->dock_dots->mask);
@@ -471,7 +475,7 @@ static void relaunchApplication(WApplication *wapp)
 	WScreen *scr;
 	WWindow *wlist, *next;
 
-	scr = wapp->main_window_desc->screen_ptr;
+	scr = wapp->main_window_desc->vscr->screen_ptr;
 	wlist = scr->focused_window;
 	if (! wlist)
 		return;
@@ -491,7 +495,7 @@ static void relaunchApplication(WApplication *wapp)
 	}
 }
 
-static void relaunchCallback(WMenu * menu, WMenuEntry * entry)
+static void relaunchCallback(WMenu *menu, WMenuEntry *entry)
 {
 	WApplication *wapp = (WApplication *) entry->clientdata;
 
@@ -501,19 +505,19 @@ static void relaunchCallback(WMenu * menu, WMenuEntry * entry)
 	relaunchApplication(wapp);
 }
 
-static void hideCallback(WMenu * menu, WMenuEntry * entry)
+static void hideCallback(WMenu *menu, WMenuEntry *entry)
 {
 	WApplication *wapp = (WApplication *) entry->clientdata;
 
 	if (wapp->flags.hidden) {
-		wWorkspaceChange(menu->menu->screen_ptr, wapp->last_workspace);
+		wWorkspaceChange(menu->menu->vscr, wapp->last_workspace);
 		wUnhideApplication(wapp, False, False);
 	} else {
 		wHideApplication(wapp);
 	}
 }
 
-static void unhideHereCallback(WMenu * menu, WMenuEntry * entry)
+static void unhideHereCallback(WMenu *menu, WMenuEntry *entry)
 {
 	WApplication *wapp = (WApplication *) entry->clientdata;
 
@@ -527,7 +531,7 @@ static void setIconCallback(WMenu *menu, WMenuEntry *entry)
 {
 	WAppIcon *icon = ((WApplication *) entry->clientdata)->app_icon;
 	char *file = NULL;
-	WScreen *scr;
+	virtual_screen *vscr;
 	int result;
 
 	/* Parameter not used, but tell the compiler that it is ok */
@@ -539,16 +543,16 @@ static void setIconCallback(WMenu *menu, WMenuEntry *entry)
 		return;
 
 	icon->editing = 1;
-	scr = icon->icon->core->screen_ptr;
+	vscr = icon->icon->core->vscr;
 
 	wretain(icon);
 
-	result = wIconChooserDialog(scr, &file, icon->wm_instance, icon->wm_class);
+	result = wIconChooserDialog(vscr, &file, icon->wm_instance, icon->wm_class);
 
 	if (result) {
 		if (!icon->destroyed) {
 			if (!wIconChangeImageFile(icon->icon, file)) {
-				wMessageDialog(scr, _("Error"),
+				wMessageDialog(vscr, _("Error"),
 				               _("Could not open specified icon file"),
 				               _("OK"), NULL, NULL);
 			} else {
@@ -556,14 +560,16 @@ static void setIconCallback(WMenu *menu, WMenuEntry *entry)
 				wAppIconPaint(icon);
 			}
 		}
+
 		if (file)
 			wfree(file);
 	}
+
 	icon->editing = 0;
 	wrelease(icon);
 }
 
-static void killCallback(WMenu * menu, WMenuEntry * entry)
+static void killCallback(WMenu *menu, WMenuEntry *entry)
 {
 	WApplication *wapp = (WApplication *) entry->clientdata;
 	WFakeGroupLeader *fPtr;
@@ -587,12 +593,12 @@ static void killCallback(WMenu * menu, WMenuEntry * entry)
 
 	wretain(wapp->main_window_desc);
 	if (wPreferences.dont_confirm_kill
-	    || wMessageDialog(menu->frame->screen_ptr, _("Kill Application"),
+	    || wMessageDialog(menu->frame->vscr, _("Kill Application"),
 			      buffer, _("Yes"), _("No"), NULL) == WAPRDefault) {
 		if (fPtr != NULL) {
 			WWindow *wwin, *twin;
 
-			wwin = wapp->main_window_desc->screen_ptr->focused_window;
+			wwin = wapp->main_window_desc->vscr->screen_ptr->focused_window;
 			while (wwin) {
 				twin = wwin->prev;
 				if (wwin->fake_group == fPtr)
@@ -623,10 +629,11 @@ static WMenu *createApplicationMenu(void)
 	return menu;
 }
 
-void appicon_map(WAppIcon *aicon, WScreen *scr)
+void appicon_map(WAppIcon *aicon, virtual_screen *vscr)
 {
-	wcore_map_toplevel(aicon->icon->core, scr, 0, 0, 0, scr->w_depth,
-			   scr->w_visual, scr->w_colormap, scr->white_pixel);
+	wcore_map_toplevel(aicon->icon->core, vscr, 0, 0, 0,
+			   vscr->screen_ptr->w_depth, vscr->screen_ptr->w_visual,
+			   vscr->screen_ptr->w_colormap, vscr->screen_ptr->white_pixel);
 
 	map_icon_image(aicon->icon);
 
@@ -643,16 +650,17 @@ void appicon_map(WAppIcon *aicon, WScreen *scr)
 static void openApplicationMenu(WApplication *wapp, int x, int y)
 {
 	WMenu *menu;
-	WScreen *scr = wapp->main_window_desc->screen_ptr;
+	virtual_screen *vscr = wapp->main_window_desc->vscr;
+	WScreen *scr = vscr->screen_ptr;
 	int i;
 
-	if (!scr->vscr.menu.icon_menu) {
-		scr->vscr.menu.icon_menu = createApplicationMenu();
-		menu_map(scr->vscr.menu.icon_menu, scr);
-		wfree(scr->vscr.menu.icon_menu->entries[1]->text);
+	if (!vscr->menu.icon_menu) {
+		vscr->menu.icon_menu = createApplicationMenu();
+		menu_map(vscr->menu.icon_menu, vscr);
+		wfree(vscr->menu.icon_menu->entries[1]->text);
 	}
 
-	menu = scr->vscr.menu.icon_menu;
+	menu = vscr->menu.icon_menu;
 
 	if (wapp->flags.hidden)
 		menu->entries[1]->text = _("Unhide");
@@ -690,7 +698,7 @@ static void iconDblClick(WObjDescriptor *desc, XEvent *event)
 {
 	WAppIcon *aicon = desc->parent;
 	WApplication *wapp;
-	WScreen *scr = aicon->icon->core->screen_ptr;
+	virtual_screen *vscr = aicon->icon->core->vscr;
 	int unhideHere;
 
 	assert(aicon->icon->owner != NULL);
@@ -704,8 +712,8 @@ static void iconDblClick(WObjDescriptor *desc, XEvent *event)
 
 	unhideHere = (event->xbutton.state & ShiftMask);
 	/* go to the last workspace that the user worked on the app */
-	if (!unhideHere && wapp->last_workspace != scr->vscr.workspace.current)
-		wWorkspaceChange(scr, wapp->last_workspace);
+	if (!unhideHere && wapp->last_workspace != vscr->workspace.current)
+		wWorkspaceChange(vscr, wapp->last_workspace);
 
 	wUnhideApplication(wapp, event->xbutton.button == Button2, unhideHere);
 
@@ -716,13 +724,13 @@ static void iconDblClick(WObjDescriptor *desc, XEvent *event)
 void appIconMouseDown(WObjDescriptor *desc, XEvent *event)
 {
 	WAppIcon *aicon = desc->parent;
-	WScreen *scr = aicon->icon->core->screen_ptr;
+	virtual_screen *vscr = aicon->icon->core->vscr;
 	Bool hasMoved;
 
 	if (aicon->editing || WCHECK_STATE(WSTATE_MODAL))
 		return;
 
-	if (IsDoubleClick(scr, event)) {
+	if (IsDoubleClick(vscr, event)) {
 		/* Middle or right mouse actions were handled on first click */
 		if (event->xbutton.button == Button1)
 			iconDblClick(desc, event);
@@ -756,7 +764,7 @@ void appIconMouseDown(WObjDescriptor *desc, XEvent *event)
 		openApplicationMenu(wapp, event->xbutton.x_root, event->xbutton.y_root);
 
 		/* allow drag select of menu */
-		desc = &scr->vscr.menu.icon_menu->menu->descriptor;
+		desc = &vscr->menu.icon_menu->menu->descriptor;
 		event->xbutton.send_event = True;
 		(*desc->handle_mousedown) (desc, event);
 		return;
@@ -770,10 +778,11 @@ void appIconMouseDown(WObjDescriptor *desc, XEvent *event)
 Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 {
 	WIcon *icon = aicon->icon;
-	WScreen *scr = icon->core->screen_ptr;
+	virtual_screen *vscr = aicon->icon->core->vscr;
+	WScreen *scr = vscr->screen_ptr;
 	WDock *originalDock = aicon->dock; /* can be NULL */
 	WDock *lastDock = originalDock;
-	WDock *allDocks[scr->vscr.drawer.drawer_count + 2]; /* clip, dock and drawers (order determined at runtime) */
+	WDock *allDocks[vscr->drawer.drawer_count + 2]; /* clip, dock and drawers (order determined at runtime) */
 	WDrawerChain *dc;
 	Bool dockable, ondock;
 	Bool grabbed = False;
@@ -799,9 +808,9 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 	if (wPreferences.flags.noupdates && originalDock != NULL)
 		return False;
 
-	if (!(event->xbutton.state & MOD_MASK))
+	if (!(event->xbutton.state & MOD_MASK)) {
 		wRaiseFrame(icon->core);
-	else {
+	} else {
 		/* If Mod is pressed for an docked appicon, assume it is to undock it,
 		 * so don't lower it */
 		if (originalDock == NULL)
@@ -817,8 +826,7 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 	if (originalDock != NULL) {
 	    dockable = True;
 	    ondock = True;
-	}
-	else {
+	} else {
 		ondock = False;
 		if (wPreferences.flags.nodock && wPreferences.flags.noclip && wPreferences.flags.nodrawer)
 			dockable = 0;
@@ -835,20 +843,21 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 	i = 0;
 	if (originalDock != NULL)
 		allDocks[ i++ ] = originalDock;
-	/* Testing scr->drawers is enough, no need to test wPreferences.flags.nodrawer */
-	for (dc = scr->vscr.drawer.drawers; dc != NULL; dc = dc->next)
+
+	/* Testing vscr->drawers is enough, no need to test wPreferences.flags.nodrawer */
+	for (dc = vscr->drawer.drawers; dc != NULL; dc = dc->next)
 		if (dc->adrawer != originalDock)
 			allDocks[ i++ ] = dc->adrawer;
 
-	if (!wPreferences.flags.nodock && scr->vscr.dock.dock != originalDock)
-		allDocks[i++] = scr->vscr.dock.dock;
+	if (!wPreferences.flags.nodock && vscr->dock.dock != originalDock)
+		allDocks[i++] = vscr->dock.dock;
 
 	if (!wPreferences.flags.noclip &&
-	    originalDock != scr->vscr.workspace.array[scr->vscr.workspace.current]->clip)
-		allDocks[i++] = scr->vscr.workspace.array[scr->vscr.workspace.current]->clip;
+	    originalDock != vscr->workspace.array[vscr->workspace.current]->clip)
+		allDocks[i++] = vscr->workspace.array[vscr->workspace.current]->clip;
 
-	for ( ; i < scr->vscr.drawer.drawer_count + 2; i++) /* In case the clip, the dock, or both, are disabled */
-		allDocks[ i ] = NULL;
+	for ( ; i < vscr->drawer.drawer_count + 2; i++) /* In case the clip, the dock, or both, are disabled */
+		allDocks[i] = NULL;
 
 	wins[0] = icon->core->window;
 	wins[1] = scr->dock_shadow;
@@ -856,12 +865,14 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 	XMoveResizeWindow(dpy, scr->dock_shadow, aicon->x_pos, aicon->y_pos, ICON_SIZE, ICON_SIZE);
 	if (superfluous) {
 		if (icon->pixmap != None)
-			ghost = MakeGhostIcon(scr, icon->pixmap);
+			ghost = MakeGhostIcon(vscr, icon->pixmap);
 		else
-			ghost = MakeGhostIcon(scr, icon->core->window);
+			ghost = MakeGhostIcon(vscr, icon->core->window);
+
 		XSetWindowBackgroundPixmap(dpy, scr->dock_shadow, ghost);
 		XClearWindow(dpy, scr->dock_shadow);
 	}
+
 	if (ondock)
 		XMapWindow(dpy, scr->dock_shadow);
 
@@ -896,14 +907,15 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 
 			if (omnipresent && !showed_all_clips) {
 				int i;
-				for (i = 0; i < scr->vscr.workspace.count; i++) {
-					if (i == scr->vscr.workspace.current)
+				for (i = 0; i < vscr->workspace.count; i++) {
+					if (i == vscr->workspace.current)
 						continue;
 
-					wDockShowIcons(scr->vscr.workspace.array[i]->clip);
+					wDockShowIcons(vscr->workspace.array[i]->clip);
 					/* Note: if dock is collapsed (for instance, because it
 					   auto-collapses), its icons still won't show up */
 				}
+
 				showed_all_clips = True; /* To prevent flickering */
 			}
 
@@ -913,7 +925,7 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 
 			WDock *theNewDock = NULL;
 			if (!(ev.xmotion.state & MOD_MASK) || aicon->launching || aicon->lock || originalDock == NULL) {
-				for (i = 0; dockable && i < scr->vscr.drawer.drawer_count + 2; i++) {
+				for (i = 0; dockable && i < vscr->drawer.drawer_count + 2; i++) {
 					WDock *theDock = allDocks[i];
 					if (theDock == NULL)
 						break;
@@ -931,18 +943,19 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 			}
 			if (lastDock != NULL && lastDock != theNewDock) {
 				/* Leave lastDock in the state we found it */
-				if (lastDock->type == WM_DRAWER) {
+				if (lastDock->type == WM_DRAWER)
 					wDrawerFillTheGap(lastDock, aicon, (lastDock == originalDock));
-				}
+
 				if (collapsed) {
 					lastDock->collapsed = 1;
 					wDockHideIcons(lastDock);
 					collapsed = False;
 				}
-				if (lastDock->auto_raise_lower) {
+
+				if (lastDock->auto_raise_lower)
 					wDockLower(lastDock);
-				}
 			}
+
 			if (theNewDock != NULL) {
 				if (lastDock != theNewDock) {
 					collapsed = theNewDock->collapsed;
@@ -950,6 +963,7 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 						theNewDock->collapsed = 0;
 						wDockShowIcons(theNewDock);
 					}
+
 					if (theNewDock->auto_raise_lower) {
 						wDockRaise(theNewDock);
 						/* And raise the moving tile above it */
@@ -963,23 +977,15 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 			  
 				XMoveWindow(dpy, scr->dock_shadow, shad_x, shad_y);
 			  
-				if (!ondock) {
+				if (!ondock)
 					XMapWindow(dpy, scr->dock_shadow);
-				}
+
 				ondock = 1;
 			} else {
-				lastDock = theNewDock; // i.e., NULL
-				if (ondock) {
+				lastDock = theNewDock; /* i.e., NULL */
+				if (ondock)
 					XUnmapWindow(dpy, scr->dock_shadow);
-					/* 
-					 * Leaving that weird comment for now.
-					 * But if we see no gap, there is no need to fill one!
-					 * We could test ondock first and the lastDock to NULL afterwards
-					   if (lastDock_before_it_was_null->type == WM_DRAWER) {
-					   wDrawerFillTheGap(lastDock, aicon, (lastDock == originalDock));
-					   } */
 
-				}
 				ondock = 0;
 			}
 			break;
@@ -990,6 +996,7 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 		case ButtonRelease:
 			if (ev.xbutton.button != clickButton)
 				break;
+
 			XUngrabPointer(dpy, CurrentTime);
 
 			Bool docked = False;
@@ -1003,27 +1010,24 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 						   command for that appicon, and the user cancels the
 						   wInputDialog asking for one). Make the rejection obvious by
 						   sliding the icon to its old position */
-						if (lastDock->type == WM_DRAWER) {
-							// Also fill the gap left in the drawer
+						if (lastDock->type == WM_DRAWER) /* Also fill the gap left in the drawer */
 							wDrawerFillTheGap(lastDock, aicon, False);
-						}
+
 						SlideWindow(icon->core->window, x, y, oldX, oldY);
 					}
-				}
-				else { // moving a docked appicon to a dock
+				} else { /* moving a docked appicon to a dock */
 					if (originalDock == lastDock) {
 						docked = True;
 						wDockReattachIcon(originalDock, aicon, ix, iy);
-					}
-					else {
+					} else {
 						docked = wDockMoveIconBetweenDocks(originalDock, lastDock, aicon, ix, iy);
 						if (!docked) {
 							/* Possible scenario: user moved an auto-attracted appicon
 							   from the clip to the dock, and cancelled the wInputDialog
 							   asking for a command */
-							if (lastDock->type == WM_DRAWER) {
+							if (lastDock->type == WM_DRAWER)
 								wDrawerFillTheGap(lastDock, aicon, False);
-							}
+
 							/* If aicon comes from a drawer, make some room to reattach it */
 							if (originalDock->type == WM_DRAWER) {
 								WAppIcon *aiconsToShift[ originalDock->icon_count ];
@@ -1035,38 +1039,35 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 										abs(ai->xindex) >= abs(aicon->xindex))
 										aiconsToShift[j++] = ai;
 								}
+
 								if (j != originalDock->icon_count - abs(aicon->xindex) - 1)
-									// Trust this never happens?
+									/* Trust this never happens? */
 									wwarning("Shifting j=%d appicons (instead of %d!) to reinsert aicon at index %d.",
 										j, originalDock->icon_count - abs(aicon->xindex) - 1, aicon->xindex);
 								wSlideAppicons(aiconsToShift, j, originalDock->on_right_side);
-								// Trust the appicon is inserted at exactly the same place, so its oldX/oldY are consistent with its "new" location?
+								/* Trust the appicon is inserted at exactly the same place, so its oldX/oldY are consistent with its "new" location? */
 							}
 
 							SlideWindow(icon->core->window, x, y, oldX, oldY);
 							wDockReattachIcon(originalDock, aicon, aicon->xindex, aicon->yindex);
-						}
-						else {
+						} else {
 							if (originalDock->auto_collapse && !originalDock->collapsed) {
 								originalDock->collapsed = 1;
 								wDockHideIcons(originalDock);
 							}
+
 							if (originalDock->auto_raise_lower)
 								wDockLower(originalDock);
 						}
 					}
 				}
-				// No matter what happened above, check to lower lastDock
-				// Don't see why I commented out the following 2 lines
-				/* if (lastDock->auto_raise_lower)
-				   wDockLower(lastDock); */
+
 				/* If docked (or tried to dock) to a auto_collapsing dock, unset
 				 * collapsed, so that wHandleAppIconMove doesn't collapse it
 				 * right away (the timer will take care of it) */
 				if (lastDock->auto_collapse)
 					collapsed = 0;
-			}
-			else {
+			} else {
 				if (originalDock != NULL) { /* Detaching a docked appicon */
 					if (superfluous) {
 						if (!aicon->running && !wPreferences.no_animations) {
@@ -1075,44 +1076,43 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 							 */
 							if (aicon->icon->selected)
 								wIconSelect(aicon->icon);
-							DoKaboom(scr, aicon->icon->core->window, x, y);
+
+							DoKaboom(vscr, aicon->icon->core->window, x, y);
 						}
 					}
+
 					wDockDetach(originalDock, aicon);
 					if (originalDock->auto_collapse && !originalDock->collapsed) {
 						originalDock->collapsed = 1;
 						wDockHideIcons(originalDock);
 					}
+
 					if (originalDock->auto_raise_lower)
 						wDockLower(originalDock);
 				}
 			}
-			// Can't remember why the icon hiding is better done above than below (commented out)
-			// Also, lastDock is quite different from originalDock
-			/*
-			  if (collapsed) {
-				lastDock->collapsed = 1;
-				wDockHideIcons(lastDock);
-				collapsed = 0;
-			}
-			*/
+
 			if (superfluous) {
 				if (ghost != None)
 					XFreePixmap(dpy, ghost);
+
 				XSetWindowBackground(dpy, scr->dock_shadow, scr->white_pixel);
 			}
+
 			if (showed_all_clips) {
 				int i;
-				for (i = 0; i < scr->vscr.workspace.count; i++) {
-					if (i == scr->vscr.workspace.current)
+				for (i = 0; i < vscr->workspace.count; i++) {
+					if (i == vscr->workspace.current)
 						continue;
 
-					wDockHideIcons(scr->vscr.workspace.array[i]->clip);
+					wDockHideIcons(vscr->workspace.array[i]->clip);
 				}
 			}
+
 			if (wPreferences.auto_arrange_icons && !(originalDock != NULL && docked))
 				/* Need to rearrange unless moving from dock to dock */
-				wArrangeIcons(scr, True);
+				wArrangeIcons(vscr, True);
+
 			return hasMoved;
 		}
 	}
@@ -1172,22 +1172,22 @@ static WAppIcon *findDockIconFor(WDock *dock, Window main_window)
 
 static void create_appicon_from_dock(WWindow *wwin, WApplication *wapp)
 {
-	WScreen *scr = wwin->screen_ptr;
+	virtual_screen *vscr = wwin->vscr;
 	Window main_window = wapp->main_window;
 	wapp->app_icon = NULL;
 
-	if (scr->vscr.last_dock)
-		wapp->app_icon = findDockIconFor(scr->vscr.last_dock, main_window);
+	if (vscr->last_dock)
+		wapp->app_icon = findDockIconFor(vscr->last_dock, main_window);
 
 	/* check main dock if we did not find it in last dock */
-	if (!wapp->app_icon && scr->vscr.dock.dock)
-		wapp->app_icon = findDockIconFor(scr->vscr.dock.dock, main_window);
+	if (!wapp->app_icon && vscr->dock.dock)
+		wapp->app_icon = findDockIconFor(vscr->dock.dock, main_window);
 
 	/* check clips */
 	if (!wapp->app_icon) {
 		int i;
-		for (i = 0; i < scr->vscr.workspace.count; i++) {
-			WDock *dock = scr->vscr.workspace.array[i]->clip;
+		for (i = 0; i < vscr->workspace.count; i++) {
+			WDock *dock = vscr->workspace.array[i]->clip;
 
 			if (dock)
 				wapp->app_icon = findDockIconFor(dock, main_window);
@@ -1200,7 +1200,7 @@ static void create_appicon_from_dock(WWindow *wwin, WApplication *wapp)
 	/* Finally check drawers */
 	if (!wapp->app_icon) {
 		WDrawerChain *dc;
-		for (dc = scr->vscr.drawer.drawers; dc != NULL; dc = dc->next) {
+		for (dc = vscr->drawer.drawers; dc != NULL; dc = dc->next) {
 			wapp->app_icon = findDockIconFor(dc->adrawer, main_window);
 			if (wapp->app_icon)
 				break;
@@ -1271,7 +1271,7 @@ WAppIcon *wAppIconFor(Window window)
 	return NULL;
 }
 
-void move_appicon_to_dock(WScreen *scr, WAppIcon *icon, char *wm_class, char *wm_instance)
+void move_appicon_to_dock(virtual_screen *vscr, WAppIcon *icon, char *wm_class, char *wm_instance)
 {
 	WAppIcon *aicon;
 	int x0, y0;
@@ -1280,10 +1280,10 @@ void move_appicon_to_dock(WScreen *scr, WAppIcon *icon, char *wm_class, char *wm
 	aicon = create_appicon(NULL, wm_class, wm_instance);
 	aicon->icon->core->descriptor.parent_type = WCLASS_APPICON;
 	aicon->icon->core->descriptor.parent = aicon;
-	appicon_map(aicon, scr);
+	appicon_map(aicon, vscr);
 
 	/* Map it on the screen, in the right possition */
-	PlaceIcon(scr, &x0, &y0, wGetHeadForWindow(aicon->icon->owner));
+	PlaceIcon(vscr, &x0, &y0, wGetHeadForWindow(aicon->icon->owner));
 	wAppIconMove(aicon, x0, y0);
 	XMapWindow(dpy, aicon->icon->core->window);
 	aicon->launching = 1;

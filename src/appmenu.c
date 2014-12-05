@@ -82,7 +82,7 @@ static void notifyClient(WMenu * menu, WMenuEntry * entry)
 	sendMessage(data->window, wmSelectItem, data->tag);
 }
 
-static WMenu *parseMenuCommand(WScreen *scr, Window win, char **slist, int count, int *index)
+static WMenu *parseMenuCommand(virtual_screen *vscr, Window win, char **slist, int count, int *index)
 {
 	WMenu *menu;
 	int command;
@@ -105,7 +105,7 @@ static WMenu *parseMenuCommand(WScreen *scr, Window win, char **slist, int count
 	if (!menu)
 		return NULL;
 
-	menu_map(menu, scr);
+	menu_map(menu, vscr);
 
 	*index += 1;
 	while (*index < count) {
@@ -182,7 +182,7 @@ static WMenu *parseMenuCommand(WScreen *scr, Window win, char **slist, int count
 			strcpy(title, &slist[*index][pos]);
 			*index += 1;
 
-			submenu = parseMenuCommand(scr, win, slist, count, index);
+			submenu = parseMenuCommand(vscr, win, slist, count, index);
 
 			entry = wMenuAddCallback(menu, title, NULL, NULL);
 
@@ -205,20 +205,21 @@ static WMenu *parseMenuCommand(WScreen *scr, Window win, char **slist, int count
 	return menu;
 }
 
-WMenu *wAppMenuGet(WScreen * scr, Window window)
+WMenu *wAppMenuGet(virtual_screen *vscr, Window window)
 {
 	XTextProperty text_prop;
 	int count, i;
 	char **slist;
 	WMenu *menu;
 
-	if (!XGetTextProperty(dpy, window, &text_prop, w_global.atom.wmaker.menu)) {
+	if (!XGetTextProperty(dpy, window, &text_prop, w_global.atom.wmaker.menu))
 		return NULL;
-	}
+
 	if (!XTextPropertyToStringList(&text_prop, &slist, &count) || count < 1) {
 		XFree(text_prop.value);
 		return NULL;
 	}
+
 	XFree(text_prop.value);
 	if (strcmp(slist[0], "WMMenu 0") != 0) {
 		wwarning("appmenu: unknown version of WMMenu in window %lx: %s", window, slist[0]);
@@ -227,7 +228,7 @@ WMenu *wAppMenuGet(WScreen * scr, Window window)
 	}
 
 	i = 1;
-	menu = parseMenuCommand(scr, window, slist, count, &i);
+	menu = parseMenuCommand(vscr, window, slist, count, &i);
 	if (menu)
 		menu->parent = NULL;
 

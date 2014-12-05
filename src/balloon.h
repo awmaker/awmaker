@@ -21,10 +21,8 @@
 #ifndef _BALLOON_H_
 #define _BALLOON_H_
 
-void wBalloonInitialize(WScreen *scr);
-
-void wBalloonEnteredObject(WScreen *scr, WObjDescriptor *object);
-
-void wBalloonHide(WScreen *scr);
+void wBalloonInitialize(virtual_screen *vscr);
+void wBalloonEnteredObject(virtual_screen *vscr, WObjDescriptor *object);
+void wBalloonHide(virtual_screen *vscr);
 
 #endif

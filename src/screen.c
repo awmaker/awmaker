@@ -104,7 +104,7 @@ static void make_keys(void)
  * 	CantManageScreen is set to 1;
  *----------------------------------------------------------------------
  */
-static int alreadyRunningError(Display * dpy, XErrorEvent * error)
+static int alreadyRunningError(Display *dpy, XErrorEvent *error)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) dpy;
@@ -129,83 +129,94 @@ static int alreadyRunningError(Display * dpy, XErrorEvent * error)
  * not be freed by anybody.
  *----------------------------------------------------------------------
  */
-static void allocButtonPixmaps(WScreen * scr)
+static void allocButtonPixmaps(WScreen *scr)
 {
 	WPixmap *pix;
 
 	/* create predefined pixmaps */
-	if (wPreferences.new_style == TS_NEXT) {
+	if (wPreferences.new_style == TS_NEXT)
 		pix = wPixmapCreateFromXPMData(scr, NEXT_CLOSE_XPM);
-	} else {
+	else
 		pix = wPixmapCreateFromXPMData(scr, PRED_CLOSE_XPM);
-	}
+
 	if (pix)
 		pix->shared = 1;
+
 	scr->b_pixmaps[WBUT_CLOSE] = pix;
 
-	if (wPreferences.new_style == TS_NEXT) {
+	if (wPreferences.new_style == TS_NEXT)
 		pix = wPixmapCreateFromXPMData(scr, NEXT_BROKEN_CLOSE_XPM);
-	} else {
+	else
 		pix = wPixmapCreateFromXPMData(scr, PRED_BROKEN_CLOSE_XPM);
-	}
+
 	if (pix)
 		pix->shared = 1;
+
 	scr->b_pixmaps[WBUT_BROKENCLOSE] = pix;
 
-	if (wPreferences.new_style == TS_NEXT) {
+	if (wPreferences.new_style == TS_NEXT)
 		pix = wPixmapCreateFromXPMData(scr, NEXT_ICONIFY_XPM);
-	} else {
+	else
 		pix = wPixmapCreateFromXPMData(scr, PRED_ICONIFY_XPM);
-	}
+
 	if (pix)
 		pix->shared = 1;
+
 	scr->b_pixmaps[WBUT_ICONIFY] = pix;
+
 #ifdef XKB_BUTTON_HINT
-	if (wPreferences.new_style == TS_NEXT) {
+	if (wPreferences.new_style == TS_NEXT)
 		pix = wPixmapCreateFromXPMData(scr, NEXT_XKBGROUP1_XPM);
-	} else {
+	else
 		pix = wPixmapCreateFromXPMData(scr, PRED_XKBGROUP1_XPM);
-	}
+
 	if (pix)
 		pix->shared = 1;
+
 	scr->b_pixmaps[WBUT_XKBGROUP1] = pix;
-	if (wPreferences.new_style == TS_NEXT) {
+
+	if (wPreferences.new_style == TS_NEXT)
 		pix = wPixmapCreateFromXPMData(scr, NEXT_XKBGROUP2_XPM);
-	} else {
+	else
 		pix = wPixmapCreateFromXPMData(scr, PRED_XKBGROUP2_XPM);
-	}
+
 	if (pix)
 		pix->shared = 1;
+
 	scr->b_pixmaps[WBUT_XKBGROUP2] = pix;
-	if (wPreferences.new_style == TS_NEXT) {
+
+	if (wPreferences.new_style == TS_NEXT)
 		pix = wPixmapCreateFromXPMData(scr, NEXT_XKBGROUP3_XPM);
-	} else {
+	else
 		pix = wPixmapCreateFromXPMData(scr, PRED_XKBGROUP3_XPM);
-	}
+
 	if (pix)
 		pix->shared = 1;
+
 	scr->b_pixmaps[WBUT_XKBGROUP3] = pix;
-	if (wPreferences.new_style == TS_NEXT) {
+
+	if (wPreferences.new_style == TS_NEXT)
 		pix = wPixmapCreateFromXPMData(scr, NEXT_XKBGROUP4_XPM);
-	} else {
+	else
 		pix = wPixmapCreateFromXPMData(scr, PRED_XKBGROUP4_XPM);
-	}
+
 	if (pix)
 		pix->shared = 1;
+
 	scr->b_pixmaps[WBUT_XKBGROUP4] = pix;
 #endif
-
-	if (wPreferences.new_style == TS_NEXT) {
+	if (wPreferences.new_style == TS_NEXT)
 		pix = wPixmapCreateFromXPMData(scr, NEXT_KILL_XPM);
-	} else {
+	else
 		pix = wPixmapCreateFromXPMData(scr, PRED_KILL_XPM);
-	}
+
 	if (pix)
 		pix->shared = 1;
+
 	scr->b_pixmaps[WBUT_KILL] = pix;
 }
 
-static void draw_dot(WScreen * scr, Drawable d, int x, int y, GC gc)
+static void draw_dot(WScreen *scr, Drawable d, int x, int y, GC gc)
 {
 	XSetForeground(dpy, gc, scr->black_pixel);
 	XDrawLine(dpy, d, gc, x, y, x + 1, y);
@@ -215,7 +226,7 @@ static void draw_dot(WScreen * scr, Drawable d, int x, int y, GC gc)
 	XDrawPoint(dpy, d, gc, x + 1, y + 1);
 }
 
-static WPixmap *make3Dots(WScreen * scr)
+static WPixmap *make3Dots(WScreen *scr)
 {
 	WPixmap *wpix;
 	GC gc2, gc;
@@ -249,7 +260,7 @@ static WPixmap *make3Dots(WScreen * scr)
 	return wpix;
 }
 
-static void allocGCs(WScreen * scr)
+static void allocGCs(WScreen *scr)
 {
 	XGCValues gcv;
 	XColor color;
@@ -282,7 +293,6 @@ static void allocGCs(WScreen * scr)
 	gcm |= GCDashOffset | GCDashList;
 
 	scr->icon_select_gc = XCreateGC(dpy, scr->w_win, gcm, &gcv);
-
 	scr->menu_title_color[0] = WMRetainColor(scr->white);
 
 	/* don't retain scr->black here because we may alter its alpha */
@@ -292,6 +302,7 @@ static void allocGCs(WScreen * scr)
 	/* frame GC */
 	wGetColor(scr, DEF_FRAME_COLOR, &color);
 	gcv.function = GXxor;
+
 	/* this will raise the probability of the XORed color being different
 	 * of the original color in PseudoColor when not all color cells are
 	 * initialized */
@@ -299,9 +310,11 @@ static void allocGCs(WScreen * scr)
 		gcv.plane_mask = (1 << (scr->depth - 1)) | 1;
 	else
 		gcv.plane_mask = AllPlanes;
+
 	gcv.foreground = color.pixel;
 	if (gcv.foreground == 0)
 		gcv.foreground = 1;
+
 	gcv.line_width = DEF_FRAME_THICKNESS;
 	gcv.subwindow_mode = IncludeInferiors;
 	gcv.graphics_exposures = False;
@@ -323,7 +336,6 @@ static void allocGCs(WScreen * scr)
 	gcv.graphics_exposures = False;
 	gcm = GCForeground | GCFunction | GCSubwindowMode | GCLineWidth | GCCapStyle | GCGraphicsExposures;
 	scr->line_gc = XCreateGC(dpy, scr->root_win, gcm, &gcv);
-
 	scr->line_pixel = gcv.foreground;
 
 	/* copy GC */
@@ -343,67 +355,72 @@ static void allocGCs(WScreen * scr)
 	scr->mono_gc = XCreateGC(dpy, scr->stipple_bitmap, gcm, &gcv);
 }
 
-static void createPixmaps(WScreen * scr)
+static void createPixmaps(virtual_screen *vscr)
 {
 	WPixmap *pix;
 
 	/* load pixmaps */
-	pix = wPixmapCreateFromXBMData(scr, (char *)MENU_RADIO_INDICATOR_XBM_DATA,
+	pix = wPixmapCreateFromXBMData(vscr->screen_ptr, (char *)MENU_RADIO_INDICATOR_XBM_DATA,
 				       (char *)MENU_RADIO_INDICATOR_XBM_DATA,
 				       MENU_RADIO_INDICATOR_XBM_SIZE,
-				       MENU_RADIO_INDICATOR_XBM_SIZE, scr->black_pixel, scr->white_pixel);
+				       MENU_RADIO_INDICATOR_XBM_SIZE, vscr->screen_ptr->black_pixel, vscr->screen_ptr->white_pixel);
 	if (pix != NULL)
 		pix->shared = 1;
-	scr->menu_radio_indicator = pix;
 
-	pix = wPixmapCreateFromXBMData(scr, (char *)MENU_CHECK_INDICATOR_XBM_DATA,
+	vscr->screen_ptr->menu_radio_indicator = pix;
+
+	pix = wPixmapCreateFromXBMData(vscr->screen_ptr, (char *)MENU_CHECK_INDICATOR_XBM_DATA,
 				       (char *)MENU_CHECK_INDICATOR_XBM_DATA,
 				       MENU_CHECK_INDICATOR_XBM_SIZE,
-				       MENU_CHECK_INDICATOR_XBM_SIZE, scr->black_pixel, scr->white_pixel);
+				       MENU_CHECK_INDICATOR_XBM_SIZE, vscr->screen_ptr->black_pixel, vscr->screen_ptr->white_pixel);
 	if (pix != NULL)
 		pix->shared = 1;
-	scr->menu_check_indicator = pix;
 
-	pix = wPixmapCreateFromXBMData(scr, (char *)MENU_MINI_INDICATOR_XBM_DATA,
+	vscr->screen_ptr->menu_check_indicator = pix;
+
+	pix = wPixmapCreateFromXBMData(vscr->screen_ptr, (char *)MENU_MINI_INDICATOR_XBM_DATA,
 				       (char *)MENU_MINI_INDICATOR_XBM_DATA,
 				       MENU_MINI_INDICATOR_XBM_SIZE,
-				       MENU_MINI_INDICATOR_XBM_SIZE, scr->black_pixel, scr->white_pixel);
+				       MENU_MINI_INDICATOR_XBM_SIZE, vscr->screen_ptr->black_pixel, vscr->screen_ptr->white_pixel);
 	if (pix != NULL)
 		pix->shared = 1;
-	scr->menu_mini_indicator = pix;
 
-	pix = wPixmapCreateFromXBMData(scr, (char *)MENU_HIDE_INDICATOR_XBM_DATA,
+	vscr->screen_ptr->menu_mini_indicator = pix;
+
+	pix = wPixmapCreateFromXBMData(vscr->screen_ptr, (char *)MENU_HIDE_INDICATOR_XBM_DATA,
 				       (char *)MENU_HIDE_INDICATOR_XBM_DATA,
 				       MENU_HIDE_INDICATOR_XBM_SIZE,
-				       MENU_HIDE_INDICATOR_XBM_SIZE, scr->black_pixel, scr->white_pixel);
+				       MENU_HIDE_INDICATOR_XBM_SIZE, vscr->screen_ptr->black_pixel, vscr->screen_ptr->white_pixel);
 	if (pix != NULL)
 		pix->shared = 1;
-	scr->menu_hide_indicator = pix;
 
-	pix = wPixmapCreateFromXBMData(scr, (char *)MENU_SHADE_INDICATOR_XBM_DATA,
+	vscr->screen_ptr->menu_hide_indicator = pix;
+
+	pix = wPixmapCreateFromXBMData(vscr->screen_ptr, (char *)MENU_SHADE_INDICATOR_XBM_DATA,
 				       (char *)MENU_SHADE_INDICATOR_XBM_DATA,
 				       MENU_SHADE_INDICATOR_XBM_SIZE,
-				       MENU_SHADE_INDICATOR_XBM_SIZE, scr->black_pixel, scr->white_pixel);
+				       MENU_SHADE_INDICATOR_XBM_SIZE, vscr->screen_ptr->black_pixel, vscr->screen_ptr->white_pixel);
 	if (pix != NULL)
 		pix->shared = 1;
-	scr->menu_shade_indicator = pix;
 
-	create_logo_image(scr);
+	vscr->screen_ptr->menu_shade_indicator = pix;
 
-	scr->dock_dots = make3Dots(scr);
+	create_logo_image(vscr);
+
+	vscr->screen_ptr->dock_dots = make3Dots(vscr->screen_ptr);
 
 	/* titlebar button pixmaps */
-	allocButtonPixmaps(scr);
+	allocButtonPixmaps(vscr->screen_ptr);
 }
 
-void create_logo_image(WScreen *scr)
+void create_logo_image(virtual_screen *vscr)
 {
-	RImage *image = get_icon_image(scr, "Logo", "WMPanel", 128);
+	RImage *image = get_icon_image(vscr, "Logo", "WMPanel", 128);
 
 	if (!image) {
 		wwarning(_("could not load logo image for panels: %s"), RMessageForError(RErrorCode));
 	} else {
-		WMSetApplicationIconImage(scr->wmscreen, image);
+		WMSetApplicationIconImage(vscr->screen_ptr->wmscreen, image);
 		RReleaseImage(image);
 	}
 }
@@ -423,7 +440,7 @@ void create_logo_image(WScreen *scr)
  * window background.
  *----------------------------------------------------------------------
  */
-static void createInternalWindows(WScreen * scr)
+static void createInternalWindows(WScreen *scr)
 {
 	int vmask;
 	XSetWindowAttributes attribs;
@@ -436,7 +453,6 @@ static void createInternalWindows(WScreen * scr)
 					  InputOnly, CopyFromParent, vmask, &attribs);
 	XSelectInput(dpy, scr->no_focus_win, KeyPressMask | KeyReleaseMask);
 	XMapWindow(dpy, scr->no_focus_win);
-
 	XSetInputFocus(dpy, scr->no_focus_win, RevertToParent, CurrentTime);
 
 	/* shadow window for dock buttons */
@@ -449,9 +465,11 @@ static void createInternalWindows(WScreen * scr)
 	attribs.cursor = wPreferences.cursor[WCUR_NORMAL];
 	vmask |= CWColormap;
 	attribs.colormap = scr->w_colormap;
-	scr->dock_shadow =
-	    XCreateWindow(dpy, scr->root_win, 0, 0, wPreferences.icon_size,
-			  wPreferences.icon_size, 0, scr->w_depth, CopyFromParent, scr->w_visual, vmask, &attribs);
+	scr->dock_shadow = XCreateWindow(dpy, scr->root_win, 0, 0,
+					 wPreferences.icon_size,
+					 wPreferences.icon_size, 0,
+					 scr->w_depth, CopyFromParent,
+					 scr->w_visual, vmask, &attribs);
 
 	/* workspace name */
 	vmask = CWBackPixel | CWSaveUnder | CWOverrideRedirect | CWColormap | CWBorderPixel;
@@ -460,9 +478,10 @@ static void createInternalWindows(WScreen * scr)
 	attribs.colormap = scr->w_colormap;
 	attribs.background_pixel = scr->icon_back_texture->normal.pixel;
 	attribs.border_pixel = 0;	/* do not care */
-	scr->workspace_name =
-	    XCreateWindow(dpy, scr->root_win, 0, 0, 10, 10, 0, scr->w_depth,
-			  CopyFromParent, scr->w_visual, vmask, &attribs);
+	scr->workspace_name = XCreateWindow(dpy, scr->root_win, 0, 0,
+					    10, 10, 0, scr->w_depth,
+					    CopyFromParent, scr->w_visual,
+					    vmask, &attribs);
 }
 
 /*
@@ -486,6 +505,7 @@ static void createInternalWindows(WScreen * scr)
 WScreen *wScreenInit(int screen_number)
 {
 	WScreen *scr;
+	virtual_screen *vscr;
 	XIconSize icon_size[1];
 	RContextAttributes rattr;
 	long event_mask;
@@ -493,6 +513,9 @@ WScreen *wScreenInit(int screen_number)
 	int i;
 
 	scr = wmalloc(sizeof(WScreen));
+	vscr = wmalloc(sizeof(virtual_screen));
+	scr->vscr = vscr;
+	scr->vscr->screen_ptr = scr;
 
 	scr->stacking_list = WMCreateTreeBag();
 
@@ -505,13 +528,13 @@ WScreen *wScreenInit(int screen_number)
 	scr->scr_width = WidthOfScreen(ScreenOfDisplay(dpy, screen_number));
 	scr->scr_height = HeightOfScreen(ScreenOfDisplay(dpy, screen_number));
 
-	wInitXinerama(scr);
+	wInitXinerama(vscr);
 
 	scr->usableArea = (WArea *) wmalloc(sizeof(WArea) * wXineramaHeads(scr));
 	scr->totalUsableArea = (WArea *) wmalloc(sizeof(WArea) * wXineramaHeads(scr));
 
 	for (i = 0; i < wXineramaHeads(scr); ++i) {
-		WMRect rect = wGetRectForHead(scr, i);
+		WMRect rect = wGetRectForHead(vscr, i);
 		scr->usableArea[i].x1 = scr->totalUsableArea[i].x1 = rect.pos.x;
 		scr->usableArea[i].y1 = scr->totalUsableArea[i].y1 = rect.pos.y;
 		scr->usableArea[i].x2 = scr->totalUsableArea[i].x2 = rect.pos.x + rect.size.width;
@@ -530,9 +553,8 @@ WScreen *wScreenInit(int screen_number)
 	/* Only GroupLock doesn't work correctly in my system since right-alt
 	 * can change mode while holding it too - ]d
 	 */
-	if (w_global.xext.xkb.supported) {
+	if (w_global.xext.xkb.supported)
 		XkbSelectEvents(dpy, XkbUseCoreKbd, XkbStateNotifyMask, XkbStateNotifyMask);
-	}
 #endif				/* KEEP_XKB_LOCK_STATUS */
 
 #ifdef USE_RANDR
@@ -577,10 +599,16 @@ WScreen *wScreenInit(int screen_number)
 
 		scr->rcontext = RCreateContext(dpy, screen_number, &rattr);
 	}
+
 	if (scr->rcontext == NULL) {
 		wfatal(_("can't create Context on screen %d, %s"),
 		       screen_number, RMessageForError(RErrorCode));
-		goto abort_no_context;
+		WMFreeArray(scr->fakeGroupLeaders);
+		wfree(scr->totalUsableArea);
+		wfree(scr->usableArea);
+		WMFreeBag(scr->stacking_list);
+		wfree(scr);
+		return NULL;
 	}
 
 	scr->w_win = scr->rcontext->drawable;
@@ -594,7 +622,6 @@ WScreen *wScreenInit(int screen_number)
 	if (!scr->wmscreen) {
 		wfatal(_("could not initialize WINGs widget set"));
 		RDestroyContext(scr->rcontext);
-	abort_no_context:
 		WMFreeArray(scr->fakeGroupLeaders);
 		wfree(scr->totalUsableArea);
 		wfree(scr->usableArea);
@@ -622,7 +649,7 @@ WScreen *wScreenInit(int screen_number)
 	scr->info_window = XCreateSimpleWindow(dpy, scr->root_win, 0, 0, 10, 10, 0, 0, 0);
 
 	/* read defaults for this screen */
-	wReadDefaults(scr, w_global.domain.wmaker->dictionary);
+	wReadDefaults(vscr, w_global.domain.wmaker->dictionary);
 
 	{
 		XColor xcol;
@@ -637,13 +664,13 @@ WScreen *wScreenInit(int screen_number)
 
 	createInternalWindows(scr);
 
-	wNETWMInitStuff(scr);
+	wNETWMInitStuff(vscr);
 
 	/* create initial workspace */
-	wWorkspaceNew(scr);
+	wWorkspaceNew(vscr);
 
 	/* create shared pixmaps */
-	createPixmaps(scr);
+	createPixmaps(vscr);
 
 	/* set icon sizes we can accept from clients */
 	icon_size[0].min_width = 8;
@@ -665,7 +692,7 @@ WScreen *wScreenInit(int screen_number)
 
 #ifdef BALLOON_TEXT
 	/* initialize balloon text stuff */
-	wBalloonInitialize(scr);
+	wBalloonInitialize(vscr);
 #endif
 
 	scr->info_text_font = WMBoldSystemFontOfSize(scr->wmscreen, 12);
@@ -677,18 +704,19 @@ WScreen *wScreenInit(int screen_number)
 	scr->gview = WCreateGeometryView(scr->wmscreen);
 	WMRealizeWidget(scr->gview);
 
-	wScreenUpdateUsableArea(scr);
+	wScreenUpdateUsableArea(vscr);
 
 	return scr;
 }
 
-void wScreenUpdateUsableArea(WScreen *scr)
+void wScreenUpdateUsableArea(virtual_screen *vscr)
 {
 	/*
 	 * scr->totalUsableArea[] will become the usableArea used for Windowplacement,
 	 * scr->usableArea[] will be used for iconplacement, hence no iconyard nor
 	 * border.
 	 */
+	WScreen *scr = vscr->screen_ptr;
 
 	WArea area;
 	int i;
@@ -697,13 +725,13 @@ void wScreenUpdateUsableArea(WScreen *scr)
 	unsigned int position = wPreferences.workspace_border_position;
 
 	for (i = 0; i < wXineramaHeads(scr); ++i) {
-		WMRect rect = wGetRectForHead(scr, i);
+		WMRect rect = wGetRectForHead(vscr, i);
 		scr->totalUsableArea[i].x1 = rect.pos.x;
 		scr->totalUsableArea[i].y1 = rect.pos.y;
 		scr->totalUsableArea[i].x2 = rect.pos.x + rect.size.width;
 		scr->totalUsableArea[i].y2 = rect.pos.y + rect.size.height;
 
-		if (wNETWMGetUsableArea(scr, i, &area)) {
+		if (wNETWMGetUsableArea(vscr, i, &area)) {
 			scr->totalUsableArea[i].x1 = WMAX(scr->totalUsableArea[i].x1, area.x1);
 			scr->totalUsableArea[i].y1 = WMAX(scr->totalUsableArea[i].y1, area.y1);
 			scr->totalUsableArea[i].x2 = WMIN(scr->totalUsableArea[i].x2, area.x2);
@@ -749,6 +777,7 @@ void wScreenUpdateUsableArea(WScreen *scr)
 				scr->totalUsableArea[i].x1 += size;
 				scr->totalUsableArea[i].x2 -= size;
 			}
+
 			if (position & WB_TOPBOTTOM) {
 				scr->totalUsableArea[i].y1 += size;
 				scr->totalUsableArea[i].y2 -= size;
@@ -757,24 +786,24 @@ void wScreenUpdateUsableArea(WScreen *scr)
 	}
 
 	if (wPreferences.auto_arrange_icons)
-		wArrangeIcons(scr, True);
+		wArrangeIcons(vscr, True);
 }
 
-void wScreenRestoreState(WScreen *scr)
+void wScreenRestoreState(virtual_screen *vscr)
 {
 	WMPropList *state;
 	char *path;
 	char buf[16];
 
-	OpenRootMenu(scr, -10000, -10000, False);
-	wMenuUnmap(scr->vscr.menu.root_menu);
+	OpenRootMenu(vscr, -10000, -10000, False);
+	wMenuUnmap(vscr->menu.root_menu);
 
 	make_keys();
 
 	if (w_global.screen_count == 1) {
 		path = wdefaultspathfordomain("WMState");
 	} else {
-		snprintf(buf, sizeof(buf), "WMState.%i", scr->screen);
+		snprintf(buf, sizeof(buf), "WMState.%i", vscr->screen_ptr->screen);
 		path = wdefaultspathfordomain(buf);
 	}
 
@@ -791,29 +820,29 @@ void wScreenRestoreState(WScreen *scr)
 
 	if (!wPreferences.flags.nodock) {
 		state = WMGetFromPLDictionary(w_global.session_state, dDock);
-		scr->vscr.dock.dock = dock_create(&(scr->vscr));
-		dock_map(scr->vscr.dock.dock, scr, state);
+		vscr->dock.dock = dock_create(vscr);
+		dock_map(vscr->dock.dock, vscr, state);
 	}
 
 	if (!wPreferences.flags.nodrawer) {
-		if (!scr->vscr.dock.dock->on_right_side) {
+		if (!vscr->dock.dock->on_right_side) {
 			/* Drawer tile was created early in wScreenInit() -> wReadDefaults(). At
-			 * that time, scr->dock was NULL and the tile was created as if we were on
+			 * that time, vscr->dock was NULL and the tile was created as if we were on
 			 * the right side. If we aren't, redo it now. */
 			assert(w_global.tile.drawer);
 			RReleaseImage(w_global.tile.drawer);
-			w_global.tile.drawer = wDrawerMakeTile(&(scr->vscr), w_global.tile.icon);
+			w_global.tile.drawer = wDrawerMakeTile(vscr, w_global.tile.icon);
 		}
 
-		wDrawersRestoreState(&(scr->vscr));
-		wDrawersRestoreState_map(scr);
+		wDrawersRestoreState(vscr);
+		wDrawersRestoreState_map(vscr);
 	}
 
-	wWorkspaceRestoreState(scr);
-	wScreenUpdateUsableArea(scr);
+	wWorkspaceRestoreState(vscr);
+	wScreenUpdateUsableArea(vscr);
 }
 
-void wScreenSaveState(WScreen *scr)
+void wScreenSaveState(virtual_screen *vscr)
 {
 	WWindow *wwin;
 	char *str;
@@ -823,7 +852,7 @@ void wScreenSaveState(WScreen *scr)
 	make_keys();
 
 	/* save state of windows */
-	wwin = scr->focused_window;
+	wwin = vscr->screen_ptr->focused_window;
 	while (wwin) {
 		wWindowSaveState(wwin);
 		wwin = wwin->prev;
@@ -839,29 +868,30 @@ void wScreenSaveState(WScreen *scr)
 
 	/* save dock state to file */
 	if (!wPreferences.flags.nodock) {
-		wDockSaveState(&(scr->vscr), old_state);
+		wDockSaveState(vscr, old_state);
 	} else {
 		if ((foo = WMGetFromPLDictionary(old_state, dDock)) != NULL)
 			WMPutInPLDictionary(w_global.session_state, dDock, foo);
 	}
+
 	if (!wPreferences.flags.noclip) {
-		wClipSaveState(&(scr->vscr));
+		wClipSaveState(vscr);
 	} else {
 		if ((foo = WMGetFromPLDictionary(old_state, dClip)) != NULL)
 			WMPutInPLDictionary(w_global.session_state, dClip, foo);
 	}
 
-	wWorkspaceSaveState(&(scr->vscr), old_state);
+	wWorkspaceSaveState(vscr, old_state);
 
 	if (!wPreferences.flags.nodrawer) {
-		wDrawersSaveState(&(scr->vscr));
+		wDrawersSaveState(vscr);
 	} else {
 		if ((foo = WMGetFromPLDictionary(old_state, dDrawers)) != NULL)
 			WMPutInPLDictionary(w_global.session_state, dDrawers, foo);
 	}
 
 	if (wPreferences.save_session_on_exit) {
-		wSessionSaveState(scr);
+		wSessionSaveState(vscr);
 	} else {
 		if ((foo = WMGetFromPLDictionary(old_state, dApplications)) != NULL)
 			WMPutInPLDictionary(w_global.session_state, dApplications, foo);
@@ -873,12 +903,12 @@ void wScreenSaveState(WScreen *scr)
 	/* clean up */
 	WMPLSetCaseSensitive(False);
 
-	wMenuSaveState(&(scr->vscr));
+	wMenuSaveState(vscr);
 
 	if (w_global.screen_count == 1) {
 		str = wdefaultspathfordomain("WMState");
 	} else {
-		snprintf(buf, sizeof(buf), "WMState.%i", scr->screen);
+		snprintf(buf, sizeof(buf), "WMState.%i", vscr->screen_ptr->screen);
 		str = wdefaultspathfordomain(buf);
 	}
 
@@ -889,13 +919,11 @@ void wScreenSaveState(WScreen *scr)
 	WMReleasePropList(old_state);
 }
 
-int wScreenBringInside(WScreen * scr, int *x, int *y, int width, int height)
+int wScreenBringInside(virtual_screen *vscr, int *x, int *y, int width, int height)
 {
 	int moved = 0;
 	int tol_w, tol_h;
-	/*
-	 * With respect to the head that contains most of the window.
-	 */
+	/* With respect to the head that contains most of the window. */
 	int sx1, sy1, sx2, sy2;
 
 	WMRect rect;
@@ -906,32 +934,13 @@ int wScreenBringInside(WScreen * scr, int *x, int *y, int width, int height)
 	rect.size.width = width;
 	rect.size.height = height;
 
-	head = wGetRectPlacementInfo(scr, rect, &flags);
-	rect = wGetRectForHead(scr, head);
+	head = wGetRectPlacementInfo(vscr, rect, &flags);
+	rect = wGetRectForHead(vscr, head);
 
 	sx1 = rect.pos.x;
 	sy1 = rect.pos.y;
 	sx2 = sx1 + rect.size.width;
 	sy2 = sy1 + rect.size.height;
-
-#if 0				/* NOTE: gives funky group movement */
-	if (flags & XFLAG_MULTIPLE) {
-		/*
-		 * since we span multiple heads, pull window totaly inside
-		 */
-		if (*x < sx1)
-			*x = sx1, moved = 1;
-		else if (*x + width > sx2)
-			*x = sx2 - width, moved = 1;
-
-		if (*y < sy1)
-			*y = sy1, moved = 1;
-		else if (*y + height > sy2)
-			*y = sy2 - height, moved = 1;
-
-		return moved;
-	}
-#endif
 
 	if (width > 20)
 		tol_w = width / 2;
@@ -956,7 +965,7 @@ int wScreenBringInside(WScreen * scr, int *x, int *y, int width, int height)
 	return moved;
 }
 
-int wScreenKeepInside(WScreen * scr, int *x, int *y, int width, int height)
+int wScreenKeepInside(virtual_screen *vscr, int *x, int *y, int width, int height)
 {
 	int moved = 0;
 	int sx1, sy1, sx2, sy2;
@@ -968,8 +977,8 @@ int wScreenKeepInside(WScreen * scr, int *x, int *y, int width, int height)
 	rect.size.width = width;
 	rect.size.height = height;
 
-	head = wGetHeadForRect(scr, rect);
-	rect = wGetRectForHead(scr, head);
+	head = wGetHeadForRect(vscr, rect);
+	rect = wGetRectForHead(vscr, head);
 
 	sx1 = rect.pos.x;
 	sy1 = rect.pos.y;

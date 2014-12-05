@@ -29,18 +29,18 @@ typedef struct WWorkspace {
     struct WDock *clip;
 } WWorkspace;
 
-void wWorkspaceMake(WScreen *scr, int count);
-int wWorkspaceNew(WScreen *scr);
+void wWorkspaceMake(virtual_screen *vscr, int count);
+int wWorkspaceNew(virtual_screen *vscr);
 int wGetWorkspaceNumber(virtual_screen *vscr, const char *value);
-Bool wWorkspaceDelete(WScreen *scr, int workspace);
-void wWorkspaceChange(WScreen *scr, int workspace);
-void wWorkspaceForceChange(WScreen *scr, int workspace);
-WMenu *wWorkspaceMenuMake(WScreen *scr, Bool titled);
+Bool wWorkspaceDelete(virtual_screen *vscr, int workspace);
+void wWorkspaceChange(virtual_screen *vscr, int workspace);
+void wWorkspaceForceChange(virtual_screen *vscr, int workspace);
+WMenu *wWorkspaceMenuMake(virtual_screen *vscr, Bool titled);
 void wWorkspaceMenuUpdate(virtual_screen *vscr, WMenu *menu);
-void wWorkspaceMenuEdit(WScreen *scr);
+void wWorkspaceMenuEdit(virtual_screen *vscr);
 void wWorkspaceSaveState(virtual_screen *vscr, WMPropList *old_state);
-void wWorkspaceRestoreState(WScreen *scr);
-void wWorkspaceRename(WScreen *scr, int workspace, const char *name);
-void wWorkspaceRelativeChange(WScreen *scr, int amount);
+void wWorkspaceRestoreState(virtual_screen *vscr);
+void wWorkspaceRename(virtual_screen *vscr, int workspace, const char *name);
+void wWorkspaceRelativeChange(virtual_screen *vscr, int amount);
 
 #endif

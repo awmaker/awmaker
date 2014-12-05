@@ -25,7 +25,6 @@
 
 #include "wconfig.h"
 #include "GNUstep.h"
-#include "texture.h"
 #include "menu.h"
 #include "application.h"
 
@@ -178,7 +177,7 @@ typedef struct WWindow {
 	struct WWindow *prev;			/* window focus list */
 	struct WWindow *next;
 
-	WScreen *screen_ptr; 			/* pointer to the screen structure */
+	virtual_screen *vscr; 			/* pointer to the screen structure */
 	WWindowAttributes user_flags;		/* window attribute flags set by user */
 	WWindowAttributes defined_user_flags;	/* mask for user_flags */
 	WWindowAttributes client_flags;		/* window attribute flags set by app
@@ -335,8 +334,6 @@ void wWindowSetShape(WWindow *wwin);
 void wWindowClearShape(WWindow *wwin);
 #endif
 
-WWindow *wManageWindow(WScreen *scr, Window window);
-
 void wUnmanageWindow(WWindow *wwin, Bool restore, Bool destroyed);
 
 void wWindowSingleFocus(WWindow *wwin);
@@ -360,40 +357,29 @@ WWindow *wWindowFor(Window window);
 
 
 void wWindowConfigureBorders(WWindow *wwin);
-
 void wWindowUpdateButtonImages(WWindow *wwin);
-
 void wWindowSaveState(WWindow *wwin);
-
 void wWindowChangeWorkspace(WWindow *wwin, int workspace);
 void wWindowChangeWorkspaceRelative(WWindow *wwin, int amount);
-
 void wWindowSetKeyGrabs(WWindow *wwin);
-
 void wWindowResetMouseGrabs(WWindow *wwin);
 
-WWindow *wManageInternalWindow(WScreen *scr, Window window, Window owner,
+WWindow *wManageWindow(virtual_screen *vscr, Window window);
+WWindow *wManageInternalWindow(virtual_screen *vscr, Window window, Window owner,
                                const char *title, int x, int y,
                                int width, int height);
 
 void wWindowSetupInitialAttributes(WWindow *wwin, int *level, int *workspace);
-
 void wWindowUpdateGNUstepAttr(WWindow *wwin, GNUstepWMAttributes *attr);
-
 void wWindowMap(WWindow *wwin);
-
 void wWindowUnmap(WWindow *wwin);
-
 void wWindowDeleteSavedStatesForPID(pid_t pid);
 
 WMagicNumber wWindowAddSavedState(const char *instance, const char *class, const char *command,
                                   pid_t pid, WSavedState *state);
 
 WMagicNumber wWindowGetSavedState(Window win);
-
 void wWindowDeleteSavedState(WMagicNumber id);
-
 Bool wWindowObscuresWindow(WWindow *wwin, WWindow *obscured);
-
 void wWindowSetOmnipresent(WWindow *wwin, Bool flag);
 #endif

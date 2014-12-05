@@ -50,7 +50,6 @@
 
 #include "WindowMaker.h"
 #include "GNUstep.h"
-#include "texture.h"
 #include "screen.h"
 #include "window.h"
 #include "actions.h"
@@ -86,11 +85,13 @@
 
 /***** Local *****/
 static WScreen **wScreen = NULL;
+static virtual_screen **vscreens = NULL;
+
 static unsigned int _NumLockMask = 0;
 static unsigned int _ScrollLockMask = 0;
-static void manageAllWindows(WScreen * scr, int crashed);
+static void manageAllWindows(virtual_screen *scr, int crashed);
 
-static int catchXError(Display * dpy, XErrorEvent * error)
+static int catchXError(Display *dpy, XErrorEvent *error)
 {
 	char buffer[MAXLINE];
 
@@ -114,6 +115,7 @@ static int catchXError(Display * dpy, XErrorEvent * error)
 		|| (error->request_code == X_InstallColormap))) {
 		return 0;
 	}
+
 	FormatXError(dpy, error, buffer, MAXLINE);
 	wwarning(_("internal X error: %s"), buffer);
 	return -1;
@@ -125,7 +127,7 @@ static int catchXError(Display * dpy, XErrorEvent * error)
  * 	Handle X shutdowns and other stuff.
  *----------------------------------------------------------------------
  */
-static int handleXIO(Display * xio_dpy)
+static int handleXIO(Display *xio_dpy)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) xio_dpy;
@@ -197,8 +199,7 @@ static RETSIGTYPE handleSig(int sig)
 static RETSIGTYPE buryChild(int foo)
 {
 	pid_t pid;
-	int status;
-	int save_errno = errno;
+	int status, save_errno = errno;
 	sigset_t sigs;
 
 	/* Parameter not used, but tell the compiler that it is ok */
@@ -215,9 +216,8 @@ static RETSIGTYPE buryChild(int foo)
 	 * exited child status because we can't count on the number of SIGCHLD
 	 * signals to know exactly how many kids have exited. -Dan
 	 */
-	while ((pid = waitpid(-1, &status, WNOHANG)) > 0 || (pid < 0 && errno == EINTR)) {
+	while ((pid = waitpid(-1, &status, WNOHANG)) > 0 || (pid < 0 && errno == EINTR))
 		NotifyDeadProcess(pid, WEXITSTATUS(status));
-	}
 
 	sigprocmask(SIG_UNBLOCK, &sigs, NULL);
 
@@ -333,36 +333,36 @@ wHackedGrabButton(unsigned int button, unsigned int modifiers,
 #endif				/* NUMLOCK_HACK */
 }
 
-WScreen *wScreenWithNumber(int i)
+virtual_screen *wScreenWithNumber(int i)
 {
 	assert(i < w_global.screen_count);
 
-	return wScreen[i];
+	return wScreen[i]->vscr;
 }
 
-WScreen *wScreenForRootWindow(Window window)
+virtual_screen *wScreenForRootWindow(Window window)
 {
 	int i;
 
 	if (w_global.screen_count == 1)
-		return wScreen[0];
+		return wScreen[0]->vscr;
 
 	/* Since the number of heads will probably be small (normally 2),
 	 * it should be faster to use this than a hash table, because
 	 * of the overhead. */
 	for (i = 0; i < w_global.screen_count; i++)
 		if (wScreen[i]->root_win == window)
-			return wScreen[i];
+			return wScreen[i]->vscr;
 
 	return wScreenForWindow(window);
 }
 
-WScreen *wScreenForWindow(Window window)
+virtual_screen *wScreenForWindow(Window window)
 {
 	XWindowAttributes attr;
 
 	if (w_global.screen_count == 1)
-		return wScreen[0];
+		return wScreen[0]->vscr;
 
 	if (XGetWindowAttributes(dpy, window, &attr))
 		return wScreenForRootWindow(attr.root);
@@ -411,18 +411,18 @@ void StartUp(Bool defaultScreenOnly)
 {
 	struct sigaction sig_action;
 	int i, j, max;
+#ifndef HAVE_XINTERNATOMS
+	int k;
+#endif
 	char **formats;
 	Atom atom[wlengthof(atomNames)];
 
-	/*
-	 * Ignore CapsLock in modifiers
-	 */
+	/* Ignore CapsLock in modifiers */
 	w_global.shortcut.modifiers_mask = 0xff & ~LockMask;
 
 	getOffendingModifiers();
-	/*
-	 * Ignore NumLock and ScrollLock too
-	 */
+
+	/* Ignore NumLock and ScrollLock too */
 	w_global.shortcut.modifiers_mask &= ~(_NumLockMask | _ScrollLockMask);
 
 	memset(&wKeyBindings, 0, sizeof(wKeyBindings));
@@ -431,17 +431,11 @@ void StartUp(Bool defaultScreenOnly)
 	w_global.context.app_win = XUniqueContext();
 	w_global.context.stack = XUniqueContext();
 
-	/*    _XA_VERSION = XInternAtom(dpy, "VERSION", False); */
-
-#ifdef HAVE_XINTERNATOMS
-	XInternAtoms(dpy, atomNames, wlengthof(atomNames), False, atom);
+#ifndef HAVE_XINTERNATOMS
+	for (k = 0; k < wlengthof(atomNames); k++)
+		atom[k] = XInternAtom(dpy, atomNames[k], False);
 #else
-
-	{
-		int i;
-		for (i = 0; i < wlengthof(atomNames); i++)
-			atom[i] = XInternAtom(dpy, atomNames[i], False);
-	}
+	XInternAtoms(dpy, atomNames, wlengthof(atomNames), False, atom);
 #endif
 
 	w_global.atom.wm.state = atom[0];
@@ -571,6 +565,7 @@ void StartUp(Bool defaultScreenOnly)
 	if (wPreferences.icon_size < 16) {
 		wwarning(_("icon size is configured to %i, but it's too small. Using 16 instead"),
 			 wPreferences.icon_size);
+
 		wPreferences.icon_size = 16;
 	}
 
@@ -610,6 +605,7 @@ void StartUp(Bool defaultScreenOnly)
 		max = ScreenCount(dpy);
 
 	wScreen = wmalloc(sizeof(WScreen *) * max);
+	vscreens = wmalloc(sizeof(virtual_screen *) * max);
 
 	w_global.screen_count = 0;
 
@@ -652,35 +648,35 @@ void StartUp(Bool defaultScreenOnly)
 
 		lastDesktop = wNETWMGetCurrentDesktopFromHint(wScreen[j]);
 
-		wScreenRestoreState(wScreen[j]);
+		wScreenRestoreState(wScreen[j]->vscr);
 
 		/* manage all windows that were already here before us */
-		if (!wPreferences.flags.nodock && wScreen[j]->vscr.dock.dock)
-			wScreen[j]->vscr.last_dock = wScreen[j]->vscr.dock.dock;
+		if (!wPreferences.flags.nodock && wScreen[j]->vscr->dock.dock)
+			wScreen[j]->vscr->last_dock = wScreen[j]->vscr->dock.dock;
 
-		manageAllWindows(wScreen[j], wPreferences.flags.restarting == 2);
+		manageAllWindows(wScreen[j]->vscr, wPreferences.flags.restarting == 2);
 
 		/* restore saved menus */
-		wMenuRestoreState(wScreen[j]);
+		wMenuRestoreState(wScreen[j]->vscr);
 
 		/* If we're not restarting, restore session */
 		if (wPreferences.flags.restarting == 0 && !wPreferences.flags.norestore)
-			wSessionRestoreState(wScreen[j]);
+			wSessionRestoreState(wScreen[j]->vscr);
 
 		if (!wPreferences.flags.noautolaunch) {
 			/* auto-launch apps */
-			if (!wPreferences.flags.nodock && wScreen[j]->vscr.dock.dock) {
-				wScreen[j]->vscr.last_dock = wScreen[j]->vscr.dock.dock;
-				wDockDoAutoLaunch(wScreen[j]->vscr.dock.dock, 0);
+			if (!wPreferences.flags.nodock && wScreen[j]->vscr->dock.dock) {
+				wScreen[j]->vscr->last_dock = wScreen[j]->vscr->dock.dock;
+				wDockDoAutoLaunch(wScreen[j]->vscr->dock.dock, 0);
 			}
 
 			/* auto-launch apps in clip */
 			if (!wPreferences.flags.noclip) {
 				int i;
-				for (i = 0; i < wScreen[j]->vscr.workspace.count; i++) {
-					if (wScreen[j]->vscr.workspace.array[i]->clip) {
-						wScreen[j]->vscr.last_dock = wScreen[j]->vscr.workspace.array[i]->clip;
-						wDockDoAutoLaunch(wScreen[j]->vscr.workspace.array[i]->clip, i);
+				for (i = 0; i < wScreen[j]->vscr->workspace.count; i++) {
+					if (wScreen[j]->vscr->workspace.array[i]->clip) {
+						wScreen[j]->vscr->last_dock = wScreen[j]->vscr->workspace.array[i]->clip;
+						wDockDoAutoLaunch(wScreen[j]->vscr->workspace.array[i]->clip, i);
 					}
 				}
 			}
@@ -688,8 +684,8 @@ void StartUp(Bool defaultScreenOnly)
 			/* auto-launch apps in drawers */
 			if (!wPreferences.flags.nodrawer) {
 				WDrawerChain *dc;
-				for (dc = wScreen[j]->vscr.drawer.drawers; dc; dc = dc->next) {
-					wScreen[j]->vscr.last_dock = dc->adrawer;
+				for (dc = wScreen[j]->vscr->drawer.drawers; dc; dc = dc->next) {
+					wScreen[j]->vscr->last_dock = dc->adrawer;
 					wDockDoAutoLaunch(dc->adrawer, 0);
 				}
 			}
@@ -697,9 +693,9 @@ void StartUp(Bool defaultScreenOnly)
 
 		/* go to workspace where we were before restart */
 		if (lastDesktop >= 0)
-			wWorkspaceForceChange(wScreen[j], lastDesktop);
+			wWorkspaceForceChange(wScreen[j]->vscr, lastDesktop);
 		else
-			wSessionRestoreLastWorkspace(wScreen[j]);
+			wSessionRestoreLastWorkspace(wScreen[j]->vscr);
 	}
 
 	if (w_global.screen_count == 0) {
@@ -715,12 +711,12 @@ void StartUp(Bool defaultScreenOnly)
 
 }
 
-static Bool windowInList(Window window, Window * list, int count)
+static Bool windowInList(Window window, Window *list, int count)
 {
-	for (; count >= 0; count--) {
+	for (; count >= 0; count--)
 		if (window == list[count])
 			return True;
-	}
+
 	return False;
 }
 
@@ -735,13 +731,15 @@ static Bool windowInList(Window window, Window * list, int count)
  * reparented/managed.
  *-----------------------------------------------------------------------
  */
-static void manageAllWindows(WScreen *scr, int crashRecovery)
+static void manageAllWindows(virtual_screen *vscr, int crashRecovery)
 {
+	WApplication *wapp;
+	WScreen *scr = vscr->screen_ptr;
 	Window root, parent;
 	Window *children;
-	unsigned int nchildren;
-	unsigned int i, j;
 	WWindow *wwin;
+	unsigned int i, j, nchildren;
+	int border;
 
 	XGrabServer(dpy);
 	XQueryTree(dpy, scr->root_win, &root, &parent, &children, &nchildren);
@@ -766,16 +764,16 @@ static void manageAllWindows(WScreen *scr, int crashRecovery)
 				}
 			}
 		}
-		if (wmhints) {
+
+		if (wmhints)
 			XFree(wmhints);
-		}
 	}
 
 	for (i = 0; i < nchildren; i++) {
 		if (children[i] == None)
 			continue;
 
-		wwin = wManageWindow(scr, children[i]);
+		wwin = wManageWindow(vscr, children[i]);
 		if (wwin) {
 			/* apply states got from WSavedState */
 			/* shaded + minimized is not restored correctly */
@@ -783,6 +781,7 @@ static void manageAllWindows(WScreen *scr, int crashRecovery)
 				wwin->flags.shaded = 0;
 				wShadeWindow(wwin);
 			}
+
 			if (wwin->flags.miniaturized
 			    && (wwin->transient_for == None
 				|| wwin->transient_for == scr->root_win
@@ -794,9 +793,8 @@ static void manageAllWindows(WScreen *scr, int crashRecovery)
 			} else {
 				wClientSetState(wwin, NormalState, None);
 			}
-			if (crashRecovery) {
-				int border;
 
+			if (crashRecovery) {
 				border = (!HAS_BORDER(wwin) ? 0 : scr->frame_border_width);
 
 				wWindowMove(wwin, wwin->frame_x - border,
@@ -805,21 +803,19 @@ static void manageAllWindows(WScreen *scr, int crashRecovery)
 			}
 		}
 	}
+
 	XUngrabServer(dpy);
 
 	/* hide apps */
 	wwin = scr->focused_window;
 	while (wwin) {
 		if (wwin->flags.hidden) {
-			WApplication *wapp = wApplicationOf(wwin->main_window);
-
-			if (wapp) {
-				wwin->flags.hidden = 0;
+			wapp = wApplicationOf(wwin->main_window);
+			wwin->flags.hidden = 0;
+			if (wapp)
 				wHideApplication(wapp);
-			} else {
-				wwin->flags.hidden = 0;
-			}
 		}
+
 		wwin = wwin->prev;
 	}
 
@@ -833,10 +829,10 @@ static void manageAllWindows(WScreen *scr, int crashRecovery)
 		WMHandleEvent(&ev);
 	}
 
-	scr->vscr.workspace.last_used = 0;
-	wWorkspaceForceChange(scr, 0);
+	vscr->workspace.last_used = 0;
+	wWorkspaceForceChange(vscr, 0);
 	if (!wPreferences.flags.noclip)
-		wDockShowIcons(scr->vscr.workspace.array[scr->vscr.workspace.current]->clip);
+		wDockShowIcons(vscr->workspace.array[vscr->workspace.current]->clip);
 
 	w_global.startup.phase2 = 0;
 }

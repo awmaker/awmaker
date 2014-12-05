@@ -98,24 +98,19 @@ iconPosition(WCoreWindow *wcore, int sx1, int sy1, int sx2, int sy2,
 	return ok;
 }
 
-void PlaceIcon(WScreen *scr, int *x_ret, int *y_ret, int head)
+void PlaceIcon(virtual_screen *vscr, int *x_ret, int *y_ret, int head)
 {
 	int pf;			/* primary axis */
 	int sf;			/* secondary axis */
-	int fullW;
-	int fullH;
+	int fullW, fullH, pi, si;
 	char *map;
-	int pi, si;
 	WCoreWindow *obj;
 	int sx1, sx2, sy1, sy2;	/* screen boundary */
-	int sw, sh;
-	int xo, yo;
-	int xs, ys;
-	int x, y;
+	int sw, sh, xo, yo, xs, ys, x, y;
 	int isize = wPreferences.icon_size;
 	int done = 0;
 	WMBagIterator iter;
-	WArea area = wGetUsableAreaForHead(scr, head, NULL, False);
+	WArea area = wGetUsableAreaForHead(vscr, head, NULL, False);
 
 	/* Find out screen boundaries. */
 
@@ -167,12 +162,12 @@ void PlaceIcon(WScreen *scr, int *x_ret, int *y_ret, int head)
 
 #define INDEX(x,y)	(((y)+1)*(sw+2) + (x) + 1)
 
-	WM_ETARETI_BAG(scr->stacking_list, obj, iter) {
+	WM_ETARETI_BAG(vscr->screen_ptr->stacking_list, obj, iter) {
 
 		while (obj) {
 			int x, y;
 
-			if (iconPosition(obj, sx1, sy1, sx2, sy2, scr->vscr.workspace.current, &x, &y)) {
+			if (iconPosition(obj, sx1, sy1, sx2, sy2, vscr->workspace.current, &x, &y)) {
 				int xdi, ydi;	/* rounded down */
 				int xui, yui;	/* rounded up */
 
@@ -209,6 +204,7 @@ void PlaceIcon(WScreen *scr, int *x_ret, int *y_ret, int head)
 				break;
 			}
 		}
+
 		if (done)
 			break;
 	}
@@ -254,14 +250,13 @@ static int calcSumOfCoveredAreas(WWindow *wwin, int x, int y, int w, int h)
 	WWindow *test_window;
 	int tw, tx, ty, th;
 
-	test_window = wwin->screen_ptr->focused_window;
+	test_window = wwin->vscr->screen_ptr->focused_window;
 	for (; test_window != NULL && test_window->prev != NULL;)
 		test_window = test_window->prev;
 
 	for (; test_window != NULL; test_window = test_window->next) {
-		if (test_window->frame->core->stacking->window_level < WMNormalLevel) {
+		if (test_window->frame->core->stacking->window_level < WMNormalLevel)
 			continue;
-		}
 
 		tw = test_window->frame->core->width;
 		th = test_window->frame->core->height;
@@ -269,10 +264,9 @@ static int calcSumOfCoveredAreas(WWindow *wwin, int x, int y, int w, int h)
 		ty = test_window->frame_y;
 
 		if (test_window->flags.mapped || (test_window->flags.shaded &&
-		     test_window->frame->workspace == wwin->screen_ptr->vscr.workspace.current &&
-		     !(test_window->flags.miniaturized || test_window->flags.hidden))) {
+		     test_window->frame->workspace == wwin->vscr->workspace.current &&
+		     !(test_window->flags.miniaturized || test_window->flags.hidden)))
 			sum_isect += calcIntersectionArea(tx, ty, tw, th, x, y, w, h);
-		}
 	}
 
 	return sum_isect;
@@ -288,9 +282,10 @@ static void set_width_height(WWindow *wwin, unsigned int *width, unsigned int *h
 		if (HAS_RESIZEBAR(wwin))
 			*height += RESIZEBAR_HEIGHT;
 	}
+
 	if (HAS_BORDER(wwin)) {
-		*height += 2 * wwin->screen_ptr->frame_border_width;
-		*width  += 2 * wwin->screen_ptr->frame_border_width;
+		*height += 2 * wwin->vscr->screen_ptr->frame_border_width;
+		*width  += 2 * wwin->vscr->screen_ptr->frame_border_width;
 	}
 }
 
@@ -300,9 +295,8 @@ window_overlaps(WWindow *win, int x, int y, int w, int h, Bool ignore_sunken)
 	int tw, th, tx, ty;
 
 	if (ignore_sunken &&
-	    win->frame->core->stacking->window_level < WMNormalLevel) {
+	    win->frame->core->stacking->window_level < WMNormalLevel)
 		return False;
-	}
 
 	tw = win->frame->core->width;
 	th = win->frame->core->height;
@@ -313,10 +307,9 @@ window_overlaps(WWindow *win, int x, int y, int w, int h, Bool ignore_sunken)
 	    (ty < (y + h)) && ((ty + th) > y) &&
 	    (win->flags.mapped ||
 	     (win->flags.shaded &&
-	      win->frame->workspace == win->screen_ptr->vscr.workspace.current &&
-	      !(win->flags.miniaturized || win->flags.hidden)))) {
+	      win->frame->workspace == win->vscr->workspace.current &&
+	      !(win->flags.miniaturized || win->flags.hidden))))
 		return True;
-	}
 
 	return False;
 }
@@ -326,17 +319,13 @@ screen_has_space(WScreen *scr, int x, int y, int w, int h, Bool ignore_sunken)
 {
 	WWindow *focused = scr->focused_window, *i;
 
-	for (i = focused; i; i = i->next) {
-		if (window_overlaps(i, x, y, w, h, ignore_sunken)) {
+	for (i = focused; i; i = i->next)
+		if (window_overlaps(i, x, y, w, h, ignore_sunken))
 			return False;
-		}
-	}
 
-	for (i = focused; i; i = i->prev) {
-		if (window_overlaps(i, x, y, w, h, ignore_sunken)) {
+	for (i = focused; i; i = i->prev)
+		if (window_overlaps(i, x, y, w, h, ignore_sunken))
 			return False;
-		}
-	}
 
 	return True;
 }
@@ -426,7 +415,7 @@ autoPlaceWindow(WWindow *wwin, int *x_ret, int *y_ret,
 		unsigned int width, unsigned int height,
 		Bool ignore_sunken, WArea usableArea)
 {
-	WScreen *scr = wwin->screen_ptr;
+	WScreen *scr = wwin->vscr->screen_ptr;
 	int x, y;
 	int sw, sh;
 
@@ -492,7 +481,8 @@ static void randomPlaceWindow(WWindow *wwin, int *x_ret, int *y_ret,
 
 void PlaceWindow(WWindow *wwin, int *x_ret, int *y_ret, unsigned width, unsigned height)
 {
-	WScreen *scr = wwin->screen_ptr;
+	virtual_screen *vscr = wwin->vscr;
+	WScreen *scr = vscr->screen_ptr;
 	int h = WMFontHeight(scr->title_font)
 		+ (wPreferences.window_title_clearance + TITLEBAR_EXTEND_SPACE) * 2;
 
@@ -502,7 +492,7 @@ void PlaceWindow(WWindow *wwin, int *x_ret, int *y_ret, unsigned width, unsigned
 	if (h < wPreferences.window_title_min_height)
 		h = wPreferences.window_title_min_height;
 
-	WArea usableArea = wGetUsableAreaForHead(scr, wGetHeadForPointerLocation(scr),
+	WArea usableArea = wGetUsableAreaForHead(vscr, wGetHeadForPointerLocation(vscr),
 						 NULL, True);
 
 	switch (wPreferences.window_placement) {

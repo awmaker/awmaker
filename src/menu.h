@@ -116,7 +116,7 @@ void wMenuEntrySetCascade(WMenu *menu, WMenuEntry *entry, WMenu *cascade);
 
 void wMenuRemoveItem(WMenu *menu, int index);
 
-WMenu *wMenuCreate(WScreen *screen, const char *title);
+WMenu *wMenuCreate(virtual_screen *vscr, const char *title);
 WMenu *wMenuCreateForApp(const char *title);
 void wMenuMap(WMenu *menu);
 void wMenuMapAt(WMenu *menu, int x, int y, int keyboard);
@@ -126,12 +126,12 @@ void wMenuSetEnabled(WMenu *menu, int index, int enable);
 void wMenuMove(WMenu *menu, int x, int y, int submenus);
 void wMenuEntryRemoveCascade(WMenu *menu, WMenuEntry *entry);
 void wMenuScroll(WMenu *menu);
-WMenu *wMenuUnderPointer(WScreen *screen);
+WMenu *wMenuUnderPointer(virtual_screen *vscr);
 void wMenuSaveState(virtual_screen *vscr);
-void wMenuRestoreState(WScreen *scr);
+void wMenuRestoreState(virtual_screen *vscr);
 
 WMenu *menu_create(const char *title);
-void menu_map(WMenu *menu, WScreen *screen);
+void menu_map(WMenu *menu, virtual_screen *screen);
 void menu_unmap(WMenu *menu);
 
 void wMenuEntrySetCascade_create(WMenu *menu, WMenuEntry *entry, WMenu *cascade);

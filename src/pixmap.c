@@ -43,7 +43,7 @@
  * 	DEF_XPM_CLOSENESS specifies the XpmCloseness
  *----------------------------------------------------------------------
  */
-WPixmap *wPixmapCreateFromXPMData(WScreen * scr, char **data)
+WPixmap *wPixmapCreateFromXPMData(WScreen *scr, char **data)
 {
 	RImage *image;
 	WPixmap *pix;
@@ -76,7 +76,7 @@ WPixmap *wPixmapCreateFromXPMData(WScreen * scr, char **data)
  *
  *----------------------------------------------------------------------
  */
-WPixmap *wPixmapCreateFromXBMData(WScreen * scr, char *data, char *mask,
+WPixmap *wPixmapCreateFromXBMData(WScreen *scr, char *data, char *mask,
 				  int width, int height, unsigned long fg, unsigned long bg)
 {
 	WPixmap *pix;
@@ -87,14 +87,16 @@ WPixmap *wPixmapCreateFromXBMData(WScreen * scr, char *data, char *mask,
 		wfree(pix);
 		return NULL;
 	}
-	if (mask) {
+
+	if (mask)
 		pix->mask = XCreateBitmapFromData(dpy, scr->w_win, mask, width, height);
-	} else {
+	else
 		pix->mask = None;
-	}
+
 	pix->width = width;
 	pix->height = height;
 	pix->depth = scr->w_depth;
+
 	return pix;
 }
 
@@ -113,9 +115,11 @@ WPixmap *wPixmapCreate(Pixmap image, Pixmap mask)
 		wfree(pix);
 		return NULL;
 	}
+
 	pix->width = width;
 	pix->height = height;
 	pix->depth = depth;
+
 	return pix;
 }
 
@@ -128,17 +132,16 @@ WPixmap *wPixmapCreate(Pixmap image, Pixmap mask)
  * 	None
  *----------------------------------------------------------------------
  */
-void wPixmapDestroy(WPixmap * pix)
+void wPixmapDestroy(WPixmap *pix)
 {
 	if (!pix->shared) {
-		if (pix->mask && !pix->client_owned_mask) {
+		if (pix->mask && !pix->client_owned_mask)
 			XFreePixmap(dpy, pix->mask);
-		}
 
-		if (pix->image && !pix->client_owned) {
+		if (pix->image && !pix->client_owned)
 			XFreePixmap(dpy, pix->image);
-		}
 	}
+
 	wfree(pix);
 }
 

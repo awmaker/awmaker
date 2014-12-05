@@ -28,8 +28,8 @@ void MoveInStackListAbove(WCoreWindow *next, WCoreWindow *frame);
 void MoveInStackListUnder(WCoreWindow *prev, WCoreWindow *frame);
 void RemoveFromStackList(WCoreWindow *frame);
 void ChangeStackingLevel(WCoreWindow *frame, int new_level);
-void RemakeStackList(WScreen *scr);
-void CommitStacking(WScreen *scr);
+void RemakeStackList(virtual_screen *vscr);
+void CommitStacking(virtual_screen *vscr);
 void CommitStackingForFrame(WCoreWindow *frame);
-void CommitStackingForWindow(WCoreWindow * frame);
+void CommitStackingForWindow(WCoreWindow *frame);
 #endif

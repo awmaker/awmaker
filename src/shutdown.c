@@ -39,7 +39,7 @@
 #include "shutdown.h"
 
 
-static void wipeDesktop(WScreen * scr);
+static void wipeDesktop(virtual_screen *vscr);
 
 /*
  *----------------------------------------------------------------------
@@ -53,6 +53,7 @@ static void wipeDesktop(WScreen * scr);
  */
 void Shutdown(WShutdownMode mode)
 {
+	virtual_screen *vscr;
 	int i;
 
 	switch (mode) {
@@ -68,58 +69,55 @@ void Shutdown(WShutdownMode mode)
 		}
 #endif
 		for (i = 0; i < w_global.screen_count; i++) {
-			WScreen *scr;
+			vscr = wScreenWithNumber(i);
+			if (vscr->screen_ptr) {
+				if (vscr->screen_ptr->helper_pid)
+					kill(vscr->screen_ptr->helper_pid, SIGKILL);
 
-			scr = wScreenWithNumber(i);
-			if (scr) {
-				if (scr->helper_pid)
-					kill(scr->helper_pid, SIGKILL);
-
-				wScreenSaveState(scr);
+				wScreenSaveState(vscr);
 
 				if (mode == WSKillMode)
-					wipeDesktop(scr);
+					wipeDesktop(vscr);
 				else
-					RestoreDesktop(scr);
+					RestoreDesktop(vscr);
 			}
 		}
+
 		ExecExitScript();
 		Exit(0);
 		break;
 
 	case WSRestartPreparationMode:
 		for (i = 0; i < w_global.screen_count; i++) {
-			WScreen *scr;
-
 #ifdef HAVE_INOTIFY
 			if (w_global.inotify.fd_event_queue >= 0) {
 				close(w_global.inotify.fd_event_queue);
 				w_global.inotify.fd_event_queue = -1;
 			}
 #endif
-			scr = wScreenWithNumber(i);
-			if (scr) {
-				if (scr->helper_pid)
-					kill(scr->helper_pid, SIGKILL);
-				wScreenSaveState(scr);
-				RestoreDesktop(scr);
+			vscr = wScreenWithNumber(i);
+			if (vscr->screen_ptr) {
+				if (vscr->screen_ptr->helper_pid)
+					kill(vscr->screen_ptr->helper_pid, SIGKILL);
+
+				wScreenSaveState(vscr);
+				RestoreDesktop(vscr);
 			}
 		}
 		break;
 	}
 }
 
-static void restoreWindows(WMBag * bag, WMBagIterator iter)
+static void restoreWindows(WMBag *bag, WMBagIterator iter)
 {
 	WCoreWindow *next;
 	WCoreWindow *core;
 	WWindow *wwin;
 
-	if (iter == NULL) {
+	if (iter == NULL)
 		core = WMBagFirst(bag, &iter);
-	} else {
+	else
 		core = WMBagNext(bag, &iter);
-	}
 
 	if (core == NULL)
 		return;
@@ -141,6 +139,7 @@ static void restoreWindows(WMBag * bag, WMBagIterator iter)
 			wUnmanageWindow(wwin, !wwin->flags.internal_window, False);
 			XMapWindow(dpy, window);
 		}
+
 		core = next;
 	}
 }
@@ -157,24 +156,24 @@ static void restoreWindows(WMBag * bag, WMBagIterator iter)
  *
  *----------------------------------------------------------------------
  */
-void RestoreDesktop(WScreen * scr)
+void RestoreDesktop(virtual_screen *vscr)
 {
-	if (scr->helper_pid > 0) {
-		kill(scr->helper_pid, SIGTERM);
-		scr->helper_pid = 0;
+	if (vscr->screen_ptr->helper_pid > 0) {
+		kill(vscr->screen_ptr->helper_pid, SIGTERM);
+		vscr->screen_ptr->helper_pid = 0;
 	}
 
 	XGrabServer(dpy);
 	wDestroyInspectorPanels();
 
 	/* reparent windows back to the root window, keeping the stacking order */
-	restoreWindows(scr->stacking_list, NULL);
+	restoreWindows(vscr->screen_ptr->stacking_list, NULL);
 
 	XUngrabServer(dpy);
 	XSetInputFocus(dpy, PointerRoot, RevertToParent, CurrentTime);
-	wColormapInstallForWindow(scr, NULL);
-	PropCleanUp(scr->root_win);
-	wNETWMCleanup(scr);
+	wColormapInstallForWindow(vscr, NULL);
+	PropCleanUp(vscr->screen_ptr->root_win);
+	wNETWMCleanup(vscr->screen_ptr);
 	XSync(dpy, 0);
 }
 
@@ -190,18 +189,20 @@ void RestoreDesktop(WScreen * scr)
  * TODO: change to XQueryTree()
  *----------------------------------------------------------------------
  */
-static void wipeDesktop(WScreen * scr)
+static void wipeDesktop(virtual_screen *vscr)
 {
 	WWindow *wwin;
 
-	wwin = scr->focused_window;
+	wwin = vscr->screen_ptr->focused_window;
 	while (wwin) {
 		if (wwin->protocols.DELETE_WINDOW)
 			wClientSendProtocol(wwin, w_global.atom.wm.delete_window,
 									  w_global.timestamp.last_event);
 		else
 			wClientKill(wwin);
+
 		wwin = wwin->prev;
 	}
+
 	XSync(dpy, False);
 }

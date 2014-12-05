@@ -237,7 +237,7 @@ void Restart(char *manager, Bool abortOnFailure)
 		exit(7);
 }
 
-void SetupEnvironment(WScreen * scr)
+void SetupEnvironment(virtual_screen *vscr)
 {
 	char *tmp, *ptr;
 	char buf[16];
@@ -262,18 +262,18 @@ void SetupEnvironment(WScreen * scr)
 			if (ptr)
 				*ptr = 0;
 		}
-		snprintf(buf, sizeof(buf), ".%i", scr->screen);
+		snprintf(buf, sizeof(buf), ".%i", vscr->screen_ptr->screen);
 		strcat(tmp, buf);
 		putenv(tmp);
 	}
 	tmp = wmalloc(60);
-	snprintf(tmp, 60, "WRASTER_COLOR_RESOLUTION%i=%i", scr->screen,
-		 scr->rcontext->attribs->colors_per_channel);
+	snprintf(tmp, 60, "WRASTER_COLOR_RESOLUTION%i=%i", vscr->screen_ptr->screen,
+		 vscr->screen_ptr->rcontext->attribs->colors_per_channel);
 	putenv(tmp);
 }
 
 typedef struct {
-	WScreen *scr;
+	virtual_screen *vscr;
 	char *command;
 } _tuple;
 
@@ -289,19 +289,15 @@ static void shellCommandHandler(pid_t pid, unsigned int status, void *client_dat
 
 		buffer = wstrconcat(_("Could not execute command: "), data->command);
 
-		wMessageDialog(data->scr, _("Error"), buffer, _("OK"), NULL, NULL);
+		wMessageDialog(data->vscr, _("Error"), buffer, _("OK"), NULL, NULL);
 		wfree(buffer);
-	} else if (status != 127) {
-		/*
-		   printf("%s: %i\n", data->command, status);
-		 */
 	}
 
 	wfree(data->command);
 	wfree(data);
 }
 
-void ExecuteShellCommand(WScreen *scr, const char *command)
+void ExecuteShellCommand(virtual_screen *vscr, const char *command)
 {
 	static char *shell = NULL;
 	pid_t pid;
@@ -322,7 +318,7 @@ void ExecuteShellCommand(WScreen *scr, const char *command)
 
 	if (pid == 0) {
 
-		SetupEnvironment(scr);
+		SetupEnvironment(vscr);
 
 #ifdef HAVE_SETSID
 		setsid();
@@ -335,7 +331,7 @@ void ExecuteShellCommand(WScreen *scr, const char *command)
 	} else {
 		_tuple *data = wmalloc(sizeof(_tuple));
 
-		data->scr = scr;
+		data->vscr = vscr;
 		data->command = wstrdup(command);
 
 		wAddDeathHandler(pid, shellCommandHandler, data);
@@ -351,29 +347,28 @@ void ExecuteShellCommand(WScreen *scr, const char *command)
  */
 Bool RelaunchWindow(WWindow *wwin)
 {
-	if (! wwin || ! wwin->client_win) {
+	char **argv;
+	int argc;
+
+	if (!wwin || !wwin->client_win) {
 		werror("no window to relaunch");
 		return False;
 	}
 
-	char **argv;
-	int argc;
-
-	if (! XGetCommand(dpy, wwin->client_win, &argv, &argc) || argc == 0 || argv == NULL) {
+	if (!XGetCommand(dpy, wwin->client_win, &argv, &argc) || argc == 0 || argv == NULL) {
 		werror("cannot relaunch the application because no WM_COMMAND property is set");
 		return False;
 	}
 
 	pid_t pid = fork();
-
 	if (pid == 0) {
-		SetupEnvironment(wwin->screen_ptr);
+		SetupEnvironment(wwin->vscr);
 #ifdef HAVE_SETSID
 		setsid();
 #endif
 		/* argv is not null-terminated */
 		char **a = (char **) malloc(argc + 1);
-		if (! a) {
+		if (!a) {
 			werror("out of memory trying to relaunch the application");
 			Exit(-1);
 		}
@@ -381,6 +376,7 @@ Bool RelaunchWindow(WWindow *wwin)
 		int i;
 		for (i = 0; i < argc; i++)
 			a[i] = argv[i];
+
 		a[i] = NULL;
 
 		execvp(a[0], a);
@@ -393,12 +389,11 @@ Bool RelaunchWindow(WWindow *wwin)
 	} else {
 		_tuple *data = wmalloc(sizeof(_tuple));
 
-		data->scr = wwin->screen_ptr;
+		data->vscr = wwin->vscr;
 		data->command = wtokenjoin(argv, argc);
 
 		/* not actually a shell command */
 		wAddDeathHandler(pid, shellCommandHandler, data);
-
 		XFreeStringList(argv);
 	}
 
@@ -415,14 +410,16 @@ Bool RelaunchWindow(WWindow *wwin)
 noreturn void wAbort(Bool dumpCore)
 {
 	int i;
-	WScreen *scr;
+	virtual_screen *vscr;
 
 	for (i = 0; i < w_global.screen_count; i++) {
-		scr = wScreenWithNumber(i);
-		if (scr)
-			RestoreDesktop(scr);
+		vscr = wScreenWithNumber(i);
+		if (vscr->screen_ptr)
+			RestoreDesktop(vscr);
 	}
+
 	printf(_("%s aborted.\n"), ProgName);
+
 	if (dumpCore)
 		abort();
 	else
@@ -460,12 +457,11 @@ static void check_defaults(void)
 	if (access(path, R_OK) != 0) {
 		wwarning(_("could not find user GNUstep directory (%s)."), path);
 
-		if (system("wmaker.inst --batch") != 0) {
+		if (system("wmaker.inst --batch") != 0)
 			wwarning(_("There was an error while creating GNUstep directory, please "
 				   "make sure you have installed Window Maker correctly and run wmaker.inst"));
-		} else {
+		else
 			wwarning(_("%s directory created with default configuration."), path);
-		}
 	}
 
 	wfree(path);
@@ -613,9 +609,9 @@ static int real_main(int argc, char **argv)
 
 	ArgCount = argc;
 	Arguments = wmalloc(sizeof(char *) * (ArgCount + 1));
-	for (i = 0; i < argc; i++) {
+	for (i = 0; i < argc; i++)
 		Arguments[i] = argv[i];
-	}
+
 	/* add the extra option to signal that we're just restarting wmaker */
 	Arguments[argc - 1] = "--for-real=";
 	Arguments[argc] = NULL;

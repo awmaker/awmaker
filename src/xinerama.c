@@ -36,8 +36,10 @@
 # endif
 #endif
 
-void wInitXinerama(WScreen * scr)
+void wInitXinerama(virtual_screen *vscr)
 {
+	WScreen *scr = vscr->screen_ptr;
+
 	scr->xine_info.primary_head = 0;
 	scr->xine_info.screens = NULL;
 	scr->xine_info.count = 0;
@@ -83,8 +85,9 @@ void wInitXinerama(WScreen * scr)
 #endif				/* USE_XINERAMA */
 }
 
-int wGetRectPlacementInfo(WScreen * scr, WMRect rect, int *flags)
+int wGetRectPlacementInfo(virtual_screen *vscr, WMRect rect, int *flags)
 {
+	WScreen *scr = vscr->screen_ptr;
 	int best;
 	unsigned long area, totalArea;
 	int i;
@@ -106,11 +109,10 @@ int wGetRectPlacementInfo(WScreen * scr, WMRect rect, int *flags)
 
 		a = calcIntersectionArea(rx, ry, rw, rh, 0, 0, scr->scr_width, scr->scr_height);
 
-		if (a == 0) {
+		if (a == 0)
 			*flags |= XFLAG_DEAD;
-		} else if (a != rw * rh) {
+		else if (a != rw * rh)
 			*flags |= XFLAG_PARTIAL;
-		}
 
 		return scr->xine_info.primary_head;
 	}
@@ -128,6 +130,7 @@ int wGetRectPlacementInfo(WScreen * scr, WMRect rect, int *flags)
 		if (a > area) {
 			if (best != -1)
 				*flags |= XFLAG_MULTIPLE;
+
 			area = a;
 			best = i;
 		}
@@ -135,19 +138,20 @@ int wGetRectPlacementInfo(WScreen * scr, WMRect rect, int *flags)
 
 	if (best == -1) {
 		*flags |= XFLAG_DEAD;
-		best = wGetHeadForPointerLocation(scr);
-	} else if (totalArea != rw * rh)
+		best = wGetHeadForPointerLocation(vscr);
+	} else if (totalArea != rw * rh) {
 		*flags |= XFLAG_PARTIAL;
+	}
 
 	return best;
 }
 
 /* get the head that covers most of the rectangle */
-int wGetHeadForRect(WScreen * scr, WMRect rect)
+int wGetHeadForRect(virtual_screen *vscr, WMRect rect)
 {
-	int best;
+	WScreen *scr = vscr->screen_ptr;
+	int best, i;
 	unsigned long area;
-	int i;
 	int rx = rect.pos.x;
 	int ry = rect.pos.y;
 	int rw = rect.size.width;
@@ -174,26 +178,24 @@ int wGetHeadForRect(WScreen * scr, WMRect rect)
 		}
 	}
 
-	/*
-	 * in case rect is in dead space, return valid head
-	 */
+	/* in case rect is in dead space, return valid head */
 	if (best == -1)
-		best = wGetHeadForPointerLocation(scr);
+		best = wGetHeadForPointerLocation(vscr);
 
 	return best;
 }
 
-Bool wWindowTouchesHead(WWindow * wwin, int head)
+Bool wWindowTouchesHead(WWindow *wwin, int head)
 {
-	WScreen *scr;
+	virtual_screen *vscr;
 	WMRect rect;
 	int a;
 
 	if (!wwin || !wwin->frame)
 		return False;
 
-	scr = wwin->screen_ptr;
-	rect = wGetRectForHead(scr, head);
+	vscr = wwin->vscr;
+	rect = wGetRectForHead(vscr, head);
 	a = calcIntersectionArea(wwin->frame_x, wwin->frame_y,
 				 wwin->frame->core->width,
 				 wwin->frame->core->height,
@@ -202,17 +204,17 @@ Bool wWindowTouchesHead(WWindow * wwin, int head)
 	return (a != 0);
 }
 
-Bool wAppIconTouchesHead(WAppIcon * aicon, int head)
+Bool wAppIconTouchesHead(WAppIcon *aicon, int head)
 {
-	WScreen *scr;
+	virtual_screen *vscr;
 	WMRect rect;
 	int a;
 
 	if (!aicon || !aicon->icon)
 		return False;
 
-	scr = aicon->icon->core->screen_ptr;
-	rect = wGetRectForHead(scr, head);
+	vscr = aicon->icon->core->vscr;
+	rect = wGetRectForHead(vscr, head);
 	a = calcIntersectionArea(aicon->x_pos, aicon->y_pos,
 				 aicon->icon->core->width,
 				 aicon->icon->core->height,
@@ -221,7 +223,7 @@ Bool wAppIconTouchesHead(WAppIcon * aicon, int head)
 	return (a != 0);
 }
 
-int wGetHeadForWindow(WWindow * wwin)
+int wGetHeadForWindow(WWindow *wwin)
 {
 	WMRect rect;
 
@@ -233,11 +235,12 @@ int wGetHeadForWindow(WWindow * wwin)
 	rect.size.width = wwin->frame->core->width;
 	rect.size.height = wwin->frame->core->height;
 
-	return wGetHeadForRect(wwin->screen_ptr, rect);
+	return wGetHeadForRect(wwin->vscr, rect);
 }
 
-int wGetHeadForPoint(WScreen * scr, WMPoint point)
+int wGetHeadForPoint(virtual_screen *vscr, WMPoint point)
 {
+	WScreen *scr = vscr->screen_ptr;
 	int i;
 
 	for (i = 0; i < scr->xine_info.count; i++) {
@@ -247,11 +250,13 @@ int wGetHeadForPoint(WScreen * scr, WMPoint point)
 		    (unsigned)(point.y - rect->pos.y) < rect->size.height)
 			return i;
 	}
+
 	return scr->xine_info.primary_head;
 }
 
-int wGetHeadForPointerLocation(WScreen * scr)
+int wGetHeadForPointerLocation(virtual_screen *vscr)
 {
+	WScreen *scr = vscr->screen_ptr;
 	WMPoint point;
 	Window bla;
 	int ble;
@@ -263,12 +268,13 @@ int wGetHeadForPointerLocation(WScreen * scr)
 	if (!XQueryPointer(dpy, scr->root_win, &bla, &bla, &point.x, &point.y, &ble, &ble, &blo))
 		return scr->xine_info.primary_head;
 
-	return wGetHeadForPoint(scr, point);
+	return wGetHeadForPoint(vscr, point);
 }
 
 /* get the dimensions of the head */
-WMRect wGetRectForHead(WScreen * scr, int head)
+WMRect wGetRectForHead(virtual_screen *vscr, int head)
 {
+	WScreen *scr = vscr->screen_ptr;
 	WMRect rect;
 
 	if (head < scr->xine_info.count) {
@@ -286,10 +292,11 @@ WMRect wGetRectForHead(WScreen * scr, int head)
 	return rect;
 }
 
-WArea wGetUsableAreaForHead(WScreen *scr, int head, WArea *totalAreaPtr, Bool noicons)
+WArea wGetUsableAreaForHead(virtual_screen *vscr, int head, WArea *totalAreaPtr, Bool noicons)
 {
+	WScreen *scr = vscr->screen_ptr;
 	WArea totalArea, usableArea;
-	WMRect rect = wGetRectForHead(scr, head);
+	WMRect rect = wGetRectForHead(vscr, head);
 
 	totalArea.x1 = rect.pos.x;
 	totalArea.y1 = rect.pos.y;
@@ -306,26 +313,26 @@ WArea wGetUsableAreaForHead(WScreen *scr, int head, WArea *totalAreaPtr, Bool no
 
 	if (noicons) {
 		/* check if user wants dock covered */
-		if (scr->vscr.dock.dock && wPreferences.no_window_over_dock &&
-		    wAppIconTouchesHead(scr->vscr.dock.dock->icon_array[0], head)) {
+		if (vscr->dock.dock && wPreferences.no_window_over_dock &&
+		    wAppIconTouchesHead(vscr->dock.dock->icon_array[0], head)) {
 			int offset = wPreferences.icon_size + DOCK_EXTRA_SPACE;
 
-			if (scr->vscr.dock.dock->on_right_side)
+			if (vscr->dock.dock->on_right_side)
 				usableArea.x2 -= offset;
 			else
 				usableArea.x1 += offset;
 		}
 
 		/* check if icons are on the same side as dock, and adjust if not done already */
-		if (scr->vscr.dock.dock && wPreferences.no_window_over_icons &&
+		if (vscr->dock.dock && wPreferences.no_window_over_icons &&
 		    !wPreferences.no_window_over_dock && (wPreferences.icon_yard & IY_VERT)) {
 			int offset = wPreferences.icon_size + DOCK_EXTRA_SPACE;
 
-			if (scr->vscr.dock.dock->on_right_side && (wPreferences.icon_yard & IY_RIGHT))
+			if (vscr->dock.dock->on_right_side && (wPreferences.icon_yard & IY_RIGHT))
 				usableArea.x2 -= offset;
 
 			/* can't use IY_LEFT in if, it's 0 ... */
-			if (!scr->vscr.dock.dock->on_right_side && !(wPreferences.icon_yard & IY_RIGHT))
+			if (!vscr->dock.dock->on_right_side && !(wPreferences.icon_yard & IY_RIGHT))
 				usableArea.x1 += offset;
 		}
 	}
@@ -333,10 +340,10 @@ WArea wGetUsableAreaForHead(WScreen *scr, int head, WArea *totalAreaPtr, Bool no
 	return usableArea;
 }
 
-WMPoint wGetPointToCenterRectInHead(WScreen * scr, int head, int width, int height)
+WMPoint wGetPointToCenterRectInHead(virtual_screen *vscr, int head, int width, int height)
 {
 	WMPoint p;
-	WMRect rect = wGetRectForHead(scr, head);
+	WMRect rect = wGetRectForHead(vscr, head);
 
 	p.x = rect.pos.x + (rect.size.width - width) / 2;
 	p.y = rect.pos.y + (rect.size.height - height) / 2;

@@ -22,8 +22,8 @@
 #ifndef WMROOTMENU_H
 #define WMROOTMENU_H
 
-Bool wRootMenuPerformShortcut(XEvent * event);
+Bool wRootMenuPerformShortcut(XEvent *event);
 void wRootMenuBindShortcuts(Window window);
-void OpenRootMenu(WScreen * scr, int x, int y, int keyboard);
+void OpenRootMenu(virtual_screen *vscr, int x, int y, int keyboard);
 
 #endif /* WMROOTMENU_H */

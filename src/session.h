@@ -22,8 +22,8 @@
 #ifndef WMSESSION_H_
 #define WMSESSION_H_
 
-void wSessionSaveState(WScreen *scr);
+void wSessionSaveState(virtual_screen *vscr);
 void wSessionClearState(void);
-void wSessionRestoreState(WScreen *scr);
-void wSessionRestoreLastWorkspace(WScreen *scr);
+void wSessionRestoreState(virtual_screen *vscr);
+void wSessionRestoreLastWorkspace(virtual_screen *vscr);
 #endif
