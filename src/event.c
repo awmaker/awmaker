@@ -1048,7 +1048,7 @@ static void handleClientMessage(XEvent *event)
 		}
 	} else if (event->xclient.message_type == w_global.atom.wm.ignore_focus_events) {
 		vscr = wScreenForRootWindow(event->xclient.window);
-		if (!vscr->screen_ptr)
+		if (!vscr || !vscr->screen_ptr)
 			return;
 
 		vscr->screen_ptr->flags.ignore_focus_events = event->xclient.data.l[0] ? 1 : 0;
