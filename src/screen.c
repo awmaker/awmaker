@@ -664,7 +664,7 @@ WScreen *wScreenInit(int screen_number)
 
 	createInternalWindows(scr);
 
-	wNETWMInitStuff(scr);
+	wNETWMInitStuff(vscr);
 
 	/* create initial workspace */
 	wWorkspaceNew(vscr);
@@ -731,7 +731,7 @@ void wScreenUpdateUsableArea(virtual_screen *vscr)
 		scr->totalUsableArea[i].x2 = rect.pos.x + rect.size.width;
 		scr->totalUsableArea[i].y2 = rect.pos.y + rect.size.height;
 
-		if (wNETWMGetUsableArea(scr, i, &area)) {
+		if (wNETWMGetUsableArea(vscr, i, &area)) {
 			scr->totalUsableArea[i].x1 = WMAX(scr->totalUsableArea[i].x1, area.x1);
 			scr->totalUsableArea[i].y1 = WMAX(scr->totalUsableArea[i].y1, area.y1);
 			scr->totalUsableArea[i].x2 = WMIN(scr->totalUsableArea[i].x2, area.x2);

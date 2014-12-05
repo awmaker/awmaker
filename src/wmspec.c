@@ -232,13 +232,13 @@ static atomitem_t atomNames[] = {
 static void observer(void *self, WMNotification *notif);
 static void wsobserver(void *self, WMNotification *notif);
 
-static void updateClientList(WScreen *scr);
-static void updateClientListStacking(WScreen *scr, WWindow *);
+static void updateClientList(virtual_screen *vscr);
+static void updateClientListStacking(virtual_screen *scr, WWindow *);
 
 static void updateWorkspaceNames(virtual_screen *vscr);
 static void updateCurrentWorkspace(virtual_screen *vscr);
 static void updateWorkspaceCount(virtual_screen *vscr);
-static void wNETWMShowingDesktop(WScreen *scr, Bool show);
+static void wNETWMShowingDesktop(virtual_screen *vscr, Bool show);
 
 typedef struct NetData {
 	WScreen *scr;
@@ -331,28 +331,28 @@ static void setSupportedHints(WScreen *scr)
 			32, PropModeReplace, (unsigned char *)&scr->info_window, 1);
 }
 
-void wNETWMUpdateDesktop(WScreen *scr)
+void wNETWMUpdateDesktop(virtual_screen *vscr)
 {
 	long *views, sizes[2];
 	int count, i;
 
-	if (scr->vscr->workspace.count == 0)
+	if (vscr->workspace.count == 0)
 		return;
 
-	count = scr->vscr->workspace.count * 2;
+	count = vscr->workspace.count * 2;
 	views = wmalloc(sizeof(long) * count);
-	sizes[0] = scr->scr_width;
-	sizes[1] = scr->scr_height;
+	sizes[0] = vscr->screen_ptr->scr_width;
+	sizes[1] = vscr->screen_ptr->scr_height;
 
-	for (i = 0; i < scr->vscr->workspace.count; i++) {
+	for (i = 0; i < vscr->workspace.count; i++) {
 		views[2 * i + 0] = 0;
 		views[2 * i + 1] = 0;
 	}
 
-	XChangeProperty(dpy, scr->root_win, net_desktop_geometry, XA_CARDINAL, 32,
+	XChangeProperty(dpy, vscr->screen_ptr->root_win, net_desktop_geometry, XA_CARDINAL, 32,
 			PropModeReplace, (unsigned char *)sizes, 2);
 
-	XChangeProperty(dpy, scr->root_win, net_desktop_viewport, XA_CARDINAL, 32,
+	XChangeProperty(dpy, vscr->screen_ptr->root_win, net_desktop_viewport, XA_CARDINAL, 32,
 			PropModeReplace, (unsigned char *)views, count);
 
 	wfree(views);
@@ -531,15 +531,15 @@ static void updateShowDesktop(WScreen *scr, Bool show)
 			PropModeReplace, (unsigned char *)&foo, 1);
 }
 
-static void wNETWMShowingDesktop(WScreen *scr, Bool show)
+static void wNETWMShowingDesktop(virtual_screen *vscr, Bool show)
 {
-	if (show && scr->netdata->show_desktop == NULL) {
+	if (show && vscr->screen_ptr->netdata->show_desktop == NULL) {
 		WWindow *tmp, **wins;
 		int i = 0;
 
-		wins = (WWindow **) wmalloc(sizeof(WWindow *) * (scr->vscr->window_count + 1));
+		wins = (WWindow **) wmalloc(sizeof(WWindow *) * (vscr->window_count + 1));
 
-		tmp = scr->focused_window;
+		tmp = vscr->screen_ptr->focused_window;
 		while (tmp) {
 			if (!tmp->flags.hidden && !tmp->flags.miniaturized && !WFLAGP(tmp, skip_window_list)) {
 
@@ -553,28 +553,29 @@ static void wNETWMShowingDesktop(WScreen *scr, Bool show)
 		}
 		wins[i++] = NULL;
 
-		scr->netdata->show_desktop = wins;
-		updateShowDesktop(scr, True);
-	} else if (scr->netdata->show_desktop != NULL) {
+		vscr->screen_ptr->netdata->show_desktop = wins;
+		updateShowDesktop(vscr->screen_ptr, True);
+	} else if (vscr->screen_ptr->netdata->show_desktop != NULL) {
 		/* FIXME: get rid of workspace flashing ! */
-		int ws = scr->vscr->workspace.current;
+		int ws = vscr->workspace.current;
 		WWindow **tmp;
-		for (tmp = scr->netdata->show_desktop; *tmp; ++tmp) {
+		for (tmp = vscr->screen_ptr->netdata->show_desktop; *tmp; ++tmp) {
 			wDeiconifyWindow(*tmp);
 			(*tmp)->flags.net_show_desktop = 0;
 		}
 
-		if (ws != scr->vscr->workspace.current)
-			wWorkspaceChange(scr->vscr, ws);
+		if (ws != vscr->workspace.current)
+			wWorkspaceChange(vscr, ws);
 
-		wfree(scr->netdata->show_desktop);
-		scr->netdata->show_desktop = NULL;
-		updateShowDesktop(scr, False);
+		wfree(vscr->screen_ptr->netdata->show_desktop);
+		vscr->screen_ptr->netdata->show_desktop = NULL;
+		updateShowDesktop(vscr->screen_ptr, False);
 	}
 }
 
-void wNETWMInitStuff(WScreen *scr)
+void wNETWMInitStuff(virtual_screen *vscr)
 {
+	WScreen *scr = vscr->screen_ptr;
 	NetData *data;
 	int i;
 
@@ -622,13 +623,13 @@ void wNETWMInitStuff(WScreen *scr)
 	WMAddNotificationObserver(wsobserver, data, WMNWorkspaceChanged, NULL);
 	WMAddNotificationObserver(wsobserver, data, WMNWorkspaceNameChanged, NULL);
 
-	updateClientList(scr);
-	updateClientListStacking(scr, NULL);
-	updateWorkspaceCount(scr->vscr);
-	updateWorkspaceNames(scr->vscr);
+	updateClientList(vscr);
+	updateClientListStacking(vscr, NULL);
+	updateWorkspaceCount(vscr);
+	updateWorkspaceNames(vscr);
 	updateShowDesktop(scr, False);
 
-	wScreenUpdateUsableArea(scr->vscr);
+	wScreenUpdateUsableArea(vscr);
 }
 
 void wNETWMCleanup(WScreen *scr)
@@ -710,16 +711,15 @@ void wNETWMUpdateWorkarea(virtual_screen *vscr)
 	wfree(area);
 }
 
-Bool wNETWMGetUsableArea(WScreen *scr, int head, WArea *area)
+Bool wNETWMGetUsableArea(virtual_screen *vscr, int head, WArea *area)
 {
-	virtual_screen *vscr;
+	WScreen *scr = vscr->screen_ptr;
 	WReservedArea *cur;
 	WMRect rect;
 
 	if (!scr->netdata || !scr->netdata->strut)
 		return False;
 
-	vscr = scr->vscr;
 	area->x1 = area->y1 = area->x2 = area->y2 = 0;
 
 	for (cur = scr->netdata->strut; cur; cur = cur->next) {
@@ -749,28 +749,29 @@ Bool wNETWMGetUsableArea(WScreen *scr, int head, WArea *area)
 	return True;
 }
 
-static void updateClientList(WScreen *scr)
+static void updateClientList(virtual_screen *vscr)
 {
 	WWindow *wwin;
 	Window *windows;
 	int count;
 
-	windows = (Window *) wmalloc(sizeof(Window) * (scr->vscr->window_count + 1));
+	windows = (Window *) wmalloc(sizeof(Window) * (vscr->window_count + 1));
 
 	count = 0;
-	wwin = scr->focused_window;
+	wwin = vscr->screen_ptr->focused_window;
 	while (wwin) {
 		windows[count++] = wwin->client_win;
 		wwin = wwin->prev;
 	}
-	XChangeProperty(dpy, scr->root_win, net_client_list, XA_WINDOW, 32,
+
+	XChangeProperty(dpy, vscr->screen_ptr->root_win, net_client_list, XA_WINDOW, 32,
 			PropModeReplace, (unsigned char *)windows, count);
 
 	wfree(windows);
 	XFlush(dpy);
 }
 
-static void updateClientListStacking(WScreen *scr, WWindow *wwin_excl)
+static void updateClientListStacking(virtual_screen *vscr, WWindow *wwin_excl)
 {
 	WWindow *wwin;
 	Window *client_list, *client_list_reverse;
@@ -779,12 +780,12 @@ static void updateClientListStacking(WScreen *scr, WWindow *wwin_excl)
 	WMBagIterator iter;
 
 	/* update client list */
-	i = scr->vscr->window_count + 1;
+	i = vscr->window_count + 1;
 	client_list = (Window *) wmalloc(sizeof(Window) * i);
 	client_list_reverse = (Window *) wmalloc(sizeof(Window) * i);
 
 	client_count = 0;
-	WM_ETARETI_BAG(scr->stacking_list, tmp, iter) {
+	WM_ETARETI_BAG(vscr->screen_ptr->stacking_list, tmp, iter) {
 		while (tmp) {
 			wwin = wWindowFor(tmp->window);
 			/* wwin_excl is a window to exclude from the list
@@ -800,7 +801,7 @@ static void updateClientListStacking(WScreen *scr, WWindow *wwin_excl)
 		client_list_reverse[i] = w;
 	}
 
-	XChangeProperty(dpy, scr->root_win, net_client_list_stacking, XA_WINDOW, 32,
+	XChangeProperty(dpy, vscr->screen_ptr->root_win, net_client_list_stacking, XA_WINDOW, 32,
 			PropModeReplace, (unsigned char *)client_list_reverse, client_count);
 
 	wfree(client_list);
@@ -1431,7 +1432,7 @@ void wNETWMCheckInitialClientState(WWindow *wwin)
 	wmessage("wNETWMCheckInitialClientState");
 #endif
 
-	wNETWMShowingDesktop(wwin->vscr->screen_ptr, False);
+	wNETWMShowingDesktop(wwin->vscr, False);
 
 	updateWindowType(wwin);
 	updateNetIconInfo(wwin);
@@ -1447,14 +1448,14 @@ void wNETWMCheckInitialFrameState(WWindow *wwin)
 	updateWindowOpacity(wwin);
 }
 
-static void handleDesktopNames(WScreen *scr)
+static void handleDesktopNames(virtual_screen *vscr)
 {
 	unsigned long nitems_ret, bytes_after_ret;
 	char *data, *names[32];
 	int fmt_ret, i, n;
 	Atom type_ret;
 
-	if (XGetWindowProperty(dpy, scr->root_win, net_desktop_names, 0, 1, False,
+	if (XGetWindowProperty(dpy, vscr->screen_ptr->root_win, net_desktop_names, 0, 1, False,
 			       utf8_string, &type_ret, &fmt_ret, &nitems_ret,
 			       &bytes_after_ret, (unsigned char **)&data) != Success)
 		return;
@@ -1473,7 +1474,7 @@ static void handleDesktopNames(WScreen *scr)
 			names[n] = &data[i];
 		} else if (*names[n] == 0) {
 			names[n] = &data[i];
-			wWorkspaceRename(scr->vscr, n, names[n]);
+			wWorkspaceRename(vscr, n, names[n]);
 		}
 	}
 }
@@ -1516,9 +1517,9 @@ Bool wNETWMProcessClientMessage(XClientMessageEvent *event)
 					updateWorkspaceCount(vscr);
 			}
 		} else if (event->message_type == net_showing_desktop) {
-			wNETWMShowingDesktop(scr, event->data.l[0]);
+			wNETWMShowingDesktop(vscr, event->data.l[0]);
 		} else if (event->message_type == net_desktop_names) {
-			handleDesktopNames(scr);
+			handleDesktopNames(vscr);
 		} else {
 			done = False;
 		}
@@ -1544,7 +1545,7 @@ Bool wNETWMProcessClientMessage(XClientMessageEvent *event)
 		if (wwin->frame->workspace == vscr->workspace.current /* No workspace change */
 		    || event->data.l[0] == 2 /* Requested by pager */
 		    || WFLAGP(wwin, focus_across_wksp) /* Explicitly allowed */) {
-				wNETWMShowingDesktop(scr, False);
+				wNETWMShowingDesktop(vscr, False);
 				wMakeWindowVisible(wwin);
 		}
 	} else if (event->message_type == net_close_window) {
@@ -1686,16 +1687,16 @@ static void observer(void *self, WMNotification *notif)
 	NetData *ndata = (NetData *) self;
 
 	if (strcmp(name, WMNManaged) == 0 && wwin) {
-		updateClientList(wwin->vscr->screen_ptr);
-		updateClientListStacking(wwin->vscr->screen_ptr, NULL);
+		updateClientList(wwin->vscr);
+		updateClientListStacking(wwin->vscr, NULL);
 		updateStateHint(wwin, True, False);
 
 		updateStrut(wwin->vscr->screen_ptr, wwin->client_win, False);
 		updateStrut(wwin->vscr->screen_ptr, wwin->client_win, True);
 		wScreenUpdateUsableArea(wwin->vscr);
 	} else if (strcmp(name, WMNUnmanaged) == 0 && wwin) {
-		updateClientList(wwin->vscr->screen_ptr);
-		updateClientListStacking(wwin->vscr->screen_ptr, wwin);
+		updateClientList(wwin->vscr);
+		updateClientListStacking(wwin->vscr, wwin);
 		updateWorkspaceHint(wwin, False, True);
 		updateStateHint(wwin, False, True);
 		wNETWMUpdateActions(wwin, True);
@@ -1703,10 +1704,10 @@ static void observer(void *self, WMNotification *notif)
 		updateStrut(wwin->vscr->screen_ptr, wwin->client_win, False);
 		wScreenUpdateUsableArea(wwin->vscr);
 	} else if (strcmp(name, WMNResetStacking) == 0 && wwin) {
-		updateClientListStacking(wwin->vscr->screen_ptr, NULL);
+		updateClientListStacking(wwin->vscr, NULL);
 		updateStateHint(wwin, False, False);
 	} else if (strcmp(name, WMNChangedStacking) == 0 && wwin) {
-		updateClientListStacking(wwin->vscr->screen_ptr, NULL);
+		updateClientListStacking(wwin->vscr, NULL);
 		updateStateHint(wwin, False, False);
 	} else if (strcmp(name, WMNChangedFocus) == 0) {
 		updateFocusHint(ndata->scr);

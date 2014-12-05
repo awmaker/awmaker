@@ -149,7 +149,7 @@ int wWorkspaceNew(virtual_screen *vscr)
 
 	wWorkspaceMenuUpdate(vscr, vscr->workspace.menu);
 	wWorkspaceMenuUpdate(vscr, vscr->clip.ws_menu);
-	wNETWMUpdateDesktop(vscr->screen_ptr);
+	wNETWMUpdateDesktop(vscr);
 	WMPostNotificationName(WMNWorkspaceCreated, vscr, (void *)(uintptr_t) (vscr->workspace.count - 1));
 	XFlush(dpy);
 
@@ -223,7 +223,7 @@ Bool wWorkspaceDelete(virtual_screen *vscr, int workspace)
 		wMenuRealize(menu);
 	}
 
-	wNETWMUpdateDesktop(vscr->screen_ptr);
+	wNETWMUpdateDesktop(vscr);
 	WMPostNotificationName(WMNWorkspaceDestroyed, vscr, (void *)(uintptr_t) (vscr->workspace.count - 1));
 
 	if (vscr->workspace.current >= vscr->workspace.count)
@@ -650,7 +650,7 @@ void wWorkspaceForceChange(virtual_screen *vscr, int workspace)
 	}
 
 	wScreenUpdateUsableArea(vscr);
-	wNETWMUpdateDesktop(vscr->screen_ptr);
+	wNETWMUpdateDesktop(vscr);
 	showWorkspaceName(vscr, workspace);
 
 	WMPostNotificationName(WMNWorkspaceChanged, vscr, (void *)(uintptr_t) workspace);
