@@ -115,6 +115,7 @@ static int catchXError(Display *dpy, XErrorEvent *error)
 		|| (error->request_code == X_InstallColormap))) {
 		return 0;
 	}
+
 	FormatXError(dpy, error, buffer, MAXLINE);
 	wwarning(_("internal X error: %s"), buffer);
 	return -1;
@@ -198,8 +199,7 @@ static RETSIGTYPE handleSig(int sig)
 static RETSIGTYPE buryChild(int foo)
 {
 	pid_t pid;
-	int status;
-	int save_errno = errno;
+	int status, save_errno = errno;
 	sigset_t sigs;
 
 	/* Parameter not used, but tell the compiler that it is ok */
@@ -216,9 +216,8 @@ static RETSIGTYPE buryChild(int foo)
 	 * exited child status because we can't count on the number of SIGCHLD
 	 * signals to know exactly how many kids have exited. -Dan
 	 */
-	while ((pid = waitpid(-1, &status, WNOHANG)) > 0 || (pid < 0 && errno == EINTR)) {
+	while ((pid = waitpid(-1, &status, WNOHANG)) > 0 || (pid < 0 && errno == EINTR))
 		NotifyDeadProcess(pid, WEXITSTATUS(status));
-	}
 
 	sigprocmask(SIG_UNBLOCK, &sigs, NULL);
 
@@ -412,18 +411,18 @@ void StartUp(Bool defaultScreenOnly)
 {
 	struct sigaction sig_action;
 	int i, j, max;
+#ifndef HAVE_XINTERNATOMS
+	int k;
+#endif
 	char **formats;
 	Atom atom[wlengthof(atomNames)];
 
-	/*
-	 * Ignore CapsLock in modifiers
-	 */
+	/* Ignore CapsLock in modifiers */
 	w_global.shortcut.modifiers_mask = 0xff & ~LockMask;
 
 	getOffendingModifiers();
-	/*
-	 * Ignore NumLock and ScrollLock too
-	 */
+
+	/* Ignore NumLock and ScrollLock too */
 	w_global.shortcut.modifiers_mask &= ~(_NumLockMask | _ScrollLockMask);
 
 	memset(&wKeyBindings, 0, sizeof(wKeyBindings));
@@ -432,17 +431,11 @@ void StartUp(Bool defaultScreenOnly)
 	w_global.context.app_win = XUniqueContext();
 	w_global.context.stack = XUniqueContext();
 
-	/*    _XA_VERSION = XInternAtom(dpy, "VERSION", False); */
-
-#ifdef HAVE_XINTERNATOMS
-	XInternAtoms(dpy, atomNames, wlengthof(atomNames), False, atom);
+#ifndef HAVE_XINTERNATOMS
+	for (k = 0; k < wlengthof(atomNames); k++)
+		atom[k] = XInternAtom(dpy, atomNames[k], False);
 #else
-
-	{
-		int i;
-		for (i = 0; i < wlengthof(atomNames); i++)
-			atom[i] = XInternAtom(dpy, atomNames[i], False);
-	}
+	XInternAtoms(dpy, atomNames, wlengthof(atomNames), False, atom);
 #endif
 
 	w_global.atom.wm.state = atom[0];
@@ -572,6 +565,7 @@ void StartUp(Bool defaultScreenOnly)
 	if (wPreferences.icon_size < 16) {
 		wwarning(_("icon size is configured to %i, but it's too small. Using 16 instead"),
 			 wPreferences.icon_size);
+
 		wPreferences.icon_size = 16;
 	}
 
@@ -719,10 +713,10 @@ void StartUp(Bool defaultScreenOnly)
 
 static Bool windowInList(Window window, Window *list, int count)
 {
-	for (; count >= 0; count--) {
+	for (; count >= 0; count--)
 		if (window == list[count])
 			return True;
-	}
+
 	return False;
 }
 
@@ -739,12 +733,13 @@ static Bool windowInList(Window window, Window *list, int count)
  */
 static void manageAllWindows(virtual_screen *vscr, int crashRecovery)
 {
+	WApplication *wapp;
 	WScreen *scr = vscr->screen_ptr;
 	Window root, parent;
 	Window *children;
-	unsigned int nchildren;
-	unsigned int i, j;
 	WWindow *wwin;
+	unsigned int i, j, nchildren;
+	int border;
 
 	XGrabServer(dpy);
 	XQueryTree(dpy, scr->root_win, &root, &parent, &children, &nchildren);
@@ -769,9 +764,9 @@ static void manageAllWindows(virtual_screen *vscr, int crashRecovery)
 				}
 			}
 		}
-		if (wmhints) {
+
+		if (wmhints)
 			XFree(wmhints);
-		}
 	}
 
 	for (i = 0; i < nchildren; i++) {
@@ -798,9 +793,8 @@ static void manageAllWindows(virtual_screen *vscr, int crashRecovery)
 			} else {
 				wClientSetState(wwin, NormalState, None);
 			}
-			if (crashRecovery) {
-				int border;
 
+			if (crashRecovery) {
 				border = (!HAS_BORDER(wwin) ? 0 : scr->frame_border_width);
 
 				wWindowMove(wwin, wwin->frame_x - border,
@@ -809,21 +803,19 @@ static void manageAllWindows(virtual_screen *vscr, int crashRecovery)
 			}
 		}
 	}
+
 	XUngrabServer(dpy);
 
 	/* hide apps */
 	wwin = scr->focused_window;
 	while (wwin) {
 		if (wwin->flags.hidden) {
-			WApplication *wapp = wApplicationOf(wwin->main_window);
-
-			if (wapp) {
-				wwin->flags.hidden = 0;
+			wapp = wApplicationOf(wwin->main_window);
+			wwin->flags.hidden = 0;
+			if (wapp)
 				wHideApplication(wapp);
-			} else {
-				wwin->flags.hidden = 0;
-			}
 		}
+
 		wwin = wwin->prev;
 	}
 
