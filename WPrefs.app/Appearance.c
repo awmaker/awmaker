@@ -1624,7 +1624,9 @@ static void updateColorPreviewBox(_Panel * panel, int elements)
 			     panel->smallFont, 155, 130, 64, 13, WALeft,
 			     _("Icon Text"));
 
-	   }
+		WMReleaseColor(light);
+		WMReleaseColor(dim);
+	}
 
 	if (elements & (1 << CLIP_COL) || elements & (1 << CCLIP_COL)) {
 		Pixmap pix;
@@ -2222,11 +2224,14 @@ static void prepareForClose(_Panel * panel)
 	for (i = 0; i < wlengthof(sample_colors); i++) {
 		WMColor *color;
 		char *str;
+		WMPropList *pl_color;
 
 		color = WMGetColorWellColor(panel->sampW[i]);
 
 		str = WMGetColorRGBDescription(color);
-		WMAddToPLArray(textureList, WMCreatePLString(str));
+		pl_color = WMCreatePLString(str);
+		WMAddToPLArray(textureList, pl_color);
+		WMReleasePropList(pl_color);
 		wfree(str);
 	}
 	WMSetUDObjectForKey(udb, textureList, "ColorList");

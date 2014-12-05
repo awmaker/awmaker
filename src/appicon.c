@@ -330,7 +330,7 @@ WAppIcon *create_appicon(char *command, char *wm_class, char *wm_instance)
 	aicon->yindex = -1;
 	aicon->xindex = -1;
 
-	if (strcmp(wm_class, "WMDock") == 0 && wPreferences.flags.clip_merged_in_dock)
+	if (wPreferences.flags.clip_merged_in_dock && wm_class != NULL && strcmp(wm_class, "WMDock") == 0)
 		aicon->icon->tile_type = TILE_CLIP;
 	else
 		aicon->icon->tile_type = TILE_NORMAL;

@@ -172,9 +172,10 @@ static void findCopyFile(const char *dir, const char *file)
 		wwarning("Could not find file %s", file);
 		if (ThemePath)
 			(void)wrmdirhier(ThemePath);
+		return;
 	}
 	wcopy_file(dir, fullPath, fullPath);
-	free(fullPath);
+	wfree(fullPath);
 }
 
 #define THEME_SUBPATH "/Library/WindowMaker/Themes/"

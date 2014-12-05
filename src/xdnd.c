@@ -229,9 +229,6 @@ static Bool acceptXDND(Window window)
 	if (icon_pos < 0)
 		return False;
 
-	if (!dock)
-		return False;
-
 	if (isAwareXDND(dock->icon_array[icon_pos]->icon->icon_win))
 		return False;
 
