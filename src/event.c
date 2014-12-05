@@ -647,18 +647,17 @@ static void handleDestroyNotify(XEvent *event)
 	WApplication *app;
 	Window window = event->xdestroywindow.window;
 	virtual_screen *vscr = wScreenForRootWindow(event->xdestroywindow.event);
-	WScreen *scr = vscr->screen_ptr;
 	int widx;
 
 	wwin = wWindowFor(window);
 	if (wwin)
 		wUnmanageWindow(wwin, False, True);
 
-	if (scr != NULL) {
-		while ((widx = WMFindInArray(scr->fakeGroupLeaders, matchWindow, (void *)window)) != WANotFound) {
+	if (vscr && vscr->screen_ptr) {
+		while ((widx = WMFindInArray(vscr->screen_ptr->fakeGroupLeaders, matchWindow, (void *)window)) != WANotFound) {
 			WFakeGroupLeader *fPtr;
 
-			fPtr = WMGetFromArray(scr->fakeGroupLeaders, widx);
+			fPtr = WMGetFromArray(vscr->screen_ptr->fakeGroupLeaders, widx);
 			if (fPtr->retainCount > 0) {
 				fPtr->retainCount--;
 				if (fPtr->retainCount == 0 && fPtr->leader != None) {
