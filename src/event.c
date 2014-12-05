@@ -967,7 +967,7 @@ static void handleClientMessage(XEvent *event)
 
 	} else if (event->xclient.message_type == w_global.atom.wm.colormap_notify && event->xclient.format == 32) {
 		vscr = wScreenForRootWindow(event->xclient.window);
-		if (!vscr->screen_ptr)
+		if (!vscr || !vscr->screen_ptr)
 			return;
 
 		if (event->xclient.data.l[1] == 1)	/* starting */
