@@ -1073,7 +1073,7 @@ void wDefaultsCheckDomains(void *arg)
 						/* Update the panel image if changed */
 						/* Don't worry. If the image is the same these
 						 * functions will have no performance impact. */
-						create_logo_image(vscr->screen_ptr);
+						create_logo_image(vscr);
 					}
 				}
 			}

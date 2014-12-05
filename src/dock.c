@@ -2330,7 +2330,7 @@ static void restore_dock_position(WDock *dock, virtual_screen *vscr, WMPropList 
 			/* check position sanity */
 			if (!onScreen(vscr, dock->x_pos, dock->y_pos)) {
 				int x = dock->x_pos;
-				wScreenKeepInside(scr, &x, &dock->y_pos, ICON_SIZE, ICON_SIZE);
+				wScreenKeepInside(vscr, &x, &dock->y_pos, ICON_SIZE, ICON_SIZE);
 			}
 
 			/* Is this needed any more? */
@@ -2360,7 +2360,7 @@ static void restore_clip_position(WDock *dock, virtual_screen *vscr, WMPropList 
 			/* check position sanity */
 			if (!onScreen(vscr, dock->x_pos, dock->y_pos)) {
 				int x = dock->x_pos;
-				wScreenKeepInside(vscr->screen_ptr, &x, &dock->y_pos, ICON_SIZE, ICON_SIZE);
+				wScreenKeepInside(vscr, &x, &dock->y_pos, ICON_SIZE, ICON_SIZE);
 			}
 
 			/* Is this needed any more? */
@@ -4280,7 +4280,7 @@ static void handleDockMove(WDock *dock, WAppIcon *aicon, XEvent *event)
 			case WM_CLIP:
 				x = ev.xmotion.x_root - ofs_x;
 				y = ev.xmotion.y_root - ofs_y;
-				wScreenKeepInside(scr, &x, &y, ICON_SIZE, ICON_SIZE);
+				wScreenKeepInside(vscr, &x, &y, ICON_SIZE, ICON_SIZE);
 				moveDock(dock, x, y);
 				break;
 			case WM_DOCK:
@@ -4298,7 +4298,7 @@ static void handleDockMove(WDock *dock, WAppIcon *aicon, XEvent *event)
 				}
 
 				/* Also perform the vertical move */
-				wScreenKeepInside(scr, &x, &y, ICON_SIZE, ICON_SIZE);
+				wScreenKeepInside(vscr, &x, &y, ICON_SIZE, ICON_SIZE);
 				moveDock(dock, dock->x_pos, y);
 				if (wPreferences.flags.wrap_appicons_in_dock) {
 					for (i = 0; i < dock->max_icons; i++) {

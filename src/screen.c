@@ -355,72 +355,72 @@ static void allocGCs(WScreen *scr)
 	scr->mono_gc = XCreateGC(dpy, scr->stipple_bitmap, gcm, &gcv);
 }
 
-static void createPixmaps(WScreen *scr)
+static void createPixmaps(virtual_screen *vscr)
 {
 	WPixmap *pix;
 
 	/* load pixmaps */
-	pix = wPixmapCreateFromXBMData(scr, (char *)MENU_RADIO_INDICATOR_XBM_DATA,
+	pix = wPixmapCreateFromXBMData(vscr->screen_ptr, (char *)MENU_RADIO_INDICATOR_XBM_DATA,
 				       (char *)MENU_RADIO_INDICATOR_XBM_DATA,
 				       MENU_RADIO_INDICATOR_XBM_SIZE,
-				       MENU_RADIO_INDICATOR_XBM_SIZE, scr->black_pixel, scr->white_pixel);
+				       MENU_RADIO_INDICATOR_XBM_SIZE, vscr->screen_ptr->black_pixel, vscr->screen_ptr->white_pixel);
 	if (pix != NULL)
 		pix->shared = 1;
 
-	scr->menu_radio_indicator = pix;
+	vscr->screen_ptr->menu_radio_indicator = pix;
 
-	pix = wPixmapCreateFromXBMData(scr, (char *)MENU_CHECK_INDICATOR_XBM_DATA,
+	pix = wPixmapCreateFromXBMData(vscr->screen_ptr, (char *)MENU_CHECK_INDICATOR_XBM_DATA,
 				       (char *)MENU_CHECK_INDICATOR_XBM_DATA,
 				       MENU_CHECK_INDICATOR_XBM_SIZE,
-				       MENU_CHECK_INDICATOR_XBM_SIZE, scr->black_pixel, scr->white_pixel);
+				       MENU_CHECK_INDICATOR_XBM_SIZE, vscr->screen_ptr->black_pixel, vscr->screen_ptr->white_pixel);
 	if (pix != NULL)
 		pix->shared = 1;
 
-	scr->menu_check_indicator = pix;
+	vscr->screen_ptr->menu_check_indicator = pix;
 
-	pix = wPixmapCreateFromXBMData(scr, (char *)MENU_MINI_INDICATOR_XBM_DATA,
+	pix = wPixmapCreateFromXBMData(vscr->screen_ptr, (char *)MENU_MINI_INDICATOR_XBM_DATA,
 				       (char *)MENU_MINI_INDICATOR_XBM_DATA,
 				       MENU_MINI_INDICATOR_XBM_SIZE,
-				       MENU_MINI_INDICATOR_XBM_SIZE, scr->black_pixel, scr->white_pixel);
+				       MENU_MINI_INDICATOR_XBM_SIZE, vscr->screen_ptr->black_pixel, vscr->screen_ptr->white_pixel);
 	if (pix != NULL)
 		pix->shared = 1;
 
-	scr->menu_mini_indicator = pix;
+	vscr->screen_ptr->menu_mini_indicator = pix;
 
-	pix = wPixmapCreateFromXBMData(scr, (char *)MENU_HIDE_INDICATOR_XBM_DATA,
+	pix = wPixmapCreateFromXBMData(vscr->screen_ptr, (char *)MENU_HIDE_INDICATOR_XBM_DATA,
 				       (char *)MENU_HIDE_INDICATOR_XBM_DATA,
 				       MENU_HIDE_INDICATOR_XBM_SIZE,
-				       MENU_HIDE_INDICATOR_XBM_SIZE, scr->black_pixel, scr->white_pixel);
+				       MENU_HIDE_INDICATOR_XBM_SIZE, vscr->screen_ptr->black_pixel, vscr->screen_ptr->white_pixel);
 	if (pix != NULL)
 		pix->shared = 1;
 
-	scr->menu_hide_indicator = pix;
+	vscr->screen_ptr->menu_hide_indicator = pix;
 
-	pix = wPixmapCreateFromXBMData(scr, (char *)MENU_SHADE_INDICATOR_XBM_DATA,
+	pix = wPixmapCreateFromXBMData(vscr->screen_ptr, (char *)MENU_SHADE_INDICATOR_XBM_DATA,
 				       (char *)MENU_SHADE_INDICATOR_XBM_DATA,
 				       MENU_SHADE_INDICATOR_XBM_SIZE,
-				       MENU_SHADE_INDICATOR_XBM_SIZE, scr->black_pixel, scr->white_pixel);
+				       MENU_SHADE_INDICATOR_XBM_SIZE, vscr->screen_ptr->black_pixel, vscr->screen_ptr->white_pixel);
 	if (pix != NULL)
 		pix->shared = 1;
 
-	scr->menu_shade_indicator = pix;
+	vscr->screen_ptr->menu_shade_indicator = pix;
 
-	create_logo_image(scr);
+	create_logo_image(vscr);
 
-	scr->dock_dots = make3Dots(scr);
+	vscr->screen_ptr->dock_dots = make3Dots(vscr->screen_ptr);
 
 	/* titlebar button pixmaps */
-	allocButtonPixmaps(scr);
+	allocButtonPixmaps(vscr->screen_ptr);
 }
 
-void create_logo_image(WScreen *scr)
+void create_logo_image(virtual_screen *vscr)
 {
-	RImage *image = get_icon_image(scr->vscr, "Logo", "WMPanel", 128);
+	RImage *image = get_icon_image(vscr, "Logo", "WMPanel", 128);
 
 	if (!image) {
 		wwarning(_("could not load logo image for panels: %s"), RMessageForError(RErrorCode));
 	} else {
-		WMSetApplicationIconImage(scr->wmscreen, image);
+		WMSetApplicationIconImage(vscr->screen_ptr->wmscreen, image);
 		RReleaseImage(image);
 	}
 }
@@ -670,7 +670,7 @@ WScreen *wScreenInit(int screen_number)
 	wWorkspaceNew(vscr);
 
 	/* create shared pixmaps */
-	createPixmaps(scr);
+	createPixmaps(vscr);
 
 	/* set icon sizes we can accept from clients */
 	icon_size[0].min_width = 8;
@@ -919,9 +919,8 @@ void wScreenSaveState(virtual_screen *vscr)
 	WMReleasePropList(old_state);
 }
 
-int wScreenBringInside(WScreen *scr, int *x, int *y, int width, int height)
+int wScreenBringInside(virtual_screen *vscr, int *x, int *y, int width, int height)
 {
-	virtual_screen *vscr = scr->vscr;
 	int moved = 0;
 	int tol_w, tol_h;
 	/* With respect to the head that contains most of the window. */
@@ -966,9 +965,8 @@ int wScreenBringInside(WScreen *scr, int *x, int *y, int width, int height)
 	return moved;
 }
 
-int wScreenKeepInside(WScreen *scr, int *x, int *y, int width, int height)
+int wScreenKeepInside(virtual_screen *vscr, int *x, int *y, int width, int height)
 {
-	virtual_screen *vscr = scr->vscr;
 	int moved = 0;
 	int sx1, sy1, sx2, sy2;
 	WMRect rect;

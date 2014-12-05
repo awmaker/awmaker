@@ -1049,7 +1049,7 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 		}
 
 		if (WFLAGP(wwin, dont_move_off) && dontBring)
-			wScreenBringInside(vscr->screen_ptr, &x, &y, width, height);
+			wScreenBringInside(vscr, &x, &y, width, height);
 	}
 
 	wNETWMPositionSplash(wwin, &x, &y, width, height);
@@ -1598,20 +1598,18 @@ void wWindowUnmap(WWindow *wwin)
 
 void wWindowSingleFocus(WWindow *wwin)
 {
-	WScreen *scr;
 	int x, y, move = 0;
 
 	if (!wwin)
 		return;
 
-	scr = wwin->vscr->screen_ptr;
 	wMakeWindowVisible(wwin);
 
 	x = wwin->frame_x;
 	y = wwin->frame_y;
 
 	/* bring window back to visible area */
-	move = wScreenBringInside(scr, &x, &y, wwin->frame->core->width, wwin->frame->core->height);
+	move = wScreenBringInside(wwin->vscr, &x, &y, wwin->frame->core->width, wwin->frame->core->height);
 
 	if (move)
 		wWindowConfigure(wwin, x, y, wwin->client.width, wwin->client.height);
@@ -2016,7 +2014,7 @@ void wWindowConfigure(WWindow *wwin, int req_x, int req_y, int req_width, int re
 		synth_notify = True;
 
 	if (WFLAGP(wwin, dont_move_off))
-		wScreenBringInside(wwin->vscr->screen_ptr, &req_x, &req_y, req_width, req_height);
+		wScreenBringInside(wwin->vscr, &req_x, &req_y, req_width, req_height);
 
 	if (resize) {
 		if (req_width < MIN_WINDOW_SIZE)
@@ -2091,7 +2089,7 @@ void wWindowMove(WWindow *wwin, int req_x, int req_y)
 #endif
 
 	if (WFLAGP(wwin, dont_move_off))
-		wScreenBringInside(wwin->vscr->screen_ptr, &req_x, &req_y,
+		wScreenBringInside(wwin->vscr, &req_x, &req_y,
 				   wwin->frame->core->width, wwin->frame->core->height);
 
 	wwin->client.x = req_x;

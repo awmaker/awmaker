@@ -323,8 +323,8 @@ WScreen *wScreenInit(int screen_number);
 void wScreenSaveState(virtual_screen *vscr);
 void wScreenRestoreState(virtual_screen *vscr);
 
-int wScreenBringInside(WScreen *scr, int *x, int *y, int width, int height);
-int wScreenKeepInside(WScreen *scr, int *x, int *y, int width, int height);
+int wScreenBringInside(virtual_screen *scr, int *x, int *y, int width, int height);
+int wScreenKeepInside(virtual_screen *scr, int *x, int *y, int width, int height);
 
 
 /* in startup.c */
@@ -332,8 +332,7 @@ virtual_screen *wScreenWithNumber(int i);
 virtual_screen *wScreenForRootWindow(Window window);   /* window must be valid */
 virtual_screen *wScreenForWindow(Window window);       /* slower than above functions */
 
-void wScreenFinish(WScreen *scr);
 void wScreenUpdateUsableArea(virtual_screen *vscr);
 
-void create_logo_image(WScreen *scr);
+void create_logo_image(virtual_screen *vscr);
 #endif
