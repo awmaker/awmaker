@@ -96,13 +96,13 @@ static const struct {
 	{ "ShadeKey",       N_("Shade active window") },
 	{ "MoveResizeKey",  N_("Move/Resize active window") },
 	{ "SelectKey",      N_("Select active window") },
-        { "WorkspaceMapKey",   N_("Open workspace pager") },
 	{ "FocusNextKey",   N_("Focus next window") },
 	{ "FocusPrevKey",   N_("Focus previous window") },
 	{ "GroupNextKey",   N_("Focus next group window") },
 	{ "GroupPrevKey",   N_("Focus previous group window") },
 
 	/* Workspace Related */
+	{ "WorkspaceMapKey",  N_("Open workspace pager") },
 	{ "NextWorkspaceKey", N_("Switch to next workspace") },
 	{ "PrevWorkspaceKey", N_("Switch to previous workspace") },
 	{ "LastWorkspaceKey", N_("Switch to last used workspace") },
