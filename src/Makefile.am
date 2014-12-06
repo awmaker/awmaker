@@ -130,6 +130,8 @@ else
 nodist_wmaker_SOURCES = misc.hack_nf.c \
 	xmodifier.hack_nf.c
 
+CLEANFILES = $(nodist_wmaker_SOURCES)
+
 misc.hack_nf.c: misc.c $(top_srcdir)/script/nested-func-to-macro.sh
 	$(top_srcdir)/script/nested-func-to-macro.sh \
 		$(srcdir)/misc.c -o $(builddir)/misc.hack_nf.c \
