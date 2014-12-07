@@ -36,10 +36,8 @@
 # endif
 #endif
 
-void wInitXinerama(virtual_screen *vscr)
+void wInitXinerama(WScreen *scr)
 {
-	WScreen *scr = vscr->screen_ptr;
-
 	scr->xine_info.primary_head = 0;
 	scr->xine_info.screens = NULL;
 	scr->xine_info.count = 0;

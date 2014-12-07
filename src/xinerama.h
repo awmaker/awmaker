@@ -26,7 +26,7 @@
 #include "window.h"
 #include <WINGs/WINGs.h>
 
-void wInitXinerama(virtual_screen *vscr);
+void wInitXinerama(WScreen *scr);
 
 #define wXineramaHeads(scr) ((scr)->xine_info.count ? (scr)->xine_info.count : 1)
 
