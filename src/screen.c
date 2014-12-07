@@ -511,6 +511,7 @@ WScreen *wScreenInit(int screen_number)
 	long event_mask;
 	XErrorHandler oldHandler;
 	int i;
+	XColor xcol;
 
 	scr = wmalloc(sizeof(WScreen));
 	vscr = wmalloc(sizeof(virtual_screen));
@@ -651,16 +652,13 @@ WScreen *wScreenInit(int screen_number)
 	/* read defaults for this screen */
 	wReadDefaults(vscr, w_global.domain.wmaker->dictionary);
 
-	{
-		XColor xcol;
-		/* frame boder color */
-		wGetColor(scr, WMGetColorRGBDescription(scr->frame_border_color), &xcol);
-		scr->frame_border_pixel = xcol.pixel;
-		wGetColor(scr, WMGetColorRGBDescription(scr->frame_focused_border_color), &xcol);
-		scr->frame_focused_border_pixel = xcol.pixel;
-		wGetColor(scr, WMGetColorRGBDescription(scr->frame_selected_border_color), &xcol);
-		scr->frame_selected_border_pixel = xcol.pixel;
-	}
+	/* frame boder color */
+	wGetColor(scr, WMGetColorRGBDescription(scr->frame_border_color), &xcol);
+	scr->frame_border_pixel = xcol.pixel;
+	wGetColor(scr, WMGetColorRGBDescription(scr->frame_focused_border_color), &xcol);
+	scr->frame_focused_border_pixel = xcol.pixel;
+	wGetColor(scr, WMGetColorRGBDescription(scr->frame_selected_border_color), &xcol);
+	scr->frame_selected_border_pixel = xcol.pixel;
 
 	createInternalWindows(scr);
 
