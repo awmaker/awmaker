@@ -43,9 +43,9 @@ static const int mini_workspace_per_line = 5;
  * will be 0 for workspaces number 0 to 9
  * 1 for workspaces number 10 -> 19
  */
-int wsmap_bulk_index;
-WMPixmap *frame_bg_focused;
-WMPixmap *frame_bg_unfocused;
+static int wsmap_bulk_index;
+static WMPixmap *frame_bg_focused;
+static WMPixmap *frame_bg_unfocused;
 
 typedef struct {
 	virtual_screen *vscr;
@@ -144,7 +144,7 @@ static void selected_workspace_callback(WMWidget *w, void *data)
 	if (w && wsmap) {
 		workspace_id = atoi(WMGetButtonText(click_button));
 		wWorkspaceChange(wsmap->vscr, workspace_id);
-		process_workspacemap_event = False;
+		wsmap->vscr->workspace.process_map_event = False;
 	}
 }
 
@@ -480,13 +480,14 @@ static void handle_event(WWorkspaceMap *wsmap, W_WorkspaceMap *wsmap_array)
                                  ButtonMotionMask | ButtonReleaseMask | ButtonPressMask,
                                  GrabModeAsync, GrabModeAsync, WMWidgetXID(wsmap->win), None, CurrentTime);
 
-	process_workspacemap_event = True;
-	while (process_workspacemap_event) {
+	wsmap->vscr->workspace.process_map_event = True;
+	while (wsmap->vscr->workspace.process_map_event) {
 		WMMaskEvent(dpy, KeyPressMask | KeyReleaseMask | ExposureMask
 			    | PointerMotionMask | ButtonPressMask | ButtonReleaseMask | EnterWindowMask, &ev);
 
 		if (!wsmap)
 			break;
+
 		modifiers = ev.xkey.state & w_global.shortcut.modifiers_mask;
 
 		switch (ev.type) {
@@ -494,7 +495,7 @@ static void handle_event(WWorkspaceMap *wsmap, W_WorkspaceMap *wsmap_array)
 			if (ev.xkey.keycode == escKey || (wKeyBindings[WKBD_WORKSPACEMAP].keycode != 0 &&
 										wKeyBindings[WKBD_WORKSPACEMAP].keycode == ev.xkey.keycode &&
 										wKeyBindings[WKBD_WORKSPACEMAP].modifier == modifiers)) {
-				process_workspacemap_event = False;
+				wsmap->vscr->workspace.process_map_event = False;
 			} else {
 				XLookupString(&ev.xkey, NULL, 16, &ks, NULL);
 				bulk_id = -1;

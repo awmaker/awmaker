@@ -93,6 +93,13 @@ struct virtual_screen {
 		 */
 		Bool ignore_change;
 
+		/*
+		 * Process WorkspaceMap Event:
+		 * this variable is set when the Workspace Map window is being displayed,
+		 * it is mainly used to avoid re-opening another one at the same time
+		 */
+		Bool process_map_event;
+
 		/* Menus */
 		struct WMenu *menu;     /* workspace operation */
 		struct WMenu *submenu;  /* workspace list for window_menu */

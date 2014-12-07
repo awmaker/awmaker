@@ -503,7 +503,7 @@ void wWorkspaceForceChange(virtual_screen *vscr, int workspace)
 		return;
 
 	if (!wPreferences.disable_workspace_pager &&
-	    !process_workspacemap_event)
+	    !vscr->workspace.process_map_event)
 		wWorkspaceMapUpdate(vscr);
 
 	SendHelperMessage(vscr, 'C', workspace + 1, NULL);
