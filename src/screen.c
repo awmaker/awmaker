@@ -535,7 +535,7 @@ WScreen *wScreenInit(int screen_number)
 	scr->totalUsableArea = (WArea *) wmalloc(sizeof(WArea) * wXineramaHeads(scr));
 
 	for (i = 0; i < wXineramaHeads(scr); ++i) {
-		WMRect rect = wGetRectForHead(vscr, i);
+		WMRect rect = wGetRectForHead(scr, i);
 		scr->usableArea[i].x1 = scr->totalUsableArea[i].x1 = rect.pos.x;
 		scr->usableArea[i].y1 = scr->totalUsableArea[i].y1 = rect.pos.y;
 		scr->usableArea[i].x2 = scr->totalUsableArea[i].x2 = rect.pos.x + rect.size.width;
@@ -723,7 +723,7 @@ void wScreenUpdateUsableArea(virtual_screen *vscr)
 	unsigned int position = wPreferences.workspace_border_position;
 
 	for (i = 0; i < wXineramaHeads(scr); ++i) {
-		WMRect rect = wGetRectForHead(vscr, i);
+		WMRect rect = wGetRectForHead(scr, i);
 		scr->totalUsableArea[i].x1 = rect.pos.x;
 		scr->totalUsableArea[i].y1 = rect.pos.y;
 		scr->totalUsableArea[i].x2 = rect.pos.x + rect.size.width;
@@ -933,7 +933,7 @@ int wScreenBringInside(virtual_screen *vscr, int *x, int *y, int width, int heig
 	rect.size.height = height;
 
 	head = wGetRectPlacementInfo(vscr, rect, &flags);
-	rect = wGetRectForHead(vscr, head);
+	rect = wGetRectForHead(vscr->screen_ptr, head);
 
 	sx1 = rect.pos.x;
 	sy1 = rect.pos.y;
@@ -976,7 +976,7 @@ int wScreenKeepInside(virtual_screen *vscr, int *x, int *y, int width, int heigh
 	rect.size.height = height;
 
 	head = wGetHeadForRect(vscr, rect);
-	rect = wGetRectForHead(vscr, head);
+	rect = wGetRectForHead(vscr->screen_ptr, head);
 
 	sx1 = rect.pos.x;
 	sy1 = rect.pos.y;

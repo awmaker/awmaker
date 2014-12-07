@@ -115,7 +115,7 @@ static void moveGeometryDisplayCentered(virtual_screen *vscr, int x, int y)
 		head = wGetRectPlacementInfo(vscr, rect, &flags);
 
 		if (flags & (XFLAG_DEAD | XFLAG_PARTIAL)) {
-			rect = wGetRectForHead(vscr, head);
+			rect = wGetRectForHead(scr, head);
 			x1 = rect.pos.x;
 			y1 = rect.pos.y;
 			x2 = x1 + rect.size.width;
@@ -162,11 +162,11 @@ static void cyclePositionDisplay(WWindow *wwin, int x, int y, int w, int h)
 		WMUnmapWidget(scr->gview);
 	} else {
 		if (wPreferences.move_display == WDIS_CENTER) {
-			rect = wGetRectForHead(vscr, wGetHeadForWindow(wwin));
+			rect = wGetRectForHead(scr, wGetHeadForWindow(wwin));
 			moveGeometryDisplayCentered(vscr, rect.pos.x + rect.size.width / 2,
 						    rect.pos.y + rect.size.height / 2);
 		} else if (wPreferences.move_display == WDIS_TOPLEFT) {
-			rect = wGetRectForHead(vscr, wGetHeadForWindow(wwin));
+			rect = wGetRectForHead(scr, wGetHeadForWindow(wwin));
 			moveGeometryDisplayCentered(vscr, rect.pos.x + 1, rect.pos.y + 1);
 		} else if (wPreferences.move_display == WDIS_FRAME_CENTER) {
 			moveGeometryDisplayCentered(vscr, x + w / 2, y + h / 2);
@@ -184,11 +184,11 @@ static void mapPositionDisplay(WWindow *wwin, int x, int y, int w, int h)
 	if (wPreferences.move_display == WDIS_NEW || wPreferences.move_display == WDIS_NONE) {
 		return;
 	} else if (wPreferences.move_display == WDIS_CENTER) {
-		rect = wGetRectForHead(vscr, wGetHeadForWindow(wwin));
+		rect = wGetRectForHead(scr, wGetHeadForWindow(wwin));
 		moveGeometryDisplayCentered(vscr, rect.pos.x + rect.size.width / 2,
 					    rect.pos.y + rect.size.height / 2);
 	} else if (wPreferences.move_display == WDIS_TOPLEFT) {
-		rect = wGetRectForHead(vscr, wGetHeadForWindow(wwin));
+		rect = wGetRectForHead(scr, wGetHeadForWindow(wwin));
 		moveGeometryDisplayCentered(vscr, rect.pos.x + 1, rect.pos.y + 1);
 	} else if (wPreferences.move_display == WDIS_FRAME_CENTER) {
 		moveGeometryDisplayCentered(vscr, x + w / 2, y + h / 2);
@@ -371,11 +371,11 @@ static void cycleGeometryDisplay(WWindow *wwin, int x, int y, int w, int h, int 
 		WMUnmapWidget(scr->gview);
 	} else {
 		if (wPreferences.size_display == WDIS_CENTER) {
-			rect = wGetRectForHead(vscr, wGetHeadForWindow(wwin));
+			rect = wGetRectForHead(scr, wGetHeadForWindow(wwin));
 			moveGeometryDisplayCentered(vscr, rect.pos.x + rect.size.width / 2,
 						    rect.pos.y + rect.size.height / 2);
 		} else if (wPreferences.size_display == WDIS_TOPLEFT) {
-			rect = wGetRectForHead(vscr, wGetHeadForWindow(wwin));
+			rect = wGetRectForHead(scr, wGetHeadForWindow(wwin));
 			moveGeometryDisplayCentered(vscr, rect.pos.x + 1, rect.pos.y + 1);
 		} else if (wPreferences.size_display == WDIS_FRAME_CENTER) {
 			moveGeometryDisplayCentered(vscr, x + w / 2, y + h / 2);
@@ -396,11 +396,11 @@ static void mapGeometryDisplay(WWindow *wwin, int x, int y, int w, int h)
 		return;
 
 	if (wPreferences.size_display == WDIS_CENTER) {
-		rect = wGetRectForHead(vscr, wGetHeadForWindow(wwin));
+		rect = wGetRectForHead(scr, wGetHeadForWindow(wwin));
 		moveGeometryDisplayCentered(vscr, rect.pos.x + rect.size.width / 2,
 					    rect.pos.y + rect.size.height / 2);
 	} else if (wPreferences.size_display == WDIS_TOPLEFT) {
-		rect = wGetRectForHead(vscr, wGetHeadForWindow(wwin));
+		rect = wGetRectForHead(scr, wGetHeadForWindow(wwin));
 		moveGeometryDisplayCentered(vscr, rect.pos.x + 1, rect.pos.y + 1);
 	} else if (wPreferences.size_display == WDIS_FRAME_CENTER) {
 		moveGeometryDisplayCentered(vscr, x + w / 2, y + h / 2);
@@ -942,7 +942,7 @@ updateWindowPosition(WWindow *wwin, MoveData *data, Bool doResistance,
 
 			/* Add inter head resistance 1/2 (if needed) */
 			head = wGetHeadForPointerLocation(vscr);
-			rect = wGetRectForHead(vscr, head);
+			rect = wGetRectForHead(scr, head);
 
 			l_edge = WMAX(scr->totalUsableArea[head].x1, rect.pos.x);
 			edge_l = l_edge - resist;

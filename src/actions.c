@@ -728,7 +728,7 @@ void wFullscreenWindow(WWindow *wwin)
 	wwin->bfs_geometry.height = wwin->frame->core->height;
 
 	head = wGetHeadForWindow(wwin);
-	rect = wGetRectForHead(wwin->vscr, head);
+	rect = wGetRectForHead(wwin->vscr->screen_ptr, head);
 	wWindowConfigure(wwin, rect.pos.x, rect.pos.y, rect.size.width, rect.size.height);
 
 	wwin->vscr->screen_ptr->bfs_focused_window = wwin->vscr->screen_ptr->focused_window;

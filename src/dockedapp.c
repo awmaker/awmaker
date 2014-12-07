@@ -373,7 +373,7 @@ void ShowDockAppSettingsPanel(WAppIcon *aicon)
 	XReparentWindow(dpy, WMWidgetXID(panel->win), parent, 0, 0);
 
 	/* make things relative to head */
-	rect = wGetRectForHead(vscr, wGetHeadForPointerLocation(vscr));
+	rect = wGetRectForHead(scr, wGetHeadForPointerLocation(vscr));
 
 	y = aicon->y_pos;
 	if (y < 0)

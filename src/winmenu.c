@@ -741,7 +741,7 @@ static void prepare_menu_position(WMenu *menu, int *x, int *y)
 {
 	WMRect rect;
 
-	rect = wGetRectForHead(menu->frame->vscr,
+	rect = wGetRectForHead(menu->frame->vscr->screen_ptr,
 			       wGetHeadForPointerLocation(menu->frame->vscr));
 
 	if (*x < rect.pos.x - menu->frame->core->width / 2)

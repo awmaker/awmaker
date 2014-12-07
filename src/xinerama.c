@@ -193,7 +193,7 @@ Bool wWindowTouchesHead(WWindow *wwin, int head)
 		return False;
 
 	vscr = wwin->vscr;
-	rect = wGetRectForHead(vscr, head);
+	rect = wGetRectForHead(vscr->screen_ptr, head);
 	a = calcIntersectionArea(wwin->frame_x, wwin->frame_y,
 				 wwin->frame->core->width,
 				 wwin->frame->core->height,
@@ -212,7 +212,7 @@ Bool wAppIconTouchesHead(WAppIcon *aicon, int head)
 		return False;
 
 	vscr = aicon->icon->core->vscr;
-	rect = wGetRectForHead(vscr, head);
+	rect = wGetRectForHead(vscr->screen_ptr, head);
 	a = calcIntersectionArea(aicon->x_pos, aicon->y_pos,
 				 aicon->icon->core->width,
 				 aicon->icon->core->height,
@@ -270,9 +270,8 @@ int wGetHeadForPointerLocation(virtual_screen *vscr)
 }
 
 /* get the dimensions of the head */
-WMRect wGetRectForHead(virtual_screen *vscr, int head)
+WMRect wGetRectForHead(WScreen *scr, int head)
 {
-	WScreen *scr = vscr->screen_ptr;
 	WMRect rect;
 
 	if (head < scr->xine_info.count) {
@@ -294,7 +293,7 @@ WArea wGetUsableAreaForHead(virtual_screen *vscr, int head, WArea *totalAreaPtr,
 {
 	WScreen *scr = vscr->screen_ptr;
 	WArea totalArea, usableArea;
-	WMRect rect = wGetRectForHead(vscr, head);
+	WMRect rect = wGetRectForHead(vscr->screen_ptr, head);
 
 	totalArea.x1 = rect.pos.x;
 	totalArea.y1 = rect.pos.y;
@@ -341,7 +340,7 @@ WArea wGetUsableAreaForHead(virtual_screen *vscr, int head, WArea *totalAreaPtr,
 WMPoint wGetPointToCenterRectInHead(virtual_screen *vscr, int head, int width, int height)
 {
 	WMPoint p;
-	WMRect rect = wGetRectForHead(vscr, head);
+	WMRect rect = wGetRectForHead(vscr->screen_ptr, head);
 
 	p.x = rect.pos.x + (rect.size.width - width) / 2;
 	p.y = rect.pos.y + (rect.size.height - height) / 2;

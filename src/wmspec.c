@@ -739,7 +739,7 @@ Bool wNETWMGetUsableArea(virtual_screen *vscr, int head, WArea *area)
 	if (area->x1 == 0 && area->x2 == 0 && area->y1 == 0 && area->y2 == 0)
 		return False;
 
-	rect = wGetRectForHead(vscr, head);
+	rect = wGetRectForHead(vscr->screen_ptr, head);
 
 	area->x1 = rect.pos.x + area->x1;
 	area->x2 = rect.pos.x + rect.size.width - area->x2;
@@ -1283,7 +1283,7 @@ void wNETWMPositionSplash(WWindow *wwin, int *x, int *y, int width, int height)
 
 	if (wwin->type == net_wm_window_type_splash) {
 		vscr = wwin->vscr;
-		rect = wGetRectForHead(vscr, wGetHeadForPointerLocation(vscr));
+		rect = wGetRectForHead(vscr->screen_ptr, wGetHeadForPointerLocation(vscr));
 
 		*x = rect.pos.x + (rect.size.width - width) / 2;
 		*y = rect.pos.y + (rect.size.height - height) / 2;

@@ -263,7 +263,7 @@ static int bounceDirection(WAppIcon *aicon)
 	rr.pos.y = aicon->y_pos;
 	rr.size.width = rr.size.height = 64;
 
-	sr = wGetRectForHead(vscr, wGetHeadForRect(vscr, rr));
+	sr = wGetRectForHead(vscr->screen_ptr, wGetHeadForRect(vscr, rr));
 
 	l = rr.pos.x - sr.pos.x;
 	r = sr.pos.x + sr.size.width - rr.pos.x - rr.size.width;
