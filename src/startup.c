@@ -600,16 +600,6 @@ static void startup_set_defaults(void)
 	}
 #endif
 
-	if (defaultScreenOnly)
-		max = 1;
-	else
-		max = ScreenCount(dpy);
-
-	wScreen = wmalloc(sizeof(WScreen *) * max);
-	vscreens = wmalloc(sizeof(virtual_screen *) * max);
-
-	w_global.screen_count = 0;
-
 	/* Check if TIFF images are supported */
 	formats = RSupportedFileFormats();
 	if (formats) {
@@ -644,6 +634,16 @@ void StartUp(Bool defaultScreenOnly)
 	startup_set_signals();
 	startup_set_defaults();
 
+	if (defaultScreenOnly)
+		max = 1;
+	else
+		max = ScreenCount(dpy);
+
+	wScreen = wmalloc(sizeof(WScreen *) * max);
+	vscreens = wmalloc(sizeof(virtual_screen *) * max);
+
+	w_global.screen_count = 0;
+
 	/* manage the screens */
 	for (j = 0; j < max; j++) {
 		if (defaultScreenOnly || max == 1) {
@@ -661,6 +661,11 @@ void StartUp(Bool defaultScreenOnly)
 		}
 
 		w_global.screen_count++;
+	}
+
+	if (w_global.screen_count == 0) {
+		wfatal(_("could not manage any screen"));
+		Exit(1);
 	}
 
 	/* initialize/restore state for the screens */
@@ -717,11 +722,6 @@ void StartUp(Bool defaultScreenOnly)
 			wWorkspaceForceChange(wScreen[j]->vscr, lastDesktop);
 		else
 			wSessionRestoreLastWorkspace(wScreen[j]->vscr);
-	}
-
-	if (w_global.screen_count == 0) {
-		wfatal(_("could not manage any screen"));
-		Exit(1);
 	}
 
 #ifndef HAVE_INOTIFY
