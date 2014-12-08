@@ -85,7 +85,6 @@
 
 /***** Local *****/
 static WScreen **wScreen = NULL;
-static virtual_screen **vscreens = NULL;
 
 static unsigned int _NumLockMask = 0;
 static unsigned int _ScrollLockMask = 0;
@@ -641,7 +640,7 @@ void StartUp(Bool defaultScreenOnly)
 		max = ScreenCount(dpy);
 
 	wScreen = wmalloc(sizeof(WScreen *) * max);
-	vscreens = wmalloc(sizeof(virtual_screen *) * max);
+	w_global.vscreens = wmalloc(sizeof(virtual_screen *) * max);
 
 	w_global.screen_count = 0;
 
@@ -670,12 +669,15 @@ void StartUp(Bool defaultScreenOnly)
 	}
 
 	/* Manage the virtual screens */
+	w_global.vscreen_count = 0;
 	for (j = 0; j < w_global.screen_count; j++) {
 		vscr = wmalloc(sizeof(virtual_screen));
 		vscr->screen_ptr = wScreen[j];
+		w_global.vscreens[w_global.vscreen_count] = vscr;
 
 		wScreen[j]->vscr = vscr;
 		set_screen_options(wScreen[j]->vscr);
+		w_global.vscreen_count++;
 	}
 
 	/* initialize/restore state for the screens */
@@ -684,35 +686,35 @@ void StartUp(Bool defaultScreenOnly)
 
 		lastDesktop = wNETWMGetCurrentDesktopFromHint(wScreen[j]);
 
-		wScreenRestoreState(wScreen[j]->vscr);
+		wScreenRestoreState(w_global.vscreens[j]);
 
 		/* manage all windows that were already here before us */
-		if (!wPreferences.flags.nodock && wScreen[j]->vscr->dock.dock)
-			wScreen[j]->vscr->last_dock = wScreen[j]->vscr->dock.dock;
+		if (!wPreferences.flags.nodock && w_global.vscreens[j]->dock.dock)
+			w_global.vscreens[j]->last_dock = w_global.vscreens[j]->dock.dock;
 
-		manageAllWindows(wScreen[j]->vscr, wPreferences.flags.restarting == 2);
+		manageAllWindows(w_global.vscreens[j], wPreferences.flags.restarting == 2);
 
 		/* restore saved menus */
-		wMenuRestoreState(wScreen[j]->vscr);
+		wMenuRestoreState(w_global.vscreens[j]);
 
 		/* If we're not restarting, restore session */
 		if (wPreferences.flags.restarting == 0 && !wPreferences.flags.norestore)
-			wSessionRestoreState(wScreen[j]->vscr);
+			wSessionRestoreState(w_global.vscreens[j]);
 
 		if (!wPreferences.flags.noautolaunch) {
 			/* auto-launch apps */
-			if (!wPreferences.flags.nodock && wScreen[j]->vscr->dock.dock) {
-				wScreen[j]->vscr->last_dock = wScreen[j]->vscr->dock.dock;
-				wDockDoAutoLaunch(wScreen[j]->vscr->dock.dock, 0);
+			if (!wPreferences.flags.nodock && w_global.vscreens[j]->dock.dock) {
+				w_global.vscreens[j]->last_dock = w_global.vscreens[j]->dock.dock;
+				wDockDoAutoLaunch(w_global.vscreens[j]->dock.dock, 0);
 			}
 
 			/* auto-launch apps in clip */
 			if (!wPreferences.flags.noclip) {
 				int i;
-				for (i = 0; i < wScreen[j]->vscr->workspace.count; i++) {
-					if (wScreen[j]->vscr->workspace.array[i]->clip) {
-						wScreen[j]->vscr->last_dock = wScreen[j]->vscr->workspace.array[i]->clip;
-						wDockDoAutoLaunch(wScreen[j]->vscr->workspace.array[i]->clip, i);
+				for (i = 0; i < w_global.vscreens[j]->workspace.count; i++) {
+					if (w_global.vscreens[j]->workspace.array[i]->clip) {
+						w_global.vscreens[j]->last_dock = w_global.vscreens[j]->workspace.array[i]->clip;
+						wDockDoAutoLaunch(w_global.vscreens[j]->workspace.array[i]->clip, i);
 					}
 				}
 			}
@@ -720,8 +722,8 @@ void StartUp(Bool defaultScreenOnly)
 			/* auto-launch apps in drawers */
 			if (!wPreferences.flags.nodrawer) {
 				WDrawerChain *dc;
-				for (dc = wScreen[j]->vscr->drawer.drawers; dc; dc = dc->next) {
-					wScreen[j]->vscr->last_dock = dc->adrawer;
+				for (dc = w_global.vscreens[j]->drawer.drawers; dc; dc = dc->next) {
+					w_global.vscreens[j]->last_dock = dc->adrawer;
 					wDockDoAutoLaunch(dc->adrawer, 0);
 				}
 			}
@@ -729,9 +731,9 @@ void StartUp(Bool defaultScreenOnly)
 
 		/* go to workspace where we were before restart */
 		if (lastDesktop >= 0)
-			wWorkspaceForceChange(wScreen[j]->vscr, lastDesktop);
+			wWorkspaceForceChange(w_global.vscreens[j], lastDesktop);
 		else
-			wSessionRestoreLastWorkspace(wScreen[j]->vscr);
+			wSessionRestoreLastWorkspace(w_global.vscreens[j]);
 	}
 
 #ifndef HAVE_INOTIFY
