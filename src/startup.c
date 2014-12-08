@@ -676,8 +676,7 @@ void StartUp(Bool defaultScreenOnly)
 		vscr->screen_ptr = wScreen[j];
 		w_global.vscreens[w_global.vscreen_count] = vscr;
 
-		wScreen[j]->vscr = vscr;
-		set_screen_options(wScreen[j]->vscr);
+		set_screen_options(w_global.vscreens[w_global.vscreen_count]);
 		w_global.vscreen_count++;
 	}
 

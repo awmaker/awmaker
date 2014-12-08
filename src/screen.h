@@ -315,8 +315,6 @@ struct WScreen {
         unsigned int jump_back_pending:1;
         unsigned int ignore_focus_events:1;
     } flags;
-
-    struct virtual_screen *vscr;
 };
 
 WScreen *wScreenInit(int screen_number);

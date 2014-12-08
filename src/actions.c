@@ -1567,7 +1567,7 @@ static void unhideWindow(WIcon *icon, int icon_x, int icon_y, WWindow *wwin, int
 	}
 #endif
 	wwin->flags.skip_next_animation = 0;
-	if (wwin->vscr->screen_ptr->vscr->workspace.current == wwin->frame->workspace) {
+	if (wwin->vscr->workspace.current == wwin->frame->workspace) {
 		XMapWindow(dpy, wwin->client_win);
 		XMapWindow(dpy, wwin->frame->core->window);
 		wClientSetState(wwin, NormalState, None);
