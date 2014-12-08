@@ -524,6 +524,8 @@ extern struct wmaker_global_variables {
 
 	/* Screens related */
 	int screen_count;
+	int vscreen_count;
+	struct virtual_screen **vscreens;
 
 	/* RImage tiles */
 	struct {

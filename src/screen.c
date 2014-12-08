@@ -505,17 +505,12 @@ static void createInternalWindows(WScreen *scr)
 WScreen *wScreenInit(int screen_number)
 {
 	WScreen *scr;
-	virtual_screen *vscr;
-	XIconSize icon_size[1];
 	RContextAttributes rattr;
 	long event_mask;
 	XErrorHandler oldHandler;
 	int i;
 
 	scr = wmalloc(sizeof(WScreen));
-	vscr = wmalloc(sizeof(virtual_screen));
-	scr->vscr = vscr;
-	scr->vscr->screen_ptr = scr;
 
 	scr->stacking_list = WMCreateTreeBag();
 
@@ -528,13 +523,13 @@ WScreen *wScreenInit(int screen_number)
 	scr->scr_width = WidthOfScreen(ScreenOfDisplay(dpy, screen_number));
 	scr->scr_height = HeightOfScreen(ScreenOfDisplay(dpy, screen_number));
 
-	wInitXinerama(vscr);
+	wInitXinerama(scr);
 
 	scr->usableArea = (WArea *) wmalloc(sizeof(WArea) * wXineramaHeads(scr));
 	scr->totalUsableArea = (WArea *) wmalloc(sizeof(WArea) * wXineramaHeads(scr));
 
 	for (i = 0; i < wXineramaHeads(scr); ++i) {
-		WMRect rect = wGetRectForHead(vscr, i);
+		WMRect rect = wGetRectForHead(scr, i);
 		scr->usableArea[i].x1 = scr->totalUsableArea[i].x1 = rect.pos.x;
 		scr->usableArea[i].y1 = scr->totalUsableArea[i].y1 = rect.pos.y;
 		scr->usableArea[i].x2 = scr->totalUsableArea[i].x2 = rect.pos.x + rect.size.width;
@@ -648,19 +643,25 @@ WScreen *wScreenInit(int screen_number)
 	 */
 	scr->info_window = XCreateSimpleWindow(dpy, scr->root_win, 0, 0, 10, 10, 0, 0, 0);
 
+	return scr;
+}
+
+void set_screen_options(virtual_screen *vscr)
+{
+	XIconSize icon_size[1];
+	XColor xcol;
+	WScreen *scr = vscr->screen_ptr;
+
 	/* read defaults for this screen */
 	wReadDefaults(vscr, w_global.domain.wmaker->dictionary);
 
-	{
-		XColor xcol;
-		/* frame boder color */
-		wGetColor(scr, WMGetColorRGBDescription(scr->frame_border_color), &xcol);
-		scr->frame_border_pixel = xcol.pixel;
-		wGetColor(scr, WMGetColorRGBDescription(scr->frame_focused_border_color), &xcol);
-		scr->frame_focused_border_pixel = xcol.pixel;
-		wGetColor(scr, WMGetColorRGBDescription(scr->frame_selected_border_color), &xcol);
-		scr->frame_selected_border_pixel = xcol.pixel;
-	}
+	/* frame boder color */
+	wGetColor(scr, WMGetColorRGBDescription(scr->frame_border_color), &xcol);
+	scr->frame_border_pixel = xcol.pixel;
+	wGetColor(scr, WMGetColorRGBDescription(scr->frame_focused_border_color), &xcol);
+	scr->frame_focused_border_pixel = xcol.pixel;
+	wGetColor(scr, WMGetColorRGBDescription(scr->frame_selected_border_color), &xcol);
+	scr->frame_selected_border_pixel = xcol.pixel;
 
 	createInternalWindows(scr);
 
@@ -705,8 +706,6 @@ WScreen *wScreenInit(int screen_number)
 	WMRealizeWidget(scr->gview);
 
 	wScreenUpdateUsableArea(vscr);
-
-	return scr;
 }
 
 void wScreenUpdateUsableArea(virtual_screen *vscr)
@@ -725,7 +724,7 @@ void wScreenUpdateUsableArea(virtual_screen *vscr)
 	unsigned int position = wPreferences.workspace_border_position;
 
 	for (i = 0; i < wXineramaHeads(scr); ++i) {
-		WMRect rect = wGetRectForHead(vscr, i);
+		WMRect rect = wGetRectForHead(scr, i);
 		scr->totalUsableArea[i].x1 = rect.pos.x;
 		scr->totalUsableArea[i].y1 = rect.pos.y;
 		scr->totalUsableArea[i].x2 = rect.pos.x + rect.size.width;
@@ -935,7 +934,7 @@ int wScreenBringInside(virtual_screen *vscr, int *x, int *y, int width, int heig
 	rect.size.height = height;
 
 	head = wGetRectPlacementInfo(vscr, rect, &flags);
-	rect = wGetRectForHead(vscr, head);
+	rect = wGetRectForHead(vscr->screen_ptr, head);
 
 	sx1 = rect.pos.x;
 	sy1 = rect.pos.y;
@@ -978,7 +977,7 @@ int wScreenKeepInside(virtual_screen *vscr, int *x, int *y, int width, int heigh
 	rect.size.height = height;
 
 	head = wGetHeadForRect(vscr, rect);
-	rect = wGetRectForHead(vscr, head);
+	rect = wGetRectForHead(vscr->screen_ptr, head);
 
 	sx1 = rect.pos.x;
 	sy1 = rect.pos.y;

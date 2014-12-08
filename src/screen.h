@@ -315,8 +315,6 @@ struct WScreen {
         unsigned int jump_back_pending:1;
         unsigned int ignore_focus_events:1;
     } flags;
-
-    struct virtual_screen *vscr;
 };
 
 WScreen *wScreenInit(int screen_number);
@@ -335,4 +333,5 @@ virtual_screen *wScreenForWindow(Window window);       /* slower than above func
 void wScreenUpdateUsableArea(virtual_screen *vscr);
 
 void create_logo_image(virtual_screen *vscr);
+void set_screen_options(virtual_screen *vscr);
 #endif

@@ -797,8 +797,8 @@ static void constructPLMenuFromPipe(WMenu * menu, WMenuEntry * entry)
 }
 static void cleanupWorkspaceMenu(WMenu *menu)
 {
-	if (menu->frame->vscr->screen_ptr->vscr->workspace.menu == menu)
-		menu->frame->vscr->screen_ptr->vscr->workspace.menu = NULL;
+	if (menu->frame->vscr->workspace.menu == menu)
+		menu->frame->vscr->workspace.menu = NULL;
 }
 
 static WMenuEntry *addWorkspaceMenu(virtual_screen *vscr, WMenu *menu, const char *title)
@@ -827,8 +827,8 @@ static WMenuEntry *addWorkspaceMenu(virtual_screen *vscr, WMenu *menu, const cha
 
 static void cleanupWindowsMenu(WMenu *menu)
 {
-	if (menu->frame->vscr->screen_ptr->vscr->menu.switch_menu == menu)
-		menu->frame->vscr->screen_ptr->vscr->menu.switch_menu = NULL;
+	if (menu->frame->vscr->menu.switch_menu == menu)
+		menu->frame->vscr->menu.switch_menu = NULL;
 }
 
 static WMenuEntry *addWindowsMenu(virtual_screen *vscr, WMenu *menu, const char *title)

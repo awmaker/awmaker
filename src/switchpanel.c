@@ -394,7 +394,7 @@ WSwitchPanel *wInitSwitchPanel(virtual_screen *vscr, WWindow *curwin, Bool class
 	WSwitchPanel *panel = wmalloc(sizeof(WSwitchPanel));
 	WMFrame *viewport;
 	int i, width, height, iconsThatFitCount, count;
-	WMRect rect = wGetRectForHead(vscr, wGetHeadForPointerLocation(vscr));
+	WMRect rect = wGetRectForHead(vscr->screen_ptr, wGetHeadForPointerLocation(vscr));
 	WMPoint center;
 
 	panel->vscr = vscr;

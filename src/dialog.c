@@ -606,7 +606,7 @@ static void listPixmaps(virtual_screen *vscr, WMList *lPtr, const char *path)
 		if (wstrlcpy(pbuf, apath, sizeof(pbuf)) >= sizeof(pbuf) ||
 		    wstrlcat(pbuf, "/", sizeof(pbuf)) >= sizeof(pbuf) ||
 		    wstrlcat(pbuf, dentry->d_name, sizeof(pbuf)) >= sizeof(pbuf)) {
-			wwarning(_("full path for file \"%s\" in \"%s\" is longer than %ld bytes, skipped"),
+			wwarning(_("full path for file \"%s\" in \"%s\" is longer than %ui bytes, skipped"),
 			         dentry->d_name, path, sizeof(pbuf) - 1);
 			continue;
 		}

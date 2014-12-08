@@ -728,7 +728,7 @@ void wFullscreenWindow(WWindow *wwin)
 	wwin->bfs_geometry.height = wwin->frame->core->height;
 
 	head = wGetHeadForWindow(wwin);
-	rect = wGetRectForHead(wwin->vscr, head);
+	rect = wGetRectForHead(wwin->vscr->screen_ptr, head);
 	wWindowConfigure(wwin, rect.pos.x, rect.pos.y, rect.size.width, rect.size.height);
 
 	wwin->vscr->screen_ptr->bfs_focused_window = wwin->vscr->screen_ptr->focused_window;
@@ -1567,7 +1567,7 @@ static void unhideWindow(WIcon *icon, int icon_x, int icon_y, WWindow *wwin, int
 	}
 #endif
 	wwin->flags.skip_next_animation = 0;
-	if (wwin->vscr->screen_ptr->vscr->workspace.current == wwin->frame->workspace) {
+	if (wwin->vscr->workspace.current == wwin->frame->workspace) {
 		XMapWindow(dpy, wwin->client_win);
 		XMapWindow(dpy, wwin->frame->core->window);
 		wClientSetState(wwin, NormalState, None);

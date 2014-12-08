@@ -85,7 +85,6 @@
 
 /***** Local *****/
 static WScreen **wScreen = NULL;
-static virtual_screen **vscreens = NULL;
 
 static unsigned int _NumLockMask = 0;
 static unsigned int _ScrollLockMask = 0;
@@ -335,24 +334,25 @@ wHackedGrabButton(unsigned int button, unsigned int modifiers,
 
 virtual_screen *wScreenWithNumber(int i)
 {
-	assert(i < w_global.screen_count);
+	assert(i < w_global.vscreen_count);
 
-	return wScreen[i]->vscr;
+	return w_global.vscreens[i];
 }
 
 virtual_screen *wScreenForRootWindow(Window window)
 {
 	int i;
 
-	if (w_global.screen_count == 1)
-		return wScreen[0]->vscr;
+	if (w_global.vscreen_count == 1)
+		return w_global.vscreens[0];
 
 	/* Since the number of heads will probably be small (normally 2),
 	 * it should be faster to use this than a hash table, because
 	 * of the overhead. */
-	for (i = 0; i < w_global.screen_count; i++)
-		if (wScreen[i]->root_win == window)
-			return wScreen[i]->vscr;
+	for (i = 0; i < w_global.vscreen_count; i++)
+		if (w_global.vscreens[i]->screen_ptr &&
+		    w_global.vscreens[i]->screen_ptr->root_win == window)
+			return w_global.vscreens[i];
 
 	return wScreenForWindow(window);
 }
@@ -361,8 +361,8 @@ virtual_screen *wScreenForWindow(Window window)
 {
 	XWindowAttributes attr;
 
-	if (w_global.screen_count == 1)
-		return wScreen[0]->vscr;
+	if (w_global.vscreen_count == 1)
+		return w_global.vscreens[0];
 
 	if (XGetWindowAttributes(dpy, window, &attr))
 		return wScreenForRootWindow(attr.root);
@@ -397,25 +397,12 @@ static char *atomNames[] = {
 	"WM_IGNORE_FOCUS_EVENTS"
 };
 
-/*
- *----------------------------------------------------------
- * StartUp--
- * 	starts the window manager and setup global data.
- * Called from main() at startup.
- *
- * Side effects:
- * global data declared in main.c is initialized
- *----------------------------------------------------------
- */
-void StartUp(Bool defaultScreenOnly)
+static void startup_set_atoms(void)
 {
-	struct sigaction sig_action;
-	int i, j, max;
+	Atom atom[wlengthof(atomNames)];
 #ifndef HAVE_XINTERNATOMS
 	int k;
 #endif
-	char **formats;
-	Atom atom[wlengthof(atomNames)];
 
 	/* Ignore CapsLock in modifiers */
 	w_global.shortcut.modifiers_mask = 0xff & ~LockMask;
@@ -466,7 +453,10 @@ void StartUp(Bool defaultScreenOnly)
 #ifdef XDND
 	wXDNDInitializeAtoms();
 #endif
+}
 
+static void startup_set_cursors(void)
+{
 	/* cursors */
 	wPreferences.cursor[WCUR_NORMAL] = None;	/* inherit from root */
 	wPreferences.cursor[WCUR_ROOT] = XCreateFontCursor(dpy, XC_left_ptr);
@@ -493,6 +483,11 @@ void StartUp(Bool defaultScreenOnly)
 	XFreeGC(dpy, gc);
 	wPreferences.cursor[WCUR_EMPTY] = XCreatePixmapCursor(dpy, cur, cur, &black, &black, 0, 0);
 	XFreePixmap(dpy, cur);
+}
+
+static void startup_set_signals(void)
+{
+	struct sigaction sig_action;
 
 	/* emergency exit... */
 	sig_action.sa_handler = handleSig;
@@ -551,6 +546,12 @@ void StartUp(Bool defaultScreenOnly)
 
 	/* set hook for out event dispatcher in WINGs event dispatcher */
 	WMHookEventHandler(DispatchEvent);
+}
+
+static void startup_set_defaults(void)
+{
+	char **formats;
+	int foo, i;
 
 	/* initialize defaults stuff */
 	w_global.domain.wmaker = wDefaultsInitDomain("WindowMaker", True);
@@ -583,12 +584,12 @@ void StartUp(Bool defaultScreenOnly)
 	XSetErrorHandler((XErrorHandler) catchXError);
 
 #ifdef USE_XSHAPE
-	/* ignore j */
-	w_global.xext.shape.supported = XShapeQueryExtension(dpy, &w_global.xext.shape.event_base, &j);
+	/* ignore foo */
+	w_global.xext.shape.supported = XShapeQueryExtension(dpy, &w_global.xext.shape.event_base, &foo);
 #endif
 
 #ifdef USE_RANDR
-	w_global.xext.randr.supported = XRRQueryExtension(dpy, &w_global.xext.randr.event_base, &j);
+	w_global.xext.randr.supported = XRRQueryExtension(dpy, &w_global.xext.randr.event_base, &foo);
 #endif
 
 #ifdef KEEP_XKB_LOCK_STATUS
@@ -598,16 +599,6 @@ void StartUp(Bool defaultScreenOnly)
 		wPreferences.modelock = 0;
 	}
 #endif
-
-	if (defaultScreenOnly)
-		max = 1;
-	else
-		max = ScreenCount(dpy);
-
-	wScreen = wmalloc(sizeof(WScreen *) * max);
-	vscreens = wmalloc(sizeof(virtual_screen *) * max);
-
-	w_global.screen_count = 0;
 
 	/* Check if TIFF images are supported */
 	formats = RSupportedFileFormats();
@@ -622,6 +613,37 @@ void StartUp(Bool defaultScreenOnly)
 
 	/* Init the system menus */
 	InitializeSwitchMenu();
+}
+
+/*
+ *----------------------------------------------------------
+ * StartUp--
+ * 	starts the window manager and setup global data.
+ * Called from main() at startup.
+ *
+ * Side effects:
+ * global data declared in main.c is initialized
+ *----------------------------------------------------------
+ */
+void StartUp(Bool defaultScreenOnly)
+{
+	int j, max;
+	virtual_screen *vscr;
+
+	startup_set_atoms();
+	startup_set_cursors();
+	startup_set_signals();
+	startup_set_defaults();
+
+	if (defaultScreenOnly)
+		max = 1;
+	else
+		max = ScreenCount(dpy);
+
+	wScreen = wmalloc(sizeof(WScreen *) * max);
+	w_global.vscreens = wmalloc(sizeof(virtual_screen *) * max);
+
+	w_global.screen_count = 0;
 
 	/* manage the screens */
 	for (j = 0; j < max; j++) {
@@ -642,41 +664,57 @@ void StartUp(Bool defaultScreenOnly)
 		w_global.screen_count++;
 	}
 
+	if (w_global.screen_count == 0) {
+		wfatal(_("could not manage any screen"));
+		Exit(1);
+	}
+
+	/* Manage the virtual screens */
+	w_global.vscreen_count = 0;
+	for (j = 0; j < w_global.screen_count; j++) {
+		vscr = wmalloc(sizeof(virtual_screen));
+		vscr->screen_ptr = wScreen[j];
+		w_global.vscreens[w_global.vscreen_count] = vscr;
+
+		set_screen_options(w_global.vscreens[w_global.vscreen_count]);
+		w_global.vscreen_count++;
+	}
+
 	/* initialize/restore state for the screens */
 	for (j = 0; j < w_global.screen_count; j++) {
 		int lastDesktop;
 
 		lastDesktop = wNETWMGetCurrentDesktopFromHint(wScreen[j]);
 
-		wScreenRestoreState(wScreen[j]->vscr);
+		wScreenRestoreState(w_global.vscreens[j]);
 
 		/* manage all windows that were already here before us */
-		if (!wPreferences.flags.nodock && wScreen[j]->vscr->dock.dock)
-			wScreen[j]->vscr->last_dock = wScreen[j]->vscr->dock.dock;
+		if (!wPreferences.flags.nodock && w_global.vscreens[j]->dock.dock)
+			w_global.vscreens[j]->last_dock = w_global.vscreens[j]->dock.dock;
 
-		manageAllWindows(wScreen[j]->vscr, wPreferences.flags.restarting == 2);
+		manageAllWindows(w_global.vscreens[j], wPreferences.flags.restarting == 2);
 
 		/* restore saved menus */
-		wMenuRestoreState(wScreen[j]->vscr);
+		wMenuRestoreState(w_global.vscreens[j]);
 
 		/* If we're not restarting, restore session */
 		if (wPreferences.flags.restarting == 0 && !wPreferences.flags.norestore)
-			wSessionRestoreState(wScreen[j]->vscr);
+			wSessionRestoreState(w_global.vscreens[j]);
 
 		if (!wPreferences.flags.noautolaunch) {
 			/* auto-launch apps */
-			if (!wPreferences.flags.nodock && wScreen[j]->vscr->dock.dock) {
-				wScreen[j]->vscr->last_dock = wScreen[j]->vscr->dock.dock;
-				wDockDoAutoLaunch(wScreen[j]->vscr->dock.dock, 0);
+			if (!wPreferences.flags.nodock && w_global.vscreens[j]->dock.dock) {
+				w_global.vscreens[j]->last_dock = w_global.vscreens[j]->dock.dock;
+				wDockDoAutoLaunch(w_global.vscreens[j]->dock.dock, 0);
 			}
 
 			/* auto-launch apps in clip */
 			if (!wPreferences.flags.noclip) {
 				int i;
-				for (i = 0; i < wScreen[j]->vscr->workspace.count; i++) {
-					if (wScreen[j]->vscr->workspace.array[i]->clip) {
-						wScreen[j]->vscr->last_dock = wScreen[j]->vscr->workspace.array[i]->clip;
-						wDockDoAutoLaunch(wScreen[j]->vscr->workspace.array[i]->clip, i);
+				for (i = 0; i < w_global.vscreens[j]->workspace.count; i++) {
+					if (w_global.vscreens[j]->workspace.array[i]->clip) {
+						w_global.vscreens[j]->last_dock = w_global.vscreens[j]->workspace.array[i]->clip;
+						wDockDoAutoLaunch(w_global.vscreens[j]->workspace.array[i]->clip, i);
 					}
 				}
 			}
@@ -684,8 +722,8 @@ void StartUp(Bool defaultScreenOnly)
 			/* auto-launch apps in drawers */
 			if (!wPreferences.flags.nodrawer) {
 				WDrawerChain *dc;
-				for (dc = wScreen[j]->vscr->drawer.drawers; dc; dc = dc->next) {
-					wScreen[j]->vscr->last_dock = dc->adrawer;
+				for (dc = w_global.vscreens[j]->drawer.drawers; dc; dc = dc->next) {
+					w_global.vscreens[j]->last_dock = dc->adrawer;
 					wDockDoAutoLaunch(dc->adrawer, 0);
 				}
 			}
@@ -693,14 +731,9 @@ void StartUp(Bool defaultScreenOnly)
 
 		/* go to workspace where we were before restart */
 		if (lastDesktop >= 0)
-			wWorkspaceForceChange(wScreen[j]->vscr, lastDesktop);
+			wWorkspaceForceChange(w_global.vscreens[j], lastDesktop);
 		else
-			wSessionRestoreLastWorkspace(wScreen[j]->vscr);
-	}
-
-	if (w_global.screen_count == 0) {
-		wfatal(_("could not manage any screen"));
-		Exit(1);
+			wSessionRestoreLastWorkspace(w_global.vscreens[j]);
 	}
 
 #ifndef HAVE_INOTIFY
