@@ -397,25 +397,12 @@ static char *atomNames[] = {
 	"WM_IGNORE_FOCUS_EVENTS"
 };
 
-/*
- *----------------------------------------------------------
- * StartUp--
- * 	starts the window manager and setup global data.
- * Called from main() at startup.
- *
- * Side effects:
- * global data declared in main.c is initialized
- *----------------------------------------------------------
- */
-void StartUp(Bool defaultScreenOnly)
+static void startup_set_atoms(void)
 {
-	struct sigaction sig_action;
-	int i, j, max;
+	Atom atom[wlengthof(atomNames)];
 #ifndef HAVE_XINTERNATOMS
 	int k;
 #endif
-	char **formats;
-	Atom atom[wlengthof(atomNames)];
 
 	/* Ignore CapsLock in modifiers */
 	w_global.shortcut.modifiers_mask = 0xff & ~LockMask;
@@ -466,7 +453,10 @@ void StartUp(Bool defaultScreenOnly)
 #ifdef XDND
 	wXDNDInitializeAtoms();
 #endif
+}
 
+static void startup_set_cursors(void)
+{
 	/* cursors */
 	wPreferences.cursor[WCUR_NORMAL] = None;	/* inherit from root */
 	wPreferences.cursor[WCUR_ROOT] = XCreateFontCursor(dpy, XC_left_ptr);
@@ -493,6 +483,11 @@ void StartUp(Bool defaultScreenOnly)
 	XFreeGC(dpy, gc);
 	wPreferences.cursor[WCUR_EMPTY] = XCreatePixmapCursor(dpy, cur, cur, &black, &black, 0, 0);
 	XFreePixmap(dpy, cur);
+}
+
+static void startup_set_signals(void)
+{
+	struct sigaction sig_action;
 
 	/* emergency exit... */
 	sig_action.sa_handler = handleSig;
@@ -551,6 +546,12 @@ void StartUp(Bool defaultScreenOnly)
 
 	/* set hook for out event dispatcher in WINGs event dispatcher */
 	WMHookEventHandler(DispatchEvent);
+}
+
+static void startup_set_defaults(void)
+{
+	char **formats;
+	int foo, i;
 
 	/* initialize defaults stuff */
 	w_global.domain.wmaker = wDefaultsInitDomain("WindowMaker", True);
@@ -583,12 +584,12 @@ void StartUp(Bool defaultScreenOnly)
 	XSetErrorHandler((XErrorHandler) catchXError);
 
 #ifdef USE_XSHAPE
-	/* ignore j */
-	w_global.xext.shape.supported = XShapeQueryExtension(dpy, &w_global.xext.shape.event_base, &j);
+	/* ignore foo */
+	w_global.xext.shape.supported = XShapeQueryExtension(dpy, &w_global.xext.shape.event_base, &foo);
 #endif
 
 #ifdef USE_RANDR
-	w_global.xext.randr.supported = XRRQueryExtension(dpy, &w_global.xext.randr.event_base, &j);
+	w_global.xext.randr.supported = XRRQueryExtension(dpy, &w_global.xext.randr.event_base, &foo);
 #endif
 
 #ifdef KEEP_XKB_LOCK_STATUS
@@ -622,6 +623,26 @@ void StartUp(Bool defaultScreenOnly)
 
 	/* Init the system menus */
 	InitializeSwitchMenu();
+}
+
+/*
+ *----------------------------------------------------------
+ * StartUp--
+ * 	starts the window manager and setup global data.
+ * Called from main() at startup.
+ *
+ * Side effects:
+ * global data declared in main.c is initialized
+ *----------------------------------------------------------
+ */
+void StartUp(Bool defaultScreenOnly)
+{
+	int j, max;
+
+	startup_set_atoms();
+	startup_set_cursors();
+	startup_set_signals();
+	startup_set_defaults();
 
 	/* manage the screens */
 	for (j = 0; j < max; j++) {
