@@ -335,4 +335,5 @@ virtual_screen *wScreenForWindow(Window window);       /* slower than above func
 void wScreenUpdateUsableArea(virtual_screen *vscr);
 
 void create_logo_image(virtual_screen *vscr);
+void set_screen_options(virtual_screen *vscr);
 #endif

@@ -660,6 +660,7 @@ void StartUp(Bool defaultScreenOnly)
 			}
 		}
 
+		set_screen_options(wScreen[w_global.screen_count]->vscr);
 		w_global.screen_count++;
 	}
 

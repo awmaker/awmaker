@@ -506,12 +506,10 @@ WScreen *wScreenInit(int screen_number)
 {
 	WScreen *scr;
 	virtual_screen *vscr;
-	XIconSize icon_size[1];
 	RContextAttributes rattr;
 	long event_mask;
 	XErrorHandler oldHandler;
 	int i;
-	XColor xcol;
 
 	scr = wmalloc(sizeof(WScreen));
 	vscr = wmalloc(sizeof(virtual_screen));
@@ -649,6 +647,15 @@ WScreen *wScreenInit(int screen_number)
 	 */
 	scr->info_window = XCreateSimpleWindow(dpy, scr->root_win, 0, 0, 10, 10, 0, 0, 0);
 
+	return scr;
+}
+
+void set_screen_options(virtual_screen *vscr)
+{
+	XIconSize icon_size[1];
+	XColor xcol;
+	WScreen *scr = vscr->screen_ptr;
+
 	/* read defaults for this screen */
 	wReadDefaults(vscr, w_global.domain.wmaker->dictionary);
 
@@ -703,8 +710,6 @@ WScreen *wScreenInit(int screen_number)
 	WMRealizeWidget(scr->gview);
 
 	wScreenUpdateUsableArea(vscr);
-
-	return scr;
 }
 
 void wScreenUpdateUsableArea(virtual_screen *vscr)
