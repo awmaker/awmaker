@@ -505,16 +505,12 @@ static void createInternalWindows(WScreen *scr)
 WScreen *wScreenInit(int screen_number)
 {
 	WScreen *scr;
-	virtual_screen *vscr;
 	RContextAttributes rattr;
 	long event_mask;
 	XErrorHandler oldHandler;
 	int i;
 
 	scr = wmalloc(sizeof(WScreen));
-	vscr = wmalloc(sizeof(virtual_screen));
-	scr->vscr = vscr;
-	scr->vscr->screen_ptr = scr;
 
 	scr->stacking_list = WMCreateTreeBag();
 

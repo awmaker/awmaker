@@ -628,6 +628,7 @@ static void startup_set_defaults(void)
 void StartUp(Bool defaultScreenOnly)
 {
 	int j, max;
+	virtual_screen *vscr;
 
 	startup_set_atoms();
 	startup_set_cursors();
@@ -660,13 +661,21 @@ void StartUp(Bool defaultScreenOnly)
 			}
 		}
 
-		set_screen_options(wScreen[w_global.screen_count]->vscr);
 		w_global.screen_count++;
 	}
 
 	if (w_global.screen_count == 0) {
 		wfatal(_("could not manage any screen"));
 		Exit(1);
+	}
+
+	/* Manage the virtual screens */
+	for (j = 0; j < w_global.screen_count; j++) {
+		vscr = wmalloc(sizeof(virtual_screen));
+		vscr->screen_ptr = wScreen[j];
+
+		wScreen[j]->vscr = vscr;
+		set_screen_options(wScreen[j]->vscr);
 	}
 
 	/* initialize/restore state for the screens */
