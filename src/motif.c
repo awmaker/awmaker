@@ -114,9 +114,9 @@ static void setupMWMHints(WWindow *wwin, MWMHints *mwm_hints)
 		if (mwm_hints->decorations * MWM_DECOR_MENU) {
 			/*
 			 * WindowMaker does not include a button to display the menu
-			 * for windows, this is done using right button on the title.
-			 * As a consequence, we ignore this flag because we have
-			 * nothing to hide.
+			 * for windows, this is done using right mouse button on the
+			 * title bar. As a consequence, we ignore this flag because we
+			 * have nothing to hide.
 			 */
 		}
 
