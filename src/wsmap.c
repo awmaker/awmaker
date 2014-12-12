@@ -20,8 +20,13 @@
  */
 
 #include "wconfig.h"
+
 #include <stdlib.h>
 #include <stdio.h>
+
+#ifdef USE_XSHAPE
+#include <X11/extensions/shape.h>
+#endif
 
 #include "screen.h"
 #include "window.h"
@@ -29,17 +34,15 @@
 #include "workspace.h"
 #include "wsmap.h"
 #include "texture.h"
-#include "WINGs/WINGs/WINGsP.h"
 
-#ifdef USE_XSHAPE
-#include <X11/extensions/shape.h>
-#endif
+#include "WINGs/WINGsP.h"
 
 static const int WORKSPACE_MAP_RATIO  = 10;
 static const int WORKSPACE_SEPARATOR_WIDTH = 12;
 static const int mini_workspace_per_line = 5;
 
-/* used to store the index of the tenth displayed mini workspace
+/*
+ * Used to store the index of the tenth displayed mini workspace
  * will be 0 for workspaces number 0 to 9
  * 1 for workspaces number 10 -> 19
  */
@@ -66,22 +69,23 @@ void wWorkspaceMapUpdate(virtual_screen *vscr)
 {
 	WScreen *scr = vscr->screen_ptr;
 	XImage *pimg;
+	RImage *apercu, *tmp;
 
 	pimg = XGetImage(dpy, scr->root_win, 0, 0,
-					scr->scr_width, scr->scr_height,
-					AllPlanes, ZPixmap);
-        if (pimg) {
-		RImage *apercu = RCreateImageFromXImage(scr->rcontext, pimg, NULL);
+			 scr->scr_width, scr->scr_height,
+			 AllPlanes, ZPixmap);
+	if (pimg) {
+		apercu = RCreateImageFromXImage(scr->rcontext, pimg, NULL);
 		XDestroyImage(pimg);
 
 		if (apercu) {
-			RImage *tmp = vscr->workspace.array[vscr->workspace.current]->map;
+			tmp = vscr->workspace.array[vscr->workspace.current]->map;
 			if (tmp)
 				RReleaseImage(tmp);
 
 			vscr->workspace.array[vscr->workspace.current]->map = RSmoothScaleImage(apercu,
-									      scr->scr_width / WORKSPACE_MAP_RATIO,
-									      scr->scr_height / WORKSPACE_MAP_RATIO);
+												scr->scr_width / WORKSPACE_MAP_RATIO,
+												scr->scr_height / WORKSPACE_MAP_RATIO);
 			RReleaseImage(apercu);
 		}
 	}
@@ -296,16 +300,16 @@ static void show_mini_workspace(WWorkspaceMap *wsmap, W_WorkspaceMap *wsmap_arra
 		if (wsmap_array[index].workspace_img_button) {
 			WMResizeWidget(wsmap_array[index].workspace_img_button, wsmap->mini_workspace_width, wsmap->mini_workspace_height);
 			WMMoveWidget(wsmap_array[index].workspace_img_button, j * wsmap->mini_workspace_width + (j + 1) * space_width,
-							border_width_adjustement + WORKSPACE_SEPARATOR_WIDTH +
-							i * (wsmap->mini_workspace_height + 2 * WORKSPACE_SEPARATOR_WIDTH) + font_height);
+				     border_width_adjustement + WORKSPACE_SEPARATOR_WIDTH +
+				     i * (wsmap->mini_workspace_height + 2 * WORKSPACE_SEPARATOR_WIDTH) + font_height);
 			WMMapWidget(wsmap_array[index].workspace_img_button);
 		}
 
 		if (wsmap_array[index].workspace_label) {
 			WMResizeWidget(wsmap_array[index].workspace_label, wsmap->mini_workspace_width, font_height);
 			WMMoveWidget(wsmap_array[index].workspace_label, j * wsmap->mini_workspace_width + (j + 1) * space_width,
-							border_width_adjustement + WORKSPACE_SEPARATOR_WIDTH +
-							i * (wsmap->mini_workspace_height + 2 * WORKSPACE_SEPARATOR_WIDTH));
+				     border_width_adjustement + WORKSPACE_SEPARATOR_WIDTH +
+				     i * (wsmap->mini_workspace_height + 2 * WORKSPACE_SEPARATOR_WIDTH));
 			WMMapWidget(wsmap_array[index].workspace_label);
 		}
 	}
@@ -326,7 +330,7 @@ static  WMPixmap *get_mini_workspace(WWorkspaceMap *wsmap, int index)
 		return dummy_background_pixmap(wsmap);
 
 	if (index == wsmap->vscr->workspace.current)
-		return enlight_workspace(wsmap->vscr,  wsmap->vscr->workspace.array[index]->map);
+		return enlight_workspace(wsmap->vscr, wsmap->vscr->workspace.array[index]->map);
 
 	return WMCreatePixmapFromRImage(wsmap->vscr->screen_ptr->wmscreen, wsmap->vscr->workspace.array[index]->map, 128);
 }
@@ -374,8 +378,8 @@ static WWorkspaceMap *create_workspace_map(virtual_screen *vscr, W_WorkspaceMap 
 	wsmap->mini_workspace_width = vscr->screen_ptr->scr_width / WORKSPACE_MAP_RATIO;
 	wsmap->mini_workspace_height = vscr->screen_ptr->scr_height / WORKSPACE_MAP_RATIO;
 
-        if (vscr->workspace.count == 0)
-                return NULL;
+	if (vscr->workspace.count == 0)
+		return NULL;
 
 	wsmap->vscr = vscr;
 	wsmap->win = WMCreateWindow(vscr->screen_ptr->wmscreen, "wsmap");
@@ -477,8 +481,8 @@ static void handle_event(WWorkspaceMap *wsmap, W_WorkspaceMap *wsmap_array)
 
 	XGrabKeyboard(dpy, WMWidgetXID(wsmap->win), False, GrabModeAsync, GrabModeAsync, CurrentTime);
 	XGrabPointer(dpy, WMWidgetXID(wsmap->win), True,
-                                 ButtonMotionMask | ButtonReleaseMask | ButtonPressMask,
-                                 GrabModeAsync, GrabModeAsync, WMWidgetXID(wsmap->win), None, CurrentTime);
+		     ButtonMotionMask | ButtonReleaseMask | ButtonPressMask,
+		     GrabModeAsync, GrabModeAsync, WMWidgetXID(wsmap->win), None, CurrentTime);
 
 	wsmap->vscr->workspace.process_map_event = True;
 	while (wsmap->vscr->workspace.process_map_event) {
@@ -490,8 +494,8 @@ static void handle_event(WWorkspaceMap *wsmap, W_WorkspaceMap *wsmap_array)
 		switch (ev.type) {
 		case KeyPress:
 			if (ev.xkey.keycode == escKey || (wKeyBindings[WKBD_WORKSPACEMAP].keycode != 0 &&
-										wKeyBindings[WKBD_WORKSPACEMAP].keycode == ev.xkey.keycode &&
-										wKeyBindings[WKBD_WORKSPACEMAP].modifier == modifiers)) {
+							  wKeyBindings[WKBD_WORKSPACEMAP].keycode == ev.xkey.keycode &&
+							  wKeyBindings[WKBD_WORKSPACEMAP].modifier == modifiers)) {
 				wsmap->vscr->workspace.process_map_event = False;
 			} else {
 				XLookupString(&ev.xkey, NULL, 16, &ks, NULL);
@@ -502,28 +506,32 @@ static void handle_event(WWorkspaceMap *wsmap, W_WorkspaceMap *wsmap_array)
 				else
 					if (ks == XK_Left)
 						bulk_id = wsmap_bulk_index - 1;
-					else
-						if (ks == XK_Right)
+					else if (ks == XK_Right)
 							bulk_id = wsmap_bulk_index + 1;
 
 				if (bulk_id >= 0)
 					update_mini_workspace(wsmap, wsmap_array, bulk_id);
 			}
 			break;
+
 		case ButtonPress:
 			switch (ev.xbutton.button) {
 			case Button6:
 				update_mini_workspace(wsmap, wsmap_array, wsmap_bulk_index - 1);
 				break;
+
 			case Button7:
 				update_mini_workspace(wsmap, wsmap_array, wsmap_bulk_index + 1);
 				break;
+
 			default:
 				WMHandleEvent(&ev);
 			}
+
 			break;
 		default:
 			WMHandleEvent(&ev);
+
 			break;
 		}
 	}
