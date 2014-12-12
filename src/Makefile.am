@@ -49,7 +49,6 @@ wmaker_SOURCES = 	\
 	main.h \
 	menu.c \
 	menu.h \
-	misc.c \
 	misc.h \
 	monitor.c \
 	monitor.h \
@@ -91,7 +90,6 @@ wmaker_SOURCES = 	\
 	xinerama.h \
 	xinerama.c \
 	xmodifier.h \
-	xmodifier.c \
 	xutil.c \
 	xutil.h \
 	wconfig.h \
@@ -108,7 +106,9 @@ wmaker_SOURCES = 	\
 	wmspec.h \
 	wmspec.c \
 	workspace.c \
-	workspace.h
+	workspace.h \
+	wsmap.c \
+	wsmap.h
 
 if WM_OSDEP_BSD
 wmaker_SOURCES += osdep_bsd.c
@@ -122,6 +122,27 @@ endif
 if WM_OSDEP_GENERIC
 wmaker_SOURCES += osdep_stub.c
 endif
+
+if USE_NESTED_FUNC
+wmaker_SOURCES += misc.c \
+	xmodifier.c
+else
+nodist_wmaker_SOURCES = misc.hack_nf.c \
+	xmodifier.hack_nf.c
+
+CLEANFILES = $(nodist_wmaker_SOURCES)
+
+misc.hack_nf.c: misc.c $(top_srcdir)/script/nested-func-to-macro.sh
+	$(top_srcdir)/script/nested-func-to-macro.sh \
+		$(srcdir)/misc.c -o $(builddir)/misc.hack_nf.c \
+		-f "append_string" -f "append_modifier"
+
+xmodifier.hack_nf.c: xmodifier.c $(top_srcdir)/script/nested-func-to-macro.sh
+	$(AM_V_GEN)$(top_srcdir)/script/nested-func-to-macro.sh \
+		$(srcdir)/xmodifier.c -o $(builddir)/xmodifier.hack_nf.c \
+		-f "modwarn" -f "modbarf" -f "check_modifier" -f "store_modifier"
+endif
+
 
 AM_CFLAGS =
 

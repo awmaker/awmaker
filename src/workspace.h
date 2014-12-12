@@ -25,8 +25,9 @@
 
 
 typedef struct WWorkspace {
-    char *name;
-    struct WDock *clip;
+	char *name;
+	struct WDock *clip;
+	RImage *map;
 } WWorkspace;
 
 void wWorkspaceMake(virtual_screen *vscr, int count);

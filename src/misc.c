@@ -259,7 +259,7 @@ void SlideWindows(Window *wins[], int n, int from_x, int from_y, int to_x, int t
 		if (slide_delay > 0)
 			wusleep(slide_delay * 1000L);
 		else
-			wusleep(10);
+			wusleep(1000L);
 
 		if (time(NULL) - time0 > MAX_ANIMATION_TIME)
 			break;
@@ -795,8 +795,10 @@ char *GetShortcutKey(WShortKey key)
 	char buffer[256];
 	char *wr;
 
-	void append_string(const char *string)
+	void append_string(const char *text)
 	{
+		const char *string = text;
+
 		while (*string) {
 			if (wr >= buffer + sizeof(buffer) - 1)
 				break;
@@ -807,10 +809,11 @@ char *GetShortcutKey(WShortKey key)
 
 	void append_modifier(int modifier_index, const char *fallback_name)
 	{
-		if (wPreferences.modifier_labels[modifier_index])
+		if (wPreferences.modifier_labels[modifier_index]) {
 			append_string(wPreferences.modifier_labels[modifier_index]);
-		else
+		} else {
 			append_string(fallback_name);
+		}
 	}
 
 	key_name = XKeysymToString(XkbKeycodeToKeysym(dpy, key.keycode, 0, 0));

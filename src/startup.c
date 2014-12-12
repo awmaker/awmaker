@@ -672,17 +672,14 @@ void StartUp(Bool defaultScreenOnly)
 	/* Manage the virtual screens */
 	w_global.vscreen_count = 0;
 	for (j = 0; j < w_global.screen_count; j++) {
+		int lastDesktop;
+
 		vscr = wmalloc(sizeof(virtual_screen));
 		vscr->screen_ptr = wScreen[j];
 		w_global.vscreens[w_global.vscreen_count] = vscr;
 
 		set_screen_options(w_global.vscreens[w_global.vscreen_count]);
 		w_global.vscreen_count++;
-	}
-
-	/* initialize/restore state for the screens */
-	for (j = 0; j < w_global.screen_count; j++) {
-		int lastDesktop;
 
 		lastDesktop = wNETWMGetCurrentDesktopFromHint(wScreen[j]);
 

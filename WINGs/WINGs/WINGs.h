@@ -26,7 +26,7 @@
 #include <WINGs/WUtil.h>
 #include <X11/Xlib.h>
 
-#define WINGS_H_VERSION  20140612
+#define WINGS_H_VERSION  20141205
 
 
 #ifdef __cplusplus
@@ -929,6 +929,10 @@ void WMResizeWidget(WMWidget *w, unsigned int width, unsigned int height);
 void WMSetWidgetBackgroundColor(WMWidget *w, WMColor *color);
 
 WMColor* WMGetWidgetBackgroundColor(WMWidget *w);
+
+void WMSetWidgetBackgroundPixmap(WMWidget *w, WMPixmap *pix);
+
+WMPixmap *WMGetWidgetBackgroundPixmap(WMWidget *w);
 
 void WMMapSubwidgets(WMWidget *w);
 

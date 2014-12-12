@@ -47,9 +47,9 @@ WRASTER_VERSION=$WRASTER_CURRENT:$WRASTER_REVISION:$WRASTER_AGE
 AC_SUBST(WRASTER_VERSION)
 dnl
 dnl libWINGs
-WINGS_CURRENT=3
+WINGS_CURRENT=4
 WINGS_REVISION=0
-WINGS_AGE=0
+WINGS_AGE=1
 WINGS_VERSION=$WINGS_CURRENT:$WINGS_REVISION:$WINGS_AGE
 AC_SUBST(WINGS_VERSION)
 dnl
@@ -104,6 +104,16 @@ AS_IF([test "x$debug" = "xyes"],
 
 AX_CFLAGS_GCC_OPTION(-Wall)
 AX_CFLAGS_GCC_OPTION(-Wextra -Wno-sign-compare)
+dnl
+dnl The use of trampolines cause code that can crash on some secured OS, it is
+dnl also known to be a source of crash if not used properly, in a more general
+dnl way it tends to generate binary code that may not be optimal, and it is
+dnl not compatible with the 'nested-func-to-macro' workaround
+WM_CFLAGS_CHECK_FIRST([-Wtrampolines],
+         [-Werror=trampolines  dnl try to generate an error if possible
+          -Wtrampolines        dnl if not, try to fall back to a simple warning
+         ])
+dnl
 AS_IF([test "x$debug" = "xyes"],
     [dnl When debug is enabled, we try to activate more checks from
      dnl the compiler. They are on independant check because the
@@ -111,16 +121,39 @@ AS_IF([test "x$debug" = "xyes"],
      dnl where some options are not supported and we don't want to
      dnl loose all of them.
      dnl
+     dnl clang, suggest parenthesis on bit operations that could be
+     dnl misunderstood due to C operator precedence
+     AX_CFLAGS_GCC_OPTION([-Wbitwise-op-parentheses])
+     dnl
+     dnl Points at code that gcc thinks is so complicated that gcc
+     dnl gives up trying to optimize, which probably also means it is
+     dnl too complicated to maintain
+     AX_CFLAGS_GCC_OPTION([-Wdisabled-optimization])
+     dnl
      dnl Floating-point comparison is not a good idea
      AX_CFLAGS_GCC_OPTION([-Wfloat-equal])
      dnl
+     dnl clang warns about constants that may have portability issues due
+     dnl to the endianness of the host
+     AX_CFLAGS_GCC_OPTION([-Wfour-char-constants])
+     dnl
+     dnl clang warns about constant that may be too big to be portable
+     AX_CFLAGS_GCC_OPTION([-Wliteral-range])
+     dnl
      dnl Try to report misuses of '&' versus '&&' and similar
      AX_CFLAGS_GCC_OPTION([-Wlogical-op])
+     dnl
+     dnl clang, reports cases where the code assumes everyone is an
+     dnl expert in C operator precedence... which is unlikely!
+     AX_CFLAGS_GCC_OPTION([-Wlogical-op-parentheses])
      dnl
      dnl Reports declaration of global things that are done inside
      dnl a local environment, instead of using the appropriate
      dnl header
      AX_CFLAGS_GCC_OPTION([-Wnested-externs])
+     dnl
+     dnl Warn about constant strings that could pose portability issues
+     AX_CFLAGS_GCC_OPTION([-Woverlength-strings])
      dnl
      dnl Use of 'sizeof()' on inappropriate pointer types
      AX_CFLAGS_GCC_OPTION([-Wpointer-arith])
@@ -128,6 +161,16 @@ AS_IF([test "x$debug" = "xyes"],
      dnl Having more than 1 prototype for a function makes code updates
      dnl more difficult, so try to avoid it
      AX_CFLAGS_GCC_OPTION([-Wredundant-decls])
+     dnl
+     dnl clang, detect some misuses of sizeof. We also count in our code
+     dnl on the use of the macro 'wlength' which contains a check if the
+     dnl compiler support C11's static_assert
+     AX_CFLAGS_GCC_OPTION([-Wsizeof-array-argument])
+     dnl
+     dnl Prototype of function must be explicit, no deprecated K&R syntax
+     dnl and no empty argument list which prevents compiler from doing
+     dnl type checking when using the function
+     WM_CFLAGS_GCC_OPTION_STRICTPROTO
      dnl
      dnl Proper attributes helps the compiler to produce better code
      WM_CFLAGS_CHECK_FIRST([format attribute suggest],
@@ -139,14 +182,12 @@ AS_IF([test "x$debug" = "xyes"],
           -Wmissing-noreturn            dnl clang syntax
          ])
      dnl
-     dnl The use of trampolines cause code that can crash on some
-     dnl secured OS, and in a more general way generate binary code
-     dnl that may not be optimal
-     AX_CFLAGS_GCC_OPTION([-Wtrampolines])
-     dnl
      dnl GCC provides a couple of checks to detect incorrect macro uses
      AX_CFLAGS_GCC_OPTION([-Wundef])
-     AX_CFLAGS_GCC_OPTION([-Wunused-macros])
+     WM_CFLAGS_GCC_OPTION_UNUSEDMACROS
+     dnl
+     dnl clang reports stuff marked unused but which is actually used
+     AX_CFLAGS_GCC_OPTION([-Wused-but-marked-unused])
 ], [dnl
      dnl When debug not enabled, we try to avoid some non-necessary
      dnl messages from the compiler
@@ -157,6 +198,12 @@ AS_IF([test "x$debug" = "xyes"],
      AX_CFLAGS_GCC_OPTION([-Wno-deprecated])
      AX_CFLAGS_GCC_OPTION([-Wno-deprecated-declarations])
 ])
+
+
+dnl Support for Nested Functions by the compiler
+dnl ============================================
+WM_PROG_CC_NESTEDFUNC
+
 
 dnl Posix thread
 dnl =================
@@ -839,6 +886,12 @@ fi
 
 gl_LD_VERSION_SCRIPT
 
+
+dnl Add the post-poned compilation options
+dnl ======================================
+WM_CFLAGS_GCC_OPTION_POSTPONED
+
+
 AC_OUTPUT(Makefile po/Makefile util/Makefile util/po/Makefile test/Makefile \
 	WINGs/Makefile WINGs/WINGs/Makefile WINGs/Documentation/Makefile \
 	WINGs/Examples/Makefile WINGs/Resources/Makefile WINGs/Tests/Makefile \
@@ -904,6 +957,9 @@ fi
 AS_IF([test "x$debug" = "xyes"],
     [AS_ECHO(["Debug enabled: CFLAGS = $CFLAGS"]) ])
 echo
+
+AS_IF([test "x$wm_cv_prog_cc_nestedfunc" != "xyes"],
+    [AC_MSG_WARN([[Your compiler does not support Nested Function, work-around enabled]])])
 
 dnl WM_PRINT_REDCRAP_BUG_STATUS
 

@@ -49,6 +49,7 @@
 #include "wmspec.h"
 #include "xinerama.h"
 #include "event.h"
+#include "wsmap.h"
 
 #define MC_NEW          0
 #define MC_DESTROY_LAST 1
@@ -56,7 +57,6 @@
 /* index of the first workspace menu entry */
 #define MC_WORKSPACE1   3
 
-#define MAX_SHORTCUT_LENGTH 32
 #define WORKSPACE_NAME_DISPLAY_PADDING 32
 
 
@@ -186,6 +186,9 @@ Bool wWorkspaceDelete(virtual_screen *vscr, int workspace)
 		} else {
 			if (vscr->workspace.array[i]->name)
 				wfree(vscr->workspace.array[i]->name);
+
+			if (vscr->workspace.array[i]->map)
+				RReleaseImage(vscr->workspace.array[i]->map);
 
 			wfree(vscr->workspace.array[i]);
 		}
@@ -497,6 +500,10 @@ void wWorkspaceForceChange(virtual_screen *vscr, int workspace)
 
 	if (workspace >= MAX_WORKSPACES || workspace < 0)
 		return;
+
+	if (!wPreferences.disable_workspace_pager &&
+	    !vscr->workspace.process_map_event)
+		wWorkspaceMapUpdate(vscr);
 
 	SendHelperMessage(vscr, 'C', workspace + 1, NULL);
 

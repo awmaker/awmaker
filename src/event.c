@@ -77,6 +77,7 @@
 #include "event.h"
 #include "winmenu.h"
 #include "switchmenu.h"
+#include "wsmap.h"
 
 
 #define MOD_MASK wPreferences.modifier_mask
@@ -1557,6 +1558,10 @@ static void handleKeyPress(XEvent *event)
 		if (ISMAPPED(wwin) && ISFOCUSED(wwin))
 			wSelectWindow(wwin, !wwin->flags.selected);
 
+		break;
+	case WKBD_WORKSPACEMAP:
+		if (!wPreferences.disable_workspace_pager)
+			StartWorkspaceMap(vscr);
 		break;
 	case WKBD_FOCUSNEXT:
 		StartWindozeCycle(wwin, event, True, False);
