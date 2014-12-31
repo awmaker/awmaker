@@ -453,7 +453,7 @@ static void showBalloon(virtual_screen *vscr)
 	}
 
 	if (wPreferences.miniwin_apercu_balloon && vscr->screen_ptr->balloon->apercu != None)
-		/* used to display either the apercu alone or the apercu and the title */
+		/* used to display either the mini-preview alone or the mini-preview with the title */
 		showApercu(vscr, x, y, vscr->screen_ptr->balloon->text, vscr->screen_ptr->balloon->apercu);
 	else
 		showText(vscr, x, y, vscr->screen_ptr->balloon->h, w, vscr->screen_ptr->balloon->text);
