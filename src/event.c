@@ -1736,7 +1736,7 @@ static void handleKeyPress(XEvent *event)
 
 	case WKBD_RUN:
 	{
-		char *cmdline = ExpandOptions(vscr, _("exec %a(Run,Type command to run:)"));
+		char *cmdline = ExpandOptions(vscr, _("exec %A(Run,Type command to run:)"));
 
 		if (cmdline) {
 			XGrabPointer(dpy, vscr->screen_ptr->root_win, True, 0,
