@@ -59,7 +59,7 @@
 #include "placement.h"
 #include "misc.h"
 #include "event.h"
-#ifdef XDND
+#ifdef USE_DOCK_XDND
 #include "xdnd.h"
 #endif
 
@@ -126,7 +126,7 @@ enum
 
 static WMPropList *dCommand = NULL;
 static WMPropList *dPasteCommand = NULL;
-#ifdef XDND			/* XXX was OFFIX */
+#ifdef USE_DOCK_XDND			/* XXX was OFFIX */
 static WMPropList *dDropCommand = NULL;
 #endif
 static WMPropList *dAutoLaunch, *dLock;
@@ -224,7 +224,7 @@ static void make_keys(void)
 
 	dCommand = WMRetainPropList(WMCreatePLString("Command"));
 	dPasteCommand = WMRetainPropList(WMCreatePLString("PasteCommand"));
-#ifdef XDND
+#ifdef USE_DOCK_XDND
 	dDropCommand = WMRetainPropList(WMCreatePLString("DropCommand"));
 #endif
 	dLock = WMRetainPropList(WMCreatePLString("Lock"));
@@ -1632,7 +1632,7 @@ void dock_map(WDock *dock, virtual_screen *vscr, WMPropList *state)
 	WMAddNotificationObserver(icon_appearanceObserver, btn->icon, WNIconAppearanceSettingsChanged, btn->icon);
 	WMAddNotificationObserver(icon_tileObserver, btn->icon, WNIconTileSettingsChanged, btn->icon);
 
-#ifdef XDND
+#ifdef USE_DOCK_XDND
 	wXDNDMakeAwareness(btn->icon->core->window);
 #endif
 
@@ -1712,7 +1712,7 @@ void clip_icon_map(virtual_screen *vscr)
 	WMAddNotificationObserver(icon_tileObserver, w_global.clip.icon->icon,
 				  WNIconTileSettingsChanged, w_global.clip.icon->icon);
 
-#ifdef XDND
+#ifdef USE_DOCK_XDND
 	wXDNDMakeAwareness(w_global.clip.icon->icon->core->window);
 #endif
 
@@ -1851,7 +1851,7 @@ void drawer_map(WDock *dock, virtual_screen *vscr)
 	WMAddNotificationObserver(icon_appearanceObserver, btn->icon, WNIconAppearanceSettingsChanged, btn->icon);
 	WMAddNotificationObserver(icon_tileObserver, btn->icon, WNIconTileSettingsChanged, btn->icon);
 
-#ifdef XDND
+#ifdef USE_DOCK_XDND
 	wXDNDMakeAwareness(btn->icon->core->window);
 #endif
 
@@ -2018,13 +2018,13 @@ static WMPropList *make_icon_state(virtual_screen *vscr, WAppIcon *btn)
 		if (btn->dock != vscr->dock.dock && (btn->xindex != 0 || btn->yindex != 0))
 			WMPutInPLDictionary(node, dOmnipresent, omnipresent);
 
-#ifdef XDND			/* was OFFIX */
+#ifdef USE_DOCK_XDND			/* was OFFIX */
 		if (btn->dnd_command) {
 			command = WMCreatePLString(btn->dnd_command);
 			WMPutInPLDictionary(node, dDropCommand, command);
 			WMReleasePropList(command);
 		}
-#endif				/* XDND */
+#endif
 
 		if (btn->paste_command) {
 			command = WMCreatePLString(btn->paste_command);
@@ -2268,7 +2268,7 @@ static WAppIcon *restore_dock_icon_state(WMPropList *info, int index)
 	aicon->icon->core->descriptor.parent_type = WCLASS_DOCK_ICON;
 	aicon->icon->core->descriptor.parent = aicon;
 
-#ifdef XDND			/* was OFFIX */
+#ifdef USE_DOCK_XDND			/* was OFFIX */
 	cmd = WMGetFromPLDictionary(info, dDropCommand);
 	if (cmd)
 		aicon->dnd_command = wstrdup(WMGetFromPLString(cmd));
@@ -2375,7 +2375,7 @@ static WAppIcon *restore_clip_icon_state(WMPropList *info, int index)
 	aicon->icon->core->descriptor.parent_type = WCLASS_DOCK_ICON;
 	aicon->icon->core->descriptor.parent = aicon;
 
-#ifdef XDND			/* was OFFIX */
+#ifdef USE_DOCK_XDND			/* was OFFIX */
 	cmd = WMGetFromPLDictionary(info, dDropCommand);
 	if (cmd)
 		aicon->dnd_command = wstrdup(WMGetFromPLString(cmd));
@@ -2478,7 +2478,7 @@ static WAppIcon *restore_drawer_icon_state(WMPropList *info, int index)
 	aicon->icon->core->descriptor.parent_type = WCLASS_DOCK_ICON;
 	aicon->icon->core->descriptor.parent = aicon;
 
-#ifdef XDND			/* was OFFIX */
+#ifdef USE_DOCK_XDND			/* was OFFIX */
 	cmd = WMGetFromPLDictionary(info, dDropCommand);
 	if (cmd)
 		aicon->dnd_command = wstrdup(WMGetFromPLString(cmd));
@@ -3070,7 +3070,7 @@ static void wDockDoAutoLaunch(WDock *dock, int workspace)
 	}
 }
 
-#ifdef XDND			/* was OFFIX */
+#ifdef USE_DOCK_XDND			/* was OFFIX */
 static WDock *findDock(virtual_screen *vscr, XEvent *event, int *icon_pos)
 {
 	WDock *dock;
@@ -3155,7 +3155,7 @@ int wDockReceiveDNDDrop(virtual_screen *vscr, XEvent *event)
 
 	return False;
 }
-#endif				/* XDND */
+#endif	/* USE_DOCK_XDND */
 
 Bool dock_attach_icon(WDock *dock, WAppIcon *icon, int x, int y, Bool update_icon)
 {
@@ -3247,7 +3247,7 @@ Bool dock_attach_icon(WDock *dock, WAppIcon *icon, int x, int y, Bool update_ico
 	if (wPreferences.auto_arrange_icons)
 		wArrangeIcons(dock->vscr, True);
 
-#ifdef XDND			/* was OFFIX */
+#ifdef USE_DOCK_XDND			/* was OFFIX */
 	if (icon->command && !icon->dnd_command) {
 		int len = strlen(icon->command) + 8;
 		icon->dnd_command = wmalloc(len);
@@ -3359,7 +3359,7 @@ Bool clip_attach_icon(WDock *dock, WAppIcon *icon, int x, int y, Bool update_ico
 	if (wPreferences.auto_arrange_icons)
 		wArrangeIcons(dock->vscr, True);
 
-#ifdef XDND			/* was OFFIX */
+#ifdef USE_DOCK_XDND			/* was OFFIX */
 	if (icon->command && !icon->dnd_command) {
 		int len = strlen(icon->command) + 8;
 		icon->dnd_command = wmalloc(len);
@@ -3465,7 +3465,7 @@ Bool drawer_attach_icon(WDock *dock, WAppIcon *icon, int x, int y, Bool update_i
 	if (wPreferences.auto_arrange_icons)
 		wArrangeIcons(dock->vscr, True);
 
-#ifdef XDND			/* was OFFIX */
+#ifdef USE_DOCK_XDND			/* was OFFIX */
 	if (icon->command && !icon->dnd_command) {
 		int len = strlen(icon->command) + 8;
 		icon->dnd_command = wmalloc(len);
@@ -3704,7 +3704,7 @@ void wDockDetach(WDock *dock, WAppIcon *icon)
 		wfree(icon->command);
 		icon->command = NULL;
 	}
-#ifdef XDND			/* was OFFIX */
+#ifdef USE_DOCK_XDND			/* was OFFIX */
 	if (icon->dnd_command) {
 		wfree(icon->dnd_command);
 		icon->dnd_command = NULL;
@@ -4774,7 +4774,7 @@ static void trackDeadProcess(pid_t pid, unsigned char status, WDock *dock)
 				char msg[PATH_MAX];
 				char *cmd;
 
-#ifdef XDND
+#ifdef USE_DOCK_XDND
 				if (icon->drop_launch)
 					cmd = icon->dnd_command;
 				else
@@ -6835,11 +6835,11 @@ static WDock *drawerRestoreState(virtual_screen *vscr, WMPropList *drawer_state)
 	drawer = drawer_create(vscr, WMGetFromPLString(value));
 
 	/* restore DnD command and paste command */
-#ifdef XDND
+#ifdef USE_DOCK_XDND
 	value = WMGetFromPLDictionary(drawer_state, dDropCommand);
 	if (value && WMIsPLString(value))
 		drawer->icon_array[0]->dnd_command = wstrdup(WMGetFromPLString(value));
-#endif /* XDND */
+#endif /* USE_DOCK_XDND */
 
 	value = WMGetFromPLDictionary(drawer_state, dPasteCommand);
 	if (value && WMIsPLString(value))
@@ -6920,14 +6920,14 @@ static WMPropList *drawerSaveState(virtual_screen *vscr, WDock *drawer)
 	WMPutInPLDictionary(drawer_state, dPosition, pstr);
 	WMReleasePropList(pstr);
 
-#ifdef XDND
+#ifdef USE_DOCK_XDND
 	/* Store its DnD command */
 	if (ai->dnd_command) {
 		pstr = WMCreatePLString(ai->dnd_command);
 		WMPutInPLDictionary(drawer_state, dDropCommand, pstr);
 		WMReleasePropList(pstr);
 	}
-#endif /* XDND */
+#endif /* USE_DOCK_XDND */
 
 	/* Store its paste command */
 	if (ai->paste_command) {

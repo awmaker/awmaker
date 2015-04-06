@@ -306,7 +306,7 @@ struct WScreen {
     WMHandlerID *autoRaiseTimer;
     Window autoRaiseWindow;	       /* window that is scheduled to be
                                         * raised */
-#ifdef XDND
+#ifdef USE_DOCK_XDND
     char *xdestring;
 #endif
 

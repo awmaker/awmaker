@@ -97,7 +97,7 @@ void wDockLaunchWithState(WAppIcon *btn, WSavedState *state);
 
 void dockedapps_autolaunch(int vscrno);
 
-#ifdef XDND
+#ifdef USE_DOCK_XDND
 int wDockReceiveDNDDrop(virtual_screen *vscr, XEvent *event);
 #endif
 

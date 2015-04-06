@@ -52,7 +52,7 @@
 #include "placement.h"
 #include "misc.h"
 #include "event.h"
-#ifdef XDND
+#ifdef USE_DOCK_XDND
 #include "xdnd.h"
 #endif
 
@@ -305,7 +305,7 @@ static WAppIcon *wAppIcon_create(WWindow *leader_win)
 static void wAppIcon_map(WAppIcon *aicon)
 {
 	icon_for_wwindow_map(aicon->icon);
-#ifdef XDND
+#ifdef USE_DOCK_XDND
 	wXDNDMakeAwareness(aicon->icon->core->window);
 #endif
 
@@ -344,7 +344,7 @@ void wAppIconDestroy(WAppIcon *aicon)
 	wIconDestroy(aicon->icon);
 	if (aicon->command)
 		wfree(aicon->command);
-#ifdef XDND
+#ifdef USE_DOCK_XDND
 	if (aicon->dnd_command)
 		wfree(aicon->dnd_command);
 #endif
@@ -640,7 +640,7 @@ void appicon_map(WAppIcon *aicon, virtual_screen *vscr)
 	WMAddNotificationObserver(icon_appearanceObserver, aicon->icon, WNIconAppearanceSettingsChanged, aicon->icon);
 	WMAddNotificationObserver(icon_tileObserver, aicon->icon, WNIconTileSettingsChanged, aicon->icon);
 
-#ifdef XDND
+#ifdef USE_DOCK_XDND
 	wXDNDMakeAwareness(aicon->icon->core->window);
 #endif
 

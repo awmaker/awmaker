@@ -661,7 +661,7 @@ char *ExpandOptions(virtual_screen *vscr, const char *cmdline)
 				}
 				break;
 
-#ifdef XDND
+#ifdef USE_DOCK_XDND
 			case 'd':
 				if (!vscr->screen_ptr->xdestring) {
 					vscr->screen_ptr->flags.dnd_data_convertion_status = 1;
@@ -688,7 +688,7 @@ char *ExpandOptions(virtual_screen *vscr, const char *cmdline)
 				strcat(out, vscr->screen_ptr->xdestring);
 				optr += slen;
 				break;
-#endif				/* XDND */
+#endif				/* USE_DOCK_XDND */
 
 			case 's':
 				if (!selection)

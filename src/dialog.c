@@ -1309,7 +1309,7 @@ void wShowInfoPanel(virtual_screen *vscr)
 	strbuf = wstrappend(strbuf, ", MWM");
 #endif
 
-#ifdef XDND
+#ifdef USE_DOCK_XDND
 	strbuf = wstrappend(strbuf, ", XDnD");
 #endif
 
