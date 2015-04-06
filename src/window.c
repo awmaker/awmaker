@@ -64,7 +64,7 @@
 #include "winmenu.h"
 #include "osdep.h"
 
-#ifdef MWM_HINTS
+#ifdef USE_MWM_HINTS
 # include "motif.h"
 #endif
 #include "wmspec.h"
@@ -349,9 +349,9 @@ void wWindowSetupInitialAttributes(WWindow *wwin, int *level, int *workspace)
 		int tmp_workspace = -1;
 		int tmp_level = INT_MIN;	/* INT_MIN is never used by the window levels */
 
-#ifdef MWM_HINTS
+#ifdef USE_MWM_HINTS
 		wMWMCheckClientHints(wwin);
-#endif				/* MWM_HINTS */
+#endif	/* USE_MWM_HINTS */
 
 		wNETWMCheckClientHints(wwin, &tmp_level, &tmp_workspace);
 
