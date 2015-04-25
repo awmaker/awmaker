@@ -371,15 +371,17 @@ static void create_mini_workspace(virtual_screen *vscr, WWorkspaceMap *wsmap, W_
 
 static WWorkspaceMap *create_workspace_map(virtual_screen *vscr, W_WorkspaceMap *wsmap_array, int edge)
 {
-	WWorkspaceMap *wsmap = wmalloc(sizeof(WWorkspaceMap));
+	WWorkspaceMap *wsmap;
+
+	if (vscr->workspace.count == 0)
+		return NULL;
+
+	wsmap = wmalloc(sizeof(WWorkspaceMap));
 
 	wsmap->border_width = 5;
 	wsmap->edge = edge;
 	wsmap->mini_workspace_width = vscr->screen_ptr->scr_width / WORKSPACE_MAP_RATIO;
 	wsmap->mini_workspace_height = vscr->screen_ptr->scr_height / WORKSPACE_MAP_RATIO;
-
-	if (vscr->workspace.count == 0)
-		return NULL;
 
 	wsmap->vscr = vscr;
 	wsmap->win = WMCreateWindow(vscr->screen_ptr->wmscreen, "wsmap");
