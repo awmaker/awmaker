@@ -609,6 +609,26 @@ void wWorkspaceForceChange(virtual_screen *vscr, int workspace)
 		if (!foc)
 			foc = foc2;
 
+		/*
+		 * Check that the window we want to focus still exists, because the application owning it
+		 * could decide to unmap/destroy it in response to unmap any of its other window following
+		 * the workspace change, this happening during our 'ProcessPendingEvents' loop.
+		 */
+		if (foc != NULL) {
+			WWindow *parse;
+			Bool found;
+
+			found = False;
+			for (parse = vscr->screen_ptr->focused_window; parse != NULL; parse = parse->prev) {
+				if (parse == foc) {
+					found = True;
+					break;
+				}
+			}
+			if (!found)
+				foc = NULL;
+		}
+
 		if (vscr->screen_ptr->focused_window->flags.mapped && !foc)
 			foc = vscr->screen_ptr->focused_window;
 
