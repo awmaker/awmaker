@@ -422,7 +422,19 @@ static WSavedState *getWindowState(virtual_screen *vscr, WMPropList *win_state)
 	return state;
 }
 
-#define SAME(x, y) (((x) && (y) && !strcmp((x), (y))) || (!(x) && !(y)))
+static inline int is_same(const char *x, const char *y)
+{
+	if ((x == NULL) && (y == NULL))
+		return 1;
+
+	if ((x == NULL) || (y == NULL))
+		return 0;
+
+	if (strcmp(x, y) == 0)
+		return 1;
+	else
+		return 0;
+}
 
 void wSessionRestoreState(virtual_screen *vscr)
 {
@@ -507,8 +519,10 @@ void wSessionRestoreState(virtual_screen *vscr)
 		if (dock != NULL) {
 			for (j = 0; j < dock->max_icons; j++) {
 				btn = dock->icon_array[j];
-				if (btn && SAME(instance, btn->wm_instance) &&
-				    SAME(class, btn->wm_class) && SAME(command, btn->command) && !btn->launching) {
+				if (btn && is_same(instance, btn->wm_instance) &&
+				    is_same(class, btn->wm_class) &&
+				    is_same(command, btn->command) &&
+				    !btn->launching) {
 					found = 1;
 					break;
 				}
