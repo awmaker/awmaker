@@ -2447,32 +2447,29 @@ static WDock *findDock(virtual_screen *vscr, XEvent *event, int *icon_pos)
 	WDock *dock;
 	int i;
 
-	*icon_pos = -1;
 	dock = vscr->dock.dock;
 	if (dock != NULL) {
 		for (i = 0; i < dock->max_icons; i++) {
-			if (dock->icon_array[i]
-			    && dock->icon_array[i]->icon->core->window == event->xclient.window) {
+			if (dock->icon_array[i] &&
+			    dock->icon_array[i]->icon->core->window == event->xclient.window) {
 				*icon_pos = i;
-				break;
+				return dock;
 			}
 		}
 	}
 
 	dock = vscr->workspace.array[vscr->workspace.current]->clip;
-	if ((*icon_pos < 0) && (dock != NULL)) {
+	if (dock != NULL) {
 		for (i = 0; i < dock->max_icons; i++) {
-			if (dock->icon_array[i]
-			    && dock->icon_array[i]->icon->core->window == event->xclient.window) {
+			if (dock->icon_array[i] &&
+			    dock->icon_array[i]->icon->core->window == event->xclient.window) {
 				*icon_pos = i;
-				break;
+				return dock;
 			}
 		}
 	}
 
-	if (*icon_pos >= 0)
-		return dock;
-
+	*icon_pos = -1;
 	return NULL;
 }
 
