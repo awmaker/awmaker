@@ -1001,7 +1001,7 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 
 			Bool docked = False;
 			if (ondock) {
-				SlideWindow(icon->core->window, x, y, shad_x, shad_y);
+				slide_window(icon->core->window, x, y, shad_x, shad_y);
 				XUnmapWindow(dpy, scr->dock_shadow);
 				if (originalDock == NULL) { // docking an undocked appicon
 					docked = wDockAttachIcon(lastDock, aicon, ix, iy, False);
@@ -1013,7 +1013,7 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 						if (lastDock->type == WM_DRAWER) /* Also fill the gap left in the drawer */
 							wDrawerFillTheGap(lastDock, aicon, False);
 
-						SlideWindow(icon->core->window, x, y, oldX, oldY);
+						slide_window(icon->core->window, x, y, oldX, oldY);
 					}
 				} else { /* moving a docked appicon to a dock */
 					if (originalDock == lastDock) {
@@ -1048,7 +1048,7 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 								/* Trust the appicon is inserted at exactly the same place, so its oldX/oldY are consistent with its "new" location? */
 							}
 
-							SlideWindow(icon->core->window, x, y, oldX, oldY);
+							slide_window(icon->core->window, x, y, oldX, oldY);
 							wDockReattachIcon(originalDock, aicon, aicon->xindex, aicon->yindex);
 						} else {
 							if (originalDock->auto_collapse && !originalDock->collapsed) {
@@ -1290,7 +1290,7 @@ void move_appicon_to_dock(virtual_screen *vscr, WAppIcon *icon, char *wm_class, 
 	wAppIconPaint(aicon);
 
 	/* Move to the docked icon and destroy it */
-	SlideWindow(aicon->icon->core->window, x0, y0, icon->x_pos, icon->y_pos);
+	slide_window(aicon->icon->core->window, x0, y0, icon->x_pos, icon->y_pos);
 	XUnmapWindow(dpy, aicon->icon->core->window);
 	wAppIconDestroy(aicon);
 }
