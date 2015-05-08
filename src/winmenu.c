@@ -48,6 +48,18 @@
 #include "xinerama.h"
 #include "winmenu.h"
 
+static WMenu *makeWorkspaceMenu(virtual_screen *vscr);
+static WMenu *makeOptionsMenu(virtual_screen *vscr);
+static WMenu *makeMaximizeMenu(virtual_screen *vscr);
+
+/*
+ * Define the Menu entry that will be present in the Window menu
+ *
+ * The order of this list defines the order in which they will appear;
+ * make sure to keep the structure below aligned with the list because
+ * the constant index is used in many places.
+ */
+
 enum
 {
 	MC_MAXIMIZE,
@@ -57,13 +69,39 @@ enum
 	MC_HIDE,
 	MC_MOVERESIZE,
 	MC_SELECT,
-	MC_DUMMY_MOVETO,
+	MC_CHANGEWKSPC,
 	MC_PROPERTIES,
 	MC_OPTIONS,
 	MC_RELAUNCH,
 	MC_CLOSE,
 	MC_KILL
 };
+
+static const struct {
+	const char *label;
+	WMenu *(*generate_submenu)(virtual_screen *vscr);
+} window_menu_entries[] = {
+	[MC_MAXIMIZE]    = { N_("Maximize"), NULL },
+	[MC_OTHERMAX]    = { N_("Other maximization"), makeMaximizeMenu },
+	[MC_MINIATURIZE] = { N_("Miniaturize"), NULL },
+	[MC_SHADE]       = { N_("Shade"), NULL },
+	[MC_HIDE]        = { N_("Hide"), NULL },
+	[MC_MOVERESIZE]  = { N_("Resize/Move"), NULL },
+	[MC_SELECT]      = { N_("Select"), NULL },
+	[MC_CHANGEWKSPC] = { N_("Move To"), makeWorkspaceMenu },
+	[MC_PROPERTIES]  = { N_("Attributes..."), NULL },
+	[MC_OPTIONS]     = { N_("Options"), makeOptionsMenu },
+	[MC_RELAUNCH]    = { N_("Launch"), NULL },
+	[MC_CLOSE]       = { N_("Close"), NULL },
+	[MC_KILL]        = { N_("Kill"), NULL }
+};
+
+/*
+ * Defines the menu entries for the Options sub-menu
+ *
+ * These options will be placed at the beginning of the menu, the rest will
+ * be populated with the Window Shortcut possibilities
+ */
 
 enum
 {
@@ -475,19 +513,13 @@ static WMenu *makeWorkspaceMenu(virtual_screen *vscr)
 
 	updateWorkspaceMenu(vscr, menu);
 
-	return menu;
-}
-
-static WMenu *makeMakeShortcutMenu(WMenu *menu)
-{
-	int i;
-
-	for (i = 0; i < MAX_WINDOW_SHORTCUTS; i++) {
-		WMenuEntry *entry;
-		entry = wMenuAddCallback(menu, "", makeShortcutCommand, NULL);
-
-		entry->flags.indicator = 1;
-	}
+	/*
+	 * The Workspace Menu is made visible in the screen structure because
+	 * it is updated when there is a change on workspaces. This was done
+	 * to be efficient, avoiding re-generating completely the window menu
+	 * and its sub-menus everytime it is needed.
+	 */
+	vscr->workspace.submenu = menu;
 
 	return menu;
 }
@@ -496,6 +528,7 @@ static WMenu *makeOptionsMenu(virtual_screen *vscr)
 {
 	WMenu *menu;
 	WMenuEntry *entry;
+	int i;
 
 	menu = wMenuCreate(vscr, NULL);
 	if (!menu) {
@@ -514,6 +547,11 @@ static WMenu *makeOptionsMenu(virtual_screen *vscr)
 	entry = wMenuAddCallback(menu, _("Omnipresent"), execWindowOptionCommand, NULL);
 	entry->flags.indicator = 1;
 	entry->flags.indicator_type = MI_CHECK;
+
+	for (i = 0; i < MAX_WINDOW_SHORTCUTS; i++) {
+		entry = wMenuAddCallback(menu, "", makeShortcutCommand, NULL);
+		entry->flags.indicator = 1;
+	}
 
 	return menu;
 }
@@ -538,35 +576,23 @@ static WMenu *makeMaximizeMenu(virtual_screen *vscr)
 static WMenu *createWindowMenu(virtual_screen *vscr)
 {
 	WMenu *menu;
-	WMenuEntry *entry;
+	int i;
 
 	menu = wMenuCreate(vscr, NULL);
-	/*
-	 * Warning: If you make some change that affects the order of the
-	 * entries, you must update the command enum in the top of
-	 * this file.
-	 */
-	entry = wMenuAddCallback(menu, _("Maximize"), execMenuCommand, NULL);
-	entry = wMenuAddCallback(menu, _("Other maximization"), NULL, NULL);
-	wMenuEntrySetCascade(menu, entry, makeMaximizeMenu(vscr));
 
-	entry = wMenuAddCallback(menu, _("Miniaturize"), execMenuCommand, NULL);
-	entry = wMenuAddCallback(menu, _("Shade"), execMenuCommand, NULL);
-	entry = wMenuAddCallback(menu, _("Hide"), execMenuCommand, NULL);
-	entry = wMenuAddCallback(menu, _("Resize/Move"), execMenuCommand, NULL);
-	entry = wMenuAddCallback(menu, _("Select"), execMenuCommand, NULL);
-	entry = wMenuAddCallback(menu, _("Move To"), NULL, NULL);
-	vscr->workspace.submenu = makeWorkspaceMenu(vscr);
-	if (vscr->workspace.submenu)
-		wMenuEntrySetCascade(menu, entry, vscr->workspace.submenu);
+	for (i = 0; i < wlengthof(window_menu_entries); i++) {
+		WMenuEntry *entry;
 
-	entry = wMenuAddCallback(menu, _("Attributes..."), execMenuCommand, NULL);
-	entry = wMenuAddCallback(menu, _("Options"), NULL, NULL);
-	wMenuEntrySetCascade(menu, entry, makeMakeShortcutMenu(makeOptionsMenu(vscr)));
+		entry = wMenuAddCallback(menu, _(window_menu_entries[i].label),
+					 (window_menu_entries[i].generate_submenu == NULL) ? execMenuCommand : NULL,
+					 NULL);
+		if (window_menu_entries[i].generate_submenu != NULL) {
+			WMenu *submenu;
 
-	entry = wMenuAddCallback(menu, _("Launch"), execMenuCommand, NULL);
-	entry = wMenuAddCallback(menu, _("Close"), execMenuCommand, NULL);
-	entry = wMenuAddCallback(menu, _("Kill"), execMenuCommand, NULL);
+			submenu = window_menu_entries[i].generate_submenu(vscr);
+			wMenuEntrySetCascade(menu, entry, submenu);
+		}
+	}
 
 	return menu;
 }
@@ -670,13 +696,12 @@ static void updateMenuForWindow(WMenu *menu, WWindow *wwin)
 		menu->entries[MC_SELECT]->text = text;
 	}
 
-	wMenuSetEnabled(menu, MC_DUMMY_MOVETO, !IS_OMNIPRESENT(wwin));
+	wMenuSetEnabled(menu, MC_CHANGEWKSPC, !IS_OMNIPRESENT(wwin));
 
-	if (!wwin->flags.inspector_open) {
+	if (!wwin->flags.inspector_open)
 		wMenuSetEnabled(menu, MC_PROPERTIES, True);
-	} else {
+	else
 		wMenuSetEnabled(menu, MC_PROPERTIES, False);
-	}
 
 	/* Update shortcut labels except for (Un)Maximize which is
 	 * handled separately.
