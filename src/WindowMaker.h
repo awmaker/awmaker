@@ -403,6 +403,7 @@ extern struct WPreferences {
 	char dont_confirm_kill;            /* do not confirm Kill application */
 	char disable_miniwindows;
 	char disable_workspace_pager;
+	char ignore_gtk_decoration_hints;
 	char dont_blink;                   /* do not blink icon selection */
 
 	/* Appearance options */
@@ -569,6 +570,11 @@ extern struct wmaker_global_variables {
 			Atom wm_resizebar;
 			Atom titlebar_state;
 		} gnustep;
+
+		/* Destkop-environment related */
+		struct {
+			Atom gtk_object_path;
+		} desktop;
 
 		/* WindowMaker specific */
 		struct {
