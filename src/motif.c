@@ -92,15 +92,8 @@ static void setupMWMHints(WWindow *wwin, MWMHints *mwm_hints)
 			wwin->client_flags.no_border = 0;
 		}
 
-		if (mwm_hints->decorations & MWM_DECOR_BORDER) {
-			/*
-			 * WindowMaker is drawing only a discreet 1 pixel border without
-			 * any decoration like a few other X window managers used to do, so
-			 * we assume it is not worth spending the time to add extra
-			 * complexity to handle this special request, considering also that
-			 * the Motif toolkit is not used anymore nowadays.
-			 */
-		}
+		if (mwm_hints->decorations & MWM_DECOR_BORDER)
+			wwin->client_flags.no_border = 0;
 
 		if (mwm_hints->decorations & MWM_DECOR_RESIZEH)
 			wwin->client_flags.no_resizebar = 0;
