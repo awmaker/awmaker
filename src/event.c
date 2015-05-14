@@ -103,6 +103,7 @@ static void handleFocusIn(XEvent *event);
 static void handleMotionNotify(XEvent *event);
 static void handleVisibilityNotify(XEvent *event);
 static void handle_inotify_events(void);
+static void handle_selection_clear(XSelectionClearEvent *event);
 static void wdelete_death_handler(WMagicNumber id);
 
 
@@ -272,6 +273,10 @@ void DispatchEvent(XEvent *event)
 		if (event->xconfigure.window == DefaultRootWindow(dpy))
 			XRRUpdateConfiguration(event);
 #endif
+		break;
+
+	case SelectionClear:
+		handle_selection_clear(&event->xselectionclear);
 		break;
 
 	default:
@@ -1833,4 +1838,24 @@ static void handleVisibilityNotify(XEvent *event)
 		return;
 
 	wwin->flags.obscured = (event->xvisibility.state == VisibilityFullyObscured);
+}
+
+static void handle_selection_clear(XSelectionClearEvent *event)
+{
+	WScreen *scr;
+	virtual_screen *vscr;
+
+	vscr = wScreenForWindow(event->window);
+	if (!vscr)
+		return;
+
+	scr = vscr->screen_ptr;
+	if (!scr)
+		return;
+
+	if (event->selection != scr->sn_atom)
+		return;
+
+	wmessage(_("another window manager is replacing us!"));
+	Shutdown(WSExitMode);
 }

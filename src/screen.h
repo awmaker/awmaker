@@ -137,6 +137,7 @@ struct virtual_screen {
 struct WScreen {
     int	screen;			       /* screen number */
     Window info_window;		       /* for our window manager info stuff */
+    Atom sn_atom;		       /* window manager selection */
 
     int scr_width;		       /* size of the screen */
     int scr_height;
