@@ -138,9 +138,8 @@ static void drawMultiLineString(WMScreen *scr, Pixmap pixmap, WMColor *color,
 
 #define SPACE 12
 
-static void drawBalloon(virtual_screen *vscr, Pixmap bitmap, Pixmap pix, int x, int y, int w, int h, int side)
+static void drawBalloon(WScreen *scr, Pixmap bitmap, Pixmap pix, int x, int y, int w, int h, int side)
 {
-	WScreen *scr = vscr->screen_ptr;
 	GC bgc = scr->balloon->monoGC;
 	GC gc = scr->draw_gc;
 	int rad = h * 3 / 10;
@@ -224,9 +223,8 @@ static void drawBalloon(virtual_screen *vscr, Pixmap bitmap, Pixmap pix, int x, 
 	XDrawLines(dpy, pix, gc, pt, 3, CoordModeOrigin);
 }
 
-static Pixmap makePixmap(virtual_screen *vscr, int width, int height, int side, Pixmap *mask)
+static Pixmap makePixmap(WScreen *scr, int width, int height, int side, Pixmap *mask)
 {
-	WScreen *scr = vscr->screen_ptr;
 	WBalloon *bal = scr->balloon;
 	Pixmap bitmap;
 	Pixmap pixmap;
@@ -250,16 +248,15 @@ static Pixmap makePixmap(virtual_screen *vscr, int width, int height, int side, 
 		y = SPACE;
 	x = 0;
 
-	drawBalloon(vscr, bitmap, pixmap, x, y, width, height, side);
+	drawBalloon(scr, bitmap, pixmap, x, y, width, height, side);
 
 	*mask = bitmap;
 
 	return pixmap;
 }
 
-static void showText(virtual_screen *vscr, int x, int y, int h, int w, const char *text)
+static void showText(WScreen *scr, int x, int y, int h, int w, const char *text)
 {
-	WScreen *scr = vscr->screen_ptr;
 	int width;
 	int height;
 	Pixmap pixmap;
@@ -303,7 +300,7 @@ static void showText(virtual_screen *vscr, int x, int y, int h, int w, const cha
 		ty = 0;
 	}
 
-	pixmap = makePixmap(vscr, width, height, side, &mask);
+	pixmap = makePixmap(scr, width, height, side, &mask);
 
 	drawMultiLineString(scr->wmscreen, pixmap, scr->black, font, 8, ty + 2, text, strlen(text));
 
@@ -320,9 +317,8 @@ static void showText(virtual_screen *vscr, int x, int y, int h, int w, const cha
 }
 #else				/* !SHAPED_BALLOON */
 
-static void showText(virtual_screen *vscr, int x, int y, int h, int w, const char *text)
+static void showText(WScreen *scr, int x, int y, int h, int w, const char *text)
 {
-	WScreen *scr = vscr->scr;
 	int width;
 	int height;
 	Pixmap pixmap;
@@ -371,9 +367,8 @@ static void showText(virtual_screen *vscr, int x, int y, int h, int w, const cha
 }
 #endif				/* !SHAPED_BALLOON */
 
-static void show_minipreview(virtual_screen *vscr, int x, int y, const char *title, Pixmap mini_preview)
+static void show_minipreview(WScreen *scr, int x, int y, const char *title, Pixmap mini_preview)
 {
-	WScreen *scr = vscr->screen_ptr;
 	Pixmap pixmap;
 	WMFont *font = scr->info_text_font;
 	int width, height, titleHeight = 0;
@@ -439,25 +434,25 @@ static void show_minipreview(virtual_screen *vscr, int x, int y, const char *tit
 	scr->balloon->mapped = 1;
 }
 
-static void showBalloon(virtual_screen *vscr)
+static void showBalloon(WScreen *scr)
 {
 	int x, y;
 	Window foow;
 	unsigned foo, w;
 
-	vscr->screen_ptr->balloon->timer = NULL;
-	vscr->screen_ptr->balloon->ignoreTimer = 1;
+	scr->balloon->timer = NULL;
+	scr->balloon->ignoreTimer = 1;
 
-	if (!XGetGeometry(dpy, vscr->screen_ptr->balloon->objectWindow, &foow, &x, &y, &w, &foo, &foo, &foo)) {
-		vscr->screen_ptr->balloon->prevType = 0;
+	if (!XGetGeometry(dpy, scr->balloon->objectWindow, &foow, &x, &y, &w, &foo, &foo, &foo)) {
+		scr->balloon->prevType = 0;
 		return;
 	}
 
-	if (wPreferences.miniwin_preview_balloon && vscr->screen_ptr->balloon->mini_preview != None)
+	if (wPreferences.miniwin_preview_balloon && scr->balloon->mini_preview != None)
 		/* used to display either the mini-preview alone or the mini-preview with the title */
-		show_minipreview(vscr, x, y, vscr->screen_ptr->balloon->text, vscr->screen_ptr->balloon->mini_preview);
+		show_minipreview(scr, x, y, scr->balloon->text, scr->balloon->mini_preview);
 	else
-		showText(vscr, x, y, vscr->screen_ptr->balloon->h, w, vscr->screen_ptr->balloon->text);
+		showText(scr, x, y, scr->balloon->h, w, scr->balloon->text);
 }
 
 static void frameBalloon(WObjDescriptor *object)
@@ -498,7 +493,7 @@ static void miniwindowBalloon(WObjDescriptor *object)
 	if ((scr->balloon->prevType == object->parent_type || scr->balloon->prevType == WCLASS_APPICON)
 	    && scr->balloon->ignoreTimer) {
 		XUnmapWindow(dpy, scr->balloon->window);
-		showBalloon(vscr);
+		showBalloon(scr);
 	} else {
 		scr->balloon->timer = WMAddTimerHandler(BALLOON_DELAY, (WMCallback *) showBalloon, scr);
 	}
@@ -572,7 +567,7 @@ static void appiconBalloon(WObjDescriptor *object)
 	if ((scr->balloon->prevType == object->parent_type || scr->balloon->prevType == WCLASS_MINIWINDOW)
 	    && scr->balloon->ignoreTimer) {
 		XUnmapWindow(dpy, scr->balloon->window);
-		showBalloon(vscr);
+		showBalloon(scr);
 	} else {
 		scr->balloon->timer = WMAddTimerHandler(BALLOON_DELAY, (WMCallback *) showBalloon, scr);
 	}
