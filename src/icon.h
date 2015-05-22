@@ -29,8 +29,8 @@
 #define TILE_CLIP	1
 #define TILE_DRAWER	2
 
-/* This is the border, in pixel, drawn around an Aperçu */
-#define APERCU_BORDER 1
+/* This is the border, in pixel, drawn around a Mini-Preview */
+#define MINIPREVIEW_BORDER 1
 
 typedef struct WIcon {
 	WCoreWindow 	*core;
@@ -50,8 +50,8 @@ typedef struct WIcon {
 	unsigned int 	mapped:1;
 	unsigned int	highlighted:1;
 
-	Pixmap 		pixmap;
-	Pixmap          apercu;
+	Pixmap		pixmap;
+	Pixmap		mini_preview;
 
 	WMHandlerID	handlerID;	/* timer handler ID for cycling select
 					 * color */
@@ -78,7 +78,7 @@ char *get_name_for_instance_class(const char *wm_instance, const char *wm_class)
 
 void wIconSetHighlited(WIcon *icon, Bool flag);
 void set_icon_image_from_image(WIcon *icon, RImage *image);
-void set_icon_apercu(WIcon *icon, RImage *image);
+void set_icon_minipreview(WIcon *icon, RImage *image);
 void map_icon_image(WIcon *icon);
 
 void icon_appearanceObserver(void *self, WMNotification *notif);

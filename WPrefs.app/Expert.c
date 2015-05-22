@@ -43,7 +43,7 @@ static const struct {
 	{ N_("Disable miniwindows (icons for minimized windows). For use with KDE/GNOME."),
 	  /* default: */ False, OPTION_WMAKER, "DisableMiniwindows" },
 
-	{ N_("Disable workspace pager"),
+	{ N_("Disable workspace pager."),
 	  /* default: */ False, OPTION_WMAKER, "DisableWorkspacePager" },
 
 	{ N_("Do not set non-WindowMaker specific parameters (do not use xset)."),
@@ -84,7 +84,7 @@ static const struct {
 	  /* default: */ False, OPTION_WMAKER, "KbdModeLock" },
 #endif /* XKB_MODELOCK */
 
-	{ N_("Enable window snapping."),
+	{ N_("Maximize a window to side or corner by dragging."),
 	  /* default: */ False, OPTION_WMAKER, "WindowSnapping" },
 
 	{ N_("Open dialogs in the same workspace as their owners."),

@@ -69,24 +69,24 @@ void wWorkspaceMapUpdate(virtual_screen *vscr)
 {
 	WScreen *scr = vscr->screen_ptr;
 	XImage *pimg;
-	RImage *apercu, *tmp;
+	RImage *mini_preview, *tmp;
 
 	pimg = XGetImage(dpy, scr->root_win, 0, 0,
 			 scr->scr_width, scr->scr_height,
 			 AllPlanes, ZPixmap);
 	if (pimg) {
-		apercu = RCreateImageFromXImage(scr->rcontext, pimg, NULL);
+		mini_preview = RCreateImageFromXImage(scr->rcontext, pimg, NULL);
 		XDestroyImage(pimg);
 
-		if (apercu) {
+		if (mini_preview) {
 			tmp = vscr->workspace.array[vscr->workspace.current]->map;
 			if (tmp)
 				RReleaseImage(tmp);
 
-			vscr->workspace.array[vscr->workspace.current]->map = RSmoothScaleImage(apercu,
+			vscr->workspace.array[vscr->workspace.current]->map = RSmoothScaleImage(mini_preview,
 												scr->scr_width / WORKSPACE_MAP_RATIO,
 												scr->scr_height / WORKSPACE_MAP_RATIO);
-			RReleaseImage(apercu);
+			RReleaseImage(mini_preview);
 		}
 	}
 }

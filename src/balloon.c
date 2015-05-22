@@ -60,7 +60,7 @@ typedef struct _WBalloon {
 	WMHandlerID timer;
 
 	Pixmap contents;
-	Pixmap apercu;
+	Pixmap mini_preview;
 
 	char mapped;
 	char ignoreTimer;
@@ -371,7 +371,7 @@ static void showText(virtual_screen *vscr, int x, int y, int h, int w, const cha
 }
 #endif				/* !SHAPED_BALLOON */
 
-static void showApercu(virtual_screen *vscr, int x, int y, const char *title, Pixmap apercu)
+static void show_minipreview(virtual_screen *vscr, int x, int y, const char *title, Pixmap mini_preview)
 {
 	WScreen *scr = vscr->screen_ptr;
 	Pixmap pixmap;
@@ -382,11 +382,11 @@ static void showApercu(virtual_screen *vscr, int x, int y, const char *title, Pi
 	if (scr->balloon->contents)
 		XFreePixmap(dpy, scr->balloon->contents);
 
-	width  = wPreferences.apercu_size;
-	height = wPreferences.apercu_size;
+	width  = wPreferences.minipreview_size;
+	height = wPreferences.minipreview_size;
 
 	if (wPreferences.miniwin_title_balloon) {
-		shortenTitle = ShrinkString(font, title, width - APERCU_BORDER * 2);
+		shortenTitle = ShrinkString(font, title, width - MINIPREVIEW_BORDER * 2);
 		titleHeight = countLines(shortenTitle) * WMFontHeight(font) + 4;
 		height += titleHeight;
 	}
@@ -414,14 +414,15 @@ static void showApercu(virtual_screen *vscr, int x, int y, const char *title, Pi
 
 	if (shortenTitle) {
 		drawMultiLineString(scr->wmscreen, pixmap, scr->window_title_color[0], font,
-						APERCU_BORDER, APERCU_BORDER, shortenTitle, strlen(shortenTitle));
+				    MINIPREVIEW_BORDER, MINIPREVIEW_BORDER,
+				    shortenTitle, strlen(shortenTitle));
 		wfree(shortenTitle);
 	}
 
-	XCopyArea(dpy, apercu, pixmap, scr->draw_gc,
-		  0, 0, (wPreferences.apercu_size - 1 - APERCU_BORDER * 2),
-		  (wPreferences.apercu_size - 1 - APERCU_BORDER * 2),
-		  APERCU_BORDER, APERCU_BORDER + titleHeight);
+	XCopyArea(dpy, mini_preview, pixmap, scr->draw_gc,
+		  0, 0, (wPreferences.minipreview_size - 1 - MINIPREVIEW_BORDER * 2),
+		  (wPreferences.minipreview_size - 1 - MINIPREVIEW_BORDER * 2),
+		  MINIPREVIEW_BORDER, MINIPREVIEW_BORDER + titleHeight);
 
 #ifdef SHAPED_BALLOON
 	XShapeCombineMask(dpy, scr->balloon->window, ShapeBounding, 0, 0, None, ShapeSet);
@@ -452,9 +453,9 @@ static void showBalloon(virtual_screen *vscr)
 		return;
 	}
 
-	if (wPreferences.miniwin_apercu_balloon && vscr->screen_ptr->balloon->apercu != None)
-		/* used to display either the apercu alone or the apercu and the title */
-		showApercu(vscr, x, y, vscr->screen_ptr->balloon->text, vscr->screen_ptr->balloon->apercu);
+	if (wPreferences.miniwin_preview_balloon && vscr->screen_ptr->balloon->mini_preview != None)
+		/* used to display either the mini-preview alone or the mini-preview with the title */
+		show_minipreview(vscr, x, y, vscr->screen_ptr->balloon->text, vscr->screen_ptr->balloon->mini_preview);
 	else
 		showText(vscr, x, y, vscr->screen_ptr->balloon->h, w, vscr->screen_ptr->balloon->text);
 }
@@ -491,7 +492,7 @@ static void miniwindowBalloon(WObjDescriptor *object)
 
 	scr->balloon->h = icon->core->height;
 	scr->balloon->text = wstrdup(icon->icon_name);
-	scr->balloon->apercu = icon->apercu;
+	scr->balloon->mini_preview = icon->mini_preview;
 	scr->balloon->objectWindow = icon->core->window;
 
 	if ((scr->balloon->prevType == object->parent_type || scr->balloon->prevType == WCLASS_APPICON)
@@ -614,7 +615,7 @@ void wBalloonEnteredObject(virtual_screen *vscr, WObjDescriptor *object)
 		wfree(scr->balloon->text);
 
 	scr->balloon->text = NULL;
-	scr->balloon->apercu = None;
+	scr->balloon->mini_preview = None;
 
 	if (!object) {
 		wBalloonHide(vscr);
@@ -632,7 +633,7 @@ void wBalloonEnteredObject(virtual_screen *vscr, WObjDescriptor *object)
 			appiconBalloon(object);
 		break;
 	case WCLASS_MINIWINDOW:
-		if (wPreferences.miniwin_title_balloon || wPreferences.miniwin_apercu_balloon)
+		if (wPreferences.miniwin_title_balloon || wPreferences.miniwin_preview_balloon)
 			miniwindowBalloon(object);
 		break;
 	case WCLASS_APPICON:

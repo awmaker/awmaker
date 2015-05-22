@@ -77,6 +77,8 @@ typedef struct _Panel {
 
 #define NON_OPAQUE_RESIZE_PIXMAP "noopaqueresize"
 
+#define PLACEMENT_WINDOW_PIXMAP "smallwindow"
+
 #define THUMB_SIZE	16
 
 static const struct {
@@ -95,10 +97,10 @@ static const struct {
 	const char *db_value;
 	const char *label;
 } drag_maximized_window_options[] = {
-	{ "Move",            N_("...change position (normal behavior)") },
-	{ "RestoreGeometry", N_("...restore unmaximized geometry")      },
-	{ "Unmaximize",      N_("...consider the window unmaximized")   },
-	{ "NoMove",          N_("...do not move the window")            }
+	{ "Move",            N_("...changes its position (normal behavior)") },
+	{ "RestoreGeometry", N_("...restores its unmaximized geometry")      },
+	{ "Unmaximize",      N_("...considers the window now unmaximized")   },
+	{ "NoMove",          N_("...does not move the window")               }
 };
 
 static void sliderCallback(WMWidget * w, void *data)
@@ -354,9 +356,29 @@ static void createPanel(Panel * p)
 	WMMoveWidget(panel->porigF, 9 + (204 - 13 - width) / 2, 45 + (109 - 13 - height) / 2);
 
 	panel->porigW = WMCreateLabel(panel->porigF);
-	WMResizeWidget(panel->porigW, THUMB_SIZE, THUMB_SIZE);
 	WMMoveWidget(panel->porigW, 2, 2);
-	WMSetLabelRelief(panel->porigW, WRRaised);
+	path = LocateImage(PLACEMENT_WINDOW_PIXMAP);
+	if (path) {
+		pixmap = WMCreatePixmapFromFile(scr, path);
+		if (pixmap) {
+			WMSize size;
+
+			WMSetLabelImagePosition(panel->porigW, WIPImageOnly);
+			size = WMGetPixmapSize(pixmap);
+			WMSetLabelImage(panel->porigW, pixmap);
+			WMResizeWidget(panel->porigW, size.width, size.height);
+			WMReleasePixmap(pixmap);
+		} else {
+			wwarning(_("could not load icon %s"), path);
+		}
+		wfree(path);
+		if (!pixmap)
+			goto use_old_window_representation;
+	} else {
+	use_old_window_representation:
+		WMResizeWidget(panel->porigW, THUMB_SIZE, THUMB_SIZE);
+		WMSetLabelRelief(panel->porigW, WRRaised);
+	}
 
 	panel->hsli = WMCreateSlider(panel->placF);
 	WMResizeWidget(panel->hsli, width, 12);
@@ -544,7 +566,7 @@ static void createPanel(Panel * p)
 	panel->dragmaxF = WMCreateFrame(panel->box);
 	WMResizeWidget(panel->dragmaxF, 357, 49);
 	WMMoveWidget(panel->dragmaxF, 8, 172);
-	WMSetFrameTitle(panel->dragmaxF, _("When dragging a maximized window..."));
+	WMSetFrameTitle(panel->dragmaxF, _("Dragging a maximized window..."));
 
 	panel->dragmaxP = WMCreatePopUpButton(panel->dragmaxF);
 	WMResizeWidget(panel->dragmaxP, 328, 20);

@@ -8,7 +8,14 @@ dnl               autoconf
 dnl               libtoolize --force --automake
 dnl               automake -a --gnu --include-deps
 dnl
+
+
+dnl Due to a bug in Autoconf 2.68 (apparently a regression), we need at least
+dnl version 2.68b which includes this patch:
+dnl   http://git.savannah.gnu.org/gitweb/?p=autoconf.git;a=commit;h=2b0d95faef68d7ed7c08b0edb9ff1c38728376fa
 dnl
+dnl Because the 2.69 was released only a few month later, let's just ask for it
+AC_PREREQ([2.69])
 
 
 AC_INIT(WindowMaker, 0.95.6, , WindowMaker, http://www.windowmaker.org/)
@@ -309,6 +316,9 @@ dnl nanosleep is generally available in standard libc, although not always the
 dnl case. One known example is Solaris which needs -lrt
 AC_SEARCH_LIBS([nanosleep], [rt], [],
     [AC_MSG_ERROR([function 'nanosleep' not found, please report to wmaker-dev@lists.windowmaker.org])])
+
+dnl the flag 'O_NOFOLLOW' for 'open' is used in WINGs
+WM_FUNC_OPEN_NOFOLLOW
 
 
 dnl Check for strlcat/strlcpy
