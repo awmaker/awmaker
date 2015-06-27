@@ -146,26 +146,24 @@ static void eatExpose(void)
 
 void move_window(Window win, int from_x, int from_y, int to_x, int to_y)
 {
-#ifdef ANIMATIONS
+#ifdef USE_ANIMATIONS
 	if (wPreferences.no_animations)
 		XMoveWindow(dpy, win, to_x, to_y);
 	else
-		SlideWindow(win, from_x, from_y, to_x, to_y);
+		slide_window(win, from_x, from_y, to_x, to_y);
 #else
 	XMoveWindow(dpy, win, to_x, to_y);
-#endif
-}
 
-void SlideWindow(Window win, int from_x, int from_y, int to_x, int to_y)
-{
-	Window *wins[1] = { &win };
-	SlideWindows(wins, 1, from_x, from_y, to_x, to_y);
+	/* Tell the compiler it is normal that those parameters are not used in this case */
+	(void) from_x;
+	(void) from_y;
+#endif
 }
 
 /* wins is an array of Window, sorted from left to right, the first is
  * going to be moved from (from_x,from_y) to (to_x,to_y) and the
  * following windows are going to be offset by (ICON_SIZE*i,0) */
-void SlideWindows(Window *wins[], int n, int from_x, int from_y, int to_x, int to_y)
+void slide_windows(Window wins[], int n, int from_x, int from_y, int to_x, int to_y)
 {
 	time_t time0 = time(NULL);
 	float dx, dy, x = from_x, y = from_y, px, py;
@@ -252,7 +250,7 @@ void SlideWindows(Window *wins[], int n, int from_x, int from_y, int to_x, int t
 		}
 
 		for (i = 0; i < n; i++)
-			XMoveWindow(dpy, *wins[i], (int) x + i * ICON_SIZE, (int) y);
+			XMoveWindow(dpy, wins[i], (int) x + i * ICON_SIZE, (int) y);
 
 		XFlush(dpy);
 
@@ -266,7 +264,7 @@ void SlideWindows(Window *wins[], int n, int from_x, int from_y, int to_x, int t
 	}
 
 	for (i = 0; i < n; i++)
-		XMoveWindow(dpy, *wins[i], to_x + i * ICON_SIZE, to_y);
+		XMoveWindow(dpy, wins[i], to_x + i * ICON_SIZE, to_y);
 
 	XSync(dpy, 0);
 

@@ -125,12 +125,12 @@ static int getBool(WMPropList * value)
 {
 	char *val;
 
-	if (!WMIsPLString(value)) {
+	if (!WMIsPLString(value))
 		return 0;
-	}
-	if (!(val = WMGetFromPLString(value))) {
+
+	val = WMGetFromPLString(value);
+	if (val == NULL)
 		return 0;
-	}
 
 	if ((val[1] == '\0' && (val[0] == 'y' || val[0] == 'Y'))
 	    || strcasecmp(val, "YES") == 0) {
@@ -303,7 +303,8 @@ void wSessionSaveState(virtual_screen *vscr)
 		     WFLAGP(wwin, shared_appicon)) &&
 		    !WFLAGP(wwin, dont_save_session)) {
 			/* A entry for this application was not yet saved. Save one. */
-			if ((win_info = makeWindowState(wwin, wapp)) != NULL) {
+			win_info = makeWindowState(wwin, wapp);
+			if (win_info != NULL) {
 				WMAddToPLArray(list, win_info);
 				WMReleasePropList(win_info);
 				/* If we were succesful in saving the info for this window
@@ -350,7 +351,8 @@ static pid_t execCommand(virtual_screen *vscr, char *command)
 	if (!argc)
 		return 0;
 
-	if ((pid = fork()) == 0) {
+	pid = fork();
+	if (pid == 0) {
 		char **args;
 		int i;
 
@@ -399,13 +401,21 @@ static WSavedState *getWindowState(virtual_screen *vscr, WMPropList *win_state)
 			state->workspace--;
 		}
 	}
-	if ((value = WMGetFromPLDictionary(win_state, sShaded)) != NULL)
+
+	value = WMGetFromPLDictionary(win_state, sShaded);
+	if (value != NULL)
 		state->shaded = getBool(value);
-	if ((value = WMGetFromPLDictionary(win_state, sMiniaturized)) != NULL)
+
+	value = WMGetFromPLDictionary(win_state, sMiniaturized);
+	if (value != NULL)
 		state->miniaturized = getBool(value);
-	if ((value = WMGetFromPLDictionary(win_state, sHidden)) != NULL)
+
+	value = WMGetFromPLDictionary(win_state, sHidden);
+	if (value != NULL)
 		state->hidden = getBool(value);
-	if ((value = WMGetFromPLDictionary(win_state, sShortcutMask)) != NULL) {
+
+	value = WMGetFromPLDictionary(win_state, sShortcutMask);
+	if (value != NULL) {
 		mask = getInt(value);
 		state->window_shortcuts = mask;
 	}
@@ -422,7 +432,19 @@ static WSavedState *getWindowState(virtual_screen *vscr, WMPropList *win_state)
 	return state;
 }
 
-#define SAME(x, y) (((x) && (y) && !strcmp((x), (y))) || (!(x) && !(y)))
+static inline int is_same(const char *x, const char *y)
+{
+	if ((x == NULL) && (y == NULL))
+		return 1;
+
+	if ((x == NULL) || (y == NULL))
+		return 0;
+
+	if (strcmp(x, y) == 0)
+		return 1;
+	else
+		return 0;
+}
 
 void wSessionRestoreState(virtual_screen *vscr)
 {
@@ -507,8 +529,10 @@ void wSessionRestoreState(virtual_screen *vscr)
 		if (dock != NULL) {
 			for (j = 0; j < dock->max_icons; j++) {
 				btn = dock->icon_array[j];
-				if (btn && SAME(instance, btn->wm_instance) &&
-				    SAME(class, btn->wm_class) && SAME(command, btn->command) && !btn->launching) {
+				if (btn && is_same(instance, btn->wm_instance) &&
+				    is_same(class, btn->wm_class) &&
+				    is_same(command, btn->command) &&
+				    !btn->launching) {
 					found = 1;
 					break;
 				}

@@ -518,7 +518,8 @@ void wWorkspaceForceChange(virtual_screen *vscr, int workspace)
 	wWorkspaceMenuUpdate(vscr, vscr->workspace.menu);
 	wWorkspaceMenuUpdate(vscr, vscr->clip.ws_menu);
 
-	if ((tmp = vscr->screen_ptr->focused_window) != NULL) {
+	tmp = vscr->screen_ptr->focused_window;
+	if (tmp != NULL) {
 		WWindow **toUnmap;
 		int toUnmapSize, toUnmapCount;
 
@@ -608,6 +609,26 @@ void wWorkspaceForceChange(virtual_screen *vscr, int workspace)
 
 		if (!foc)
 			foc = foc2;
+
+		/*
+		 * Check that the window we want to focus still exists, because the application owning it
+		 * could decide to unmap/destroy it in response to unmap any of its other window following
+		 * the workspace change, this happening during our 'ProcessPendingEvents' loop.
+		 */
+		if (foc != NULL) {
+			WWindow *parse;
+			Bool found;
+
+			found = False;
+			for (parse = vscr->screen_ptr->focused_window; parse != NULL; parse = parse->prev) {
+				if (parse == foc) {
+					found = True;
+					break;
+				}
+			}
+			if (!found)
+				foc = NULL;
+		}
 
 		if (vscr->screen_ptr->focused_window->flags.mapped && !foc)
 			foc = vscr->screen_ptr->focused_window;
@@ -857,8 +878,10 @@ void wWorkspaceSaveState(virtual_screen *vscr, WMPropList *old_state)
 			WMPutInPLDictionary(wks_state, dClip, pstr);
 			WMReleasePropList(pstr);
 		} else if (old_wks_state != NULL) {
-			if ((foo = WMGetFromPLArray(old_wks_state, i)) != NULL) {
-				if ((bar = WMGetFromPLDictionary(foo, dClip)) != NULL)
+			foo = WMGetFromPLArray(old_wks_state, i);
+			if (foo != NULL) {
+				bar = WMGetFromPLDictionary(foo, dClip);
+				if (bar != NULL)
 					WMPutInPLDictionary(wks_state, dClip, bar);
 			}
 		}

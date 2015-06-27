@@ -1,8 +1,8 @@
+DOMAIN = wmgenmenu
+
 CATALOGS = @UTILMOFILES@
 
-nlsdir = $(NLSDIR)
-
-CLEANFILES = wmgenmenu.pot $(CATALOGS)
+CLEANFILES = $(DOMAIN).pot $(CATALOGS)
 
 EXTRA_DIST = de.po es.po fr.po nl.po pt.po
 
@@ -13,30 +13,43 @@ POTFILES  = \
 SUFFIXES = .po .mo
 
 .po.mo:
-	msgfmt -c -o $@ $<
+	$(AM_V_GEN)$(MSGFMT) -c -o $@ $<
 
 
 all-local: $(CATALOGS)
 
-wmgenmenu.pot: $(POTFILES)
-	xgettext --default-domain=wmgenmenu \
-	--add-comments --keyword=_ --keyword=N_ $(POTFILES)
-	if cmp -s wmgenmenu.po wmgenmenu.pot; then \
-	    rm -f wmgenmenu.po; \
+
+.PHONY: update-lang
+
+if HAVE_XGETTEXT
+update-lang: $(DOMAIN).pot
+	$(AM_V_GEN)$(top_srcdir)/script/generate-po-from-template.sh \
+	    -n "$(PACKAGE_NAME)" -v "$(PACKAGE_VERSION)" -b "$(PACKAGE_BUGREPORT)" \
+	    -t "$(DOMAIN).pot"  "$(srcdir)/$(PO).po"
+
+$(DOMAIN).pot: $(POTFILES)
+	$(AM_V_GEN)$(XGETTEXT) --default-domain=$(DOMAIN) \
+	    --add-comments --keyword=_ --keyword=N_ $(POTFILES)
+	@if cmp -s $(DOMAIN).po $(DOMAIN).pot; then \
+	    rm -f $(DOMAIN).po; \
 	else \
-	    mv -f wmgenmenu.po wmgenmenu.pot; \
+	    mv -f $(DOMAIN).po $(DOMAIN).pot; \
 	fi
+endif
 
 
 install-data-local:  $(CATALOGS)
-	$(mkinstalldirs) $(DESTDIR)$(nlsdir)
-	chmod 755 $(DESTDIR)$(nlsdir)
+	$(mkinstalldirs) $(DESTDIR)$(localedir)
 	for n in $(CATALOGS) __DuMmY ; do \
 		if test "$$n" -a "$$n" != "__DuMmY" ; then \
 			l=`basename $$n .mo`; \
-			$(mkinstalldirs) $(DESTDIR)$(nlsdir)/$$l/LC_MESSAGES; \
-			chmod 755 $(DESTDIR)$(nlsdir)/$$l; \
-			chmod 755 $(DESTDIR)$(nlsdir)/$$l/LC_MESSAGES; \
-			$(INSTALL_DATA) -m 644 $$n $(DESTDIR)$(nlsdir)/$$l/LC_MESSAGES/wmgenmenu.mo; \
+			$(mkinstalldirs) $(DESTDIR)$(localedir)/$$l/LC_MESSAGES; \
+			$(INSTALL_DATA) -m 644 $$n $(DESTDIR)$(localedir)/$$l/LC_MESSAGES/$(DOMAIN).mo; \
 		fi; \
+	done
+
+uninstall-local:
+	for n in $(CATALOGS) ; do \
+		l=`basename $$n .mo`; \
+		rm -f $(DESTDIR)$(localedir)/$$l/LC_MESSAGES/$(DOMAIN).mo; \
 	done

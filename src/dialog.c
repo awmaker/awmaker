@@ -309,7 +309,8 @@ ScanFiles(const char *dir, const char *prefix, unsigned acceptmask, unsigned dec
 	char *fullfilename, *suffix;
 
 	prefixlen = strlen(prefix);
-	if ((d = opendir(dir)) != NULL) {
+	d = opendir(dir);
+	if (d != NULL) {
 		while ((de = readdir(d)) != NULL) {
 			if (strlen(de->d_name) > prefixlen &&
 			    !strncmp(prefix, de->d_name, prefixlen) &&
@@ -345,12 +346,14 @@ static WMArray *GenerateVariants(const char *complete)
 	while (*complete == ' ')
 		++complete;
 
-	if ((pos = strrchr(complete, ' ')) != NULL) {
+	pos = strrchr(complete, ' ');
+	if (pos != NULL) {
 		complete = pos + 1;
 		firstWord = False;
 	}
 
-	if ((pos = strrchr(complete, '/')) != NULL) {
+	pos = strrchr(complete, '/');
+	if (pos != NULL) {
 		tmp = wstrndup((char *)complete, pos - complete + 1);
 		if (*tmp == '~' && *(tmp + 1) == '/' && getenv("HOME")) {
 			dir = wstrdup(getenv("HOME"));
@@ -606,8 +609,8 @@ static void listPixmaps(virtual_screen *vscr, WMList *lPtr, const char *path)
 		if (wstrlcpy(pbuf, apath, sizeof(pbuf)) >= sizeof(pbuf) ||
 		    wstrlcat(pbuf, "/", sizeof(pbuf)) >= sizeof(pbuf) ||
 		    wstrlcat(pbuf, dentry->d_name, sizeof(pbuf)) >= sizeof(pbuf)) {
-			wwarning(_("full path for file \"%s\" in \"%s\" is longer than %ui bytes, skipped"),
-			         dentry->d_name, path, sizeof(pbuf) - 1);
+			wwarning(_("full path for file \"%s\" in \"%s\" is longer than %d bytes, skipped"),
+			         dentry->d_name, path, (int) sizeof(pbuf) - 1);
 			continue;
 		}
 
@@ -1278,7 +1281,7 @@ void wShowInfoPanel(virtual_screen *vscr)
 	strbuf = wstrappend(strbuf, _("\nAdditional support for: "));
 	strbuf = wstrappend(strbuf, "WMSPEC");
 
-#ifdef MWM_HINTS
+#ifdef USE_MWM_HINTS
 	strbuf = wstrappend(strbuf, ", MWM");
 #endif
 

@@ -64,7 +64,7 @@
 #include "winmenu.h"
 #include "osdep.h"
 
-#ifdef MWM_HINTS
+#ifdef USE_MWM_HINTS
 # include "motif.h"
 #endif
 #include "wmspec.h"
@@ -349,9 +349,9 @@ void wWindowSetupInitialAttributes(WWindow *wwin, int *level, int *workspace)
 		int tmp_workspace = -1;
 		int tmp_level = INT_MIN;	/* INT_MIN is never used by the window levels */
 
-#ifdef MWM_HINTS
+#ifdef USE_MWM_HINTS
 		wMWMCheckClientHints(wwin);
-#endif				/* MWM_HINTS */
+#endif	/* USE_MWM_HINTS */
 
 		wNETWMCheckClientHints(wwin, &tmp_level, &tmp_workspace);
 
@@ -2585,7 +2585,19 @@ WMagicNumber wWindowAddSavedState(const char *instance, const char *class,
 	return wstate;
 }
 
-#define SAME(x, y) (((x) && (y) && !strcmp((x), (y))) || (!(x) && !(y)))
+static inline int is_same(const char *x, const char *y)
+{
+	if ((x == NULL) && (y == NULL))
+		return 1;
+
+	if ((x == NULL) || (y == NULL))
+		return 0;
+
+	if (strcmp(x, y) == 0)
+		return 1;
+	else
+		return 0;
+}
 
 WMagicNumber wWindowGetSavedState(Window win)
 {
@@ -2601,10 +2613,11 @@ WMagicNumber wWindowGetSavedState(Window win)
 
 	if (PropGetWMClass(win, &class, &instance)) {
 		while (wstate) {
-			if (SAME(instance, wstate->instance) &&
-			    SAME(class, wstate->class) && SAME(command, wstate->command)) {
+			if (is_same(instance, wstate->instance) &&
+			    is_same(class, wstate->class) &&
+			    is_same(command, wstate->command))
 				break;
-			}
+
 			wstate = wstate->next;
 		}
 	} else {

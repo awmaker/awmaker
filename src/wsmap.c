@@ -94,17 +94,17 @@ void wWorkspaceMapUpdate(virtual_screen *vscr)
 static void workspace_map_slide(WWorkspaceMap *wsmap)
 {
 	if (wsmap->edge == WD_TOP)
-		SlideWindow(WMWidgetXID(wsmap->win), 0, -1 * wsmap->wsheight, wsmap->xcount, wsmap->ycount);
+		slide_window(WMWidgetXID(wsmap->win), 0, -1 * wsmap->wsheight, wsmap->xcount, wsmap->ycount);
 	else
-		SlideWindow(WMWidgetXID(wsmap->win), 0, wsmap->vscr->screen_ptr->scr_height, wsmap->xcount, wsmap->ycount);
+		slide_window(WMWidgetXID(wsmap->win), 0, wsmap->vscr->screen_ptr->scr_height, wsmap->xcount, wsmap->ycount);
 }
 
 static void workspace_map_unslide(WWorkspaceMap *wsmap)
 {
 	if (wsmap->edge == WD_TOP)
-		SlideWindow(WMWidgetXID(wsmap->win), wsmap->xcount, wsmap->ycount, 0, -1 * wsmap->wsheight);
+		slide_window(WMWidgetXID(wsmap->win), wsmap->xcount, wsmap->ycount, 0, -1 * wsmap->wsheight);
 	else
-		SlideWindow(WMWidgetXID(wsmap->win), wsmap->xcount, wsmap->ycount, 0, wsmap->vscr->screen_ptr->scr_height);
+		slide_window(WMWidgetXID(wsmap->win), wsmap->xcount, wsmap->ycount, 0, wsmap->vscr->screen_ptr->scr_height);
 }
 
 static void workspace_map_destroy(WWorkspaceMap *wsmap)
@@ -371,15 +371,17 @@ static void create_mini_workspace(virtual_screen *vscr, WWorkspaceMap *wsmap, W_
 
 static WWorkspaceMap *create_workspace_map(virtual_screen *vscr, W_WorkspaceMap *wsmap_array, int edge)
 {
-	WWorkspaceMap *wsmap = wmalloc(sizeof(WWorkspaceMap));
+	WWorkspaceMap *wsmap;
+
+	if (vscr->workspace.count == 0)
+		return NULL;
+
+	wsmap = wmalloc(sizeof(WWorkspaceMap));
 
 	wsmap->border_width = 5;
 	wsmap->edge = edge;
 	wsmap->mini_workspace_width = vscr->screen_ptr->scr_width / WORKSPACE_MAP_RATIO;
 	wsmap->mini_workspace_height = vscr->screen_ptr->scr_height / WORKSPACE_MAP_RATIO;
-
-	if (vscr->workspace.count == 0)
-		return NULL;
 
 	wsmap->vscr = vscr;
 	wsmap->win = WMCreateWindow(vscr->screen_ptr->wmscreen, "wsmap");

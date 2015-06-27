@@ -24,12 +24,11 @@ m4_pattern_forbid([^_?WM_])
 m4_pattern_allow([^WM_OSDEP(_[A-Z]*)?$])
 
 
-dnl
-dnl WM_CHECK_XFT_VERSION(MIN_VERSION, [ACTION-IF-FOUND [,ACTION-IF-NOT-FOUND]])
-dnl
-dnl # $XFTFLAGS should be defined before calling this macro,
-dnl # else it will not be able to find Xft.h
-dnl
+# WM_CHECK_XFT_VERSION(MIN_VERSION, [ACTION-IF-FOUND [,ACTION-IF-NOT-FOUND]])
+#
+# $XFTFLAGS should be defined before calling this macro,
+# else it will not be able to find Xft.h
+#
 AC_DEFUN([WM_CHECK_XFT_VERSION],
 [
 CPPFLAGS_old="$CPPFLAGS"
@@ -61,14 +60,14 @@ CPPFLAGS="$CPPFLAGS_old"
 ])
 
 
-dnl _WM_LIB_CHECK_FUNCTS
-dnl -----------------------
-dnl (internal shell functions)
-dnl
-dnl Create 2 shell functions:
-dnl  wm_fn_imgfmt_try_link: try to link against library
-dnl  wm_fn_imgfmt_try_compile: try to compile against header
-dnl
+# _WM_LIB_CHECK_FUNCTS
+# --------------------
+# (internal shell functions)
+#
+# Create 2 shell functions:
+#  wm_fn_imgfmt_try_link: try to link against library
+#  wm_fn_imgfmt_try_compile: try to compile against header
+#
 AC_DEFUN_ONCE([_WM_LIB_CHECK_FUNCTS],
 [@%:@ wm_fn_lib_try_link FUNCTION LFLAGS
 @%:@ ----------------------------------
@@ -243,4 +242,26 @@ AS_CASE([$wm_cv_func_open_nofollow],
                 [defined by configure if the attribute is not defined on your platform])
             AC_MSG_WARN([flag O_NOFOLLOW is not defined on your platform])],
     [CPPFLAGS="$CPPFLAGS $wm_cv_func_open_nofollow"])
+])
+
+
+# WM_TYPE_SIGNAL
+# --------------
+#
+# Check the return type for the function 'signal'
+# Autoconf now claims we can assume the type is 'void' as it is in the C89 standard,
+# but as Window Maker is supposed to be lightweight enough for old machines, we
+# prefer to keep the check for portability
+AC_DEFUN_ONCE([WM_TYPE_SIGNAL],
+[AC_CACHE_CHECK([return type of signal handlers], [wm_cv_type_signal],
+    [AC_COMPILE_IFELSE(
+        [AC_LANG_PROGRAM([#include <sys/types.h>
+#include <signal.h>
+],
+            [return *(signal (0, 0)) (0) == 1;])],
+        [wm_cv_type_signal=int],
+        [wm_cv_type_signal=void])dnl
+    ])
+AC_DEFINE_UNQUOTED([RETSIGTYPE], [$wm_cv_type_signal],
+    [Define as the return type of signal handlers (`int' or `void')])dnl
 ])

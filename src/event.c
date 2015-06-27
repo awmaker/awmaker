@@ -582,7 +582,8 @@ static void handleMapRequest(XEvent *ev)
 	virtual_screen *vscr = NULL;
 	Window window = ev->xmaprequest.window;
 
-	if ((wwin = wWindowFor(window))) {
+	wwin = wWindowFor(window);
+	if (wwin != NULL) {
 		if (wwin->flags.shaded)
 			wUnshadeWindow(wwin);
 
@@ -917,7 +918,8 @@ static void handleConfigureRequest(XEvent *event)
 {
 	WWindow *wwin;
 
-	if (!(wwin = wWindowFor(event->xconfigurerequest.window)))
+	wwin = wWindowFor(event->xconfigurerequest.window);
+	if (wwin == NULL)
 		/* Configure request for unmapped window */
 		wClientConfigure(NULL, &(event->xconfigurerequest));
 	else
@@ -1736,7 +1738,7 @@ static void handleKeyPress(XEvent *event)
 
 	case WKBD_RUN:
 	{
-		char *cmdline = ExpandOptions(vscr, _("exec %a(Run,Type command to run:)"));
+		char *cmdline = ExpandOptions(vscr, _("exec %A(Run,Type command to run:)"));
 
 		if (cmdline) {
 			XGrabPointer(dpy, vscr->screen_ptr->root_win, True, 0,

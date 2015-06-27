@@ -52,8 +52,6 @@ wmaker_SOURCES = 	\
 	misc.h \
 	monitor.c \
 	monitor.h \
-	motif.c \
-	motif.h \
 	moveres.c \
 	pixmap.c \
 	pixmap.h \
@@ -110,6 +108,10 @@ wmaker_SOURCES = 	\
 	wsmap.c \
 	wsmap.h
 
+if USE_MWM_HINTS
+wmaker_SOURCES += motif.h motif.c
+endif
+
 if WM_OSDEP_BSD
 wmaker_SOURCES += osdep_bsd.c
 endif
@@ -146,8 +148,7 @@ endif
 
 AM_CFLAGS =
 
-AM_CPPFLAGS = \
-	$(DFLAGS) -DLOCALEDIR=\"$(NLSDIR)\" \
+AM_CPPFLAGS = $(DFLAGS) \
 	-I$(top_srcdir)/wrlib \
 	-I$(top_srcdir)/WINGs @HEADER_SEARCH_PATH@ 
 
@@ -162,3 +163,32 @@ wmaker_LDADD = \
 	@XLIBS@ \
 	@LIBM@ \
 	@INTLIBS@
+
+######################################################################
+
+# Create a 'silent rule' for our make check the same way automake does
+AM_V_CHKOPTS = $(am__v_CHKOPTS_$(V))
+am__v_CHKOPTS_  = $(am__v_CHKOPTS_$(AM_DEFAULT_VERBOSITY))
+am__v_CHKOPTS_0 = @echo "  CHK      $@" ;
+am__v_CHKOPTS_1 =
+
+check-local: defaults-callbacks-static defaults-callbacks-dynamic
+
+# Check that the callback functions used to load the configuration match
+# the type of the variable where the value will be stored
+defaults-callbacks-static:
+	$(AM_V_CHKOPTS)$(top_srcdir)/script/check-wmaker-loaddef-callbacks.sh  \
+		--source "$(srcdir)/defaults.c" --structure "staticOptionList"  \
+		--field-value-ptr 4 --field-callback 5  \
+		--struct-def "wPreferences=$(srcdir)/WindowMaker.h"  \
+		--callback "getBool=char, getEnum=char, getInt=int"  \
+		--callback "getModMask=int"
+
+defaults-callbacks-dynamic:
+	$(AM_V_CHKOPTS)$(top_srcdir)/script/check-wmaker-loaddef-callbacks.sh  \
+		--source "$(srcdir)/defaults.c" --structure "optionList"  \
+		--field-value-ptr 4 --field-callback 5  \
+		--struct-def "wPreferences=$(srcdir)/WindowMaker.h"  \
+		--struct-def "legacy_minipreview_config=$(srcdir)/defaults.c"  \
+		--callback "getBool=char, getEnum=char, getInt=int"  \
+		--callback "getPathList=char*, getCoord=WCoord"

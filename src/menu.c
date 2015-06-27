@@ -349,7 +349,7 @@ void wMenuEntrySetCascade_create(WMenu *menu, WMenuEntry *entry, WMenu *cascade)
 
 	if (!done) {
 		entry->cascade = menu->cascade_no;
-		menu->cascades = wrealloc(menu->cascades, sizeof(WMenu) * (menu->cascade_no + 1));
+		menu->cascades = wrealloc(menu->cascades, sizeof(menu->cascades[0]) * (menu->cascade_no + 1));
 		menu->cascades[menu->cascade_no++] = cascade;
 	}
 }

@@ -82,7 +82,7 @@ static int compareTimes(Time t1, Time t2)
 	return (diff < 60000) ? 1 : -1;
 }
 
-#ifdef ANIMATIONS
+#ifdef USE_ANIMATIONS
 static void shade_animate(WWindow *wwin, Bool what);
 #else
 static inline void shade_animate(WWindow *wwin, Bool what)
@@ -255,11 +255,10 @@ void wShadeWindow(WWindow *wwin)
 
 	WMPostNotificationName(WMNChangedState, wwin, "shade");
 
-#ifdef ANIMATIONS
-	if (!w_global.startup.phase1) {
+#ifdef USE_ANIMATIONS
+	if (!w_global.startup.phase1)
 		/* Catch up with events not processed while animation was running */
 		ProcessPendingEvents();
-	}
 #endif
 }
 
@@ -762,7 +761,7 @@ void wUnfullscreenWindow(WWindow *wwin)
 	}
 }
 
-#ifdef ANIMATIONS
+#ifdef USE_ANIMATIONS
 static void animateResizeFlip(virtual_screen *vscr, int x, int y, int w, int h, int fx, int fy, int fw, int fh, int steps)
 {
 #define FRAMES (MINIATURIZE_ANIMATION_FRAMES_F)
@@ -974,7 +973,7 @@ void animateResize(virtual_screen *vscr, int x, int y, int w, int h, int fx, int
 		break;
 	}
 }
-#endif				/* ANIMATIONS */
+#endif	/* USE_ANIMATIONS */
 
 static void flushExpose(void)
 {
@@ -1049,7 +1048,8 @@ static WWindow *recursiveTransientFor(WWindow *wwin)
 	}
 
 	if (i == 0 && wwin) {
-		wwarning("%s has a severely broken WM_TRANSIENT_FOR hint.", wwin->frame->title);
+		wwarning(_("window \"%s\" has a severely broken WM_TRANSIENT_FOR hint"),
+			 wwin->frame->title);
 		return NULL;
 	}
 
@@ -1157,7 +1157,16 @@ void wIconifyWindow(WWindow *wwin)
 					set_icon_minipreview(wwin->icon, mini_preview);
 					RReleaseImage(mini_preview);
 				} else {
-					wwarning(_("window mini-preview creation failed"));
+					const char *title;
+					char title_buf[32];
+ 
+					if (wwin->frame->title) {
+						title = wwin->frame->title;
+					} else {
+						snprintf(title_buf, sizeof(title_buf), "(id=0x%lx)", wwin->client_win);
+						title = title_buf;
+					}
+					wwarning(_("creation of mini-preview failed for window \"%s\""), title);
 				}
 			}
 		}
@@ -1170,7 +1179,7 @@ void wIconifyWindow(WWindow *wwin)
 	unmapTransientsFor(wwin);
 
 	if (present) {
-#ifdef ANIMATIONS
+#ifdef USE_ANIMATIONS
 		int ix, iy, iw, ih;
 #endif
 		XUngrabPointer(dpy, CurrentTime);
@@ -1185,7 +1194,7 @@ void wIconifyWindow(WWindow *wwin)
 			wClientSetState(wwin, IconicState, wwin->icon->icon_win);
 
 		flushExpose();
-#ifdef ANIMATIONS
+#ifdef USE_ANIMATIONS
 		if (getAnimationGeometry(wwin, &ix, &iy, &iw, &ih))
 			animateResize(wwin->vscr, wwin->frame_x, wwin->frame_y,
 				      wwin->frame->core->width, wwin->frame->core->height, ix, iy, iw, ih);
@@ -1223,7 +1232,7 @@ void wIconifyWindow(WWindow *wwin)
 		} else if (wPreferences.focus_mode != WKF_CLICK) {
 			wSetFocusTo(wwin->vscr, NULL);
 		}
-#ifdef ANIMATIONS
+#ifdef USE_ANIMATIONS
 		if (!w_global.startup.phase1) {
 			/* Catch up with events not processed while animation was running */
 			Window clientwin = wwin->client_win;
@@ -1299,7 +1308,7 @@ void wDeiconifyWindow(WWindow *wwin)
 
 	/* if the window is in another workspace, do it silently */
 	if (!netwm_hidden) {
-#ifdef ANIMATIONS
+#ifdef USE_ANIMATIONS
 		int ix, iy, iw, ih;
 		if (getAnimationGeometry(wwin, &ix, &iy, &iw, &ih))
 			animateResize(wwin->vscr, ix, iy, iw, ih,
@@ -1332,7 +1341,7 @@ void wDeiconifyWindow(WWindow *wwin)
 
 		wSetFocusTo(wwin->vscr, wwin);
 
-#ifdef ANIMATIONS
+#ifdef USE_ANIMATIONS
 		if (!w_global.startup.phase1) {
 			/* Catch up with events not processed while animation was running */
 			Window clientwin = wwin->client_win;
@@ -1382,13 +1391,12 @@ static void hideWindow(WIcon *icon, int icon_x, int icon_y, WWindow *wwin, int a
 	wClientSetState(wwin, IconicState, icon->icon_win);
 	flushExpose();
 
-#ifdef ANIMATIONS
+#ifdef USE_ANIMATIONS
 	if (!w_global.startup.phase1 && !wPreferences.no_animations &&
-	    !wwin->flags.skip_next_animation && animate) {
+	    !wwin->flags.skip_next_animation && animate)
 		animateResize(wwin->vscr, wwin->frame_x, wwin->frame_y,
 			      wwin->frame->core->width, wwin->frame->core->height,
 			      icon_x, icon_y, icon->core->width, icon->core->height);
-	}
 #endif
 	wwin->flags.skip_next_animation = 0;
 
@@ -1558,13 +1566,12 @@ static void unhideWindow(WIcon *icon, int icon_x, int icon_y, WWindow *wwin, int
 
 	wwin->flags.hidden = 0;
 
-#ifdef ANIMATIONS
-	if (!w_global.startup.phase1 && !wPreferences.no_animations && animate) {
+#ifdef USE_ANIMATIONS
+	if (!w_global.startup.phase1 && !wPreferences.no_animations && animate)
 		animateResize(wwin->vscr, icon_x, icon_y,
 			      icon->core->width, icon->core->height,
 			      wwin->frame_x, wwin->frame_y,
 			      wwin->frame->core->width, wwin->frame->core->height);
-	}
 #endif
 	wwin->flags.skip_next_animation = 0;
 	if (wwin->vscr->workspace.current == wwin->frame->workspace) {
@@ -1826,10 +1833,10 @@ void wArrangeIcons(virtual_screen *vscr, Bool arrangeAll)
 			head = wGetHeadForWindow(aicon->icon->owner);
 
 			if (aicon->x_pos != X || aicon->y_pos != Y) {
-#ifdef ANIMATIONS
+#ifdef USE_ANIMATIONS
 				if (!wPreferences.no_animations)
-					SlideWindow(aicon->icon->core->window, aicon->x_pos, aicon->y_pos, X, Y);
-#endif				/* ANIMATIONS */
+					slide_window(aicon->icon->core->window, aicon->x_pos, aicon->y_pos, X, Y);
+#endif	/* USE_ANIMATIONS */
 			}
 			wAppIconMove(aicon, X, Y);
 			vars[head].pi++;
@@ -1950,7 +1957,7 @@ void wMakeWindowVisible(WWindow *wwin)
  * Do the animation while shading (called with what = SHADE)
  * or unshading (what = UNSHADE).
  */
-#ifdef ANIMATIONS
+#ifdef USE_ANIMATIONS
 static void shade_animate(WWindow *wwin, Bool what)
 {
 	int y, s, w, h;
