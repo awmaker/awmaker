@@ -1149,7 +1149,7 @@ static void handleEnterNotify(XEvent *event)
 			if (wPreferences.raise_delay && !WFLAGP(wwin, no_focusable)) {
 				vscr->screen_ptr->autoRaiseWindow = wwin->frame->core->window;
 				vscr->screen_ptr->autoRaiseTimer
-				    = WMAddTimerHandler(wPreferences.raise_delay, (WMCallback *) raiseWindow, vscr->screen_ptr);
+				    = WMAddTimerHandler(wPreferences.raise_delay, (WMCallback *) raiseWindow, vscr);
 			}
 		}
 		/* Install colormap for window, if the colormap installation mode
