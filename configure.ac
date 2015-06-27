@@ -37,7 +37,11 @@ dnl =======================================
 AC_INIT([WindowMaker],[0.95.6],[wmaker-dev@lists.windowmaker.org],[WindowMaker],[http://www.windowmaker.org/])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_HEADERS([config.h])
-AM_INIT_AUTOMAKE([1.11 silent-rules])
+
+dnl We need the EXTRA_xxx_DEPENDENCIES keyword in Makefiles which have been
+dnl introduced in the version 1.11.3; because the 1.12 was realeased shortly
+dnl after, we just ask for it
+AM_INIT_AUTOMAKE([1.12 silent-rules])
 
 dnl Reference file used by 'configure' to make sure the path to sources is valid
 AC_CONFIG_SRCDIR([src/WindowMaker.h])
@@ -152,6 +156,11 @@ AS_IF([test "x$debug" = "xyes"],
      dnl gives up trying to optimize, which probably also means it is
      dnl too complicated to maintain
      AX_CFLAGS_GCC_OPTION([-Wdisabled-optimization])
+     dnl
+     dnl Because of C's type promotion, the compiler has to generate
+     dnl less optimal code when a double constant is used in a
+     dnl float expression
+     AX_CFLAGS_GCC_OPTION([-Wdouble-promotion])
      dnl
      dnl Floating-point comparison is not a good idea
      AX_CFLAGS_GCC_OPTION([-Wfloat-equal])
@@ -272,6 +281,8 @@ test "x$exec_prefix" = xNONE && exec_prefix='${prefix}'
 
 _bindir=`eval echo $bindir`
 _bindir=`eval echo $_bindir`
+_libdir=`eval echo $libdir`
+_libdir=`eval echo $_libdir`
 
 lib_search_path='-L${libdir}'
 
@@ -511,6 +522,20 @@ AS_IF([test "x$enable_xdnd" = "xyes"],
     [supported_xext="$supported_xext XDnD"
      AC_DEFINE([XDND], [1], [whether Drag-nd-Drop support should be enabled])],
     [unsupported="$unsupported XDnd"])
+
+
+dnl Support for ICCCM 2.0 Window Manager replacement
+dnl ================================================
+AC_ARG_ENABLE([wmreplace],
+    [AS_HELP_STRING([--enable-wmreplace], [support for ICCCM window manager replacement])],
+    [AS_CASE([$enableval],
+        [yes|no], [],
+        [AC_MSG_ERROR([bad value '$enableval' for --enable-wmreplace])])],
+    [enable_wmreplace=no])
+AS_IF([test "x$enable_wmreplace" = "xyes"],
+    [AC_DEFINE([USE_ICCCM_WMREPLACE], [1],
+       [define to support ICCCM protocol for window manager replacement])
+     supported_xext="$supported_xext WMReplace"])
 
 
 dnl XShape support
@@ -901,7 +926,7 @@ echo "Window Maker was configured as follows:"
 echo
 echo "Installation path prefix            : $prefix"
 echo "Installation path for binaries      : $_bindir"
-echo "Installation path for libraries     : $libdir"
+echo "Installation path for libraries     : $_libdir"
 echo "Installation path for WPrefs.app    : $wprefs_base_dir" | sed -e 's|\${prefix}|'"$prefix|"
 echo "Supported core features:            :$supported_core"
 echo "Supported X extensions:             :$supported_xext"

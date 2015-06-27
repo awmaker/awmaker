@@ -34,6 +34,7 @@
 #include <limits.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <getopt.h>
 #include "config.h"
 
 #ifdef HAVE_EXIF
@@ -705,25 +706,35 @@ int main(int argc, char **argv)
 	red.red = 255;
 	red.green = red.blue = 0;
 
-	option = getopt(argc, argv, "hv");
+	static struct option long_options[] = {
+			{"version", no_argument, 0, 'v'},
+			{"help", no_argument, 0, 'h'},
+			{0, 0, 0, 0}
+		};
+	int option_index = 0;
+
+	option = getopt_long (argc, argv, "hv", long_options, &option_index);
 	if (option != -1) {
 		switch (option) {
 		case 'h':
-			fprintf(stderr, "Usage: %s [image(s)|directory]\n"
+			printf("Usage: %s [image(s)|directory]\n"
+			"Options:\n"
+			"  -h, --help     print this help text\n"
+			"  -v, --version  print version\n"
 			"Keys:\n"
-			"+: zoom in\n"
-			"-: zoom out\n"
-			"esc: actual size\n"
+			"  [+]            zoom in\n"
+			"  [-]            zoom out\n"
+			"  [Esc]          actual size\n"
 #ifdef HAVE_PTHREAD
-			"d: launch diaporama mode\n"
+			"  [D]            launch diaporama mode\n"
 #endif
-			"l: rotate image on the left\n"
-			"q: quit\n"
-			"r: rotate image on the right\n"
-			"right: next image\n"
-			"left: previous image\n"
-			"up: first image\n"
-			"down: last image\n",
+			"  [L]            rotate image on the left\n"
+			"  [Q]            quit\n"
+			"  [R]            rotate image on the right\n"
+			"  [▸]            next image\n"
+			"  [◂]            previous image\n"
+			"  [▴]            first image\n"
+			"  [▾]            last image\n",
 			argv[0]);
 			return EXIT_SUCCESS;
 		case 'v':

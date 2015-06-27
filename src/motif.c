@@ -75,38 +75,33 @@ static void setupMWMHints(WWindow *wwin, MWMHints *mwm_hints)
 	 */
 
 	if (mwm_hints->flags & MWM_HINTS_DECORATIONS) {
-		WSETUFLAG(wwin, no_titlebar, 1);
-		WSETUFLAG(wwin, no_close_button, 1);
-		WSETUFLAG(wwin, no_miniaturize_button, 1);
-		WSETUFLAG(wwin, no_resizebar, 1);
+		wwin->client_flags.no_titlebar = 1;
+		wwin->client_flags.no_close_button = 1;
+		wwin->client_flags.no_miniaturize_button = 1;
+		wwin->client_flags.no_resizebar = 1;
+		wwin->client_flags.no_border = 1;
 
 		if (mwm_hints->decorations & MWM_DECOR_ALL) {
-			WSETUFLAG(wwin, no_titlebar, 0);
-			WSETUFLAG(wwin, no_close_button, 0);
-			WSETUFLAG(wwin, no_closable, 0);
-			WSETUFLAG(wwin, no_miniaturize_button, 0);
-			WSETUFLAG(wwin, no_miniaturizable, 0);
-			WSETUFLAG(wwin, no_resizebar, 0);
-			WSETUFLAG(wwin, no_resizable, 0);
+			wwin->client_flags.no_titlebar = 0;
+			wwin->client_flags.no_close_button = 0;
+			wwin->client_flags.no_closable = 0;
+			wwin->client_flags.no_miniaturize_button = 0;
+			wwin->client_flags.no_miniaturizable = 0;
+			wwin->client_flags.no_resizebar = 0;
+			wwin->client_flags.no_resizable = 0;
+			wwin->client_flags.no_border = 0;
 		}
 
-		if (mwm_hints->decorations & MWM_DECOR_BORDER) {
-			/*
-			 * WindowMaker is drawing only a discreet 1 pixel border without
-			 * any decoration like a few other X window managers used to do, so
-			 * we assume it is not worth spending the time to add extra
-			 * complexity to handle this special request, considering also that
-			 * the Motif toolkit is not used anymore nowadays.
-			 */
-		}
+		if (mwm_hints->decorations & MWM_DECOR_BORDER)
+			wwin->client_flags.no_border = 0;
 
 		if (mwm_hints->decorations & MWM_DECOR_RESIZEH)
-			WSETUFLAG(wwin, no_resizebar, 0);
+			wwin->client_flags.no_resizebar = 0;
 
 		if (mwm_hints->decorations & MWM_DECOR_TITLE) {
-			WSETUFLAG(wwin, no_titlebar, 0);
-			WSETUFLAG(wwin, no_close_button, 0);
-			WSETUFLAG(wwin, no_closable, 0);
+			wwin->client_flags.no_titlebar = 0;
+			wwin->client_flags.no_close_button = 0;
+			wwin->client_flags.no_closable = 0;
 		}
 
 		if (mwm_hints->decorations * MWM_DECOR_MENU) {
@@ -119,8 +114,8 @@ static void setupMWMHints(WWindow *wwin, MWMHints *mwm_hints)
 		}
 
 		if (mwm_hints->decorations & MWM_DECOR_MINIMIZE) {
-			WSETUFLAG(wwin, no_miniaturize_button, 0);
-			WSETUFLAG(wwin, no_miniaturizable, 0);
+			wwin->client_flags.no_miniaturize_button = 0;
+			wwin->client_flags.no_miniaturizable = 0;
 		}
 
 		if (mwm_hints->decorations & MWM_DECOR_MAXIMIZE) {
@@ -132,17 +127,17 @@ static void setupMWMHints(WWindow *wwin, MWMHints *mwm_hints)
 	}
 
 	if (mwm_hints->flags & MWM_HINTS_FUNCTIONS) {
-		WSETUFLAG(wwin, no_closable, 1);
-		WSETUFLAG(wwin, no_miniaturizable, 1);
-		WSETUFLAG(wwin, no_resizable, 1);
+		wwin->client_flags.no_closable = 1;
+		wwin->client_flags.no_miniaturizable = 1;
+		wwin->client_flags.no_resizable = 1;
 
 		if (mwm_hints->functions & MWM_FUNC_ALL) {
-			WSETUFLAG(wwin, no_closable, 0);
-			WSETUFLAG(wwin, no_miniaturizable, 0);
-			WSETUFLAG(wwin, no_resizable, 0);
+			wwin->client_flags.no_closable = 0;
+			wwin->client_flags.no_miniaturizable = 0;
+			wwin->client_flags.no_resizable = 0;
 		}
 		if (mwm_hints->functions & MWM_FUNC_RESIZE)
-			WSETUFLAG(wwin, no_resizable, 0);
+			wwin->client_flags.no_resizable = 0;
 
 		if (mwm_hints->functions & MWM_FUNC_MOVE) {
 			/*
@@ -152,14 +147,14 @@ static void setupMWMHints(WWindow *wwin, MWMHints *mwm_hints)
 		}
 
 		if (mwm_hints->functions & MWM_FUNC_MINIMIZE)
-			WSETUFLAG(wwin, no_miniaturizable, 0);
+			wwin->client_flags.no_miniaturizable = 0;
 
-		if (mwm_hints->functions & MWM_FUNC_MAXIMIZE) {
+		if (mwm_hints->functions & MWM_FUNC_MAXIMIZE)
 			/* a window must be resizable to be maximizable */
-			WSETUFLAG(wwin, no_resizable, 0);
-		}
+			wwin->client_flags.no_resizable = 0;
+
 		if (mwm_hints->functions & MWM_FUNC_CLOSE)
-			WSETUFLAG(wwin, no_closable, 0);
+			wwin->client_flags.no_closable = 0;
 	}
 }
 

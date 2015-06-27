@@ -517,6 +517,8 @@ WDefaultEntry optionList[] = {
 	    &wPreferences.panel_only_open, getBool, NULL, NULL, NULL},
 	{"MiniPreviewSize", "128", NULL,
 	    &wPreferences.minipreview_size, getInt, NULL, NULL, NULL},
+	{"IgnoreGtkHints", "NO", NULL,
+	    &wPreferences.ignore_gtk_decoration_hints, getBool, NULL, NULL, NULL},
 
 	/*
 	 * Backward Compatibility:
@@ -526,7 +528,7 @@ WDefaultEntry optionList[] = {
 	 */
 	{"MiniwindowApercuBalloons", "NO", NULL,
 	    &legacy_minipreview_config.enable, getBool, NULL, NULL, NULL},
-	{"ApercuSize", "128", NULL,
+	{"ApercuSize", "0", NULL,
 	    &legacy_minipreview_config.size, getInt, NULL, NULL, NULL},
 
 	/* style options */
@@ -1152,10 +1154,6 @@ void wReadDefaults(virtual_screen *vscr, WMPropList *new_dict)
 	void *tdata;
 	WMPropList *old_dict = (w_global.domain.wmaker->dictionary != new_dict ? w_global.domain.wmaker->dictionary : NULL);
 
-	/* Backward Compatibility: init array to special value to detect if they changed */
-	legacy_minipreview_config.enable = 99;
-	legacy_minipreview_config.size   = -1;
-
 	needs_refresh = 0;
 
 	for (i = 0; i < wlengthof(optionList); i++) {
@@ -1219,11 +1217,11 @@ void wReadDefaults(virtual_screen *vscr, WMPropList *new_dict)
 	 * This code should probably stay for at least 2 years, you should not consider removing
 	 * it before year 2017
 	 */
-	if (legacy_minipreview_config.enable != 99) {
+	if (legacy_minipreview_config.enable) {
 		wwarning(_("your configuration is using old syntax for Mini-Preview settings; consider running WPrefs.app to update"));
 		wPreferences.miniwin_preview_balloon = legacy_minipreview_config.enable;
 
-		if (legacy_minipreview_config.size >= 0) {
+		if (legacy_minipreview_config.size > 0) {
 			/*
 			 * the option 'ApercuSize' used to be coded as a multiple of the icon size in v0.95.6
 			 * it is now expressed directly in pixels, but to avoid breaking user's setting we check

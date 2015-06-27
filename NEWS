@@ -12,10 +12,10 @@ screen, by dragging it to that side or corner.  It is enabled by setting
 "WindowSnapping = YES" in ~/GNUstep/Defaults/WindowMaker or selecting "Enable
 window snapping" under "Expert User Preferences" in WPrefs.app.
 
-Note that window snapping is automatically disabled if "Switch workspaces while
-dragging windows" is selected under "Workspace Preferences" in WPrefs.app, or
-if "DontLinkWorkspaces = NO" in  ~/GNUstep/Defaults/WindowMaker, as this feature
-also involves dragging a window to one side of the screen.
+Note that if "Switch workspaces while dragging windows" is selected under
+"Workspace Preferences" in WPrefs.app, or if "DontLinkWorkspaces = NO" in
+~/GNUstep/Defaults/WindowMaker, then you may only snap a window to the top or
+bottom of the screen.
 
 Dragging maximized windows
 --------------------------
@@ -52,6 +52,27 @@ Since the original name was not really clear because it is a French word that
 is rarely used by British people, it was decided to change it to the more usual
 Mini-Preview name. The setting is configurable with WPrefs in the Icon
 Preferences tab, the size is now expressed in pixels directly.
+
+
+Ignore Decoration Hints from GNOME applications
+-----------------------------------------------
+
+The GNOME applications ask Window Maker to get no title bar and no resize bar to
+their windows by using "Hints". You can re-add them using the Attribute dialog
+in the Window menu, but if you are using many GNOME applications you may want to
+tell Window Maker to just ignore them. This is done with the new setting called
+"IgnoreGtkHints", which is available in the "Expert" panel in WPrefs.
+
+
+Cooperative Window Manager Replacement
+--------------------------------------
+
+The ICCCM defines a protocol for window managers to ask to replace the currently
+running one; Window Maker now supports it. You can ask Window Maker to take the
+place of current one by running "wmaker --replace", or any other window manager
+can ask Window Maker to leave the place for them when started the same way.
+Please note that this feature must be explicitely enabled at compile time because
+by default it is not compiled in ("configure --enable-wmreplace").
 
 
 --- 0.95.6

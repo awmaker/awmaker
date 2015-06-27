@@ -403,6 +403,7 @@ extern struct WPreferences {
 	char dont_confirm_kill;            /* do not confirm Kill application */
 	char disable_miniwindows;
 	char disable_workspace_pager;
+	char ignore_gtk_decoration_hints;
 	char dont_blink;                   /* do not blink icon selection */
 
 	/* Appearance options */
@@ -470,6 +471,9 @@ extern struct WPreferences {
 	char show_clip_title;
 
 	struct {
+#ifdef USE_ICCCM_WMREPLACE
+		unsigned int replace:1;               /* replace existing window manager */
+#endif
 		unsigned int nodock:1;                /* don't display the dock */
 		unsigned int noclip:1;                /* don't display the clip */
 		unsigned int clip_merged_in_dock:1;   /* disable clip, dock gets its workspace switching functionality */
@@ -569,6 +573,11 @@ extern struct wmaker_global_variables {
 			Atom wm_resizebar;
 			Atom titlebar_state;
 		} gnustep;
+
+		/* Destkop-environment related */
+		struct {
+			Atom gtk_object_path;
+		} desktop;
 
 		/* WindowMaker specific */
 		struct {

@@ -60,6 +60,123 @@
 #define UPDATE_DEFAULTS		1
 #define IS_BOOLEAN		2
 
+static const struct {
+	const char *key_name;
+	WWindowAttributes flag;
+	const char *caption;
+	const char *description;
+} window_attribute[] = {
+	{ "NoTitlebar", { .no_titlebar = 1 }, N_("Disable titlebar"),
+	  N_("Remove the titlebar of this window.\n"
+	     "To access the window commands menu of a window\n"
+	     "without it's titlebar, press Control+Esc (or the\n"
+	     "equivalent shortcut, if you changed the default\n"
+	     "settings).") },
+
+	{ "NoResizebar", { .no_resizebar = 1 }, N_("Disable resizebar"),
+	  N_("Remove the resizebar of this window.") },
+
+	{ "NoCloseButton", { .no_close_button = 1 }, N_("Disable close button"),
+	  N_("Remove the `close window' button of this window.") },
+
+	{ "NoMiniaturizeButton", { .no_miniaturize_button = 1 }, N_("Disable miniaturize button"),
+	  N_("Remove the `miniaturize window' button of the window.") },
+
+	{ "NoBorder", { .no_border = 1 }, N_("Disable border"),
+	  N_("Remove the 1 pixel black border around the window.") },
+
+	{ "KeepOnTop", { .floating = 1 }, N_("Keep on top (floating)"),
+	  N_("Keep the window over other windows, not allowing\n"
+	     "them to cover it.") },
+
+	{ "KeepOnBottom", { .sunken = 1 }, N_("Keep at bottom (sunken)"),
+	  N_("Keep the window under all other windows.") },
+
+	{ "Omnipresent", { .omnipresent = 1 }, N_("Omnipresent"),
+	  N_("Make window present in all workspaces.") },
+
+	{ "StartMiniaturized", { .start_miniaturized = 1 }, N_("Start miniaturized"),
+	  N_("Make the window be automatically miniaturized when it's\n"
+	     "first shown.") },
+
+	{ "StartMaximized", { .start_maximized = 1 }, N_("Start maximized"),
+	  N_("Make the window be automatically maximized when it's\n"
+	     "first shown.") },
+
+	{ "FullMaximize", { .full_maximize = 1 }, N_("Full screen maximization"),
+	  N_("Make the window use the whole screen space when it's\n"
+	     "maximized. The titlebar and resizebar will be moved\n"
+	     "to outside the screen.") }
+
+}, advanced_option[] = {
+	{ "NoKeyBindings", { .no_bind_keys = 1 }, N_("Do not bind keyboard shortcuts"),
+	  N_("Do not bind keyboard shortcuts from Window Maker\n"
+	     "when this window is focused. This will allow the\n"
+	     "window to receive all key combinations regardless\n"
+	     "of your shortcut configuration.") },
+
+	{ "NoMouseBindings", { .no_bind_mouse = 1 }, N_("Do not bind mouse clicks"),
+	  N_("Do not bind mouse actions, such as `Alt'+drag\n"
+	     "in the window (when Alt is the modifier you have\n"
+	     "configured).") },
+
+	{ "SkipWindowList", { .skip_window_list = 1 }, N_("Do not show in the window list"),
+	  N_("Do not list the window in the window list menu.") },
+
+	{ "SkipSwitchPanel", { .skip_switchpanel = 1 }, N_("Do not show in the switch panel"),
+	  N_("Do not include in switch panel while cycling windows.") },
+
+	{ "Unfocusable", { .no_focusable = 1 }, N_("Do not let it take focus"),
+	  N_("Do not let the window take keyboard focus when you\n"
+	     "click on it.") },
+
+	{ "KeepInsideScreen", { .dont_move_off = 1 }, N_("Keep inside screen"),
+	  N_("Do not allow the window to move itself completely\n"
+	     "outside the screen. For bug compatibility.\n") },
+
+	{ "NoHideOthers", { .no_hide_others = 1 }, N_("Ignore 'Hide Others'"),
+	  N_("Do not hide the window when issuing the\n"
+	     "`HideOthers' command.") },
+
+	{ "DontSaveSession", { .dont_save_session = 1 }, N_("Ignore 'Save Session'"),
+	  N_("Do not save the associated application in the\n"
+	     "session's state, so that it won't be restarted\n"
+	     "together with other applications when Window Maker\n"
+	     "starts.") },
+
+	{ "EmulateAppIcon", { .emulate_appicon = 1 }, N_("Emulate application icon"),
+	  N_("Make this window act as an application that provides\n"
+	     "enough information to Window Maker for a dockable\n"
+	     "application icon to be created.") },
+
+	{ "FocusAcrossWorkspace", { .focus_across_wksp = 1 }, N_("Focus across workspaces"),
+	  N_("Allow Window Maker to switch workspace to satisfy\n"
+	     "a focus request (annoying).") },
+
+	{ "NoMiniaturizable", { .no_miniaturizable = 1 }, N_("Do not let it be minimized"),
+	  N_("Do not let the window of this application be\n"
+	     "minimized.\n") }
+
+#ifdef XKB_BUTTON_HINT
+	,{ "NoLanguageButton", { .no_language_button = 1 }, N_("Disable language button"),
+	   N_("Remove the `toggle language' button of the window.") }
+#endif
+
+}, application_attr[] = {
+	{ "StartHidden", { .start_hidden = 1 }, N_("Start hidden"),
+	  N_("Automatically hide application when it's started.") },
+
+	{ "NoAppIcon", { .no_appicon = 1 }, N_("No application icon"),
+	  N_("Disable the application icon for the application.\n"
+	     "Note that you won't be able to dock it anymore,\n"
+	     "and any icons that are already docked will stop\n"
+	     "working correctly.") },
+
+	{ "SharedAppIcon", { .shared_appicon = 1 }, N_("Shared application icon"),
+	  N_("Use a single shared application icon for all of\n"
+	     "the instances of this application.\n") }
+};
+
 typedef struct InspectorPanel {
 	struct InspectorPanel *nextPtr;
 
@@ -85,15 +202,12 @@ typedef struct InspectorPanel {
 
 	/* second page. attributes */
 	WMFrame *attrFrm;
-	WMButton *attrChk[11];
+	WMButton *attrClient[sizeof(window_attribute) / sizeof(window_attribute[0])];
+	WMButton *attrChk[sizeof(window_attribute) / sizeof(window_attribute[0])];
 
 	/* 3rd page. more attributes */
 	WMFrame *moreFrm;
-#ifdef XKB_BUTTON_HINT
-	WMButton *moreChk[12];
-#else
-	WMButton *moreChk[11];
-#endif
+	WMButton *moreChk[sizeof(advanced_option) / sizeof(advanced_option[0])];
 
 	/* 4th page. icon and workspace */
 	WMFrame *iconFrm;
@@ -107,7 +221,7 @@ typedef struct InspectorPanel {
 
 	/* 5th page. application wide attributes */
 	WMFrame *appFrm;
-	WMButton *appChk[3];
+	WMButton *appChk[sizeof(application_attr) / sizeof(application_attr[0])];
 
 	unsigned int done:1;
 	unsigned int destroyed:1;
@@ -115,39 +229,23 @@ typedef struct InspectorPanel {
 } InspectorPanel;
 
 static InspectorPanel *panelList = NULL;
-static WMPropList *ANoTitlebar = NULL;
-static WMPropList *ANoResizebar;
-static WMPropList *ANoMiniaturizeButton;
-static WMPropList *ANoCloseButton;
-static WMPropList *ANoBorder;
-static WMPropList *ANoHideOthers;
-static WMPropList *ANoMouseBindings;
-static WMPropList *ANoKeyBindings;
-static WMPropList *ANoAppIcon;
-static WMPropList *AKeepOnTop;
-static WMPropList *AKeepOnBottom;
-static WMPropList *AOmnipresent;
-static WMPropList *ASkipWindowList;
-static WMPropList *ASkipSwitchPanel;
-static WMPropList *AKeepInsideScreen;
-static WMPropList *AUnfocusable;
-static WMPropList *AFocusAcrossWorkspace;
+
+/*
+ * We are supposed to use the 'key_name' from the the 'window_attribute' structure when we want to
+ * save the user choice to the database, but as we will need to convert that name into a Property
+ * List, we use here a Cache of Property Lists, generated only once, which can be reused. It will
+ * also save on memory because of the re-use of the same storage space instead of allocating a new
+ * one everytime.
+ */
+static WMPropList *pl_attribute[sizeof(window_attribute) / sizeof(window_attribute[0])] = { [0] = NULL };
+static WMPropList *pl_advoptions[sizeof(advanced_option) / sizeof(advanced_option[0])];
+static WMPropList *pl_appattrib[sizeof(application_attr) / sizeof(application_attr[0])];
+
 static WMPropList *AAlwaysUserIcon;
-static WMPropList *AStartMiniaturized;
-static WMPropList *AStartMaximized;
-static WMPropList *ADontSaveSession;
-static WMPropList *AEmulateAppIcon;
-static WMPropList *AFullMaximize;
-static WMPropList *ASharedAppIcon;
-static WMPropList *ANoMiniaturizable;
-#ifdef XKB_BUTTON_HINT
-static WMPropList *ANoLanguageButton;
-#endif
 static WMPropList *AStartWorkspace;
 static WMPropList *AIcon;
 
 /* application wide options */
-static WMPropList *AStartHidden;
 static WMPropList *AnyWindow;
 static WMPropList *EmptyString;
 static WMPropList *Yes, *No;
@@ -162,42 +260,74 @@ static void create_tab_window_advanced(WWindow *wwin, InspectorPanel *panel, int
 static void create_tab_icon_workspace(WWindow *wwin, InspectorPanel *panel);
 static void create_tab_app_specific(WWindow *wwin, InspectorPanel *panel, int frame_width);
 
+/*
+ * These 3 functions sets/clear/read a bit inside a bit-field in a generic manner;
+ * they uses binary operators to be as effiscient as possible, also counting on compiler's
+ * optimisations because the bit-field structure will fit in only 1 or 2 int but it is
+ * depending on the processor architecture.
+ */
+static inline void set_attr_flag(WWindowAttributes *target, const WWindowAttributes *flag)
+{
+	int i;
+	const unsigned char *src;
+	unsigned char *dst;
+
+	src = (const unsigned char *) flag;
+	dst = (unsigned char *) target;
+
+	for (i = 0; i < sizeof(*flag); i++)
+	        dst[i] |= src[i];
+}
+
+static inline void clear_attr_flag(WWindowAttributes *target, const WWindowAttributes *flag)
+{
+	int i;
+	const unsigned char *src;
+	unsigned char *dst;
+
+	src = (const unsigned char *) flag;
+	dst = (unsigned char *) target;
+
+	for (i = 0; i < sizeof(*flag); i++)
+	        dst[i] &= ~src[i];
+}
+
+static inline int get_attr_flag(const WWindowAttributes *from, const WWindowAttributes *flag)
+{
+	int i;
+	const unsigned char *xpect, *field;
+
+	field = (const unsigned char *) from;
+	xpect = (const unsigned char *) flag;
+
+	for (i = 0; i < sizeof(*flag); i++)
+	        if (field[i] & xpect[i])
+	                return 1;
+
+	return 0;
+}
+
+/*
+ * This function is creating the Property List for the cache mentionned above
+ */
 static void make_keys(void)
 {
-	if (ANoTitlebar != NULL)
+	int i;
+
+	if (pl_attribute[0] != NULL)
 		return;
 
-	AIcon = WMCreatePLString("Icon");
-	ANoTitlebar = WMCreatePLString("NoTitlebar");
-	ANoResizebar = WMCreatePLString("NoResizebar");
-	ANoMiniaturizeButton = WMCreatePLString("NoMiniaturizeButton");
-	ANoCloseButton = WMCreatePLString("NoCloseButton");
-	ANoBorder = WMCreatePLString("NoBorder");
-	ANoHideOthers = WMCreatePLString("NoHideOthers");
-	ANoMouseBindings = WMCreatePLString("NoMouseBindings");
-	ANoKeyBindings = WMCreatePLString("NoKeyBindings");
-	ANoAppIcon = WMCreatePLString("NoAppIcon");
-	AKeepOnTop = WMCreatePLString("KeepOnTop");
-	AKeepOnBottom = WMCreatePLString("KeepOnBottom");
-	AOmnipresent = WMCreatePLString("Omnipresent");
-	ASkipWindowList = WMCreatePLString("SkipWindowList");
-	ASkipSwitchPanel = WMCreatePLString("SkipSwitchPanel");
-	AKeepInsideScreen = WMCreatePLString("KeepInsideScreen");
-	AUnfocusable = WMCreatePLString("Unfocusable");
-	AFocusAcrossWorkspace = WMCreatePLString("FocusAcrossWorkspace");
-	AAlwaysUserIcon = WMCreatePLString("AlwaysUserIcon");
-	AStartMiniaturized = WMCreatePLString("StartMiniaturized");
-	AStartMaximized = WMCreatePLString("StartMaximized");
-	AStartHidden = WMCreatePLString("StartHidden");
-	ADontSaveSession = WMCreatePLString("DontSaveSession");
-	AEmulateAppIcon = WMCreatePLString("EmulateAppIcon");
-	AFullMaximize = WMCreatePLString("FullMaximize");
-	ASharedAppIcon = WMCreatePLString("SharedAppIcon");
-	ANoMiniaturizable = WMCreatePLString("NoMiniaturizable");
-#ifdef XKB_BUTTON_HINT
-	ANoLanguageButton = WMCreatePLString("NoLanguageButton");
-#endif
+	for (i = 0; i < wlengthof(window_attribute); i++)
+		pl_attribute[i] = WMCreatePLString(window_attribute[i].key_name);
 
+	for (i = 0; i < wlengthof(advanced_option); i++)
+		pl_advoptions[i] = WMCreatePLString(advanced_option[i].key_name);
+
+	for (i = 0; i < wlengthof(application_attr); i++)
+		pl_appattrib[i] = WMCreatePLString(application_attr[i].key_name);
+
+	AIcon = WMCreatePLString("Icon");
+	AAlwaysUserIcon = WMCreatePLString("AlwaysUserIcon");
 	AStartWorkspace = WMCreatePLString("StartWorkspace");
 
 	AnyWindow = WMCreatePLString("*");
@@ -509,86 +639,43 @@ static void saveSettings(WMWidget *button, void *client_data)
 
 	flags |= IS_BOOLEAN;
 
-	value = (WMGetButtonSelected(panel->attrChk[0]) != 0) ? Yes : No;
-	different |= insertAttribute(dict, winDic, ANoTitlebar, value, flags);
+	/* Attributes... --> Window Attributes */
+	for (i = 0; i < wlengthof(window_attribute); i++) {
+		WMPropList *old_value;
+		int state;
 
-	value = (WMGetButtonSelected(panel->attrChk[1]) != 0) ? Yes : No;
-	different |= insertAttribute(dict, winDic, ANoResizebar, value, flags);
+		old_value = WMGetFromPLDictionary(winDic, pl_attribute[i]);
+		state = WMGetButtonSelected(panel->attrChk[i]);
+		if (state > 0) {
+			if ((old_value == NULL) || !getBool(old_value)) {
+				WMPutInPLDictionary(winDic, pl_attribute[i], Yes);
+				different |= 1;
+			}
+		} else if (state == 0) {
+			if ((old_value == NULL) || getBool(old_value)) {
+				WMPutInPLDictionary(winDic, pl_attribute[i], No);
+				different |= 1;
+			}
+		} else {	/* (state < 0) */
+			if (old_value != NULL) {
+				WMRemoveFromPLDictionary(winDic, pl_attribute[i]);
+				different |= 1;
+			}
+		}
+	}
 
-	value = (WMGetButtonSelected(panel->attrChk[2]) != 0) ? Yes : No;
-	different |= insertAttribute(dict, winDic, ANoCloseButton, value, flags);
+	/* Attributes... --> Advanced Options */
+	for (i = 0; i < wlengthof(advanced_option); i++) {
+		value = (WMGetButtonSelected(panel->moreChk[i]) != 0) ? Yes : No;
+		different |= insertAttribute(dict, winDic, pl_advoptions[i], value, flags);
+	}
 
-	value = (WMGetButtonSelected(panel->attrChk[3]) != 0) ? Yes : No;
-	different |= insertAttribute(dict, winDic, ANoMiniaturizeButton, value, flags);
-
-	value = (WMGetButtonSelected(panel->attrChk[4]) != 0) ? Yes : No;
-	different |= insertAttribute(dict, winDic, ANoBorder, value, flags);
-
-	value = (WMGetButtonSelected(panel->attrChk[5]) != 0) ? Yes : No;
-	different |= insertAttribute(dict, winDic, AKeepOnTop, value, flags);
-
-	value = (WMGetButtonSelected(panel->attrChk[6]) != 0) ? Yes : No;
-	different |= insertAttribute(dict, winDic, AKeepOnBottom, value, flags);
-
-	value = (WMGetButtonSelected(panel->attrChk[7]) != 0) ? Yes : No;
-	different |= insertAttribute(dict, winDic, AOmnipresent, value, flags);
-
-	value = (WMGetButtonSelected(panel->attrChk[8]) != 0) ? Yes : No;
-	different |= insertAttribute(dict, winDic, AStartMiniaturized, value, flags);
-
-	value = (WMGetButtonSelected(panel->attrChk[9]) != 0) ? Yes : No;
-	different |= insertAttribute(dict, winDic, AStartMaximized, value, flags);
-
-	value = (WMGetButtonSelected(panel->attrChk[10]) != 0) ? Yes : No;
-	different |= insertAttribute(dict, winDic, AFullMaximize, value, flags);
-
-	value = (WMGetButtonSelected(panel->moreChk[0]) != 0) ? Yes : No;
-	different |= insertAttribute(dict, winDic, ANoKeyBindings, value, flags);
-
-	value = (WMGetButtonSelected(panel->moreChk[1]) != 0) ? Yes : No;
-	different |= insertAttribute(dict, winDic, ANoMouseBindings, value, flags);
-
-	value = (WMGetButtonSelected(panel->moreChk[2]) != 0) ? Yes : No;
-	different |= insertAttribute(dict, winDic, ASkipWindowList, value, flags);
-
-	value = (WMGetButtonSelected(panel->moreChk[3]) != 0) ? Yes : No;
-	different |= insertAttribute(dict, winDic, ASkipSwitchPanel, value, flags);
-
-	value = (WMGetButtonSelected(panel->moreChk[4]) != 0) ? Yes : No;
-	different |= insertAttribute(dict, winDic, AUnfocusable, value, flags);
-
-	value = (WMGetButtonSelected(panel->moreChk[5]) != 0) ? Yes : No;
-	different |= insertAttribute(dict, winDic, AKeepInsideScreen, value, flags);
-
-	value = (WMGetButtonSelected(panel->moreChk[6]) != 0) ? Yes : No;
-	different |= insertAttribute(dict, winDic, ANoHideOthers, value, flags);
-
-	value = (WMGetButtonSelected(panel->moreChk[7]) != 0) ? Yes : No;
-	different |= insertAttribute(dict, winDic, ADontSaveSession, value, flags);
-
-	value = (WMGetButtonSelected(panel->moreChk[8]) != 0) ? Yes : No;
-	different |= insertAttribute(dict, winDic, AEmulateAppIcon, value, flags);
-
-	value = (WMGetButtonSelected(panel->moreChk[9]) != 0) ? Yes : No;
-	different |= insertAttribute(dict, winDic, AFocusAcrossWorkspace, value, flags);
-
-	value = (WMGetButtonSelected(panel->moreChk[10]) != 0) ? Yes : No;
-	different |= insertAttribute(dict, winDic, ANoMiniaturizable, value, flags);
-
-#ifdef XKB_BUTTON_HINT
-	value = (WMGetButtonSelected(panel->moreChk[11]) != 0) ? Yes : No;
-	different |= insertAttribute(dict, winDic, ANoLanguageButton, value, flags);
-#endif
-
+	/* Attributes... --> Application Specific */
 	if (wwin->main_window != None && wApplicationOf(wwin->main_window) != NULL) {
-		value = (WMGetButtonSelected(panel->appChk[0]) != 0) ? Yes : No;
-		different2 |= insertAttribute(dict, appDic, AStartHidden, value, flags);
-
-		value = (WMGetButtonSelected(panel->appChk[1]) != 0) ? Yes : No;
-		different2 |= insertAttribute(dict, appDic, ANoAppIcon, value, flags);
-
-		value = (WMGetButtonSelected(panel->appChk[2]) != 0) ? Yes : No;
-		different2 |= insertAttribute(dict, appDic, ASharedAppIcon, value, flags);
+		for (i = 0; i < wlengthof(application_attr); i++) {
+			value = (WMGetButtonSelected(panel->appChk[i]) != 0) ? Yes : No;
+			different2 |= insertAttribute(dict, appDic, pl_appattrib[i], value, flags);
+		}
 	}
 
 	if (wwin->fake_group) {
@@ -645,9 +732,9 @@ static void applySettings(WMWidget *button, void *client_data)
 	InspectorPanel *panel = (InspectorPanel *) client_data;
 	WWindow *wwin = panel->inspected;
 	WApplication *wapp = wApplicationOf(wwin->main_window);
-	int floating, sunken, skip_window_list;
-	int old_omnipresent, old_no_bind_keys, old_no_bind_mouse;
+	int i, old_skip_window_list, old_omnipresent, old_no_bind_keys, old_no_bind_mouse;
 
+	old_skip_window_list = WFLAGP(wwin, skip_window_list);
 	old_omnipresent = WFLAGP(wwin, omnipresent);
 	old_no_bind_keys = WFLAGP(wwin, no_bind_keys);
 	old_no_bind_mouse = WFLAGP(wwin, no_bind_mouse);
@@ -655,33 +742,32 @@ static void applySettings(WMWidget *button, void *client_data)
 	showIconFor(WMWidgetScreen(button), panel, NULL, NULL, USE_TEXT_FIELD);
 
 	/* Attributes... --> Window Attributes */
-	WSETUFLAG(wwin, no_titlebar, WMGetButtonSelected(panel->attrChk[0]));
-	WSETUFLAG(wwin, no_resizebar, WMGetButtonSelected(panel->attrChk[1]));
-	WSETUFLAG(wwin, no_close_button, WMGetButtonSelected(panel->attrChk[2]));
-	WSETUFLAG(wwin, no_miniaturize_button, WMGetButtonSelected(panel->attrChk[3]));
-	WSETUFLAG(wwin, no_border, WMGetButtonSelected(panel->attrChk[4]));
-	floating = WMGetButtonSelected(panel->attrChk[5]);
-	sunken = WMGetButtonSelected(panel->attrChk[6]);
-	WSETUFLAG(wwin, omnipresent, WMGetButtonSelected(panel->attrChk[7]));
-	WSETUFLAG(wwin, start_miniaturized, WMGetButtonSelected(panel->attrChk[8]));
-	WSETUFLAG(wwin, start_maximized, WMGetButtonSelected(panel->attrChk[9]));
-	WSETUFLAG(wwin, full_maximize, WMGetButtonSelected(panel->attrChk[10]));
+	for (i = 0; i < wlengthof(window_attribute); i++) {
+		int state;
+
+		state = WMGetButtonSelected(panel->attrChk[i]);
+
+		if (state > 0)
+			set_attr_flag(&wwin->user_flags, &window_attribute[i].flag);
+		else
+			clear_attr_flag(&wwin->user_flags, &window_attribute[i].flag);
+
+		if (state < 0)
+			clear_attr_flag(&wwin->defined_user_flags, &window_attribute[i].flag);
+		else
+			set_attr_flag(&wwin->defined_user_flags, &window_attribute[i].flag);
+	}
 
 	/* Attributes... --> Advanced Options */
-	WSETUFLAG(wwin, no_bind_keys, WMGetButtonSelected(panel->moreChk[0]));
-	WSETUFLAG(wwin, no_bind_mouse, WMGetButtonSelected(panel->moreChk[1]));
-	skip_window_list = WMGetButtonSelected(panel->moreChk[2]);
-	WSETUFLAG(wwin, skip_switchpanel, WMGetButtonSelected(panel->moreChk[3]));
-	WSETUFLAG(wwin, no_focusable, WMGetButtonSelected(panel->moreChk[4]));
-	WSETUFLAG(wwin, dont_move_off, WMGetButtonSelected(panel->moreChk[5]));
-	WSETUFLAG(wwin, no_hide_others, WMGetButtonSelected(panel->moreChk[6]));
-	WSETUFLAG(wwin, dont_save_session, WMGetButtonSelected(panel->moreChk[7]));
-	WSETUFLAG(wwin, emulate_appicon, WMGetButtonSelected(panel->moreChk[8]));
-	WSETUFLAG(wwin, focus_across_wksp, WMGetButtonSelected(panel->moreChk[9]));
-	WSETUFLAG(wwin, no_miniaturizable, WMGetButtonSelected(panel->moreChk[10]));
-#ifdef XKB_BUTTON_HINT
-	WSETUFLAG(wwin, no_language_button, WMGetButtonSelected(panel->moreChk[11]));
-#endif
+	for (i = 0; i < wlengthof(advanced_option); i++) {
+		if (WMGetButtonSelected(panel->moreChk[i]))
+			set_attr_flag(&wwin->user_flags, &advanced_option[i].flag);
+		else
+			clear_attr_flag(&wwin->user_flags, &advanced_option[i].flag);
+
+		set_attr_flag(&wwin->defined_user_flags, &advanced_option[i].flag);
+	}
+
 	WSETUFLAG(wwin, always_user_icon, WMGetButtonSelected(panel->alwChk));
 
 	if (WFLAGP(wwin, no_titlebar) && wwin->flags.shaded)
@@ -689,24 +775,21 @@ static void applySettings(WMWidget *button, void *client_data)
 
 	WSETUFLAG(wwin, no_shadeable, WFLAGP(wwin, no_titlebar));
 
-	if (floating) {
-		if (!WFLAGP(wwin, floating))
-			ChangeStackingLevel(wwin->frame->core, WMFloatingLevel);
-	} else if (sunken) {
-		if (!WFLAGP(wwin, sunken))
-			ChangeStackingLevel(wwin->frame->core, WMSunkenLevel);
-	} else {
-		if (WFLAGP(wwin, floating) || WFLAGP(wwin, sunken))
-			ChangeStackingLevel(wwin->frame->core, WMNormalLevel);
-	}
+	/*
+	 * Update the window level according to AlwaysOnTop/AlwaysOnBotton
+	 * if the level did not change, ChangeStackingLevel will do nothing anyway
+	 */
+	if (WFLAGP(wwin, floating))
+		ChangeStackingLevel(wwin->frame->core, WMFloatingLevel);
+	else if (WFLAGP(wwin, sunken))
+		ChangeStackingLevel(wwin->frame->core, WMSunkenLevel);
+	else
+		ChangeStackingLevel(wwin->frame->core, WMNormalLevel);
 
-	WSETUFLAG(wwin, sunken, sunken);
-	WSETUFLAG(wwin, floating, floating);
 	wwin->flags.omnipresent = 0;
 
-	if (WFLAGP(wwin, skip_window_list) != skip_window_list) {
-		WSETUFLAG(wwin, skip_window_list, skip_window_list);
-		UpdateSwitchMenu(wwin->vscr, wwin, skip_window_list ? ACTION_REMOVE : ACTION_ADD);
+	if (WFLAGP(wwin, skip_window_list) != old_skip_window_list) {
+		UpdateSwitchMenu(wwin->vscr, wwin, WFLAGP(wwin, skip_window_list)?ACTION_REMOVE:ACTION_ADD);
 	} else {
 		if (WFLAGP(wwin, omnipresent) != old_omnipresent)
 			WMPostNotificationName(WMNChangedState, wwin, "omnipresent");
@@ -730,9 +813,14 @@ static void applySettings(WMWidget *button, void *client_data)
 	/* Can't apply emulate_appicon because it will probably cause problems. */
 	if (wapp) {
 		/* do application wide stuff */
-		WSETUFLAG(wapp->main_window_desc, start_hidden, WMGetButtonSelected(panel->appChk[0]));
-		WSETUFLAG(wapp->main_window_desc, no_appicon, WMGetButtonSelected(panel->appChk[1]));
-		WSETUFLAG(wapp->main_window_desc, shared_appicon, WMGetButtonSelected(panel->appChk[2]));
+		for (i = 0; i < wlengthof(application_attr); i++) {
+			if (WMGetButtonSelected(panel->appChk[i]))
+				set_attr_flag(&wapp->main_window_desc->user_flags, &application_attr[i].flag);
+			else
+				clear_attr_flag(&wapp->main_window_desc->user_flags, &application_attr[i].flag);
+
+			set_attr_flag(&wapp->main_window_desc->defined_user_flags, &application_attr[i].flag);
+		}
 
 		if (WFLAGP(wapp->main_window_desc, no_appicon))
 			unpaint_app_icon(wapp);
@@ -832,92 +920,33 @@ static void revertSettings(WMWidget *button, void *client_data)
 
 	wWindowSetupInitialAttributes(wwin, &level, &workspace);
 
-	for (i = 0; i < wlengthof(panel->attrChk); i++) {
-		int flag = 0;
+	/* Attributes... --> Window Attributes */
+	for (i = 0; i < wlengthof(window_attribute); i++) {
+		int is_userdef, flag;
 
-		switch (i) {
-		case 0:
-			flag = WFLAGP(wwin, no_titlebar);
-			break;
-		case 1:
-			flag = WFLAGP(wwin, no_resizebar);
-			break;
-		case 2:
-			flag = WFLAGP(wwin, no_close_button);
-			break;
-		case 3:
-			flag = WFLAGP(wwin, no_miniaturize_button);
-			break;
-		case 4:
-			flag = WFLAGP(wwin, no_border);
-			break;
-		case 5:
-			flag = WFLAGP(wwin, floating);
-			break;
-		case 6:
-			flag = WFLAGP(wwin, sunken);
-			break;
-		case 7:
-			flag = WFLAGP(wwin, omnipresent);
-			break;
-		case 8:
-			flag = WFLAGP(wwin, start_miniaturized);
-			break;
-		case 9:
-			flag = WFLAGP(wwin, start_maximized != 0);
-			break;
-		case 10:
-			flag = WFLAGP(wwin, full_maximize);
-			break;
-		}
+		is_userdef = get_attr_flag(&wwin->defined_user_flags, &window_attribute[i].flag);
+		if (is_userdef)
+			flag = get_attr_flag(&wwin->user_flags, &window_attribute[i].flag);
+		else
+			flag = -1;
+
 		WMSetButtonSelected(panel->attrChk[i], flag);
 	}
 
-	for (i = 0; i < wlengthof(panel->moreChk); i++) {
-		int flag = 0;
+	/* Attributes... --> Advanced Options */
+	for (i = 0; i < wlengthof(advanced_option); i++) {
+		int is_userdef, flag;
 
-		switch (i) {
-		case 0:
-			flag = WFLAGP(wwin, no_bind_keys);
-			break;
-		case 1:
-			flag = WFLAGP(wwin, no_bind_mouse);
-			break;
-		case 2:
-			flag = WFLAGP(wwin, skip_window_list);
-			break;
-		case 3:
-			flag = WFLAGP(wwin, skip_switchpanel);
-			break;
-		case 4:
-			flag = WFLAGP(wwin, no_focusable);
-			break;
-		case 5:
-			flag = WFLAGP(wwin, dont_move_off);
-			break;
-		case 6:
-			flag = WFLAGP(wwin, no_hide_others);
-			break;
-		case 7:
-			flag = WFLAGP(wwin, dont_save_session);
-			break;
-		case 8:
-			flag = WFLAGP(wwin, emulate_appicon);
-			break;
-		case 9:
-			flag = WFLAGP(wwin, focus_across_wksp);
-			break;
-		case 10:
-			flag = WFLAGP(wwin, no_miniaturizable);
-			break;
-#ifdef XKB_BUTTON_HINT
-		case 11:
-			flag = WFLAGP(wwin, no_language_button);
-			break;
-#endif
-		}
+		is_userdef = get_attr_flag(&wwin->defined_user_flags, &advanced_option[i].flag);
+		if (is_userdef)
+			flag = get_attr_flag(&wwin->user_flags, &advanced_option[i].flag);
+		else
+			flag = get_attr_flag(&wwin->client_flags, &advanced_option[i].flag);
+
 		WMSetButtonSelected(panel->moreChk[i], flag);
 	}
+
+	/* Attributes... --> Application Specific */
 	if (panel->appFrm && wapp) {
 		for (i = 0; i < wlengthof(panel->appChk); i++) {
 			int flag = 0;
@@ -933,6 +962,7 @@ static void revertSettings(WMWidget *button, void *client_data)
 				flag = WFLAGP(wapp->main_window_desc, shared_appicon);
 				break;
 			}
+
 			WMSetButtonSelected(panel->appChk[i], flag);
 		}
 	}
@@ -1242,8 +1272,8 @@ static InspectorPanel *createInspectorForWindow(WWindow *wwin, int xpos, int ypo
 	/* kluge to know who should get the key events */
 	panel->frame->client_leader = WMWidgetXID(panel->win);
 
-	WSETUFLAG(panel->frame, no_closable, 0);
-	WSETUFLAG(panel->frame, no_close_button, 0);
+	panel->frame->client_flags.no_closable = 0;
+	panel->frame->client_flags.no_close_button = 0;
 	wWindowUpdateButtonImages(panel->frame);
 	wFrameWindowShowButton(panel->frame->frame, WFF_RIGHT_BUTTON);
 	panel->frame->frame->on_click_right = destroyInspector;
@@ -1307,181 +1337,72 @@ void wCloseInspectorForWindow(WWindow *wwin)
 static void create_tab_window_attributes(WWindow *wwin, InspectorPanel *panel, int frame_width)
 {
 	int i = 0;
-	char *caption = NULL, *descr = NULL;
-	int flag = 0;
 
 	panel->attrFrm = WMCreateFrame(panel->win);
 	WMSetFrameTitle(panel->attrFrm, _("Attributes"));
 	WMMoveWidget(panel->attrFrm, 15, 45);
 	WMResizeWidget(panel->attrFrm, frame_width, 250);
 
-	for (i = 0; i < wlengthof(panel->attrChk); i++) {
-		switch (i) {
-		case 0:
-			caption = _("Disable titlebar");
-			flag = WFLAGP(wwin, no_titlebar);
-			descr = _("Remove the titlebar of this window.\n"
-				  "To access the window commands menu of a window\n"
-				  "without it's titlebar, press Control+Esc (or the\n"
-				  "equivalent shortcut, if you changed the default\n" "settings).");
-			break;
-		case 1:
-			caption = _("Disable resizebar");
-			flag = WFLAGP(wwin, no_resizebar);
-			descr = _("Remove the resizebar of this window.");
-			break;
-		case 2:
-			caption = _("Disable close button");
-			flag = WFLAGP(wwin, no_close_button);
-			descr = _("Remove the `close window' button of this window.");
-			break;
-		case 3:
-			caption = _("Disable miniaturize button");
-			flag = WFLAGP(wwin, no_miniaturize_button);
-			descr = _("Remove the `miniaturize window' button of the window.");
-			break;
-		case 4:
-			caption = _("Disable border");
-			flag = WFLAGP(wwin, no_border);
-			descr = _("Remove the 1 pixel black border around the window.");
-			break;
-		case 5:
-			caption = _("Keep on top (floating)");
-			flag = WFLAGP(wwin, floating);
-			descr = _("Keep the window over other windows, not allowing\n" "them to cover it.");
-			break;
-		case 6:
-			caption = _("Keep at bottom (sunken)");
-			flag = WFLAGP(wwin, sunken);
-			descr = _("Keep the window under all other windows.");
-			break;
-		case 7:
-			caption = _("Omnipresent");
-			flag = WFLAGP(wwin, omnipresent);
-			descr = _("Make window present in all workspaces.");
-			break;
-		case 8:
-			caption = _("Start miniaturized");
-			flag = WFLAGP(wwin, start_miniaturized);
-			descr = _("Make the window be automatically miniaturized when it's\n" "first shown.");
-			break;
-		case 9:
-			caption = _("Start maximized");
-			flag = WFLAGP(wwin, start_maximized != 0);
-			descr = _("Make the window be automatically maximized when it's\n" "first shown.");
-			break;
-		case 10:
-			caption = _("Full screen maximization");
-			flag = WFLAGP(wwin, full_maximize);
-			descr = _("Make the window use the whole screen space when it's\n"
-				  "maximized. The titlebar and resizebar will be moved\n"
-				  "to outside the screen.");
-			break;
-		}
-		panel->attrChk[i] = WMCreateSwitchButton(panel->attrFrm);
-		WMMoveWidget(panel->attrChk[i], 10, 20 * (i + 1));
-		WMResizeWidget(panel->attrChk[i], frame_width - 15, 20);
-		WMSetButtonSelected(panel->attrChk[i], flag);
-		WMSetButtonText(panel->attrChk[i], caption);
+	for (i = 0; i < wlengthof(window_attribute); i++) {
+		int is_userdef, flag;
 
-		WMSetBalloonTextForView(descr, WMWidgetView(panel->attrChk[i]));
+		/* Read-only button to display the state requested by the application */
+		flag = get_attr_flag(&wwin->client_flags, &window_attribute[i].flag);
+
+		panel->attrClient[i] = WMCreateSwitchButton(panel->attrFrm);
+		WMMoveWidget(panel->attrClient[i], 10, 20 * (i + 1));
+		WMResizeWidget(panel->attrClient[i], 20, 20);
+		WMSetButtonText(panel->attrClient[i], NULL);
+		WMSetButtonSelected(panel->attrClient[i], flag);
+		WMSetButtonEnabled(panel->attrClient[i], False);
+
+		WMSetBalloonTextForView(_("Shows the state that was asked by the application.\n"
+		                          "You can use the checkbox on the right to change this setting;\n"
+		                          "when it is grayed it means to follow application's choice."),
+		                        WMWidgetView(panel->attrClient[i]));
+
+		/* Button to let user override this choice */
+		is_userdef = get_attr_flag(&wwin->defined_user_flags, &window_attribute[i].flag);
+		if (is_userdef)
+			flag = get_attr_flag(&wwin->user_flags, &window_attribute[i].flag);
+		else
+			flag = -1;
+
+		panel->attrChk[i] = WMCreateButton(panel->attrFrm, WBTTriState);
+		WMMoveWidget(panel->attrChk[i], 30, 20 * (i + 1));
+		WMResizeWidget(panel->attrChk[i], frame_width - 45, 20);
+		WMSetButtonSelected(panel->attrChk[i], flag);
+		WMSetButtonText(panel->attrChk[i], _(window_attribute[i].caption));
+
+		WMSetBalloonTextForView(_(window_attribute[i].description), WMWidgetView(panel->attrChk[i]));
 	}
 }
 
 static void create_tab_window_advanced(WWindow *wwin, InspectorPanel *panel, int frame_width)
 {
 	int i = 0;
-	char *caption = NULL, *descr = NULL;
-	int flag = 0;
 
 	panel->moreFrm = WMCreateFrame(panel->win);
 	WMSetFrameTitle(panel->moreFrm, _("Advanced"));
 	WMMoveWidget(panel->moreFrm, 15, 45);
 	WMResizeWidget(panel->moreFrm, frame_width, 265);
 
-	for (i = 0; i < wlengthof(panel->moreChk); i++) {
-		switch (i) {
-		case 0:
-			caption = _("Do not bind keyboard shortcuts");
-			flag = WFLAGP(wwin, no_bind_keys);
-			descr = _("Do not bind keyboard shortcuts from Window Maker\n"
-				  "when this window is focused. This will allow the\n"
-				  "window to receive all key combinations regardless\n"
-				  "of your shortcut configuration.");
-			break;
-		case 1:
-			caption = _("Do not bind mouse clicks");
-			flag = WFLAGP(wwin, no_bind_mouse);
-			descr = _("Do not bind mouse actions, such as `Alt'+drag\n"
-				  "in the window (when Alt is the modifier you have\n" "configured).");
-			break;
-		case 2:
-			caption = _("Do not show in the window list");
-			flag = WFLAGP(wwin, skip_window_list);
-			descr = _("Do not list the window in the window list menu.");
-			break;
-		case 3:
-			caption = _("Do not show in the switch panel");
-			flag = WFLAGP(wwin, skip_switchpanel);
-			descr = _("Do not include in switch panel while cycling windows.");
-			break;
-		case 4:
-			caption = _("Do not let it take focus");
-			flag = WFLAGP(wwin, no_focusable);
-			descr = _("Do not let the window take keyboard focus when you\n" "click on it.");
-			break;
-		case 5:
-			caption = _("Keep inside screen");
-			flag = WFLAGP(wwin, dont_move_off);
-			descr = _("Do not allow the window to move itself completely\n"
-				  "outside the screen. For bug compatibility.\n");
-			break;
-		case 6:
-			caption = _("Ignore 'Hide Others'");
-			flag = WFLAGP(wwin, no_hide_others);
-			descr = _("Do not hide the window when issuing the\n" "`HideOthers' command.");
-			break;
-		case 7:
-			caption = _("Ignore 'Save Session'");
-			flag = WFLAGP(wwin, dont_save_session);
-			descr = _("Do not save the associated application in the\n"
-				  "session's state, so that it won't be restarted\n"
-				  "together with other applications when Window Maker\n" "starts.");
-			break;
-		case 8:
-			caption = _("Emulate application icon");
-			flag = WFLAGP(wwin, emulate_appicon);
-			descr = _("Make this window act as an application that provides\n"
-				  "enough information to Window Maker for a dockable\n"
-				  "application icon to be created.");
-			break;
-		case 9:
-			caption = _("Focus across workspaces");
-			flag = WFLAGP(wwin, focus_across_wksp);
-			descr = _("Allow Window Maker to switch workspace to satisfy\n"
-				  "a focus request (annoying).");
-			break;
-		case 10:
-			caption = _("Do not let it be minimized");
-			flag = WFLAGP(wwin, no_miniaturizable);
-			descr = _("Do not let the window of this application be\n"
-					  "minimized.\n");
-			break;
-#ifdef XKB_BUTTON_HINT
-		case 11:
-			caption = _("Disable language button");
-			flag = WFLAGP(wwin, no_language_button);
-			descr = _("Remove the `toggle language' button of the window.");
-			break;
-#endif
-		}
+	for (i = 0; i < wlengthof(advanced_option); i++) {
+		int is_userdef, flag;
+
+		is_userdef = get_attr_flag(&wwin->defined_user_flags, &advanced_option[i].flag);
+		if (is_userdef)
+			flag = get_attr_flag(&wwin->user_flags, &advanced_option[i].flag);
+		else
+			flag = get_attr_flag(&wwin->client_flags, &advanced_option[i].flag);
+
 		panel->moreChk[i] = WMCreateSwitchButton(panel->moreFrm);
-		WMMoveWidget(panel->moreChk[i], 10, 20 * (i + 1));
+		WMMoveWidget(panel->moreChk[i], 10, 20 * (i + 1) - 4);
 		WMResizeWidget(panel->moreChk[i], frame_width - 15, 20);
 		WMSetButtonSelected(panel->moreChk[i], flag);
-		WMSetButtonText(panel->moreChk[i], caption);
+		WMSetButtonText(panel->moreChk[i], _(advanced_option[i].caption));
 
-		WMSetBalloonTextForView(descr, WMWidgetView(panel->moreChk[i]));
+		WMSetBalloonTextForView(_(advanced_option[i].description), WMWidgetView(panel->moreChk[i]));
 	}
 }
 
@@ -1550,9 +1471,7 @@ static void create_tab_icon_workspace(WWindow *wwin, InspectorPanel *panel)
 static void create_tab_app_specific(WWindow *wwin, InspectorPanel *panel, int frame_width)
 {
 	WScreen *scr = wwin->vscr->screen_ptr;
-	int i = 0, flag = 0, tmp;
-	char *caption = NULL, *descr = NULL;
-
+	int i = 0, tmp;
 
 	if (wwin->main_window != None) {
 		WApplication *wapp = wApplicationOf(wwin->main_window);
@@ -1562,34 +1481,22 @@ static void create_tab_app_specific(WWindow *wwin, InspectorPanel *panel, int fr
 		WMMoveWidget(panel->appFrm, 15, 50);
 		WMResizeWidget(panel->appFrm, frame_width, 240);
 
-		for (i = 0; i < wlengthof(panel->appChk); i++) {
-			switch (i) {
-			case 0:
-				caption = _("Start hidden");
-				flag = WFLAGP(wapp->main_window_desc, start_hidden);
-				descr = _("Automatically hide application when it's started.");
-				break;
-			case 1:
-				caption = _("No application icon");
-				flag = WFLAGP(wapp->main_window_desc, no_appicon);
-				descr = _("Disable the application icon for the application.\n"
-					  "Note that you won't be able to dock it anymore,\n"
-					  "and any icons that are already docked will stop\n"
-					  "working correctly.");
-				break;
-			case 2:
-				caption = _("Shared application icon");
-				flag = WFLAGP(wapp->main_window_desc, shared_appicon);
-				descr = _("Use a single shared application icon for all of\n"
-					  "the instances of this application.\n");
-				break;
-			}
+		for (i = 0; i < wlengthof(application_attr); i++) {
+			int is_userdef, flag;
+
+			is_userdef = get_attr_flag(&wapp->main_window_desc->defined_user_flags, &application_attr[i].flag);
+			if (is_userdef)
+				flag = get_attr_flag(&wapp->main_window_desc->user_flags, &application_attr[i].flag);
+			else
+				flag = get_attr_flag(&wapp->main_window_desc->client_flags, &application_attr[i].flag);
+
 			panel->appChk[i] = WMCreateSwitchButton(panel->appFrm);
 			WMMoveWidget(panel->appChk[i], 10, 20 * (i + 1));
 			WMResizeWidget(panel->appChk[i], 205, 20);
 			WMSetButtonSelected(panel->appChk[i], flag);
-			WMSetButtonText(panel->appChk[i], caption);
-			WMSetBalloonTextForView(descr, WMWidgetView(panel->appChk[i]));
+			WMSetButtonText(panel->appChk[i], _(application_attr[i].caption));
+			WMSetBalloonTextForView(_(application_attr[i].description),
+						WMWidgetView(panel->appChk[i]));
 		}
 
 		if (WFLAGP(wwin, emulate_appicon)) {

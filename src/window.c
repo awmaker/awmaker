@@ -293,13 +293,38 @@ static void setupGNUstepHints(WWindow *wwin, GNUstepWMAttributes *gs_hints)
 		wwin->client_flags.no_appicon = 1;
 }
 
+static void discard_hints_from_gtk(WWindow *wwin)
+{
+	Atom type;
+	int status, format;
+	unsigned long nb_item, nb_remain;
+	unsigned char *result;
+
+	status = XGetWindowProperty(dpy, wwin->client_win, w_global.atom.desktop.gtk_object_path, 0, 16, False,
+	                            AnyPropertyType, &type, &format, &nb_item, &nb_remain, &result);
+	if (status != Success)
+	        return;
+
+	/* If we're here, that means the Property exists. We don't care what is inside, it means it is a GTK-based application */
+
+	if (result != NULL)
+	        XFree(result);
+
+	/* GTK is asking to remove these decorations: */
+	wwin->client_flags.no_titlebar = 0;
+	wwin->client_flags.no_close_button = 0;
+	wwin->client_flags.no_miniaturize_button = 0;
+	wwin->client_flags.no_resizebar = 0;
+}
+
 void wWindowSetupInitialAttributes(WWindow *wwin, int *level, int *workspace)
 {
 	virtual_screen *vscr = wwin->vscr;
 	WScreen *scr = vscr->screen_ptr;
 
 	/* sets global default stuff */
-	wDefaultFillAttributes(wwin->wm_instance, wwin->wm_class, &wwin->client_flags, NULL, True);
+	wDefaultFillAttributes(wwin->wm_instance, wwin->wm_class, &wwin->user_flags, NULL, True);
+	wwin->defined_user_flags = wwin->user_flags;
 
 	/*
 	 * Decoration setting is done in this precedence (lower to higher)
@@ -309,25 +334,25 @@ void wWindowSetupInitialAttributes(WWindow *wwin, int *level, int *workspace)
 	 * - set hints specified for the app in the resource DB
 	 *
 	 */
-	WSETUFLAG(wwin, broken_close, 0);
+	wwin->client_flags.broken_close = 0;
 
 	if (wwin->protocols.DELETE_WINDOW)
-		WSETUFLAG(wwin, kill_close, 0);
+		wwin->client_flags.kill_close = 0;
 	else
-		WSETUFLAG(wwin, kill_close, 1);
+		wwin->client_flags.kill_close = 1;
 
 	/* transients can't be iconified or maximized */
 	if (wwin->transient_for != None && wwin->transient_for != scr->root_win) {
-		WSETUFLAG(wwin, no_miniaturizable, 1);
-		WSETUFLAG(wwin, no_miniaturize_button, 1);
+		wwin->client_flags.no_miniaturizable = 1;
+		wwin->client_flags.no_miniaturize_button = 1;
 	}
 
 	/* if the window can't be resized, remove the resizebar */
 	if (wwin->normal_hints->flags & (PMinSize | PMaxSize)
 	    && (wwin->normal_hints->min_width == wwin->normal_hints->max_width)
 	    && (wwin->normal_hints->min_height == wwin->normal_hints->max_height)) {
-		WSETUFLAG(wwin, no_resizable, 1);
-		WSETUFLAG(wwin, no_resizebar, 1);
+		wwin->client_flags.no_resizable = 1;
+		wwin->client_flags.no_resizebar = 1;
 	}
 
 	/* set GNUstep window attributes */
@@ -354,6 +379,9 @@ void wWindowSetupInitialAttributes(WWindow *wwin, int *level, int *workspace)
 #endif	/* USE_MWM_HINTS */
 
 		wNETWMCheckClientHints(wwin, &tmp_level, &tmp_workspace);
+
+		if (wPreferences.ignore_gtk_decoration_hints)
+			discard_hints_from_gtk(wwin);
 
 		/* window levels are between INT_MIN+1 and INT_MAX, so if we still
 		 * have INT_MIN that means that no window level was requested. -Dan
@@ -407,7 +435,9 @@ void wWindowSetupInitialAttributes(WWindow *wwin, int *level, int *workspace)
 	    && wwin->user_flags.floating && wwin->defined_user_flags.floating)
 		wwin->user_flags.sunken = 0;
 
-	WSETUFLAG(wwin, no_shadeable, WFLAGP(wwin, no_titlebar));
+	/* A window that does not have a title cannot be Shaded and we don't let user override this */
+	wwin->client_flags.no_shadeable = WFLAGP(wwin, no_titlebar);
+	wwin->defined_user_flags.no_shadeable = 0;
 
 	/* windows that have takefocus=False shouldn't take focus at all */
 	if (wwin->focus_mode == WFM_NO_INPUT)
@@ -730,22 +760,22 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 	wwin->orig_main_window = wwin->main_window;
 
 	if (wwin->flags.is_gnustep)
-		WSETUFLAG(wwin, shared_appicon, 0);
+		wwin->client_flags.shared_appicon = 0;
 
 	if (wwin->main_window) {
 		XTextProperty text_prop;
 
 		if (XGetTextProperty(dpy, wwin->main_window, &text_prop, w_global.atom.wmaker.menu))
-			WSETUFLAG(wwin, shared_appicon, 0);
+			wwin->client_flags.shared_appicon = 0;
 	}
 
 	if (wwin->flags.is_dockapp)
-		WSETUFLAG(wwin, shared_appicon, 0);
+		wwin->client_flags.shared_appicon = 0;
 
 	if (wwin->main_window) {
             WApplication *app = wApplicationOf(wwin->main_window);
             if (app && app->app_icon)
-		WSETUFLAG(wwin, shared_appicon, 0);
+		wwin->client_flags.shared_appicon = 0;
         }
 
 	if (!withdraw && wwin->main_window && WFLAGP(wwin, shared_appicon)) {
@@ -1328,10 +1358,10 @@ WWindow *wManageInternalWindow(virtual_screen *vscr, Window window, Window owner
 
 	wwin->flags.internal_window = 1;
 
-	WSETUFLAG(wwin, omnipresent, 1);
-	WSETUFLAG(wwin, no_shadeable, 1);
-	WSETUFLAG(wwin, no_resizable, 1);
-	WSETUFLAG(wwin, no_miniaturizable, 1);
+	wwin->client_flags.omnipresent = 1;
+	wwin->client_flags.no_shadeable = 1;
+	wwin->client_flags.no_resizable = 1;
+	wwin->client_flags.no_miniaturizable = 1;
 
 	wwin->focus_mode = WFM_PASSIVE;
 	wwin->client_win = window;
