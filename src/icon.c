@@ -929,3 +929,11 @@ void map_icon_image(WIcon *icon)
 	/* Update the icon, because icon could be NULL */
 	wIconUpdate(icon);
 }
+
+void unmap_icon_image(WIcon *icon)
+{
+	if (icon->pixmap != None)
+		XFreePixmap(dpy, icon->pixmap);
+
+	unset_icon_file_image(icon);
+}
