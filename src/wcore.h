@@ -53,4 +53,5 @@ void wcore_map_toplevel(WCoreWindow *core, virtual_screen *vscr, int x, int y,
 void wcore_map(WCoreWindow *core, WCoreWindow *parent, virtual_screen *vscr,
 	       int x, int y, int bwidth, int depth, Visual *visual,
 	       Colormap colormap);
+void wcore_unmap(WCoreWindow *core);
 #endif
