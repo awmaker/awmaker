@@ -83,13 +83,10 @@ WFrameWindow *wframewindow_create(int width, int height)
 
 void wframewindow_unmap_wcorewindow(WCoreWindow *core)
 {
-	if (core) {
-		if (core->stacking)
-			wfree(core->stacking);
+	if (core && core->stacking)
+		wfree(core->stacking);
 
-		XDeleteContext(dpy, core->window, w_global.context.client_win);
-		XDestroyWindow(dpy, core->window);
-	}
+	wcore_unmap(core);
 }
 
 void wframewindow_destroy_wcorewindow(WCoreWindow *core)
