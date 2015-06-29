@@ -515,17 +515,17 @@ static void resizebar_unmap(WFrameWindow *fwin)
 	}
 }
 
-void wFrameWindowUpdateBorders(WFrameWindow * fwin, int flags)
+static int get_framewin_height(WFrameWindow *fwin, int flags)
 {
-	int theight, bsize, width, height;
-	virtual_screen *vscr = fwin->vscr;
-	WScreen *scr = vscr->screen_ptr;
-
-	width = fwin->core->width;
 	if (flags & WFF_IS_SHADED)
-		height = -1;
+		return -1;
 	else
-		height = fwin->core->height - fwin->top_width - fwin->bottom_width;
+		return fwin->core->height - fwin->top_width - fwin->bottom_width;
+}
+
+static int get_framewin_titleheight(WFrameWindow *fwin, int flags)
+{
+	int theight = 0;
 
 	if (flags & WFF_TITLEBAR) {
 		theight = WMFontHeight(*fwin->font) + (*fwin->title_clearance + TITLEBAR_EXTEND_SPACE) * 2;
@@ -535,17 +535,36 @@ void wFrameWindowUpdateBorders(WFrameWindow * fwin, int flags)
 
 		if (theight < *fwin->title_min_height)
 			theight = *fwin->title_min_height;
-	} else {
-		theight = 0;
 	}
 
+	return theight;
+}
+
+static int get_framewin_bordersize(int titleheight)
+{
+	int bsize;
+
 	if (wPreferences.new_style == TS_NEW) {
-		bsize = theight;
+		bsize = titleheight;
 	} else if (wPreferences.new_style == TS_OLD) {
-		bsize = theight - 7;
+		bsize = titleheight - 7;
 	} else {
-		bsize = theight - 8;
+		bsize = titleheight - 8;
 	}
+
+	return bsize;
+}
+
+void wFrameWindowUpdateBorders(WFrameWindow *fwin, int flags)
+{
+	int theight, bsize, width, height;
+	virtual_screen *vscr = fwin->vscr;
+	WScreen *scr = vscr->screen_ptr;
+
+	width = fwin->core->width;
+	height = get_framewin_height(fwin, flags);
+	theight = get_framewin_titleheight(fwin, flags);
+	bsize = get_framewin_bordersize(theight);
 
 	if (fwin->titlebar) {
 		titlebar_unmap(fwin);
