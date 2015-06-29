@@ -448,9 +448,6 @@ static void titlebar_unmap(WFrameWindow *fwin)
 #ifdef XKB_BUTTON_HINT
 		language_button_unmap(fwin);
 #endif
-		if (fwin->titlebar && fwin->titlebar->stacking)
-			wfree(fwin->titlebar->stacking);
-
 		wcore_unmap(fwin->titlebar);
 
 		fwin->top_width = 0;
@@ -513,11 +510,7 @@ static void resizebar_unmap(WFrameWindow *fwin)
 {
 	if (fwin->flags.resizebar) {
 		fwin->bottom_width = 0;
-		if (fwin->resizebar && fwin->resizebar->stacking)
-			wfree(fwin->resizebar->stacking);
-
 		wcore_unmap(fwin->resizebar);
-
 		fwin->flags.resizebar = 0;
 	}
 }
