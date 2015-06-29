@@ -219,9 +219,6 @@ static void left_button_map(WFrameWindow *fwin, int theight, int bsize)
 
 static void left_button_unmap(WFrameWindow *fwin)
 {
-	if (fwin->left_button && fwin->left_button->stacking)
-		wfree(fwin->left_button->stacking);
-
 	wcore_unmap(fwin->left_button);
 	fwin->flags.left_button = 0;
 }
@@ -274,9 +271,6 @@ static void language_button_map(WFrameWindow *fwin, int theight, int bsize)
 
 static void language_button_unmap(WFrameWindow *fwin)
 {
-	if (fwin->language_button && fwin->language_button->stacking)
-		wfree(fwin->language_button->stacking);
-
 	wcore_unmap(fwin->language_button);
 	fwin->flags.language_button = 0;
 }
@@ -334,9 +328,6 @@ static void right_button_map(WFrameWindow *fwin, int theight, int bsize)
 
 static void right_button_unmap(WFrameWindow *fwin)
 {
-	if (fwin->right_button && fwin->right_button->stacking)
-		wfree(fwin->right_button->stacking);
-
 	wcore_unmap(fwin->right_button);
 	fwin->flags.right_button = 0;
 }
