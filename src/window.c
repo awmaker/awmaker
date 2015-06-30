@@ -610,7 +610,7 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 	WWindow *transientOwner = NULL;
 	int window_level;
 	int wm_state;
-	int foo;
+	int foo, flags;
 	int workspace = -1;
 	char *title;
 	Bool withdraw = False;
@@ -1124,19 +1124,29 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 	wWindowUpdateButtonImages(wwin);
 
 	/* hide unused buttons */
-	foo = 0;
+	flags = 0;
 	if (WFLAGP(wwin, no_close_button))
-		foo |= WFF_RIGHT_BUTTON;
+		flags |= WFF_RIGHT_BUTTON;
 
 	if (WFLAGP(wwin, no_miniaturize_button))
-		foo |= WFF_LEFT_BUTTON;
+		flags |= WFF_LEFT_BUTTON;
 
 #ifdef XKB_BUTTON_HINT
 	if (WFLAGP(wwin, no_language_button) || WFLAGP(wwin, no_focusable))
-		foo |= WFF_LANGUAGE_BUTTON;
+		flags |= WFF_LANGUAGE_BUTTON;
 #endif
-	if (foo != 0)
-		wFrameWindowHideButton(wwin->frame, foo);
+	if (flags != 0) {
+		if (flags & WFF_LEFT_BUTTON)
+			wframewindow_hide_leftbutton(wwin->frame);
+#ifdef XKB_BUTTON_HINT
+		if (flags & WFF_LANGUAGE_BUTTON)
+			wframewindow_hide_languagebutton(wwin->frame);
+#endif
+		if (flags & WFF_RIGHT_BUTTON)
+			wframewindow_hide_rightbutton(wwin->frame);
+
+		wframewindow_refresh_titlebar(wwin->frame);
+	}
 
 	wwin->frame->child = wwin;
 	wwin->frame->workspace = workspace;
@@ -1406,7 +1416,8 @@ WWindow *wManageInternalWindow(virtual_screen *vscr, Window window, Window owner
 	wWindowUpdateButtonImages(wwin);
 
 	/* hide buttons */
-	wFrameWindowHideButton(wwin->frame, WFF_RIGHT_BUTTON);
+	wframewindow_hide_rightbutton(wwin->frame);
+	wframewindow_refresh_titlebar(wwin->frame);
 
 	wwin->frame->child = wwin;
 	wwin->frame->workspace = vscr->workspace.current;
@@ -2294,7 +2305,16 @@ void wWindowConfigureBorders(WWindow *wwin)
 
 		if (flags != 0) {
 			wWindowUpdateButtonImages(wwin);
-			wFrameWindowShowButton(wwin->frame, flags);
+			if (flags & WFF_LEFT_BUTTON)
+				wframewindow_show_leftbutton(wwin->frame);
+#ifdef XKB_BUTTON_HINT
+			if (flags & WFF_LANGUAGE_BUTTON)
+				wframewindow_show_languagebutton(wwin->frame);
+#endif
+			if (flags & WFF_RIGHT_BUTTON)
+				wframewindow_show_rightbutton(wwin->frame);
+
+			wframewindow_refresh_titlebar(wwin->frame);
 		}
 
 		flags = 0;
@@ -2312,8 +2332,18 @@ void wWindowConfigureBorders(WWindow *wwin)
 		    && !wwin->frame->flags.hide_right_button)
 			flags |= WFF_RIGHT_BUTTON;
 
-		if (flags != 0)
-			wFrameWindowHideButton(wwin->frame, flags);
+		if (flags != 0) {
+			if (flags & WFF_LEFT_BUTTON)
+				wframewindow_hide_leftbutton(wwin->frame);
+#ifdef XKB_BUTTON_HINT
+			if (flags & WFF_LANGUAGE_BUTTON)
+				wframewindow_hide_languagebutton(wwin->frame);
+#endif
+			if (flags & WFF_RIGHT_BUTTON)
+				wframewindow_hide_rightbutton(wwin->frame);
+
+			wframewindow_refresh_titlebar(wwin->frame);
+		}
 
 #ifdef USE_XSHAPE
 		if (w_global.xext.shape.supported && wwin->flags.shaped)
