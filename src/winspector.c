@@ -1275,7 +1275,8 @@ static InspectorPanel *createInspectorForWindow(WWindow *wwin, int xpos, int ypo
 	panel->frame->client_flags.no_closable = 0;
 	panel->frame->client_flags.no_close_button = 0;
 	wWindowUpdateButtonImages(panel->frame);
-	wFrameWindowShowButton(panel->frame->frame, WFF_RIGHT_BUTTON);
+	wframewindow_show_rightbutton(panel->frame->frame);
+	wframewindow_refresh_titlebar(panel->frame->frame);
 	panel->frame->frame->on_click_right = destroyInspector;
 
 	wWindowMap(panel->frame);
