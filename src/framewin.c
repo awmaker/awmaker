@@ -736,6 +736,7 @@ void wframewindow_show_rightbutton(WFrameWindow *fwin)
 			XMapWindow(dpy, fwin->right_button->window);
 
 		fwin->flags.hide_right_button = 0;
+		fwin->flags.map_right_button = 1;
 	}
 }
 
@@ -744,6 +745,7 @@ void wframewindow_hide_rightbutton(WFrameWindow *fwin)
 	if (fwin->right_button) {
 		XUnmapWindow(dpy, fwin->right_button->window);
 		fwin->flags.hide_right_button = 1;
+		fwin->flags.map_right_button = 0;
 	}
 }
 
@@ -754,6 +756,7 @@ void wframewindow_show_leftbutton(WFrameWindow *fwin)
 			XMapWindow(dpy, fwin->left_button->window);
 
 		fwin->flags.hide_left_button = 0;
+		fwin->flags.map_left_button = 1;
 	}
 }
 
@@ -762,6 +765,7 @@ void wframewindow_hide_leftbutton(WFrameWindow *fwin)
 	if (fwin->left_button) {
 		XUnmapWindow(dpy, fwin->left_button->window);
 		fwin->flags.hide_left_button = 1;
+		fwin->flags.map_left_button = 0;
 	}
 }
 
@@ -773,6 +777,7 @@ void wframewindow_show_languagebutton(WFrameWindow *fwin)
 			XMapWindow(dpy, fwin->language_button->window);
 
 		fwin->flags.hide_language_button = 0;
+		fwin->flags.map_language_button = 1;
 	}
 #else
 	(void) fwin;
@@ -785,6 +790,7 @@ void wframewindow_hide_languagebutton(WFrameWindow *fwin)
 	if (fwin->language_button) {
 		XUnmapWindow(dpy, fwin->language_button->window);
 		fwin->flags.hide_language_button = 1;
+		fwin->flags.map_language_button = 0;
 	}
 #else
 	(void) fwin;
