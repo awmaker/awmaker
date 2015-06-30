@@ -84,6 +84,8 @@ WFrameWindow *wframewindow_create(int width, int height, int flags)
 	fwin->flags.map_language_button = (flags & WFF_LANGUAGE_BUTTON) ? 1 : 0;
 #endif
 
+	fwin->flags.single_texture = (flags & WFF_SINGLE_STATE) ? 1 : 0;
+
 	return fwin;
 }
 
@@ -100,8 +102,6 @@ void wframewindow_map(WFrameWindow *fwin, virtual_screen *vscr, int wlevel,
 		      Visual *visual, Colormap colormap)
 {
 	fwin->vscr = vscr;
-
-	fwin->flags.single_texture = (flags & WFF_SINGLE_STATE) ? 1 : 0;
 
 	fwin->title_texture = title_texture;
 	fwin->resizebar_texture = resize_texture;

@@ -207,7 +207,7 @@ void menu_map(WMenu *menu, virtual_screen *screen)
 #endif
 
 	/* kix: This code could be removed, because flags are set in wframewindow_create */
-	flags = WFF_SINGLE_STATE | WFF_BORDER;
+	flags = WFF_BORDER;
 	if (menu->flags.titled)
 		flags |= WFF_TITLEBAR | WFF_RIGHT_BUTTON;
 
@@ -494,7 +494,7 @@ void wMenuRealize(WMenu *menu)
 	char *text;
 	WScreen *scr = menu->frame->vscr->screen_ptr;
 
-	flags = WFF_SINGLE_STATE | WFF_BORDER;
+	flags = WFF_BORDER;
 	if (menu->flags.titled)
 		flags |= WFF_TITLEBAR | WFF_RIGHT_BUTTON;
 
