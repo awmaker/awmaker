@@ -123,6 +123,11 @@ typedef struct WFrameWindow {
 #ifdef XKB_BUTTON_HINT
         unsigned int language_button:1;
 #endif
+	unsigned int map_left_button:1;
+	unsigned int map_right_button:1;
+#ifdef XKB_BUTTON_HINT
+	unsigned int map_language_button:1;
+#endif
 
         unsigned int need_texture_remake:1;
 
