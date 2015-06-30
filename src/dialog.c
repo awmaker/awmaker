@@ -1344,10 +1344,11 @@ void wShowInfoPanel(virtual_screen *vscr)
 	WSETUFLAG(wwin, no_closable, 0);
 	WSETUFLAG(wwin, no_close_button, 0);
 #ifdef XKB_BUTTON_HINT
-	wFrameWindowHideButton(wwin->frame, WFF_LANGUAGE_BUTTON);
+	wframewindow_hide_languagebutton(wwin->frame);
 #endif
 	wWindowUpdateButtonImages(wwin);
-	wFrameWindowShowButton(wwin->frame, WFF_RIGHT_BUTTON);
+	wframewindow_show_rightbutton(wwin->frame);
+	wframewindow_refresh_titlebar(wwin->frame);
 	wwin->frame->on_click_right = destroyInfoPanel;
 
 	wWindowMap(wwin);
@@ -1432,10 +1433,11 @@ void wShowLegalPanel(virtual_screen *vscr)
 	WSETUFLAG(wwin, no_closable, 0);
 	WSETUFLAG(wwin, no_close_button, 0);
 	wWindowUpdateButtonImages(wwin);
-	wFrameWindowShowButton(wwin->frame, WFF_RIGHT_BUTTON);
+	wframewindow_show_rightbutton(wwin->frame);
 #ifdef XKB_BUTTON_HINT
-	wFrameWindowHideButton(wwin->frame, WFF_LANGUAGE_BUTTON);
+	wframewindow_hide_languagebutton(wwin->frame);
 #endif
+	wframewindow_refresh_titlebar(wwin->frame);
 	wwin->frame->on_click_right = destroyLegalPanel;
 	panel->wwin = wwin;
 
