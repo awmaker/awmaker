@@ -71,12 +71,22 @@ static void allocFrameBorderPixel(Colormap colormap, const char *color_name, uns
 		**pixel = xcol.pixel;
 }
 
-WFrameWindow *wframewindow_create(int width, int height)
+WFrameWindow *wframewindow_create(int width, int height, int flags)
 {
 	WFrameWindow *fwin;
 
 	fwin = wmalloc(sizeof(WFrameWindow));
 	fwin->core = wcore_create(width, height);
+
+	if (flags & WFF_LEFT_BUTTON)
+		fwin->flags.map_left_button = 1;
+
+#ifdef XKB_BUTTON_HINT
+	if (flags & WFF_LANGUAGE_BUTTON)
+		fwin->flags.map_language_button = 1;
+#endif
+	if (flags & WFF_RIGHT_BUTTON)
+		fwin->flags.map_right_button = 1;
 
 	return fwin;
 }

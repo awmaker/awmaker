@@ -184,7 +184,7 @@ void wframewindow_refresh_titlebar(WFrameWindow *fwin);
 void wFrameWindowUpdateLanguageButton(WFrameWindow *fwin);
 #endif
 
-WFrameWindow *wframewindow_create(int width, int height);
+WFrameWindow *wframewindow_create(int width, int height, int flags);
 void wframewindow_map(WFrameWindow *fwin, virtual_screen *vscr, int wlevel,
                       int x, int y, int *clearance,
                       int *title_min, int *title_max, int flags,

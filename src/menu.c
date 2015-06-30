@@ -136,11 +136,14 @@ static void appearanceObserver(void *self, WMNotification *notif)
 WMenu *menu_create(const char *title)
 {
 	WMenu *menu;
-	int width = 1;
+	int flags, width = 1;
+
+	flags = WFF_SINGLE_STATE | WFF_BORDER;
+	if (title)
+		flags |= WFF_TITLEBAR | WFF_RIGHT_BUTTON;
 
 	menu = wmalloc(sizeof(WMenu));
-
-	menu->frame = wframewindow_create(width, 1);
+	menu->frame = wframewindow_create(width, 1, flags);
 	menu->menu = wcore_create(width, 10);
 
 	if (title) {
@@ -203,6 +206,7 @@ void menu_map(WMenu *menu, virtual_screen *screen)
 	tmp = (main_menu ? WMMainMenuLevel : WMSubmenuLevel);
 #endif
 
+	/* kix: This code could be removed, because flags are set in wframewindow_create */
 	flags = WFF_SINGLE_STATE | WFF_BORDER;
 	if (menu->flags.titled)
 		flags |= WFF_TITLEBAR | WFF_RIGHT_BUTTON;
