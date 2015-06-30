@@ -219,7 +219,8 @@ void menu_map(WMenu *menu, virtual_screen *screen)
 	menu->frame->core->descriptor.parent_type = WCLASS_MENU;
 	menu->frame->core->descriptor.handle_mousedown = menuMouseDown;
 
-	wFrameWindowHideButton(menu->frame, WFF_RIGHT_BUTTON);
+	wframewindow_hide_rightbutton(menu->frame);
+	wframewindow_refresh_titlebar(menu->frame);
 
 	menu->frame->rbutton_image = screen->screen_ptr->b_pixmaps[WBUT_CLOSE];
 
@@ -1074,8 +1075,10 @@ void wMenuUnmap(WMenu *menu)
 	int i;
 
 	XUnmapWindow(dpy, menu->frame->core->window);
-	if (menu->flags.titled && menu->flags.buttoned)
-		wFrameWindowHideButton(menu->frame, WFF_RIGHT_BUTTON);
+	if (menu->flags.titled && menu->flags.buttoned) {
+		wframewindow_hide_rightbutton(menu->frame);
+		wframewindow_refresh_titlebar(menu->frame);
+	}
 
 	menu->flags.buttoned = 0;
 	menu->flags.mapped = 0;
@@ -2044,7 +2047,8 @@ static void menuTitleMouseDown(WCoreWindow * sender, void *data, XEvent * event)
 	/* tear off the menu if it's a root menu or a cascade application menu */
 	if (!menu->flags.buttoned && (!menu->flags.app_menu || menu->parent != NULL)) {
 		menu->flags.buttoned = 1;
-		wFrameWindowShowButton(menu->frame, WFF_RIGHT_BUTTON);
+		wframewindow_show_rightbutton(menu->frame);
+		wframewindow_refresh_titlebar(menu->frame);
 		if (menu->parent) /* turn off selected menu entry in parent menu */
 			selectEntry(menu->parent, -1);
 	}
@@ -2279,7 +2283,8 @@ static int restoreMenu(virtual_screen *vscr, WMPropList *menu)
 
 		wMenuMove(pmenu, x, y, True);
 		pmenu->flags.buttoned = 1;
-		wFrameWindowShowButton(pmenu->frame, WFF_RIGHT_BUTTON);
+		wframewindow_show_rightbutton(pmenu->frame);
+		wframewindow_refresh_titlebar(pmenu->frame);
 		return True;
 	}
 
@@ -2326,7 +2331,8 @@ static int restoreMenuRecurs(virtual_screen *vscr, WMPropList *menus, WMenu *men
 
 			wMenuMove(menu, x, y, True);
 			menu->flags.buttoned = 1;
-			wFrameWindowShowButton(menu->frame, WFF_RIGHT_BUTTON);
+			wframewindow_show_rightbutton(menu->frame);
+			wframewindow_refresh_titlebar(menu->frame);
 			res = True;
 		}
 	}
