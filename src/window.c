@@ -2289,35 +2289,6 @@ void wWindowConfigureBorders(WWindow *wwin)
 		}
 
 		flags = 0;
-		if (!WFLAGP(wwin, no_miniaturize_button)
-		    && wwin->frame->flags.hide_left_button)
-			flags |= WFF_LEFT_BUTTON;
-
-#ifdef XKB_BUTTON_HINT
-		if (!WFLAGP(wwin, no_language_button)
-		    && wwin->frame->flags.hide_language_button)
-			flags |= WFF_LANGUAGE_BUTTON;
-#endif
-
-		if (!WFLAGP(wwin, no_close_button)
-		    && wwin->frame->flags.hide_right_button)
-			flags |= WFF_RIGHT_BUTTON;
-
-		if (flags != 0) {
-			wWindowUpdateButtonImages(wwin);
-			if (flags & WFF_LEFT_BUTTON)
-				wframewindow_show_leftbutton(wwin->frame);
-#ifdef XKB_BUTTON_HINT
-			if (flags & WFF_LANGUAGE_BUTTON)
-				wframewindow_show_languagebutton(wwin->frame);
-#endif
-			if (flags & WFF_RIGHT_BUTTON)
-				wframewindow_show_rightbutton(wwin->frame);
-
-			wframewindow_refresh_titlebar(wwin->frame);
-		}
-
-		flags = 0;
 		if (WFLAGP(wwin, no_miniaturize_button)
 		    && !wwin->frame->flags.hide_left_button)
 			flags |= WFF_LEFT_BUTTON;
