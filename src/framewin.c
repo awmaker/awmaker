@@ -567,6 +567,9 @@ void wFrameWindowUpdateBorders(WFrameWindow *fwin, int flags)
 	virtual_screen *vscr = fwin->vscr;
 	WScreen *scr = vscr->screen_ptr;
 
+	if (fwin->flags.shaded)
+		flags |= WFF_IS_SHADED;
+
 	width = fwin->core->width;
 	height = get_framewin_height(fwin, flags);
 	theight = get_framewin_titleheight(fwin, flags);
