@@ -2257,50 +2257,51 @@ void wWindowUpdateButtonImages(WWindow *wwin)
  */
 void wWindowConfigureBorders(WWindow *wwin)
 {
-	if (wwin->frame) {
-		int flags = 0;
-		int newy, oldh;
+	int flags = 0;
+	int newy, oldh;
 
-		if (!WFLAGP(wwin, no_miniaturize_button) ||
-		    wwin->frame->flags.hide_left_button)
-			flags = WFF_LEFT_BUTTON;
+	if (!wwin->frame)
+		return;
 
-		if (!WFLAGP(wwin, no_close_button) ||
-		    wwin->frame->flags.hide_right_button)
-			flags |= WFF_RIGHT_BUTTON;
+	if (!WFLAGP(wwin, no_miniaturize_button) ||
+	    wwin->frame->flags.hide_left_button)
+		flags = WFF_LEFT_BUTTON;
+
+	if (!WFLAGP(wwin, no_close_button) ||
+	    wwin->frame->flags.hide_right_button)
+		flags |= WFF_RIGHT_BUTTON;
 
 #ifdef XKB_BUTTON_HINT
-		if ((wPreferences.modelock) &&
-		    ((!WFLAGP(wwin, no_language_button) ||
-		     wwin->frame->flags.hide_language_button)))
-			flags |= WFF_LANGUAGE_BUTTON;
+	if ((wPreferences.modelock) &&
+	    ((!WFLAGP(wwin, no_language_button) ||
+	     wwin->frame->flags.hide_language_button)))
+		flags |= WFF_LANGUAGE_BUTTON;
 #endif
 
-		if (HAS_TITLEBAR(wwin))
-			flags |= WFF_TITLEBAR;
-		if (HAS_RESIZEBAR(wwin) && IS_RESIZABLE(wwin))
-			flags |= WFF_RESIZEBAR;
-		if (HAS_BORDER(wwin))
-			flags |= WFF_BORDER;
-		if (wwin->flags.selected)
-			flags |= WFF_SELECTED;
+	if (HAS_TITLEBAR(wwin))
+		flags |= WFF_TITLEBAR;
+	if (HAS_RESIZEBAR(wwin) && IS_RESIZABLE(wwin))
+		flags |= WFF_RESIZEBAR;
+	if (HAS_BORDER(wwin))
+		flags |= WFF_BORDER;
+	if (wwin->flags.selected)
+		flags |= WFF_SELECTED;
 
-		wwin->frame->flags.shaded = wwin->flags.shaded;
+	wwin->frame->flags.shaded = wwin->flags.shaded;
 
-		oldh = wwin->frame->top_width;
-		wFrameWindowUpdateBorders(wwin->frame, flags);
-		if (oldh != wwin->frame->top_width) {
-			newy = wwin->frame_y + oldh - wwin->frame->top_width;
+	oldh = wwin->frame->top_width;
+	wFrameWindowUpdateBorders(wwin->frame, flags);
+	if (oldh != wwin->frame->top_width) {
+		newy = wwin->frame_y + oldh - wwin->frame->top_width;
 
-			XMoveWindow(dpy, wwin->client_win, 0, wwin->frame->top_width);
-			wWindowConfigure(wwin, wwin->frame_x, newy, wwin->client.width, wwin->client.height);
-		}
+		XMoveWindow(dpy, wwin->client_win, 0, wwin->frame->top_width);
+		wWindowConfigure(wwin, wwin->frame_x, newy, wwin->client.width, wwin->client.height);
+	}
 
 #ifdef USE_XSHAPE
-		if (w_global.xext.shape.supported && wwin->flags.shaped)
-			wWindowSetShape(wwin);
+	if (w_global.xext.shape.supported && wwin->flags.shaped)
+		wWindowSetShape(wwin);
 #endif
-	}
 }
 
 void wWindowSaveState(WWindow *wwin)
