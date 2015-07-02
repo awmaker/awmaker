@@ -1397,10 +1397,6 @@ WWindow *wManageInternalWindow(virtual_screen *vscr, Window window, Window owner
 	/* setup button images */
 	wWindowUpdateButtonImages(wwin);
 
-	/* hide buttons */
-	wframewindow_hide_rightbutton(wwin->frame);
-	wframewindow_refresh_titlebar(wwin->frame);
-
 	wwin->frame->child = wwin;
 	wwin->frame->workspace = vscr->workspace.current;
 
