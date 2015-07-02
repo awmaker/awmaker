@@ -610,7 +610,7 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 	WWindow *transientOwner = NULL;
 	int window_level;
 	int wm_state;
-	int foo, flags;
+	int flags = 0;
 	int workspace = -1;
 	char *title;
 	Bool withdraw = False;
@@ -1089,26 +1089,33 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 			wwin->flags.omnipresent ^= 1;
 
 	/* Create frame, borders and do reparenting */
-	foo = WFF_LEFT_BUTTON | WFF_RIGHT_BUTTON;
+	if (!WFLAGP(wwin, no_miniaturize_button))
+		flags |= WFF_LEFT_BUTTON;
+
+	if (!WFLAGP(wwin, no_close_button))
+		flags |= WFF_RIGHT_BUTTON;
+
 #ifdef XKB_BUTTON_HINT
-	if (wPreferences.modelock)
-		foo |= WFF_LANGUAGE_BUTTON;
+	if (wPreferences.modelock &&
+	    (!WFLAGP(wwin, no_language_button) && !WFLAGP(wwin, no_focusable)))
+		flags |= WFF_LANGUAGE_BUTTON;
 #endif
+
 	if (HAS_TITLEBAR(wwin))
-		foo |= WFF_TITLEBAR;
+		flags |= WFF_TITLEBAR;
 
 	if (HAS_RESIZEBAR(wwin))
-		foo |= WFF_RESIZEBAR;
+		flags |= WFF_RESIZEBAR;
 
 	if (HAS_BORDER(wwin))
-		foo |= WFF_BORDER;
+		flags |= WFF_BORDER;
 
-	wwin->frame = wframewindow_create(width, height, foo);
+	wwin->frame = wframewindow_create(width, height, flags);
 	wframewindow_map(wwin->frame, vscr, window_level, x, y,
 		      &wPreferences.window_title_clearance,
 		      &wPreferences.window_title_min_height,
 		      &wPreferences.window_title_max_height,
-		      foo,
+		      flags,
 		      vscr->screen_ptr->window_title_texture,
 		      vscr->screen_ptr->resizebar_texture,
 		      vscr->screen_ptr->window_title_color,
@@ -1122,31 +1129,6 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 
 	/* setup button images */
 	wWindowUpdateButtonImages(wwin);
-
-	/* hide unused buttons */
-	flags = 0;
-	if (WFLAGP(wwin, no_close_button))
-		flags |= WFF_RIGHT_BUTTON;
-
-	if (WFLAGP(wwin, no_miniaturize_button))
-		flags |= WFF_LEFT_BUTTON;
-
-#ifdef XKB_BUTTON_HINT
-	if (WFLAGP(wwin, no_language_button) || WFLAGP(wwin, no_focusable))
-		flags |= WFF_LANGUAGE_BUTTON;
-#endif
-	if (flags != 0) {
-		if (flags & WFF_LEFT_BUTTON)
-			wframewindow_hide_leftbutton(wwin->frame);
-#ifdef XKB_BUTTON_HINT
-		if (flags & WFF_LANGUAGE_BUTTON)
-			wframewindow_hide_languagebutton(wwin->frame);
-#endif
-		if (flags & WFF_RIGHT_BUTTON)
-			wframewindow_hide_rightbutton(wwin->frame);
-
-		wframewindow_refresh_titlebar(wwin->frame);
-	}
 
 	wwin->frame->child = wwin;
 	wwin->frame->workspace = workspace;
