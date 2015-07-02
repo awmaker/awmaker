@@ -1197,9 +1197,9 @@ static void paint_title(WFrameWindow *fwin, int lofs, int rofs, int state)
 	wfree(title);
 }
 
-void wFrameWindowPaint(WFrameWindow * fwin)
+void wFrameWindowPaint(WFrameWindow *fwin)
 {
-	int state;
+	int state, tmp_state, i;
 
 	state = fwin->flags.state;
 
@@ -1207,24 +1207,22 @@ void wFrameWindowPaint(WFrameWindow * fwin)
 		fwin->flags.justification = wPreferences.title_justification;
 
 	if (fwin->flags.need_texture_remake) {
-		int i;
-
 		fwin->flags.need_texture_remake = 0;
 		fwin->flags.need_texture_change = 0;
 
-		if (fwin->flags.single_texture) {
-			remakeTexture_titlebar(fwin, 0);
-			remakeTexture_resizebar(fwin, 0);
-			updateTexture_titlebar(fwin);
-			updateTexture_resizebar(fwin);
-		} else {
-			/* first render the texture for the current state... */
-			remakeTexture_titlebar(fwin, state);
-			remakeTexture_resizebar(fwin, state);
-			/* ... and paint it */
-			updateTexture_titlebar(fwin);
-			updateTexture_resizebar(fwin);
+		if (fwin->flags.single_texture)
+			tmp_state = 0;
+		else
+			tmp_state = state;
 
+		/* first render the texture for the current state... */
+		remakeTexture_titlebar(fwin, tmp_state);
+		remakeTexture_resizebar(fwin, tmp_state);
+		/* ... and paint it */
+		updateTexture_titlebar(fwin);
+		updateTexture_resizebar(fwin);
+
+		if (!fwin->flags.single_texture) {
 			for (i = 0; i < 3; i++) {
 				if (i != state) {
 					remakeTexture_titlebar(fwin, i);
@@ -1243,10 +1241,9 @@ void wFrameWindowPaint(WFrameWindow * fwin)
 	}
 
 	if (fwin->titlebar && fwin->flags.titlebar && !fwin->flags.repaint_only_resizebar
-	    && fwin->title_texture[state]->any.type == WTEX_SOLID) {
+	    && fwin->title_texture[state]->any.type == WTEX_SOLID)
 		wDrawBevel(fwin->titlebar->window, fwin->titlebar->width,
 			   fwin->titlebar->height, (WTexSolid *) fwin->title_texture[state], WREL_RAISED);
-	}
 
 	if (fwin->resizebar && fwin->flags.resizebar &&
 	    !fwin->flags.repaint_only_titlebar &&
