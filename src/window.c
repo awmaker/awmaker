@@ -2258,14 +2258,22 @@ void wWindowUpdateButtonImages(WWindow *wwin)
 void wWindowConfigureBorders(WWindow *wwin)
 {
 	if (wwin->frame) {
-		int flags;
+		int flags = 0;
 		int newy, oldh;
 
-		flags = WFF_LEFT_BUTTON | WFF_RIGHT_BUTTON;
+		if (!WFLAGP(wwin, no_miniaturize_button) ||
+		    wwin->frame->flags.hide_left_button)
+			flags = WFF_LEFT_BUTTON;
+
+		if (!WFLAGP(wwin, no_close_button) ||
+		    wwin->frame->flags.hide_right_button)
+			flags |= WFF_RIGHT_BUTTON;
 
 #ifdef XKB_BUTTON_HINT
-	if (wPreferences.modelock)
-		flags |= WFF_LANGUAGE_BUTTON;
+		if ((wPreferences.modelock) &&
+		    ((!WFLAGP(wwin, no_language_button) ||
+		     wwin->frame->flags.hide_language_button)))
+			flags |= WFF_LANGUAGE_BUTTON;
 #endif
 
 		if (HAS_TITLEBAR(wwin))
@@ -2286,34 +2294,6 @@ void wWindowConfigureBorders(WWindow *wwin)
 
 			XMoveWindow(dpy, wwin->client_win, 0, wwin->frame->top_width);
 			wWindowConfigure(wwin, wwin->frame_x, newy, wwin->client.width, wwin->client.height);
-		}
-
-		flags = 0;
-		if (WFLAGP(wwin, no_miniaturize_button)
-		    && !wwin->frame->flags.hide_left_button)
-			flags |= WFF_LEFT_BUTTON;
-
-#ifdef XKB_BUTTON_HINT
-		if (WFLAGP(wwin, no_language_button)
-		    && !wwin->frame->flags.hide_language_button)
-			flags |= WFF_LANGUAGE_BUTTON;
-#endif
-
-		if (WFLAGP(wwin, no_close_button)
-		    && !wwin->frame->flags.hide_right_button)
-			flags |= WFF_RIGHT_BUTTON;
-
-		if (flags != 0) {
-			if (flags & WFF_LEFT_BUTTON)
-				wframewindow_hide_leftbutton(wwin->frame);
-#ifdef XKB_BUTTON_HINT
-			if (flags & WFF_LANGUAGE_BUTTON)
-				wframewindow_hide_languagebutton(wwin->frame);
-#endif
-			if (flags & WFF_RIGHT_BUTTON)
-				wframewindow_hide_rightbutton(wwin->frame);
-
-			wframewindow_refresh_titlebar(wwin->frame);
 		}
 
 #ifdef USE_XSHAPE
