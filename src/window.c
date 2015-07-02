@@ -3011,7 +3011,6 @@ static void windowLanguageClick(WCoreWindow *sender, void *data, XEvent *event)
 {
 	WWindow *wwin = data;
 	WFrameWindow *fwin = wwin->frame;
-	WScreen *scr = fwin->screen_ptr;
 	int tl;
 
 	/* Parameter not used, but tell the compiler that it is ok */
@@ -3022,9 +3021,9 @@ static void windowLanguageClick(WCoreWindow *sender, void *data, XEvent *event)
 	tl = wwin->frame->languagemode;
 	wwin->frame->languagemode = wwin->frame->last_languagemode;
 	wwin->frame->last_languagemode = tl;
-	wSetFocusTo(scr, wwin);
+	wSetFocusTo(fwin->vscr, wwin);
 	wwin->frame->languagebutton_image =
-	    wwin->frame->screen_ptr->b_pixmaps[WBUT_XKBGROUP1 + wwin->frame->languagemode];
+	    wwin->frame->vscr->screen_ptr->b_pixmaps[WBUT_XKBGROUP1 + wwin->frame->languagemode];
 	wFrameWindowUpdateLanguageButton(wwin->frame);
 	if (event->xbutton.button == Button3)
 		return;
