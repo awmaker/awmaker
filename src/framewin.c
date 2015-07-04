@@ -240,13 +240,17 @@ static void language_button_create(WFrameWindow *fwin, int bsize)
 
 static void language_button_map(WFrameWindow *fwin, int theight, int bsize)
 {
+	int language_button_pos_width, language_button_pos_height;
 	int width = fwin->core->width;
-	WScreen *scr = fwin->vscr->screen_ptr;
+	virtual_screen *vscr = fwin->vscr;
+	WScreen *scr = vscr->screen_ptr;
 
 	if (wPreferences.new_style == TS_NEW) {
+		language_button_pos_width = bsize;
+		language_button_pos_height = 0;
 		wcore_map(fwin->language_button, fwin->core,
 			  fwin->core->vscr,
-			  bsize, 0, 0,
+			  language_button_pos_width, language_button_pos_height, 0,
 			  fwin->core->vscr->screen_ptr->w_depth,
 			  fwin->core->vscr->screen_ptr->w_visual,
 			  fwin->core->vscr->screen_ptr->w_colormap);
@@ -256,15 +260,21 @@ static void language_button_map(WFrameWindow *fwin, int theight, int bsize)
 		else
 			XMapRaised(dpy, fwin->language_button->window);
 	} else {
+		language_button_pos_width = bsize + 6;
+		language_button_pos_height = (theight - bsize) / 2;
 		wcore_map(fwin->language_button, fwin->titlebar,
 			  fwin->titlebar->vscr,
-			  bsize + 6, (theight - bsize) / 2, 0,
+			  language_button_pos_width, language_button_pos_height, 0,
 			  fwin->titlebar->vscr->screen_ptr->w_depth,
 			  fwin->titlebar->vscr->screen_ptr->w_visual,
 			  fwin->titlebar->vscr->screen_ptr->w_colormap);
 
-		XSetWindowBackground(dpy, fwin->language_button->window,
-				     scr->widget_texture->normal.pixel);
+		if (wPreferences.new_style == TS_OLD)
+			XSetWindowBackground(dpy, fwin->language_button->window,
+					     scr->widget_texture->normal.pixel);
+		else
+			XSetWindowBackground(dpy, fwin->language_button->window,
+					     scr->widget_texture->dark.pixel);
 
 		if (width < theight * 3)
 			fwin->flags.languagebutton_dont_fit = 1;
