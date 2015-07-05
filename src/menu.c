@@ -493,7 +493,7 @@ void wMenuRealize(WMenu *menu)
 	if (menu->flags.titled)
 		flags |= WFF_TITLEBAR | WFF_RIGHT_BUTTON;
 
-	wFrameWindowUpdateBorders(menu->frame, flags);
+	wframewin_set_borders(menu->frame, flags);
 
 	if (menu->flags.titled) {
 		twidth = WMWidthOfString(scr->menu_title_font, menu->frame->title, strlen(menu->frame->title));

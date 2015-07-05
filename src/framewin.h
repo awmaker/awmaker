@@ -166,7 +166,7 @@ typedef struct WFrameWindow {
     unsigned long *selected_border_pixel;
 } WFrameWindow;
 
-void wFrameWindowUpdateBorders(WFrameWindow *fwin, int flags);
+void wframewin_set_borders(WFrameWindow *fwin, int flags);
 void wFrameWindowDestroy(WFrameWindow *fwin);
 void wFrameWindowChangeState(WFrameWindow *fwin, int state);
 void wFrameWindowPaint(WFrameWindow *fwin);

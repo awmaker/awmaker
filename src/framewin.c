@@ -160,7 +160,7 @@ void wframewindow_map(WFrameWindow *fwin, virtual_screen *vscr, int wlevel,
 		flags |= WFF_LANGUAGE_BUTTON;
 #endif
 
-	wFrameWindowUpdateBorders(fwin, flags);
+	wframewin_set_borders(fwin, flags);
 }
 
 
@@ -606,7 +606,7 @@ static int get_framewin_bordersize(int titleheight)
 	return bsize;
 }
 
-void wFrameWindowUpdateBorders(WFrameWindow *fwin, int flags)
+void wframewin_set_borders(WFrameWindow *fwin, int flags)
 {
 	int theight, bsize, width, height;
 	virtual_screen *vscr = fwin->vscr;
