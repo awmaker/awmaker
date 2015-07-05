@@ -78,15 +78,11 @@ WFrameWindow *wframewindow_create(int width, int height, int flags)
 	fwin = wmalloc(sizeof(WFrameWindow));
 	fwin->core = wcore_create(width, height);
 
-	if (flags & WFF_LEFT_BUTTON)
-		fwin->flags.map_left_button = 1;
-
+	fwin->flags.map_left_button = (flags & WFF_LEFT_BUTTON) ? 1 : 0;
+	fwin->flags.map_right_button = (flags & WFF_RIGHT_BUTTON) ? 1 : 0;
 #ifdef XKB_BUTTON_HINT
-	if (flags & WFF_LANGUAGE_BUTTON)
-		fwin->flags.map_language_button = 1;
+	fwin->flags.map_language_button = (flags & WFF_LANGUAGE_BUTTON) ? 1 : 0;
 #endif
-	if (flags & WFF_RIGHT_BUTTON)
-		fwin->flags.map_right_button = 1;
 
 	return fwin;
 }
