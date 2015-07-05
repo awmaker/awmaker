@@ -172,8 +172,6 @@ void wFrameWindowChangeState(WFrameWindow *fwin, int state);
 void wFrameWindowPaint(WFrameWindow *fwin);
 void wFrameWindowConfigure(WFrameWindow *fwin, int x, int y, int width, int height);
 void wFrameWindowResize(WFrameWindow *fwin, int width, int height);
-void wFrameWindowShowButton(WFrameWindow *fwin, int flags);
-void wFrameWindowHideButton(WFrameWindow *fwin, int flags);
 int wFrameWindowChangeTitle(WFrameWindow *fwin, const char *new_title);
 
 void wframewindow_show_rightbutton(WFrameWindow *fwin);

@@ -903,37 +903,6 @@ void wframewindow_refresh_titlebar(WFrameWindow *fwin)
 	}
 }
 
-void wFrameWindowHideButton(WFrameWindow *fwin, int flags)
-{
-	if (flags & WFF_RIGHT_BUTTON)
-		wframewindow_hide_rightbutton(fwin);
-
-	if (flags & WFF_LEFT_BUTTON)
-		wframewindow_hide_leftbutton(fwin);
-
-#ifdef XKB_BUTTON_HINT
-	if (flags & WFF_LANGUAGE_BUTTON)
-		wframewindow_hide_languagebutton(fwin);
-#endif
-	wframewindow_refresh_titlebar(fwin);
-}
-
-void wFrameWindowShowButton(WFrameWindow *fwin, int flags)
-{
-	if (flags & WFF_RIGHT_BUTTON)
-		wframewindow_show_rightbutton(fwin);
-
-#ifdef XKB_BUTTON_HINT
-	if (flags & WFF_LANGUAGE_BUTTON)
-		wframewindow_show_languagebutton(fwin);
-#endif
-
-	if (flags & WFF_LEFT_BUTTON)
-		wframewindow_show_leftbutton(fwin);
-
-	wframewindow_refresh_titlebar(fwin);
-}
-
 static void renderTexture(WScreen *scr, WTexture *texture,
 			 int width, int height,
 			 int bwidth, int bheight,
