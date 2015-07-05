@@ -838,26 +838,6 @@ void wframewindow_hide_rightbutton(WFrameWindow *fwin)
 	}
 }
 
-void wframewindow_show_leftbutton(WFrameWindow *fwin)
-{
-	if (fwin->left_button && fwin->flags.hide_left_button) {
-		if (!fwin->flags.lbutton_dont_fit)
-			XMapWindow(dpy, fwin->left_button->window);
-
-		fwin->flags.hide_left_button = 0;
-		fwin->flags.map_left_button = 1;
-	}
-}
-
-void wframewindow_hide_leftbutton(WFrameWindow *fwin)
-{
-	if (fwin->left_button && fwin->flags.map_left_button) {
-		XUnmapWindow(dpy, fwin->left_button->window);
-		fwin->flags.hide_left_button = 1;
-		fwin->flags.map_left_button = 0;
-	}
-}
-
 void wframewindow_show_languagebutton(WFrameWindow *fwin)
 {
 #ifdef XKB_BUTTON_HINT
