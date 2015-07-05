@@ -85,6 +85,7 @@ WFrameWindow *wframewindow_create(int width, int height, int flags)
 #endif
 
 	fwin->flags.single_texture = (flags & WFF_SINGLE_STATE) ? 1 : 0;
+	fwin->flags.border = (flags & WFF_BORDER) ? 1 : 0;
 
 	return fwin;
 }
@@ -120,7 +121,7 @@ void wframewindow_map(WFrameWindow *fwin, virtual_screen *vscr, int wlevel,
 	fwin->colormap = colormap;
 
 	wcore_map_toplevel(fwin->core, vscr, x, y,
-			   (flags & WFF_BORDER) ? vscr->screen_ptr->frame_border_width : 0,
+			   (fwin->flags.border) ? vscr->screen_ptr->frame_border_width : 0,
 			   fwin->depth, fwin->visual,
 			   fwin->colormap, vscr->screen_ptr->frame_border_pixel);
 
@@ -136,6 +137,9 @@ void wframewindow_map(WFrameWindow *fwin, virtual_screen *vscr, int wlevel,
 	/* wFrameWindowUpdateBorders uses flags argument to
 	 * udpate the flags and update the framewindow
 	 */
+	if (fwin->flags.border)
+		flags |= WFF_BORDER;
+
 	if (fwin->flags.map_left_button)
 		flags |= WFF_LEFT_BUTTON;
 
@@ -605,6 +609,11 @@ void wFrameWindowUpdateBorders(WFrameWindow *fwin, int flags)
 	else
 		fwin->flags.map_left_button = 0;
 
+	if (flags & WFF_BORDER)
+		fwin->flags.border = 1;
+	else
+		fwin->flags.border = 0;
+
 #ifdef XKB_BUTTON_HINT
 	if (flags & WFF_LANGUAGE_BUTTON)
 		fwin->flags.map_language_button = 1;
@@ -644,7 +653,7 @@ void wFrameWindowUpdateBorders(WFrameWindow *fwin, int flags)
 	if (height + fwin->top_width + fwin->bottom_width != fwin->core->height && !(flags & WFF_IS_SHADED))
 		wFrameWindowResize(fwin, width, height + fwin->top_width + fwin->bottom_width);
 
-	if (flags & WFF_BORDER)
+	if (fwin->flags.border)
 		XSetWindowBorderWidth(dpy, fwin->core->window, scr->frame_border_width);
 	else
 		XSetWindowBorderWidth(dpy, fwin->core->window, 0);

@@ -198,7 +198,7 @@ void menu_destroy(WMenu *menu)
 
 void menu_map(WMenu *menu, virtual_screen *screen)
 {
-	int tmp, flags;
+	int tmp, flags = 0;
 
 #ifdef SINGLE_MENULEVEL
 	tmp = WMSubmenuLevel;
@@ -207,7 +207,6 @@ void menu_map(WMenu *menu, virtual_screen *screen)
 #endif
 
 	/* kix: This code could be removed, because flags are set in wframewindow_create */
-	flags = WFF_BORDER;
 	if (menu->flags.titled)
 		flags |= WFF_TITLEBAR | WFF_RIGHT_BUTTON;
 

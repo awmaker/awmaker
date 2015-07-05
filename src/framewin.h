@@ -133,6 +133,7 @@ typedef struct WFrameWindow {
 
         unsigned int single_texture:1;
 	unsigned int shaded:1;
+	unsigned int border:1;
 
         unsigned int hide_left_button:1;
         unsigned int hide_right_button:1;
