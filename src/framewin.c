@@ -376,13 +376,8 @@ static void right_button_unmap(WFrameWindow *fwin)
 
 static void titlebar_create(WFrameWindow *fwin, int theight, int bsize, int flags)
 {
-	int width = fwin->core->width;
-
-	/* if we didn't have a titlebar and are being requested for
-	 * one, create it */
 	fwin->top_width = theight;
-
-	fwin->titlebar = wcore_create(width + 1, theight);
+	fwin->titlebar = wcore_create(fwin->core->width + 1, theight);
 
 	if (flags & WFF_LEFT_BUTTON) {
 		fwin->flags.left_button = 1;
@@ -404,9 +399,7 @@ static void titlebar_create(WFrameWindow *fwin, int theight, int bsize, int flag
 		right_button_create(fwin, bsize);
 	}
 
-	/* setup object descriptors */
-	if (fwin->titlebar)
-		set_framewin_descriptors(fwin->titlebar, handleExpose, fwin, WCLASS_FRAME, titlebarMouseDown);
+	set_framewin_descriptors(fwin->titlebar, handleExpose, fwin, WCLASS_FRAME, titlebarMouseDown);
 }
 
 static void titlebar_map(WFrameWindow *fwin, int theight, int bsize, int flags)
