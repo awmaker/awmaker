@@ -424,14 +424,15 @@ static void titlebar_map(WFrameWindow *fwin, int theight, int bsize, int flags)
 			  fwin->core->vscr->screen_ptr->w_visual,
 			  fwin->core->vscr->screen_ptr->w_colormap);
 
-		if (flags & WFF_LEFT_BUTTON)
+		if (fwin->flags.map_left_button)
 			left_button_map(fwin, theight, bsize);
 
 #ifdef XKB_BUTTON_HINT
-		if (flags & WFF_LANGUAGE_BUTTON)
+		if (fwin->flags.map_language_button)
 			language_button_map(fwin, theight, bsize);
 #endif
-		if (flags & WFF_RIGHT_BUTTON)
+
+		if (fwin->flags.map_right_button)
 			right_button_map(fwin, theight, bsize);
 
 		if (wPreferences.new_style == TS_NEW)
