@@ -566,11 +566,11 @@ static int get_framewin_height(WFrameWindow *fwin, int flags)
 		return fwin->core->height - fwin->top_width - fwin->bottom_width;
 }
 
-static int get_framewin_titleheight(WFrameWindow *fwin, int flags)
+static int get_framewin_titleheight(WFrameWindow *fwin)
 {
 	int theight = 0;
 
-	if (flags & WFF_TITLEBAR) {
+	if (fwin->flags.map_titlebar) {
 		theight = WMFontHeight(*fwin->font) + (*fwin->title_clearance + TITLEBAR_EXTEND_SPACE) * 2;
 
 		if (theight > *fwin->title_max_height)
@@ -641,7 +641,7 @@ void wFrameWindowUpdateBorders(WFrameWindow *fwin, int flags)
 
 	width = fwin->core->width;
 	height = get_framewin_height(fwin, flags);
-	theight = get_framewin_titleheight(fwin, flags);
+	theight = get_framewin_titleheight(fwin);
 	bsize = get_framewin_bordersize(theight);
 
 	if (fwin->titlebar) {
