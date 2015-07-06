@@ -118,6 +118,8 @@ typedef struct WFrameWindow {
         unsigned int justification:2;
         unsigned int titlebar:1;
         unsigned int resizebar:1;
+        unsigned int map_titlebar:1;
+        unsigned int map_resizebar:1;
         unsigned int left_button:1;
         unsigned int right_button:1;
 #ifdef XKB_BUTTON_HINT

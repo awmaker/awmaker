@@ -78,6 +78,8 @@ WFrameWindow *wframewindow_create(int width, int height, int flags)
 	fwin = wmalloc(sizeof(WFrameWindow));
 	fwin->core = wcore_create(width, height);
 
+	fwin->flags.map_titlebar = (flags & WFF_TITLEBAR) ? 1 : 0;
+	fwin->flags.map_resizebar = (flags & WFF_RESIZEBAR) ? 1 : 0;
 	fwin->flags.map_left_button = (flags & WFF_LEFT_BUTTON) ? 1 : 0;
 	fwin->flags.map_right_button = (flags & WFF_RIGHT_BUTTON) ? 1 : 0;
 #ifdef XKB_BUTTON_HINT
@@ -139,6 +141,12 @@ void wframewindow_map(WFrameWindow *fwin, virtual_screen *vscr, int wlevel,
 	 */
 	if (fwin->flags.border)
 		flags |= WFF_BORDER;
+
+	if (fwin->flags.map_titlebar)
+		flags |= WFF_TITLEBAR;
+
+	if (fwin->flags.map_resizebar)
+		flags |= WFF_RESIZEBAR;
 
 	if (fwin->flags.map_left_button)
 		flags |= WFF_LEFT_BUTTON;
@@ -596,6 +604,16 @@ void wFrameWindowUpdateBorders(WFrameWindow *fwin, int flags)
 	virtual_screen *vscr = fwin->vscr;
 	WScreen *scr = vscr->screen_ptr;
 
+	if (flags & WFF_TITLEBAR)
+		fwin->flags.map_titlebar = 1;
+	else
+		fwin->flags.map_titlebar = 0;
+
+	if (flags & WFF_RESIZEBAR)
+		fwin->flags.map_resizebar = 1;
+	else
+		fwin->flags.map_resizebar = 0;
+
 	if (fwin->flags.shaded)
 		flags |= WFF_IS_SHADED;
 
@@ -628,7 +646,7 @@ void wFrameWindowUpdateBorders(WFrameWindow *fwin, int flags)
 
 	if (fwin->titlebar) {
 		titlebar_unmap(fwin);
-		if (flags & WFF_TITLEBAR) {
+		if (fwin->flags.map_titlebar) {
 			titlebar_map(fwin, theight, bsize, flags);
 			titlebar_update(fwin, theight, bsize);
 		}
@@ -641,7 +659,7 @@ void wFrameWindowUpdateBorders(WFrameWindow *fwin, int flags)
 
 	if (fwin->resizebar) {
 		resizebar_unmap(fwin);
-		if (flags & WFF_RESIZEBAR) {
+		if (fwin->flags.map_resizebar) {
 			resizebar_map(fwin, width, height);
 			resizebar_update(fwin, width, height);
 		}
