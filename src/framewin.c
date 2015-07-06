@@ -406,35 +406,36 @@ static void titlebar_map(WFrameWindow *fwin, int theight, int bsize)
 {
 	/* if we didn't have a titlebar and are being requested for
 	 * one, create it */
-	if (fwin->flags.map_titlebar) {
-		fwin->flags.titlebar = 1;
-		fwin->top_width = theight;
+	if (!fwin->flags.map_titlebar)
+		return;
 
-		wcore_map(fwin->titlebar, fwin->core,
-			  fwin->core->vscr,
-			  0, 0, 0,
-			  fwin->core->vscr->screen_ptr->w_depth,
-			  fwin->core->vscr->screen_ptr->w_visual,
-			  fwin->core->vscr->screen_ptr->w_colormap);
+	fwin->flags.titlebar = 1;
+	fwin->top_width = theight;
 
-		if (fwin->flags.map_left_button)
-			left_button_map(fwin, theight, bsize);
+	wcore_map(fwin->titlebar, fwin->core,
+		  fwin->core->vscr,
+		  0, 0, 0,
+		  fwin->core->vscr->screen_ptr->w_depth,
+		  fwin->core->vscr->screen_ptr->w_visual,
+		  fwin->core->vscr->screen_ptr->w_colormap);
+
+	if (fwin->flags.map_left_button)
+		left_button_map(fwin, theight, bsize);
 
 #ifdef XKB_BUTTON_HINT
-		if (fwin->flags.map_language_button)
-			language_button_map(fwin, theight, bsize);
+	if (fwin->flags.map_language_button)
+		language_button_map(fwin, theight, bsize);
 #endif
 
-		if (fwin->flags.map_right_button)
-			right_button_map(fwin, theight, bsize);
+	if (fwin->flags.map_right_button)
+		right_button_map(fwin, theight, bsize);
 
-		if (wPreferences.new_style == TS_NEW)
-			updateTitlebar(fwin);
+	if (wPreferences.new_style == TS_NEW)
+		updateTitlebar(fwin);
 
-		XMapRaised(dpy, fwin->titlebar->window);
+	XMapRaised(dpy, fwin->titlebar->window);
 
-		fwin->flags.need_texture_remake = 1;
-	}
+	fwin->flags.need_texture_remake = 1;
 }
 
 static void titlebar_update(WFrameWindow *fwin, int theight, int bsize)
