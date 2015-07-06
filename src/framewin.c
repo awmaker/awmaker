@@ -402,11 +402,11 @@ static void titlebar_create(WFrameWindow *fwin, int theight, int bsize, int flag
 	set_framewin_descriptors(fwin->titlebar, handleExpose, fwin, WCLASS_FRAME, titlebarMouseDown);
 }
 
-static void titlebar_map(WFrameWindow *fwin, int theight, int bsize, int flags)
+static void titlebar_map(WFrameWindow *fwin, int theight, int bsize)
 {
 	/* if we didn't have a titlebar and are being requested for
 	 * one, create it */
-	if (flags & WFF_TITLEBAR) {
+	if (fwin->flags.map_titlebar) {
 		fwin->flags.titlebar = 1;
 		fwin->top_width = theight;
 
@@ -650,12 +650,12 @@ void wFrameWindowUpdateBorders(WFrameWindow *fwin, int flags)
 	if (fwin->titlebar) {
 		titlebar_unmap(fwin);
 		if (fwin->flags.map_titlebar) {
-			titlebar_map(fwin, theight, bsize, flags);
+			titlebar_map(fwin, theight, bsize);
 			titlebar_update(fwin, theight, bsize);
 		}
 	} else {
 		titlebar_create(fwin, theight, bsize, flags);
-		titlebar_map(fwin, theight, bsize, flags);
+		titlebar_map(fwin, theight, bsize);
 	}
 
 	checkTitleSize(fwin);
