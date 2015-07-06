@@ -99,12 +99,13 @@ void wframewindow_destroy_wcorewindow(WCoreWindow *core)
 
 void wframewindow_map(WFrameWindow *fwin, virtual_screen *vscr, int wlevel,
 		      int x, int y, int *clearance,
-		      int *title_min, int *title_max, int flags,
+		      int *title_min, int *title_max,
 		      WTexture **title_texture, WTexture **resize_texture,
 		      WMColor **color, WMFont **font, int depth,
 		      Visual *visual, Colormap colormap)
 {
 	fwin->vscr = vscr;
+	int flags = 0;
 
 	fwin->title_texture = title_texture;
 	fwin->resizebar_texture = resize_texture;

@@ -198,7 +198,7 @@ void menu_destroy(WMenu *menu)
 
 void menu_map(WMenu *menu, virtual_screen *screen)
 {
-	int tmp, flags = 0;
+	int tmp;
 
 #ifdef SINGLE_MENULEVEL
 	tmp = WMSubmenuLevel;
@@ -206,14 +206,10 @@ void menu_map(WMenu *menu, virtual_screen *screen)
 	tmp = (main_menu ? WMMainMenuLevel : WMSubmenuLevel);
 #endif
 
-	/* kix: This code could be removed, because flags are set in wframewindow_create */
-	if (menu->flags.titled)
-		flags |= WFF_TITLEBAR | WFF_RIGHT_BUTTON;
-
 	wframewindow_map(menu->frame, screen, tmp, 8, 2,
 			 &wPreferences.menu_title_clearance,
 			 &wPreferences.menu_title_min_height,
-			 &wPreferences.menu_title_max_height, flags,
+			 &wPreferences.menu_title_max_height,
 			 screen->screen_ptr->menu_title_texture, NULL,
 			 screen->screen_ptr->menu_title_color, &screen->screen_ptr->menu_title_font,
 			 screen->screen_ptr->w_depth, screen->screen_ptr->w_visual, screen->screen_ptr->w_colormap);
