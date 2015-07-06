@@ -133,6 +133,20 @@ void wframewindow_map(WFrameWindow *fwin, virtual_screen *vscr, int wlevel,
 
 	AddToStackList(fwin->core);
 
+	/* wFrameWindowUpdateBorders uses flags argument to
+	 * udpate the flags and update the framewindow
+	 */
+	if (fwin->flags.map_left_button)
+		flags |= WFF_LEFT_BUTTON;
+
+	if (fwin->flags.map_right_button)
+		flags |= WFF_RIGHT_BUTTON;
+
+#ifdef XKB_BUTTON_HINT
+	if (fwin->flags.map_language_button)
+		flags |= WFF_LANGUAGE_BUTTON;
+#endif
+
 	wFrameWindowUpdateBorders(fwin, flags);
 }
 
@@ -365,6 +379,7 @@ static void titlebar_create(WFrameWindow *fwin, int theight, int bsize, int flag
 	if (flags & WFF_LANGUAGE_BUTTON)
 		language_button_create(fwin, bsize);
 #endif
+
 	if (flags & WFF_RIGHT_BUTTON)
 		right_button_create(fwin, bsize);
 
@@ -579,6 +594,23 @@ void wFrameWindowUpdateBorders(WFrameWindow *fwin, int flags)
 
 	if (fwin->flags.shaded)
 		flags |= WFF_IS_SHADED;
+
+	if (flags & WFF_LEFT_BUTTON)
+		fwin->flags.map_left_button = 1;
+	else
+		fwin->flags.map_left_button = 0;
+
+	if (flags & WFF_RIGHT_BUTTON)
+		fwin->flags.map_right_button = 1;
+	else
+		fwin->flags.map_left_button = 0;
+
+#ifdef XKB_BUTTON_HINT
+	if (flags & WFF_LANGUAGE_BUTTON)
+		fwin->flags.map_language_button = 1;
+	else
+		fwin->flags.map_language_button = 0;
+#endif
 
 	width = fwin->core->width;
 	height = get_framewin_height(fwin, flags);
