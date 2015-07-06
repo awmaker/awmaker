@@ -384,16 +384,25 @@ static void titlebar_create(WFrameWindow *fwin, int theight, int bsize, int flag
 
 	fwin->titlebar = wcore_create(width + 1, theight);
 
-	if (flags & WFF_LEFT_BUTTON)
+	if (flags & WFF_LEFT_BUTTON) {
+		fwin->flags.left_button = 1;
+		fwin->flags.map_left_button = 1;
 		left_button_create(fwin, bsize);
+	}
 
 #ifdef XKB_BUTTON_HINT
-	if (flags & WFF_LANGUAGE_BUTTON)
+	if (flags & WFF_LANGUAGE_BUTTON) {
+		fwin->flags.language_button = 1;
+		fwin->flags.map_language_button = 1;
 		language_button_create(fwin, bsize);
+	}
 #endif
 
-	if (flags & WFF_RIGHT_BUTTON)
+	if (flags & WFF_RIGHT_BUTTON) {
+		fwin->flags.right_button = 1;
+		fwin->flags.map_right_button = 1;
 		right_button_create(fwin, bsize);
+	}
 
 	/* setup object descriptors */
 	if (fwin->titlebar)
