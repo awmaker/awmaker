@@ -86,6 +86,7 @@ WAppIcon *dock_icon_create(char *command, char *wm_class, char *wm_instance);
 WAppIcon *create_appicon(char *command, char *wm_class, char *wm_instance);
 
 void appicon_map(WAppIcon *aicon, virtual_screen *vscr);
+void appicon_unmap(WAppIcon *aicon);
 
 void appIconMouseDown(WObjDescriptor *desc, XEvent *event);
 void add_to_appicon_list(WAppIcon *appicon);

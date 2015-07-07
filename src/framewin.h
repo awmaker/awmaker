@@ -118,15 +118,24 @@ typedef struct WFrameWindow {
         unsigned int justification:2;
         unsigned int titlebar:1;
         unsigned int resizebar:1;
+        unsigned int map_titlebar:1;
+        unsigned int map_resizebar:1;
         unsigned int left_button:1;
         unsigned int right_button:1;
 #ifdef XKB_BUTTON_HINT
         unsigned int language_button:1;
 #endif
+	unsigned int map_left_button:1;
+	unsigned int map_right_button:1;
+#ifdef XKB_BUTTON_HINT
+	unsigned int map_language_button:1;
+#endif
 
         unsigned int need_texture_remake:1;
 
         unsigned int single_texture:1;
+	unsigned int shaded:1;
+	unsigned int border:1;
 
         unsigned int hide_left_button:1;
         unsigned int hide_right_button:1;
@@ -157,24 +166,28 @@ typedef struct WFrameWindow {
     unsigned long *selected_border_pixel;
 } WFrameWindow;
 
-void wFrameWindowUpdateBorders(WFrameWindow *fwin, int flags);
+void wframewin_set_borders(WFrameWindow *fwin, int flags);
 void wFrameWindowDestroy(WFrameWindow *fwin);
 void wFrameWindowChangeState(WFrameWindow *fwin, int state);
 void wFrameWindowPaint(WFrameWindow *fwin);
 void wFrameWindowConfigure(WFrameWindow *fwin, int x, int y, int width, int height);
 void wFrameWindowResize(WFrameWindow *fwin, int width, int height);
-void wFrameWindowShowButton(WFrameWindow *fwin, int flags);
-void wFrameWindowHideButton(WFrameWindow *fwin, int flags);
 int wFrameWindowChangeTitle(WFrameWindow *fwin, const char *new_title);
+
+void wframewindow_show_rightbutton(WFrameWindow *fwin);
+void wframewindow_hide_rightbutton(WFrameWindow *fwin);
+void wframewindow_show_languagebutton(WFrameWindow *fwin);
+void wframewindow_hide_languagebutton(WFrameWindow *fwin);
+void wframewindow_refresh_titlebar(WFrameWindow *fwin);
 
 #ifdef XKB_BUTTON_HINT
 void wFrameWindowUpdateLanguageButton(WFrameWindow *fwin);
 #endif
 
-WFrameWindow *wframewindow_create(int width, int height);
+WFrameWindow *wframewindow_create(int width, int height, int flags);
 void wframewindow_map(WFrameWindow *fwin, virtual_screen *vscr, int wlevel,
                       int x, int y, int *clearance,
-                      int *title_min, int *title_max, int flags,
+                      int *title_min, int *title_max,
                       WTexture **title_texture, WTexture **resize_texture,
                       WMColor **color, WMFont **font, int depth,
                       Visual *visual, Colormap colormap);

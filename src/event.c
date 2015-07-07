@@ -1236,13 +1236,15 @@ static void handleShapeNotify(XEvent *event)
 static void handleXkbIndicatorStateNotify(XkbEvent *event)
 {
 	WWindow *wwin;
-	WScreen *scr;
+	virtual_screen *vscr;
 	XkbStateRec staterec;
 	int i;
 
+	(void) event;
+
 	for (i = 0; i < w_global.screen_count; i++) {
-		scr = wScreenWithNumber(i);
-		wwin = scr->focused_window;
+		vscr = wScreenWithNumber(i);
+		wwin = vscr->screen_ptr->focused_window;
 		if (wwin && wwin->flags.focused) {
 			XkbGetState(dpy, XkbUseCoreKbd, &staterec);
 			if (wwin->frame->languagemode != staterec.group) {
@@ -1799,7 +1801,7 @@ static void handleKeyPress(XEvent *event)
 			wwin = scr->focused_window;
 
 			if (wwin && wwin->flags.mapped
-			    && wwin->frame->workspace == w_global.workspace.current
+			    && wwin->frame->workspace == vscr->workspace.current
 			    && !wwin->flags.miniaturized && !wwin->flags.hidden) {
 				XkbGetState(dpy, XkbUseCoreKbd, &staterec);
 

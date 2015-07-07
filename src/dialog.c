@@ -63,9 +63,23 @@
 #include "xinerama.h"
 
 #define COPYRIGHT_TEXT  \
-    "Copyright \xc2\xa9 1997-2006 Alfredo K. Kojima\n"\
-    "Copyright \xc2\xa9 1998-2006 Dan Pascu\n"\
-    "Copyright \xc2\xa9 2013-2014 Window Maker Developers Team"
+	"Copyright \xc2\xa9 1997-2006 Alfredo K. Kojima\n"\
+	"Copyright \xc2\xa9 1998-2006 Dan Pascu\n"\
+	"Copyright \xc2\xa9 2013-2014 Window Maker Developers Team"
+
+#define LEGAL_TEXT \
+	"    Window Maker is free software; you can redistribute it and/or "\
+	"modify it under the terms of the GNU General Public License as "\
+	"published by the Free Software Foundation; either version 2 of the "\
+	"License, or (at your option) any later version.\n\n"\
+	"    Window Maker is distributed in the hope that it will be useful, "\
+	"but WITHOUT ANY WARRANTY; without even the implied warranty "\
+	"of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. "\
+	"See the GNU General Public License for more details.\n\n"\
+	"    You should have received a copy of the GNU General Public "\
+	"License along with this program; if not, write to the Free Software "\
+	"Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA"\
+	"02110-1301 USA."
 
 typedef struct IconPanel {
 	virtual_screen *vscr;
@@ -124,6 +138,8 @@ static WMPoint getCenter(virtual_screen *vscr, int width, int height)
 int wMessageDialog(virtual_screen *vscr, const char *title, const char *message, const char *defBtn, const char *altBtn, const char *othBtn)
 {
 	WScreen *scr = vscr->screen_ptr;
+	const int win_width = 400;
+	const int win_height = 180;
 	WMAlertPanel *panel;
 	Window parent;
 	WWindow *wwin;
@@ -132,12 +148,12 @@ int wMessageDialog(virtual_screen *vscr, const char *title, const char *message,
 
 	panel = WMCreateAlertPanel(scr->wmscreen, NULL, title, message, defBtn, altBtn, othBtn);
 
-	parent = XCreateSimpleWindow(dpy, scr->root_win, 0, 0, 400, 180, 0, 0, 0);
+	parent = XCreateSimpleWindow(dpy, scr->root_win, 0, 0, win_width, win_height, 0, 0, 0);
 
 	XReparentWindow(dpy, WMWidgetXID(panel->win), parent, 0, 0);
 
-	center = getCenter(vscr, 400, 180);
-	wwin = wManageInternalWindow(vscr, parent, None, NULL, center.x, center.y, 400, 180);
+	center = getCenter(vscr, win_width, win_height);
+	wwin = wManageInternalWindow(vscr, parent, None, NULL, center.x, center.y, win_width, win_height);
 	wwin->client_leader = WMWidgetXID(panel->win);
 
 	WMMapWidget(panel->win);
@@ -170,6 +186,8 @@ static void toggleSaveSession(WMWidget *w, void *data)
 int wExitDialog(virtual_screen *vscr, const char *title, const char *message, const char *defBtn, const char *altBtn, const char *othBtn)
 {
 	WScreen *scr = vscr->screen_ptr;
+	const int win_width = 400;
+	const int win_height = 180;
 	WMAlertPanel *panel;
 	WMButton *saveSessionBtn;
 	Window parent;
@@ -188,12 +206,12 @@ int wExitDialog(virtual_screen *vscr, const char *title, const char *message, co
 	WMRealizeWidget(saveSessionBtn);
 	WMMapWidget(saveSessionBtn);
 
-	parent = XCreateSimpleWindow(dpy, scr->root_win, 0, 0, 400, 180, 0, 0, 0);
+	parent = XCreateSimpleWindow(dpy, scr->root_win, 0, 0, win_width, win_height, 0, 0, 0);
 
 	XReparentWindow(dpy, WMWidgetXID(panel->win), parent, 0, 0);
 
-	center = getCenter(vscr, 400, 180);
-	wwin = wManageInternalWindow(vscr, parent, None, NULL, center.x, center.y, 400, 180);
+	center = getCenter(vscr, win_width, win_height);
+	wwin = wManageInternalWindow(vscr, parent, None, NULL, center.x, center.y, win_width, win_height);
 
 	wwin->client_leader = WMWidgetXID(panel->win);
 	WMMapWidget(panel->win);
@@ -464,6 +482,8 @@ static void handleHistoryKeyPress(XEvent *event, void *clientData)
 int wAdvancedInputDialog(virtual_screen *vscr, const char *title, const char *message, const char *name, char **text)
 {
 	WScreen *scr = vscr->screen_ptr;
+	const int win_width = 320;
+	const int win_height = 160;
 	WWindow *wwin;
 	Window parent;
 	char *result;
@@ -483,13 +503,13 @@ int wAdvancedInputDialog(virtual_screen *vscr, const char *title, const char *me
 	p->varpos = 0;
 	WMCreateEventHandler(WMWidgetView(p->panel->text), KeyPressMask, handleHistoryKeyPress, p);
 
-	parent = XCreateSimpleWindow(dpy, scr->root_win, 0, 0, 320, 160, 0, 0, 0);
+	parent = XCreateSimpleWindow(dpy, scr->root_win, 0, 0, win_width, win_height, 0, 0, 0);
 	XSelectInput(dpy, parent, KeyPressMask | KeyReleaseMask);
 
 	XReparentWindow(dpy, WMWidgetXID(p->panel->win), parent, 0, 0);
 
-	center = getCenter(vscr, 320, 160);
-	wwin = wManageInternalWindow(vscr, parent, None, NULL, center.x, center.y, 320, 160);
+	center = getCenter(vscr, win_width, win_height);
+	wwin = wManageInternalWindow(vscr, parent, None, NULL, center.x, center.y, win_width, win_height);
 
 	wwin->client_leader = WMWidgetXID(p->panel->win);
 	WMMapWidget(p->panel->win);
@@ -528,6 +548,8 @@ int wAdvancedInputDialog(virtual_screen *vscr, const char *title, const char *me
 int wInputDialog(virtual_screen *vscr, const char *title, const char *message, char **text)
 {
 	WScreen *scr = vscr->screen_ptr;
+	const int win_width = 320;
+	const int win_height = 160;
 	WWindow *wwin;
 	Window parent;
 	WMInputPanel *panel;
@@ -536,13 +558,13 @@ int wInputDialog(virtual_screen *vscr, const char *title, const char *message, c
 
 	panel = WMCreateInputPanel(scr->wmscreen, NULL, title, message, *text, _("OK"), _("Cancel"));
 
-	parent = XCreateSimpleWindow(dpy, scr->root_win, 0, 0, 320, 160, 0, 0, 0);
+	parent = XCreateSimpleWindow(dpy, scr->root_win, 0, 0, win_width, win_height, 0, 0, 0);
 	XSelectInput(dpy, parent, KeyPressMask | KeyReleaseMask);
 
 	XReparentWindow(dpy, WMWidgetXID(panel->win), parent, 0, 0);
 
-	center = getCenter(vscr, 320, 160);
-	wwin = wManageInternalWindow(vscr, parent, None, NULL, center.x, center.y, 320, 160);
+	center = getCenter(vscr, win_width, win_height);
+	wwin = wManageInternalWindow(vscr, parent, None, NULL, center.x, center.y, win_width, win_height);
 
 	wwin->client_leader = WMWidgetXID(panel->win);
 
@@ -610,7 +632,7 @@ static void listPixmaps(virtual_screen *vscr, WMList *lPtr, const char *path)
 		    wstrlcat(pbuf, "/", sizeof(pbuf)) >= sizeof(pbuf) ||
 		    wstrlcat(pbuf, dentry->d_name, sizeof(pbuf)) >= sizeof(pbuf)) {
 			wwarning(_("full path for file \"%s\" in \"%s\" is longer than %d bytes, skipped"),
-			         dentry->d_name, path, (int) sizeof(pbuf) - 1);
+				 dentry->d_name, path, (int) sizeof(pbuf) - 1);
 			continue;
 		}
 
@@ -899,6 +921,8 @@ static void keyPressHandler(XEvent *event, void *data)
 Bool wIconChooserDialog(virtual_screen *vscr, char **file, const char *instance, const char *class)
 {
 	WScreen *scr = vscr->screen_ptr;
+	const int win_width = 450;
+	const int win_height = 280;
 	WWindow *wwin;
 	Window parent;
 	IconPanel *panel;
@@ -910,7 +934,7 @@ Bool wIconChooserDialog(virtual_screen *vscr, char **file, const char *instance,
 	panel->vscr = vscr;
 
 	panel->win = WMCreateWindow(scr->wmscreen, "iconChooser");
-	WMResizeWidget(panel->win, 450, 280);
+	WMResizeWidget(panel->win, win_width, win_height);
 
 	WMCreateEventHandler(WMWidgetView(panel->win), KeyPressMask | KeyReleaseMask, keyPressHandler, panel);
 
@@ -999,7 +1023,7 @@ Bool wIconChooserDialog(virtual_screen *vscr, char **file, const char *instance,
 	WMRealizeWidget(panel->win);
 	WMMapSubwidgets(panel->win);
 
-	parent = XCreateSimpleWindow(dpy, scr->root_win, 0, 0, 450, 280, 0, 0, 0);
+	parent = XCreateSimpleWindow(dpy, scr->root_win, 0, 0, win_width, win_height, 0, 0, 0);
 
 	XReparentWindow(dpy, WMWidgetXID(panel->win), parent, 0, 0);
 
@@ -1034,9 +1058,9 @@ Bool wIconChooserDialog(virtual_screen *vscr, char **file, const char *instance,
 			strcat(title, "]");
 		}
 
-		center = getCenter(vscr, 450, 280);
+		center = getCenter(vscr, win_width, win_height);
 
-		wwin = wManageInternalWindow(vscr, parent, None, title, center.x, center.y, 450, 280);
+		wwin = wManageInternalWindow(vscr, parent, None, title, center.x, center.y, win_width, win_height);
 		wfree(title);
 	}
 
@@ -1344,10 +1368,11 @@ void wShowInfoPanel(virtual_screen *vscr)
 	WSETUFLAG(wwin, no_closable, 0);
 	WSETUFLAG(wwin, no_close_button, 0);
 #ifdef XKB_BUTTON_HINT
-	wFrameWindowHideButton(wwin->frame, WFF_LANGUAGE_BUTTON);
+	wframewindow_hide_languagebutton(wwin->frame);
 #endif
 	wWindowUpdateButtonImages(wwin);
-	wFrameWindowShowButton(wwin->frame, WFF_RIGHT_BUTTON);
+	wframewindow_show_rightbutton(wwin->frame);
+	wframewindow_refresh_titlebar(wwin->frame);
 	wwin->frame->on_click_right = destroyInfoPanel;
 
 	wWindowMap(wwin);
@@ -1406,19 +1431,7 @@ void wShowLegalPanel(virtual_screen *vscr)
 	WMResizeWidget(panel->licenseL, win_width - (2 * margin), win_height - (2 * margin));
 	WMMoveWidget(panel->licenseL, margin, margin);
 	WMSetLabelTextAlignment(panel->licenseL, WALeft);
-	WMSetLabelText(panel->licenseL,
-		       _("    Window Maker is free software; you can redistribute it and/or "
-			 "modify it under the terms of the GNU General Public License as "
-			 "published by the Free Software Foundation; either version 2 of the "
-			 "License, or (at your option) any later version.\n\n"
-			 "    Window Maker is distributed in the hope that it will be useful, "
-			 "but WITHOUT ANY WARRANTY; without even the implied warranty "
-			 "of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. "
-			 "See the GNU General Public License for more details.\n\n"
-			 "    You should have received a copy of the GNU General Public "
-			 "License along with this program; if not, write to the Free Software "
-			 "Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA"
-			 "02110-1301 USA."));
+	WMSetLabelText(panel->licenseL, LEGAL_TEXT);
 	WMSetLabelRelief(panel->licenseL, WRGroove);
 
 	WMRealizeWidget(panel->win);
@@ -1432,10 +1445,11 @@ void wShowLegalPanel(virtual_screen *vscr)
 	WSETUFLAG(wwin, no_closable, 0);
 	WSETUFLAG(wwin, no_close_button, 0);
 	wWindowUpdateButtonImages(wwin);
-	wFrameWindowShowButton(wwin->frame, WFF_RIGHT_BUTTON);
+	wframewindow_show_rightbutton(wwin->frame);
 #ifdef XKB_BUTTON_HINT
-	wFrameWindowHideButton(wwin->frame, WFF_LANGUAGE_BUTTON);
+	wframewindow_hide_languagebutton(wwin->frame);
 #endif
+	wframewindow_refresh_titlebar(wwin->frame);
 	wwin->frame->on_click_right = destroyLegalPanel;
 	panel->wwin = wwin;
 
@@ -1589,9 +1603,9 @@ int wShowCrashingDialogPanel(int whatSig)
 	WMMoveWidget(panel->note2L, 10, 130);
 	WMSetLabelTextAlignment(panel->note2L, WALeft);
 	snprintf(buf, sizeof(buf), /* Comment for the PO file: the %s is an email address */
-	         _(" This fatal error occured probably due to a bug."
-	           " Please fill the included BUGFORM and report it to %s."),
-	         PACKAGE_BUGREPORT);
+		 _(" This fatal error occured probably due to a bug."
+		   " Please fill the included BUGFORM and report it to %s."),
+		 PACKAGE_BUGREPORT);
 	WMSetLabelText(panel->note2L, buf);
 	WMSetLabelWraps(panel->note2L, True);
 

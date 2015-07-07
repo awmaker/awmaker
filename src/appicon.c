@@ -647,6 +647,13 @@ void appicon_map(WAppIcon *aicon, virtual_screen *vscr)
 	AddToStackList(aicon->icon->core);
 }
 
+void appicon_unmap(WAppIcon *aicon)
+{
+	RemoveFromStackList(aicon->icon->core);
+	unmap_icon_image(aicon->icon);
+	wcore_unmap(aicon->icon->core);
+}
+
 static void openApplicationMenu(WApplication *wapp, int x, int y)
 {
 	WMenu *menu;

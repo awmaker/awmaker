@@ -540,6 +540,14 @@ void wIconSelect(WIcon *icon)
 	}
 }
 
+static void unset_icon_file_image(WIcon *icon)
+{
+	if (icon->file_image) {
+		RReleaseImage(icon->file_image);
+		icon->file_image = NULL;
+	}
+}
+
 static void unset_icon_image(WIcon *icon)
 {
 	if (icon->file_name) {
@@ -547,10 +555,7 @@ static void unset_icon_image(WIcon *icon)
 		icon->file_name = NULL;
 	}
 
-	if (icon->file_image) {
-		RReleaseImage(icon->file_image);
-		icon->file_image = NULL;
-	}
+	unset_icon_file_image(icon);
 }
 
 void set_icon_image_from_image(WIcon *icon, RImage *image)
@@ -923,4 +928,12 @@ void map_icon_image(WIcon *icon)
 
 	/* Update the icon, because icon could be NULL */
 	wIconUpdate(icon);
+}
+
+void unmap_icon_image(WIcon *icon)
+{
+	if (icon->pixmap != None)
+		XFreePixmap(dpy, icon->pixmap);
+
+	unset_icon_file_image(icon);
 }

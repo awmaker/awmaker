@@ -98,6 +98,14 @@ void wcore_map(WCoreWindow *core, WCoreWindow *parent, virtual_screen *screen, i
 	XSaveContext(dpy, core->window, w_global.context.client_win, (XPointer) & core->descriptor);
 }
 
+void wcore_unmap(WCoreWindow *core)
+{
+	if (core) {
+		XDeleteContext(dpy, core->window, w_global.context.client_win);
+		XDestroyWindow(dpy, core->window);
+	}
+}
+
 void wCoreConfigure(WCoreWindow * core, int req_x, int req_y, int req_w, int req_h)
 {
 	XWindowChanges xwc;
