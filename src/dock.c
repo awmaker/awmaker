@@ -142,6 +142,7 @@ static void restore_state_lowered(WDock *dock, WMPropList *state);
 static void restore_state_collapsed(WDock *dock, WMPropList *state);
 static void restore_state_autoraise(WDock *dock, WMPropList *state);
 static void dock_set_attacheddocks(virtual_screen *vscr, WDock *dock, WMPropList *state);
+static void dock_unset_attacheddocks(WDock *dock);
 static int restore_state_autocollapsed(WDock *dock, WMPropList *state);
 static int restore_state_autoattracticons(WDock *dock, WMPropList *state);
 
@@ -2328,6 +2329,11 @@ static void dock_set_attacheddocks(virtual_screen *vscr, WDock *dock, WMPropList
 
 		wAppIconDestroy(old_top);
 	}
+}
+
+static void dock_unset_attacheddocks(WDock *dock)
+{
+	set_attacheddocks_unmap(dock);
 }
 
 static void restore_dock_position(WDock *dock, virtual_screen *vscr, WMPropList *state)
