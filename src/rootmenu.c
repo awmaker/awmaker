@@ -1643,8 +1643,6 @@ void OpenRootMenu(virtual_screen *vscr, int x, int y, int keyboard)
 				menu = configureMenu(vscr, definition);
 				if (menu)
 					menu->timestamp = w_global.domain.root_menu->timestamp;
-			} else {
-				menu = NULL;
 			}
 		} else {
 			menu = configureMenu(vscr, definition);

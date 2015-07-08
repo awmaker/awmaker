@@ -4596,6 +4596,16 @@ static void iconMouseDown(WObjDescriptor *desc, XEvent *event)
 			return;
 		}
 
+		/* kix: FIXME
+		 * There is a BUG here. When the menu entry callback is used
+		 * the function menuMouseDown (menu.c) is used. If the user
+		 * doesn't select any entry, no windows are openned and then
+		 * we are unable to set the focus to the new window.
+		 * This problem shows an catchXError call.
+		 * The error was created in the commit:
+		 * "DA: Dock menu always unmapped (warning)"
+		 * This error only happends here, not in rootmenu, appicon, etc.
+		 */
 		switch (dock->type) {
 		case WM_DOCK:
 			dock_menu_map(dock->menu, vscr);
