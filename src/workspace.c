@@ -339,7 +339,7 @@ static void showWorkspaceName(virtual_screen *vscr, int workspace)
 #ifdef USE_XINERAMA
 		px = xx;
 #else
-		px = (scr->scr_width - (w + 4)) / 2;
+		px = (vscr->screen_ptr->scr_width - (w + 4)) / 2;
 #endif
 		py = WORKSPACE_NAME_DISPLAY_PADDING;
 		break;
@@ -373,8 +373,8 @@ static void showWorkspaceName(virtual_screen *vscr, int workspace)
 		px = xx;
 		py = yy;
 #else
-		px = (scr->screen_ptr->scr_width - (w + 4)) / 2;
-		py = (scr->screen_ptr->scr_height - (h + 4)) / 2;
+		px = (vscr->screen_ptr->scr_width - (w + 4)) / 2;
+		py = (vscr->screen_ptr->scr_height - (h + 4)) / 2;
 #endif
 		break;
 	}
