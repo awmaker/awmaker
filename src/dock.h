@@ -69,6 +69,7 @@ void dock_unmap(WDock *dock);
 
 void clip_icon_create(void);
 void clip_icon_map(virtual_screen *vscr);
+void clip_icon_unmap(void);
 
 void wDockDestroy(WDock *dock);
 void wDockHideIcons(WDock *dock);

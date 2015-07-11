@@ -1564,6 +1564,14 @@ void clip_icon_map(virtual_screen *vscr)
 	XMapWindow(dpy, w_global.clip.icon->icon->core->window);
 }
 
+void clip_icon_unmap(void)
+{
+	XUnmapWindow(dpy, w_global.clip.icon->icon->core->window);
+	RemoveFromStackList(w_global.clip.icon->icon->core);
+	unmap_icon_image(w_global.clip.icon->icon);
+	wcore_unmap(w_global.clip.icon->icon->core);
+}
+
 WDock *clip_create(virtual_screen *vscr)
 {
 	WDock *dock;
