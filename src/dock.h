@@ -64,6 +64,7 @@ WDock *clip_create(virtual_screen *vscr);
 WDock *dock_create(virtual_screen *vscr);
 void clip_map(WDock *dock, virtual_screen *scr, WMPropList *state);
 void dock_map(WDock *dock, virtual_screen *scr, WMPropList *dock_state);
+void dock_unmap(WDock *dock);
 
 void clip_icon_create(void);
 void clip_icon_map(virtual_screen *vscr);

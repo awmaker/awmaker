@@ -1508,6 +1508,16 @@ void dock_map(WDock *dock, virtual_screen *vscr, WMPropList *state)
 	WMReleasePropList(state);
 }
 
+void dock_unmap(WDock *dock)
+{
+	WAppIcon *btn = dock->icon_array[0];
+
+	dock_unset_attacheddocks(dock);
+	XUnmapWindow(dpy, btn->icon->core->window);
+	RemoveFromStackList(btn->icon->core);
+	unmap_icon_image(btn->icon);
+}
+
 /* Create appicon's icon */
 void clip_icon_create(void)
 {
