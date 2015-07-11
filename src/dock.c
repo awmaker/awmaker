@@ -5488,6 +5488,12 @@ static WDock *drawerRestoreState(virtual_screen *vscr, WMPropList *drawer_state)
 	return drawer;
 }
 
+static void drawerRestoreState_unmap(WDock *drawer)
+{
+	set_attacheddocks_unmap(drawer);
+	drawer_unmap(drawer);
+}
+
 static void drawerRestoreState_map(virtual_screen *vscr, WDock *drawer)
 {
 	drawer_map(drawer, vscr);
