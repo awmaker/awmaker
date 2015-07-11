@@ -1617,6 +1617,11 @@ void clip_map(WDock *dock, virtual_screen *vscr, WMPropList *state)
 	WMReleasePropList(state);
 }
 
+void clip_unmap(WDock *dock)
+{
+	dock_unset_attacheddocks(dock);
+}
+
 WDock *drawer_create(virtual_screen *vscr, const char *name)
 {
 	WDock *dock;
