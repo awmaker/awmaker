@@ -1704,6 +1704,17 @@ void drawer_map(WDock *dock, virtual_screen *vscr)
 	XMoveWindow(dpy, btn->icon->core->window, btn->x_pos, btn->y_pos);
 }
 
+void drawer_unmap(WDock *dock)
+{
+	WAppIcon *btn = dock->icon_array[0];
+
+	XUnmapWindow(dpy, btn->icon->core->window);
+	RemoveFromStackList(btn->icon->core);
+	unmap_icon_image(btn->icon);
+	wcore_unmap(btn->icon->core);
+}
+
+
 void wDockDestroy(WDock *dock)
 {
 	int i;
