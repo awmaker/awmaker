@@ -5577,6 +5577,14 @@ void wDrawersSaveState(virtual_screen *vscr)
 	WMReleasePropList(all_drawers);
 }
 
+void wDrawers_unmap(int vscrno)
+{
+	WDrawerChain *dc;
+
+	for (dc = w_global.vscreens[vscrno]->drawer.drawers; dc; dc = dc->next)
+		drawerRestoreState_unmap(dc->adrawer);
+}
+
 void wDrawersRestoreState(virtual_screen *vscr)
 {
 	WMPropList *all_drawers, *drawer_state;
