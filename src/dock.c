@@ -1065,7 +1065,7 @@ static void updateOptionsMenu(WDock *dock, WMenu *menu)
 	wMenuRealize(menu);
 }
 
-static WMenu *makeClipOptionsMenu(void)
+static WMenu *clip_make_options_menu(void)
 {
 	WMenu *menu;
 	WMenuEntry *entry;
@@ -1073,6 +1073,47 @@ static WMenu *makeClipOptionsMenu(void)
 	menu = menu_create(NULL);
 	if (!menu) {
 		wwarning(_("could not create options submenu for Clip menu"));
+		return NULL;
+	}
+
+	entry = wMenuAddCallback(menu, _("Keep on Top"), toggleLoweredCallback, NULL);
+	entry->flags.indicator = 1;
+	entry->flags.indicator_on = 1;
+	entry->flags.indicator_type = MI_CHECK;
+
+	entry = wMenuAddCallback(menu, _("Collapsed"), toggleCollapsedCallback, NULL);
+	entry->flags.indicator = 1;
+	entry->flags.indicator_on = 1;
+	entry->flags.indicator_type = MI_CHECK;
+
+	entry = wMenuAddCallback(menu, _("Autocollapse"), toggleAutoCollapseCallback, NULL);
+	entry->flags.indicator = 1;
+	entry->flags.indicator_on = 1;
+	entry->flags.indicator_type = MI_CHECK;
+
+	entry = wMenuAddCallback(menu, _("Autoraise"), toggleAutoRaiseLowerCallback, NULL);
+	entry->flags.indicator = 1;
+	entry->flags.indicator_on = 1;
+	entry->flags.indicator_type = MI_CHECK;
+
+	entry = wMenuAddCallback(menu, _("Autoattract Icons"), toggleAutoAttractCallback, NULL);
+	entry->flags.indicator = 1;
+	entry->flags.indicator_on = 1;
+	entry->flags.indicator_type = MI_CHECK;
+
+	menu->flags.realized = 0;
+
+	return menu;
+}
+
+static WMenu *drawer_make_options_menu(void)
+{
+	WMenu *menu;
+	WMenuEntry *entry;
+
+	menu = menu_create(NULL);
+	if (!menu) {
+		wwarning(_("could not create options submenu for Drawer menu"));
 		return NULL;
 	}
 
@@ -1252,7 +1293,7 @@ void clip_menu_create(virtual_screen *vscr)
 	menu = menu_create(NULL);
 	vscr->clip.submenu = makeWorkspaceMenu();
 	if (!vscr->clip.opt_menu)
-		vscr->clip.opt_menu = makeClipOptionsMenu();
+		vscr->clip.opt_menu = clip_make_options_menu();
 
 	entry = wMenuAddCallback(menu, _("Clip Options"), NULL, NULL);
 
@@ -1340,7 +1381,7 @@ static void drawer_menu_create(virtual_screen *vscr)
 
 	entry = wMenuAddCallback(menu, _("Drawer options"), NULL, NULL);
 
-	vscr->dock.drawer_opt_menu = makeClipOptionsMenu();
+	vscr->dock.drawer_opt_menu = drawer_make_options_menu();
 
 	wMenuEntrySetCascade_create(menu, entry, vscr->dock.drawer_opt_menu);
 
