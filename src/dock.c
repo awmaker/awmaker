@@ -108,8 +108,6 @@ static void toggleCollapsed(WDock *dock);
 static void clipIconExpose(WObjDescriptor *desc, XEvent *event);
 static void dockIconExpose(WObjDescriptor *desc, XEvent *event);
 
-static void clipLeave(WDock *dock);
-
 static void dock_leave(WDock *dock);
 static void clip_leave(WDock *dock);
 static void drawer_leave(WDock *dock);
@@ -5805,52 +5803,6 @@ static void drawer_leave(WDock *dock)
 
 	if (dock->auto_collapse && !dock->auto_collapse_magic)
 		dock->auto_collapse_magic = WMAddTimerHandler(wPreferences.clip_auto_collapse_delay, drawer_autocollapse, (void *)dock);
-}
-
-static void clipLeave(WDock *dock)
-{
-	XEvent event;
-	WObjDescriptor *desc = NULL;
-	WDock *tmp;
-
-	if (dock == NULL)
-		return;
-
-	if (XCheckTypedEvent(dpy, EnterNotify, &event) != False) {
-		if (XFindContext(dpy, event.xcrossing.window, w_global.context.client_win,
-				 (XPointer *) & desc) != XCNOENT
-		    && desc && desc->parent_type == WCLASS_DOCK_ICON
-		    && ((WAppIcon *) desc->parent)->dock == dock) {
-			/* We haven't left the dock/clip/drawer yet */
-			XPutBackEvent(dpy, &event);
-			return;
-		}
-
-		XPutBackEvent(dpy, &event);
-	} else {
-		/* We entered a withdrawn window, so we're still in Clip */
-		return;
-	}
-
-	tmp = (dock->type == WM_DRAWER ? dock->vscr->dock.dock : dock);
-	if (tmp->auto_raise_magic) {
-		WMDeleteTimerHandler(tmp->auto_raise_magic);
-		tmp->auto_raise_magic = NULL;
-	}
-
-	if (tmp->auto_raise_lower && !tmp->auto_lower_magic)
-		tmp->auto_lower_magic = WMAddTimerHandler(wPreferences.clip_auto_lower_delay, clipAutoLower, (void *)tmp);
-
-	if (dock->type != WM_CLIP && dock->type != WM_DRAWER)
-		return;
-
-	if (dock->auto_expand_magic) {
-		WMDeleteTimerHandler(dock->auto_expand_magic);
-		dock->auto_expand_magic = NULL;
-	}
-
-	if (dock->auto_collapse && !dock->auto_collapse_magic)
-		dock->auto_collapse_magic = WMAddTimerHandler(wPreferences.clip_auto_collapse_delay, clip_autocollapse, (void *)dock);
 }
 
 static void dock_leave_notify(WObjDescriptor *desc, XEvent *event)
