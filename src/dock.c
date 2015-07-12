@@ -2470,23 +2470,6 @@ static WAppIcon *restore_drawer_icon_state(WMPropList *info, int index)
 	return aicon;
 }
 
-static WAppIcon *restore_icon_state(WMPropList *info, int type, int index)
-{
-	switch (type) {
-	case WM_DOCK:
-		return restore_dock_icon_state(info, index);
-		break;
-	case WM_CLIP:
-		return restore_clip_icon_state(info, index);
-		break;
-	case WM_DRAWER:
-		return restore_drawer_icon_state(info, index);
-	}
-
-	/* Avoid compiler warning */
-	return NULL;
-}
-
 #define COMPLAIN(key) wwarning(_("bad value in dock/drawer state info:%s"), key)
 
 /* restore lowered/raised state */
@@ -2692,7 +2675,19 @@ static int set_attacheddocks(WDock *dock, WMPropList *apps)
 		}
 
 		value = WMGetFromPLArray(apps, i);
-		aicon = restore_icon_state(value, dock->type, dock->icon_count);
+		aicon = NULL;
+
+		switch (dock->type) {
+		case WM_DOCK:
+			aicon = restore_dock_icon_state(value, dock->icon_count);
+			break;
+		case WM_CLIP:
+			aicon = restore_clip_icon_state(value, dock->icon_count);
+			break;
+		case WM_DRAWER:
+			aicon = restore_drawer_icon_state(value, dock->icon_count);
+		}
+
 		dock->icon_array[dock->icon_count] = aicon;
 
 		if (aicon) {
