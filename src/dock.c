@@ -124,7 +124,10 @@ static void dock_leave_notify(WObjDescriptor *desc, XEvent *event);
 static void clip_leave_notify(WObjDescriptor *desc, XEvent *event);
 static void drawer_leave_notify(WObjDescriptor *desc, XEvent *event);
 
-static void clipAutoCollapse(void *cdata);
+static void dock_autocollapse(void *cdata);
+static void clip_autocollapse(void *cdata);
+static void drawer_autocollapse(void *cdata);
+
 static void clipAutoExpand(void *cdata);
 static void launchDockedApplication(WAppIcon *btn, Bool withSelection);
 
@@ -5727,7 +5730,7 @@ static void clip_leave(WDock *dock)
 	}
 
 	if (dock->auto_collapse && !dock->auto_collapse_magic)
-		dock->auto_collapse_magic = WMAddTimerHandler(wPreferences.clip_auto_collapse_delay, clipAutoCollapse, (void *)dock);
+		dock->auto_collapse_magic = WMAddTimerHandler(wPreferences.clip_auto_collapse_delay, clip_autocollapse, (void *)dock);
 }
 
 static void drawer_leave(WDock *dock)
@@ -5770,7 +5773,7 @@ static void drawer_leave(WDock *dock)
 	}
 
 	if (dock->auto_collapse && !dock->auto_collapse_magic)
-		dock->auto_collapse_magic = WMAddTimerHandler(wPreferences.clip_auto_collapse_delay, clipAutoCollapse, (void *)dock);
+		dock->auto_collapse_magic = WMAddTimerHandler(wPreferences.clip_auto_collapse_delay, drawer_autocollapse, (void *)dock);
 }
 
 static void clipLeave(WDock *dock)
@@ -5816,7 +5819,7 @@ static void clipLeave(WDock *dock)
 	}
 
 	if (dock->auto_collapse && !dock->auto_collapse_magic)
-		dock->auto_collapse_magic = WMAddTimerHandler(wPreferences.clip_auto_collapse_delay, clipAutoCollapse, (void *)dock);
+		dock->auto_collapse_magic = WMAddTimerHandler(wPreferences.clip_auto_collapse_delay, clip_autocollapse, (void *)dock);
 }
 
 static void dock_leave_notify(WObjDescriptor *desc, XEvent *event)
@@ -5864,7 +5867,35 @@ static void drawer_leave_notify(WObjDescriptor *desc, XEvent *event)
 	drawer_leave(btn->dock);
 }
 
-static void clipAutoCollapse(void *cdata)
+static void dock_autocollapse(void *cdata)
+{
+	WDock *dock = (WDock *) cdata;
+
+	if (dock->type != WM_CLIP && dock->type != WM_DRAWER)
+		return;
+
+	if (dock->auto_collapse) {
+		dock->collapsed = 1;
+		wDockHideIcons(dock);
+	}
+	dock->auto_collapse_magic = NULL;
+}
+
+static void clip_autocollapse(void *cdata)
+{
+	WDock *dock = (WDock *) cdata;
+
+	if (dock->type != WM_CLIP && dock->type != WM_DRAWER)
+		return;
+
+	if (dock->auto_collapse) {
+		dock->collapsed = 1;
+		wDockHideIcons(dock);
+	}
+	dock->auto_collapse_magic = NULL;
+}
+
+static void drawer_autocollapse(void *cdata)
 {
 	WDock *dock = (WDock *) cdata;
 
