@@ -110,13 +110,20 @@ static void dockIconExpose(WObjDescriptor *desc, XEvent *event);
 
 static void clipLeave(WDock *dock);
 
+static void dock_leave(WDock *dock);
+static void clip_leave(WDock *dock);
+static void drawer_leave(WDock *dock);
+
 static void handleClipChangeWorkspace(virtual_screen *vscr, XEvent *event);
 
 static void dock_enter_notify(WObjDescriptor *desc, XEvent *event);
 static void clip_enter_notify(WObjDescriptor *desc, XEvent *event);
 static void drawer_enter_notify(WObjDescriptor *desc, XEvent *event);
 
-static void clipLeaveNotify(WObjDescriptor *desc, XEvent *event);
+static void dock_leave_notify(WObjDescriptor *desc, XEvent *event);
+static void clip_leave_notify(WObjDescriptor *desc, XEvent *event);
+static void drawer_leave_notify(WObjDescriptor *desc, XEvent *event);
+
 static void clipAutoCollapse(void *cdata);
 static void clipAutoExpand(void *cdata);
 static void launchDockedApplication(WAppIcon *btn, Bool withSelection);
@@ -1529,7 +1536,7 @@ void dock_map(WDock *dock, virtual_screen *vscr, WMPropList *state)
 
 	btn->icon->core->descriptor.handle_mousedown = dock_icon_mouse_down;
 	btn->icon->core->descriptor.handle_enternotify = dock_enter_notify;
-	btn->icon->core->descriptor.handle_leavenotify = clipLeaveNotify;
+	btn->icon->core->descriptor.handle_leavenotify = dock_leave_notify;
 	XMapWindow(dpy, btn->icon->core->window);
 	btn->x_pos = scr->scr_width - ICON_SIZE - DOCK_EXTRA_SPACE;
 	btn->y_pos = 0;
@@ -1610,7 +1617,7 @@ void clip_icon_map(virtual_screen *vscr)
 	w_global.clip.icon->icon->core->descriptor.handle_expose = clipIconExpose;
 	w_global.clip.icon->icon->core->descriptor.handle_mousedown = clip_icon_mouse_down;
 	w_global.clip.icon->icon->core->descriptor.handle_enternotify = clip_enter_notify;
-	w_global.clip.icon->icon->core->descriptor.handle_leavenotify = clipLeaveNotify;
+	w_global.clip.icon->icon->core->descriptor.handle_leavenotify = clip_leave_notify;
 	w_global.clip.icon->icon->core->descriptor.parent_type = WCLASS_DOCK_ICON;
 	w_global.clip.icon->icon->core->descriptor.parent = w_global.clip.icon;
 	XMapWindow(dpy, w_global.clip.icon->icon->core->window);
@@ -1744,7 +1751,7 @@ void drawer_map(WDock *dock, virtual_screen *vscr)
 	btn->icon->core->descriptor.handle_expose = drawerIconExpose;
 	btn->icon->core->descriptor.handle_mousedown = drawer_icon_mouse_down;
 	btn->icon->core->descriptor.handle_enternotify = drawer_enter_notify;
-	btn->icon->core->descriptor.handle_leavenotify = clipLeaveNotify;
+	btn->icon->core->descriptor.handle_leavenotify = drawer_leave_notify;
 
 	btn->x_pos = dock->x_pos;
 	btn->y_pos = dock->y_pos;
@@ -2157,7 +2164,7 @@ static WAppIcon *restore_dock_icon_state(WMPropList *info, int index)
 	aicon->icon->core->descriptor.handle_expose = dockIconExpose;
 	aicon->icon->core->descriptor.handle_mousedown = dock_icon_mouse_down;
 	aicon->icon->core->descriptor.handle_enternotify = dock_enter_notify;
-	aicon->icon->core->descriptor.handle_leavenotify = clipLeaveNotify;
+	aicon->icon->core->descriptor.handle_leavenotify = dock_leave_notify;
 	aicon->icon->core->descriptor.parent_type = WCLASS_DOCK_ICON;
 	aicon->icon->core->descriptor.parent = aicon;
 
@@ -2264,7 +2271,7 @@ static WAppIcon *restore_clip_icon_state(WMPropList *info, int index)
 	aicon->icon->core->descriptor.handle_expose = dockIconExpose;
 	aicon->icon->core->descriptor.handle_mousedown = clip_icon_mouse_down;
 	aicon->icon->core->descriptor.handle_enternotify = clip_enter_notify;
-	aicon->icon->core->descriptor.handle_leavenotify = clipLeaveNotify;
+	aicon->icon->core->descriptor.handle_leavenotify = clip_leave_notify;
 	aicon->icon->core->descriptor.parent_type = WCLASS_DOCK_ICON;
 	aicon->icon->core->descriptor.parent = aicon;
 
@@ -2367,7 +2374,7 @@ static WAppIcon *restore_drawer_icon_state(WMPropList *info, int index)
 	aicon->icon->core->descriptor.handle_expose = dockIconExpose;
 	aicon->icon->core->descriptor.handle_mousedown = drawer_icon_mouse_down;
 	aicon->icon->core->descriptor.handle_enternotify = drawer_enter_notify;
-	aicon->icon->core->descriptor.handle_leavenotify = clipLeaveNotify;
+	aicon->icon->core->descriptor.handle_leavenotify = drawer_leave_notify;
 	aicon->icon->core->descriptor.parent_type = WCLASS_DOCK_ICON;
 	aicon->icon->core->descriptor.parent = aicon;
 
@@ -3032,7 +3039,7 @@ Bool dock_attach_icon(WDock *dock, WAppIcon *icon, int x, int y, Bool update_ico
 	icon->dock = dock;
 	icon->icon->core->descriptor.handle_mousedown = dock_icon_mouse_down;
 	icon->icon->core->descriptor.handle_enternotify = dock_enter_notify;
-	icon->icon->core->descriptor.handle_leavenotify = clipLeaveNotify;
+	icon->icon->core->descriptor.handle_leavenotify = dock_leave_notify;
 	icon->icon->core->descriptor.parent_type = WCLASS_DOCK_ICON;
 	icon->icon->core->descriptor.parent = icon;
 
@@ -3144,7 +3151,7 @@ Bool clip_attach_icon(WDock *dock, WAppIcon *icon, int x, int y, Bool update_ico
 	icon->dock = dock;
 	icon->icon->core->descriptor.handle_mousedown = clip_icon_mouse_down;
 	icon->icon->core->descriptor.handle_enternotify = clip_enter_notify;
-	icon->icon->core->descriptor.handle_leavenotify = clipLeaveNotify;
+	icon->icon->core->descriptor.handle_leavenotify = clip_leave_notify;
 	icon->icon->core->descriptor.parent_type = WCLASS_DOCK_ICON;
 	icon->icon->core->descriptor.parent = icon;
 
@@ -3250,7 +3257,7 @@ Bool drawer_attach_icon(WDock *dock, WAppIcon *icon, int x, int y, Bool update_i
 	icon->dock = dock;
 	icon->icon->core->descriptor.handle_mousedown = drawer_icon_mouse_down;
 	icon->icon->core->descriptor.handle_enternotify = drawer_enter_notify;
-	icon->icon->core->descriptor.handle_leavenotify = clipLeaveNotify;
+	icon->icon->core->descriptor.handle_leavenotify = drawer_leave_notify;
 	icon->icon->core->descriptor.parent_type = WCLASS_DOCK_ICON;
 	icon->icon->core->descriptor.parent = icon;
 
@@ -3405,15 +3412,16 @@ Bool wDockMoveIconBetweenDocks(WDock *src, WDock *dest, WAppIcon *icon, int x, i
 	switch (dest->type) {
 	case WM_DOCK:
 		icon->icon->core->descriptor.handle_enternotify = dock_enter_notify;
+		icon->icon->core->descriptor.handle_leavenotify = dock_leave_notify;
 		break;
 	case WM_CLIP:
 		icon->icon->core->descriptor.handle_enternotify = clip_enter_notify;
+		icon->icon->core->descriptor.handle_leavenotify = clip_leave_notify;
 		break;
 	case WM_DRAWER:
 		icon->icon->core->descriptor.handle_enternotify = drawer_enter_notify;
+		icon->icon->core->descriptor.handle_leavenotify = drawer_leave_notify;
 	}
-
-	icon->icon->core->descriptor.handle_leavenotify = clipLeaveNotify;
 
 	/* set it to be kept when moving to dock.
 	 * Unless the icon does not have a command set
@@ -5642,6 +5650,129 @@ static void drawer_enter_notify(WObjDescriptor *desc, XEvent *event)
 		dock->auto_expand_magic = WMAddTimerHandler(wPreferences.clip_auto_expand_delay, clipAutoExpand, (void *)dock);
 }
 
+static void dock_leave(WDock *dock)
+{
+	XEvent event;
+	WObjDescriptor *desc = NULL;
+	WDock *tmp;
+
+	if (dock == NULL)
+		return;
+
+	if (XCheckTypedEvent(dpy, EnterNotify, &event) != False) {
+		if (XFindContext(dpy, event.xcrossing.window, w_global.context.client_win,
+				 (XPointer *) & desc) != XCNOENT
+		    && desc && desc->parent_type == WCLASS_DOCK_ICON
+		    && ((WAppIcon *) desc->parent)->dock == dock) {
+			/* We haven't left the dock/clip/drawer yet */
+			XPutBackEvent(dpy, &event);
+			return;
+		}
+
+		XPutBackEvent(dpy, &event);
+	} else {
+		/* We entered a withdrawn window, so we're still in Clip */
+		return;
+	}
+
+	tmp = dock;
+	if (tmp->auto_raise_magic) {
+		WMDeleteTimerHandler(tmp->auto_raise_magic);
+		tmp->auto_raise_magic = NULL;
+	}
+
+	if (tmp->auto_raise_lower && !tmp->auto_lower_magic)
+		tmp->auto_lower_magic = WMAddTimerHandler(wPreferences.clip_auto_lower_delay, clipAutoLower, (void *)tmp);
+
+	return;
+}
+
+static void clip_leave(WDock *dock)
+{
+	XEvent event;
+	WObjDescriptor *desc = NULL;
+	WDock *tmp;
+
+	if (dock == NULL)
+		return;
+
+	if (XCheckTypedEvent(dpy, EnterNotify, &event) != False) {
+		if (XFindContext(dpy, event.xcrossing.window, w_global.context.client_win,
+				 (XPointer *) & desc) != XCNOENT
+		    && desc && desc->parent_type == WCLASS_DOCK_ICON
+		    && ((WAppIcon *) desc->parent)->dock == dock) {
+			/* We haven't left the dock/clip/drawer yet */
+			XPutBackEvent(dpy, &event);
+			return;
+		}
+
+		XPutBackEvent(dpy, &event);
+	} else {
+		/* We entered a withdrawn window, so we're still in Clip */
+		return;
+	}
+
+	tmp = dock;
+	if (tmp->auto_raise_magic) {
+		WMDeleteTimerHandler(tmp->auto_raise_magic);
+		tmp->auto_raise_magic = NULL;
+	}
+
+	if (tmp->auto_raise_lower && !tmp->auto_lower_magic)
+		tmp->auto_lower_magic = WMAddTimerHandler(wPreferences.clip_auto_lower_delay, clipAutoLower, (void *)tmp);
+
+	if (dock->auto_expand_magic) {
+		WMDeleteTimerHandler(dock->auto_expand_magic);
+		dock->auto_expand_magic = NULL;
+	}
+
+	if (dock->auto_collapse && !dock->auto_collapse_magic)
+		dock->auto_collapse_magic = WMAddTimerHandler(wPreferences.clip_auto_collapse_delay, clipAutoCollapse, (void *)dock);
+}
+
+static void drawer_leave(WDock *dock)
+{
+	XEvent event;
+	WObjDescriptor *desc = NULL;
+	WDock *tmp;
+
+	if (dock == NULL)
+		return;
+
+	if (XCheckTypedEvent(dpy, EnterNotify, &event) != False) {
+		if (XFindContext(dpy, event.xcrossing.window, w_global.context.client_win,
+				 (XPointer *) & desc) != XCNOENT
+		    && desc && desc->parent_type == WCLASS_DOCK_ICON
+		    && ((WAppIcon *) desc->parent)->dock == dock) {
+			/* We haven't left the dock/clip/drawer yet */
+			XPutBackEvent(dpy, &event);
+			return;
+		}
+
+		XPutBackEvent(dpy, &event);
+	} else {
+		/* We entered a withdrawn window, so we're still in Clip */
+		return;
+	}
+
+	tmp = dock->vscr->dock.dock;
+	if (tmp->auto_raise_magic) {
+		WMDeleteTimerHandler(tmp->auto_raise_magic);
+		tmp->auto_raise_magic = NULL;
+	}
+
+	if (tmp->auto_raise_lower && !tmp->auto_lower_magic)
+		tmp->auto_lower_magic = WMAddTimerHandler(wPreferences.clip_auto_lower_delay, clipAutoLower, (void *)tmp);
+
+	if (dock->auto_expand_magic) {
+		WMDeleteTimerHandler(dock->auto_expand_magic);
+		dock->auto_expand_magic = NULL;
+	}
+
+	if (dock->auto_collapse && !dock->auto_collapse_magic)
+		dock->auto_collapse_magic = WMAddTimerHandler(wPreferences.clip_auto_collapse_delay, clipAutoCollapse, (void *)dock);
+}
+
 static void clipLeave(WDock *dock)
 {
 	XEvent event;
@@ -5688,7 +5819,7 @@ static void clipLeave(WDock *dock)
 		dock->auto_collapse_magic = WMAddTimerHandler(wPreferences.clip_auto_collapse_delay, clipAutoCollapse, (void *)dock);
 }
 
-static void clipLeaveNotify(WObjDescriptor *desc, XEvent *event)
+static void dock_leave_notify(WObjDescriptor *desc, XEvent *event)
 {
 	WAppIcon *btn = (WAppIcon *) desc->parent;
 
@@ -5700,7 +5831,37 @@ static void clipLeaveNotify(WObjDescriptor *desc, XEvent *event)
 	if (desc->parent_type != WCLASS_DOCK_ICON)
 		return;
 
-	clipLeave(btn->dock);
+	dock_leave(btn->dock);
+}
+
+static void clip_leave_notify(WObjDescriptor *desc, XEvent *event)
+{
+	WAppIcon *btn = (WAppIcon *) desc->parent;
+
+	/* Parameter not used, but tell the compiler that it is ok */
+	(void) event;
+
+	assert(event->type == LeaveNotify);
+
+	if (desc->parent_type != WCLASS_DOCK_ICON)
+		return;
+
+	clip_leave(btn->dock);
+}
+
+static void drawer_leave_notify(WObjDescriptor *desc, XEvent *event)
+{
+	WAppIcon *btn = (WAppIcon *) desc->parent;
+
+	/* Parameter not used, but tell the compiler that it is ok */
+	(void) event;
+
+	assert(event->type == LeaveNotify);
+
+	if (desc->parent_type != WCLASS_DOCK_ICON)
+		return;
+
+	drawer_leave(btn->dock);
 }
 
 static void clipAutoCollapse(void *cdata)
