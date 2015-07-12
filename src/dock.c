@@ -154,6 +154,7 @@ static void restore_state_lowered(WDock *dock, WMPropList *state);
 static void restore_state_collapsed(WDock *dock, WMPropList *state);
 static void restore_state_autoraise(WDock *dock, WMPropList *state);
 static void dock_set_attacheddocks(virtual_screen *vscr, WDock *dock, WMPropList *state);
+static void clip_set_attacheddocks(virtual_screen *vscr, WDock *dock, WMPropList *state);
 static void dock_unset_attacheddocks(WDock *dock);
 static int restore_state_autocollapsed(WDock *dock, WMPropList *state);
 static int restore_state_autoattracticons(WDock *dock, WMPropList *state);
@@ -1720,7 +1721,7 @@ void clip_map(WDock *dock, virtual_screen *vscr, WMPropList *state)
 	(void) restore_state_autoattracticons(dock, state);
 
 	/* application list */
-	dock_set_attacheddocks(dock->vscr, dock, state);
+	clip_set_attacheddocks(dock->vscr, dock, state);
 
 	WMReleasePropList(state);
 }
@@ -2704,6 +2705,47 @@ static int set_attacheddocks(WDock *dock, WMPropList *apps)
 }
 
 static void dock_set_attacheddocks(virtual_screen *vscr, WDock *dock, WMPropList *state)
+{
+	char screen_id[64];
+	WMPropList *apps;
+	WAppIcon *old_top;
+
+	old_top = dock->icon_array[0];
+
+	snprintf(screen_id, sizeof(screen_id), "%ix%i", vscr->screen_ptr->scr_width, vscr->screen_ptr->scr_height);
+	apps = get_application_list(state, screen_id);
+	if (!apps)
+		return;
+
+	if (set_attacheddocks(dock, apps))
+		return;
+
+	set_attacheddocks_map(vscr, dock);
+
+	/* if the first icon is not defined, use the default */
+	if (dock->icon_array[0] == NULL) {
+		/* update default icon */
+		old_top->x_pos = dock->x_pos;
+		old_top->y_pos = dock->y_pos;
+		if (dock->lowered)
+			ChangeStackingLevel(old_top->icon->core, WMNormalLevel);
+		else
+			ChangeStackingLevel(old_top->icon->core, WMDockLevel);
+
+		dock->icon_array[0] = old_top;
+		XMoveWindow(dpy, old_top->icon->core->window, dock->x_pos, dock->y_pos);
+		/* we don't need to increment dock->icon_count here because it was
+		 * incremented in the loop above.
+		 */
+	} else if (old_top != dock->icon_array[0]) {
+		if (old_top == w_global.clip.icon) /* TODO dande: understand the logic */
+			w_global.clip.icon = dock->icon_array[0];
+
+		wAppIconDestroy(old_top);
+	}
+}
+
+static void clip_set_attacheddocks(virtual_screen *vscr, WDock *dock, WMPropList *state)
 {
 	char screen_id[64];
 	WMPropList *apps;
