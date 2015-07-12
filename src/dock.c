@@ -3090,7 +3090,7 @@ void wDockDetach(WDock *dock, WAppIcon *icon)
  */
 /* Redocking == true means either icon->dock == dock (normal case)
  * or we are called from handleDockMove for a drawer */
-Bool wDockSnapIcon(WDock *dock, WAppIcon *icon, int req_x, int req_y, int *ret_x, int *ret_y, int redocking)
+Bool dock_snap_icon(WDock *dock, WAppIcon *icon, int req_x, int req_y, int *ret_x, int *ret_y, int redocking)
 {
 	virtual_screen *vscr = dock->vscr;
 	int dx, dy;
@@ -3124,201 +3124,284 @@ Bool wDockSnapIcon(WDock *dock, WAppIcon *icon, int req_x, int req_y, int *ret_x
 	if (!onScreen(vscr, dx + ex_x * ICON_SIZE, dy + ex_y * ICON_SIZE))
 		return False;
 
-	switch (dock->type) {
-	case WM_DOCK:
-		/* We can return False right away if
-		 * - we do not come from this dock (which is a WM_DOCK),
-		 * - we are not right over it, and
-		 * - we are not the main tile of a drawer.
-		 * In the latter case, we are called from handleDockMove. */
-		if (icon->dock != dock && ex_x != 0 &&
-			!(icon->dock && icon->dock->type == WM_DRAWER && icon == icon->dock->icon_array[0]))
+	/* We can return False right away if
+	 * - we do not come from this dock (which is a WM_DOCK),
+	 * - we are not right over it, and
+	 * - we are not the main tile of a drawer.
+	 * In the latter case, we are called from handleDockMove. */
+	if (icon->dock != dock && ex_x != 0 &&
+		!(icon->dock && icon->dock->type == WM_DRAWER && icon == icon->dock->icon_array[0]))
+		return False;
+
+	if (!redocking && ex_x != 0)
+		return False;
+
+	if (getDrawer(vscr, ex_y)) /* Return false so that the drawer gets it. */
+		return False;
+
+	aicon = NULL;
+	for (i = 0; i < dock->max_icons; i++) {
+		nicon = dock->icon_array[i];
+		if (nicon && nicon->yindex == ex_y) {
+			aicon = nicon;
+			break;
+		}
+	}
+
+	if (redocking) {
+		int sig, done, closest;
+
+		/* Possible cases when redocking:
+		 *
+		 * icon dragged out of range of any slot -> false
+		 * icon dragged on a drawer -> false (to open the drawer)
+		 * icon dragged to range of free slot
+		 * icon dragged to range of same slot
+		 * icon dragged to range of different icon
+		 */
+		if (abs(ex_x) > DOCK_DETTACH_THRESHOLD)
 			return False;
 
-		if (!redocking && ex_x != 0)
-			return False;
+		if (aicon == icon || !aicon) {
+			*ret_x = 0;
+			*ret_y = ex_y;
+			return True;
+		}
 
-		if (getDrawer(vscr, ex_y)) /* Return false so that the drawer gets it. */
-			return False;
+		/* start looking at the upper slot or lower? */
+		if (ex_y * ICON_SIZE < (req_y + offset - dy))
+			sig = 1;
+		else
+			sig = -1;
 
-		aicon = NULL;
-		for (i = 0; i < dock->max_icons; i++) {
-			nicon = dock->icon_array[i];
-			if (nicon && nicon->yindex == ex_y) {
+		done = 0;
+		/* look for closest free slot */
+		for (i = 0; i < (DOCK_DETTACH_THRESHOLD + 1) * 2 && !done; i++) {
+			int j;
+
+			done = 1;
+			closest = sig * (i / 2) + ex_y;
+			/* check if this slot is fully on the screen and not used */
+			if (onScreen(vscr, dx, dy + closest * ICON_SIZE)) {
+				for (j = 0; j < dock->max_icons; j++) {
+					if (dock->icon_array[j]
+						&& dock->icon_array[j]->yindex == closest) {
+						/* slot is used by someone else */
+						if (dock->icon_array[j] != icon)
+							done = 0;
+						break;
+					}
+				}
+				/* slot is used by a drawer */
+				done = done && !getDrawer(vscr, closest);
+			} else {
+				/* !onScreen */
+				done = 0;
+			}
+
+			sig = -sig;
+		}
+
+		if (done &&
+		    ((ex_y >= closest && ex_y - closest < DOCK_DETTACH_THRESHOLD + 1) ||
+		     (ex_y < closest && closest - ex_y <= DOCK_DETTACH_THRESHOLD + 1))) {
+			*ret_x = 0;
+			*ret_y = closest;
+			return True;
+		}
+	} else {	/* !redocking */
+		/* if slot is free and the icon is close enough, return it */
+		if (!aicon && ex_x == 0) {
+			*ret_x = 0;
+			*ret_y = ex_y;
+			return True;
+		}
+	}
+
+	return False;
+}
+
+Bool clip_snap_icon(WDock *dock, WAppIcon *icon, int req_x, int req_y, int *ret_x, int *ret_y, int redocking)
+{
+	virtual_screen *vscr = dock->vscr;
+	int dx, dy;
+	int ex_x, ex_y;
+	int i, offset = ICON_SIZE / 2;
+	WAppIcon *aicon = NULL;
+	WAppIcon *nicon = NULL;
+
+	if (wPreferences.flags.noupdates)
+		return False;
+
+	dx = dock->x_pos;
+	dy = dock->y_pos;
+
+	/* if the dock is full */
+	if (!redocking && (dock->icon_count >= dock->max_icons))
+		return False;
+
+	/* exact position */
+	if (req_y < dy)
+		ex_y = (req_y - offset - dy) / ICON_SIZE;
+	else
+		ex_y = (req_y + offset - dy) / ICON_SIZE;
+
+	if (req_x < dx)
+		ex_x = (req_x - offset - dx) / ICON_SIZE;
+	else
+		ex_x = (req_x + offset - dx) / ICON_SIZE;
+
+	/* check if the icon is outside the screen boundaries */
+	if (!onScreen(vscr, dx + ex_x * ICON_SIZE, dy + ex_y * ICON_SIZE))
+		return False;
+
+	int start, stop, k, neighbours = 0;
+
+	start = icon->omnipresent ? 0 : vscr->workspace.current;
+	stop = icon->omnipresent ? vscr->workspace.count : start + 1;
+
+	aicon = NULL;
+	for (k = start; k < stop; k++) {
+		WDock *tmp = vscr->workspace.array[k]->clip;
+		if (!tmp)
+			continue;
+
+		for (i = 0; i < tmp->max_icons; i++) {
+			nicon = tmp->icon_array[i];
+			if (nicon && nicon->xindex == ex_x && nicon->yindex == ex_y) {
 				aicon = nicon;
 				break;
 			}
 		}
 
-		if (redocking) {
-			int sig, done, closest;
-
-			/* Possible cases when redocking:
-			 *
-			 * icon dragged out of range of any slot -> false
-			 * icon dragged on a drawer -> false (to open the drawer)
-			 * icon dragged to range of free slot
-			 * icon dragged to range of same slot
-			 * icon dragged to range of different icon
-			 */
-			if (abs(ex_x) > DOCK_DETTACH_THRESHOLD)
-				return False;
-
-			if (aicon == icon || !aicon) {
-				*ret_x = 0;
-				*ret_y = ex_y;
-				return True;
-			}
-
-			/* start looking at the upper slot or lower? */
-			if (ex_y * ICON_SIZE < (req_y + offset - dy))
-				sig = 1;
-			else
-				sig = -1;
-
-			done = 0;
-			/* look for closest free slot */
-			for (i = 0; i < (DOCK_DETTACH_THRESHOLD + 1) * 2 && !done; i++) {
-				int j;
-
-				done = 1;
-				closest = sig * (i / 2) + ex_y;
-				/* check if this slot is fully on the screen and not used */
-				if (onScreen(vscr, dx, dy + closest * ICON_SIZE)) {
-					for (j = 0; j < dock->max_icons; j++) {
-						if (dock->icon_array[j]
-							&& dock->icon_array[j]->yindex == closest) {
-							/* slot is used by someone else */
-							if (dock->icon_array[j] != icon)
-								done = 0;
-							break;
-						}
-					}
-					/* slot is used by a drawer */
-					done = done && !getDrawer(vscr, closest);
-				} else {
-					/* !onScreen */
-					done = 0;
-				}
-
-				sig = -sig;
-			}
-
-			if (done &&
-				((ex_y >= closest && ex_y - closest < DOCK_DETTACH_THRESHOLD + 1)
-					|| (ex_y < closest && closest - ex_y <= DOCK_DETTACH_THRESHOLD + 1))) {
-				*ret_x = 0;
-				*ret_y = closest;
-				return True;
-			}
-		} else {	/* !redocking */
-
-			/* if slot is free and the icon is close enough, return it */
-			if (!aicon && ex_x == 0) {
-				*ret_x = 0;
-				*ret_y = ex_y;
-				return True;
-			}
-		}
-		break;
-	case WM_CLIP:
-	{
-		int start, stop, k, neighbours = 0;
-
-		start = icon->omnipresent ? 0 : vscr->workspace.current;
-		stop = icon->omnipresent ? vscr->workspace.count : start + 1;
-
-		aicon = NULL;
-		for (k = start; k < stop; k++) {
-			WDock *tmp = vscr->workspace.array[k]->clip;
-			if (!tmp)
-				continue;
-
-			for (i = 0; i < tmp->max_icons; i++) {
-				nicon = tmp->icon_array[i];
-				if (nicon && nicon->xindex == ex_x && nicon->yindex == ex_y) {
-					aicon = nicon;
-					break;
-				}
-			}
-
-			if (aicon)
-				break;
-		}
-
-		for (k = start; k < stop; k++) {
-			WDock *tmp = vscr->workspace.array[k]->clip;
-			if (!tmp)
-				continue;
-
-			for (i = 0; i < tmp->max_icons; i++) {
-				nicon = tmp->icon_array[i];
-				if (nicon && nicon != icon &&	/* Icon can't be it's own neighbour */
-				    (abs(nicon->xindex - ex_x) <= CLIP_ATTACH_VICINITY &&
-				     abs(nicon->yindex - ex_y) <= CLIP_ATTACH_VICINITY)) {
-					neighbours = 1;
-					break;
-				}
-			}
-
-			if (neighbours)
-				break;
-		}
-
-		if (neighbours && (aicon == NULL || (redocking && aicon == icon))) {
-			*ret_x = ex_x;
-			*ret_y = ex_y;
-			return True;
-		}
-
-		break;
+		if (aicon)
+			break;
 	}
-	case WM_DRAWER:
-	{
-		WAppIcon *aicons_to_shift[ dock->icon_count ];
-		int index_of_hole, j;
 
-		if (ex_y != 0 ||
-			abs(ex_x) - dock->icon_count > DOCK_DETTACH_THRESHOLD ||
-			(ex_x < 0 && !dock->on_right_side) ||
-			(ex_x > 0 &&  dock->on_right_side)) {
-			return False;
+	for (k = start; k < stop; k++) {
+		WDock *tmp = vscr->workspace.array[k]->clip;
+		if (!tmp)
+			continue;
+
+		for (i = 0; i < tmp->max_icons; i++) {
+			nicon = tmp->icon_array[i];
+			if (nicon && nicon != icon &&	/* Icon can't be it's own neighbour */
+			    (abs(nicon->xindex - ex_x) <= CLIP_ATTACH_VICINITY &&
+			     abs(nicon->yindex - ex_y) <= CLIP_ATTACH_VICINITY)) {
+				neighbours = 1;
+				break;
+			}
 		}
 
-		if (ex_x == 0)
-			ex_x = (dock->on_right_side ? -1 : 1);
+		if (neighbours)
+			break;
+	}
 
-		/* "Reduce" ex_x but keep its sign */
-		if (redocking) {
-			if (abs(ex_x) > dock->icon_count - 1) /* minus 1: do not take icon_array[0] into account */
-				ex_x = ex_x * (dock->icon_count - 1) / abs(ex_x); /* don't use *= ! */
-		} else {
-			if (abs(ex_x) > dock->icon_count)
-				ex_x = ex_x * dock->icon_count / abs(ex_x);
-		}
-
-		index_of_hole = indexOfHole(dock, icon, redocking);
-
-		/* Find the appicons between where icon was (index_of_hole) and where
-		 * it wants to be (ex_x) and slide them. */
-		j = 0;
-		for (i = 1; i < dock->max_icons; i++) {
-			aicon = dock->icon_array[i];
-			if ((aicon != NULL) && aicon != icon &&
-				((ex_x <= aicon->xindex && aicon->xindex < index_of_hole) ||
-					(index_of_hole < aicon->xindex && aicon->xindex <= ex_x)))
-				aicons_to_shift[ j++ ] = aicon;
-		}
-
-		assert(j == abs(ex_x - index_of_hole));
-
-		wSlideAppicons(aicons_to_shift, j, (index_of_hole < ex_x));
-
+	if (neighbours && (aicon == NULL || (redocking && aicon == icon))) {
 		*ret_x = ex_x;
 		*ret_y = ex_y;
 		return True;
 	}
+
+	return False;
+}
+
+Bool drawer_snap_icon(WDock *dock, WAppIcon *icon, int req_x, int req_y, int *ret_x, int *ret_y, int redocking)
+{
+	virtual_screen *vscr = dock->vscr;
+	int dx, dy;
+	int ex_x, ex_y;
+	int i, offset = ICON_SIZE / 2;
+	WAppIcon *aicon = NULL;
+
+	if (wPreferences.flags.noupdates)
+		return False;
+
+	dx = dock->x_pos;
+	dy = dock->y_pos;
+
+	/* if the dock is full */
+	if (!redocking && (dock->icon_count >= dock->max_icons))
+		return False;
+
+	/* exact position */
+	if (req_y < dy)
+		ex_y = (req_y - offset - dy) / ICON_SIZE;
+	else
+		ex_y = (req_y + offset - dy) / ICON_SIZE;
+
+	if (req_x < dx)
+		ex_x = (req_x - offset - dx) / ICON_SIZE;
+	else
+		ex_x = (req_x + offset - dx) / ICON_SIZE;
+
+	/* check if the icon is outside the screen boundaries */
+	if (!onScreen(vscr, dx + ex_x * ICON_SIZE, dy + ex_y * ICON_SIZE))
+		return False;
+
+	WAppIcon *aicons_to_shift[ dock->icon_count ];
+	int index_of_hole, j;
+
+	if (ex_y != 0 ||
+		abs(ex_x) - dock->icon_count > DOCK_DETTACH_THRESHOLD ||
+		(ex_x < 0 && !dock->on_right_side) ||
+		(ex_x > 0 &&  dock->on_right_side)) {
+		return False;
 	}
+
+	if (ex_x == 0)
+		ex_x = (dock->on_right_side ? -1 : 1);
+
+	/* "Reduce" ex_x but keep its sign */
+	if (redocking) {
+		if (abs(ex_x) > dock->icon_count - 1) /* minus 1: do not take icon_array[0] into account */
+			ex_x = ex_x * (dock->icon_count - 1) / abs(ex_x); /* don't use *= ! */
+	} else {
+		if (abs(ex_x) > dock->icon_count)
+			ex_x = ex_x * dock->icon_count / abs(ex_x);
+	}
+
+	index_of_hole = indexOfHole(dock, icon, redocking);
+
+	/* Find the appicons between where icon was (index_of_hole) and where
+	 * it wants to be (ex_x) and slide them. */
+	j = 0;
+	for (i = 1; i < dock->max_icons; i++) {
+		aicon = dock->icon_array[i];
+		if ((aicon != NULL) && aicon != icon &&
+			((ex_x <= aicon->xindex && aicon->xindex < index_of_hole) ||
+				(index_of_hole < aicon->xindex && aicon->xindex <= ex_x)))
+			aicons_to_shift[j++] = aicon;
+	}
+
+	assert(j == abs(ex_x - index_of_hole));
+
+	wSlideAppicons(aicons_to_shift, j, (index_of_hole < ex_x));
+
+	*ret_x = ex_x;
+	*ret_y = ex_y;
+
+	return True;
+}
+
+Bool wDockSnapIcon(WDock *dock, WAppIcon *icon, int req_x, int req_y,
+		   int *ret_x, int *ret_y, int redocking)
+{
+	switch (dock->type) {
+	case WM_DOCK:
+		return dock_snap_icon(dock, icon, req_x, req_y, ret_x,
+				      ret_y, redocking);
+		break;
+	case WM_CLIP:
+		return clip_snap_icon(dock, icon, req_x, req_y, ret_x,
+				       ret_y, redocking);
+		break;
+	case WM_DRAWER:
+		return drawer_snap_icon(dock, icon, req_x, req_y, ret_x,
+					ret_y, redocking);
+	}
+
+	/* Avoid compiler warning, and defalt */
 	return False;
 }
 
