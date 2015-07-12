@@ -5265,11 +5265,8 @@ static void dock_icon_mouse_down(WObjDescriptor *desc, XEvent *event)
 
 	if (IsDoubleClick(vscr, event)) {
 		/* double-click was not in the main clip icon */
-		if (dock->type != WM_CLIP || aicon->xindex != 0 || aicon->yindex != 0
-		    || getClipButton(event->xbutton.x, event->xbutton.y) == CLIP_IDLE) {
-			iconDblClick(desc, event);
-			return;
-		}
+		iconDblClick(desc, event);
+		return;
 	}
 
 	switch (event->xbutton.button) {
@@ -5286,7 +5283,7 @@ static void dock_icon_mouse_down(WObjDescriptor *desc, XEvent *event)
 
 		if (aicon->yindex == 0 && aicon->xindex == 0) {
 			if (getClipButton(event->xbutton.x, event->xbutton.y) != CLIP_IDLE &&
-				(dock->type == WM_CLIP || (dock->type == WM_DOCK && wPreferences.flags.clip_merged_in_dock)))
+			    wPreferences.flags.clip_merged_in_dock)
 				handleClipChangeWorkspace(vscr, event);
 			else
 				handleDockMove(dock, aicon, event);
@@ -5319,8 +5316,6 @@ static void dock_icon_mouse_down(WObjDescriptor *desc, XEvent *event)
 				event->xany.send_event = True;
 				(*desc->handle_mousedown) (desc, event);
 			}
-		} else if (dock->type == WM_CLIP && (event->xbutton.state & ShiftMask)) {
-			wClipMakeIconOmnipresent(aicon, !aicon->omnipresent);
 		} else {
 			WAppIcon *btn = desc->parent;
 
@@ -5347,30 +5342,15 @@ static void dock_icon_mouse_down(WObjDescriptor *desc, XEvent *event)
 		 * "DA: Dock menu always unmapped (warning)"
 		 * This error only happends here, not in rootmenu, appicon, etc.
 		 */
-		switch (dock->type) {
-		case WM_DOCK:
-			dock_menu_map(dock->menu, vscr);
-			open_menu_dock(dock, aicon, event);
-			dock_menu_unmap(vscr, dock->menu);
-			break;
-		case WM_CLIP:
-			clip_menu_map(dock->menu, vscr);
-			open_menu_clip(dock, aicon, event);
-			clip_menu_unmap(vscr, dock->menu);
-			break;
-		case WM_DRAWER:
-			drawer_menu_map(dock->menu, vscr);
-			open_menu_drawer(dock, aicon, event);
-			drawer_menu_unmap(vscr, dock->menu);
-		}
+		dock_menu_map(dock->menu, vscr);
+		open_menu_dock(dock, aicon, event);
+		dock_menu_unmap(vscr, dock->menu);
+
 		break;
 	case Button4:
-		if (dock->type == WM_CLIP)
-			wWorkspaceRelativeChange(vscr, 1);
 		break;
 	case Button5:
-		if (dock->type == WM_CLIP)
-			wWorkspaceRelativeChange(vscr, -1);
+		break;
 	}
 }
 
@@ -5411,8 +5391,7 @@ static void clip_icon_mouse_down(WObjDescriptor *desc, XEvent *event)
 		}
 
 		if (aicon->yindex == 0 && aicon->xindex == 0) {
-			if (getClipButton(event->xbutton.x, event->xbutton.y) != CLIP_IDLE &&
-				(dock->type == WM_CLIP || (dock->type == WM_DOCK && wPreferences.flags.clip_merged_in_dock)))
+			if (getClipButton(event->xbutton.x, event->xbutton.y) != CLIP_IDLE)
 				handleClipChangeWorkspace(vscr, event);
 			else
 				handleDockMove(dock, aicon, event);
@@ -5445,7 +5424,7 @@ static void clip_icon_mouse_down(WObjDescriptor *desc, XEvent *event)
 				event->xany.send_event = True;
 				(*desc->handle_mousedown) (desc, event);
 			}
-		} else if (dock->type == WM_CLIP && (event->xbutton.state & ShiftMask)) {
+		} else if (event->xbutton.state & ShiftMask) {
 			wClipMakeIconOmnipresent(aicon, !aicon->omnipresent);
 		} else {
 			WAppIcon *btn = desc->parent;
@@ -5473,30 +5452,16 @@ static void clip_icon_mouse_down(WObjDescriptor *desc, XEvent *event)
 		 * "DA: Dock menu always unmapped (warning)"
 		 * This error only happends here, not in rootmenu, appicon, etc.
 		 */
-		switch (dock->type) {
-		case WM_DOCK:
-			dock_menu_map(dock->menu, vscr);
-			open_menu_dock(dock, aicon, event);
-			dock_menu_unmap(vscr, dock->menu);
-			break;
-		case WM_CLIP:
-			clip_menu_map(dock->menu, vscr);
-			open_menu_clip(dock, aicon, event);
-			clip_menu_unmap(vscr, dock->menu);
-			break;
-		case WM_DRAWER:
-			drawer_menu_map(dock->menu, vscr);
-			open_menu_drawer(dock, aicon, event);
-			drawer_menu_unmap(vscr, dock->menu);
-		}
+		clip_menu_map(dock->menu, vscr);
+		open_menu_clip(dock, aicon, event);
+		clip_menu_unmap(vscr, dock->menu);
+
 		break;
 	case Button4:
-		if (dock->type == WM_CLIP)
-			wWorkspaceRelativeChange(vscr, 1);
+		wWorkspaceRelativeChange(vscr, 1);
 		break;
 	case Button5:
-		if (dock->type == WM_CLIP)
-			wWorkspaceRelativeChange(vscr, -1);
+		wWorkspaceRelativeChange(vscr, -1);
 	}
 }
 
@@ -5517,11 +5482,8 @@ static void drawer_icon_mouse_down(WObjDescriptor *desc, XEvent *event)
 
 	if (IsDoubleClick(vscr, event)) {
 		/* double-click was not in the main clip icon */
-		if (dock->type != WM_CLIP || aicon->xindex != 0 || aicon->yindex != 0
-		    || getClipButton(event->xbutton.x, event->xbutton.y) == CLIP_IDLE) {
-			iconDblClick(desc, event);
-			return;
-		}
+		iconDblClick(desc, event);
+		return;
 	}
 
 	switch (event->xbutton.button) {
@@ -5537,11 +5499,7 @@ static void drawer_icon_mouse_down(WObjDescriptor *desc, XEvent *event)
 		}
 
 		if (aicon->yindex == 0 && aicon->xindex == 0) {
-			if (getClipButton(event->xbutton.x, event->xbutton.y) != CLIP_IDLE &&
-				(dock->type == WM_CLIP || (dock->type == WM_DOCK && wPreferences.flags.clip_merged_in_dock)))
-				handleClipChangeWorkspace(vscr, event);
-			else
-				handleDockMove(dock, aicon, event);
+			handleDockMove(dock, aicon, event);
 		} else {
 			Bool hasMoved = wHandleAppIconMove(aicon, event);
 			if (wPreferences.single_click && !hasMoved)
@@ -5571,8 +5529,6 @@ static void drawer_icon_mouse_down(WObjDescriptor *desc, XEvent *event)
 				event->xany.send_event = True;
 				(*desc->handle_mousedown) (desc, event);
 			}
-		} else if (dock->type == WM_CLIP && (event->xbutton.state & ShiftMask)) {
-			wClipMakeIconOmnipresent(aicon, !aicon->omnipresent);
 		} else {
 			WAppIcon *btn = desc->parent;
 
@@ -5599,30 +5555,15 @@ static void drawer_icon_mouse_down(WObjDescriptor *desc, XEvent *event)
 		 * "DA: Dock menu always unmapped (warning)"
 		 * This error only happends here, not in rootmenu, appicon, etc.
 		 */
-		switch (dock->type) {
-		case WM_DOCK:
-			dock_menu_map(dock->menu, vscr);
-			open_menu_dock(dock, aicon, event);
-			dock_menu_unmap(vscr, dock->menu);
-			break;
-		case WM_CLIP:
-			clip_menu_map(dock->menu, vscr);
-			open_menu_clip(dock, aicon, event);
-			clip_menu_unmap(vscr, dock->menu);
-			break;
-		case WM_DRAWER:
-			drawer_menu_map(dock->menu, vscr);
-			open_menu_drawer(dock, aicon, event);
-			drawer_menu_unmap(vscr, dock->menu);
-		}
+		drawer_menu_map(dock->menu, vscr);
+		open_menu_drawer(dock, aicon, event);
+		drawer_menu_unmap(vscr, dock->menu);
+
 		break;
 	case Button4:
-		if (dock->type == WM_CLIP)
-			wWorkspaceRelativeChange(vscr, 1);
 		break;
 	case Button5:
-		if (dock->type == WM_CLIP)
-			wWorkspaceRelativeChange(vscr, -1);
+		break;
 	}
 }
 
