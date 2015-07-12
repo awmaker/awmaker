@@ -2107,7 +2107,7 @@ static Bool getBooleanDockValue(WMPropList *value, WMPropList *key)
 	return False;
 }
 
-static WAppIcon *restore_icon_state(WMPropList *info, int type, int index)
+static WAppIcon *restore_dock_icon_state(WMPropList *info, int index)
 {
 	WAppIcon *aicon;
 	WMPropList *cmd, *value;
@@ -2153,7 +2153,7 @@ static WAppIcon *restore_icon_state(WMPropList *info, int type, int index)
 	wfree(command);
 
 	aicon->icon->core->descriptor.handle_expose = dockIconExpose;
-	aicon->icon->core->descriptor.handle_mousedown = iconMouseDown;
+	aicon->icon->core->descriptor.handle_mousedown = dock_icon_mouse_down;
 	aicon->icon->core->descriptor.handle_enternotify = clipEnterNotify;
 	aicon->icon->core->descriptor.handle_leavenotify = clipLeaveNotify;
 	aicon->icon->core->descriptor.parent_type = WCLASS_DOCK_ICON;
@@ -2197,9 +2197,7 @@ static WAppIcon *restore_icon_state(WMPropList *info, int type, int index)
 
 		/* check position sanity */
 		/* *Very* incomplete section! */
-		if (type == WM_DOCK) {
-			aicon->xindex = 0;
-		}
+		aicon->xindex = 0;
 	} else {
 		aicon->yindex = index;
 		aicon->xindex = 0;
@@ -2214,6 +2212,229 @@ static WAppIcon *restore_icon_state(WMPropList *info, int type, int index)
 	aicon->docked = 1;
 
 	return aicon;
+}
+
+static WAppIcon *restore_clip_icon_state(WMPropList *info, int index)
+{
+	WAppIcon *aicon;
+	WMPropList *cmd, *value;
+	char *wclass, *winstance, *command;
+
+	cmd = WMGetFromPLDictionary(info, dCommand);
+	if (!cmd || !WMIsPLString(cmd))
+		return NULL;
+
+	/* parse window name */
+	value = WMGetFromPLDictionary(info, dName);
+	if (!value)
+		return NULL;
+
+	ParseWindowName(value, &winstance, &wclass, "dock");
+
+	if (!winstance && !wclass)
+		return NULL;
+
+	/* get commands */
+	command = wstrdup(WMGetFromPLString(cmd));
+	if (strcmp(command, "-") == 0) {
+		wfree(command);
+
+		if (wclass)
+			wfree(wclass);
+
+		if (winstance)
+			wfree(winstance);
+
+		return NULL;
+	}
+
+	/* Create appicon's icon */
+	aicon = create_appicon(command, wclass, winstance);
+
+	if (wclass)
+		wfree(wclass);
+
+	if (winstance)
+		wfree(winstance);
+
+	wfree(command);
+
+	aicon->icon->core->descriptor.handle_expose = dockIconExpose;
+	aicon->icon->core->descriptor.handle_mousedown = clip_icon_mouse_down;
+	aicon->icon->core->descriptor.handle_enternotify = clipEnterNotify;
+	aicon->icon->core->descriptor.handle_leavenotify = clipLeaveNotify;
+	aicon->icon->core->descriptor.parent_type = WCLASS_DOCK_ICON;
+	aicon->icon->core->descriptor.parent = aicon;
+
+#ifdef XDND			/* was OFFIX */
+	cmd = WMGetFromPLDictionary(info, dDropCommand);
+	if (cmd)
+		aicon->dnd_command = wstrdup(WMGetFromPLString(cmd));
+#endif
+
+	cmd = WMGetFromPLDictionary(info, dPasteCommand);
+	if (cmd)
+		aicon->paste_command = wstrdup(WMGetFromPLString(cmd));
+
+	/* check auto launch */
+	value = WMGetFromPLDictionary(info, dAutoLaunch);
+
+	aicon->auto_launch = getBooleanDockValue(value, dAutoLaunch);
+
+	/* check lock */
+	value = WMGetFromPLDictionary(info, dLock);
+
+	aicon->lock = getBooleanDockValue(value, dLock);
+
+	/* check if it wasn't normally docked */
+	value = WMGetFromPLDictionary(info, dForced);
+
+	aicon->forced_dock = getBooleanDockValue(value, dForced);
+
+	/* check if we can rely on the stuff in the app */
+	value = WMGetFromPLDictionary(info, dBuggyApplication);
+
+	aicon->buggy_app = getBooleanDockValue(value, dBuggyApplication);
+
+	/* get position in the dock */
+	value = WMGetFromPLDictionary(info, dPosition);
+	if (value && WMIsPLString(value)) {
+		if (sscanf(WMGetFromPLString(value), "%hi,%hi", &aicon->xindex, &aicon->yindex) != 2)
+			wwarning(_("bad value in docked icon state info %s"), WMGetFromPLString(dPosition));
+	} else {
+		aicon->yindex = index;
+		aicon->xindex = 0;
+	}
+
+	/* check if icon is omnipresent */
+	value = WMGetFromPLDictionary(info, dOmnipresent);
+
+	aicon->omnipresent = getBooleanDockValue(value, dOmnipresent);
+
+	aicon->running = 0;
+	aicon->docked = 1;
+
+	return aicon;
+}
+
+static WAppIcon *restore_drawer_icon_state(WMPropList *info, int index)
+{
+	WAppIcon *aicon;
+	WMPropList *cmd, *value;
+	char *wclass, *winstance, *command;
+
+	cmd = WMGetFromPLDictionary(info, dCommand);
+	if (!cmd || !WMIsPLString(cmd))
+		return NULL;
+
+	/* parse window name */
+	value = WMGetFromPLDictionary(info, dName);
+	if (!value)
+		return NULL;
+
+	ParseWindowName(value, &winstance, &wclass, "dock");
+
+	if (!winstance && !wclass)
+		return NULL;
+
+	/* get commands */
+	command = wstrdup(WMGetFromPLString(cmd));
+	if (strcmp(command, "-") == 0) {
+		wfree(command);
+
+		if (wclass)
+			wfree(wclass);
+
+		if (winstance)
+			wfree(winstance);
+
+		return NULL;
+	}
+
+	/* Create appicon's icon */
+	aicon = create_appicon(command, wclass, winstance);
+
+	if (wclass)
+		wfree(wclass);
+
+	if (winstance)
+		wfree(winstance);
+
+	wfree(command);
+
+	aicon->icon->core->descriptor.handle_expose = dockIconExpose;
+	aicon->icon->core->descriptor.handle_mousedown = drawer_icon_mouse_down;
+	aicon->icon->core->descriptor.handle_enternotify = clipEnterNotify;
+	aicon->icon->core->descriptor.handle_leavenotify = clipLeaveNotify;
+	aicon->icon->core->descriptor.parent_type = WCLASS_DOCK_ICON;
+	aicon->icon->core->descriptor.parent = aicon;
+
+#ifdef XDND			/* was OFFIX */
+	cmd = WMGetFromPLDictionary(info, dDropCommand);
+	if (cmd)
+		aicon->dnd_command = wstrdup(WMGetFromPLString(cmd));
+#endif
+
+	cmd = WMGetFromPLDictionary(info, dPasteCommand);
+	if (cmd)
+		aicon->paste_command = wstrdup(WMGetFromPLString(cmd));
+
+	/* check auto launch */
+	value = WMGetFromPLDictionary(info, dAutoLaunch);
+
+	aicon->auto_launch = getBooleanDockValue(value, dAutoLaunch);
+
+	/* check lock */
+	value = WMGetFromPLDictionary(info, dLock);
+
+	aicon->lock = getBooleanDockValue(value, dLock);
+
+	/* check if it wasn't normally docked */
+	value = WMGetFromPLDictionary(info, dForced);
+
+	aicon->forced_dock = getBooleanDockValue(value, dForced);
+
+	/* check if we can rely on the stuff in the app */
+	value = WMGetFromPLDictionary(info, dBuggyApplication);
+
+	aicon->buggy_app = getBooleanDockValue(value, dBuggyApplication);
+
+	/* get position in the dock */
+	value = WMGetFromPLDictionary(info, dPosition);
+	if (value && WMIsPLString(value)) {
+		if (sscanf(WMGetFromPLString(value), "%hi,%hi", &aicon->xindex, &aicon->yindex) != 2)
+			wwarning(_("bad value in docked icon state info %s"), WMGetFromPLString(dPosition));
+	} else {
+		aicon->yindex = index;
+		aicon->xindex = 0;
+	}
+
+	/* check if icon is omnipresent */
+	value = WMGetFromPLDictionary(info, dOmnipresent);
+
+	aicon->omnipresent = getBooleanDockValue(value, dOmnipresent);
+
+	aicon->running = 0;
+	aicon->docked = 1;
+
+	return aicon;
+}
+
+static WAppIcon *restore_icon_state(WMPropList *info, int type, int index)
+{
+	switch (type) {
+	case WM_DOCK:
+		return restore_dock_icon_state(info, index);
+		break;
+	case WM_CLIP:
+		return restore_clip_icon_state(info, index);
+		break;
+	case WM_DRAWER:
+		return restore_drawer_icon_state(info, index);
+	}
+
+	/* Avoid compiler warning */
+	return NULL;
 }
 
 #define COMPLAIN(key) wwarning(_("bad value in dock/drawer state info:%s"), key)
