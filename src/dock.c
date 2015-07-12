@@ -3416,31 +3416,52 @@ Bool wDockMoveIconBetweenDocks(WDock *src, WDock *dest, WAppIcon *icon, int x, i
 	case WM_DOCK:
 		icon->icon->core->descriptor.handle_enternotify = dock_enter_notify;
 		icon->icon->core->descriptor.handle_leavenotify = dock_leave_notify;
+
+		/* set it to be kept when moving to dock.
+		 * Unless the icon does not have a command set
+		 */
+		if (icon->command) {
+			icon->attracted = 0;
+			if (icon->icon->shadowed) {
+				icon->icon->shadowed = 0;
+				update_icon = True;
+			}
+
+			save_appicon(icon, True);
+		}
+
+		if (src->auto_collapse || src->auto_raise_lower)
+			dock_leave(src);
+
 		break;
 	case WM_CLIP:
 		icon->icon->core->descriptor.handle_enternotify = clip_enter_notify;
 		icon->icon->core->descriptor.handle_leavenotify = clip_leave_notify;
+
+		if (src->auto_collapse || src->auto_raise_lower)
+			clip_leave(src);
+
 		break;
 	case WM_DRAWER:
 		icon->icon->core->descriptor.handle_enternotify = drawer_enter_notify;
 		icon->icon->core->descriptor.handle_leavenotify = drawer_leave_notify;
-	}
 
-	/* set it to be kept when moving to dock.
-	 * Unless the icon does not have a command set
-	 */
-	if (icon->command && (dest->type == WM_DOCK || dest->type == WM_DRAWER)) {
-		icon->attracted = 0;
-		if (icon->icon->shadowed) {
-			icon->icon->shadowed = 0;
-			update_icon = True;
+		/* set it to be kept when moving to dock.
+		 * Unless the icon does not have a command set
+		 */
+		if (icon->command) {
+			icon->attracted = 0;
+			if (icon->icon->shadowed) {
+				icon->icon->shadowed = 0;
+				update_icon = True;
+			}
+
+			save_appicon(icon, True);
 		}
 
-		save_appicon(icon, True);
+		if (src->auto_collapse || src->auto_raise_lower)
+			drawer_leave(src);
 	}
-
-	if (src->auto_collapse || src->auto_raise_lower)
-		clipLeave(src);
 
 	icon->yindex = y;
 	icon->xindex = x;
