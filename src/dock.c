@@ -2963,7 +2963,7 @@ int wDockReceiveDNDDrop(virtual_screen *vscr, XEvent *event)
 }
 #endif				/* XDND */
 
-Bool wDockAttachIcon(WDock *dock, WAppIcon *icon, int x, int y, Bool update_icon)
+Bool dock_attach_icon(WDock *dock, WAppIcon *icon, int x, int y, Bool update_icon)
 {
 	WWindow *wwin;
 	Bool lupdate_icon = False;
@@ -2985,36 +2985,24 @@ Bool wDockAttachIcon(WDock *dock, WAppIcon *icon, int x, int y, Bool update_icon
 		if (command) {
 			icon->command = command;
 		} else {
-			/* icon->forced_dock = 1; */
-			if (dock->type != WM_CLIP || !icon->attracted) {
-				icon->editing = 1;
-				if (wInputDialog(dock->vscr, _("Dock Icon"),
-						 _("Type the command used to launch the application"), &command)) {
+			icon->editing = 1;
+			if (wInputDialog(dock->vscr, _("Dock Icon"),
+					 _("Type the command used to launch the application"), &command)) {
 
-					if (command && (command[0] == 0 || (command[0] == '-' && command[1] == 0))) {
-						wfree(command);
-						command = NULL;
-					}
-
-					icon->command = command;
-					icon->editing = 0;
-				} else {
-					icon->editing = 0;
-					if (command)
-						wfree(command);
-					/* If the target is the dock, reject the icon. If
-					 * the target is the clip, make it an attracted icon
-					 */
-					if (dock->type == WM_CLIP) {
-						icon->attracted = 1;
-						if (!icon->icon->shadowed) {
-							icon->icon->shadowed = 1;
-							lupdate_icon = True;
-						}
-					} else {
-						return False;
-					}
+				if (command && (command[0] == 0 || (command[0] == '-' && command[1] == 0))) {
+					wfree(command);
+					command = NULL;
 				}
+
+				icon->command = command;
+				icon->editing = 0;
+			} else {
+				icon->editing = 0;
+				if (command)
+					wfree(command);
+
+				/* If the target is the dock, reject the icon. */
+				return False;
 			}
 		}
 	}
@@ -3040,7 +3028,7 @@ Bool wDockAttachIcon(WDock *dock, WAppIcon *icon, int x, int y, Bool update_icon
 	icon->launching = 0;
 	icon->docked = 1;
 	icon->dock = dock;
-	icon->icon->core->descriptor.handle_mousedown = iconMouseDown;
+	icon->icon->core->descriptor.handle_mousedown = dock_icon_mouse_down;
 	icon->icon->core->descriptor.handle_enternotify = clipEnterNotify;
 	icon->icon->core->descriptor.handle_leavenotify = clipLeaveNotify;
 	icon->icon->core->descriptor.parent_type = WCLASS_DOCK_ICON;
@@ -3079,6 +3067,241 @@ Bool wDockAttachIcon(WDock *dock, WAppIcon *icon, int x, int y, Bool update_icon
 		snprintf(icon->paste_command, len, "%s %%s", icon->command);
 	}
 
+	return True;
+}
+
+Bool clip_attach_icon(WDock *dock, WAppIcon *icon, int x, int y, Bool update_icon)
+{
+	WWindow *wwin;
+	Bool lupdate_icon = False;
+	char *command = NULL;
+	int index;
+
+	icon->editing = 0;
+
+	if (update_icon)
+		lupdate_icon = True;
+
+	if (icon->command == NULL) {
+		/* If icon->owner exists, it means the application is running */
+		if (icon->icon->owner) {
+			wwin = icon->icon->owner;
+			command = GetCommandForWindow(wwin->client_win);
+		}
+
+		if (command) {
+			icon->command = command;
+		} else {
+			if (!icon->attracted) {
+				icon->editing = 1;
+				if (wInputDialog(dock->vscr, _("Dock Icon"),
+						 _("Type the command used to launch the application"), &command)) {
+
+					if (command && (command[0] == 0 || (command[0] == '-' && command[1] == 0))) {
+						wfree(command);
+						command = NULL;
+					}
+
+					icon->command = command;
+					icon->editing = 0;
+				} else {
+					icon->editing = 0;
+					if (command)
+						wfree(command);
+					/* If the target is the clip, make it an attracted icon */
+					icon->attracted = 1;
+					if (!icon->icon->shadowed) {
+						icon->icon->shadowed = 1;
+						lupdate_icon = True;
+					}
+				}
+			}
+		}
+	}
+
+	for (index = 1; index < dock->max_icons; index++)
+		if (dock->icon_array[index] == NULL)
+			break;
+
+	assert(index < dock->max_icons);
+
+	dock->icon_array[index] = icon;
+	icon->yindex = y;
+	icon->xindex = x;
+
+	icon->omnipresent = 0;
+
+	icon->x_pos = dock->x_pos + x * ICON_SIZE;
+	icon->y_pos = dock->y_pos + y * ICON_SIZE;
+
+	dock->icon_count++;
+
+	icon->running = 1;
+	icon->launching = 0;
+	icon->docked = 1;
+	icon->dock = dock;
+	icon->icon->core->descriptor.handle_mousedown = clip_icon_mouse_down;
+	icon->icon->core->descriptor.handle_enternotify = clipEnterNotify;
+	icon->icon->core->descriptor.handle_leavenotify = clipLeaveNotify;
+	icon->icon->core->descriptor.parent_type = WCLASS_DOCK_ICON;
+	icon->icon->core->descriptor.parent = icon;
+
+	MoveInStackListUnder(dock->icon_array[index - 1]->icon->core, icon->icon->core);
+	wAppIconMove(icon, icon->x_pos, icon->y_pos);
+
+	/*
+	 * Update icon pixmap, RImage doesn't change,
+	 * so call wIconUpdate is not needed
+	 */
+	if (lupdate_icon)
+		update_icon_pixmap(icon->icon);
+
+	/* Paint it */
+	wAppIconPaint(icon);
+
+	/* Save it */
+	save_appicon(icon, True);
+
+	if (wPreferences.auto_arrange_icons)
+		wArrangeIcons(dock->vscr, True);
+
+#ifdef XDND			/* was OFFIX */
+	if (icon->command && !icon->dnd_command) {
+		int len = strlen(icon->command) + 8;
+		icon->dnd_command = wmalloc(len);
+		snprintf(icon->dnd_command, len, "%s %%d", icon->command);
+	}
+#endif
+
+	if (icon->command && !icon->paste_command) {
+		int len = strlen(icon->command) + 8;
+		icon->paste_command = wmalloc(len);
+		snprintf(icon->paste_command, len, "%s %%s", icon->command);
+	}
+
+	return True;
+}
+
+Bool drawer_attach_icon(WDock *dock, WAppIcon *icon, int x, int y, Bool update_icon)
+{
+	WWindow *wwin;
+	Bool lupdate_icon = False;
+	char *command = NULL;
+	int index;
+
+	icon->editing = 0;
+
+	if (update_icon)
+		lupdate_icon = True;
+
+	if (icon->command == NULL) {
+		/* If icon->owner exists, it means the application is running */
+		if (icon->icon->owner) {
+			wwin = icon->icon->owner;
+			command = GetCommandForWindow(wwin->client_win);
+		}
+
+		if (command) {
+			icon->command = command;
+		} else {
+			icon->editing = 1;
+			if (wInputDialog(dock->vscr, _("Dock Icon"),
+					 _("Type the command used to launch the application"), &command)) {
+
+				if (command && (command[0] == 0 || (command[0] == '-' && command[1] == 0))) {
+					wfree(command);
+					command = NULL;
+				}
+
+				icon->command = command;
+				icon->editing = 0;
+			} else {
+				icon->editing = 0;
+				if (command)
+					wfree(command);
+
+				return False;
+			}
+		}
+	}
+
+	for (index = 1; index < dock->max_icons; index++)
+		if (dock->icon_array[index] == NULL)
+			break;
+
+	assert(index < dock->max_icons);
+
+	dock->icon_array[index] = icon;
+	icon->yindex = y;
+	icon->xindex = x;
+
+	icon->omnipresent = 0;
+
+	icon->x_pos = dock->x_pos + x * ICON_SIZE;
+	icon->y_pos = dock->y_pos + y * ICON_SIZE;
+
+	dock->icon_count++;
+
+	icon->running = 1;
+	icon->launching = 0;
+	icon->docked = 1;
+	icon->dock = dock;
+	icon->icon->core->descriptor.handle_mousedown = drawer_icon_mouse_down;
+	icon->icon->core->descriptor.handle_enternotify = clipEnterNotify;
+	icon->icon->core->descriptor.handle_leavenotify = clipLeaveNotify;
+	icon->icon->core->descriptor.parent_type = WCLASS_DOCK_ICON;
+	icon->icon->core->descriptor.parent = icon;
+
+	MoveInStackListUnder(dock->icon_array[index - 1]->icon->core, icon->icon->core);
+	wAppIconMove(icon, icon->x_pos, icon->y_pos);
+
+	/*
+	 * Update icon pixmap, RImage doesn't change,
+	 * so call wIconUpdate is not needed
+	 */
+	if (lupdate_icon)
+		update_icon_pixmap(icon->icon);
+
+	/* Paint it */
+	wAppIconPaint(icon);
+
+	/* Save it */
+	save_appicon(icon, True);
+
+	if (wPreferences.auto_arrange_icons)
+		wArrangeIcons(dock->vscr, True);
+
+#ifdef XDND			/* was OFFIX */
+	if (icon->command && !icon->dnd_command) {
+		int len = strlen(icon->command) + 8;
+		icon->dnd_command = wmalloc(len);
+		snprintf(icon->dnd_command, len, "%s %%d", icon->command);
+	}
+#endif
+
+	if (icon->command && !icon->paste_command) {
+		int len = strlen(icon->command) + 8;
+		icon->paste_command = wmalloc(len);
+		snprintf(icon->paste_command, len, "%s %%s", icon->command);
+	}
+
+	return True;
+}
+
+Bool wDockAttachIcon(WDock *dock, WAppIcon *icon, int x, int y, Bool update_icon)
+{
+	switch (dock->type) {
+	case WM_DOCK:
+		return dock_attach_icon(dock, icon, x, y, update_icon);
+		break;
+	case WM_CLIP:
+		return clip_attach_icon(dock, icon, x, y, update_icon);
+		break;
+	case WM_DRAWER:
+		return drawer_attach_icon(dock, icon, x, y, update_icon);
+	}
+
+	/* Avoid compiler warning */
 	return True;
 }
 
