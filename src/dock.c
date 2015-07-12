@@ -3567,8 +3567,18 @@ void wDockDetach(WDock *dock, WAppIcon *icon)
 			wArrangeIcons(dock->vscr, True);
 	}
 
-	if (dock->auto_collapse || dock->auto_raise_lower)
-		clipLeave(dock);
+	if (dock->auto_collapse || dock->auto_raise_lower) {
+		switch (dock->type) {
+		case WM_DOCK:
+			dock_leave(dock);
+			break;
+		case WM_CLIP:
+			clip_leave(dock);
+			break;
+		case WM_DRAWER:
+			drawer_leave(dock);
+		}
+	}
 }
 
 /*
