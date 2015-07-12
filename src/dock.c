@@ -116,7 +116,6 @@ static void dock_enter_notify(WObjDescriptor *desc, XEvent *event);
 static void clip_enter_notify(WObjDescriptor *desc, XEvent *event);
 static void drawer_enter_notify(WObjDescriptor *desc, XEvent *event);
 
-static void clipEnterNotify(WObjDescriptor *desc, XEvent *event);
 static void clipLeaveNotify(WObjDescriptor *desc, XEvent *event);
 static void clipAutoCollapse(void *cdata);
 static void clipAutoExpand(void *cdata);
@@ -3402,7 +3401,18 @@ Bool wDockMoveIconBetweenDocks(WDock *src, WDock *dest, WAppIcon *icon, int x, i
 	if (icon->icon->selected)
 		wIconSelect(icon->icon);
 
-	icon->icon->core->descriptor.handle_enternotify = clipEnterNotify;
+	/* New type is like the destination type */
+	switch (dest->type) {
+	case WM_DOCK:
+		icon->icon->core->descriptor.handle_enternotify = dock_enter_notify;
+		break;
+	case WM_CLIP:
+		icon->icon->core->descriptor.handle_enternotify = clip_enter_notify;
+		break;
+	case WM_DRAWER:
+		icon->icon->core->descriptor.handle_enternotify = drawer_enter_notify;
+	}
+
 	icon->icon->core->descriptor.handle_leavenotify = clipLeaveNotify;
 
 	/* set it to be kept when moving to dock.
@@ -5621,49 +5631,6 @@ static void drawer_enter_notify(WObjDescriptor *desc, XEvent *event)
 
 	if (tmp->auto_raise_lower && !tmp->auto_raise_magic)
 		tmp->auto_raise_magic = WMAddTimerHandler(wPreferences.clip_auto_raise_delay, clipAutoRaise, (void *) tmp);
-
-	/* The auto expand/collapse code */
-	if (dock->auto_collapse_magic) {
-		WMDeleteTimerHandler(dock->auto_collapse_magic);
-		dock->auto_collapse_magic = NULL;
-	}
-
-	if (dock->auto_collapse && !dock->auto_expand_magic)
-		dock->auto_expand_magic = WMAddTimerHandler(wPreferences.clip_auto_expand_delay, clipAutoExpand, (void *)dock);
-}
-
-static void clipEnterNotify(WObjDescriptor *desc, XEvent *event)
-{
-	WAppIcon *btn = (WAppIcon *) desc->parent;
-	WDock *dock, *tmp;
-	virtual_screen *vscr;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) event;
-
-	assert(event->type == EnterNotify);
-
-	if (desc->parent_type != WCLASS_DOCK_ICON)
-		return;
-
-	vscr = btn->icon->core->vscr;
-	dock = btn->dock;
-
-	if (dock == NULL)
-		return;
-
-	/* The auto raise/lower code */
-	tmp = (dock->type == WM_DRAWER ? vscr->dock.dock : dock);
-	if (tmp->auto_lower_magic) {
-		WMDeleteTimerHandler(tmp->auto_lower_magic);
-		tmp->auto_lower_magic = NULL;
-	}
-
-	if (tmp->auto_raise_lower && !tmp->auto_raise_magic)
-		tmp->auto_raise_magic = WMAddTimerHandler(wPreferences.clip_auto_raise_delay, clipAutoRaise, (void *) tmp);
-
-	if (dock->type != WM_CLIP && dock->type != WM_DRAWER)
-		return;
 
 	/* The auto expand/collapse code */
 	if (dock->auto_collapse_magic) {
