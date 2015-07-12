@@ -4187,7 +4187,7 @@ static void open_menu_dock(WDock *dock, WAppIcon *aicon, XEvent *event)
 	virtual_screen *vscr = dock->vscr;
 	WScreen *scr = vscr->screen_ptr;
 	WObjDescriptor *desc;
-	WMenuEntry *entry;
+	WMenuEntry *entry = NULL;
 	int index = 0;
 	int x_pos;
 
@@ -4211,7 +4211,7 @@ static void open_menu_clip(WDock *dock, WAppIcon *aicon, XEvent *event)
 	virtual_screen *vscr = dock->vscr;
 	WScreen *scr = vscr->screen_ptr;
 	WObjDescriptor *desc;
-	WMenuEntry *entry;
+	WMenuEntry *entry = NULL;
 	int index = 0;
 	int x_pos;
 
@@ -4240,7 +4240,7 @@ static void open_menu_drawer(WDock *dock, WAppIcon *aicon, XEvent *event)
 	virtual_screen *vscr = dock->vscr;
 	WScreen *scr = vscr->screen_ptr;
 	WObjDescriptor *desc;
-	WMenuEntry *entry;
+	WMenuEntry *entry = NULL;
 	int index = 0;
 	int x_pos;
 
