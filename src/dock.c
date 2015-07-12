@@ -514,7 +514,7 @@ static void removeIcons(WMArray *icons, WDock *dock)
 		wArrangeIcons(dock->vscr, True);
 }
 
-static void removeIconsCallback(WMenu *menu, WMenuEntry *entry)
+static void clip_remove_icons_callback(WMenu *menu, WMenuEntry *entry)
 {
 	WAppIcon *clickedIcon = (WAppIcon *) entry->clientdata;
 	WDock *dock;
@@ -524,7 +524,6 @@ static void removeIconsCallback(WMenu *menu, WMenuEntry *entry)
 	(void) menu;
 
 	assert(clickedIcon != NULL);
-
 	dock = clickedIcon->dock;
 
 	/* This is only for security, to avoid crash in PlaceIcon
@@ -534,10 +533,9 @@ static void removeIconsCallback(WMenu *menu, WMenuEntry *entry)
 		return;
 
 	selectedIcons = getSelected(dock);
-
 	if (WMGetArrayItemCount(selectedIcons)) {
 		if (wMessageDialog(dock->vscr,
-					dock->type == WM_CLIP ? _("Workspace Clip") : _("Drawer"),
+					_("Workspace Clip"),
 					_("All selected icons will be removed!"),
 					_("OK"), _("Cancel"), NULL) != WAPRDefault) {
 			WMFreeArray(selectedIcons);
@@ -553,9 +551,46 @@ static void removeIconsCallback(WMenu *menu, WMenuEntry *entry)
 	}
 
 	removeIcons(selectedIcons, dock);
+}
 
-	if (dock->type == WM_DRAWER)
-		drawerConsolidateIcons(dock);
+static void drawer_remove_icons_callback(WMenu *menu, WMenuEntry *entry)
+{
+	WAppIcon *clickedIcon = (WAppIcon *) entry->clientdata;
+	WDock *dock;
+	WMArray *selectedIcons;
+
+	/* Parameter not used, but tell the compiler that it is ok */
+	(void) menu;
+
+	assert(clickedIcon != NULL);
+	dock = clickedIcon->dock;
+
+	/* This is only for security, to avoid crash in PlaceIcon
+	 * but it shouldn't happend, because the callback cannot
+	 * be used without screen */
+	if (!dock->vscr->screen_ptr)
+		return;
+
+	selectedIcons = getSelected(dock);
+	if (WMGetArrayItemCount(selectedIcons)) {
+		if (wMessageDialog(dock->vscr,
+					_("Drawer"),
+					_("All selected icons will be removed!"),
+					_("OK"), _("Cancel"), NULL) != WAPRDefault) {
+			WMFreeArray(selectedIcons);
+			return;
+		}
+	} else {
+		if (clickedIcon->xindex == 0 && clickedIcon->yindex == 0) {
+			WMFreeArray(selectedIcons);
+			return;
+		}
+
+		WMAddToArray(selectedIcons, clickedIcon);
+	}
+
+	removeIcons(selectedIcons, dock);
+	drawerConsolidateIcons(dock);
 }
 
 static void keepIconsCallback(WMenu *menu, WMenuEntry *entry)
@@ -1239,7 +1274,7 @@ void clip_menu_create(virtual_screen *vscr)
 	if (vscr->clip.submenu)
 		wMenuEntrySetCascade_create(menu, entry, vscr->clip.submenu);
 
-	entry = wMenuAddCallback(menu, _("Remove Icon"), removeIconsCallback, NULL);
+	entry = wMenuAddCallback(menu, _("Remove Icon"), clip_remove_icons_callback, NULL);
 	wfree(entry->text);
 	entry->text = _("Remove Icon"); /* can be: Remove Icons */
 
@@ -1310,7 +1345,7 @@ static void drawer_menu_create(virtual_screen *vscr)
 	wfree(entry->text);
 	entry->text = _("Keep Icon"); /* can be: Keep Icons */
 
-	entry = wMenuAddCallback(menu, _("Remove Icon"), removeIconsCallback, NULL);
+	entry = wMenuAddCallback(menu, _("Remove Icon"), drawer_remove_icons_callback, NULL);
 	wfree(entry->text);
 	entry->text = _("Remove Icon"); /* can be: Remove Icons */
 
