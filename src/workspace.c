@@ -174,7 +174,7 @@ Bool wWorkspaceDelete(virtual_screen *vscr, int workspace)
 	}
 
 	if (!wPreferences.flags.noclip) {
-		wDockDestroy(vscr->workspace.array[workspace]->clip);
+		clip_destroy(vscr->workspace.array[workspace]->clip);
 		vscr->workspace.array[workspace]->clip = NULL;
 	}
 
@@ -932,7 +932,7 @@ void wWorkspaceRestoreState(virtual_screen *vscr)
 
 			clip_state = WMGetFromPLDictionary(wks_state, dClip);
 			if (vscr->workspace.array[i]->clip)
-				wDockDestroy(vscr->workspace.array[i]->clip);
+				clip_destroy(vscr->workspace.array[i]->clip);
 
 			set_workspace_clip(&vscr->workspace.array[i]->clip, vscr, clip_state);
 

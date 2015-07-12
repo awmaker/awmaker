@@ -1761,21 +1761,21 @@ void drawer_unmap(WDock *dock)
 	wcore_unmap(btn->icon->core);
 }
 
-
-void wDockDestroy(WDock *dock)
+void clip_destroy(WDock *dock)
 {
-	int i;
+	int i, keepit;
 	WAppIcon *aicon;
 
-	for (i = (dock->type == WM_CLIP) ? 1 : 0; i < dock->max_icons; i++) {
+	for (i = 1; i < dock->max_icons; i++) {
 		aicon = dock->icon_array[i];
 		if (aicon) {
-			int keepit = aicon->running && wApplicationOf(aicon->main_window);
+			keepit = aicon->running && wApplicationOf(aicon->main_window);
 			wDockDetach(dock, aicon);
 			if (keepit) {
 				PlaceIcon(dock->vscr, &aicon->x_pos, &aicon->y_pos,
 					  wGetHeadForWindow(aicon->icon->owner));
 				XMoveWindow(dpy, aicon->icon->core->window, aicon->x_pos, aicon->y_pos);
+
 				if (!dock->mapped || dock->collapsed)
 					XMapWindow(dpy, aicon->icon->core->window);
 			}
@@ -1786,8 +1786,6 @@ void wDockDestroy(WDock *dock)
 		wArrangeIcons(dock->vscr, True);
 
 	wfree(dock->icon_array);
-	if (dock->menu && dock->type != WM_CLIP)
-		wMenuDestroy(dock->menu, True);
 
 	if (dock->vscr->last_dock == dock)
 		dock->vscr->last_dock = NULL;
