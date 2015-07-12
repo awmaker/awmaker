@@ -2584,6 +2584,7 @@ int wDockReceiveDNDDrop(virtual_screen *vscr, XEvent *event)
 {
 	WDock *dock;
 	WAppIcon *btn;
+	WWindowAttributes attr;
 	int icon_pos;
 
 	dock = findDock(vscr, event, &icon_pos);
@@ -2598,38 +2599,38 @@ int wDockReceiveDNDDrop(virtual_screen *vscr, XEvent *event)
 	if (dock->icon_array[icon_pos]->icon->icon_win != None)
 		return True;
 
-	if (dock->icon_array[icon_pos]->dnd_command != NULL) {
-		vscr->screen_ptr->flags.dnd_data_convertion_status = 0;
+	if (dock->icon_array[icon_pos]->dnd_command == NULL)
+		return False;
 
-		btn = dock->icon_array[icon_pos];
-
-		if (!btn->forced_dock) {
-			btn->relaunching = btn->running;
-			btn->running = 1;
-		}
-		if (btn->wm_instance || btn->wm_class) {
-			WWindowAttributes attr;
-			memset(&attr, 0, sizeof(WWindowAttributes));
-			wDefaultFillAttributes(btn->wm_instance, btn->wm_class, &attr, NULL, True);
-
-			if (!attr.no_appicon)
-				btn->launching = 1;
-			else
-				btn->running = 0;
-		}
-
-		btn->paste_launch = 0;
-		btn->drop_launch = 1;
-		vscr->last_dock = dock;
-		btn->pid = execCommand(btn, btn->dnd_command, NULL);
-		if (btn->pid > 0) {
-			dockIconPaint(btn);
-		} else {
-			btn->launching = 0;
-			if (!btn->relaunching)
-				btn->running = 0;
-		}
+	vscr->screen_ptr->flags.dnd_data_convertion_status = 0;
+	btn = dock->icon_array[icon_pos];
+	if (!btn->forced_dock) {
+		btn->relaunching = btn->running;
+		btn->running = 1;
 	}
+
+	if (btn->wm_instance || btn->wm_class) {
+		memset(&attr, 0, sizeof(WWindowAttributes));
+		wDefaultFillAttributes(btn->wm_instance, btn->wm_class, &attr, NULL, True);
+
+		if (!attr.no_appicon)
+			btn->launching = 1;
+		else
+			btn->running = 0;
+	}
+
+	btn->paste_launch = 0;
+	btn->drop_launch = 1;
+	vscr->last_dock = dock;
+	btn->pid = execCommand(btn, btn->dnd_command, NULL);
+	if (btn->pid > 0) {
+		dockIconPaint(btn);
+	} else {
+		btn->launching = 0;
+		if (!btn->relaunching)
+			btn->running = 0;
+	}
+
 	return False;
 }
 #endif				/* XDND */
