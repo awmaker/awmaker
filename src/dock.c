@@ -92,6 +92,9 @@ static WMPropList *dDrawers = NULL;
 static void dockIconPaint(WAppIcon *btn);
 
 static void iconMouseDown(WObjDescriptor *desc, XEvent *event);
+static void dock_icon_mouse_down(WObjDescriptor *desc, XEvent *event);
+static void clip_icon_mouse_down(WObjDescriptor *desc, XEvent *event);
+static void drawer_icon_mouse_down(WObjDescriptor *desc, XEvent *event);
 
 static pid_t execCommand(WAppIcon *btn, const char *command, WSavedState *state);
 
@@ -1522,7 +1525,7 @@ void dock_map(WDock *dock, virtual_screen *vscr, WMPropList *state)
 
 	AddToStackList(btn->icon->core);
 
-	btn->icon->core->descriptor.handle_mousedown = iconMouseDown;
+	btn->icon->core->descriptor.handle_mousedown = dock_icon_mouse_down;
 	btn->icon->core->descriptor.handle_enternotify = clipEnterNotify;
 	btn->icon->core->descriptor.handle_leavenotify = clipLeaveNotify;
 	XMapWindow(dpy, btn->icon->core->window);
@@ -1603,7 +1606,7 @@ void clip_icon_map(virtual_screen *vscr)
 	AddToStackList(w_global.clip.icon->icon->core);
 
 	w_global.clip.icon->icon->core->descriptor.handle_expose = clipIconExpose;
-	w_global.clip.icon->icon->core->descriptor.handle_mousedown = iconMouseDown;
+	w_global.clip.icon->icon->core->descriptor.handle_mousedown = clip_icon_mouse_down;
 	w_global.clip.icon->icon->core->descriptor.handle_enternotify = clipEnterNotify;
 	w_global.clip.icon->icon->core->descriptor.handle_leavenotify = clipLeaveNotify;
 	w_global.clip.icon->icon->core->descriptor.parent_type = WCLASS_DOCK_ICON;
@@ -1737,7 +1740,7 @@ void drawer_map(WDock *dock, virtual_screen *vscr)
 	AddToStackList(btn->icon->core);
 
 	btn->icon->core->descriptor.handle_expose = drawerIconExpose;
-	btn->icon->core->descriptor.handle_mousedown = iconMouseDown;
+	btn->icon->core->descriptor.handle_mousedown = drawer_icon_mouse_down;
 	btn->icon->core->descriptor.handle_enternotify = clipEnterNotify;
 	btn->icon->core->descriptor.handle_leavenotify = clipLeaveNotify;
 
@@ -4803,6 +4806,275 @@ static void handleClipChangeWorkspace(virtual_screen *vscr, XEvent *event)
 }
 
 static void iconMouseDown(WObjDescriptor *desc, XEvent *event)
+{
+	WAppIcon *aicon = desc->parent;
+	WDock *dock = aicon->dock;
+
+	switch (dock->type) {
+	case WM_DOCK:
+		dock_icon_mouse_down(desc, event);
+		break;
+	case WM_CLIP:
+		clip_icon_mouse_down(desc, event);
+		break;
+	case WM_DRAWER:
+		drawer_icon_mouse_down(desc, event);
+	}
+}
+
+static void dock_icon_mouse_down(WObjDescriptor *desc, XEvent *event)
+{
+	WAppIcon *aicon = desc->parent;
+	WDock *dock = aicon->dock;
+	virtual_screen *vscr = aicon->icon->core->vscr;
+	WScreen *scr = vscr->screen_ptr;
+
+	if (aicon->editing || WCHECK_STATE(WSTATE_MODAL))
+		return;
+
+	vscr->last_dock = dock;
+
+	if (dock->menu->flags.mapped)
+		wMenuUnmap(dock->menu);
+
+	if (IsDoubleClick(vscr, event)) {
+		/* double-click was not in the main clip icon */
+		if (dock->type != WM_CLIP || aicon->xindex != 0 || aicon->yindex != 0
+		    || getClipButton(event->xbutton.x, event->xbutton.y) == CLIP_IDLE) {
+			iconDblClick(desc, event);
+			return;
+		}
+	}
+
+	switch (event->xbutton.button) {
+	case Button1:
+		if (event->xbutton.state & MOD_MASK)
+			wDockLower(dock);
+		else
+			wDockRaise(dock);
+
+		if ((event->xbutton.state & ShiftMask) && aicon != w_global.clip.icon && dock->type != WM_DOCK) {
+			wIconSelect(aicon->icon);
+			return;
+		}
+
+		if (aicon->yindex == 0 && aicon->xindex == 0) {
+			if (getClipButton(event->xbutton.x, event->xbutton.y) != CLIP_IDLE &&
+				(dock->type == WM_CLIP || (dock->type == WM_DOCK && wPreferences.flags.clip_merged_in_dock)))
+				handleClipChangeWorkspace(vscr, event);
+			else
+				handleDockMove(dock, aicon, event);
+		} else {
+			Bool hasMoved = wHandleAppIconMove(aicon, event);
+			if (wPreferences.single_click && !hasMoved)
+				iconDblClick(desc, event);
+		}
+		break;
+	case Button2:
+		if (aicon == w_global.clip.icon) {
+			if (!vscr->clip.ws_menu)
+				vscr->clip.ws_menu = wWorkspaceMenuMake(vscr, False);
+
+			if (vscr->clip.ws_menu) {
+				WMenu *wsMenu = vscr->clip.ws_menu;
+				int xpos;
+
+				wWorkspaceMenuUpdate(vscr, wsMenu);
+
+				xpos = event->xbutton.x_root - wsMenu->frame->core->width / 2 - 1;
+				if (xpos < 0)
+					xpos = 0;
+				else if (xpos + wsMenu->frame->core->width > scr->scr_width - 2)
+					xpos = scr->scr_width - wsMenu->frame->core->width - 4;
+
+				wMenuMapAt(wsMenu, xpos, event->xbutton.y_root + 2, False);
+
+				desc = &wsMenu->menu->descriptor;
+				event->xany.send_event = True;
+				(*desc->handle_mousedown) (desc, event);
+			}
+		} else if (dock->type == WM_CLIP && (event->xbutton.state & ShiftMask)) {
+			wClipMakeIconOmnipresent(aicon, !aicon->omnipresent);
+		} else {
+			WAppIcon *btn = desc->parent;
+
+			if (!btn->launching && (!btn->running || (event->xbutton.state & ControlMask)))
+				launchDockedApplication(btn, True);
+		}
+		break;
+	case Button3:
+		if (event->xbutton.send_event &&
+		    XGrabPointer(dpy, aicon->icon->core->window, True, ButtonMotionMask
+				 | ButtonReleaseMask | ButtonPressMask, GrabModeAsync,
+				 GrabModeAsync, None, None, CurrentTime) != GrabSuccess) {
+			wwarning("pointer grab failed for dockicon menu");
+			return;
+		}
+
+		/* kix: FIXME
+		 * There is a BUG here. When the menu entry callback is used
+		 * the function menuMouseDown (menu.c) is used. If the user
+		 * doesn't select any entry, no windows are openned and then
+		 * we are unable to set the focus to the new window.
+		 * This problem shows an catchXError call.
+		 * The error was created in the commit:
+		 * "DA: Dock menu always unmapped (warning)"
+		 * This error only happends here, not in rootmenu, appicon, etc.
+		 */
+		switch (dock->type) {
+		case WM_DOCK:
+			dock_menu_map(dock->menu, vscr);
+			open_menu_dock(dock, aicon, event);
+			dock_menu_unmap(vscr, dock->menu);
+			break;
+		case WM_CLIP:
+			clip_menu_map(dock->menu, vscr);
+			open_menu_clip(dock, aicon, event);
+			clip_menu_unmap(vscr, dock->menu);
+			break;
+		case WM_DRAWER:
+			drawer_menu_map(dock->menu, vscr);
+			open_menu_drawer(dock, aicon, event);
+			drawer_menu_unmap(vscr, dock->menu);
+		}
+		break;
+	case Button4:
+		if (dock->type == WM_CLIP)
+			wWorkspaceRelativeChange(vscr, 1);
+		break;
+	case Button5:
+		if (dock->type == WM_CLIP)
+			wWorkspaceRelativeChange(vscr, -1);
+	}
+}
+
+static void clip_icon_mouse_down(WObjDescriptor *desc, XEvent *event)
+{
+	WAppIcon *aicon = desc->parent;
+	WDock *dock = aicon->dock;
+	virtual_screen *vscr = aicon->icon->core->vscr;
+	WScreen *scr = vscr->screen_ptr;
+
+	if (aicon->editing || WCHECK_STATE(WSTATE_MODAL))
+		return;
+
+	vscr->last_dock = dock;
+
+	if (dock->menu->flags.mapped)
+		wMenuUnmap(dock->menu);
+
+	if (IsDoubleClick(vscr, event)) {
+		/* double-click was not in the main clip icon */
+		if (dock->type != WM_CLIP || aicon->xindex != 0 || aicon->yindex != 0
+		    || getClipButton(event->xbutton.x, event->xbutton.y) == CLIP_IDLE) {
+			iconDblClick(desc, event);
+			return;
+		}
+	}
+
+	switch (event->xbutton.button) {
+	case Button1:
+		if (event->xbutton.state & MOD_MASK)
+			wDockLower(dock);
+		else
+			wDockRaise(dock);
+
+		if ((event->xbutton.state & ShiftMask) && aicon != w_global.clip.icon && dock->type != WM_DOCK) {
+			wIconSelect(aicon->icon);
+			return;
+		}
+
+		if (aicon->yindex == 0 && aicon->xindex == 0) {
+			if (getClipButton(event->xbutton.x, event->xbutton.y) != CLIP_IDLE &&
+				(dock->type == WM_CLIP || (dock->type == WM_DOCK && wPreferences.flags.clip_merged_in_dock)))
+				handleClipChangeWorkspace(vscr, event);
+			else
+				handleDockMove(dock, aicon, event);
+		} else {
+			Bool hasMoved = wHandleAppIconMove(aicon, event);
+			if (wPreferences.single_click && !hasMoved)
+				iconDblClick(desc, event);
+		}
+		break;
+	case Button2:
+		if (aicon == w_global.clip.icon) {
+			if (!vscr->clip.ws_menu)
+				vscr->clip.ws_menu = wWorkspaceMenuMake(vscr, False);
+
+			if (vscr->clip.ws_menu) {
+				WMenu *wsMenu = vscr->clip.ws_menu;
+				int xpos;
+
+				wWorkspaceMenuUpdate(vscr, wsMenu);
+
+				xpos = event->xbutton.x_root - wsMenu->frame->core->width / 2 - 1;
+				if (xpos < 0)
+					xpos = 0;
+				else if (xpos + wsMenu->frame->core->width > scr->scr_width - 2)
+					xpos = scr->scr_width - wsMenu->frame->core->width - 4;
+
+				wMenuMapAt(wsMenu, xpos, event->xbutton.y_root + 2, False);
+
+				desc = &wsMenu->menu->descriptor;
+				event->xany.send_event = True;
+				(*desc->handle_mousedown) (desc, event);
+			}
+		} else if (dock->type == WM_CLIP && (event->xbutton.state & ShiftMask)) {
+			wClipMakeIconOmnipresent(aicon, !aicon->omnipresent);
+		} else {
+			WAppIcon *btn = desc->parent;
+
+			if (!btn->launching && (!btn->running || (event->xbutton.state & ControlMask)))
+				launchDockedApplication(btn, True);
+		}
+		break;
+	case Button3:
+		if (event->xbutton.send_event &&
+		    XGrabPointer(dpy, aicon->icon->core->window, True, ButtonMotionMask
+				 | ButtonReleaseMask | ButtonPressMask, GrabModeAsync,
+				 GrabModeAsync, None, None, CurrentTime) != GrabSuccess) {
+			wwarning("pointer grab failed for dockicon menu");
+			return;
+		}
+
+		/* kix: FIXME
+		 * There is a BUG here. When the menu entry callback is used
+		 * the function menuMouseDown (menu.c) is used. If the user
+		 * doesn't select any entry, no windows are openned and then
+		 * we are unable to set the focus to the new window.
+		 * This problem shows an catchXError call.
+		 * The error was created in the commit:
+		 * "DA: Dock menu always unmapped (warning)"
+		 * This error only happends here, not in rootmenu, appicon, etc.
+		 */
+		switch (dock->type) {
+		case WM_DOCK:
+			dock_menu_map(dock->menu, vscr);
+			open_menu_dock(dock, aicon, event);
+			dock_menu_unmap(vscr, dock->menu);
+			break;
+		case WM_CLIP:
+			clip_menu_map(dock->menu, vscr);
+			open_menu_clip(dock, aicon, event);
+			clip_menu_unmap(vscr, dock->menu);
+			break;
+		case WM_DRAWER:
+			drawer_menu_map(dock->menu, vscr);
+			open_menu_drawer(dock, aicon, event);
+			drawer_menu_unmap(vscr, dock->menu);
+		}
+		break;
+	case Button4:
+		if (dock->type == WM_CLIP)
+			wWorkspaceRelativeChange(vscr, 1);
+		break;
+	case Button5:
+		if (dock->type == WM_CLIP)
+			wWorkspaceRelativeChange(vscr, -1);
+	}
+}
+
+static void drawer_icon_mouse_down(WObjDescriptor *desc, XEvent *event)
 {
 	WAppIcon *aicon = desc->parent;
 	WDock *dock = aicon->dock;
