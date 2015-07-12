@@ -887,42 +887,48 @@ static void launchDockedApplication(WAppIcon *btn, Bool withSelection)
 {
 	virtual_screen *vscr = btn->icon->core->vscr;
 
-	if (!btn->launching &&
-	    ((!withSelection && btn->command != NULL) || (withSelection && btn->paste_command != NULL))) {
-		if (!btn->forced_dock) {
-			btn->relaunching = btn->running;
-			btn->running = 1;
-		}
-		if (btn->wm_instance || btn->wm_class) {
-			WWindowAttributes attr;
-			memset(&attr, 0, sizeof(WWindowAttributes));
-			wDefaultFillAttributes(btn->wm_instance, btn->wm_class, &attr, NULL, True);
+	if (btn->launching)
+		return;
 
-			if (!attr.no_appicon && !btn->buggy_app)
-				btn->launching = 1;
-			else
-				btn->running = 0;
-		}
-		btn->drop_launch = 0;
-		btn->paste_launch = withSelection;
-		vscr->last_dock = btn->dock;
-		btn->pid = execCommand(btn, (withSelection ? btn->paste_command : btn->command), NULL);
-		if (btn->pid > 0) {
-			if (btn->buggy_app) {
-				/* give feedback that the app was launched */
-				btn->launching = 1;
-				dockIconPaint(btn);
-				btn->launching = 0;
-				WMAddTimerHandler(200, (WMCallback *) dockIconPaint, btn);
-			} else {
-				dockIconPaint(btn);
-			}
-		} else {
-			wwarning(_("could not launch application %s"), btn->command);
+	if ((withSelection || btn->command == NULL) &&
+	    (!withSelection || btn->paste_command == NULL))
+		return;
+
+	if (!btn->forced_dock) {
+		btn->relaunching = btn->running;
+		btn->running = 1;
+	}
+
+	if (btn->wm_instance || btn->wm_class) {
+		WWindowAttributes attr;
+		memset(&attr, 0, sizeof(WWindowAttributes));
+		wDefaultFillAttributes(btn->wm_instance, btn->wm_class, &attr, NULL, True);
+
+		if (!attr.no_appicon && !btn->buggy_app)
+			btn->launching = 1;
+		else
+			btn->running = 0;
+	}
+
+	btn->drop_launch = 0;
+	btn->paste_launch = withSelection;
+	vscr->last_dock = btn->dock;
+	btn->pid = execCommand(btn, (withSelection ? btn->paste_command : btn->command), NULL);
+	if (btn->pid > 0) {
+		if (btn->buggy_app) {
+			/* give feedback that the app was launched */
+			btn->launching = 1;
+			dockIconPaint(btn);
 			btn->launching = 0;
-			if (!btn->relaunching)
-				btn->running = 0;
+			WMAddTimerHandler(200, (WMCallback *) dockIconPaint, btn);
+		} else {
+			dockIconPaint(btn);
 		}
+	} else {
+		wwarning(_("could not launch application %s"), btn->command);
+		btn->launching = 0;
+		if (!btn->relaunching)
+			btn->running = 0;
 	}
 }
 
