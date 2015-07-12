@@ -1924,7 +1924,7 @@ static WMPropList *make_icon_state(virtual_screen *vscr, WAppIcon *btn)
 	return node;
 }
 
-static WMPropList *dockSaveState(virtual_screen *vscr, WDock *dock)
+static WMPropList *dock_save_state(virtual_screen *vscr, WDock *dock)
 {
 	int i;
 	WMPropList *icon_info;
@@ -1934,7 +1934,7 @@ static WMPropList *dockSaveState(virtual_screen *vscr, WDock *dock)
 
 	list = WMCreatePLArray(NULL);
 
-	for (i = (dock->type == WM_DOCK ? 0 : 1); i < dock->max_icons; i++) {
+	for (i = 0; i < dock->max_icons; i++) {
 		WAppIcon *btn = dock->icon_array[i];
 
 		if (!btn || btn->attracted)
@@ -1949,37 +1949,102 @@ static WMPropList *dockSaveState(virtual_screen *vscr, WDock *dock)
 
 	dock_state = WMCreatePLDictionary(dApplications, list, NULL);
 
-	if (dock->type == WM_DOCK) {
-		/* Save with the same screen_id. See get_application_list() */
-		snprintf(buffer, sizeof(buffer), "%ix%i",
-			 dock->vscr->screen_ptr->scr_width, dock->vscr->screen_ptr->scr_height);
-		save_application_list(dock_state, list, buffer);
+	/* Save with the same screen_id. See get_application_list() */
+	snprintf(buffer, sizeof(buffer), "%ix%i",
+		 dock->vscr->screen_ptr->scr_width, dock->vscr->screen_ptr->scr_height);
+	save_application_list(dock_state, list, buffer);
 
-		snprintf(buffer, sizeof(buffer), "%i,%i", (dock->on_right_side ? -ICON_SIZE : 0), dock->y_pos);
-		value = WMCreatePLString(buffer);
-		WMPutInPLDictionary(dock_state, dPosition, value);
-		WMReleasePropList(value);
-	}
+	snprintf(buffer, sizeof(buffer), "%i,%i", (dock->on_right_side ? -ICON_SIZE : 0), dock->y_pos);
+	value = WMCreatePLString(buffer);
+	WMPutInPLDictionary(dock_state, dPosition, value);
+	WMReleasePropList(value);
 	WMReleasePropList(list);
 
-	if (dock->type == WM_CLIP || dock->type == WM_DRAWER) {
-		value = (dock->collapsed ? dYes : dNo);
-		WMPutInPLDictionary(dock_state, dCollapsed, value);
+	value = (dock->lowered ? dYes : dNo);
+	WMPutInPLDictionary(dock_state, dLowered, value);
 
-		value = (dock->auto_collapse ? dYes : dNo);
-		WMPutInPLDictionary(dock_state, dAutoCollapse, value);
+	value = (dock->auto_raise_lower ? dYes : dNo);
+	WMPutInPLDictionary(dock_state, dAutoRaiseLower, value);
 
-		value = (dock->attract_icons ? dYes : dNo);
-		WMPutInPLDictionary(dock_state, dAutoAttractIcons, value);
+	return dock_state;
+}
+
+static WMPropList *clip_save_state(virtual_screen *vscr, WDock *dock)
+{
+	int i;
+	WMPropList *icon_info;
+	WMPropList *list = NULL, *dock_state = NULL;
+	WMPropList *value;
+
+	list = WMCreatePLArray(NULL);
+
+	for (i = 1; i < dock->max_icons; i++) {
+		WAppIcon *btn = dock->icon_array[i];
+
+		if (!btn || btn->attracted)
+			continue;
+
+		icon_info = make_icon_state(vscr, dock->icon_array[i]);
+		if (icon_info != NULL) {
+			WMAddToPLArray(list, icon_info);
+			WMReleasePropList(icon_info);
+		}
 	}
 
-	if (dock->type == WM_DOCK || dock->type == WM_CLIP) {
-		value = (dock->lowered ? dYes : dNo);
-		WMPutInPLDictionary(dock_state, dLowered, value);
+	dock_state = WMCreatePLDictionary(dApplications, list, NULL);
+	WMReleasePropList(list);
 
-		value = (dock->auto_raise_lower ? dYes : dNo);
-		WMPutInPLDictionary(dock_state, dAutoRaiseLower, value);
+	value = (dock->collapsed ? dYes : dNo);
+	WMPutInPLDictionary(dock_state, dCollapsed, value);
+
+	value = (dock->auto_collapse ? dYes : dNo);
+	WMPutInPLDictionary(dock_state, dAutoCollapse, value);
+
+	value = (dock->attract_icons ? dYes : dNo);
+	WMPutInPLDictionary(dock_state, dAutoAttractIcons, value);
+
+	value = (dock->lowered ? dYes : dNo);
+	WMPutInPLDictionary(dock_state, dLowered, value);
+
+	value = (dock->auto_raise_lower ? dYes : dNo);
+	WMPutInPLDictionary(dock_state, dAutoRaiseLower, value);
+
+	return dock_state;
+}
+
+static WMPropList *drawer_save_state(virtual_screen *vscr, WDock *dock)
+{
+	int i;
+	WMPropList *icon_info;
+	WMPropList *list = NULL, *dock_state = NULL;
+	WMPropList *value;
+
+	list = WMCreatePLArray(NULL);
+
+	for (i = 1; i < dock->max_icons; i++) {
+		WAppIcon *btn = dock->icon_array[i];
+
+		if (!btn || btn->attracted)
+			continue;
+
+		icon_info = make_icon_state(vscr, dock->icon_array[i]);
+		if (icon_info != NULL) {
+			WMAddToPLArray(list, icon_info);
+			WMReleasePropList(icon_info);
+		}
 	}
+
+	dock_state = WMCreatePLDictionary(dApplications, list, NULL);
+	WMReleasePropList(list);
+
+	value = (dock->collapsed ? dYes : dNo);
+	WMPutInPLDictionary(dock_state, dCollapsed, value);
+
+	value = (dock->auto_collapse ? dYes : dNo);
+	WMPutInPLDictionary(dock_state, dAutoCollapse, value);
+
+	value = (dock->attract_icons ? dYes : dNo);
+	WMPutInPLDictionary(dock_state, dAutoAttractIcons, value);
 
 	return dock_state;
 }
@@ -1989,7 +2054,7 @@ void wDockSaveState(virtual_screen *vscr, WMPropList *old_state)
 	WMPropList *dock_state;
 	WMPropList *keys;
 
-	dock_state = dockSaveState(vscr, vscr->dock.dock);
+	dock_state = dock_save_state(vscr, vscr->dock.dock);
 
 	/* Copy saved states of docks with different sizes. */
 	if (old_state) {
@@ -2023,7 +2088,7 @@ void wClipSaveState(virtual_screen *vscr)
 
 WMPropList *wClipSaveWorkspaceState(virtual_screen *vscr, int workspace)
 {
-	return dockSaveState(vscr, vscr->workspace.array[workspace]->clip);
+	return clip_save_state(vscr, vscr->workspace.array[workspace]->clip);
 }
 
 static Bool getBooleanDockValue(WMPropList *value, WMPropList *key)
@@ -5637,7 +5702,7 @@ static WMPropList *drawerSaveState(virtual_screen *vscr, WDock *drawer)
 	}
 
 	/* Store applications list and other properties */
-	pstr = dockSaveState(vscr, drawer);
+	pstr = drawer_save_state(vscr, drawer);
 	WMPutInPLDictionary(drawer_state, dDock, pstr);
 	WMReleasePropList(pstr);
 
