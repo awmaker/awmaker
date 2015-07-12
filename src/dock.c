@@ -91,7 +91,6 @@ static WMPropList *dDrawers = NULL;
 
 static void dockIconPaint(WAppIcon *btn);
 
-static void iconMouseDown(WObjDescriptor *desc, XEvent *event);
 static void dock_icon_mouse_down(WObjDescriptor *desc, XEvent *event);
 static void clip_icon_mouse_down(WObjDescriptor *desc, XEvent *event);
 static void drawer_icon_mouse_down(WObjDescriptor *desc, XEvent *event);
@@ -5247,23 +5246,6 @@ static void handleClipChangeWorkspace(virtual_screen *vscr, XEvent *event)
 	}
 
 	wClipIconPaint();
-}
-
-static void iconMouseDown(WObjDescriptor *desc, XEvent *event)
-{
-	WAppIcon *aicon = desc->parent;
-	WDock *dock = aicon->dock;
-
-	switch (dock->type) {
-	case WM_DOCK:
-		dock_icon_mouse_down(desc, event);
-		break;
-	case WM_CLIP:
-		clip_icon_mouse_down(desc, event);
-		break;
-	case WM_DRAWER:
-		drawer_icon_mouse_down(desc, event);
-	}
 }
 
 static void dock_icon_mouse_down(WObjDescriptor *desc, XEvent *event)
