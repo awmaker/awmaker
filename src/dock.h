@@ -93,8 +93,9 @@ void wDrawerFillTheGap(WDock *drawer, WAppIcon *aicon, Bool redocking);
 void wDockFinishLaunch(WAppIcon *icon);
 void wDockTrackWindowLaunch(WDock *dock, Window window);
 WAppIcon *wDockFindIconForWindow(WDock *dock, Window window);
-void wDockDoAutoLaunch(WDock *dock, int workspace);
 void wDockLaunchWithState(WAppIcon *btn, WSavedState *state);
+
+void dockedapps_autolaunch(int vscrno);
 
 #ifdef XDND
 int wDockReceiveDNDDrop(virtual_screen *vscr, XEvent *event);

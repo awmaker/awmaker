@@ -146,6 +146,12 @@ static void dock_unset_attacheddocks(WDock *dock);
 static int restore_state_autocollapsed(WDock *dock, WMPropList *state);
 static int restore_state_autoattracticons(WDock *dock, WMPropList *state);
 
+static void wDockDoAutoLaunch(WDock *dock, int workspace);
+
+static void dock_autolaunch(int vscrno);
+static void clip_autolaunch(int vscrno);
+static void drawers_autolaunch(int vscrno);
+
 static void make_keys(void)
 {
 	if (dCommand != NULL)
@@ -2480,7 +2486,50 @@ void wDockLaunchWithState(WAppIcon *btn, WSavedState *state)
 	}
 }
 
-void wDockDoAutoLaunch(WDock *dock, int workspace)
+static void dock_autolaunch(int vscrno)
+{
+	/* auto-launch apps */
+	if (!wPreferences.flags.nodock && w_global.vscreens[vscrno]->dock.dock) {
+		w_global.vscreens[vscrno]->last_dock = w_global.vscreens[vscrno]->dock.dock;
+		wDockDoAutoLaunch(w_global.vscreens[vscrno]->dock.dock, 0);
+	}
+}
+
+static void clip_autolaunch(int vscrno)
+{
+	int i;
+
+	/* auto-launch apps in clip */
+	if (!wPreferences.flags.noclip) {
+		for (i = 0; i < w_global.vscreens[vscrno]->workspace.count; i++) {
+			if (w_global.vscreens[vscrno]->workspace.array[i]->clip) {
+				w_global.vscreens[vscrno]->last_dock = w_global.vscreens[vscrno]->workspace.array[i]->clip;
+				wDockDoAutoLaunch(w_global.vscreens[vscrno]->workspace.array[i]->clip, i);
+			}
+		}
+	}
+}
+
+static void drawers_autolaunch(int vscrno)
+{
+	/* auto-launch apps in drawers */
+	if (!wPreferences.flags.nodrawer) {
+		WDrawerChain *dc;
+		for (dc = w_global.vscreens[vscrno]->drawer.drawers; dc; dc = dc->next) {
+			w_global.vscreens[vscrno]->last_dock = dc->adrawer;
+			wDockDoAutoLaunch(dc->adrawer, 0);
+		}
+	}
+}
+
+void dockedapps_autolaunch(int vscrno)
+{
+	dock_autolaunch(vscrno);
+	clip_autolaunch(vscrno);
+	drawers_autolaunch(vscrno);
+}
+
+static void wDockDoAutoLaunch(WDock *dock, int workspace)
 {
 	WAppIcon *btn;
 	WSavedState *state;

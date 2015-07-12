@@ -702,33 +702,9 @@ void StartUp(Bool defaultScreenOnly)
 		if (wPreferences.flags.restarting == 0 && !wPreferences.flags.norestore)
 			wSessionRestoreState(w_global.vscreens[j]);
 
-		if (!wPreferences.flags.noautolaunch) {
-			/* auto-launch apps */
-			if (!wPreferences.flags.nodock && w_global.vscreens[j]->dock.dock) {
-				w_global.vscreens[j]->last_dock = w_global.vscreens[j]->dock.dock;
-				wDockDoAutoLaunch(w_global.vscreens[j]->dock.dock, 0);
-			}
-
-			/* auto-launch apps in clip */
-			if (!wPreferences.flags.noclip) {
-				int i;
-				for (i = 0; i < w_global.vscreens[j]->workspace.count; i++) {
-					if (w_global.vscreens[j]->workspace.array[i]->clip) {
-						w_global.vscreens[j]->last_dock = w_global.vscreens[j]->workspace.array[i]->clip;
-						wDockDoAutoLaunch(w_global.vscreens[j]->workspace.array[i]->clip, i);
-					}
-				}
-			}
-
-			/* auto-launch apps in drawers */
-			if (!wPreferences.flags.nodrawer) {
-				WDrawerChain *dc;
-				for (dc = w_global.vscreens[j]->drawer.drawers; dc; dc = dc->next) {
-					w_global.vscreens[j]->last_dock = dc->adrawer;
-					wDockDoAutoLaunch(dc->adrawer, 0);
-				}
-			}
-		}
+		/* Launch the Dock, Clip and Drawers autolaunch apps */
+		if (!wPreferences.flags.noautolaunch)
+			dockedapps_autolaunch(j);
 
 		/* go to workspace where we were before restart */
 		if (lastDesktop >= 0)
