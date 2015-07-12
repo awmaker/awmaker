@@ -5253,7 +5253,7 @@ static void dock_icon_mouse_down(WObjDescriptor *desc, XEvent *event)
 	WAppIcon *aicon = desc->parent;
 	WDock *dock = aicon->dock;
 	virtual_screen *vscr = aicon->icon->core->vscr;
-	WScreen *scr = vscr->screen_ptr;
+	WAppIcon *btn;
 
 	if (aicon->editing || WCHECK_STATE(WSTATE_MODAL))
 		return;
@@ -5294,34 +5294,11 @@ static void dock_icon_mouse_down(WObjDescriptor *desc, XEvent *event)
 		}
 		break;
 	case Button2:
-		if (aicon == w_global.clip.icon) {
-			if (!vscr->clip.ws_menu)
-				vscr->clip.ws_menu = wWorkspaceMenuMake(vscr, False);
+		btn = desc->parent;
 
-			if (vscr->clip.ws_menu) {
-				WMenu *wsMenu = vscr->clip.ws_menu;
-				int xpos;
+		if (!btn->launching && (!btn->running || (event->xbutton.state & ControlMask)))
+			launchDockedApplication(btn, True);
 
-				wWorkspaceMenuUpdate(vscr, wsMenu);
-
-				xpos = event->xbutton.x_root - wsMenu->frame->core->width / 2 - 1;
-				if (xpos < 0)
-					xpos = 0;
-				else if (xpos + wsMenu->frame->core->width > scr->scr_width - 2)
-					xpos = scr->scr_width - wsMenu->frame->core->width - 4;
-
-				wMenuMapAt(wsMenu, xpos, event->xbutton.y_root + 2, False);
-
-				desc = &wsMenu->menu->descriptor;
-				event->xany.send_event = True;
-				(*desc->handle_mousedown) (desc, event);
-			}
-		} else {
-			WAppIcon *btn = desc->parent;
-
-			if (!btn->launching && (!btn->running || (event->xbutton.state & ControlMask)))
-				launchDockedApplication(btn, True);
-		}
 		break;
 	case Button3:
 		if (event->xbutton.send_event &&
@@ -5470,7 +5447,7 @@ static void drawer_icon_mouse_down(WObjDescriptor *desc, XEvent *event)
 	WAppIcon *aicon = desc->parent;
 	WDock *dock = aicon->dock;
 	virtual_screen *vscr = aicon->icon->core->vscr;
-	WScreen *scr = vscr->screen_ptr;
+	WAppIcon *btn;
 
 	if (aicon->editing || WCHECK_STATE(WSTATE_MODAL))
 		return;
@@ -5507,34 +5484,11 @@ static void drawer_icon_mouse_down(WObjDescriptor *desc, XEvent *event)
 		}
 		break;
 	case Button2:
-		if (aicon == w_global.clip.icon) {
-			if (!vscr->clip.ws_menu)
-				vscr->clip.ws_menu = wWorkspaceMenuMake(vscr, False);
+		btn = desc->parent;
 
-			if (vscr->clip.ws_menu) {
-				WMenu *wsMenu = vscr->clip.ws_menu;
-				int xpos;
+		if (!btn->launching && (!btn->running || (event->xbutton.state & ControlMask)))
+			launchDockedApplication(btn, True);
 
-				wWorkspaceMenuUpdate(vscr, wsMenu);
-
-				xpos = event->xbutton.x_root - wsMenu->frame->core->width / 2 - 1;
-				if (xpos < 0)
-					xpos = 0;
-				else if (xpos + wsMenu->frame->core->width > scr->scr_width - 2)
-					xpos = scr->scr_width - wsMenu->frame->core->width - 4;
-
-				wMenuMapAt(wsMenu, xpos, event->xbutton.y_root + 2, False);
-
-				desc = &wsMenu->menu->descriptor;
-				event->xany.send_event = True;
-				(*desc->handle_mousedown) (desc, event);
-			}
-		} else {
-			WAppIcon *btn = desc->parent;
-
-			if (!btn->launching && (!btn->running || (event->xbutton.state & ControlMask)))
-				launchDockedApplication(btn, True);
-		}
 		break;
 	case Button3:
 		if (event->xbutton.send_event &&
