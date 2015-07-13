@@ -5448,11 +5448,6 @@ static void dock_icon_mouse_down(WObjDescriptor *desc, XEvent *event)
 		else
 			wDockRaise(dock);
 
-		if ((event->xbutton.state & ShiftMask) && aicon != w_global.clip.icon && dock->type != WM_DOCK) {
-			wIconSelect(aicon->icon);
-			return;
-		}
-
 		if (aicon->yindex == 0 && aicon->xindex == 0) {
 			if (getClipButton(event->xbutton.x, event->xbutton.y) != CLIP_IDLE &&
 			    wPreferences.flags.clip_merged_in_dock)
