@@ -106,7 +106,9 @@ static void toggleLowered(WDock *dock);
 static void toggleCollapsed(WDock *dock);
 
 static void clipIconExpose(WObjDescriptor *desc, XEvent *event);
-static void dockIconExpose(WObjDescriptor *desc, XEvent *event);
+static void dock_icon_expose(WObjDescriptor *desc, XEvent *event);
+static void clip_icon_expose(WObjDescriptor *desc, XEvent *event);
+static void drawer_icon_expose(WObjDescriptor *desc, XEvent *event);
 
 static void dock_leave(WDock *dock);
 static void clip_leave(WDock *dock);
@@ -1563,7 +1565,7 @@ void dock_map(WDock *dock, virtual_screen *vscr, WMPropList *state)
 	if (wPreferences.flags.clip_merged_in_dock)
 		btn->icon->core->descriptor.handle_expose = clipIconExpose;
 	else
-		btn->icon->core->descriptor.handle_expose = dockIconExpose;
+		btn->icon->core->descriptor.handle_expose = dock_icon_expose;
 
 	map_icon_image(btn->icon);
 
@@ -2203,7 +2205,7 @@ static WAppIcon *restore_dock_icon_state(WMPropList *info, int index)
 
 	wfree(command);
 
-	aicon->icon->core->descriptor.handle_expose = dockIconExpose;
+	aicon->icon->core->descriptor.handle_expose = dock_icon_expose;
 	aicon->icon->core->descriptor.handle_mousedown = dock_icon_mouse_down;
 	aicon->icon->core->descriptor.handle_enternotify = dock_enter_notify;
 	aicon->icon->core->descriptor.handle_leavenotify = dock_leave_notify;
@@ -2310,7 +2312,7 @@ static WAppIcon *restore_clip_icon_state(WMPropList *info, int index)
 
 	wfree(command);
 
-	aicon->icon->core->descriptor.handle_expose = dockIconExpose;
+	aicon->icon->core->descriptor.handle_expose = clip_icon_expose;
 	aicon->icon->core->descriptor.handle_mousedown = clip_icon_mouse_down;
 	aicon->icon->core->descriptor.handle_enternotify = clip_enter_notify;
 	aicon->icon->core->descriptor.handle_leavenotify = clip_leave_notify;
@@ -2413,7 +2415,7 @@ static WAppIcon *restore_drawer_icon_state(WMPropList *info, int index)
 
 	wfree(command);
 
-	aicon->icon->core->descriptor.handle_expose = dockIconExpose;
+	aicon->icon->core->descriptor.handle_expose = drawer_icon_expose;
 	aicon->icon->core->descriptor.handle_mousedown = drawer_icon_mouse_down;
 	aicon->icon->core->descriptor.handle_enternotify = drawer_enter_notify;
 	aicon->icon->core->descriptor.handle_leavenotify = drawer_leave_notify;
@@ -6180,12 +6182,29 @@ static char *findUniqueName(virtual_screen *vscr, const char *instance_basename)
 	return buffer;
 }
 
-static void dockIconExpose(WObjDescriptor *desc, XEvent *event)
+static void dock_icon_expose(WObjDescriptor *desc, XEvent *event)
 {
-        /* Parameter not used, but tell the compiler that it is ok */
-        (void) event;
+	/* Parameter not used, but tell the compiler that it is ok */
+	(void) event;
 
-        wAppIconPaint(desc->parent);
+	wAppIconPaint(desc->parent);
+}
+
+static void clip_icon_expose(WObjDescriptor *desc, XEvent *event)
+{
+	/* Parameter not used, but tell the compiler that it is ok */
+	(void) event;
+	(void) desc;
+
+	wClipIconPaint();
+}
+
+static void drawer_icon_expose(WObjDescriptor *desc, XEvent *event)
+{
+	/* Parameter not used, but tell the compiler that it is ok */
+	(void) event;
+
+	wAppIconPaint(desc->parent);
 }
 
 static void drawerIconExpose(WObjDescriptor *desc, XEvent *event)
