@@ -1669,11 +1669,15 @@ void clip_icon_map(virtual_screen *vscr)
 	w_global.clip.icon->icon->core->descriptor.handle_leavenotify = clip_leave_notify;
 	w_global.clip.icon->icon->core->descriptor.parent_type = WCLASS_DOCK_ICON;
 	w_global.clip.icon->icon->core->descriptor.parent = w_global.clip.icon;
+	w_global.clip.mapped = 1;
+
 	XMapWindow(dpy, w_global.clip.icon->icon->core->window);
 }
 
 void clip_icon_unmap(void)
 {
+	w_global.clip.mapped = 0;
+
 	XUnmapWindow(dpy, w_global.clip.icon->icon->core->window);
 	RemoveFromStackList(w_global.clip.icon->icon->core);
 	unmap_icon_image(w_global.clip.icon->icon);

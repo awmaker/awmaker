@@ -777,6 +777,13 @@ void set_screen_options(virtual_screen *vscr)
 
 	wNETWMInitStuff(vscr);
 
+        /* Create the icon struct, always because
+         * it uses a few memory only. We don't need
+         * check anymore if the clip exists, so the
+         * map functions are easier.
+         */
+        clip_icon_create();
+
 	/* create initial workspace */
 	wWorkspaceNew(vscr, True);
 

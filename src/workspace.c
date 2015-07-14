@@ -83,10 +83,8 @@ void wWorkspaceMake(virtual_screen *vscr, int count)
 static void set_workspace_clip(WDock **clip, virtual_screen *vscr, WMPropList *state) {
 	/* We should create and map the dock icon only in the first
 	 * workspace, because the image is shared */
-	if (!w_global.clip.icon) {
-		clip_icon_create();
+	if (!w_global.clip.mapped)
 		clip_icon_map(vscr);
-	}
 
 	*clip = clip_create(vscr);
 	clip_map(*clip, vscr, state);
@@ -674,7 +672,7 @@ void wWorkspaceForceChange(virtual_screen *vscr, int workspace)
 		/* to handle enter notify. This will also */
 		XUnmapWindow(dpy, w_global.clip.icon->icon->core->window);
 		XMapWindow(dpy, w_global.clip.icon->icon->core->window);
-	} else if (w_global.clip.icon != NULL) {
+	} else if (w_global.clip.mapped) {
 		wClipIconPaint();
 	}
 
