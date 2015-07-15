@@ -461,7 +461,7 @@ static void omnipresentCallback(WMenu *menu, WMenuEntry *entry)
 	WDock *dock;
 	WMArray *selectedIcons;
 	WMArrayIterator iter;
-	int failed;
+	int failed, sts;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) menu;
@@ -477,10 +477,16 @@ static void omnipresentCallback(WMenu *menu, WMenuEntry *entry)
 
 	failed = 0;
 	WM_ITERATE_ARRAY(selectedIcons, aicon, iter) {
-		if (wClipMakeIconOmnipresent(aicon, !aicon->omnipresent) == WO_FAILED)
+		sts = wClipMakeIconOmnipresent(aicon, !aicon->omnipresent);
+		if (sts == WO_SUCCESS)
+			wAppIconPaint(aicon);
+
+		if (sts == WO_FAILED) {
+			wAppIconPaint(aicon);
 			failed++;
-		else if (aicon->icon->selected)
+		} else if (aicon->icon->selected) {
 			wIconSelect(aicon->icon);
+		}
 	}
 
 	WMFreeArray(selectedIcons);
@@ -3454,7 +3460,7 @@ Bool wDockMoveIconBetweenDocks(WDock *src, WDock *dest, WAppIcon *icon, int x, i
 {
 	WWindow *wwin;
 	char *command = NULL;
-	int index;
+	int index, sts;
 	Bool update_icon = False;
 
 	if (src == dest)
@@ -3502,8 +3508,11 @@ Bool wDockMoveIconBetweenDocks(WDock *src, WDock *dest, WAppIcon *icon, int x, i
 		}
 	}
 
-	if (dest->type == WM_DOCK || dest->type == WM_DRAWER)
-		wClipMakeIconOmnipresent(icon, False);
+	if (dest->type == WM_DOCK || dest->type == WM_DRAWER) {
+		sts = wClipMakeIconOmnipresent(icon, False);
+		if (sts == WO_FAILED || sts == WO_SUCCESS)
+			wAppIconPaint(icon);
+	}
 
 	for (index = 1; index < src->max_icons; index++)
 		if (src->icon_array[index] == icon)
@@ -3604,7 +3613,7 @@ Bool wDockMoveIconBetweenDocks(WDock *src, WDock *dest, WAppIcon *icon, int x, i
 
 void wDockDetach(WDock *dock, WAppIcon *icon)
 {
-	int index;
+	int index, sts;
 	Bool update_icon = False;
 
 	/* make the settings panel be closed */
@@ -3614,7 +3623,9 @@ void wDockDetach(WDock *dock, WAppIcon *icon)
 	/* This must be called before icon->dock is set to NULL.
 	 * Don't move it. -Dan
 	 */
-	wClipMakeIconOmnipresent(icon, False);
+	sts = wClipMakeIconOmnipresent(icon, False);
+	if (sts == WO_FAILED || sts == WO_SUCCESS)
+		wAppIconPaint(icon);
 
 	icon->docked = 0;
 	icon->dock = NULL;
@@ -5504,6 +5515,7 @@ static void clip_icon_mouse_down(WObjDescriptor *desc, XEvent *event)
 	WDock *dock = aicon->dock;
 	virtual_screen *vscr = aicon->icon->core->vscr;
 	WScreen *scr = vscr->screen_ptr;
+	int sts;
 
 	if (aicon->editing || WCHECK_STATE(WSTATE_MODAL))
 		return;
@@ -5569,7 +5581,9 @@ static void clip_icon_mouse_down(WObjDescriptor *desc, XEvent *event)
 				(*desc->handle_mousedown) (desc, event);
 			}
 		} else if (event->xbutton.state & ShiftMask) {
-			wClipMakeIconOmnipresent(aicon, !aicon->omnipresent);
+			sts = wClipMakeIconOmnipresent(aicon, !aicon->omnipresent);
+			if (sts == WO_FAILED || sts == WO_SUCCESS)
+				wAppIconPaint(aicon);
 		} else {
 			WAppIcon *btn = desc->parent;
 
@@ -6092,8 +6106,6 @@ int wClipMakeIconOmnipresent(WAppIcon *aicon, int omnipresent)
 			}
 		}
 	}
-
-	wAppIconPaint(aicon);
 
 	return status;
 }

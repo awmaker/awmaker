@@ -896,7 +896,7 @@ void wWorkspaceSaveState(virtual_screen *vscr, WMPropList *old_state)
 void wWorkspaceRestoreState(virtual_screen *vscr)
 {
 	WMPropList *parr, *pstr, *wks_state, *clip_state;
-	int i, j;
+	int i, j, sts;
 
 	make_keys();
 
@@ -951,7 +951,12 @@ void wWorkspaceRestoreState(virtual_screen *vscr)
 					continue;
 
 				aicon->omnipresent = 0;
-				if (wClipMakeIconOmnipresent(aicon, True) != WO_SUCCESS)
+
+				sts = wClipMakeIconOmnipresent(aicon, True);
+				if (sts == WO_FAILED || sts == WO_SUCCESS)
+					wAppIconPaint(aicon);
+
+				if (sts != WO_SUCCESS)
 					continue;
 
 				if (i == 0)
