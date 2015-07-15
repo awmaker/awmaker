@@ -179,7 +179,6 @@ static WDECallbackUpdate setCursor;
 #define REFRESH_WINDOW_FONT	(1<<8)
 #define REFRESH_ICON_TILE	(1<<9)
 #define REFRESH_ICON_FONT	(1<<10)
-#define REFRESH_WORKSPACE_BACK	(1<<11)
 
 #define REFRESH_BUTTON_IMAGES   (1<<12)
 

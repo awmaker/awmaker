@@ -51,7 +51,6 @@
 #include "event.h"
 #include "wsmap.h"
 
-#define MC_NEW          0
 #define MC_DESTROY_LAST 1
 #define MC_LAST_USED    2
 /* index of the first workspace menu entry */
