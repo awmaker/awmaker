@@ -893,10 +893,54 @@ void wWorkspaceSaveState(virtual_screen *vscr, WMPropList *old_state)
 	WMReleasePropList(parr);
 }
 
+int set_clip_omnipresent(virtual_screen *vscr, int wksno)
+{
+	int sts, j, added_omnipresent_icons = 0;
+
+	for (j = 0; j < vscr->workspace.array[wksno]->clip->max_icons; j++) {
+		WAppIcon *aicon = vscr->workspace.array[wksno]->clip->icon_array[j];
+		int k;
+
+		if (!aicon || !aicon->omnipresent)
+			continue;
+
+		aicon->omnipresent = 0;
+
+		sts = wClipMakeIconOmnipresent(aicon, True);
+		if (sts == WO_FAILED || sts == WO_SUCCESS)
+			wAppIconPaint(aicon);
+
+		if (sts != WO_SUCCESS)
+			continue;
+
+		if (wksno == 0)
+			continue;
+
+		/* Move this appicon from workspace i to workspace 0 */
+		vscr->workspace.array[wksno]->clip->icon_array[j] = NULL;
+		vscr->workspace.array[wksno]->clip->icon_count--;
+		added_omnipresent_icons++;
+
+		/* If there are too many omnipresent appicons, we are in trouble */
+		assert(vscr->workspace.array[0]->clip->icon_count + added_omnipresent_icons
+		       <= vscr->workspace.array[0]->clip->max_icons);
+
+		/* Find first free spot on workspace 0 */
+		for (k = 0; k < vscr->workspace.array[0]->clip->max_icons; k++)
+			if (vscr->workspace.array[0]->clip->icon_array[k] == NULL)
+				break;
+
+		vscr->workspace.array[0]->clip->icon_array[k] = aicon;
+		aicon->dock = vscr->workspace.array[0]->clip;
+	}
+
+	return added_omnipresent_icons;
+}
+
 void wWorkspaceRestoreState(virtual_screen *vscr)
 {
 	WMPropList *parr, *pstr, *wks_state, *clip_state;
-	int i, j, sts;
+	int i;
 
 	make_keys();
 
@@ -927,8 +971,6 @@ void wWorkspaceRestoreState(virtual_screen *vscr)
 		wfree(vscr->workspace.array[i]->name);
 		vscr->workspace.array[i]->name = wstrdup(WMGetFromPLString(pstr));
 		if (!wPreferences.flags.noclip) {
-			int added_omnipresent_icons = 0;
-
 			clip_state = WMGetFromPLDictionary(wks_state, dClip);
 			if (vscr->workspace.array[i]->clip)
 				clip_destroy(vscr->workspace.array[i]->clip);
@@ -943,44 +985,7 @@ void wWorkspaceRestoreState(virtual_screen *vscr)
 			 * There we only set icon->omnipresent to know which icons we
 			 * need to set here.
 			 */
-			for (j = 0; j < vscr->workspace.array[i]->clip->max_icons; j++) {
-				WAppIcon *aicon = vscr->workspace.array[i]->clip->icon_array[j];
-				int k;
-
-				if (!aicon || !aicon->omnipresent)
-					continue;
-
-				aicon->omnipresent = 0;
-
-				sts = wClipMakeIconOmnipresent(aicon, True);
-				if (sts == WO_FAILED || sts == WO_SUCCESS)
-					wAppIconPaint(aicon);
-
-				if (sts != WO_SUCCESS)
-					continue;
-
-				if (i == 0)
-					continue;
-
-				/* Move this appicon from workspace i to workspace 0 */
-				vscr->workspace.array[i]->clip->icon_array[j] = NULL;
-				vscr->workspace.array[i]->clip->icon_count--;
-				added_omnipresent_icons++;
-
-				/* If there are too many omnipresent appicons, we are in trouble */
-				assert(vscr->workspace.array[0]->clip->icon_count + added_omnipresent_icons
-				       <= vscr->workspace.array[0]->clip->max_icons);
-
-				/* Find first free spot on workspace 0 */
-				for (k = 0; k < vscr->workspace.array[0]->clip->max_icons; k++)
-					if (vscr->workspace.array[0]->clip->icon_array[k] == NULL)
-						break;
-
-				vscr->workspace.array[0]->clip->icon_array[k] = aicon;
-				aicon->dock = vscr->workspace.array[0]->clip;
-			}
-
-			vscr->workspace.array[0]->clip->icon_count += added_omnipresent_icons;
+			vscr->workspace.array[0]->clip->icon_count += set_clip_omnipresent(vscr, i);
 		}
 
 		WMPostNotificationName(WMNWorkspaceNameChanged, vscr, (void *)(uintptr_t) i);
