@@ -907,8 +907,12 @@ int set_clip_omnipresent(virtual_screen *vscr, int wksno)
 		aicon->omnipresent = 0;
 
 		sts = wClipMakeIconOmnipresent(aicon, True);
+
+		/* kix TODO Remove it
+		 * We don't need paint yet, we wil paint all icons later
 		if (sts == WO_FAILED || sts == WO_SUCCESS)
 			wAppIconPaint(aicon);
+		 */
 
 		if (sts != WO_SUCCESS)
 			continue;
