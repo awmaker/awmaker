@@ -75,7 +75,7 @@ static void make_keys(void)
 void wWorkspaceMake(virtual_screen *vscr, int count)
 {
 	while (count > 0) {
-		wWorkspaceNew(vscr);
+		wWorkspaceNew(vscr, True);
 		count--;
 	}
 }
@@ -92,7 +92,7 @@ static void set_workspace_clip(WDock **clip, virtual_screen *vscr, WMPropList *s
 	clip_map(*clip, vscr, state);
 }
 
-int wWorkspaceNew(virtual_screen *vscr)
+int wWorkspaceNew(virtual_screen *vscr, Bool with_clip)
 {
 	WWorkspace *wspace, **list;
 	WMPropList *state;
@@ -129,10 +129,12 @@ int wWorkspaceNew(virtual_screen *vscr)
 	snprintf(wspace->name, name_length, new_name, vscr->workspace.count);
 
 	/* Set the clip */
-	wspace->clip = NULL;
-	if (!wPreferences.flags.noclip) {
-		state = WMGetFromPLDictionary(w_global.session_state, dClip);
-		set_workspace_clip(&wspace->clip, vscr, state);
+	if (with_clip) {
+		wspace->clip = NULL;
+		if (!wPreferences.flags.noclip) {
+			state = WMGetFromPLDictionary(w_global.session_state, dClip);
+			set_workspace_clip(&wspace->clip, vscr, state);
+		}
 	}
 
 	list = wmalloc(sizeof(WWorkspace *) * vscr->workspace.count);
@@ -711,7 +713,7 @@ static void newWSCommand(WMenu *menu, WMenuEntry *foo)
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) foo;
 
-	ws = wWorkspaceNew(menu->frame->vscr);
+	ws = wWorkspaceNew(menu->frame->vscr, True);
 
 	/* autochange workspace */
 	if (ws >= 0)
@@ -964,7 +966,7 @@ void wWorkspaceRestoreState(virtual_screen *vscr)
 			pstr = wks_state;
 
 		if (i >= vscr->workspace.count)
-			wWorkspaceNew(vscr);
+			wWorkspaceNew(vscr, False);
 
 		if (vscr->workspace.menu) {
 			wfree(vscr->workspace.menu->entries[i + MC_WORKSPACE1]->text);
@@ -976,9 +978,6 @@ void wWorkspaceRestoreState(virtual_screen *vscr)
 		vscr->workspace.array[i]->name = wstrdup(WMGetFromPLString(pstr));
 		if (!wPreferences.flags.noclip) {
 			clip_state = WMGetFromPLDictionary(wks_state, dClip);
-			if (vscr->workspace.array[i]->clip)
-				clip_destroy(vscr->workspace.array[i]->clip);
-
 			set_workspace_clip(&vscr->workspace.array[i]->clip, vscr, clip_state);
 
 			if (i > 0)

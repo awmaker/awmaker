@@ -778,7 +778,7 @@ void set_screen_options(virtual_screen *vscr)
 	wNETWMInitStuff(vscr);
 
 	/* create initial workspace */
-	wWorkspaceNew(vscr);
+	wWorkspaceNew(vscr, True);
 
 	/* create shared pixmaps */
 	createPixmaps(vscr);

@@ -872,7 +872,7 @@ static Bool checkWorkspaceChange(WWindow *wwin, MoveData *data, Bool opaqueMove)
 			/* create a new workspace */
 			if (abs(data->rubCount) > 2) {
 				/* go to next workspace */
-				wWorkspaceNew(vscr);
+				wWorkspaceNew(vscr, True);
 
 				crossWorkspace(vscr, wwin, opaqueMove, vscr->workspace.current + 1, False);
 				changed = True;

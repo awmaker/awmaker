@@ -31,7 +31,7 @@ typedef struct WWorkspace {
 } WWorkspace;
 
 void wWorkspaceMake(virtual_screen *vscr, int count);
-int wWorkspaceNew(virtual_screen *vscr);
+int wWorkspaceNew(virtual_screen *vscr, Bool with_clip);
 int wGetWorkspaceNumber(virtual_screen *vscr, const char *value);
 Bool wWorkspaceDelete(virtual_screen *vscr, int workspace);
 void wWorkspaceChange(virtual_screen *vscr, int workspace);
