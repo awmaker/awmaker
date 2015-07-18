@@ -191,7 +191,7 @@ void create_workspace(virtual_screen *vscr, int wksno, WMPropList *parr)
 	WMPostNotificationName(WMNWorkspaceNameChanged, vscr, (void *)(uintptr_t) wksno);
 }
 
-int wWorkspaceNew(virtual_screen *vscr, Bool with_clip)
+int wWorkspaceNew(virtual_screen *vscr)
 {
 	WWorkspace *wspace;
 
@@ -207,8 +207,7 @@ int wWorkspaceNew(virtual_screen *vscr, Bool with_clip)
 	set_workspace_name(vscr, wspace);
 
 	/* Set the clip */
-	if (with_clip)
-		set_clip_in_workspace(vscr, wspace);
+	set_clip_in_workspace(vscr, wspace);
 
 	update_workspace_list(vscr, wspace);
 
@@ -576,7 +575,7 @@ void wWorkspaceForceChange(virtual_screen *vscr, int workspace)
 	if (workspace > vscr->workspace.count - 1) {
 		count = workspace - vscr->workspace.count + 1;
 		while (count > 0) {
-			wWorkspaceNew(vscr, True);
+			wWorkspaceNew(vscr);
 			count--;
 		}
 	}
@@ -783,7 +782,7 @@ static void newWSCommand(WMenu *menu, WMenuEntry *foo)
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) foo;
 
-	ws = wWorkspaceNew(menu->frame->vscr, True);
+	ws = wWorkspaceNew(menu->frame->vscr);
 
 	/* autochange workspace */
 	if (ws >= 0)

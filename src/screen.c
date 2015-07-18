@@ -785,7 +785,7 @@ void set_screen_options(virtual_screen *vscr)
         clip_icon_create();
 
 	/* create initial workspace */
-	wWorkspaceNew(vscr, True);
+	wWorkspaceNew(vscr);
 
 	/* create shared pixmaps */
 	createPixmaps(vscr);

@@ -1558,7 +1558,7 @@ Bool wNETWMProcessClientMessage(XClientMessageEvent *event)
 				count = value - vscr->workspace.count;
 
 				while (count > 0) {
-					wWorkspaceNew(vscr, True);
+					wWorkspaceNew(vscr);
 					count--;
 				}
 			} else if (value < vscr->workspace.count) {

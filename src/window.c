@@ -1965,7 +1965,7 @@ void wWindowChangeWorkspaceRelative(WWindow *wwin, int amount)
 			count = workspace;
 
 			while (count > 0) {
-				wWorkspaceNew(vscr, True);
+				wWorkspaceNew(vscr);
 				count--;
 			}
 
