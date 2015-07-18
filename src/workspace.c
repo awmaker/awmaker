@@ -133,6 +133,7 @@ static void set_clip_in_workspace(virtual_screen *vscr, WWorkspace *wspace)
 void create_workspace(virtual_screen *vscr, int wksno, WMPropList *parr)
 {
 	WMPropList *pstr, *wks_state, *clip_state;
+	WWorkspace *wspace;
 
 	make_keys();
 
@@ -142,8 +143,23 @@ void create_workspace(virtual_screen *vscr, int wksno, WMPropList *parr)
 	else
 		pstr = wks_state;
 
-	if (wksno >= vscr->workspace.count)
-		wWorkspaceNew(vscr, False);
+	if (wksno >= vscr->workspace.count &&
+	    vscr->workspace.count < MAX_WORKSPACES) {
+		/* Create a new one */
+		wspace = wmalloc(sizeof(WWorkspace));
+		vscr->workspace.count++;
+
+		/* Set the workspace name */
+		set_workspace_name(vscr, wspace);
+
+		update_workspace_list(vscr, wspace);
+
+		wWorkspaceMenuUpdate(vscr, vscr->workspace.menu);
+		wWorkspaceMenuUpdate(vscr, vscr->clip.ws_menu);
+		wNETWMUpdateDesktop(vscr);
+		WMPostNotificationName(WMNWorkspaceCreated, vscr, (void *)(uintptr_t) (vscr->workspace.count - 1));
+		XFlush(dpy);
+	}
 
 	if (vscr->workspace.menu) {
 		wfree(vscr->workspace.menu->entries[wksno + MC_WORKSPACE1]->text);
