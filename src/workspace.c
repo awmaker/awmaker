@@ -73,16 +73,21 @@ static void make_keys(void)
 	dClip = WMCreatePLString("Clip");
 }
 
-static void set_workspace_name(virtual_screen *vscr, WWorkspace *wspace)
+static void set_workspace_name(virtual_screen *vscr, WWorkspace *wspace, char *name)
 {
 	static const char *new_name = NULL;
 	static size_t name_length;
 
 	wspace->name = NULL;
-	new_name = _("Workspace %i");
-	name_length = strlen(new_name) + 8;
-	wspace->name = wmalloc(name_length);
-	snprintf(wspace->name, name_length, new_name, vscr->workspace.count);
+
+	if (name) {
+		wspace->name = wstrdup(name);
+	} else {
+		new_name = _("Workspace %i");
+		name_length = strlen(new_name) + 8;
+		wspace->name = wmalloc(name_length);
+		snprintf(wspace->name, name_length, new_name, vscr->workspace.count);
+	}
 }
 
 static void update_workspace_list(virtual_screen *vscr, WWorkspace *wspace)
@@ -150,7 +155,7 @@ void create_workspace(virtual_screen *vscr, int wksno, WMPropList *parr)
 		vscr->workspace.count++;
 
 		/* Set the workspace name */
-		set_workspace_name(vscr, wspace);
+		set_workspace_name(vscr, wspace, WMGetFromPLString(pstr));
 
 		update_workspace_list(vscr, wspace);
 
@@ -167,8 +172,6 @@ void create_workspace(virtual_screen *vscr, int wksno, WMPropList *parr)
 		vscr->workspace.menu->flags.realized = 0;
 	}
 
-	wfree(vscr->workspace.array[wksno]->name);
-	vscr->workspace.array[wksno]->name = wstrdup(WMGetFromPLString(pstr));
 	if (!wPreferences.flags.noclip) {
 		clip_state = WMGetFromPLDictionary(wks_state, dClip);
 		if (!w_global.clip.mapped)
@@ -204,7 +207,7 @@ int wWorkspaceNew(virtual_screen *vscr)
 	vscr->workspace.count++;
 
 	/* Set the workspace name */
-	set_workspace_name(vscr, wspace);
+	set_workspace_name(vscr, wspace, NULL);
 
 	/* Set the clip */
 	set_clip_in_workspace(vscr, wspace);
