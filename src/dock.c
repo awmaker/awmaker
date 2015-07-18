@@ -105,7 +105,6 @@ static void toggleLowered(WDock *dock);
 
 static void toggleCollapsed(WDock *dock);
 
-static void clipIconExpose(WObjDescriptor *desc, XEvent *event);
 static void dock_icon_expose(WObjDescriptor *desc, XEvent *event);
 static void clip_icon_expose(WObjDescriptor *desc, XEvent *event);
 static void drawer_icon_expose(WObjDescriptor *desc, XEvent *event);
@@ -1563,7 +1562,7 @@ void dock_map(WDock *dock, virtual_screen *vscr, WMPropList *state)
 			   scr->w_visual, scr->w_colormap, scr->white_pixel);
 
 	if (wPreferences.flags.clip_merged_in_dock)
-		btn->icon->core->descriptor.handle_expose = clipIconExpose;
+		btn->icon->core->descriptor.handle_expose = clip_icon_expose;
 	else
 		btn->icon->core->descriptor.handle_expose = dock_icon_expose;
 
@@ -1658,7 +1657,7 @@ void clip_icon_map(virtual_screen *vscr)
 
 	AddToStackList(w_global.clip.icon->icon->core);
 
-	w_global.clip.icon->icon->core->descriptor.handle_expose = clipIconExpose;
+	w_global.clip.icon->icon->core->descriptor.handle_expose = clip_icon_expose;
 	w_global.clip.icon->icon->core->descriptor.handle_mousedown = clip_icon_mouse_down;
 	w_global.clip.icon->icon->core->descriptor.handle_enternotify = clip_enter_notify;
 	w_global.clip.icon->icon->core->descriptor.handle_leavenotify = clip_leave_notify;
@@ -1892,15 +1891,6 @@ void wClipIconPaint(void)
 			       0, 0, wPreferences.icon_size, wPreferences.icon_size);
 
 	paintClipButtons(aicon, aicon->dock->lclip_button_pushed, aicon->dock->rclip_button_pushed);
-}
-
-static void clipIconExpose(WObjDescriptor *desc, XEvent *event)
-{
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) desc;
-	(void) event;
-
-	wClipIconPaint();
 }
 
 static void dockIconPaint(WAppIcon *btn)
