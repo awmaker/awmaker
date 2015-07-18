@@ -73,6 +73,18 @@ static void make_keys(void)
 	dClip = WMCreatePLString("Clip");
 }
 
+static void set_workspace_name(virtual_screen *vscr, WWorkspace *wspace)
+{
+	static const char *new_name = NULL;
+	static size_t name_length;
+
+	wspace->name = NULL;
+	new_name = _("Workspace %i");
+	name_length = strlen(new_name) + 8;
+	wspace->name = wmalloc(name_length);
+	snprintf(wspace->name, name_length, new_name, vscr->workspace.count);
+}
+
 static void update_workspace_list(virtual_screen *vscr, WWorkspace *wspace)
 {
 	WWorkspace **list;
@@ -139,8 +151,6 @@ int wWorkspaceNew(virtual_screen *vscr, Bool with_clip)
 {
 	WWorkspace *wspace;
 	WMPropList *state;
-	static const char *new_name = NULL;
-	static size_t name_length;
 	char *path;
 
 	make_keys();
@@ -164,11 +174,7 @@ int wWorkspaceNew(virtual_screen *vscr, Bool with_clip)
 	vscr->workspace.count++;
 
 	/* Set the workspace name */
-	wspace->name = NULL;
-	new_name = _("Workspace %i");
-	name_length = strlen(new_name) + 8;
-	wspace->name = wmalloc(name_length);
-	snprintf(wspace->name, name_length, new_name, vscr->workspace.count);
+	set_workspace_name(vscr, wspace);
 
 	/* Set the clip */
 	if (with_clip) {
