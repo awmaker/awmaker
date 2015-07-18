@@ -30,7 +30,6 @@ typedef struct WWorkspace {
 	RImage *map;
 } WWorkspace;
 
-void wWorkspaceMake(virtual_screen *vscr, int count);
 int wWorkspaceNew(virtual_screen *vscr, Bool with_clip);
 int wGetWorkspaceNumber(virtual_screen *vscr, const char *value);
 Bool wWorkspaceDelete(virtual_screen *vscr, int workspace);

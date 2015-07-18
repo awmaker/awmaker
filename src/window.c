@@ -1950,6 +1950,7 @@ void wWindowChangeWorkspaceRelative(WWindow *wwin, int amount)
 {
 	virtual_screen *vscr = wwin->vscr;
 	int w = vscr->workspace.current + amount;
+	int workspace, count;
 
 	if (amount < 0) {
 		if (w >= 0)
@@ -1960,8 +1961,14 @@ void wWindowChangeWorkspaceRelative(WWindow *wwin, int amount)
 		if (w < vscr->workspace.count) {
 			wWindowChangeWorkspace(wwin, w);
 		} else if (wPreferences.ws_advance) {
-			int workspace = WMIN(w, MAX_WORKSPACES - 1);
-			wWorkspaceMake(vscr, workspace);
+			workspace = WMIN(w, MAX_WORKSPACES - 1);
+			count = workspace;
+
+			while (count > 0) {
+				wWorkspaceNew(vscr, True);
+				count--;
+			}
+
 			wWindowChangeWorkspace(wwin, workspace);
 		} else if (wPreferences.ws_cycle) {
 			wWindowChangeWorkspace(wwin, w % vscr->workspace.count);

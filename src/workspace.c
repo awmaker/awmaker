@@ -73,14 +73,6 @@ static void make_keys(void)
 	dClip = WMCreatePLString("Clip");
 }
 
-void wWorkspaceMake(virtual_screen *vscr, int count)
-{
-	while (count > 0) {
-		wWorkspaceNew(vscr, True);
-		count--;
-	}
-}
-
 void create_workspace(virtual_screen *vscr, int wksno, WMPropList *parr)
 {
 	WMPropList *pstr, *wks_state, *clip_state;
@@ -536,6 +528,7 @@ void wWorkspaceRelativeChange(virtual_screen *vscr, int amount)
 void wWorkspaceForceChange(virtual_screen *vscr, int workspace)
 {
 	WWindow *tmp, *foc = NULL, *foc2 = NULL;
+	int count;
 
 	if (workspace >= MAX_WORKSPACES || workspace < 0)
 		return;
@@ -546,8 +539,13 @@ void wWorkspaceForceChange(virtual_screen *vscr, int workspace)
 
 	SendHelperMessage(vscr, 'C', workspace + 1, NULL);
 
-	if (workspace > vscr->workspace.count - 1)
-		wWorkspaceMake(vscr, workspace - vscr->workspace.count + 1);
+	if (workspace > vscr->workspace.count - 1) {
+		count = workspace - vscr->workspace.count + 1;
+		while (count > 0) {
+			wWorkspaceNew(vscr, True);
+			count--;
+		}
+	}
 
 	wClipUpdateForWorkspaceChange(vscr, workspace);
 
