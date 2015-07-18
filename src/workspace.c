@@ -73,6 +73,23 @@ static void make_keys(void)
 	dClip = WMCreatePLString("Clip");
 }
 
+static void update_workspace_list(virtual_screen *vscr, WWorkspace *wspace)
+{
+	WWorkspace **list;
+	int i;
+
+	list = wmalloc(sizeof(WWorkspace *) * vscr->workspace.count);
+
+	for (i = 0; i < vscr->workspace.count - 1; i++)
+		list[i] = vscr->workspace.array[i];
+
+	list[i] = wspace;
+	if (vscr->workspace.array)
+		wfree(vscr->workspace.array);
+
+	vscr->workspace.array = list;
+}
+
 void create_workspace(virtual_screen *vscr, int wksno, WMPropList *parr)
 {
 	WMPropList *pstr, *wks_state, *clip_state;
@@ -120,11 +137,10 @@ void create_workspace(virtual_screen *vscr, int wksno, WMPropList *parr)
 
 int wWorkspaceNew(virtual_screen *vscr, Bool with_clip)
 {
-	WWorkspace *wspace, **list;
+	WWorkspace *wspace;
 	WMPropList *state;
 	static const char *new_name = NULL;
 	static size_t name_length;
-	int i;
 	char *path;
 
 	make_keys();
@@ -167,16 +183,7 @@ int wWorkspaceNew(virtual_screen *vscr, Bool with_clip)
 		}
 	}
 
-	list = wmalloc(sizeof(WWorkspace *) * vscr->workspace.count);
-
-	for (i = 0; i < vscr->workspace.count - 1; i++)
-		list[i] = vscr->workspace.array[i];
-
-	list[i] = wspace;
-	if (vscr->workspace.array)
-		wfree(vscr->workspace.array);
-
-	vscr->workspace.array = list;
+	update_workspace_list(vscr, wspace);
 
 	wWorkspaceMenuUpdate(vscr, vscr->workspace.menu);
 	wWorkspaceMenuUpdate(vscr, vscr->clip.ws_menu);
