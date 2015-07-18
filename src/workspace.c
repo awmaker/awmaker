@@ -80,16 +80,6 @@ void wWorkspaceMake(virtual_screen *vscr, int count)
 	}
 }
 
-static void set_workspace_clip(WDock **clip, virtual_screen *vscr, WMPropList *state) {
-	/* We should create and map the dock icon only in the first
-	 * workspace, because the image is shared */
-	if (!w_global.clip.mapped)
-		clip_icon_map(vscr);
-
-	*clip = clip_create(vscr);
-	clip_map(*clip, vscr, state);
-}
-
 int wWorkspaceNew(virtual_screen *vscr, Bool with_clip)
 {
 	WWorkspace *wspace, **list;
@@ -131,7 +121,11 @@ int wWorkspaceNew(virtual_screen *vscr, Bool with_clip)
 		wspace->clip = NULL;
 		if (!wPreferences.flags.noclip) {
 			state = WMGetFromPLDictionary(w_global.session_state, dClip);
-			set_workspace_clip(&wspace->clip, vscr, state);
+			if (!w_global.clip.mapped)
+				clip_icon_map(vscr);
+
+			wspace->clip = clip_create(vscr);
+			clip_map(wspace->clip, vscr, state);
 		}
 	}
 
@@ -976,7 +970,11 @@ void wWorkspaceRestoreState(virtual_screen *vscr)
 		vscr->workspace.array[i]->name = wstrdup(WMGetFromPLString(pstr));
 		if (!wPreferences.flags.noclip) {
 			clip_state = WMGetFromPLDictionary(wks_state, dClip);
-			set_workspace_clip(&vscr->workspace.array[i]->clip, vscr, clip_state);
+			if (!w_global.clip.mapped)
+				clip_icon_map(vscr);
+
+			vscr->workspace.array[i]->clip = clip_create(vscr);
+			clip_map(vscr->workspace.array[i]->clip, vscr, clip_state);
 
 			if (i > 0)
 				wDockHideIcons(vscr->workspace.array[i]->clip);
