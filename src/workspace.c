@@ -102,6 +102,34 @@ static void update_workspace_list(virtual_screen *vscr, WWorkspace *wspace)
 	vscr->workspace.array = list;
 }
 
+static void set_clip_in_workspace(virtual_screen *vscr, WWorkspace *wspace)
+{
+	WMPropList *state;
+	char *path;
+
+	make_keys();
+
+	/* We need load the WMState file to set the Clip session state */
+	path = wdefaultspathfordomain("WMState");
+	w_global.session_state = WMReadPropListFromFile(path);
+	wfree(path);
+	if (!w_global.session_state && w_global.screen_count > 1) {
+		path = wdefaultspathfordomain("WMState");
+		w_global.session_state = WMReadPropListFromFile(path);
+		wfree(path);
+	}
+
+	wspace->clip = NULL;
+	if (!wPreferences.flags.noclip) {
+		state = WMGetFromPLDictionary(w_global.session_state, dClip);
+		if (!w_global.clip.mapped)
+			clip_icon_map(vscr);
+
+		wspace->clip = clip_create(vscr);
+		clip_map(wspace->clip, vscr, state);
+	}
+}
+
 void create_workspace(virtual_screen *vscr, int wksno, WMPropList *parr)
 {
 	WMPropList *pstr, *wks_state, *clip_state;
@@ -150,20 +178,6 @@ void create_workspace(virtual_screen *vscr, int wksno, WMPropList *parr)
 int wWorkspaceNew(virtual_screen *vscr, Bool with_clip)
 {
 	WWorkspace *wspace;
-	WMPropList *state;
-	char *path;
-
-	make_keys();
-
-	/* We need load the WMState file to set the Clip session state */
-	path = wdefaultspathfordomain("WMState");
-	w_global.session_state = WMReadPropListFromFile(path);
-	wfree(path);
-	if (!w_global.session_state && w_global.screen_count > 1) {
-		path = wdefaultspathfordomain("WMState");
-		w_global.session_state = WMReadPropListFromFile(path);
-		wfree(path);
-	}
 
 	/* Max workspaces reached check */
 	if (vscr->workspace.count >= MAX_WORKSPACES)
@@ -177,17 +191,8 @@ int wWorkspaceNew(virtual_screen *vscr, Bool with_clip)
 	set_workspace_name(vscr, wspace);
 
 	/* Set the clip */
-	if (with_clip) {
-		wspace->clip = NULL;
-		if (!wPreferences.flags.noclip) {
-			state = WMGetFromPLDictionary(w_global.session_state, dClip);
-			if (!w_global.clip.mapped)
-				clip_icon_map(vscr);
-
-			wspace->clip = clip_create(vscr);
-			clip_map(wspace->clip, vscr, state);
-		}
-	}
+	if (with_clip)
+		set_clip_in_workspace(vscr, wspace);
 
 	update_workspace_list(vscr, wspace);
 
