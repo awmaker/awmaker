@@ -164,8 +164,12 @@ void create_workspace(virtual_screen *vscr, int wksno, WMPropList *parr)
 
 		update_workspace_list(vscr, wspace);
 
-		wWorkspaceMenuUpdate(vscr, vscr->workspace.menu);
-		wWorkspaceMenuUpdate(vscr, vscr->clip.ws_menu);
+		menu_workspace_addwks(vscr, vscr->workspace.menu);
+		menu_workspace_shortcut_labels(vscr, vscr->workspace.menu);
+		wWorkspaceMenuUpdate_map(vscr, vscr->workspace.menu);
+		menu_workspace_addwks(vscr, vscr->clip.ws_menu);
+		menu_workspace_shortcut_labels(vscr, vscr->clip.ws_menu);
+		wWorkspaceMenuUpdate_map(vscr, vscr->clip.ws_menu);
 		wNETWMUpdateDesktop(vscr);
 		WMPostNotificationName(WMNWorkspaceCreated, vscr, (void *)(uintptr_t) (vscr->workspace.count - 1));
 		XFlush(dpy);
@@ -219,8 +223,12 @@ int wWorkspaceNew(virtual_screen *vscr)
 
 	update_workspace_list(vscr, wspace);
 
-	wWorkspaceMenuUpdate(vscr, vscr->workspace.menu);
-	wWorkspaceMenuUpdate(vscr, vscr->clip.ws_menu);
+	menu_workspace_addwks(vscr, vscr->workspace.menu);
+	menu_workspace_shortcut_labels(vscr, vscr->workspace.menu);
+	wWorkspaceMenuUpdate_map(vscr, vscr->workspace.menu);
+	menu_workspace_addwks(vscr, vscr->clip.ws_menu);
+	menu_workspace_shortcut_labels(vscr, vscr->clip.ws_menu);
+	wWorkspaceMenuUpdate_map(vscr, vscr->clip.ws_menu);
 	wNETWMUpdateDesktop(vscr);
 	WMPostNotificationName(WMNWorkspaceCreated, vscr, (void *)(uintptr_t) (vscr->workspace.count - 1));
 	XFlush(dpy);
@@ -271,10 +279,12 @@ Bool wWorkspaceDelete(virtual_screen *vscr, int workspace)
 
 	vscr->workspace.count--;
 
-	/* update menu */
-	wWorkspaceMenuUpdate(vscr, vscr->workspace.menu);
-	/* clip workspace menu */
-	wWorkspaceMenuUpdate(vscr, vscr->clip.ws_menu);
+	menu_workspace_delwks(vscr, vscr->workspace.menu);
+	menu_workspace_shortcut_labels(vscr, vscr->workspace.menu);
+	wWorkspaceMenuUpdate_map(vscr, vscr->workspace.menu);
+	menu_workspace_delwks(vscr, vscr->clip.ws_menu);
+	menu_workspace_shortcut_labels(vscr, vscr->clip.ws_menu);
+	wWorkspaceMenuUpdate_map(vscr, vscr->clip.ws_menu);
 
 	/* update also window menu */
 	if (vscr->workspace.submenu) {
