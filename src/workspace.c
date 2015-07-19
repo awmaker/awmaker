@@ -132,9 +132,6 @@ static void set_clip_in_workspace(virtual_screen *vscr, WWorkspace *wspace)
 	wspace->clip = NULL;
 	if (!wPreferences.flags.noclip) {
 		state = WMGetFromPLDictionary(w_global.session_state, dClip);
-		if (!w_global.clip.mapped)
-			clip_icon_map(vscr);
-
 		wspace->clip = clip_create(vscr);
 		clip_map(wspace->clip, vscr, state);
 	}
@@ -180,11 +177,11 @@ void create_workspace(virtual_screen *vscr, int wksno, WMPropList *parr)
 	WMPostNotificationName(WMNWorkspaceCreated, vscr, (void *)(uintptr_t) (vscr->workspace.count - 1));
 	XFlush(dpy);
 
+	if ((!wPreferences.flags.noclip) && (!w_global.clip.mapped))
+		clip_icon_map(vscr);
+
 	if (!wPreferences.flags.noclip) {
 		clip_state = WMGetFromPLDictionary(wks_state, dClip);
-		if (!w_global.clip.mapped)
-			clip_icon_map(vscr);
-
 		vscr->workspace.array[wksno]->clip = clip_create(vscr);
 		clip_map(vscr->workspace.array[wksno]->clip, vscr, clip_state);
 
@@ -216,6 +213,9 @@ int wWorkspaceNew(virtual_screen *vscr)
 	set_workspace_name(vscr, wspace, NULL);
 
 	/* Set the clip */
+	if ((!wPreferences.flags.noclip) && (!w_global.clip.mapped))
+		clip_icon_map(vscr);
+
 	set_clip_in_workspace(vscr, wspace);
 
 	update_workspace_list(vscr, wspace);
