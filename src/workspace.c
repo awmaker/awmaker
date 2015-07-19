@@ -167,18 +167,14 @@ void create_workspace(virtual_screen *vscr, int wksno, WMPropList *parr)
 		menu_workspace_addwks(vscr, vscr->workspace.menu);
 		menu_workspace_shortcut_labels(vscr, vscr->workspace.menu);
 		wWorkspaceMenuUpdate_map(vscr, vscr->workspace.menu);
+
 		menu_workspace_addwks(vscr, vscr->clip.ws_menu);
 		menu_workspace_shortcut_labels(vscr, vscr->clip.ws_menu);
 		wWorkspaceMenuUpdate_map(vscr, vscr->clip.ws_menu);
+
 		wNETWMUpdateDesktop(vscr);
 		WMPostNotificationName(WMNWorkspaceCreated, vscr, (void *)(uintptr_t) (vscr->workspace.count - 1));
 		XFlush(dpy);
-	}
-
-	if (vscr->workspace.menu) {
-		wfree(vscr->workspace.menu->entries[wksno + MC_WORKSPACE1]->text);
-		vscr->workspace.menu->entries[wksno + MC_WORKSPACE1]->text = wstrdup(WMGetFromPLString(pstr));
-		vscr->workspace.menu->flags.realized = 0;
 	}
 
 	if (!wPreferences.flags.noclip) {
