@@ -300,8 +300,6 @@ Bool wWorkspaceDelete(virtual_screen *vscr, int workspace)
 		i = menu->entry_no;
 		while (i > vscr->workspace.count)
 			wMenuRemoveItem(menu, --i);
-
-		wMenuRealize(menu);
 	}
 
 	wNETWMUpdateDesktop(vscr);
