@@ -60,6 +60,11 @@
 
 int set_clip_omnipresent(virtual_screen *vscr, int wksno);
 
+void menu_workspace_addwks(virtual_screen *vscr, WMenu *menu);
+void menu_workspace_delwks(virtual_screen *vscr, WMenu *menu);
+void menu_workspace_shortcut_labels(virtual_screen *vscr, WMenu *menu);
+void wWorkspaceMenuUpdate_map(virtual_screen *vscr, WMenu *menu);
+
 static WMPropList *dWorkspaces = NULL;
 static WMPropList *dClip, *dName;
 
@@ -869,36 +874,48 @@ WMenu *wWorkspaceMenuMake(virtual_screen *vscr, Bool titled)
 	return wsmenu;
 }
 
-void wWorkspaceMenuUpdate(virtual_screen *vscr, WMenu *menu)
+void menu_workspace_addwks(virtual_screen *vscr, WMenu *menu)
 {
-	int i;
-	long ws;
 	char title[MAX_WORKSPACENAME_WIDTH + 1];
 	WMenuEntry *entry;
-	int tmp;
+	int i;
+	long ws;
 
 	if (!menu)
 		return;
 
-	if (menu->entry_no < vscr->workspace.count + MC_WORKSPACE1) {
-		/* new workspace(s) added */
-		i = vscr->workspace.count - (menu->entry_no - MC_WORKSPACE1);
-		ws = menu->entry_no - MC_WORKSPACE1;
-		while (i > 0) {
-			wstrlcpy(title, vscr->workspace.array[ws]->name, MAX_WORKSPACENAME_WIDTH);
+	/* new workspace(s) added */
+	i = vscr->workspace.count - (menu->entry_no - MC_WORKSPACE1);
+	ws = menu->entry_no - MC_WORKSPACE1;
+	while (i > 0) {
+		wstrlcpy(title, vscr->workspace.array[ws]->name, MAX_WORKSPACENAME_WIDTH);
 
-			entry = wMenuAddCallback(menu, title, switchWSCommand, (void *)ws);
-			entry->flags.indicator = 1;
-			entry->flags.editable = 1;
+		entry = wMenuAddCallback(menu, title, switchWSCommand, (void *)ws);
+		entry->flags.indicator = 1;
+		entry->flags.editable = 1;
 
-			i--;
-			ws++;
-		}
-	} else if (menu->entry_no > vscr->workspace.count + MC_WORKSPACE1) {
-		/* removed workspace(s) */
-		for (i = menu->entry_no - 1; i >= vscr->workspace.count + MC_WORKSPACE1; i--)
-			wMenuRemoveItem(menu, i);
+		i--;
+		ws++;
 	}
+}
+
+void menu_workspace_delwks(virtual_screen *vscr, WMenu *menu)
+{
+	int i;
+
+	if (!menu)
+		return;
+
+	for (i = menu->entry_no - 1; i >= vscr->workspace.count + MC_WORKSPACE1; i--)
+		wMenuRemoveItem(menu, i);
+}
+
+void menu_workspace_shortcut_labels(virtual_screen *vscr, WMenu *menu)
+{
+	int i;
+
+	if (!menu)
+		return;
 
 	for (i = 0; i < vscr->workspace.count; i++) {
 		/* workspace shortcut labels */
@@ -911,6 +928,15 @@ void wWorkspaceMenuUpdate(virtual_screen *vscr, WMenu *menu)
 	}
 
 	menu->entries[vscr->workspace.current + MC_WORKSPACE1]->flags.indicator_on = 1;
+}
+
+void wWorkspaceMenuUpdate_map(virtual_screen *vscr, WMenu *menu)
+{
+	int tmp;
+
+	if (!menu)
+		return;
+
 	wMenuRealize(menu);
 
 	/* don't let user destroy current workspace */
@@ -931,6 +957,20 @@ void wWorkspaceMenuUpdate(virtual_screen *vscr, WMenu *menu)
 		wMenuMove(menu, tmp - (int)menu->frame->core->width, menu->frame_y, False);
 
 	wMenuPaint(menu);
+}
+
+void wWorkspaceMenuUpdate(virtual_screen *vscr, WMenu *menu)
+{
+	if (!menu)
+		return;
+
+	if (menu->entry_no < vscr->workspace.count + MC_WORKSPACE1)
+		menu_workspace_addwks(vscr, menu);
+	else if (menu->entry_no > vscr->workspace.count + MC_WORKSPACE1)
+		menu_workspace_delwks(vscr, menu);
+
+	menu_workspace_shortcut_labels(vscr, menu);
+	wWorkspaceMenuUpdate_map(vscr, menu);
 }
 
 void wWorkspaceSaveState(virtual_screen *vscr, WMPropList *old_state)
