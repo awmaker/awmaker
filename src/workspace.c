@@ -536,7 +536,7 @@ static void showWorkspaceName(virtual_screen *vscr, int workspace)
 
 void wWorkspaceChange(virtual_screen *vscr, int workspace)
 {
-	if (w_global.startup.phase1 || w_global.startup.phase2 || vscr->screen_ptr->flags.ignore_focus_events)
+	if (w_global.startup.phase1 || vscr->screen_ptr->flags.ignore_focus_events)
 		return;
 
 	if (workspace != vscr->workspace.current)

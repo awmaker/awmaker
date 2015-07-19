@@ -502,7 +502,6 @@ extern struct wmaker_global_variables {
 	/* Window Maker startup phases */
 	struct {
 		unsigned int phase1:1;
-		unsigned int phase2:1;
 	} startup;
 
 	/* locale to use. NULL==POSIX or C */
