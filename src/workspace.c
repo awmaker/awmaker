@@ -195,8 +195,6 @@ void create_workspace(virtual_screen *vscr, int wksno, WMPropList *parr)
 		 */
 		vscr->workspace.array[0]->clip->icon_count += set_clip_omnipresent(vscr, wksno);
 	}
-
-	WMPostNotificationName(WMNWorkspaceNameChanged, vscr, (void *)(uintptr_t) wksno);
 }
 
 int wWorkspaceNew(virtual_screen *vscr)
