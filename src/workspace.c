@@ -153,29 +153,32 @@ void create_workspace(virtual_screen *vscr, int wksno, WMPropList *parr)
 	else
 		pstr = wks_state;
 
-	if (wksno >= vscr->workspace.count &&
-	    vscr->workspace.count < MAX_WORKSPACES) {
-		/* Create a new one */
-		wspace = wmalloc(sizeof(WWorkspace));
-		vscr->workspace.count++;
+	if (wksno < vscr->workspace.count)
+		return;
 
-		/* Set the workspace name */
-		set_workspace_name(vscr, wspace, WMGetFromPLString(pstr));
+	if (vscr->workspace.count >= MAX_WORKSPACES)
+		return;
 
-		update_workspace_list(vscr, wspace);
+	/* Create a new one */
+	wspace = wmalloc(sizeof(WWorkspace));
+	vscr->workspace.count++;
 
-		menu_workspace_addwks(vscr, vscr->workspace.menu);
-		menu_workspace_shortcut_labels(vscr, vscr->workspace.menu);
-		wWorkspaceMenuUpdate_map(vscr, vscr->workspace.menu);
+	/* Set the workspace name */
+	set_workspace_name(vscr, wspace, WMGetFromPLString(pstr));
 
-		menu_workspace_addwks(vscr, vscr->clip.ws_menu);
-		menu_workspace_shortcut_labels(vscr, vscr->clip.ws_menu);
-		wWorkspaceMenuUpdate_map(vscr, vscr->clip.ws_menu);
+	update_workspace_list(vscr, wspace);
 
-		wNETWMUpdateDesktop(vscr);
-		WMPostNotificationName(WMNWorkspaceCreated, vscr, (void *)(uintptr_t) (vscr->workspace.count - 1));
-		XFlush(dpy);
-	}
+	menu_workspace_addwks(vscr, vscr->workspace.menu);
+	menu_workspace_shortcut_labels(vscr, vscr->workspace.menu);
+	wWorkspaceMenuUpdate_map(vscr, vscr->workspace.menu);
+
+	menu_workspace_addwks(vscr, vscr->clip.ws_menu);
+	menu_workspace_shortcut_labels(vscr, vscr->clip.ws_menu);
+	wWorkspaceMenuUpdate_map(vscr, vscr->clip.ws_menu);
+
+	wNETWMUpdateDesktop(vscr);
+	WMPostNotificationName(WMNWorkspaceCreated, vscr, (void *)(uintptr_t) (vscr->workspace.count - 1));
+	XFlush(dpy);
 
 	if (!wPreferences.flags.noclip) {
 		clip_state = WMGetFromPLDictionary(wks_state, dClip);
