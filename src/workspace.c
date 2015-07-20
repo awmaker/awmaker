@@ -175,10 +175,10 @@ int create_workspace(virtual_screen *vscr, int wksno, WMPropList *parr)
 			pstr = wks_state;
 
 		wksname = WMGetFromPLString(pstr);
-	}
 
-	if (wksno < vscr->workspace.count)
-		return -1;
+		if (wksno < vscr->workspace.count)
+			return -1;
+	}
 
 	if (vscr->workspace.count >= MAX_WORKSPACES)
 		return -1;
@@ -215,41 +215,7 @@ int create_workspace(virtual_screen *vscr, int wksno, WMPropList *parr)
 
 int wWorkspaceNew(virtual_screen *vscr)
 {
-	WWorkspace *wspace;
-
-	/* Max workspaces reached check */
-	if (vscr->workspace.count >= MAX_WORKSPACES)
-		return -1;
-
-	/* Create a new one */
-	wspace = wmalloc(sizeof(WWorkspace));
-	vscr->workspace.count++;
-
-	/* Set the workspace name */
-	set_workspace_name(vscr, wspace, NULL);
-	update_workspace_list(vscr, wspace);
-
-	/* Set the clip */
-	if ((!wPreferences.flags.noclip) && (!w_global.clip.mapped))
-		clip_icon_map(vscr);
-
-	set_clip_in_workspace(vscr, wspace);
-
-	menu_workspace_addwks(vscr, vscr->workspace.menu);
-	menu_workspace_shortcut_labels(vscr, vscr->workspace.menu);
-
-	menu_workspace_addwks(vscr, vscr->clip.ws_menu);
-	menu_workspace_shortcut_labels(vscr, vscr->clip.ws_menu);
-
-	set_clip_in_workspace_map(vscr, wspace, -1, NULL);
-	wWorkspaceMenuUpdate_map(vscr, vscr->workspace.menu);
-	wWorkspaceMenuUpdate_map(vscr, vscr->clip.ws_menu);
-
-	wNETWMUpdateDesktop(vscr);
-	WMPostNotificationName(WMNWorkspaceCreated, vscr, (void *)(uintptr_t) (vscr->workspace.count - 1));
-	XFlush(dpy);
-
-	return vscr->workspace.count - 1;
+	return create_workspace(vscr, -1, NULL);
 }
 
 Bool wWorkspaceDelete(virtual_screen *vscr, int workspace)
