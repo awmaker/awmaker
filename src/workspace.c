@@ -191,9 +191,6 @@ int create_workspace(virtual_screen *vscr, int wksno, WMPropList *parr)
 	set_workspace_name(vscr, wspace, wksname);
 	update_workspace_list(vscr, wspace);
 
-	if ((!wPreferences.flags.noclip) && (!w_global.clip.mapped))
-		clip_icon_map(vscr);
-
 	set_clip_in_workspace(vscr, wspace);
 
 	menu_workspace_addwks(vscr, vscr->workspace.menu);
@@ -201,6 +198,9 @@ int create_workspace(virtual_screen *vscr, int wksno, WMPropList *parr)
 
 	menu_workspace_addwks(vscr, vscr->clip.ws_menu);
 	menu_workspace_shortcut_labels(vscr, vscr->clip.ws_menu);
+
+	if ((!wPreferences.flags.noclip) && (!w_global.clip.mapped))
+		clip_icon_map(vscr);
 
 	set_clip_in_workspace_map(vscr, wspace, wksno, wks_state);
 	wWorkspaceMenuUpdate_map(vscr, vscr->workspace.menu);
