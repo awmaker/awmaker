@@ -161,16 +161,21 @@ static void set_clip_in_workspace_map(virtual_screen *vscr, WWorkspace *wspace, 
 
 int create_workspace(virtual_screen *vscr, int wksno, WMPropList *parr)
 {
-	WMPropList *pstr, *wks_state;
+	WMPropList *pstr, *wks_state = NULL;
 	WWorkspace *wspace;
+	char *wksname = NULL;
 
 	make_keys();
 
-	wks_state = WMGetFromPLArray(parr, wksno);
-	if (WMIsPLDictionary(wks_state))
-		pstr = WMGetFromPLDictionary(wks_state, dName);
-	else
-		pstr = wks_state;
+	if (parr != NULL) {
+		wks_state = WMGetFromPLArray(parr, wksno);
+		if (WMIsPLDictionary(wks_state))
+			pstr = WMGetFromPLDictionary(wks_state, dName);
+		else
+			pstr = wks_state;
+
+		wksname = WMGetFromPLString(pstr);
+	}
 
 	if (wksno < vscr->workspace.count)
 		return -1;
@@ -183,7 +188,7 @@ int create_workspace(virtual_screen *vscr, int wksno, WMPropList *parr)
 	vscr->workspace.count++;
 
 	/* Set the workspace name */
-	set_workspace_name(vscr, wspace, WMGetFromPLString(pstr));
+	set_workspace_name(vscr, wspace, wksname);
 	update_workspace_list(vscr, wspace);
 
 	if ((!wPreferences.flags.noclip) && (!w_global.clip.mapped))
