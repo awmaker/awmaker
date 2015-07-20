@@ -139,8 +139,8 @@ static void set_clip_in_workspace(virtual_screen *vscr, WWorkspace *wspace, int 
 	} else {
 		if (!wPreferences.flags.noclip) {
 			clip_state = WMGetFromPLDictionary(wks_state, dClip);
-			vscr->workspace.array[wksno]->clip = clip_create(vscr);
-			clip_map(vscr->workspace.array[wksno]->clip, vscr, clip_state);
+			wspace->clip = clip_create(vscr);
+			clip_map(wspace->clip, vscr, clip_state);
 
 			if (wksno > 0)
 				wDockHideIcons(vscr->workspace.array[wksno]->clip);
