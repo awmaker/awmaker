@@ -112,16 +112,19 @@ static void update_workspace_list(virtual_screen *vscr, WWorkspace *wspace)
 	vscr->workspace.array = list;
 }
 
-static void set_clip_in_workspace(virtual_screen *vscr, WWorkspace *wspace, int wksno, WMPropList *wks_state)
+static void set_clip_in_workspace(virtual_screen *vscr, WWorkspace *wspace)
+{
+	wspace->clip = NULL;
+	if (!wPreferences.flags.noclip)
+		wspace->clip = clip_create(vscr);
+}
+
+static void set_clip_in_workspace_map(virtual_screen *vscr, WWorkspace *wspace, int wksno, WMPropList *wks_state)
 {
 	WMPropList *clip_state, *tmp_state;
 	char *path;
 
 	make_keys();
-
-	wspace->clip = NULL;
-	if (!wPreferences.flags.noclip)
-		wspace->clip = clip_create(vscr);
 
 	if (wksno < 0) {
 		/* We need load the WMState file to set the Clip session state */
@@ -199,7 +202,8 @@ void create_workspace(virtual_screen *vscr, int wksno, WMPropList *parr)
 	if ((!wPreferences.flags.noclip) && (!w_global.clip.mapped))
 		clip_icon_map(vscr);
 
-	set_clip_in_workspace(vscr, wspace, wksno, wks_state);
+	set_clip_in_workspace(vscr, wspace);
+	set_clip_in_workspace_map(vscr, wspace, wksno, wks_state);
 }
 
 int wWorkspaceNew(virtual_screen *vscr)
@@ -221,7 +225,8 @@ int wWorkspaceNew(virtual_screen *vscr)
 	if ((!wPreferences.flags.noclip) && (!w_global.clip.mapped))
 		clip_icon_map(vscr);
 
-	set_clip_in_workspace(vscr, wspace, -1, NULL);
+	set_clip_in_workspace(vscr, wspace);
+	set_clip_in_workspace_map(vscr, wspace, -1, NULL);
 
 	update_workspace_list(vscr, wspace);
 
