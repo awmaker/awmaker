@@ -184,26 +184,26 @@ void create_workspace(virtual_screen *vscr, int wksno, WMPropList *parr)
 
 	/* Set the workspace name */
 	set_workspace_name(vscr, wspace, WMGetFromPLString(pstr));
-
 	update_workspace_list(vscr, wspace);
-
-	menu_workspace_addwks(vscr, vscr->workspace.menu);
-	menu_workspace_shortcut_labels(vscr, vscr->workspace.menu);
-	wWorkspaceMenuUpdate_map(vscr, vscr->workspace.menu);
-
-	menu_workspace_addwks(vscr, vscr->clip.ws_menu);
-	menu_workspace_shortcut_labels(vscr, vscr->clip.ws_menu);
-	wWorkspaceMenuUpdate_map(vscr, vscr->clip.ws_menu);
-
-	wNETWMUpdateDesktop(vscr);
-	WMPostNotificationName(WMNWorkspaceCreated, vscr, (void *)(uintptr_t) (vscr->workspace.count - 1));
-	XFlush(dpy);
 
 	if ((!wPreferences.flags.noclip) && (!w_global.clip.mapped))
 		clip_icon_map(vscr);
 
 	set_clip_in_workspace(vscr, wspace);
+
+	menu_workspace_addwks(vscr, vscr->workspace.menu);
+	menu_workspace_shortcut_labels(vscr, vscr->workspace.menu);
+
+	menu_workspace_addwks(vscr, vscr->clip.ws_menu);
+	menu_workspace_shortcut_labels(vscr, vscr->clip.ws_menu);
+
 	set_clip_in_workspace_map(vscr, wspace, wksno, wks_state);
+	wWorkspaceMenuUpdate_map(vscr, vscr->workspace.menu);
+	wWorkspaceMenuUpdate_map(vscr, vscr->clip.ws_menu);
+
+	wNETWMUpdateDesktop(vscr);
+	WMPostNotificationName(WMNWorkspaceCreated, vscr, (void *)(uintptr_t) (vscr->workspace.count - 1));
+	XFlush(dpy);
 }
 
 int wWorkspaceNew(virtual_screen *vscr)
@@ -220,22 +220,24 @@ int wWorkspaceNew(virtual_screen *vscr)
 
 	/* Set the workspace name */
 	set_workspace_name(vscr, wspace, NULL);
+	update_workspace_list(vscr, wspace);
 
 	/* Set the clip */
 	if ((!wPreferences.flags.noclip) && (!w_global.clip.mapped))
 		clip_icon_map(vscr);
 
 	set_clip_in_workspace(vscr, wspace);
-	set_clip_in_workspace_map(vscr, wspace, -1, NULL);
-
-	update_workspace_list(vscr, wspace);
 
 	menu_workspace_addwks(vscr, vscr->workspace.menu);
 	menu_workspace_shortcut_labels(vscr, vscr->workspace.menu);
-	wWorkspaceMenuUpdate_map(vscr, vscr->workspace.menu);
+
 	menu_workspace_addwks(vscr, vscr->clip.ws_menu);
 	menu_workspace_shortcut_labels(vscr, vscr->clip.ws_menu);
+
+	set_clip_in_workspace_map(vscr, wspace, -1, NULL);
+	wWorkspaceMenuUpdate_map(vscr, vscr->workspace.menu);
 	wWorkspaceMenuUpdate_map(vscr, vscr->clip.ws_menu);
+
 	wNETWMUpdateDesktop(vscr);
 	WMPostNotificationName(WMNWorkspaceCreated, vscr, (void *)(uintptr_t) (vscr->workspace.count - 1));
 	XFlush(dpy);
