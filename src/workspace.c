@@ -119,6 +119,10 @@ static void set_clip_in_workspace(virtual_screen *vscr, WWorkspace *wspace, int 
 
 	make_keys();
 
+	wspace->clip = NULL;
+	if (!wPreferences.flags.noclip)
+		wspace->clip = clip_create(vscr);
+
 	if (wksno < 0) {
 		/* We need load the WMState file to set the Clip session state */
 		path = wdefaultspathfordomain("WMState");
@@ -130,20 +134,15 @@ static void set_clip_in_workspace(virtual_screen *vscr, WWorkspace *wspace, int 
 			w_global.session_state = WMReadPropListFromFile(path);
 			wfree(path);
 		}
-
-		wspace->clip = NULL;
 	} else {
 		tmp_state = wks_state;
 	}
 
 	if (!wPreferences.flags.noclip) {
 		clip_state = WMGetFromPLDictionary(tmp_state, dClip);
-		wspace->clip = clip_create(vscr);
 		clip_map(wspace->clip, vscr, clip_state);
-	}
 
-	if (wksno >= 0) {
-		if (!wPreferences.flags.noclip) {
+		if (wksno >= 0) {
 			if (wksno > 0)
 				wDockHideIcons(vscr->workspace.array[wksno]->clip);
 
