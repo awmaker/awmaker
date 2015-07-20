@@ -571,7 +571,7 @@ void wWorkspaceForceChange(virtual_screen *vscr, int workspace)
 	if (workspace > vscr->workspace.count - 1) {
 		count = workspace - vscr->workspace.count + 1;
 		while (count > 0) {
-			wWorkspaceNew(vscr);
+			create_workspace(vscr, -1, NULL);
 			count--;
 		}
 	}
@@ -778,7 +778,7 @@ static void newWSCommand(WMenu *menu, WMenuEntry *foo)
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) foo;
 
-	ws = wWorkspaceNew(menu->frame->vscr);
+	ws = create_workspace(menu->frame->vscr, -1, NULL);
 
 	/* autochange workspace */
 	if (ws >= 0)
