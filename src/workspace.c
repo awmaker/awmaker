@@ -159,7 +159,7 @@ static void set_clip_in_workspace_map(virtual_screen *vscr, WWorkspace *wspace, 
 	}
 }
 
-void create_workspace(virtual_screen *vscr, int wksno, WMPropList *parr)
+int create_workspace(virtual_screen *vscr, int wksno, WMPropList *parr)
 {
 	WMPropList *pstr, *wks_state;
 	WWorkspace *wspace;
@@ -173,10 +173,10 @@ void create_workspace(virtual_screen *vscr, int wksno, WMPropList *parr)
 		pstr = wks_state;
 
 	if (wksno < vscr->workspace.count)
-		return;
+		return -1;
 
 	if (vscr->workspace.count >= MAX_WORKSPACES)
-		return;
+		return -1;
 
 	/* Create a new one */
 	wspace = wmalloc(sizeof(WWorkspace));
@@ -204,6 +204,8 @@ void create_workspace(virtual_screen *vscr, int wksno, WMPropList *parr)
 	wNETWMUpdateDesktop(vscr);
 	WMPostNotificationName(WMNWorkspaceCreated, vscr, (void *)(uintptr_t) (vscr->workspace.count - 1));
 	XFlush(dpy);
+
+	return vscr->workspace.count - 1;
 }
 
 int wWorkspaceNew(virtual_screen *vscr)
