@@ -773,16 +773,18 @@ static void deleteWSCommand(WMenu *menu, WMenuEntry *entry)
 
 static void newWSCommand(WMenu *menu, WMenuEntry *foo)
 {
-	int ws;
+	int s1, s2;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) foo;
 
-	ws = create_workspace(menu->frame->vscr, -1, NULL);
+	s1 = menu->frame->vscr->workspace.count;
+	create_workspace(menu->frame->vscr, -1, NULL);
+	s2 = menu->frame->vscr->workspace.count;
 
 	/* autochange workspace */
-	if (ws >= 0)
-		wWorkspaceChange(menu->frame->vscr, ws);
+	if (s2 > s1)
+		wWorkspaceChange(menu->frame->vscr, s2 - 1);
 }
 
 void wWorkspaceRename(virtual_screen *vscr, int workspace, const char *name)
