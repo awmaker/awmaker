@@ -114,7 +114,7 @@ static void update_workspace_list(virtual_screen *vscr, WWorkspace *wspace)
 
 static void set_clip_in_workspace(virtual_screen *vscr, WWorkspace *wspace, int wksno, WMPropList *wks_state)
 {
-	WMPropList *state, *clip_state;
+	WMPropList *clip_state;
 	char *path;
 
 	make_keys();
@@ -132,9 +132,9 @@ static void set_clip_in_workspace(virtual_screen *vscr, WWorkspace *wspace, int 
 
 		wspace->clip = NULL;
 		if (!wPreferences.flags.noclip) {
-			state = WMGetFromPLDictionary(w_global.session_state, dClip);
+			clip_state = WMGetFromPLDictionary(w_global.session_state, dClip);
 			wspace->clip = clip_create(vscr);
-			clip_map(wspace->clip, vscr, state);
+			clip_map(wspace->clip, vscr, clip_state);
 		}
 	} else {
 		if (!wPreferences.flags.noclip) {
