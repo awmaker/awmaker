@@ -261,6 +261,45 @@ void switchmenu_delitem(virtual_screen *vscr, WWindow *wwin)
 	wMenuPaint(switchmenu);
 }
 
+static void switchmenu_changeitem(virtual_screen *vscr, WWindow *wwin)
+{
+	WMenu *switchmenu = vscr->menu.switch_menu;
+	WMenuEntry *entry;
+	char title[MAX_MENU_TEXT_LENGTH + 6];
+	int i, tmp;
+
+	if (!vscr->menu.switch_menu)
+		return;
+
+	for (i = 0; i < switchmenu->entry_no; i++) {
+		entry = switchmenu->entries[i];
+		/* this is the entry that was changed */
+		if (entry->clientdata == wwin) {
+			if (entry->text)
+				wfree(entry->text);
+
+			if (wwin->frame->title)
+				snprintf(title, MAX_MENU_TEXT_LENGTH, "%s", wwin->frame->title);
+			else
+				snprintf(title, MAX_MENU_TEXT_LENGTH, "%s", DEF_WINDOW_TITLE);
+
+			entry->text = ShrinkString(vscr->screen_ptr->menu_entry_font, title, MAX_WINDOWLIST_WIDTH);
+
+			wMenuRealize(switchmenu);
+			break;
+		}
+	}
+
+
+	tmp = switchmenu->frame->top_width + 5;
+	/* if menu got unreachable, bring it to a visible place */
+	if (switchmenu->frame_x < tmp - (int)switchmenu->frame->core->width)
+		wMenuMove(switchmenu, tmp - (int)switchmenu->frame->core->width,
+			  switchmenu->frame_y, False);
+
+	wMenuPaint(switchmenu);
+}
+
 /* Update switch menu */
 static void UpdateSwitchMenu(virtual_screen *vscr, WWindow *wwin, int action)
 {
