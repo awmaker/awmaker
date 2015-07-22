@@ -76,24 +76,6 @@ static char STIPPLE_DATA[] = { 0x02, 0x01 };
 
 static int CantManageScreen = 0;
 
-static WMPropList *dApplications = NULL;
-static WMPropList *dWorkspace;
-static WMPropList *dDock;
-static WMPropList *dClip;
-static WMPropList *dDrawers = NULL;
-
-static void make_keys(void)
-{
-	if (dApplications != NULL)
-		return;
-
-	dApplications = WMCreatePLString("Applications");
-	dWorkspace = WMCreatePLString("Workspace");
-	dDock = WMCreatePLString("Dock");
-	dClip = WMCreatePLString("Clip");
-	dDrawers = WMCreatePLString("Drawers");
-}
-
  /*
  * Support for ICCCM 2.0: Window Manager Replacement protocol
  * See: http://www.x.org/releases/X11R7.6/doc/xorg-docs/specs/ICCCM/icccm.html
@@ -898,14 +880,11 @@ void wScreenUpdateUsableArea(virtual_screen *vscr)
 
 void wScreenRestoreState(virtual_screen *vscr)
 {
-	WMPropList *state;
-	char *path;
-	char buf[16];
+	WMPropList *state, *dDock;
+	char *path, buf[16];
 
 	OpenRootMenu(vscr, -10000, -10000, False);
 	wMenuUnmap(vscr->menu.root_menu);
-
-	make_keys();
 
 	if (w_global.screen_count == 1) {
 		path = wdefaultspathfordomain("WMState");
@@ -926,6 +905,7 @@ void wScreenRestoreState(virtual_screen *vscr)
 		w_global.session_state = WMCreatePLDictionary(NULL, NULL);
 
 	if (!wPreferences.flags.nodock) {
+		dDock = WMCreatePLString("Dock");
 		state = WMGetFromPLDictionary(w_global.session_state, dDock);
 		vscr->dock.dock = dock_create(vscr);
 		dock_map(vscr->dock.dock, vscr, state);
@@ -954,9 +934,15 @@ void wScreenSaveState(virtual_screen *vscr)
 	WWindow *wwin;
 	char *str;
 	WMPropList *old_state, *foo;
+	WMPropList *dApplications, *dDrawers;
+	WMPropList *dWorkspace, *dDock, *dClip;
 	char buf[16];
 
-	make_keys();
+	dApplications = WMCreatePLString("Applications");
+	dWorkspace = WMCreatePLString("Workspace");
+	dDock = WMCreatePLString("Dock");
+	dClip = WMCreatePLString("Clip");
+	dDrawers = WMCreatePLString("Drawers");
 
 	/* save state of windows */
 	wwin = vscr->screen_ptr->focused_window;
