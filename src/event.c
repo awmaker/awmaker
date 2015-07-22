@@ -1619,11 +1619,11 @@ static void handleKeyPress(XEvent *event)
 		break;
 	case WKBD_MOVE_NEXTWORKSPACE:
 		if (wwin)
-			wWindowChangeWorkspaceRelative(wwin, 1);
+			window_move_next_workspace(wwin);
 		break;
 	case WKBD_MOVE_PREVWORKSPACE:
 		if (wwin)
-			wWindowChangeWorkspaceRelative(wwin, -1);
+			window_move_prev_workspace(wwin);
 		break;
 	case WKBD_MOVE_LASTWORKSPACE:
 		if (wwin)
