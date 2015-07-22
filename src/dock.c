@@ -1697,6 +1697,7 @@ WDock *clip_create(virtual_screen *vscr)
 	dock->type = WM_CLIP;
 	dock->on_right_side = 1;
 	dock->icon_array[0] = btn;
+	dock->vscr = vscr;
 
 	/* create clip menu */
 	if (!vscr->clip.menu)
