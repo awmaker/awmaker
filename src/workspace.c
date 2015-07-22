@@ -165,6 +165,7 @@ void workspace_create(virtual_screen *vscr, int wksno, WMPropList *parr)
 	WWorkspace *wspace;
 	char *wksname = NULL;
 
+	printf("workspace_create ini\n");
 	make_keys();
 
 	if (parr != NULL) {
@@ -199,6 +200,18 @@ void workspace_create(virtual_screen *vscr, int wksno, WMPropList *parr)
 	menu_workspace_addwks(vscr, vscr->clip.ws_menu);
 	menu_workspace_shortcut_labels(vscr, vscr->clip.ws_menu);
 
+	printf("workspace_create: %p\n", wspace);
+}
+
+void workspace_map(virtual_screen *vscr, WWorkspace *wspace, int wksno, WMPropList *parr)
+{
+	WMPropList *wks_state = NULL;
+
+	make_keys();
+
+	if (parr != NULL)
+		wks_state = WMGetFromPLArray(parr, wksno);
+
 	if ((!wPreferences.flags.noclip) && (!w_global.clip.mapped))
 		clip_icon_map(vscr);
 
@@ -213,7 +226,15 @@ void workspace_create(virtual_screen *vscr, int wksno, WMPropList *parr)
 
 int wWorkspaceNew(virtual_screen *vscr)
 {
+	int s1, s2;
+
+	s1 = vscr->workspace.count;
 	workspace_create(vscr, -1, NULL);
+	s2 = vscr->workspace.count;
+	if (s2 > s1) {
+		printf("wWorkspaceNew: %p\n", vscr->workspace.array[vscr->workspace.count - 1]);
+		workspace_map(vscr, vscr->workspace.array[vscr->workspace.count - 1], -1, NULL);
+	}
 
 	/* kix: FIXME, wWorkspaceNew should be void */
 	return 0;
@@ -558,7 +579,7 @@ void wWorkspaceRelativeChange(virtual_screen *vscr, int amount)
 void wWorkspaceForceChange(virtual_screen *vscr, int workspace)
 {
 	WWindow *tmp, *foc = NULL, *foc2 = NULL;
-	int count;
+	int count, s1, s2;
 
 	if (workspace >= MAX_WORKSPACES || workspace < 0)
 		return;
@@ -572,7 +593,14 @@ void wWorkspaceForceChange(virtual_screen *vscr, int workspace)
 	if (workspace > vscr->workspace.count - 1) {
 		count = workspace - vscr->workspace.count + 1;
 		while (count > 0) {
+			s1 = vscr->workspace.count;
 			workspace_create(vscr, -1, NULL);
+			s2 = vscr->workspace.count;
+			if (s2 > s1) {
+				printf("wWorkspaceForceChange: %p\n", vscr->workspace.array[vscr->workspace.count - 1]);
+				workspace_map(vscr, vscr->workspace.array[vscr->workspace.count - 1], -1, NULL);
+			}
+
 			count--;
 		}
 	}
@@ -784,8 +812,13 @@ static void newWSCommand(WMenu *menu, WMenuEntry *foo)
 	s2 = menu->frame->vscr->workspace.count;
 
 	/* autochange workspace */
-	if (s2 > s1)
+	if (s2 > s1) {
+		printf("newWSCommand: %p\n", menu->frame->vscr->workspace.array[menu->frame->vscr->workspace.count - 1]);
+		workspace_map(menu->frame->vscr,
+			      menu->frame->vscr->workspace.array[menu->frame->vscr->workspace.count - 1],
+			      -1, NULL);
 		wWorkspaceChange(menu->frame->vscr, s2 - 1);
+	}
 }
 
 void wWorkspaceRename(virtual_screen *vscr, int workspace, const char *name)
@@ -1049,7 +1082,7 @@ int set_clip_omnipresent(virtual_screen *vscr, int wksno)
 void wWorkspaceRestoreState(virtual_screen *vscr)
 {
 	WMPropList *parr;
-	int wksno;
+	int wksno, s1, s2;
 
 	make_keys();
 
@@ -1060,8 +1093,15 @@ void wWorkspaceRestoreState(virtual_screen *vscr)
 	if (!parr)
 		return;
 
-	for (wksno = 0; wksno < WMIN(WMGetPropListItemCount(parr), MAX_WORKSPACES); wksno++)
+	for (wksno = 0; wksno < WMIN(WMGetPropListItemCount(parr), MAX_WORKSPACES); wksno++) {
+		s1 = vscr->workspace.count;
 		workspace_create(vscr, wksno, parr);
+		s2 = vscr->workspace.count;
+		if (s2 > s1) {
+			printf("wWorkspaceRestoreState: %p\n", vscr->workspace.array[vscr->workspace.count - 1]);
+			workspace_map(vscr, vscr->workspace.array[wksno - 1], wksno, parr);
+		}
+	}
 }
 
 /* Returns the workspace number for a given workspace name */
