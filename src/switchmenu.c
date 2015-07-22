@@ -231,6 +231,34 @@ void switchmenu_additem(virtual_screen *vscr, WWindow *wwin)
 	wMenuPaint(switchmenu);
 }
 
+void switchmenu_delitem(virtual_screen *vscr, WWindow *wwin)
+{
+	WMenu *switchmenu = vscr->menu.switch_menu;
+	WMenuEntry *entry;
+	int tmp, i;
+
+	if (!vscr->menu.switch_menu)
+		return;
+
+	for (i = 0; i < switchmenu->entry_no; i++) {
+		entry = switchmenu->entries[i];
+		/* this is the entry that was changed */
+		if (entry->clientdata == wwin) {
+			wMenuRemoveItem(switchmenu, i);
+			wMenuRealize(switchmenu);
+			break;
+		}
+	}
+
+	tmp = switchmenu->frame->top_width + 5;
+	/* if menu got unreachable, bring it to a visible place */
+	if (switchmenu->frame_x < tmp - (int) switchmenu->frame->core->width)
+		wMenuMove(switchmenu, tmp - (int) switchmenu->frame->core->width,
+			  switchmenu->frame_y, False);
+
+	wMenuPaint(switchmenu);
+}
+
 /* Update switch menu */
 void UpdateSwitchMenu(virtual_screen *vscr, WWindow *wwin, int action)
 {
@@ -253,6 +281,9 @@ void UpdateSwitchMenu(virtual_screen *vscr, WWindow *wwin, int action)
 	if (action == ACTION_ADD) {
 		switchmenu_additem(vscr, wwin);
 		return;
+	} else if (action == ACTION_REMOVE) {
+		switchmenu_delitem(vscr, wwin);
+		return;
 	} else {
 		char *t;
 		for (i = 0; i < switchmenu->entry_no; i++) {
@@ -260,12 +291,6 @@ void UpdateSwitchMenu(virtual_screen *vscr, WWindow *wwin, int action)
 			/* this is the entry that was changed */
 			if (entry->clientdata == wwin) {
 				switch (action) {
-				case ACTION_REMOVE:
-					wMenuRemoveItem(switchmenu, i);
-					wMenuRealize(switchmenu);
-					checkVisibility = 1;
-					break;
-
 				case ACTION_CHANGE:
 					if (entry->text)
 						wfree(entry->text);
