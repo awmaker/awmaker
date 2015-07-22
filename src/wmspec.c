@@ -1536,7 +1536,7 @@ Bool wNETWMProcessClientMessage(XClientMessageEvent *event)
 	virtual_screen *vscr;
 	WScreen *scr;
 	WWindow *wwin;
-	int count;
+	int count, s1, s2;
 
 #ifdef DEBUG_WMSPEC
 	wmessage("processClientMessage type %s", XGetAtomName(dpy, event->message_type));
@@ -1558,7 +1558,12 @@ Bool wNETWMProcessClientMessage(XClientMessageEvent *event)
 				count = value - vscr->workspace.count;
 
 				while (count > 0) {
-					wWorkspaceNew(vscr);
+					s1 = vscr->workspace.count;
+					workspace_create(vscr, -1, NULL);
+					s2 = vscr->workspace.count;
+					if (s2 > s1)
+						workspace_map(vscr, vscr->workspace.array[vscr->workspace.count - 1], -1, NULL);
+
 					count--;
 				}
 			} else if (value < vscr->workspace.count) {

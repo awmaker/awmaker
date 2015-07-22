@@ -1951,6 +1951,7 @@ void wWindowChangeWorkspaceRelative(WWindow *wwin, int amount)
 	virtual_screen *vscr = wwin->vscr;
 	int w = vscr->workspace.current + amount;
 	int workspace, count;
+	int s1, s2;
 
 	if (amount < 0) {
 		if (w >= 0)
@@ -1965,7 +1966,12 @@ void wWindowChangeWorkspaceRelative(WWindow *wwin, int amount)
 			count = workspace;
 
 			while (count > 0) {
-				wWorkspaceNew(vscr);
+				s1 = vscr->workspace.count;
+				workspace_create(vscr, -1, NULL);
+				s2 = vscr->workspace.count;
+				if (s2 > s1)
+					workspace_map(vscr, vscr->workspace.array[vscr->workspace.count - 1], -1, NULL);
+
 				count--;
 			}
 

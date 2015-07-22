@@ -221,20 +221,6 @@ void workspace_map(virtual_screen *vscr, WWorkspace *wspace, int wksno, WMPropLi
 	XFlush(dpy);
 }
 
-int wWorkspaceNew(virtual_screen *vscr)
-{
-	int s1, s2;
-
-	s1 = vscr->workspace.count;
-	workspace_create(vscr, -1, NULL);
-	s2 = vscr->workspace.count;
-	if (s2 > s1)
-		workspace_map(vscr, vscr->workspace.array[vscr->workspace.count - 1], -1, NULL);
-
-	/* kix: FIXME, wWorkspaceNew should be void */
-	return 0;
-}
-
 Bool wWorkspaceDelete(virtual_screen *vscr, int workspace)
 {
 	WWindow *tmp;
