@@ -761,7 +761,6 @@ void set_screen_options(virtual_screen *vscr)
 	XIconSize icon_size[1];
 	XColor xcol;
 	WScreen *scr = vscr->screen_ptr;
-	int s1, s2;
 
 	/* read defaults for this screen */
 	wReadDefaults(vscr, w_global.domain.wmaker->dictionary);
@@ -786,10 +785,8 @@ void set_screen_options(virtual_screen *vscr)
         clip_icon_create();
 
 	/* create initial workspace */
-	s1 = vscr->workspace.count;
 	workspace_create(vscr, -1, NULL);
-	s2 = vscr->workspace.count;
-	if (s2 > s1)
+	if (vscr->workspace.count == 1)
 		workspace_map(vscr, vscr->workspace.array[vscr->workspace.count - 1], -1, NULL);
 
 	/* create shared pixmaps */
