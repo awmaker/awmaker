@@ -300,6 +300,99 @@ static void switchmenu_changeitem(virtual_screen *vscr, WWindow *wwin)
 	wMenuPaint(switchmenu);
 }
 
+static void switchmenu_changeworkspaceitem(virtual_screen *vscr, WWindow *wwin)
+{
+	WMenu *switchmenu = vscr->menu.switch_menu;
+	WMenuEntry *entry;
+	int i;
+
+	if (!vscr->menu.switch_menu)
+		return;
+
+	for (i = 0; i < switchmenu->entry_no; i++) {
+		entry = switchmenu->entries[i];
+		/* this is the entry that was changed */
+		if (entry->clientdata == wwin) {
+			if (entry->rtext) {
+				char *t, *rt;
+				int it, ion, idx = -1;
+
+				if (IS_OMNIPRESENT(wwin))
+					snprintf(entry->rtext, MAX_WORKSPACENAME_WIDTH, "[*]");
+				else
+					snprintf(entry->rtext, MAX_WORKSPACENAME_WIDTH, "[%s]",
+						 vscr->workspace.array[wwin->frame->workspace]->name);
+
+				rt = entry->rtext;
+				entry->rtext = NULL;
+				t = entry->text;
+				entry->text = NULL;
+
+				it = entry->flags.indicator_type;
+				ion = entry->flags.indicator_on;
+
+				if (!IS_OMNIPRESENT(wwin) && idx < 0)
+					idx = menuIndexForWindow(switchmenu, wwin, i);
+
+				wMenuRemoveItem(switchmenu, i);
+
+				entry = wMenuInsertCallback(switchmenu, idx, t, focusWindow, wwin);
+				wfree(t);
+				entry->rtext = rt;
+				entry->flags.indicator = 1;
+				entry->flags.indicator_type = it;
+				entry->flags.indicator_on = ion;
+			}
+			wMenuRealize(switchmenu);
+			break;
+		}
+	}
+
+	int tmp;
+
+	tmp = switchmenu->frame->top_width + 5;
+	/* if menu got unreachable, bring it to a visible place */
+	if (switchmenu->frame_x < tmp - (int)switchmenu->frame->core->width)
+		wMenuMove(switchmenu, tmp - (int)switchmenu->frame->core->width,
+			  switchmenu->frame_y, False);
+
+	wMenuPaint(switchmenu);
+}
+
+/* Update switch menu */
+static void switchmenu_changestate(virtual_screen *vscr, WWindow *wwin)
+{
+	WMenu *switchmenu = vscr->menu.switch_menu;
+	WMenuEntry *entry;
+	int i;
+
+	if (!vscr->menu.switch_menu)
+		return;
+
+	for (i = 0; i < switchmenu->entry_no; i++) {
+		entry = switchmenu->entries[i];
+		/* this is the entry that was changed */
+		if (entry->clientdata == wwin) {
+			if (wwin->flags.hidden) {
+				entry->flags.indicator_type = MI_HIDDEN;
+				entry->flags.indicator_on = 1;
+			} else if (wwin->flags.miniaturized) {
+				entry->flags.indicator_type = MI_MINIWINDOW;
+				entry->flags.indicator_on = 1;
+			} else if (wwin->flags.shaded && !wwin->flags.focused) {
+				entry->flags.indicator_type = MI_SHADED;
+				entry->flags.indicator_on = 1;
+			} else {
+				entry->flags.indicator_on = wwin->flags.focused;
+				entry->flags.indicator_type = MI_DIAMOND;
+			}
+			break;
+		}
+	}
+
+	wMenuPaint(switchmenu);
+}
+
 /* Update switch menu */
 static void UpdateSwitchMenu(virtual_screen *vscr, WWindow *wwin, int action)
 {
