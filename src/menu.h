@@ -116,7 +116,6 @@ void wMenuEntrySetCascade(WMenu *menu, WMenuEntry *entry, WMenu *cascade);
 
 void wMenuRemoveItem(WMenu *menu, int index);
 
-WMenu *wMenuCreate(virtual_screen *vscr, const char *title);
 WMenu *wMenuCreateForApp(const char *title);
 void wMenuMap(WMenu *menu);
 void wMenuMapAt(WMenu *menu, int x, int y, int keyboard);

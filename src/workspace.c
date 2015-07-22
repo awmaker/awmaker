@@ -858,11 +858,17 @@ WMenu *wWorkspaceMenuMake(virtual_screen *vscr, Bool titled)
 	WMenu *wsmenu;
 	WMenuEntry *entry;
 
-	wsmenu = wMenuCreate(vscr, titled ? _("Workspaces") : NULL);
+	if (titled)
+		wsmenu = menu_create(_("Workspaces"));
+	else
+		wsmenu = menu_create(NULL);
+
 	if (!wsmenu) {
 		wwarning(_("could not create Workspace menu"));
 		return NULL;
 	}
+
+	menu_map(wsmenu, vscr);
 
 	/* callback to be called when an entry is edited */
 	wsmenu->on_edit = onMenuEntryEdited;

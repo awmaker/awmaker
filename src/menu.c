@@ -248,28 +248,6 @@ void menu_map(WMenu *menu, virtual_screen *screen)
 	WMAddNotificationObserver(appearanceObserver, menu, WNMenuTitleAppearanceSettingsChanged, menu);
 }
 
-/*
- *----------------------------------------------------------------------
- * wMenuCreate--
- * 	Creates a new empty menu with the specified title. If main_menu
- * is True, the created menu will be a main menu, which has some special
- * properties such as being placed over other normal menus.
- * 	If title is NULL, the menu will have no titlebar.
- *
- * Returns:
- * 	The created menu.
- *----------------------------------------------------------------------
- */
-WMenu *wMenuCreate(virtual_screen *vscr, const char *title)
-{
-	WMenu *menu;
-
-	menu = menu_create(title);
-	menu_map(menu, vscr);
-
-	return menu;
-}
-
 WMenu *wMenuCreateForApp(const char *title)
 {
 	WMenu *menu;

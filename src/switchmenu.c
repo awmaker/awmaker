@@ -113,7 +113,9 @@ void OpenSwitchMenu(virtual_screen *vscr, int x, int y, int keyboard)
 		return;
 	}
 
-	switchmenu = wMenuCreate(vscr, _("Windows"));
+	switchmenu = menu_create(_("Windows"));
+	menu_map(switchmenu, vscr);
+
 	vscr->menu.switch_menu = switchmenu;
 
 	wwin = vscr->screen_ptr->focused_window;
