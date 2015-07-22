@@ -165,7 +165,6 @@ void workspace_create(virtual_screen *vscr, int wksno, WMPropList *parr)
 	WWorkspace *wspace;
 	char *wksname = NULL;
 
-	printf("workspace_create ini\n");
 	make_keys();
 
 	if (parr != NULL) {
@@ -199,8 +198,6 @@ void workspace_create(virtual_screen *vscr, int wksno, WMPropList *parr)
 
 	menu_workspace_addwks(vscr, vscr->clip.ws_menu);
 	menu_workspace_shortcut_labels(vscr, vscr->clip.ws_menu);
-
-	printf("workspace_create: %p\n", wspace);
 }
 
 void workspace_map(virtual_screen *vscr, WWorkspace *wspace, int wksno, WMPropList *parr)
@@ -231,10 +228,8 @@ int wWorkspaceNew(virtual_screen *vscr)
 	s1 = vscr->workspace.count;
 	workspace_create(vscr, -1, NULL);
 	s2 = vscr->workspace.count;
-	if (s2 > s1) {
-		printf("wWorkspaceNew: %p\n", vscr->workspace.array[vscr->workspace.count - 1]);
+	if (s2 > s1)
 		workspace_map(vscr, vscr->workspace.array[vscr->workspace.count - 1], -1, NULL);
-	}
 
 	/* kix: FIXME, wWorkspaceNew should be void */
 	return 0;
@@ -596,10 +591,8 @@ void wWorkspaceForceChange(virtual_screen *vscr, int workspace)
 			s1 = vscr->workspace.count;
 			workspace_create(vscr, -1, NULL);
 			s2 = vscr->workspace.count;
-			if (s2 > s1) {
-				printf("wWorkspaceForceChange: %p\n", vscr->workspace.array[vscr->workspace.count - 1]);
+			if (s2 > s1)
 				workspace_map(vscr, vscr->workspace.array[vscr->workspace.count - 1], -1, NULL);
-			}
 
 			count--;
 		}
@@ -813,7 +806,6 @@ static void newWSCommand(WMenu *menu, WMenuEntry *foo)
 
 	/* autochange workspace */
 	if (s2 > s1) {
-		printf("newWSCommand: %p\n", menu->frame->vscr->workspace.array[menu->frame->vscr->workspace.count - 1]);
 		workspace_map(menu->frame->vscr,
 			      menu->frame->vscr->workspace.array[menu->frame->vscr->workspace.count - 1],
 			      -1, NULL);
@@ -1097,10 +1089,8 @@ void wWorkspaceRestoreState(virtual_screen *vscr)
 		s1 = vscr->workspace.count;
 		workspace_create(vscr, wksno, parr);
 		s2 = vscr->workspace.count;
-		if (s2 > s1) {
-			printf("wWorkspaceRestoreState: %p\n", vscr->workspace.array[vscr->workspace.count - 1]);
+		if (s2 > s1)
 			workspace_map(vscr, vscr->workspace.array[wksno - 1], wksno, parr);
-		}
 	}
 }
 
