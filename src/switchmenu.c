@@ -122,7 +122,7 @@ void OpenSwitchMenu(virtual_screen *vscr, int x, int y, int keyboard)
 
 	wwin = vscr->screen_ptr->focused_window;
 	while (wwin) {
-		UpdateSwitchMenu(vscr, wwin, ACTION_ADD);
+		switchmenu_additem(vscr, wwin);
 		wwin = wwin->prev;
 	}
 
@@ -412,10 +412,7 @@ static void UpdateSwitchMenu(virtual_screen *vscr, WWindow *wwin, int action)
 	 *    3.  When a window changes it's title.
 	 *    4.  When a window changes its workspace.
 	 */
-	if (action == ACTION_ADD) {
-		switchmenu_additem(vscr, wwin);
-		return;
-	} else if (action == ACTION_REMOVE) {
+	if (action == ACTION_REMOVE) {
 		switchmenu_delitem(vscr, wwin);
 		return;
 	} else {
@@ -548,7 +545,7 @@ static void observer(void *self, WMNotification * notif)
 		return;
 
 	if (strcmp(name, WMNManaged) == 0) {
-		UpdateSwitchMenu(wwin->vscr, wwin, ACTION_ADD);
+		switchmenu_additem(wwin->vscr, wwin);
 	} else if (strcmp(name, WMNUnmanaged) == 0) {
 		UpdateSwitchMenu(wwin->vscr, wwin, ACTION_REMOVE);
 	} else if (strcmp(name, WMNChangedWorkspace) == 0) {
