@@ -859,7 +859,7 @@ static WMenuEntry *addWindowsMenu(virtual_screen *vscr, WMenu *menu, const char 
 	vscr->menu.switch_menu = wwmenu;
 	wwin = vscr->screen_ptr->focused_window;
 	while (wwin) {
-		UpdateSwitchMenu(vscr, wwin, ACTION_ADD);
+		switchmenu_additem(vscr, wwin);
 		wwin = wwin->prev;
 	}
 

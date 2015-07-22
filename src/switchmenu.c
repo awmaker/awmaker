@@ -48,6 +48,8 @@ static int initialized = 0;
 static void observer(void *self, WMNotification *notif);
 static void wsobserver(void *self, WMNotification *notif);
 
+static void UpdateSwitchMenu(virtual_screen *vscr, WWindow *wwin, int action);
+
 /*
  * FocusWindow
  *
@@ -260,7 +262,7 @@ void switchmenu_delitem(virtual_screen *vscr, WWindow *wwin)
 }
 
 /* Update switch menu */
-void UpdateSwitchMenu(virtual_screen *vscr, WWindow *wwin, int action)
+static void UpdateSwitchMenu(virtual_screen *vscr, WWindow *wwin, int action)
 {
 	WMenu *switchmenu = vscr->menu.switch_menu;
 	WMenuEntry *entry;
