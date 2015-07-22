@@ -100,10 +100,11 @@ static WMenu *parseMenuCommand(virtual_screen *vscr, Window win, char **slist, i
 		return NULL;
 	}
 
-	menu = wMenuCreateForApp(title);
+	menu = menu_create(title);
 	if (!menu)
 		return NULL;
 
+	menu->flags.app_menu = 1;
 	menu_map(menu, vscr);
 
 	*index += 1;

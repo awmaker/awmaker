@@ -116,7 +116,6 @@ void wMenuEntrySetCascade(WMenu *menu, WMenuEntry *entry, WMenu *cascade);
 
 void wMenuRemoveItem(WMenu *menu, int index);
 
-WMenu *wMenuCreateForApp(const char *title);
 void wMenuMap(WMenu *menu);
 void wMenuMapAt(WMenu *menu, int x, int y, int keyboard);
 #define wMenuMapCopyAt(menu, x, y) wMenuMapAt((menu)->brother, (x), (y), False)

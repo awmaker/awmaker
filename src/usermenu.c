@@ -220,10 +220,11 @@ static WMenu *configureUserMenu(virtual_screen *vscr, WMPropList *plum)
 		return NULL;
 
 	mtitle = WMGetFromPLString(elem);
-
-	menu = wMenuCreateForApp(mtitle);
-	if (menu)
+	menu = menu_create(mtitle);
+	if (menu) {
+		menu->flags.app_menu = 1;
 		menu_map(menu, vscr);
+	}
 
 	for (i = 1; i < count; i++) {
 		elem = WMGetFromPLArray(plum, i);

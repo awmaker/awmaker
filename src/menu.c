@@ -248,19 +248,6 @@ void menu_map(WMenu *menu, virtual_screen *screen)
 	WMAddNotificationObserver(appearanceObserver, menu, WNMenuTitleAppearanceSettingsChanged, menu);
 }
 
-WMenu *wMenuCreateForApp(const char *title)
-{
-	WMenu *menu;
-
-	menu = menu_create(title);
-	if (!menu)
-		return NULL;
-
-	menu->flags.app_menu = 1;
-
-	return menu;
-}
-
 static void insertEntry(WMenu *menu, WMenuEntry *entry, int index)
 {
 	int i;
