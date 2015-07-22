@@ -682,6 +682,12 @@ void StartUp(Bool defaultScreenOnly)
 		vscr->screen_ptr = wScreen[j];
 		w_global.vscreens[w_global.vscreen_count] = vscr;
 
+		/* read defaults for this screen */
+		wReadDefaults(vscr, w_global.domain.wmaker->dictionary);
+
+		clip_icon_create();
+		workspace_create(vscr, -1, NULL);
+
 		set_screen_options(w_global.vscreens[w_global.vscreen_count]);
 		w_global.vscreen_count++;
 

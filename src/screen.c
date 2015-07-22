@@ -762,9 +762,6 @@ void set_screen_options(virtual_screen *vscr)
 	XColor xcol;
 	WScreen *scr = vscr->screen_ptr;
 
-	/* read defaults for this screen */
-	wReadDefaults(vscr, w_global.domain.wmaker->dictionary);
-
 	/* frame boder color */
 	wGetColor(scr, WMGetColorRGBDescription(scr->frame_border_color), &xcol);
 	scr->frame_border_pixel = xcol.pixel;
@@ -777,15 +774,7 @@ void set_screen_options(virtual_screen *vscr)
 
 	wNETWMInitStuff(vscr);
 
-        /* Create the icon struct, always because
-         * it uses a few memory only. We don't need
-         * check anymore if the clip exists, so the
-         * map functions are easier.
-         */
-        clip_icon_create();
-
-	/* create initial workspace */
-	workspace_create(vscr, -1, NULL);
+	/* map initial workspace */
 	if (vscr->workspace.count == 1)
 		workspace_map(vscr, vscr->workspace.array[vscr->workspace.count - 1], -1, NULL);
 
