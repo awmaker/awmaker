@@ -624,9 +624,7 @@ static void constructMenu(WMenu *menu, WMenuEntry *entry)
 {
 	WMenu *submenu;
 	struct stat stat_buf;
-	char **path;
-	char *cmd;
-	char *lpath = NULL;
+	char **path, *cmd, *lpath = NULL;
 	int i, first = -1;
 	time_t last = 0;
 
@@ -638,8 +636,10 @@ static void constructMenu(WMenu *menu, WMenuEntry *entry)
 				wfree(path[i]);
 			wfree(path);
 		}
+
 		if (cmd)
 			wfree(cmd);
+
 		return;
 	}
 
@@ -691,7 +691,6 @@ static void constructMenu(WMenu *menu, WMenuEntry *entry)
 						first = i;
 				} else {
 					werror(_("%s:could not stat menu"), path[i]);
-					/*goto finish; */
 				}
 
 				i++;
@@ -699,12 +698,20 @@ static void constructMenu(WMenu *menu, WMenuEntry *entry)
 
 			if (first < 0) {
 				werror(_("%s:could not stat menu:%s"), "OPEN_MENU", (char *)entry->clientdata);
-				goto finish;
-			}
-			stat(path[first], &stat_buf);
-			if (!menu->cascades[entry->cascade]
-					|| menu->cascades[entry->cascade]->timestamp < last) {
+				i = 0;
+				while (path[i] != NULL)
+					wfree(path[i++]);
 
+				wfree(path);
+				if (cmd)
+					wfree(cmd);
+
+				return;
+			}
+
+			stat(path[first], &stat_buf);
+			if (!menu->cascades[entry->cascade] ||
+			    menu->cascades[entry->cascade]->timestamp < last) {
 				if (S_ISDIR(stat_buf.st_mode)) {
 					/* menu directory */
 					submenu = readMenuDirectory(menu->frame->vscr, entry->text, path, cmd);
@@ -734,10 +741,10 @@ static void constructMenu(WMenu *menu, WMenuEntry *entry)
 		wMenuEntrySetCascade(menu, entry, submenu);
 	}
 
- finish:
 	i = 0;
 	while (path[i] != NULL)
 		wfree(path[i++]);
+
 	wfree(path);
 	if (cmd)
 		wfree(cmd);
@@ -1020,11 +1027,10 @@ static WMenu *parseCascade(virtual_screen *vscr, WMenu *menu, WMenuParser parser
 	char *command, *params, *shortcut, *title;
 
 	while (WMenuParserGetLine(parser, &title, &command, &params, &shortcut)) {
-
 		if (command == NULL || !command[0]) {
 			WMenuParserError(parser, _("missing command in menu config") );
 			freeline(title, command, params, shortcut);
-			goto error;
+			return NULL;
 		}
 
 		if (strcasecmp(command, "MENU") == 0) {
@@ -1053,7 +1059,6 @@ static WMenu *parseCascade(virtual_screen *vscr, WMenu *menu, WMenuParser parser
 
 	WMenuParserError(parser, _("syntax error in menu file: END declaration missing") );
 
- error:
 	return NULL;
 }
 
@@ -1557,8 +1562,12 @@ static WMenu *configureMenu(virtual_screen *vscr, WMPropList *definition)
 
 	for (i = 1; i < count; i++) {
 		elem = WMGetFromPLArray(definition, i);
-		if (!WMIsPLArray(elem) || WMGetPropListItemCount(elem) < 2)
-			goto error;
+		if (!WMIsPLArray(elem) || WMGetPropListItemCount(elem) < 2) {
+			tmp = WMGetPropListDescription(elem, False);
+			wwarning(_("%s:format error in root menu configuration \"%s\""), "WMRootMenu", tmp);
+			wfree(tmp);
+			continue;
+		}
 
 		if (WMIsPLArray(WMGetFromPLArray(elem, 1))) {
 			WMenu *submenu;
@@ -1586,20 +1595,18 @@ static WMenu *configureMenu(virtual_screen *vscr, WMPropList *definition)
 			}
 			params = WMGetFromPLArray(elem, idx++);
 
-			if (!title || !command)
-				goto error;
+			if (!title || !command) {
+				tmp = WMGetPropListDescription(elem, False);
+				wwarning(_("%s:format error in root menu configuration \"%s\""), "WMRootMenu", tmp);
+				wfree(tmp);
+				continue;
+			}
 
 			addMenuEntry(menu, M_(WMGetFromPLString(title)),
 				     shortcut ? WMGetFromPLString(shortcut) : NULL,
 				     WMGetFromPLString(command),
 				     params ? WMGetFromPLString(params) : NULL, "WMRootMenu");
 		}
-		continue;
-
- error:
-		tmp = WMGetPropListDescription(elem, False);
-		wwarning(_("%s:format error in root menu configuration \"%s\""), "WMRootMenu", tmp);
-		wfree(tmp);
 	}
 
 	return menu;
