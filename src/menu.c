@@ -330,12 +330,6 @@ void wMenuEntrySetCascade_map(WMenu *menu, WMenu *cascade)
 		wMenuRealize(menu);
 }
 
-void wMenuEntrySetCascade(WMenu *menu, WMenuEntry *entry, WMenu *cascade)
-{
-	wMenuEntrySetCascade_create(menu, entry, cascade);
-	wMenuEntrySetCascade_map(menu, cascade);
-}
-
 void wMenuEntryRemoveCascade(WMenu *menu, WMenuEntry *entry)
 {
 	/* destroy cascade menu */

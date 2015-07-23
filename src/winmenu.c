@@ -599,7 +599,8 @@ static WMenu *createWindowMenu(virtual_screen *vscr)
 			WMenu *submenu;
 
 			submenu = window_menu_entries[i].generate_submenu(vscr);
-			wMenuEntrySetCascade(menu, entry, submenu);
+			wMenuEntrySetCascade_create(menu, entry, submenu);
+			wMenuEntrySetCascade_map(menu, submenu);
 		}
 	}
 

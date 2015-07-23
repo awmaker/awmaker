@@ -109,8 +109,6 @@ WMenuEntry *wMenuInsertCallback(WMenu *menu, int index, const char *text,
                                 void (*callback)(WMenu *menu, WMenuEntry *entry),
                                 void *clientdata);
 
-void wMenuEntrySetCascade(WMenu *menu, WMenuEntry *entry, WMenu *cascade);
-
 #define wMenuAddCallback(menu, text, callback, data) \
     wMenuInsertCallback(menu, -1, text, callback, data)
 

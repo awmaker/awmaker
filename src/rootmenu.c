@@ -738,7 +738,8 @@ static void constructMenu(WMenu *menu, WMenuEntry *entry)
 
 	if (submenu) {
 		wMenuEntryRemoveCascade(menu, entry);
-		wMenuEntrySetCascade(menu, entry, submenu);
+		wMenuEntrySetCascade_create(menu, entry, submenu);
+		wMenuEntrySetCascade_map(menu, submenu);
 	}
 
 	i = 0;
@@ -790,7 +791,8 @@ static void constructPLMenuFromPipe(WMenu * menu, WMenuEntry * entry)
 
 	if (submenu) {
 		wMenuEntryRemoveCascade(menu, entry);
-		wMenuEntrySetCascade(menu, entry, submenu);
+		wMenuEntrySetCascade_create(menu, entry, submenu);
+		wMenuEntrySetCascade_map(menu, submenu);
 	}
 
 	i = 0;
@@ -826,7 +828,8 @@ static WMenuEntry *addWorkspaceMenu(virtual_screen *vscr, WMenu *menu, const cha
 
 	vscr->workspace.menu = wsmenu;
 	entry = wMenuAddCallback(menu, title, NULL, NULL);
-	wMenuEntrySetCascade(menu, entry, wsmenu);
+	wMenuEntrySetCascade_create(menu, entry, wsmenu);
+	wMenuEntrySetCascade_map(menu, wsmenu);
 	wWorkspaceMenuUpdate(vscr, wsmenu);
 
 	return entry;
@@ -864,7 +867,8 @@ static WMenuEntry *addWindowsMenu(virtual_screen *vscr, WMenu *menu, const char 
 	}
 
 	entry = wMenuAddCallback(menu, title, NULL, NULL);
-	wMenuEntrySetCascade(menu, entry, wwmenu);
+	wMenuEntrySetCascade_create(menu, entry, wwmenu);
+	wMenuEntrySetCascade_map(menu, wwmenu);
 
 	return entry;
 }
@@ -896,7 +900,8 @@ static WMenuEntry *addMenuEntry(WMenu *menu, const char *title, const char *shor
 			dummy->on_destroy = removeShortcutsForMenu;
 			entry = wMenuAddCallback(menu, title, constructMenu, path);
 			entry->free_cdata = wfree;
-			wMenuEntrySetCascade(menu, entry, dummy);
+			wMenuEntrySetCascade_create(menu, entry, dummy);
+			wMenuEntrySetCascade_map(menu, dummy);
 		}
 	} else if (strcmp(command, "OPEN_PLMENU") == 0) {
 		if (!params) {
@@ -914,7 +919,8 @@ static WMenuEntry *addMenuEntry(WMenu *menu, const char *title, const char *shor
 			dummy->on_destroy = removeShortcutsForMenu;
 			entry = wMenuAddCallback(menu, title, constructPLMenuFromPipe, path);
 			entry->free_cdata = wfree;
-			wMenuEntrySetCascade(menu, entry, dummy);
+			wMenuEntrySetCascade_create(menu, entry, dummy);
+			wMenuEntrySetCascade_map(menu, dummy);
 		}
 	} else if (strcmp(command, "EXEC") == 0) {
 		if (!params)
@@ -1040,11 +1046,12 @@ static WMenu *parseCascade(virtual_screen *vscr, WMenu *menu, WMenuParser parser
 			cascade = menu_create(M_(title));
 			menu_map(cascade, vscr);
 			cascade->on_destroy = removeShortcutsForMenu;
-			if (!parseCascade(vscr, cascade, parser))
+			if (!parseCascade(vscr, cascade, parser)) {
 				wMenuDestroy(cascade, True);
-			else
-				wMenuEntrySetCascade(menu, wMenuAddCallback(menu, M_(title), NULL, NULL), cascade);
-
+			} else {
+				wMenuEntrySetCascade_create(menu, wMenuAddCallback(menu, M_(title), NULL, NULL), cascade);
+				wMenuEntrySetCascade_map(menu, cascade);
+			}
 		} else if (strcasecmp(command, "END") == 0) {
 			/* end of menu */
 			freeline(title, command, params, shortcut);
@@ -1577,7 +1584,8 @@ static WMenu *configureMenu(virtual_screen *vscr, WMPropList *definition)
 			submenu = configureMenu(vscr, elem);
 			if (submenu) {
 				mentry = wMenuAddCallback(menu, submenu->frame->title, NULL, NULL);
-				wMenuEntrySetCascade(menu, mentry, submenu);
+				wMenuEntrySetCascade_create(menu, mentry, submenu);
+				wMenuEntrySetCascade_map(menu, submenu);
 			}
 		} else {
 			int idx = 0;
