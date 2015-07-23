@@ -116,7 +116,6 @@ void wMenuRemoveItem(WMenu *menu, int index);
 
 void wMenuMap(WMenu *menu);
 void wMenuMapAt(WMenu *menu, int x, int y, int keyboard);
-#define wMenuMapCopyAt(menu, x, y) wMenuMapAt((menu)->brother, (x), (y), False)
 void wMenuUnmap(WMenu *menu);
 void wMenuSetEnabled(WMenu *menu, int index, int enable);
 void wMenuMove(WMenu *menu, int x, int y, int submenus);
