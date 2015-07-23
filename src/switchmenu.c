@@ -93,6 +93,7 @@ void OpenSwitchMenu(virtual_screen *vscr, int x, int y, int keyboard)
 {
 	WMenu *switchmenu = vscr->menu.switch_menu;
 	WWindow *wwin;
+	int tmp;
 
 	if (switchmenu) {
 		if (switchmenu->flags.mapped) {
@@ -121,6 +122,16 @@ void OpenSwitchMenu(virtual_screen *vscr, int x, int y, int keyboard)
 	wwin = vscr->screen_ptr->focused_window;
 	while (wwin) {
 		switchmenu_additem(vscr, wwin);
+
+		wMenuRealize(vscr->menu.switch_menu);
+
+		tmp = vscr->menu.switch_menu->frame->top_width + 5;
+		/* if menu got unreachable, bring it to a visible place */
+		if (vscr->menu.switch_menu->frame_x < tmp - (int) vscr->menu.switch_menu->frame->core->width)
+			wMenuMove(vscr->menu.switch_menu, tmp - (int) vscr->menu.switch_menu->frame->core->width,
+				  vscr->menu.switch_menu->frame_y, False);
+
+		wMenuPaint(vscr->menu.switch_menu);
 		wwin = wwin->prev;
 	}
 
@@ -176,7 +187,7 @@ void switchmenu_additem(virtual_screen *vscr, WWindow *wwin)
 	WMenu *switchmenu = vscr->menu.switch_menu;
 	WMenuEntry *entry;
 	char *t, title[MAX_MENU_TEXT_LENGTH + 6];
-	int idx = -1, tmp, len = sizeof(title);
+	int idx = -1, len = sizeof(title);
 
 	if (!vscr->menu.switch_menu)
 		return;
@@ -219,16 +230,6 @@ void switchmenu_additem(virtual_screen *vscr, WWindow *wwin)
 		entry->flags.indicator_type = MI_SHADED;
 		entry->flags.indicator_on = 1;
 	}
-
-	wMenuRealize(switchmenu);
-
-	tmp = switchmenu->frame->top_width + 5;
-	/* if menu got unreachable, bring it to a visible place */
-	if (switchmenu->frame_x < tmp - (int) switchmenu->frame->core->width)
-		wMenuMove(switchmenu, tmp - (int) switchmenu->frame->core->width,
-			  switchmenu->frame_y, False);
-
-	wMenuPaint(switchmenu);
 }
 
 void switchmenu_delitem(virtual_screen *vscr, WWindow *wwin)
@@ -423,6 +424,16 @@ static void observer(void *self, WMNotification * notif)
 
 	if (strcmp(name, WMNManaged) == 0) {
 		switchmenu_additem(wwin->vscr, wwin);
+
+		wMenuRealize(wwin->vscr->menu.switch_menu);
+
+		tmp = wwin->vscr->menu.switch_menu->frame->top_width + 5;
+		/* if menu got unreachable, bring it to a visible place */
+		if (wwin->vscr->menu.switch_menu->frame_x < tmp - (int) wwin->vscr->menu.switch_menu->frame->core->width)
+			wMenuMove(wwin->vscr->menu.switch_menu, tmp - (int) wwin->vscr->menu.switch_menu->frame->core->width,
+				  wwin->vscr->menu.switch_menu->frame_y, False);
+
+		wMenuPaint(wwin->vscr->menu.switch_menu);
 	} else if (strcmp(name, WMNUnmanaged) == 0) {
 		switchmenu_delitem(wwin->vscr, wwin);
 

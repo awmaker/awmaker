@@ -802,6 +802,15 @@ static void applySettings(WMWidget *button, void *client_data)
 			wMenuPaint(wwin->vscr->menu.switch_menu);
 		} else {
 			switchmenu_additem(wwin->vscr, wwin);
+			wMenuRealize(wwin->vscr->menu.switch_menu);
+
+			tmp = wwin->vscr->menu.switch_menu->frame->top_width + 5;
+			/* if menu got unreachable, bring it to a visible place */
+			if (wwin->vscr->menu.switch_menu->frame_x < tmp - (int) wwin->vscr->menu.switch_menu->frame->core->width)
+			wMenuMove(wwin->vscr->menu.switch_menu, tmp - (int) wwin->vscr->menu.switch_menu->frame->core->width,
+				  wwin->vscr->menu.switch_menu->frame_y, False);
+
+			wMenuPaint(wwin->vscr->menu.switch_menu);
 		}
 	} else {
 		if (WFLAGP(wwin, omnipresent) != old_omnipresent)
