@@ -48,8 +48,6 @@ static int initialized = 0;
 static void observer(void *self, WMNotification *notif);
 static void wsobserver(void *self, WMNotification *notif);
 
-static void UpdateSwitchMenu(virtual_screen *vscr, WWindow *wwin, int action);
-
 /*
  * FocusWindow
  *
@@ -393,119 +391,6 @@ static void switchmenu_changestate(virtual_screen *vscr, WWindow *wwin)
 	wMenuPaint(switchmenu);
 }
 
-/* Update switch menu */
-static void UpdateSwitchMenu(virtual_screen *vscr, WWindow *wwin, int action)
-{
-	WMenu *switchmenu = vscr->menu.switch_menu;
-	WMenuEntry *entry;
-	char title[MAX_MENU_TEXT_LENGTH + 6];
-	int i, checkVisibility = 0;
-
-	if (!vscr->menu.switch_menu)
-		return;
-	/*
-	 *  This menu is updated under the following conditions:
-	 *
-	 *    1.  When a window is created.
-	 *    2.  When a window is destroyed.
-	 *
-	 *    3.  When a window changes it's title.
-	 *    4.  When a window changes its workspace.
-	 */
-	if (action == ACTION_REMOVE) {
-		switchmenu_delitem(vscr, wwin);
-		return;
-	} else {
-		char *t;
-		for (i = 0; i < switchmenu->entry_no; i++) {
-			entry = switchmenu->entries[i];
-			/* this is the entry that was changed */
-			if (entry->clientdata == wwin) {
-				switch (action) {
-				case ACTION_CHANGE:
-					if (entry->text)
-						wfree(entry->text);
-
-					if (wwin->frame->title)
-						snprintf(title, MAX_MENU_TEXT_LENGTH, "%s", wwin->frame->title);
-					else
-						snprintf(title, MAX_MENU_TEXT_LENGTH, "%s", DEF_WINDOW_TITLE);
-
-					t = ShrinkString(vscr->screen_ptr->menu_entry_font, title, MAX_WINDOWLIST_WIDTH);
-					entry->text = t;
-
-					wMenuRealize(switchmenu);
-					checkVisibility = 1;
-					break;
-
-				case ACTION_CHANGE_WORKSPACE:
-					if (entry->rtext) {
-						char *t, *rt;
-						int it, ion, idx = -1;
-
-						if (IS_OMNIPRESENT(wwin))
-							snprintf(entry->rtext, MAX_WORKSPACENAME_WIDTH, "[*]");
-						else
-							snprintf(entry->rtext, MAX_WORKSPACENAME_WIDTH, "[%s]",
-								 vscr->workspace.array[wwin->frame->workspace]->name);
-
-						rt = entry->rtext;
-						entry->rtext = NULL;
-						t = entry->text;
-						entry->text = NULL;
-
-						it = entry->flags.indicator_type;
-						ion = entry->flags.indicator_on;
-
-						if (!IS_OMNIPRESENT(wwin) && idx < 0)
-							idx = menuIndexForWindow(switchmenu, wwin, i);
-
-						wMenuRemoveItem(switchmenu, i);
-
-						entry = wMenuInsertCallback(switchmenu, idx, t, focusWindow, wwin);
-						wfree(t);
-						entry->rtext = rt;
-						entry->flags.indicator = 1;
-						entry->flags.indicator_type = it;
-						entry->flags.indicator_on = ion;
-					}
-					wMenuRealize(switchmenu);
-					checkVisibility = 1;
-					break;
-
-				case ACTION_CHANGE_STATE:
-					if (wwin->flags.hidden) {
-						entry->flags.indicator_type = MI_HIDDEN;
-						entry->flags.indicator_on = 1;
-					} else if (wwin->flags.miniaturized) {
-						entry->flags.indicator_type = MI_MINIWINDOW;
-						entry->flags.indicator_on = 1;
-					} else if (wwin->flags.shaded && !wwin->flags.focused) {
-						entry->flags.indicator_type = MI_SHADED;
-						entry->flags.indicator_on = 1;
-					} else {
-						entry->flags.indicator_on = wwin->flags.focused;
-						entry->flags.indicator_type = MI_DIAMOND;
-					}
-					break;
-				}
-				break;
-			}
-		}
-	}
-	if (checkVisibility) {
-		int tmp;
-
-		tmp = switchmenu->frame->top_width + 5;
-		/* if menu got unreachable, bring it to a visible place */
-		if (switchmenu->frame_x < tmp - (int)switchmenu->frame->core->width) {
-			wMenuMove(switchmenu, tmp - (int)switchmenu->frame->core->width,
-				  switchmenu->frame_y, False);
-		}
-	}
-	wMenuPaint(switchmenu);
-}
-
 static void UpdateSwitchMenuWorkspace(virtual_screen *vscr, int workspace)
 {
 	WMenu *menu = vscr->menu.switch_menu;
@@ -547,18 +432,18 @@ static void observer(void *self, WMNotification * notif)
 	if (strcmp(name, WMNManaged) == 0) {
 		switchmenu_additem(wwin->vscr, wwin);
 	} else if (strcmp(name, WMNUnmanaged) == 0) {
-		UpdateSwitchMenu(wwin->vscr, wwin, ACTION_REMOVE);
+		switchmenu_delitem(wwin->vscr, wwin);
 	} else if (strcmp(name, WMNChangedWorkspace) == 0) {
-		UpdateSwitchMenu(wwin->vscr, wwin, ACTION_CHANGE_WORKSPACE);
+		switchmenu_changeworkspaceitem(wwin->vscr, wwin);
 	} else if (strcmp(name, WMNChangedFocus) == 0) {
-		UpdateSwitchMenu(wwin->vscr, wwin, ACTION_CHANGE_STATE);
+		switchmenu_changestate(wwin->vscr, wwin);
 	} else if (strcmp(name, WMNChangedName) == 0) {
-		UpdateSwitchMenu(wwin->vscr, wwin, ACTION_CHANGE);
+		switchmenu_changeitem(wwin->vscr, wwin);
 	} else if (strcmp(name, WMNChangedState) == 0) {
 		if (strcmp((char *)data, "omnipresent") == 0)
-			UpdateSwitchMenu(wwin->vscr, wwin, ACTION_CHANGE_WORKSPACE);
+			switchmenu_changeworkspaceitem(wwin->vscr, wwin);
 		else
-			UpdateSwitchMenu(wwin->vscr, wwin, ACTION_CHANGE_STATE);
+			switchmenu_changestate(wwin->vscr, wwin);
 	}
 }
 
