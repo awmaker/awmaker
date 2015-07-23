@@ -235,7 +235,7 @@ void switchmenu_delitem(virtual_screen *vscr, WWindow *wwin)
 {
 	WMenu *switchmenu = vscr->menu.switch_menu;
 	WMenuEntry *entry;
-	int tmp, i;
+	int i;
 
 	if (!vscr->menu.switch_menu)
 		return;
@@ -245,18 +245,9 @@ void switchmenu_delitem(virtual_screen *vscr, WWindow *wwin)
 		/* this is the entry that was changed */
 		if (entry->clientdata == wwin) {
 			wMenuRemoveItem(switchmenu, i);
-			wMenuRealize(switchmenu);
 			break;
 		}
 	}
-
-	tmp = switchmenu->frame->top_width + 5;
-	/* if menu got unreachable, bring it to a visible place */
-	if (switchmenu->frame_x < tmp - (int) switchmenu->frame->core->width)
-		wMenuMove(switchmenu, tmp - (int) switchmenu->frame->core->width,
-			  switchmenu->frame_y, False);
-
-	wMenuPaint(switchmenu);
 }
 
 static void switchmenu_changeitem(virtual_screen *vscr, WWindow *wwin)
@@ -422,6 +413,7 @@ static void observer(void *self, WMNotification * notif)
 	WWindow *wwin = (WWindow *) WMGetNotificationObject(notif);
 	const char *name = WMGetNotificationName(notif);
 	void *data = WMGetNotificationClientData(notif);
+	int tmp;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) self;
@@ -433,6 +425,15 @@ static void observer(void *self, WMNotification * notif)
 		switchmenu_additem(wwin->vscr, wwin);
 	} else if (strcmp(name, WMNUnmanaged) == 0) {
 		switchmenu_delitem(wwin->vscr, wwin);
+
+		wMenuRealize(wwin->vscr->menu.switch_menu);
+		tmp = wwin->vscr->menu.switch_menu->frame->top_width + 5;
+		/* if menu got unreachable, bring it to a visible place */
+		if (wwin->vscr->menu.switch_menu->frame_x < tmp - (int) wwin->vscr->menu.switch_menu->frame->core->width)
+			wMenuMove(wwin->vscr->menu.switch_menu, tmp - (int) wwin->vscr->menu.switch_menu->frame->core->width,
+				  wwin->vscr->menu.switch_menu->frame_y, False);
+
+		wMenuPaint(wwin->vscr->menu.switch_menu);
 	} else if (strcmp(name, WMNChangedWorkspace) == 0) {
 		switchmenu_changeworkspaceitem(wwin->vscr, wwin);
 	} else if (strcmp(name, WMNChangedFocus) == 0) {

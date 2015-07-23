@@ -732,7 +732,7 @@ static void applySettings(WMWidget *button, void *client_data)
 	InspectorPanel *panel = (InspectorPanel *) client_data;
 	WWindow *wwin = panel->inspected;
 	WApplication *wapp = wApplicationOf(wwin->main_window);
-	int i, old_skip_window_list, old_omnipresent, old_no_bind_keys, old_no_bind_mouse;
+	int tmp, i, old_skip_window_list, old_omnipresent, old_no_bind_keys, old_no_bind_mouse;
 
 	old_skip_window_list = WFLAGP(wwin, skip_window_list);
 	old_omnipresent = WFLAGP(wwin, omnipresent);
@@ -789,10 +789,20 @@ static void applySettings(WMWidget *button, void *client_data)
 	wwin->flags.omnipresent = 0;
 
 	if (WFLAGP(wwin, skip_window_list) != old_skip_window_list) {
-		if (WFLAGP(wwin, skip_window_list))
+		if (WFLAGP(wwin, skip_window_list)) {
 			switchmenu_delitem(wwin->vscr, wwin);
-		else
+
+			wMenuRealize(wwin->vscr->menu.switch_menu);
+			tmp = wwin->vscr->menu.switch_menu->frame->top_width + 5;
+			/* if menu got unreachable, bring it to a visible place */
+			if (wwin->vscr->menu.switch_menu->frame_x < tmp - (int) wwin->vscr->menu.switch_menu->frame->core->width)
+				wMenuMove(wwin->vscr->menu.switch_menu, tmp - (int) wwin->vscr->menu.switch_menu->frame->core->width,
+					  wwin->vscr->menu.switch_menu->frame_y, False);
+
+			wMenuPaint(wwin->vscr->menu.switch_menu);
+		} else {
 			switchmenu_additem(wwin->vscr, wwin);
+		}
 	} else {
 		if (WFLAGP(wwin, omnipresent) != old_omnipresent)
 			WMPostNotificationName(WMNChangedState, wwin, "omnipresent");
