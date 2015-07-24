@@ -360,7 +360,10 @@ void wWindowConfigureBorders(WWindow *wwin);
 void wWindowUpdateButtonImages(WWindow *wwin);
 void wWindowSaveState(WWindow *wwin);
 void wWindowChangeWorkspace(WWindow *wwin, int workspace);
-void wWindowChangeWorkspaceRelative(WWindow *wwin, int amount);
+
+void window_move_next_workspace(WWindow *wwin);
+void window_move_prev_workspace(WWindow *wwin);
+
 void wWindowSetKeyGrabs(WWindow *wwin);
 void wWindowResetMouseGrabs(WWindow *wwin);
 

@@ -513,7 +513,9 @@ static WMenu *makeWorkspaceMenu(virtual_screen *vscr)
 {
 	WMenu *menu;
 
-	menu = wMenuCreate(vscr, NULL);
+	menu = menu_create(NULL);
+	menu_map(menu, vscr);
+
 	if (!menu) {
 		wwarning(_("could not create submenu for window menu"));
 		return NULL;
@@ -538,11 +540,13 @@ static WMenu *makeOptionsMenu(virtual_screen *vscr)
 	WMenuEntry *entry;
 	int i;
 
-	menu = wMenuCreate(vscr, NULL);
+	menu = menu_create(NULL);
 	if (!menu) {
 		wwarning(_("could not create submenu for window menu"));
 		return NULL;
 	}
+
+	menu_map(menu, vscr);
 
 	for (i = 0; i < wlengthof(menu_options_entries); i++) {
 		entry = wMenuAddCallback(menu, _(menu_options_entries[i]), execWindowOptionCommand, NULL);
@@ -563,11 +567,13 @@ static WMenu *makeMaximizeMenu(virtual_screen *vscr)
 	WMenu *menu;
 	int i;
 
-	menu = wMenuCreate(vscr, NULL);
+	menu = menu_create(NULL);
 	if (!menu) {
 		wwarning(_("could not create submenu for window menu"));
 		return NULL;
 	}
+
+	menu_map(menu, vscr);
 
 	for (i = 0; i < wlengthof(menu_maximize_entries); i++)
 		wMenuAddCallback(menu, _(menu_maximize_entries[i].label), execMaximizeCommand, NULL);
@@ -580,7 +586,8 @@ static WMenu *createWindowMenu(virtual_screen *vscr)
 	WMenu *menu;
 	int i;
 
-	menu = wMenuCreate(vscr, NULL);
+	menu = menu_create(NULL);
+	menu_map(menu, vscr);
 
 	for (i = 0; i < wlengthof(window_menu_entries); i++) {
 		WMenuEntry *entry;
@@ -592,7 +599,8 @@ static WMenu *createWindowMenu(virtual_screen *vscr)
 			WMenu *submenu;
 
 			submenu = window_menu_entries[i].generate_submenu(vscr);
-			wMenuEntrySetCascade(menu, entry, submenu);
+			wMenuEntrySetCascade_create(menu, entry, submenu);
+			wMenuEntrySetCascade_map(menu, submenu);
 		}
 	}
 

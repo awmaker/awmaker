@@ -842,6 +842,7 @@ static Bool checkWorkspaceChange(WWindow *wwin, MoveData *data, Bool opaqueMove)
 	virtual_screen *vscr = wwin->vscr;
 	WScreen *scr = vscr->screen_ptr;
 	Bool changed = False;
+	int s1, s2;
 
 	if (data->mouseX <= 1) {
 		if (vscr->workspace.current > 0) {
@@ -872,7 +873,11 @@ static Bool checkWorkspaceChange(WWindow *wwin, MoveData *data, Bool opaqueMove)
 			/* create a new workspace */
 			if (abs(data->rubCount) > 2) {
 				/* go to next workspace */
-				wWorkspaceNew(vscr);
+				s1 = vscr->workspace.count;
+				workspace_create(vscr, -1, NULL);
+				s2 = vscr->workspace.count;
+				if (s2 > s1)
+					workspace_map(vscr, vscr->workspace.array[vscr->workspace.count - 1], -1, NULL);
 
 				crossWorkspace(vscr, wwin, opaqueMove, vscr->workspace.current + 1, False);
 				changed = True;

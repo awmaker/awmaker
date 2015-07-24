@@ -54,6 +54,7 @@
 #include "geomview.h"
 #include "wmspec.h"
 #include "rootmenu.h"
+#include "switchmenu.h"
 
 #include "xinerama.h"
 
@@ -75,24 +76,6 @@
 static char STIPPLE_DATA[] = { 0x02, 0x01 };
 
 static int CantManageScreen = 0;
-
-static WMPropList *dApplications = NULL;
-static WMPropList *dWorkspace;
-static WMPropList *dDock;
-static WMPropList *dClip;
-static WMPropList *dDrawers = NULL;
-
-static void make_keys(void)
-{
-	if (dApplications != NULL)
-		return;
-
-	dApplications = WMCreatePLString("Applications");
-	dWorkspace = WMCreatePLString("Workspace");
-	dDock = WMCreatePLString("Dock");
-	dClip = WMCreatePLString("Clip");
-	dDrawers = WMCreatePLString("Drawers");
-}
 
  /*
  * Support for ICCCM 2.0: Window Manager Replacement protocol
@@ -762,9 +745,6 @@ void set_screen_options(virtual_screen *vscr)
 	XColor xcol;
 	WScreen *scr = vscr->screen_ptr;
 
-	/* read defaults for this screen */
-	wReadDefaults(vscr, w_global.domain.wmaker->dictionary);
-
 	/* frame boder color */
 	wGetColor(scr, WMGetColorRGBDescription(scr->frame_border_color), &xcol);
 	scr->frame_border_pixel = xcol.pixel;
@@ -777,8 +757,9 @@ void set_screen_options(virtual_screen *vscr)
 
 	wNETWMInitStuff(vscr);
 
-	/* create initial workspace */
-	wWorkspaceNew(vscr);
+	/* map initial workspace */
+	if (vscr->workspace.count == 1)
+		workspace_map(vscr, vscr->workspace.array[vscr->workspace.count - 1], -1, NULL);
 
 	/* create shared pixmaps */
 	createPixmaps(vscr);
@@ -900,14 +881,14 @@ void wScreenUpdateUsableArea(virtual_screen *vscr)
 
 void wScreenRestoreState(virtual_screen *vscr)
 {
-	WMPropList *state;
-	char *path;
-	char buf[16];
+	WMPropList *state, *dDock;
+	char *path, buf[16];
+
+	/* Create the switchmenu */
+	switchmenu_create(vscr);
 
 	OpenRootMenu(vscr, -10000, -10000, False);
 	wMenuUnmap(vscr->menu.root_menu);
-
-	make_keys();
 
 	if (w_global.screen_count == 1) {
 		path = wdefaultspathfordomain("WMState");
@@ -928,6 +909,7 @@ void wScreenRestoreState(virtual_screen *vscr)
 		w_global.session_state = WMCreatePLDictionary(NULL, NULL);
 
 	if (!wPreferences.flags.nodock) {
+		dDock = WMCreatePLString("Dock");
 		state = WMGetFromPLDictionary(w_global.session_state, dDock);
 		vscr->dock.dock = dock_create(vscr);
 		dock_map(vscr->dock.dock, vscr, state);
@@ -956,9 +938,15 @@ void wScreenSaveState(virtual_screen *vscr)
 	WWindow *wwin;
 	char *str;
 	WMPropList *old_state, *foo;
+	WMPropList *dApplications, *dDrawers;
+	WMPropList *dWorkspace, *dDock, *dClip;
 	char buf[16];
 
-	make_keys();
+	dApplications = WMCreatePLString("Applications");
+	dWorkspace = WMCreatePLString("Workspace");
+	dDock = WMCreatePLString("Dock");
+	dClip = WMCreatePLString("Clip");
+	dDrawers = WMCreatePLString("Drawers");
 
 	/* save state of windows */
 	wwin = vscr->screen_ptr->focused_window;

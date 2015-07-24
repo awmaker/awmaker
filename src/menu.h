@@ -109,18 +109,13 @@ WMenuEntry *wMenuInsertCallback(WMenu *menu, int index, const char *text,
                                 void (*callback)(WMenu *menu, WMenuEntry *entry),
                                 void *clientdata);
 
-void wMenuEntrySetCascade(WMenu *menu, WMenuEntry *entry, WMenu *cascade);
-
 #define wMenuAddCallback(menu, text, callback, data) \
     wMenuInsertCallback(menu, -1, text, callback, data)
 
 void wMenuRemoveItem(WMenu *menu, int index);
 
-WMenu *wMenuCreate(virtual_screen *vscr, const char *title);
-WMenu *wMenuCreateForApp(const char *title);
 void wMenuMap(WMenu *menu);
 void wMenuMapAt(WMenu *menu, int x, int y, int keyboard);
-#define wMenuMapCopyAt(menu, x, y) wMenuMapAt((menu)->brother, (x), (y), False)
 void wMenuUnmap(WMenu *menu);
 void wMenuSetEnabled(WMenu *menu, int index, int enable);
 void wMenuMove(WMenu *menu, int x, int y, int submenus);

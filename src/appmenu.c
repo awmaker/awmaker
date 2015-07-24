@@ -100,10 +100,11 @@ static WMenu *parseMenuCommand(virtual_screen *vscr, Window win, char **slist, i
 		return NULL;
 	}
 
-	menu = wMenuCreateForApp(title);
+	menu = menu_create(title);
 	if (!menu)
 		return NULL;
 
+	menu->flags.app_menu = 1;
 	menu_map(menu, vscr);
 
 	*index += 1;
@@ -193,8 +194,8 @@ static WMenu *parseMenuCommand(virtual_screen *vscr, Window win, char **slist, i
 				return NULL;
 			}
 
-			wMenuEntrySetCascade(menu, entry, submenu);
-
+			wMenuEntrySetCascade_create(menu, entry, submenu);
+			wMenuEntrySetCascade_map(menu, submenu);
 		} else {
 			wMenuDestroy(menu, True);
 			wwarning(_("appmenu: bad menu entry \"%s\" in window %lx"), slist[*index], win);

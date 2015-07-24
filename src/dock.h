@@ -63,12 +63,15 @@ typedef struct WDock {
 WDock *clip_create(virtual_screen *vscr);
 WDock *dock_create(virtual_screen *vscr);
 void clip_map(WDock *dock, virtual_screen *scr, WMPropList *state);
+void clip_unmap(WDock *dock);
 void dock_map(WDock *dock, virtual_screen *scr, WMPropList *dock_state);
+void dock_unmap(WDock *dock);
 
 void clip_icon_create(void);
 void clip_icon_map(virtual_screen *vscr);
+void clip_icon_unmap(void);
 
-void wDockDestroy(WDock *dock);
+void clip_destroy(WDock *dock);
 void wDockHideIcons(WDock *dock);
 void wDockShowIcons(WDock *dock);
 void wDockLower(WDock *dock);
@@ -90,8 +93,9 @@ void wDrawerFillTheGap(WDock *drawer, WAppIcon *aicon, Bool redocking);
 void wDockFinishLaunch(WAppIcon *icon);
 void wDockTrackWindowLaunch(WDock *dock, Window window);
 WAppIcon *wDockFindIconForWindow(WDock *dock, Window window);
-void wDockDoAutoLaunch(WDock *dock, int workspace);
 void wDockLaunchWithState(WAppIcon *btn, WSavedState *state);
+
+void dockedapps_autolaunch(int vscrno);
 
 #ifdef XDND
 int wDockReceiveDNDDrop(virtual_screen *vscr, XEvent *event);

@@ -682,6 +682,12 @@ void StartUp(Bool defaultScreenOnly)
 		vscr->screen_ptr = wScreen[j];
 		w_global.vscreens[w_global.vscreen_count] = vscr;
 
+		/* read defaults for this screen */
+		wReadDefaults(vscr, w_global.domain.wmaker->dictionary);
+
+		clip_icon_create();
+		workspace_create(vscr, -1, NULL);
+
 		set_screen_options(w_global.vscreens[w_global.vscreen_count]);
 		w_global.vscreen_count++;
 
@@ -695,6 +701,16 @@ void StartUp(Bool defaultScreenOnly)
 
 		manageAllWindows(w_global.vscreens[j], wPreferences.flags.restarting == 2);
 
+		while (XPending(dpy)) {
+			XEvent ev;
+			WMNextEvent(dpy, &ev);
+			WMHandleEvent(&ev);
+		}
+
+		vscr->workspace.last_used = 0;
+		if (!wPreferences.flags.noclip)
+			wDockShowIcons(vscr->workspace.array[vscr->workspace.current]->clip);
+
 		/* restore saved menus */
 		wMenuRestoreState(w_global.vscreens[j]);
 
@@ -702,33 +718,9 @@ void StartUp(Bool defaultScreenOnly)
 		if (wPreferences.flags.restarting == 0 && !wPreferences.flags.norestore)
 			wSessionRestoreState(w_global.vscreens[j]);
 
-		if (!wPreferences.flags.noautolaunch) {
-			/* auto-launch apps */
-			if (!wPreferences.flags.nodock && w_global.vscreens[j]->dock.dock) {
-				w_global.vscreens[j]->last_dock = w_global.vscreens[j]->dock.dock;
-				wDockDoAutoLaunch(w_global.vscreens[j]->dock.dock, 0);
-			}
-
-			/* auto-launch apps in clip */
-			if (!wPreferences.flags.noclip) {
-				int i;
-				for (i = 0; i < w_global.vscreens[j]->workspace.count; i++) {
-					if (w_global.vscreens[j]->workspace.array[i]->clip) {
-						w_global.vscreens[j]->last_dock = w_global.vscreens[j]->workspace.array[i]->clip;
-						wDockDoAutoLaunch(w_global.vscreens[j]->workspace.array[i]->clip, i);
-					}
-				}
-			}
-
-			/* auto-launch apps in drawers */
-			if (!wPreferences.flags.nodrawer) {
-				WDrawerChain *dc;
-				for (dc = w_global.vscreens[j]->drawer.drawers; dc; dc = dc->next) {
-					w_global.vscreens[j]->last_dock = dc->adrawer;
-					wDockDoAutoLaunch(dc->adrawer, 0);
-				}
-			}
-		}
+		/* Launch the Dock, Clip and Drawers autolaunch apps */
+		if (!wPreferences.flags.noautolaunch)
+			dockedapps_autolaunch(j);
 
 		/* go to workspace where we were before restart */
 		if (lastDesktop >= 0)
@@ -854,19 +846,6 @@ static void manageAllWindows(virtual_screen *vscr, int crashRecovery)
 	}
 
 	XFree(children);
+
 	w_global.startup.phase1 = 0;
-	w_global.startup.phase2 = 1;
-
-	while (XPending(dpy)) {
-		XEvent ev;
-		WMNextEvent(dpy, &ev);
-		WMHandleEvent(&ev);
-	}
-
-	vscr->workspace.last_used = 0;
-	wWorkspaceForceChange(vscr, 0);
-	if (!wPreferences.flags.noclip)
-		wDockShowIcons(vscr->workspace.array[vscr->workspace.current]->clip);
-
-	w_global.startup.phase2 = 0;
 }

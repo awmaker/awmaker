@@ -1946,26 +1946,43 @@ void wWindowChangeWorkspace(WWindow *wwin, int workspace)
 		wWindowUnmap(wwin);
 }
 
-void wWindowChangeWorkspaceRelative(WWindow *wwin, int amount)
+void window_move_prev_workspace(WWindow *wwin)
 {
 	virtual_screen *vscr = wwin->vscr;
-	int w = vscr->workspace.current + amount;
+	int w = vscr->workspace.current - 1;
 
-	if (amount < 0) {
-		if (w >= 0)
-			wWindowChangeWorkspace(wwin, w);
-		else if (wPreferences.ws_cycle)
-			wWindowChangeWorkspace(wwin, vscr->workspace.count + w);
-	} else if (amount > 0) {
-		if (w < vscr->workspace.count) {
-			wWindowChangeWorkspace(wwin, w);
-		} else if (wPreferences.ws_advance) {
-			int workspace = WMIN(w, MAX_WORKSPACES - 1);
-			wWorkspaceMake(vscr, workspace);
-			wWindowChangeWorkspace(wwin, workspace);
-		} else if (wPreferences.ws_cycle) {
-			wWindowChangeWorkspace(wwin, w % vscr->workspace.count);
+	if (w >= 0)
+		wWindowChangeWorkspace(wwin, w);
+	else if (wPreferences.ws_cycle)
+		wWindowChangeWorkspace(wwin, vscr->workspace.count + w);
+}
+
+void window_move_next_workspace(WWindow *wwin)
+{
+	virtual_screen *vscr = wwin->vscr;
+	int w = vscr->workspace.current + 1;
+	int workspace, count;
+	int s1, s2;
+
+	if (w < vscr->workspace.count) {
+		wWindowChangeWorkspace(wwin, w);
+	} else if (wPreferences.ws_advance) {
+		workspace = WMIN(w, MAX_WORKSPACES - 1);
+		count = workspace;
+
+		while (count > 0) {
+			s1 = vscr->workspace.count;
+			workspace_create(vscr, -1, NULL);
+			s2 = vscr->workspace.count;
+			if (s2 > s1)
+				workspace_map(vscr, vscr->workspace.array[vscr->workspace.count - 1], -1, NULL);
+
+			count--;
 		}
+
+		wWindowChangeWorkspace(wwin, workspace);
+	} else if (wPreferences.ws_cycle) {
+		wWindowChangeWorkspace(wwin, w % vscr->workspace.count);
 	}
 }
 

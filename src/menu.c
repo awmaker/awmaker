@@ -248,41 +248,6 @@ void menu_map(WMenu *menu, virtual_screen *screen)
 	WMAddNotificationObserver(appearanceObserver, menu, WNMenuTitleAppearanceSettingsChanged, menu);
 }
 
-/*
- *----------------------------------------------------------------------
- * wMenuCreate--
- * 	Creates a new empty menu with the specified title. If main_menu
- * is True, the created menu will be a main menu, which has some special
- * properties such as being placed over other normal menus.
- * 	If title is NULL, the menu will have no titlebar.
- *
- * Returns:
- * 	The created menu.
- *----------------------------------------------------------------------
- */
-WMenu *wMenuCreate(virtual_screen *vscr, const char *title)
-{
-	WMenu *menu;
-
-	menu = menu_create(title);
-	menu_map(menu, vscr);
-
-	return menu;
-}
-
-WMenu *wMenuCreateForApp(const char *title)
-{
-	WMenu *menu;
-
-	menu = menu_create(title);
-	if (!menu)
-		return NULL;
-
-	menu->flags.app_menu = 1;
-
-	return menu;
-}
-
 static void insertEntry(WMenu *menu, WMenuEntry *entry, int index)
 {
 	int i;
@@ -363,12 +328,6 @@ void wMenuEntrySetCascade_map(WMenu *menu, WMenu *cascade)
 
 	if (!menu->flags.realized)
 		wMenuRealize(menu);
-}
-
-void wMenuEntrySetCascade(WMenu *menu, WMenuEntry *entry, WMenu *cascade)
-{
-	wMenuEntrySetCascade_create(menu, entry, cascade);
-	wMenuEntrySetCascade_map(menu, cascade);
 }
 
 void wMenuEntryRemoveCascade(WMenu *menu, WMenuEntry *entry)
@@ -2258,7 +2217,6 @@ static int restoreMenu(virtual_screen *vscr, WMPropList *menu)
 	if (!getMenuInfo(menu, &x, &y, &lowered))
 		return False;
 
-	OpenSwitchMenu(vscr, x, y, False);
 	pmenu = vscr->menu.switch_menu;
 	if (pmenu) {
 		width = MENUW(pmenu);
