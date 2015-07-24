@@ -2217,7 +2217,6 @@ static int restoreMenu(virtual_screen *vscr, WMPropList *menu)
 	if (!getMenuInfo(menu, &x, &y, &lowered))
 		return False;
 
-	OpenSwitchMenu(vscr, x, y, False);
 	pmenu = vscr->menu.switch_menu;
 	if (pmenu) {
 		width = MENUW(pmenu);

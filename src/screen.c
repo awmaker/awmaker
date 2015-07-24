@@ -54,6 +54,7 @@
 #include "geomview.h"
 #include "wmspec.h"
 #include "rootmenu.h"
+#include "switchmenu.h"
 
 #include "xinerama.h"
 
@@ -882,6 +883,9 @@ void wScreenRestoreState(virtual_screen *vscr)
 {
 	WMPropList *state, *dDock;
 	char *path, buf[16];
+
+	/* Create the switchmenu */
+	switchmenu_create(vscr);
 
 	OpenRootMenu(vscr, -10000, -10000, False);
 	wMenuUnmap(vscr->menu.root_menu);
