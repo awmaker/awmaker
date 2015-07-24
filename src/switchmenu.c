@@ -256,7 +256,7 @@ static void switchmenu_changeitem(virtual_screen *vscr, WWindow *wwin)
 	WMenu *switchmenu = vscr->menu.switch_menu;
 	WMenuEntry *entry;
 	char title[MAX_MENU_TEXT_LENGTH + 6];
-	int i, tmp;
+	int i;
 
 	if (!vscr->menu.switch_menu)
 		return;
@@ -275,19 +275,9 @@ static void switchmenu_changeitem(virtual_screen *vscr, WWindow *wwin)
 
 			entry->text = ShrinkString(vscr->screen_ptr->menu_entry_font, title, MAX_WINDOWLIST_WIDTH);
 
-			wMenuRealize(switchmenu);
 			break;
 		}
 	}
-
-
-	tmp = switchmenu->frame->top_width + 5;
-	/* if menu got unreachable, bring it to a visible place */
-	if (switchmenu->frame_x < tmp - (int)switchmenu->frame->core->width)
-		wMenuMove(switchmenu, tmp - (int)switchmenu->frame->core->width,
-			  switchmenu->frame_y, False);
-
-	wMenuPaint(switchmenu);
 }
 
 static void switchmenu_changeworkspaceitem(virtual_screen *vscr, WWindow *wwin)
@@ -333,20 +323,9 @@ static void switchmenu_changeworkspaceitem(virtual_screen *vscr, WWindow *wwin)
 				entry->flags.indicator_type = it;
 				entry->flags.indicator_on = ion;
 			}
-			wMenuRealize(switchmenu);
 			break;
 		}
 	}
-
-	int tmp;
-
-	tmp = switchmenu->frame->top_width + 5;
-	/* if menu got unreachable, bring it to a visible place */
-	if (switchmenu->frame_x < tmp - (int)switchmenu->frame->core->width)
-		wMenuMove(switchmenu, tmp - (int)switchmenu->frame->core->width,
-			  switchmenu->frame_y, False);
-
-	wMenuPaint(switchmenu);
 }
 
 /* Update switch menu */
@@ -379,8 +358,6 @@ static void switchmenu_changestate(virtual_screen *vscr, WWindow *wwin)
 			break;
 		}
 	}
-
-	wMenuPaint(switchmenu);
 }
 
 static void UpdateSwitchMenuWorkspace(virtual_screen *vscr, int workspace)
@@ -424,27 +401,8 @@ static void observer(void *self, WMNotification * notif)
 
 	if (strcmp(name, WMNManaged) == 0) {
 		switchmenu_additem(wwin->vscr, wwin);
-
-		wMenuRealize(wwin->vscr->menu.switch_menu);
-
-		tmp = wwin->vscr->menu.switch_menu->frame->top_width + 5;
-		/* if menu got unreachable, bring it to a visible place */
-		if (wwin->vscr->menu.switch_menu->frame_x < tmp - (int) wwin->vscr->menu.switch_menu->frame->core->width)
-			wMenuMove(wwin->vscr->menu.switch_menu, tmp - (int) wwin->vscr->menu.switch_menu->frame->core->width,
-				  wwin->vscr->menu.switch_menu->frame_y, False);
-
-		wMenuPaint(wwin->vscr->menu.switch_menu);
 	} else if (strcmp(name, WMNUnmanaged) == 0) {
 		switchmenu_delitem(wwin->vscr, wwin);
-
-		wMenuRealize(wwin->vscr->menu.switch_menu);
-		tmp = wwin->vscr->menu.switch_menu->frame->top_width + 5;
-		/* if menu got unreachable, bring it to a visible place */
-		if (wwin->vscr->menu.switch_menu->frame_x < tmp - (int) wwin->vscr->menu.switch_menu->frame->core->width)
-			wMenuMove(wwin->vscr->menu.switch_menu, tmp - (int) wwin->vscr->menu.switch_menu->frame->core->width,
-				  wwin->vscr->menu.switch_menu->frame_y, False);
-
-		wMenuPaint(wwin->vscr->menu.switch_menu);
 	} else if (strcmp(name, WMNChangedWorkspace) == 0) {
 		switchmenu_changeworkspaceitem(wwin->vscr, wwin);
 	} else if (strcmp(name, WMNChangedFocus) == 0) {
@@ -457,6 +415,16 @@ static void observer(void *self, WMNotification * notif)
 		else
 			switchmenu_changestate(wwin->vscr, wwin);
 	}
+
+	wMenuRealize(wwin->vscr->menu.switch_menu);
+
+	tmp = wwin->vscr->menu.switch_menu->frame->top_width + 5;
+	/* if menu got unreachable, bring it to a visible place */
+	if (wwin->vscr->menu.switch_menu->frame_x < tmp - (int) wwin->vscr->menu.switch_menu->frame->core->width)
+		wMenuMove(wwin->vscr->menu.switch_menu, tmp - (int) wwin->vscr->menu.switch_menu->frame->core->width,
+			  wwin->vscr->menu.switch_menu->frame_y, False);
+
+	wMenuPaint(wwin->vscr->menu.switch_menu);
 }
 
 static void wsobserver(void *self, WMNotification *notif)
