@@ -88,11 +88,24 @@ void InitializeSwitchMenu(void)
 	}
 }
 
+void switchmenu_create(virtual_screen *vscr)
+{
+	WMenu *switchmenu;
+	WWindow *wwin;
+
+	switchmenu = menu_create(_("Windows"));
+	vscr->menu.switch_menu = switchmenu;
+	wwin = vscr->screen_ptr->focused_window;
+	while (wwin) {
+		switchmenu_additem(vscr, wwin);
+		wwin = wwin->prev;
+	}
+}
+
 /* Open switch menu */
 void OpenSwitchMenu(virtual_screen *vscr, int x, int y, int keyboard)
 {
 	WMenu *switchmenu = vscr->menu.switch_menu;
-	WWindow *wwin;
 	int tmp;
 
 	if (switchmenu) {
@@ -114,17 +127,9 @@ void OpenSwitchMenu(virtual_screen *vscr, int x, int y, int keyboard)
 		return;
 	}
 
-	switchmenu = menu_create(_("Windows"));
+	switchmenu_create(vscr);
+
 	menu_map(switchmenu, vscr);
-
-	vscr->menu.switch_menu = switchmenu;
-
-	wwin = vscr->screen_ptr->focused_window;
-	while (wwin) {
-		switchmenu_additem(vscr, wwin);
-		wwin = wwin->prev;
-	}
-
 	wMenuRealize(vscr->menu.switch_menu);
 
 	tmp = vscr->menu.switch_menu->frame->top_width + 5;
