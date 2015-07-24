@@ -106,57 +106,27 @@ void switchmenu_create(virtual_screen *vscr)
 void OpenSwitchMenu(virtual_screen *vscr, int x, int y, int keyboard)
 {
 	WMenu *switchmenu = vscr->menu.switch_menu;
-	int tmp;
 
-	if (switchmenu) {
-		if (switchmenu->flags.mapped) {
-			if (!switchmenu->flags.buttoned) {
-				wMenuUnmap(switchmenu);
-			} else {
-				wRaiseFrame(switchmenu->frame->core);
-
-				if (keyboard)
-					wMenuMapAt(switchmenu, 0, 0, True);
-			}
+	/* Mapped, so unmap or raise */
+	if (switchmenu->flags.mapped) {
+		if (!switchmenu->flags.buttoned) {
+			wMenuUnmap(switchmenu);
 		} else {
-			if (keyboard && x == vscr->screen_ptr->scr_width / 2 && y == vscr->screen_ptr->scr_height / 2)
-				y = y - switchmenu->frame->core->height / 2;
+			wRaiseFrame(switchmenu->frame->core);
 
-			wMenuMapAt(switchmenu, x - switchmenu->frame->core->width / 2, y, keyboard);
+			if (keyboard)
+				wMenuMapAt(switchmenu, 0, 0, True);
 		}
 		return;
 	}
 
-	switchmenu_create(vscr);
+	/* Not mapped, map it */
+	if (keyboard &&
+	    x == vscr->screen_ptr->scr_width / 2 &&
+	    y == vscr->screen_ptr->scr_height / 2)
+		y = y - switchmenu->frame->core->height / 2;
 
-	menu_map(switchmenu, vscr);
-	wMenuRealize(vscr->menu.switch_menu);
-
-	tmp = vscr->menu.switch_menu->frame->top_width + 5;
-	/* if menu got unreachable, bring it to a visible place */
-	if (vscr->menu.switch_menu->frame_x < tmp - (int) vscr->menu.switch_menu->frame->core->width)
-		wMenuMove(vscr->menu.switch_menu, tmp - (int) vscr->menu.switch_menu->frame->core->width,
-			  vscr->menu.switch_menu->frame_y, False);
-
-	wMenuPaint(vscr->menu.switch_menu);
-
-	if (switchmenu) {
-		int newx, newy;
-
-		if (!switchmenu->flags.realized)
-			wMenuRealize(switchmenu);
-
-		if (keyboard && x == 0 && y == 0) {
-			newx = newy = 0;
-		} else if (keyboard && x == vscr->screen_ptr->scr_width / 2 && y == vscr->screen_ptr->scr_height / 2) {
-			newx = x - switchmenu->frame->core->width / 2;
-			newy = y - switchmenu->frame->core->height / 2;
-		} else {
-			newx = x - switchmenu->frame->core->width / 2;
-			newy = y;
-		}
-		wMenuMapAt(switchmenu, newx, newy, keyboard);
-	}
+	wMenuMapAt(switchmenu, x - switchmenu->frame->core->width / 2, y, keyboard);
 }
 
 static int menuIndexForWindow(WMenu * menu, WWindow * wwin, int old_pos)
