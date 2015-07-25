@@ -565,7 +565,7 @@ void wWorkspaceForceChange(virtual_screen *vscr, int workspace)
 	if (workspace >= MAX_WORKSPACES || workspace < 0)
 		return;
 
-	if (!wPreferences.disable_workspace_pager &&
+	if (wPreferences.enable_workspace_pager &&
 	    !vscr->workspace.process_map_event)
 		wWorkspaceMapUpdate(vscr);
 

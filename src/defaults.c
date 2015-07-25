@@ -361,8 +361,8 @@ WDefaultEntry staticOptionList[] = {
 	    NULL, getBool, setClipMergedInDock, NULL, NULL},
 	{"DisableMiniwindows", "NO", NULL,
 	    &wPreferences.disable_miniwindows, getBool, NULL, NULL, NULL},
-	{"DisableWorkspacePager", "NO", NULL,
-	    &wPreferences.disable_workspace_pager, getBool, NULL, NULL, NULL}
+	{"EnableWorkspacePager", "NO", NULL,
+	    &wPreferences.enable_workspace_pager, getBool, NULL, NULL, NULL}
 };
 
 #define NUM2STRING_(x) #x

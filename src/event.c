@@ -1575,7 +1575,7 @@ static void handleKeyPress(XEvent *event)
 
 		break;
 	case WKBD_WORKSPACEMAP:
-		if (!wPreferences.disable_workspace_pager)
+		if (wPreferences.enable_workspace_pager)
 			StartWorkspaceMap(vscr);
 		break;
 	case WKBD_FOCUSNEXT:
