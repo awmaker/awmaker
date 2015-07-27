@@ -1558,6 +1558,9 @@ int wKeyboardMoveResizeWindow(WWindow *wwin)
 				keysym = XLookupKeysym(&event.xkey, 0);
 				switch (keysym) {
 				case XK_Return:
+#ifdef XK_KP_Enter
+				case XK_KP_Enter:
+#endif
 					done = 2;
 					break;
 				case XK_Escape:
