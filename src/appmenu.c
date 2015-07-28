@@ -238,63 +238,61 @@ WMenu *wAppMenuGet(virtual_screen *vscr, Window window)
 	return menu;
 }
 
-void wAppMenuDestroy(WMenu * menu)
+void wAppMenuDestroy(WMenu *menu)
 {
 	if (menu)
 		wMenuDestroy(menu, True);
 }
 
-static void mapmenus(WMenu * menu)
+static void mapmenus(WMenu *menu)
 {
 	int i;
 
 	if (menu->flags.mapped)
 		XMapWindow(dpy, menu->frame->core->window);
 
-	for (i = 0; i < menu->cascade_no; i++) {
+	for (i = 0; i < menu->cascade_no; i++)
 		if (menu->cascades[i])
 			mapmenus(menu->cascades[i]);
-	}
 }
 
-void wAppMenuMap(WMenu * menu, WWindow * wwin)
+void wAppMenuMap(WMenu *menu, WWindow *wwin)
 {
+	int x, min;
 
 	if (!menu)
 		return;
 
-	if (!menu->flags.mapped) {
-		wMenuMap(menu);
-	}
-	if (wwin && (wPreferences.focus_mode != WKF_CLICK)) {
-		int x, min;
+	x = 0;
+	min = 20;	/* Keep at least 20 pixels visible */
 
-		min = 20;	/* Keep at least 20 pixels visible */
-		if (wwin->frame_x > min) {
+	if (wwin && (wPreferences.focus_mode != WKF_CLICK)) {
+		if (wwin->frame_x > min)
 			x = wwin->frame_x - menu->frame->core->width;
-		} else {
+		else
 			x = min - menu->frame->core->width;
-		}
-		wMenuMove(menu, x, wwin->frame_y, True);
 	}
+
+	if (!menu->flags.mapped)
+		wMenuMapAt(wwin->vscr, menu, x, wwin->frame_y, False);
+
 	mapmenus(menu);
 
 }
 
-static void unmapmenus(WMenu * menu)
+static void unmapmenus(WMenu *menu)
 {
 	int i;
 
 	if (menu->flags.mapped)
 		XUnmapWindow(dpy, menu->frame->core->window);
 
-	for (i = 0; i < menu->cascade_no; i++) {
+	for (i = 0; i < menu->cascade_no; i++)
 		if (menu->cascades[i])
 			unmapmenus(menu->cascades[i]);
-	}
 }
 
-void wAppMenuUnmap(WMenu * menu)
+void wAppMenuUnmap(WMenu *menu)
 {
 	if (menu)
 		unmapmenus(menu);
