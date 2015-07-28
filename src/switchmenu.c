@@ -95,7 +95,7 @@ void switchmenu_create(virtual_screen *vscr)
 	vscr->menu.switch_menu = menu_create(_("Windows"));
 	wwin = vscr->screen_ptr->focused_window;
 	while (wwin) {
-		switchmenu_additem(vscr, wwin);
+		switchmenu_additem(vscr->menu.switch_menu, vscr, wwin);
 		wwin = wwin->prev;
 	}
 }
@@ -155,13 +155,13 @@ static int menuIndexForWindow(WMenu * menu, WWindow * wwin, int old_pos)
 	return idx;
 }
 
-void switchmenu_additem(virtual_screen *vscr, WWindow *wwin)
+void switchmenu_additem(WMenu *menu, virtual_screen *vscr, WWindow *wwin)
 {
 	WMenuEntry *entry;
 	char *t, title[MAX_MENU_TEXT_LENGTH + 6];
 	int idx = -1, len = sizeof(title);
 
-	if (!vscr->menu.switch_menu)
+	if (!menu)
 		return;
 
 	if (wwin->flags.internal_window ||
@@ -175,10 +175,10 @@ void switchmenu_additem(virtual_screen *vscr, WWindow *wwin)
 		snprintf(title, len, "%s", DEF_WINDOW_TITLE);
 
 	if (!IS_OMNIPRESENT(wwin))
-		idx = menuIndexForWindow(vscr->menu.switch_menu, wwin, -1);
+		idx = menuIndexForWindow(menu, wwin, -1);
 
 	t = ShrinkString(vscr->screen_ptr->menu_entry_font, title, MAX_WINDOWLIST_WIDTH);
-	entry = wMenuInsertCallback(vscr->menu.switch_menu, idx, t, focusWindow, wwin);
+	entry = wMenuInsertCallback(menu, idx, t, focusWindow, wwin);
 	wfree(t);
 
 	entry->flags.indicator = 1;
@@ -368,7 +368,7 @@ static void observer(void *self, WMNotification * notif)
 		return;
 
 	if (strcmp(name, WMNManaged) == 0) {
-		switchmenu_additem(wwin->vscr, wwin);
+		switchmenu_additem(wwin->vscr->menu.switch_menu, wwin->vscr, wwin);
 	} else if (strcmp(name, WMNUnmanaged) == 0) {
 		switchmenu_delitem(wwin->vscr, wwin);
 	} else if (strcmp(name, WMNChangedWorkspace) == 0) {
