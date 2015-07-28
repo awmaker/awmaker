@@ -1664,7 +1664,7 @@ void OpenRootMenu(virtual_screen *vscr, int x, int y, int keyboard)
 			wRaiseFrame(menu->frame->core);
 
 			if (keyboard)
-				wMenuMapAt(menu, 0, 0, True);
+				wMenuMapAt(vscr, menu, 0, 0, True);
 		}
 		return;
 	}
@@ -1717,7 +1717,8 @@ void OpenRootMenu(virtual_screen *vscr, int x, int y, int keyboard)
 			newx = x - menu->frame->core->width / 2;
 			newy = y;
 		}
-		wMenuMapAt(menu, newx, newy, keyboard);
+
+		wMenuMapAt(vscr, menu, newx, newy, keyboard);
 	}
 
 	if (vscr->menu.flags.root_menu_changed_shortcuts)

@@ -805,7 +805,7 @@ void OpenWindowMenu(WWindow *wwin, int x, int y, int keyboard)
 	prepare_menu_position(menu, &x, &y);
 
 	if (!wwin->flags.internal_window)
-		wMenuMapAt(menu, x, y, keyboard);
+		wMenuMapAt(wwin->vscr, menu, x, y, keyboard);
 }
 
 void OpenWindowMenu2(WWindow *wwin, int x, int y, int keyboard)
@@ -830,7 +830,7 @@ void OpenWindowMenu2(WWindow *wwin, int x, int y, int keyboard)
 	prepare_menu_position(menu, &x, &y);
 
 	if (!wwin->flags.internal_window)
-		wMenuMapAt(menu, x, y, keyboard);
+		wMenuMapAt(vscr, menu, x, y, keyboard);
 }
 
 void OpenMiniwindowMenu(WWindow *wwin, int x, int y)
@@ -843,7 +843,7 @@ void OpenMiniwindowMenu(WWindow *wwin, int x, int y)
 
 	x -= menu->frame->core->width / 2;
 
-	wMenuMapAt(menu, x, y, False);
+	wMenuMapAt(wwin->vscr, menu, x, y, False);
 }
 
 void DestroyWindowMenu(virtual_screen *vscr)

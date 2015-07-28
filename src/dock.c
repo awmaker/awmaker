@@ -5013,7 +5013,7 @@ static void open_menu_dock(WDock *dock, WAppIcon *aicon, XEvent *event)
 		wMenuRealize(dock->menu);
 
 	x_pos = dock->on_right_side ? scr->scr_width - dock->menu->frame->core->width - 3 : 0;
-	wMenuMapAt(dock->menu, x_pos, event->xbutton.y_root + 2, False);
+	wMenuMapAt(vscr, dock->menu, x_pos, event->xbutton.y_root + 2, False);
 
 	/* allow drag select */
 	event->xany.send_event = True;
@@ -5042,7 +5042,7 @@ static void open_menu_clip(WDock *dock, WAppIcon *aicon, XEvent *event)
 	else if (x_pos + dock->menu->frame->core->width > scr->scr_width - 2)
 		x_pos = scr->scr_width - dock->menu->frame->core->width - 4;
 
-	wMenuMapAt(dock->menu, x_pos, event->xbutton.y_root + 2, False);
+	wMenuMapAt(vscr, dock->menu, x_pos, event->xbutton.y_root + 2, False);
 
 	/* allow drag select */
 	event->xany.send_event = True;
@@ -5071,7 +5071,7 @@ static void open_menu_drawer(WDock *dock, WAppIcon *aicon, XEvent *event)
 	else if (x_pos + dock->menu->frame->core->width > scr->scr_width - 2)
 		x_pos = scr->scr_width - dock->menu->frame->core->width - 4;
 
-	wMenuMapAt(dock->menu, x_pos, event->xbutton.y_root + 2, False);
+	wMenuMapAt(vscr, dock->menu, x_pos, event->xbutton.y_root + 2, False);
 
 	/* allow drag select */
 	event->xany.send_event = True;
@@ -5579,7 +5579,7 @@ static void clip_icon_mouse_down(WObjDescriptor *desc, XEvent *event)
 				else if (xpos + wsMenu->frame->core->width > scr->scr_width - 2)
 					xpos = scr->scr_width - wsMenu->frame->core->width - 4;
 
-				wMenuMapAt(wsMenu, xpos, event->xbutton.y_root + 2, False);
+				wMenuMapAt(vscr, wsMenu, xpos, event->xbutton.y_root + 2, False);
 
 				desc = &wsMenu->menu->descriptor;
 				event->xany.send_event = True;
