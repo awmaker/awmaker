@@ -391,6 +391,11 @@ static void observer(void *self, WMNotification * notif)
 			switchmenu_changestate(wwin->vscr, wwin);
 	}
 
+	/* If menu is not mapped, exit */
+	if (!wwin->vscr->menu.switch_menu->frame ||
+	    !wwin->vscr->menu.switch_menu->frame->vscr)
+		return;
+
 	wMenuRealize(wwin->vscr->menu.switch_menu);
 
 	tmp = wwin->vscr->menu.switch_menu->frame->top_width + 5;

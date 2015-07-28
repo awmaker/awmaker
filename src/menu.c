@@ -442,11 +442,17 @@ static void updateTexture(WMenu *menu)
 
 void wMenuRealize(WMenu *menu)
 {
+	WScreen *scr;
 	int i, flags;
 	int width, rwidth, mrwidth = 0, mwidth = 0;
 	int theight = 0, twidth = 0, eheight;
 	char *text;
-	WScreen *scr = menu->frame->vscr->screen_ptr;
+
+	/* If not mapped on the screen, return */
+	if (!menu || !menu->frame || !menu->frame->vscr || !menu->frame->vscr->screen_ptr)
+		return;
+
+	scr = menu->frame->vscr->screen_ptr;
 
 	flags = WFF_BORDER;
 	if (menu->flags.titled)
