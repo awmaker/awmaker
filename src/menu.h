@@ -114,7 +114,6 @@ WMenuEntry *wMenuInsertCallback(WMenu *menu, int index, const char *text,
 
 void wMenuRemoveItem(WMenu *menu, int index);
 
-void wMenuMap(WMenu *menu);
 void wMenuMapAt(virtual_screen *vscr, WMenu *menu, int x, int y, int keyboard);
 void wMenuUnmap(WMenu *menu);
 void wMenuSetEnabled(WMenu *menu, int index, int enable);

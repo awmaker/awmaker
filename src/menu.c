@@ -1017,24 +1017,6 @@ void wMenuMapAt(virtual_screen *vscr, WMenu *menu, int x, int y, int keyboard)
 		keyboardMenu(menu);
 }
 
-void wMenuMap(WMenu *menu)
-{
-	if (!menu->flags.realized) {
-		menu->flags.realized = 1;
-		wMenuRealize(menu);
-	}
-
-	if (menu->flags.app_menu && menu->parent == NULL) {
-		menu->frame_x = 0;
-		menu->frame_y = 0;
-		XMoveWindow(dpy, menu->frame->core->window, menu->frame_x, menu->frame_y);
-	}
-
-	XMapWindow(dpy, menu->frame->core->window);
-	wRaiseFrame(menu->frame->core);
-	menu->flags.mapped = 1;
-}
-
 void wMenuUnmap(WMenu *menu)
 {
 	int i;
