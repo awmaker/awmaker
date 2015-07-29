@@ -746,36 +746,12 @@ static Bool windowInList(Window window, Window *list, int count)
 	return False;
 }
 
-/*
- *-----------------------------------------------------------------------
- * manageAllWindows--
- * 	Manages all windows in the screen.
- *
- * Notes:
- * 	Called when the wm is being started.
- *	No events can be processed while the windows are being
- * reparented/managed.
- *-----------------------------------------------------------------------
- */
-static void manageAllWindows(virtual_screen *vscr, int crashRecovery)
+void remove_icon_windows(Window *children, unsigned int nchildren)
 {
-	WApplication *wapp;
-	WScreen *scr = vscr->screen_ptr;
-	Window root, parent;
-	Window *children;
-	WWindow *wwin;
-	unsigned int i, j, nchildren;
-	int border;
+	unsigned int i, j;
+	XWMHints *wmhints;
 
-	XGrabServer(dpy);
-	XQueryTree(dpy, scr->root_win, &root, &parent, &children, &nchildren);
-
-	w_global.startup.phase1 = 1;
-
-	/* first remove all icon windows */
 	for (i = 0; i < nchildren; i++) {
-		XWMHints *wmhints;
-
 		if (children[i] == None)
 			continue;
 
@@ -794,6 +770,36 @@ static void manageAllWindows(virtual_screen *vscr, int crashRecovery)
 		if (wmhints)
 			XFree(wmhints);
 	}
+}
+
+/*
+ *-----------------------------------------------------------------------
+ * manageAllWindows--
+ * 	Manages all windows in the screen.
+ *
+ * Notes:
+ * 	Called when the wm is being started.
+ *	No events can be processed while the windows are being
+ * reparented/managed.
+ *-----------------------------------------------------------------------
+ */
+static void manageAllWindows(virtual_screen *vscr, int crashRecovery)
+{
+	WApplication *wapp;
+	WScreen *scr = vscr->screen_ptr;
+	Window root, parent;
+	Window *children;
+	WWindow *wwin;
+	unsigned int i, nchildren;
+	int border;
+
+	XGrabServer(dpy);
+	XQueryTree(dpy, scr->root_win, &root, &parent, &children, &nchildren);
+
+	w_global.startup.phase1 = 1;
+
+	/* first remove all icon windows */
+	remove_icon_windows(children, nchildren);
 
 	for (i = 0; i < nchildren; i++) {
 		if (children[i] == None)
