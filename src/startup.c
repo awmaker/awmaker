@@ -89,6 +89,8 @@ static WScreen **wScreen = NULL;
 static unsigned int _NumLockMask = 0;
 static unsigned int _ScrollLockMask = 0;
 static void manageAllWindows(virtual_screen *scr, int crashed);
+void hide_all_applications(virtual_screen *vscr);
+void remove_icon_windows(Window *children, unsigned int nchildren);
 
 static int catchXError(Display *dpy, XErrorEvent *error)
 {
@@ -772,6 +774,24 @@ void remove_icon_windows(Window *children, unsigned int nchildren)
 	}
 }
 
+void hide_all_applications(virtual_screen *vscr)
+{
+	WWindow *wwin;
+	WApplication *wapp;
+
+	wwin = vscr->screen_ptr->focused_window;
+	while (wwin) {
+		if (wwin->flags.hidden) {
+			wapp = wApplicationOf(wwin->main_window);
+			wwin->flags.hidden = 0;
+			if (wapp)
+				wHideApplication(wapp);
+		}
+
+		wwin = wwin->prev;
+	}
+}
+
 /*
  *-----------------------------------------------------------------------
  * manageAllWindows--
@@ -785,7 +805,6 @@ void remove_icon_windows(Window *children, unsigned int nchildren)
  */
 static void manageAllWindows(virtual_screen *vscr, int crashRecovery)
 {
-	WApplication *wapp;
 	WScreen *scr = vscr->screen_ptr;
 	Window root, parent;
 	Window *children;
@@ -839,17 +858,7 @@ static void manageAllWindows(virtual_screen *vscr, int crashRecovery)
 	XUngrabServer(dpy);
 
 	/* hide apps */
-	wwin = scr->focused_window;
-	while (wwin) {
-		if (wwin->flags.hidden) {
-			wapp = wApplicationOf(wwin->main_window);
-			wwin->flags.hidden = 0;
-			if (wapp)
-				wHideApplication(wapp);
-		}
-
-		wwin = wwin->prev;
-	}
+	hide_all_applications(vscr);
 
 	XFree(children);
 
