@@ -386,9 +386,6 @@ static void updateWorkspaceMenu(virtual_screen *vscr, WMenu *menu)
 		else
 			entry->rtext = NULL;
 	}
-
-	if (!menu->flags.realized)
-		wMenuRealize(menu);
 }
 
 static void updateMakeShortcutMenu(WMenu *menu, WWindow *wwin)
@@ -522,6 +519,9 @@ static WMenu *makeWorkspaceMenu(virtual_screen *vscr)
 	}
 
 	updateWorkspaceMenu(vscr, menu);
+
+	if (!menu->flags.realized)
+		wMenuRealize(menu);
 
 	/*
 	 * The Workspace Menu is made visible in the screen structure because
@@ -758,6 +758,9 @@ static WMenu *open_window_menu_core(WWindow *wwin)
 		wfree(vscr->menu.window_menu->entries[MC_SELECT]->text);
 	} else {
 		updateWorkspaceMenu(vscr, vscr->workspace.submenu);
+
+		if (vscr->workspace.submenu->flags.realized)
+			wMenuRealize(vscr->workspace.submenu);
 	}
 
 	menu = vscr->menu.window_menu;
