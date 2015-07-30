@@ -811,7 +811,7 @@ void OpenWindowMenu(WWindow *wwin, int x, int y, int keyboard)
 		wMenuMapAt(wwin->vscr, menu, x, y, keyboard);
 }
 
-void OpenWindowMenu2(WWindow *wwin, int x, int y, int keyboard)
+void windowmenu_at_switchmenu_open(WWindow *wwin, int x, int y)
 {
 	int i;
 	WMenu *menu;
@@ -833,7 +833,7 @@ void OpenWindowMenu2(WWindow *wwin, int x, int y, int keyboard)
 	prepare_menu_position(menu, &x, &y);
 
 	if (!wwin->flags.internal_window)
-		wMenuMapAt(vscr, menu, x, y, keyboard);
+		wMenuMapAt(vscr, menu, x, y, False);
 }
 
 void OpenMiniwindowMenu(WWindow *wwin, int x, int y)

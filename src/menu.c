@@ -1645,9 +1645,9 @@ static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
 		} else if (!delayed_select) {
 			if (menu == vscr->menu.switch_menu && event->xbutton.button == Button3) {
 				selectEntry(menu, entry_no);
-				OpenWindowMenu2((WWindow *)entry->clientdata,
+				windowmenu_at_switchmenu_open((WWindow *)entry->clientdata,
 								event->xbutton.x_root,
-								event->xbutton.y_root, False);
+								event->xbutton.y_root);
 				wwin = (WWindow *)entry->clientdata;
 				desc = &wwin->vscr->menu.window_menu->menu->descriptor;
 				event->xany.send_event = True;
