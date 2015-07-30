@@ -949,15 +949,19 @@ void wWorkspaceMenuUpdate_map(virtual_screen *vscr, WMenu *menu)
 
 	/* don't let user destroy current workspace */
 	if (vscr->workspace.current == vscr->workspace.count - 1)
-		wMenuSetEnabled(menu, MC_DESTROY_LAST, False);
+		menu_entry_set_enabled(menu, MC_DESTROY_LAST, False);
 	else
-		wMenuSetEnabled(menu, MC_DESTROY_LAST, True);
+		menu_entry_set_enabled(menu, MC_DESTROY_LAST, True);
+
+	menu_entry_set_enabled_paint(menu, MC_DESTROY_LAST);
 
 	/* back to last workspace */
 	if (vscr->workspace.count && vscr->workspace.last_used != vscr->workspace.current)
-		wMenuSetEnabled(menu, MC_LAST_USED, True);
+		menu_entry_set_enabled(menu, MC_LAST_USED, True);
 	else
-		wMenuSetEnabled(menu, MC_LAST_USED, False);
+		menu_entry_set_enabled(menu, MC_LAST_USED, False);
+
+	menu_entry_set_enabled_paint(menu, MC_LAST_USED);
 
 	tmp = menu->frame->top_width + 5;
 	/* if menu got unreachable, bring it to a visible place */

@@ -1052,15 +1052,21 @@ void wMenuPaint(WMenu *menu)
 		paintEntry(menu, i, i == menu->selected_entry);
 }
 
-void wMenuSetEnabled(WMenu *menu, int index, int enable)
+void menu_entry_set_enabled(WMenu *menu, int index, int enable)
 {
 	if (index >= menu->entry_no)
 		return;
 
 	menu->entries[index]->flags.enabled = enable;
-	paintEntry(menu, index, index == menu->selected_entry);
 }
 
+void menu_entry_set_enabled_paint(WMenu *menu, int index)
+{
+	if (index >= menu->entry_no)
+		return;
+
+	paintEntry(menu, index, index == menu->selected_entry);
+}
 
 static void selectEntry(WMenu *menu, int entry_no)
 {
