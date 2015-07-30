@@ -688,7 +688,7 @@ static void openApplicationMenu(WApplication *wapp, int x, int y)
 	for (i = 0; i < menu->entry_no; i++)
 		menu->entries[i]->clientdata = wapp;
 
-	wMenuMapAt(menu, x, y, False);
+	wMenuMapAt(vscr, menu, x, y, False);
 }
 
 /******************************************************************/

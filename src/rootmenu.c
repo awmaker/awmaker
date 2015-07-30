@@ -863,7 +863,7 @@ static WMenuEntry *addWindowsMenu(virtual_screen *vscr, WMenu *menu, const char 
 	vscr->menu.switch_menu = wwmenu;
 	wwin = vscr->screen_ptr->focused_window;
 	while (wwin) {
-		switchmenu_additem(vscr, wwin);
+		switchmenu_additem(vscr->menu.switch_menu, vscr, wwin);
 		wMenuRealize(vscr->menu.switch_menu);
 
 		tmp = vscr->menu.switch_menu->frame->top_width + 5;
@@ -1664,7 +1664,7 @@ void OpenRootMenu(virtual_screen *vscr, int x, int y, int keyboard)
 			wRaiseFrame(menu->frame->core);
 
 			if (keyboard)
-				wMenuMapAt(menu, 0, 0, True);
+				wMenuMapAt(vscr, menu, 0, 0, True);
 		}
 		return;
 	}
@@ -1717,7 +1717,8 @@ void OpenRootMenu(virtual_screen *vscr, int x, int y, int keyboard)
 			newx = x - menu->frame->core->width / 2;
 			newy = y;
 		}
-		wMenuMapAt(menu, newx, newy, keyboard);
+
+		wMenuMapAt(vscr, menu, newx, newy, keyboard);
 	}
 
 	if (vscr->menu.flags.root_menu_changed_shortcuts)

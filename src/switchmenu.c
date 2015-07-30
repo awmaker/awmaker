@@ -90,14 +90,13 @@ void InitializeSwitchMenu(void)
 
 void switchmenu_create(virtual_screen *vscr)
 {
-	WMenu *switchmenu;
 	WWindow *wwin;
 
-	switchmenu = menu_create(_("Windows"));
-	vscr->menu.switch_menu = switchmenu;
+	vscr->menu.switch_menu = menu_create(_("Windows"));
+	menu_map(vscr->menu.switch_menu, vscr);
 	wwin = vscr->screen_ptr->focused_window;
 	while (wwin) {
-		switchmenu_additem(vscr, wwin);
+		switchmenu_additem(vscr->menu.switch_menu, vscr, wwin);
 		wwin = wwin->prev;
 	}
 }
@@ -115,7 +114,7 @@ void OpenSwitchMenu(virtual_screen *vscr, int x, int y, int keyboard)
 			wRaiseFrame(switchmenu->frame->core);
 
 			if (keyboard)
-				wMenuMapAt(switchmenu, 0, 0, True);
+				wMenuMapAt(vscr, switchmenu, 0, 0, True);
 		}
 		return;
 	}
@@ -126,7 +125,7 @@ void OpenSwitchMenu(virtual_screen *vscr, int x, int y, int keyboard)
 	    y == vscr->screen_ptr->scr_height / 2)
 		y = y - switchmenu->frame->core->height / 2;
 
-	wMenuMapAt(switchmenu, x - switchmenu->frame->core->width / 2, y, keyboard);
+	wMenuMapAt(vscr, switchmenu, x - switchmenu->frame->core->width / 2, y, keyboard);
 }
 
 static int menuIndexForWindow(WMenu * menu, WWindow * wwin, int old_pos)
@@ -157,14 +156,13 @@ static int menuIndexForWindow(WMenu * menu, WWindow * wwin, int old_pos)
 	return idx;
 }
 
-void switchmenu_additem(virtual_screen *vscr, WWindow *wwin)
+void switchmenu_additem(WMenu *menu, virtual_screen *vscr, WWindow *wwin)
 {
-	WMenu *switchmenu = vscr->menu.switch_menu;
 	WMenuEntry *entry;
 	char *t, title[MAX_MENU_TEXT_LENGTH + 6];
 	int idx = -1, len = sizeof(title);
 
-	if (!vscr->menu.switch_menu)
+	if (!menu)
 		return;
 
 	if (wwin->flags.internal_window ||
@@ -178,10 +176,10 @@ void switchmenu_additem(virtual_screen *vscr, WWindow *wwin)
 		snprintf(title, len, "%s", DEF_WINDOW_TITLE);
 
 	if (!IS_OMNIPRESENT(wwin))
-		idx = menuIndexForWindow(switchmenu, wwin, -1);
+		idx = menuIndexForWindow(menu, wwin, -1);
 
 	t = ShrinkString(vscr->screen_ptr->menu_entry_font, title, MAX_WINDOWLIST_WIDTH);
-	entry = wMenuInsertCallback(switchmenu, idx, t, focusWindow, wwin);
+	entry = wMenuInsertCallback(menu, idx, t, focusWindow, wwin);
 	wfree(t);
 
 	entry->flags.indicator = 1;
@@ -209,18 +207,17 @@ void switchmenu_additem(virtual_screen *vscr, WWindow *wwin)
 
 void switchmenu_delitem(virtual_screen *vscr, WWindow *wwin)
 {
-	WMenu *switchmenu = vscr->menu.switch_menu;
 	WMenuEntry *entry;
 	int i;
 
 	if (!vscr->menu.switch_menu)
 		return;
 
-	for (i = 0; i < switchmenu->entry_no; i++) {
-		entry = switchmenu->entries[i];
+	for (i = 0; i < vscr->menu.switch_menu->entry_no; i++) {
+		entry = vscr->menu.switch_menu->entries[i];
 		/* this is the entry that was changed */
 		if (entry->clientdata == wwin) {
-			wMenuRemoveItem(switchmenu, i);
+			wMenuRemoveItem(vscr->menu.switch_menu, i);
 			break;
 		}
 	}
@@ -228,7 +225,6 @@ void switchmenu_delitem(virtual_screen *vscr, WWindow *wwin)
 
 static void switchmenu_changeitem(virtual_screen *vscr, WWindow *wwin)
 {
-	WMenu *switchmenu = vscr->menu.switch_menu;
 	WMenuEntry *entry;
 	char title[MAX_MENU_TEXT_LENGTH + 6];
 	int i;
@@ -236,8 +232,8 @@ static void switchmenu_changeitem(virtual_screen *vscr, WWindow *wwin)
 	if (!vscr->menu.switch_menu)
 		return;
 
-	for (i = 0; i < switchmenu->entry_no; i++) {
-		entry = switchmenu->entries[i];
+	for (i = 0; i < vscr->menu.switch_menu->entry_no; i++) {
+		entry = vscr->menu.switch_menu->entries[i];
 		/* this is the entry that was changed */
 		if (entry->clientdata == wwin) {
 			if (entry->text)
@@ -257,15 +253,14 @@ static void switchmenu_changeitem(virtual_screen *vscr, WWindow *wwin)
 
 static void switchmenu_changeworkspaceitem(virtual_screen *vscr, WWindow *wwin)
 {
-	WMenu *switchmenu = vscr->menu.switch_menu;
 	WMenuEntry *entry;
 	int i;
 
 	if (!vscr->menu.switch_menu)
 		return;
 
-	for (i = 0; i < switchmenu->entry_no; i++) {
-		entry = switchmenu->entries[i];
+	for (i = 0; i < vscr->menu.switch_menu->entry_no; i++) {
+		entry = vscr->menu.switch_menu->entries[i];
 		/* this is the entry that was changed */
 		if (entry->clientdata == wwin) {
 			if (entry->rtext) {
@@ -287,11 +282,11 @@ static void switchmenu_changeworkspaceitem(virtual_screen *vscr, WWindow *wwin)
 				ion = entry->flags.indicator_on;
 
 				if (!IS_OMNIPRESENT(wwin) && idx < 0)
-					idx = menuIndexForWindow(switchmenu, wwin, i);
+					idx = menuIndexForWindow(vscr->menu.switch_menu, wwin, i);
 
-				wMenuRemoveItem(switchmenu, i);
+				wMenuRemoveItem(vscr->menu.switch_menu, i);
 
-				entry = wMenuInsertCallback(switchmenu, idx, t, focusWindow, wwin);
+				entry = wMenuInsertCallback(vscr->menu.switch_menu, idx, t, focusWindow, wwin);
 				wfree(t);
 				entry->rtext = rt;
 				entry->flags.indicator = 1;
@@ -306,15 +301,14 @@ static void switchmenu_changeworkspaceitem(virtual_screen *vscr, WWindow *wwin)
 /* Update switch menu */
 static void switchmenu_changestate(virtual_screen *vscr, WWindow *wwin)
 {
-	WMenu *switchmenu = vscr->menu.switch_menu;
 	WMenuEntry *entry;
 	int i;
 
 	if (!vscr->menu.switch_menu)
 		return;
 
-	for (i = 0; i < switchmenu->entry_no; i++) {
-		entry = switchmenu->entries[i];
+	for (i = 0; i < vscr->menu.switch_menu->entry_no; i++) {
+		entry = vscr->menu.switch_menu->entries[i];
 		/* this is the entry that was changed */
 		if (entry->clientdata == wwin) {
 			if (wwin->flags.hidden) {
@@ -375,7 +369,7 @@ static void observer(void *self, WMNotification * notif)
 		return;
 
 	if (strcmp(name, WMNManaged) == 0) {
-		switchmenu_additem(wwin->vscr, wwin);
+		switchmenu_additem(wwin->vscr->menu.switch_menu, wwin->vscr, wwin);
 	} else if (strcmp(name, WMNUnmanaged) == 0) {
 		switchmenu_delitem(wwin->vscr, wwin);
 	} else if (strcmp(name, WMNChangedWorkspace) == 0) {
@@ -390,6 +384,11 @@ static void observer(void *self, WMNotification * notif)
 		else
 			switchmenu_changestate(wwin->vscr, wwin);
 	}
+
+	/* If menu is not mapped, exit */
+	if (!wwin->vscr->menu.switch_menu->frame ||
+	    !wwin->vscr->menu.switch_menu->frame->vscr)
+		return;
 
 	wMenuRealize(wwin->vscr->menu.switch_menu);
 

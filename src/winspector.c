@@ -801,7 +801,7 @@ static void applySettings(WMWidget *button, void *client_data)
 
 			wMenuPaint(wwin->vscr->menu.switch_menu);
 		} else {
-			switchmenu_additem(wwin->vscr, wwin);
+			switchmenu_additem(wwin->vscr->menu.switch_menu, wwin->vscr, wwin);
 			wMenuRealize(wwin->vscr->menu.switch_menu);
 
 			tmp = wwin->vscr->menu.switch_menu->frame->top_width + 5;

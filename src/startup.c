@@ -89,6 +89,8 @@ static WScreen **wScreen = NULL;
 static unsigned int _NumLockMask = 0;
 static unsigned int _ScrollLockMask = 0;
 static void manageAllWindows(virtual_screen *scr, int crashed);
+void hide_all_applications(virtual_screen *vscr);
+void remove_icon_windows(Window *children, unsigned int nchildren);
 
 static int catchXError(Display *dpy, XErrorEvent *error)
 {
@@ -746,36 +748,12 @@ static Bool windowInList(Window window, Window *list, int count)
 	return False;
 }
 
-/*
- *-----------------------------------------------------------------------
- * manageAllWindows--
- * 	Manages all windows in the screen.
- *
- * Notes:
- * 	Called when the wm is being started.
- *	No events can be processed while the windows are being
- * reparented/managed.
- *-----------------------------------------------------------------------
- */
-static void manageAllWindows(virtual_screen *vscr, int crashRecovery)
+void remove_icon_windows(Window *children, unsigned int nchildren)
 {
-	WApplication *wapp;
-	WScreen *scr = vscr->screen_ptr;
-	Window root, parent;
-	Window *children;
-	WWindow *wwin;
-	unsigned int i, j, nchildren;
-	int border;
+	unsigned int i, j;
+	XWMHints *wmhints;
 
-	XGrabServer(dpy);
-	XQueryTree(dpy, scr->root_win, &root, &parent, &children, &nchildren);
-
-	w_global.startup.phase1 = 1;
-
-	/* first remove all icon windows */
 	for (i = 0; i < nchildren; i++) {
-		XWMHints *wmhints;
-
 		if (children[i] == None)
 			continue;
 
@@ -794,6 +772,53 @@ static void manageAllWindows(virtual_screen *vscr, int crashRecovery)
 		if (wmhints)
 			XFree(wmhints);
 	}
+}
+
+void hide_all_applications(virtual_screen *vscr)
+{
+	WWindow *wwin;
+	WApplication *wapp;
+
+	wwin = vscr->screen_ptr->focused_window;
+	while (wwin) {
+		if (wwin->flags.hidden) {
+			wapp = wApplicationOf(wwin->main_window);
+			wwin->flags.hidden = 0;
+			if (wapp)
+				wHideApplication(wapp);
+		}
+
+		wwin = wwin->prev;
+	}
+}
+
+/*
+ *-----------------------------------------------------------------------
+ * manageAllWindows--
+ * 	Manages all windows in the screen.
+ *
+ * Notes:
+ * 	Called when the wm is being started.
+ *	No events can be processed while the windows are being
+ * reparented/managed.
+ *-----------------------------------------------------------------------
+ */
+static void manageAllWindows(virtual_screen *vscr, int crashRecovery)
+{
+	WScreen *scr = vscr->screen_ptr;
+	Window root, parent;
+	Window *children;
+	WWindow *wwin;
+	unsigned int i, nchildren;
+	int border;
+
+	XGrabServer(dpy);
+	XQueryTree(dpy, scr->root_win, &root, &parent, &children, &nchildren);
+
+	w_global.startup.phase1 = 1;
+
+	/* first remove all icon windows */
+	remove_icon_windows(children, nchildren);
 
 	for (i = 0; i < nchildren; i++) {
 		if (children[i] == None)
@@ -833,17 +858,7 @@ static void manageAllWindows(virtual_screen *vscr, int crashRecovery)
 	XUngrabServer(dpy);
 
 	/* hide apps */
-	wwin = scr->focused_window;
-	while (wwin) {
-		if (wwin->flags.hidden) {
-			wapp = wApplicationOf(wwin->main_window);
-			wwin->flags.hidden = 0;
-			if (wapp)
-				wHideApplication(wapp);
-		}
-
-		wwin = wwin->prev;
-	}
+	hide_all_applications(vscr);
 
 	XFree(children);
 

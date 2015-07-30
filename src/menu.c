@@ -442,11 +442,17 @@ static void updateTexture(WMenu *menu)
 
 void wMenuRealize(WMenu *menu)
 {
+	WScreen *scr;
 	int i, flags;
 	int width, rwidth, mrwidth = 0, mwidth = 0;
 	int theight = 0, twidth = 0, eheight;
 	char *text;
-	WScreen *scr = menu->frame->vscr->screen_ptr;
+
+	/* If not mapped on the screen, return */
+	if (!menu || !menu->frame || !menu->frame->vscr || !menu->frame->vscr->screen_ptr)
+		return;
+
+	scr = menu->frame->vscr->screen_ptr;
 
 	flags = WFF_BORDER;
 	if (menu->flags.titled)
@@ -971,10 +977,12 @@ static int keyboardMenu(WMenu *menu)
 	return False;
 }
 
-void wMenuMapAt(WMenu *menu, int x, int y, int keyboard)
+void wMenuMapAt(virtual_screen *vscr, WMenu *menu, int x, int y, int keyboard)
 {
-	virtual_screen *vscr;
 	WMRect rect;
+
+	/* Set the vscr */
+	menu->frame->vscr = vscr;
 
 	if (!menu->flags.realized) {
 		menu->flags.realized = 1;
@@ -983,7 +991,6 @@ void wMenuMapAt(WMenu *menu, int x, int y, int keyboard)
 
 	if (!menu->flags.mapped) {
 		if (wPreferences.wrap_menus) {
-			vscr = menu->frame->vscr;
 			rect = wGetRectForHead(vscr->screen_ptr, wGetHeadForPointerLocation(vscr));
 
 			if (x < rect.pos.x)
@@ -1008,24 +1015,6 @@ void wMenuMapAt(WMenu *menu, int x, int y, int keyboard)
 
 	if (keyboard)
 		keyboardMenu(menu);
-}
-
-void wMenuMap(WMenu *menu)
-{
-	if (!menu->flags.realized) {
-		menu->flags.realized = 1;
-		wMenuRealize(menu);
-	}
-
-	if (menu->flags.app_menu && menu->parent == NULL) {
-		menu->frame_x = 0;
-		menu->frame_y = 0;
-		XMoveWindow(dpy, menu->frame->core->window, menu->frame_x, menu->frame_y);
-	}
-
-	XMapWindow(dpy, menu->frame->core->window);
-	wRaiseFrame(menu->frame->core);
-	menu->flags.mapped = 1;
 }
 
 void wMenuUnmap(WMenu *menu)
@@ -1158,7 +1147,8 @@ static void selectEntry(WMenu *menu, int entry_no)
 					y -= menu->cascades[entry->cascade]->frame->top_width;
 			}
 
-			wMenuMapAt(menu->cascades[entry->cascade], x, y, False);
+				/* kix: FIXME check if the menu->frame->vscr is valid */
+			wMenuMapAt(menu->frame->vscr, menu->cascades[entry->cascade], x, y, False);
 			menu->cascades[entry->cascade]->parent = menu;
 		}
 		paintEntry(menu, entry_no, True);
@@ -2269,7 +2259,7 @@ static int restoreMenuRecurs(virtual_screen *vscr, WMPropList *menus, WMenu *men
 			height = MENUH(menu);
 			WMRect rect = wGetRectForHead(vscr->screen_ptr, wGetHeadForPointerLocation(vscr));
 
-			wMenuMapAt(menu, x, y, False);
+			wMenuMapAt(vscr, menu, x, y, False);
 
 			if (lowered)
 				changeMenuLevels(menu, True);

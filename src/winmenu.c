@@ -386,9 +386,6 @@ static void updateWorkspaceMenu(virtual_screen *vscr, WMenu *menu)
 		else
 			entry->rtext = NULL;
 	}
-
-	if (!menu->flags.realized)
-		wMenuRealize(menu);
 }
 
 static void updateMakeShortcutMenu(WMenu *menu, WWindow *wwin)
@@ -522,6 +519,9 @@ static WMenu *makeWorkspaceMenu(virtual_screen *vscr)
 	}
 
 	updateWorkspaceMenu(vscr, menu);
+
+	if (!menu->flags.realized)
+		wMenuRealize(menu);
 
 	/*
 	 * The Workspace Menu is made visible in the screen structure because
@@ -758,6 +758,9 @@ static WMenu *open_window_menu_core(WWindow *wwin)
 		wfree(vscr->menu.window_menu->entries[MC_SELECT]->text);
 	} else {
 		updateWorkspaceMenu(vscr, vscr->workspace.submenu);
+
+		if (vscr->workspace.submenu->flags.realized)
+			wMenuRealize(vscr->workspace.submenu);
 	}
 
 	menu = vscr->menu.window_menu;
@@ -805,7 +808,7 @@ void OpenWindowMenu(WWindow *wwin, int x, int y, int keyboard)
 	prepare_menu_position(menu, &x, &y);
 
 	if (!wwin->flags.internal_window)
-		wMenuMapAt(menu, x, y, keyboard);
+		wMenuMapAt(wwin->vscr, menu, x, y, keyboard);
 }
 
 void OpenWindowMenu2(WWindow *wwin, int x, int y, int keyboard)
@@ -830,7 +833,7 @@ void OpenWindowMenu2(WWindow *wwin, int x, int y, int keyboard)
 	prepare_menu_position(menu, &x, &y);
 
 	if (!wwin->flags.internal_window)
-		wMenuMapAt(menu, x, y, keyboard);
+		wMenuMapAt(vscr, menu, x, y, keyboard);
 }
 
 void OpenMiniwindowMenu(WWindow *wwin, int x, int y)
@@ -843,7 +846,7 @@ void OpenMiniwindowMenu(WWindow *wwin, int x, int y)
 
 	x -= menu->frame->core->width / 2;
 
-	wMenuMapAt(menu, x, y, False);
+	wMenuMapAt(wwin->vscr, menu, x, y, False);
 }
 
 void DestroyWindowMenu(virtual_screen *vscr)

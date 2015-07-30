@@ -22,7 +22,7 @@
 #ifndef WMSWITCHMENU_H
 #define WMSWITCHMENU_H
 
-void switchmenu_additem(virtual_screen *vscr, WWindow *wwin);
+void switchmenu_additem(WMenu *menu, virtual_screen *vscr, WWindow *wwin);
 void switchmenu_delitem(virtual_screen *vscr, WWindow *wwin);
 
 void switchmenu_create(virtual_screen *vscr);
