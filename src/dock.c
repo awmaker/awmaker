@@ -80,6 +80,17 @@ enum
 	OM_AUTOATTRACT
 };
 
+enum
+{
+	DM_DOCKPOSSUBMENU,
+	DM_ADD_DRAWER,
+	DM_LAUNCH,
+	DM_BRING,
+	DM_HIDE,
+	DM_SETTINGS,
+	DM_KILL
+};
+
 /***** Local variables ****/
 
 static WMPropList *dCommand = NULL;
@@ -4805,7 +4816,7 @@ static void toggleCollapsed(WDock *dock)
 static void set_dockmenu_dock_code(virtual_screen *vscr, WDock *dock, WMenuEntry *entry, WAppIcon *aicon)
 {
 	WApplication *wapp = NULL;
-	int appIsRunning, index = 0;
+	int appIsRunning;
 
 	/* Dock position menu */
 	updateDockPositionMenu(vscr, dock);
@@ -4819,59 +4830,59 @@ static void set_dockmenu_dock_code(virtual_screen *vscr, WDock *dock, WMenuEntry
 	appIsRunning = aicon->running && aicon->icon && aicon->icon->owner;
 
 	/* add a drawer */
-	entry = dock->menu->entries[++(index)];
+	entry = dock->menu->entries[DM_ADD_DRAWER];
 	entry->clientdata = aicon;
-	menu_entry_set_enabled(dock->menu, (index), True);
-	menu_entry_set_enabled_paint(dock->menu, (index));
+	menu_entry_set_enabled(dock->menu, DM_ADD_DRAWER, True);
 
 	/* launch */
-	entry = dock->menu->entries[++(index)];
+	entry = dock->menu->entries[DM_LAUNCH];
 	entry->clientdata = aicon;
-	menu_entry_set_enabled(dock->menu, index, aicon->command != NULL);
-	menu_entry_set_enabled_paint(dock->menu, index);
+	menu_entry_set_enabled(dock->menu, DM_LAUNCH, aicon->command != NULL);
 
 	/* unhide here */
-	entry = dock->menu->entries[++(index)];
+	entry = dock->menu->entries[DM_BRING];
 	entry->clientdata = aicon;
 	if (wapp && wapp->flags.hidden)
 		entry->text = _("Unhide Here");
 	else
 		entry->text = _("Bring Here");
 
-	menu_entry_set_enabled(dock->menu, index, appIsRunning);
-	menu_entry_set_enabled_paint(dock->menu, index);
+	menu_entry_set_enabled(dock->menu, DM_BRING, appIsRunning);
 
 	/* hide */
-	entry = dock->menu->entries[++(index)];
+	entry = dock->menu->entries[DM_HIDE];
 	entry->clientdata = aicon;
 	if (wapp && wapp->flags.hidden)
 		entry->text = _("Unhide");
 	else
 		entry->text = _("Hide");
 
-	menu_entry_set_enabled(dock->menu, index, appIsRunning);
-	menu_entry_set_enabled_paint(dock->menu, index);
+	menu_entry_set_enabled(dock->menu, DM_HIDE, appIsRunning);
 
 	/* settings */
-	entry = dock->menu->entries[++(index)];
+	entry = dock->menu->entries[DM_SETTINGS];
 	entry->clientdata = aicon;
-	menu_entry_set_enabled(dock->menu, index, !aicon->editing && !wPreferences.flags.noupdates);
-	menu_entry_set_enabled_paint(dock->menu, index);
+	menu_entry_set_enabled(dock->menu, DM_SETTINGS, !aicon->editing && !wPreferences.flags.noupdates);
 
 	/* kill or remove drawer */
-	entry = dock->menu->entries[++(index)];
+	entry = dock->menu->entries[DM_KILL];
 	entry->clientdata = aicon;
 	if (wIsADrawer(aicon)) {
 		entry->callback = removeDrawerCallback;
 		entry->text = _("Remove drawer");
-		menu_entry_set_enabled(dock->menu, index, True);
+		menu_entry_set_enabled(dock->menu, DM_KILL, True);
 	} else {
 		entry->callback = killCallback;
 		entry->text = _("Kill");
-		menu_entry_set_enabled(dock->menu, index, appIsRunning);
+		menu_entry_set_enabled(dock->menu, DM_KILL, appIsRunning);
 	}
 
-	menu_entry_set_enabled_paint(dock->menu, index);
+	menu_entry_set_enabled_paint(dock->menu, DM_ADD_DRAWER);
+	menu_entry_set_enabled_paint(dock->menu, DM_LAUNCH);
+	menu_entry_set_enabled_paint(dock->menu, DM_BRING);
+	menu_entry_set_enabled_paint(dock->menu, DM_HIDE);
+	menu_entry_set_enabled_paint(dock->menu, DM_SETTINGS);
+	menu_entry_set_enabled_paint(dock->menu, DM_KILL);
 }
 
 static void set_dockmenu_clip_code(WDock *dock, WMenuEntry *entry, WAppIcon *aicon)
