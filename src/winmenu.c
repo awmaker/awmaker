@@ -480,19 +480,19 @@ static void updateOptionsMenu(WMenu *menu, WWindow *wwin)
 	smenu->entries[WO_KEEP_ON_TOP]->flags.indicator_on =
 	    (wwin->frame->core->stacking->window_level == WMFloatingLevel) ? 1 : 0;
 	menu_entry_set_enabled(smenu, WO_KEEP_ON_TOP, !wwin->flags.miniaturized);
-	menu_entry_set_enabled_paint(smenu, WO_KEEP_ON_TOP);
 
 	/* keep at bottom check */
 	smenu->entries[WO_KEEP_AT_BOTTOM]->clientdata = wwin;
 	smenu->entries[WO_KEEP_AT_BOTTOM]->flags.indicator_on =
 	    (wwin->frame->core->stacking->window_level == WMSunkenLevel) ? 1 : 0;
 	menu_entry_set_enabled(smenu, WO_KEEP_AT_BOTTOM, !wwin->flags.miniaturized);
-	menu_entry_set_enabled_paint(smenu, WO_KEEP_AT_BOTTOM);
 
 	/* omnipresent check */
 	smenu->entries[WO_OMNIPRESENT]->clientdata = wwin;
 	smenu->entries[WO_OMNIPRESENT]->flags.indicator_on = IS_OMNIPRESENT(wwin);
 
+	menu_entry_set_enabled_paint(smenu, WO_KEEP_ON_TOP);
+	menu_entry_set_enabled_paint(smenu, WO_KEEP_AT_BOTTOM);
 	smenu->flags.realized = 0;
 	wMenuRealize(smenu);
 }
@@ -641,9 +641,7 @@ static void updateMenuForWindow(WMenu *menu, WWindow *wwin)
 	updateMakeShortcutMenu(menu, wwin);
 
 	menu_entry_set_enabled(menu, MC_HIDE, wapp != NULL && !WFLAGP(wapp->main_window_desc, no_appicon));
-	menu_entry_set_enabled_paint(menu, MC_HIDE);
 	menu_entry_set_enabled(menu, MC_CLOSE, (wwin->protocols.DELETE_WINDOW && !WFLAGP(wwin, no_closable)));
-	menu_entry_set_enabled_paint(menu, MC_CLOSE);
 
 	if (wwin->flags.miniaturized) {
 		static char *text = NULL;
@@ -660,7 +658,6 @@ static void updateMenuForWindow(WMenu *menu, WWindow *wwin)
 	}
 
 	menu_entry_set_enabled(menu, MC_MINIATURIZE, !WFLAGP(wwin, no_miniaturizable));
-	menu_entry_set_enabled_paint(menu, MC_MINIATURIZE);
 
 	if (wwin->flags.maximized) {
 		static char *text = NULL;
@@ -679,11 +676,8 @@ static void updateMenuForWindow(WMenu *menu, WWindow *wwin)
 	}
 
 	menu_entry_set_enabled(menu, MC_MAXIMIZE, IS_RESIZABLE(wwin));
-	menu_entry_set_enabled_paint(menu, MC_MAXIMIZE);
-
 	menu_entry_set_enabled(menu, MC_MOVERESIZE, IS_RESIZABLE(wwin) &&
 			       !wwin->flags.miniaturized);
-	menu_entry_set_enabled_paint(menu, MC_MOVERESIZE);
 
 	if (wwin->flags.shaded) {
 		static char *text = NULL;
@@ -701,7 +695,6 @@ static void updateMenuForWindow(WMenu *menu, WWindow *wwin)
 
 	menu_entry_set_enabled(menu, MC_SHADE, !WFLAGP(wwin, no_shadeable) &&
 			       !wwin->flags.miniaturized);
-	menu_entry_set_enabled_paint(menu, MC_SHADE);
 
 	if (wwin->flags.selected) {
 		static char *text = NULL;
@@ -718,14 +711,11 @@ static void updateMenuForWindow(WMenu *menu, WWindow *wwin)
 	}
 
 	menu_entry_set_enabled(menu, MC_CHANGEWKSPC, !IS_OMNIPRESENT(wwin));
-	menu_entry_set_enabled_paint(menu, MC_CHANGEWKSPC);
 
 	if (!wwin->flags.inspector_open)
 		menu_entry_set_enabled(menu, MC_PROPERTIES, True);
 	else
 		menu_entry_set_enabled(menu, MC_PROPERTIES, False);
-
-	menu_entry_set_enabled_paint(menu, MC_PROPERTIES);
 
 	/* Update shortcut labels except for (Un)Maximize which is
 	 * handled separately.
@@ -749,9 +739,20 @@ static void updateMenuForWindow(WMenu *menu, WWindow *wwin)
 			menu_entry_set_enabled(vscr->workspace.submenu, i, False);
 		else
 			menu_entry_set_enabled(vscr->workspace.submenu, i, True);
-
-		menu_entry_set_enabled_paint(vscr->workspace.submenu, i);
 	}
+
+	/* Paint the menu entries */
+	menu_entry_set_enabled_paint(menu, MC_HIDE);
+	menu_entry_set_enabled_paint(menu, MC_CLOSE);
+	menu_entry_set_enabled_paint(menu, MC_MINIATURIZE);
+	menu_entry_set_enabled_paint(menu, MC_MAXIMIZE);
+	menu_entry_set_enabled_paint(menu, MC_MOVERESIZE);
+	menu_entry_set_enabled_paint(menu, MC_SHADE);
+	menu_entry_set_enabled_paint(menu, MC_CHANGEWKSPC);
+	menu_entry_set_enabled_paint(menu, MC_PROPERTIES);
+
+	for (i = 0; i < vscr->workspace.submenu->entry_no; i++)
+		menu_entry_set_enabled_paint(vscr->workspace.submenu, i);
 
 	menu->flags.realized = 0;
 	wMenuRealize(menu);
@@ -841,8 +842,10 @@ void windowmenu_at_switchmenu_open(WWindow *wwin, int x, int y)
 	for (i = 0; i < vscr->workspace.submenu->entry_no; i++) {
 		vscr->workspace.submenu->entries[i]->clientdata = wwin;
 		menu_entry_set_enabled(vscr->workspace.submenu, i, True);
-		menu_entry_set_enabled_paint(vscr->workspace.submenu, i);
 	}
+
+	for (i = 0; i < vscr->workspace.submenu->entry_no; i++)
+		menu_entry_set_enabled_paint(vscr->workspace.submenu, i);
 
 	x -= menu->frame->core->width / 2;
 
