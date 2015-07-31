@@ -453,10 +453,8 @@ static void updateMakeShortcutMenu(WMenu *menu, WWindow *wwin)
 			}
 
 			menu_entry_set_enabled(smenu, i, True);
-			menu_entry_set_enabled_paint(smenu, i);
 		} else {
 			menu_entry_set_enabled(smenu, i, False);
-			menu_entry_set_enabled_paint(smenu, i);
 			if (entry->rtext) {
 				wfree(entry->rtext);
 				entry->rtext = NULL;
@@ -467,8 +465,6 @@ static void updateMakeShortcutMenu(WMenu *menu, WWindow *wwin)
 	}
 
 	wfree(buffer);
-	if (!smenu->flags.realized)
-		wMenuRealize(smenu);
 }
 
 static void updateOptionsMenu(WMenu *menu, WWindow *wwin)
@@ -491,10 +487,7 @@ static void updateOptionsMenu(WMenu *menu, WWindow *wwin)
 	smenu->entries[WO_OMNIPRESENT]->clientdata = wwin;
 	smenu->entries[WO_OMNIPRESENT]->flags.indicator_on = IS_OMNIPRESENT(wwin);
 
-	menu_entry_set_enabled_paint(smenu, WO_KEEP_ON_TOP);
-	menu_entry_set_enabled_paint(smenu, WO_KEEP_AT_BOTTOM);
 	smenu->flags.realized = 0;
-	wMenuRealize(smenu);
 }
 
 static void updateMaximizeMenu(WMenu *menu, WWindow *wwin)
@@ -508,7 +501,6 @@ static void updateMaximizeMenu(WMenu *menu, WWindow *wwin)
 	}
 
 	smenu->flags.realized = 0;
-	wMenuRealize(smenu);
 }
 
 static WMenu *makeWorkspaceMenu(virtual_screen *vscr)
@@ -634,11 +626,27 @@ static void updateMenuForWindow(WMenu *menu, WWindow *wwin)
 	WApplication *wapp = wApplicationOf(wwin->main_window);
 	virtual_screen *vscr = wwin->vscr;
 	int i;
+	WMenu *omenu, *mmenu, *smenu;
+
+	omenu = menu->cascades[menu->entries[MC_OPTIONS]->cascade];
+	mmenu = menu->cascades[menu->entries[MC_OTHERMAX]->cascade];
+	smenu = menu->cascades[menu->entries[MC_OPTIONS]->cascade];
 
 	updateOptionsMenu(menu, wwin);
+	menu_entry_set_enabled_paint(omenu, WO_KEEP_ON_TOP);
+	menu_entry_set_enabled_paint(omenu, WO_KEEP_AT_BOTTOM);
+	wMenuRealize(omenu);
+
 	updateMaximizeMenu(menu, wwin);
+	wMenuRealize(mmenu);
 
 	updateMakeShortcutMenu(menu, wwin);
+
+	for (i = wlengthof(menu_options_entries); i < smenu->entry_no; i++)
+		menu_entry_set_enabled_paint(smenu, i);
+
+	if (!smenu->flags.realized)
+		wMenuRealize(smenu);
 
 	menu_entry_set_enabled(menu, MC_HIDE, wapp != NULL && !WFLAGP(wapp->main_window_desc, no_appicon));
 	menu_entry_set_enabled(menu, MC_CLOSE, (wwin->protocols.DELETE_WINDOW && !WFLAGP(wwin, no_closable)));
