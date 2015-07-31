@@ -731,9 +731,9 @@ static void updateMenuForWindow(WMenu *menu, WWindow *wwin)
 	menu->flags.realized = 0;
 }
 
-static void updateMenuForWindow_map(WMenu *menu, WWindow *wwin)
+static void updateMenuForWindow_map(WMenu *menu)
 {
-	virtual_screen *vscr = wwin->vscr;
+	virtual_screen *vscr = menu->frame->vscr;
 	int i;
 	WMenu *omenu, *mmenu, *smenu;
 
@@ -798,7 +798,7 @@ static WMenu *open_window_menu_core(WWindow *wwin)
 	}
 
 	updateMenuForWindow(menu, wwin);
-	updateMenuForWindow_map(menu, wwin);
+	updateMenuForWindow_map(menu);
 
 	return menu;
 }
