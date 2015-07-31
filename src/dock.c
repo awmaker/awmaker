@@ -71,6 +71,15 @@
 #define MOD_MASK wPreferences.modifier_mask
 #define ICON_SIZE wPreferences.icon_size
 
+enum
+{
+	OM_KEEP_ON_TOP,
+	OM_COLLAPSED,
+	OM_AUTO_COLLAPSED,
+	OM_AUTORAISE,
+	OM_AUTOATTRACT
+};
+
 /***** Local variables ****/
 
 static WMPropList *dCommand = NULL;
@@ -1039,40 +1048,39 @@ static WMenu *makeWorkspaceMenu(void)
 static void updateOptionsMenu(WDock *dock, WMenu *menu)
 {
 	WMenuEntry *entry;
-	int index = 0;
 
 	if (!menu || !dock)
 		return;
 
 	/* keep on top */
-	entry = menu->entries[index];
+	entry = menu->entries[OM_KEEP_ON_TOP];
 	entry->flags.indicator_on = !dock->lowered;
 	entry->clientdata = dock;
-	menu_entry_set_enabled(menu, index, dock->type == WM_CLIP);
-	menu_entry_set_enabled_paint(menu, index);
+	menu_entry_set_enabled(menu, OM_KEEP_ON_TOP, dock->type == WM_CLIP);
 
 	/* collapsed */
-	entry = menu->entries[++index];
+	entry = menu->entries[OM_COLLAPSED];
 	entry->flags.indicator_on = dock->collapsed;
 	entry->clientdata = dock;
 
 	/* auto-collapse */
-	entry = menu->entries[++index];
+	entry = menu->entries[OM_AUTO_COLLAPSED];
 	entry->flags.indicator_on = dock->auto_collapse;
 	entry->clientdata = dock;
 
 	/* auto-raise/lower */
-	entry = menu->entries[++index];
+	entry = menu->entries[OM_AUTORAISE];
 	entry->flags.indicator_on = dock->auto_raise_lower;
 	entry->clientdata = dock;
-	menu_entry_set_enabled(menu, index, dock->lowered && (dock->type == WM_CLIP));
-	menu_entry_set_enabled_paint(menu, index);
+	menu_entry_set_enabled(menu, OM_AUTORAISE, dock->lowered && (dock->type == WM_CLIP));
 
 	/* attract icons */
-	entry = menu->entries[++index];
+	entry = menu->entries[OM_AUTOATTRACT];
 	entry->flags.indicator_on = dock->attract_icons;
 	entry->clientdata = dock;
 
+	menu_entry_set_enabled_paint(menu, OM_KEEP_ON_TOP);
+	menu_entry_set_enabled_paint(menu, OM_AUTORAISE);
 	menu->flags.realized = 0;
 	wMenuRealize(menu);
 }
