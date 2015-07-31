@@ -626,30 +626,10 @@ static void updateMenuForWindow(WMenu *menu, WWindow *wwin)
 	WApplication *wapp = wApplicationOf(wwin->main_window);
 	virtual_screen *vscr = wwin->vscr;
 	int i;
-	WMenu *omenu, *mmenu, *smenu;
-
-	omenu = menu->cascades[menu->entries[MC_OPTIONS]->cascade];
-	mmenu = menu->cascades[menu->entries[MC_OTHERMAX]->cascade];
-	smenu = menu->cascades[menu->entries[MC_OPTIONS]->cascade];
 
 	updateOptionsMenu(menu, wwin);
-	menu_entry_set_enabled_paint(omenu, WO_KEEP_ON_TOP);
-	menu_entry_set_enabled_paint(omenu, WO_KEEP_AT_BOTTOM);
-	wMenuRealize(omenu);
-
 	updateMaximizeMenu(menu, wwin);
-	wMenuRealize(mmenu);
-
 	updateMakeShortcutMenu(menu, wwin);
-
-	for (i = wlengthof(menu_options_entries); i < smenu->entry_no; i++)
-		menu_entry_set_enabled_paint(smenu, i);
-
-	if (!smenu->flags.realized)
-		wMenuRealize(smenu);
-
-	menu_entry_set_enabled(menu, MC_HIDE, wapp != NULL && !WFLAGP(wapp->main_window_desc, no_appicon));
-	menu_entry_set_enabled(menu, MC_CLOSE, (wwin->protocols.DELETE_WINDOW && !WFLAGP(wwin, no_closable)));
 
 	if (wwin->flags.miniaturized) {
 		static char *text = NULL;
@@ -664,8 +644,6 @@ static void updateMenuForWindow(WMenu *menu, WWindow *wwin)
 
 		menu->entries[MC_MINIATURIZE]->text = text;
 	}
-
-	menu_entry_set_enabled(menu, MC_MINIATURIZE, !WFLAGP(wwin, no_miniaturizable));
 
 	if (wwin->flags.maximized) {
 		static char *text = NULL;
@@ -683,10 +661,6 @@ static void updateMenuForWindow(WMenu *menu, WWindow *wwin)
 		menu->entries[MC_MAXIMIZE]->rtext = GetShortcutKey(wKeyBindings[WKBD_MAXIMIZE]);
 	}
 
-	menu_entry_set_enabled(menu, MC_MAXIMIZE, IS_RESIZABLE(wwin));
-	menu_entry_set_enabled(menu, MC_MOVERESIZE, IS_RESIZABLE(wwin) &&
-			       !wwin->flags.miniaturized);
-
 	if (wwin->flags.shaded) {
 		static char *text = NULL;
 		if (!text)
@@ -700,9 +674,6 @@ static void updateMenuForWindow(WMenu *menu, WWindow *wwin)
 
 		menu->entries[MC_SHADE]->text = text;
 	}
-
-	menu_entry_set_enabled(menu, MC_SHADE, !WFLAGP(wwin, no_shadeable) &&
-			       !wwin->flags.miniaturized);
 
 	if (wwin->flags.selected) {
 		static char *text = NULL;
@@ -718,6 +689,14 @@ static void updateMenuForWindow(WMenu *menu, WWindow *wwin)
 		menu->entries[MC_SELECT]->text = text;
 	}
 
+	menu_entry_set_enabled(menu, MC_HIDE, wapp != NULL && !WFLAGP(wapp->main_window_desc, no_appicon));
+	menu_entry_set_enabled(menu, MC_CLOSE, (wwin->protocols.DELETE_WINDOW && !WFLAGP(wwin, no_closable)));
+	menu_entry_set_enabled(menu, MC_MINIATURIZE, !WFLAGP(wwin, no_miniaturizable));
+	menu_entry_set_enabled(menu, MC_MAXIMIZE, IS_RESIZABLE(wwin));
+	menu_entry_set_enabled(menu, MC_MOVERESIZE, IS_RESIZABLE(wwin) &&
+			       !wwin->flags.miniaturized);
+	menu_entry_set_enabled(menu, MC_SHADE, !WFLAGP(wwin, no_shadeable) &&
+			       !wwin->flags.miniaturized);
 	menu_entry_set_enabled(menu, MC_CHANGEWKSPC, !IS_OMNIPRESENT(wwin));
 
 	if (!wwin->flags.inspector_open)
@@ -749,6 +728,30 @@ static void updateMenuForWindow(WMenu *menu, WWindow *wwin)
 			menu_entry_set_enabled(vscr->workspace.submenu, i, True);
 	}
 
+	menu->flags.realized = 0;
+}
+
+static void updateMenuForWindow_map(WMenu *menu, WWindow *wwin)
+{
+	virtual_screen *vscr = wwin->vscr;
+	int i;
+	WMenu *omenu, *mmenu, *smenu;
+
+	omenu = menu->cascades[menu->entries[MC_OPTIONS]->cascade];
+	mmenu = menu->cascades[menu->entries[MC_OTHERMAX]->cascade];
+	smenu = menu->cascades[menu->entries[MC_OPTIONS]->cascade];
+
+	menu_entry_set_enabled_paint(omenu, WO_KEEP_ON_TOP);
+	menu_entry_set_enabled_paint(omenu, WO_KEEP_AT_BOTTOM);
+	wMenuRealize(omenu);
+	wMenuRealize(mmenu);
+
+	for (i = wlengthof(menu_options_entries); i < smenu->entry_no; i++)
+		menu_entry_set_enabled_paint(smenu, i);
+
+	if (!smenu->flags.realized)
+		wMenuRealize(smenu);
+
 	/* Paint the menu entries */
 	menu_entry_set_enabled_paint(menu, MC_HIDE);
 	menu_entry_set_enabled_paint(menu, MC_CLOSE);
@@ -762,7 +765,6 @@ static void updateMenuForWindow(WMenu *menu, WWindow *wwin)
 	for (i = 0; i < vscr->workspace.submenu->entry_no; i++)
 		menu_entry_set_enabled_paint(vscr->workspace.submenu, i);
 
-	menu->flags.realized = 0;
 	wMenuRealize(menu);
 }
 
@@ -796,6 +798,7 @@ static WMenu *open_window_menu_core(WWindow *wwin)
 	}
 
 	updateMenuForWindow(menu, wwin);
+	updateMenuForWindow_map(menu, wwin);
 
 	return menu;
 }
