@@ -91,6 +91,23 @@ enum
 	DM_KILL
 };
 
+enum
+{
+	CM_CLIPOPTSSUBMENU,
+	CM_ONE,
+	CM_SELECT,
+	CM_SELECTALL,
+	CM_KEEP_ICONS,
+	CM_MOVE_ICONS,
+	CM_REMOVE_ICONS,
+	CM_ATTRACT,
+	CM_LAUNCH,
+	CM_BRING,
+	CM_HIDE,
+	CM_SETTINGS,
+	CM_KILL
+};
+
 /***** Local variables ****/
 
 static WMPropList *dCommand = NULL;
@@ -4888,7 +4905,7 @@ static void set_dockmenu_dock_code(virtual_screen *vscr, WDock *dock, WMenuEntry
 static void set_dockmenu_clip_code(WDock *dock, WMenuEntry *entry, WAppIcon *aicon)
 {
 	WApplication *wapp = NULL;
-	int n_selected, appIsRunning, index = 0;
+	int n_selected, appIsRunning;
 	virtual_screen *vscr = dock->vscr;
 
 	appIsRunning = aicon->running && aicon->icon && aicon->icon->owner;
@@ -4903,7 +4920,7 @@ static void set_dockmenu_clip_code(WDock *dock, WMenuEntry *entry, WAppIcon *aic
 	n_selected = numberOfSelectedIcons(dock);
 
 	/* Rename Workspace */
-	entry = dock->menu->entries[++(index)];
+	entry = dock->menu->entries[CM_ONE];
 	if (aicon == w_global.clip.icon) {
 		entry->callback = renameCallback;
 		entry->clientdata = dock;
@@ -4924,36 +4941,33 @@ static void set_dockmenu_clip_code(WDock *dock, WMenuEntry *entry, WAppIcon *aic
 	}
 
 	/* select/unselect icon */
-	entry = dock->menu->entries[++(index)];
+	entry = dock->menu->entries[CM_SELECT];
 	entry->clientdata = aicon;
 	entry->flags.indicator_on = aicon->icon->selected;
-	menu_entry_set_enabled(dock->menu, index, aicon != w_global.clip.icon && !wIsADrawer(aicon));
-	menu_entry_set_enabled_paint(dock->menu, index);
+	menu_entry_set_enabled(dock->menu, CM_SELECT, aicon != w_global.clip.icon && !wIsADrawer(aicon));
 
 	/* select/unselect all icons */
-	entry = dock->menu->entries[++(index)];
+	entry = dock->menu->entries[CM_SELECTALL];
 	entry->clientdata = aicon;
 	if (n_selected > 0)
 		entry->text = _("Unselect All Icons");
 	else
 		entry->text = _("Select All Icons");
 
-	menu_entry_set_enabled(dock->menu, index, dock->icon_count > 1);
-	menu_entry_set_enabled_paint(dock->menu, index);
+	menu_entry_set_enabled(dock->menu, CM_SELECTALL, dock->icon_count > 1);
 
 	/* keep icon(s) */
-	entry = dock->menu->entries[++(index)];
+	entry = dock->menu->entries[CM_KEEP_ICONS];
 	entry->clientdata = aicon;
 	if (n_selected > 1)
 		entry->text = _("Keep Icons");
 	else
 		entry->text = _("Keep Icon");
 
-	menu_entry_set_enabled(dock->menu, index, dock->icon_count > 1);
-	menu_entry_set_enabled_paint(dock->menu, index);
+	menu_entry_set_enabled(dock->menu, CM_KEEP_ICONS, dock->icon_count > 1);
 
 	/* this is the workspace submenu part */
-	entry = dock->menu->entries[++(index)];
+	entry = dock->menu->entries[CM_MOVE_ICONS];
 	if (n_selected > 1)
 		entry->text = _("Move Icons To");
 	else
@@ -4962,75 +4976,79 @@ static void set_dockmenu_clip_code(WDock *dock, WMenuEntry *entry, WAppIcon *aic
 	if (vscr->clip.submenu)
 		updateWorkspaceMenu(vscr->clip.submenu, aicon);
 
-	menu_entry_set_enabled(dock->menu, index, !aicon->omnipresent);
-	menu_entry_set_enabled_paint(dock->menu, index);
+	menu_entry_set_enabled(dock->menu, CM_MOVE_ICONS, !aicon->omnipresent);
 
 	/* remove icon(s) */
-	entry = dock->menu->entries[++(index)];
+	entry = dock->menu->entries[CM_REMOVE_ICONS];
 	entry->clientdata = aicon;
 	if (n_selected > 1)
 		entry->text = _("Remove Icons");
 	else
 		entry->text = _("Remove Icon");
 
-	menu_entry_set_enabled(dock->menu, index, dock->icon_count > 1);
-	menu_entry_set_enabled_paint(dock->menu, index);
+	menu_entry_set_enabled(dock->menu, CM_REMOVE_ICONS, dock->icon_count > 1);
 
 	/* attract icon(s) */
-	entry = dock->menu->entries[++(index)];
+	entry = dock->menu->entries[CM_ATTRACT];
 	entry->clientdata = aicon;
 
 	/* launch */
-	entry = dock->menu->entries[++(index)];
+	entry = dock->menu->entries[CM_LAUNCH];
 	entry->clientdata = aicon;
-	menu_entry_set_enabled(dock->menu, index, aicon->command != NULL);
-	menu_entry_set_enabled_paint(dock->menu, index);
+	menu_entry_set_enabled(dock->menu, CM_LAUNCH, aicon->command != NULL);
 
 	/* unhide here */
-	entry = dock->menu->entries[++(index)];
+	entry = dock->menu->entries[CM_BRING];
 	entry->clientdata = aicon;
 	if (wapp && wapp->flags.hidden)
 		entry->text = _("Unhide Here");
 	else
 		entry->text = _("Bring Here");
 
-	menu_entry_set_enabled(dock->menu, index, appIsRunning);
-	menu_entry_set_enabled_paint(dock->menu, index);
+	menu_entry_set_enabled(dock->menu, CM_BRING, appIsRunning);
 
 	/* hide */
-	entry = dock->menu->entries[++(index)];
+	entry = dock->menu->entries[CM_HIDE];
 	entry->clientdata = aicon;
 	if (wapp && wapp->flags.hidden)
 		entry->text = _("Unhide");
 	else
 		entry->text = _("Hide");
 
-	menu_entry_set_enabled(dock->menu, index, appIsRunning);
-	menu_entry_set_enabled_paint(dock->menu, index);
+	menu_entry_set_enabled(dock->menu, CM_HIDE, appIsRunning);
 
 	/* settings */
-	entry = dock->menu->entries[++(index)];
+	entry = dock->menu->entries[CM_SETTINGS];
 	entry->clientdata = aicon;
-	menu_entry_set_enabled(dock->menu, index, !aicon->editing && !wPreferences.flags.noupdates);
-	menu_entry_set_enabled_paint(dock->menu, index);
+	menu_entry_set_enabled(dock->menu, CM_SETTINGS, !aicon->editing && !wPreferences.flags.noupdates);
 
 	/* kill or remove drawer */
-	entry = dock->menu->entries[++(index)];
+	entry = dock->menu->entries[CM_KILL];
 	entry->clientdata = aicon;
 	if (wIsADrawer(aicon)) {
 		entry->callback = removeDrawerCallback;
 		entry->text = _("Remove drawer");
-		menu_entry_set_enabled(dock->menu, index, True);
+		menu_entry_set_enabled(dock->menu, CM_KILL, True);
 	} else {
 		entry->callback = killCallback;
 		entry->text = _("Kill");
-		menu_entry_set_enabled(dock->menu, index, appIsRunning);
+		menu_entry_set_enabled(dock->menu, CM_KILL, appIsRunning);
 	}
 
 	dock->menu->flags.realized = 0;
-	wMenuRealize(dock->menu);
 
-	menu_entry_set_enabled_paint(dock->menu, index);
+	menu_entry_set_enabled_paint(dock->menu, CM_SELECT);
+	menu_entry_set_enabled_paint(dock->menu, CM_SELECTALL);
+	menu_entry_set_enabled_paint(dock->menu, CM_KEEP_ICONS);
+	menu_entry_set_enabled_paint(dock->menu, CM_MOVE_ICONS);
+	menu_entry_set_enabled_paint(dock->menu, CM_REMOVE_ICONS);
+	menu_entry_set_enabled_paint(dock->menu, CM_LAUNCH);
+	menu_entry_set_enabled_paint(dock->menu, CM_BRING);
+	menu_entry_set_enabled_paint(dock->menu, CM_HIDE);
+	menu_entry_set_enabled_paint(dock->menu, CM_SETTINGS);
+	menu_entry_set_enabled_paint(dock->menu, CM_KILL);
+
+	wMenuRealize(dock->menu);
 }
 
 static void set_dockmenu_drawer_code(virtual_screen *vscr, WDock *dock, WMenuEntry *entry, WAppIcon *aicon)
