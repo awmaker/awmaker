@@ -1022,9 +1022,10 @@ static void updateWorkspaceMenu(WMenu *menu, WAppIcon *icon)
 			menu_entry_set_enabled(menu, i, False);
 		else
 			menu_entry_set_enabled(menu, i, True);
-
-		menu_entry_set_enabled_paint(menu, i);
 	}
+
+	for (i = 0; i < vscr->workspace.count; i++)
+		menu_entry_set_enabled_paint(menu, i);
 
 	if (!menu->flags.realized)
 		wMenuRealize(menu);
