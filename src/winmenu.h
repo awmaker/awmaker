@@ -22,6 +22,7 @@
 #ifndef WMWINMENU_H
 #define WMWINMENU_H
 
+void window_menu_create(virtual_screen *vscr);
 void OpenWindowMenu(WWindow *wwin, int x, int y, int keyboard);
 void windowmenu_at_switchmenu_open(WWindow *wwin, int x, int y);
 void OpenMiniwindowMenu(WWindow *wwin, int x, int y);

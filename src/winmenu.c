@@ -768,6 +768,20 @@ static void updateMenuForWindow_map(WMenu *menu)
 	wMenuRealize(menu);
 }
 
+void window_menu_create(virtual_screen *vscr)
+{
+	if (vscr->menu.window_menu)
+		return;
+
+	vscr->menu.window_menu = createWindowMenu(vscr);
+
+	/* hack to save some memory allocation/deallocation */
+	wfree(vscr->menu.window_menu->entries[MC_MINIATURIZE]->text);
+	wfree(vscr->menu.window_menu->entries[MC_MAXIMIZE]->text);
+	wfree(vscr->menu.window_menu->entries[MC_SHADE]->text);
+	wfree(vscr->menu.window_menu->entries[MC_SELECT]->text);
+}
+
 static WMenu *open_window_menu_core(WWindow *wwin)
 {
 	virtual_screen *vscr = wwin->vscr;
@@ -775,20 +789,10 @@ static WMenu *open_window_menu_core(WWindow *wwin)
 
 	wwin->flags.menu_open_for_me = 1;
 
-	if (!vscr->menu.window_menu) {
-		vscr->menu.window_menu = createWindowMenu(vscr);
+	updateWorkspaceMenu(vscr, vscr->workspace.submenu);
 
-		/* hack to save some memory allocation/deallocation */
-		wfree(vscr->menu.window_menu->entries[MC_MINIATURIZE]->text);
-		wfree(vscr->menu.window_menu->entries[MC_MAXIMIZE]->text);
-		wfree(vscr->menu.window_menu->entries[MC_SHADE]->text);
-		wfree(vscr->menu.window_menu->entries[MC_SELECT]->text);
-	} else {
-		updateWorkspaceMenu(vscr, vscr->workspace.submenu);
-
-		if (vscr->workspace.submenu->flags.realized)
-			wMenuRealize(vscr->workspace.submenu);
-	}
+	if (vscr->workspace.submenu->flags.realized)
+		wMenuRealize(vscr->workspace.submenu);
 
 	menu = vscr->menu.window_menu;
 	if (menu->flags.mapped) {
