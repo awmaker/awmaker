@@ -1181,6 +1181,128 @@ updateWindowPosition(WWindow *wwin, MoveData *data, Bool doResistance,
 	data->realY = newY;
 }
 
+static void draw_snap_frame(WWindow *wwin, int direction)
+{
+	WScreen *scr = wwin->vscr->screen_ptr;
+
+	switch (direction) {
+	case SNAP_LEFT:
+		drawTransparentFrame(wwin, 0, 0, scr->scr_width/2, scr->scr_height);
+		break;
+
+	case SNAP_RIGHT:
+		drawTransparentFrame(wwin, scr->scr_width/2, 0, scr->scr_width/2, scr->scr_height);
+		break;
+
+	case SNAP_TOP:
+		drawTransparentFrame(wwin, 0, 0, scr->scr_width, scr->scr_height/2);
+		break;
+
+	case SNAP_BOTTOM:
+		drawTransparentFrame(wwin, 0, scr->scr_height/2, scr->scr_width, scr->scr_height/2);
+		break;
+
+	case SNAP_TOPLEFT:
+		drawTransparentFrame(wwin, 0, 0, scr->scr_width/2, scr->scr_height/2);
+		break;
+
+	case SNAP_TOPRIGHT:
+		drawTransparentFrame(wwin, scr->scr_width/2, 0, scr->scr_width/2, scr->scr_height/2);
+		break;
+
+	case SNAP_BOTTOMLEFT:
+		drawTransparentFrame(wwin, 0, scr->scr_height/2, scr->scr_width/2, scr->scr_height/2);
+		break;
+
+	case SNAP_BOTTOMRIGHT:
+		drawTransparentFrame(wwin, scr->scr_width/2, scr->scr_height/2,
+				     scr->scr_width/2, scr->scr_height/2);
+		break;
+	}
+}
+
+static int get_snap_direction(WScreen *scr, int x, int y)
+{
+	if (x < 1) {
+		if (y < 1)
+			return SNAP_TOPLEFT;
+		if (y > scr->scr_height - 2)
+			return SNAP_BOTTOMLEFT;
+		return SNAP_LEFT;
+	}
+
+	if (x > scr->scr_width - 2) {
+		if (y < 1)
+			return SNAP_TOPRIGHT;
+		if (y > scr->scr_height - 2)
+			return SNAP_BOTTOMRIGHT;
+		return SNAP_RIGHT;
+	}
+
+	if (y < 1)
+		return SNAP_TOP;
+
+	if (y > scr->scr_height - 2)
+		return SNAP_BOTTOM;
+
+	return SNAP_NONE;
+}
+
+static void do_snap(WWindow *wwin, MoveData *data, Bool opaqueMove)
+{
+	int directions = 0;
+	WScreen *scr = wwin->vscr->screen_ptr;
+
+	/* erase frames */
+	if (!opaqueMove)
+		drawFrames(wwin, scr->selected_windows, data->realX - wwin->frame_x, data->realY - wwin->frame_y);
+
+	draw_snap_frame(wwin, data->snap);
+
+	switch (data->snap) {
+	case SNAP_NONE:
+		return;
+
+	case SNAP_LEFT:
+		directions = MAX_VERTICAL | MAX_LEFTHALF;
+		break;
+
+	case SNAP_RIGHT:
+		directions = MAX_VERTICAL | MAX_RIGHTHALF;
+		break;
+
+	case SNAP_TOP:
+		directions = MAX_HORIZONTAL | MAX_TOPHALF;
+		break;
+
+	case SNAP_BOTTOM:
+		directions = MAX_HORIZONTAL | MAX_BOTTOMHALF;
+		break;
+
+	case SNAP_TOPLEFT:
+		directions = MAX_TOPHALF | MAX_LEFTHALF;
+		break;
+
+	case SNAP_TOPRIGHT:
+		directions = MAX_TOPHALF | MAX_RIGHTHALF;
+		break;
+
+	case SNAP_BOTTOMLEFT:
+		directions = MAX_BOTTOMHALF | MAX_LEFTHALF;
+		break;
+
+	case SNAP_BOTTOMRIGHT:
+		directions = MAX_BOTTOMHALF | MAX_RIGHTHALF;
+		break;
+	}
+
+	if (directions)
+		handleMaximize(wwin, directions);
+
+	data->snap = SNAP_NONE;
+}
+
+
 static void drawSnapFrame(WWindow *wwin, int direction)
 {
 	WScreen *scr;
@@ -1232,6 +1354,7 @@ static int getSnapDirection(WScreen *scr, int x, int y)
 			return SNAP_BOTTOMLEFT;
 		return SNAP_LEFT;
 	}
+
 	if (x > scr->scr_width - 2) {
 		if (y < 1)
 			return SNAP_TOPRIGHT;
@@ -1239,20 +1362,20 @@ static int getSnapDirection(WScreen *scr, int x, int y)
 			return SNAP_BOTTOMRIGHT;
 		return SNAP_RIGHT;
 	}
+
 	if (y < 1)
 		return SNAP_TOP;
+
 	if (y > scr->scr_height - 2)
 		return SNAP_BOTTOM;
+
 	return SNAP_NONE;
 }
 
 static void doSnap(WWindow *wwin, MoveData *data, Bool opaqueMove)
 {
-	int directions;
-	WScreen *scr;
-
-	directions = 0;
-	scr = wwin->vscr->screen_ptr;
+	int directions = 0;
+	WScreen *scr = wwin->vscr->screen_ptr;
 
 	/* erase frames */
 	if (!opaqueMove)
@@ -1263,27 +1386,35 @@ static void doSnap(WWindow *wwin, MoveData *data, Bool opaqueMove)
 	switch (data->snap) {
 	case SNAP_NONE:
 		return;
+
 	case SNAP_LEFT:
 		directions = MAX_VERTICAL | MAX_LEFTHALF;
 		break;
+
 	case SNAP_RIGHT:
 		directions = MAX_VERTICAL | MAX_RIGHTHALF;
 		break;
+
 	case SNAP_TOP:
 		directions = MAX_HORIZONTAL | MAX_TOPHALF;
 		break;
+
 	case SNAP_BOTTOM:
 		directions = MAX_HORIZONTAL | MAX_BOTTOMHALF;
 		break;
+
 	case SNAP_TOPLEFT:
 		directions = MAX_TOPHALF | MAX_LEFTHALF;
 		break;
+
 	case SNAP_TOPRIGHT:
 		directions = MAX_TOPHALF | MAX_RIGHTHALF;
 		break;
+
 	case SNAP_BOTTOMLEFT:
 		directions = MAX_BOTTOMHALF | MAX_LEFTHALF;
 		break;
+
 	case SNAP_BOTTOMRIGHT:
 		directions = MAX_BOTTOMHALF | MAX_RIGHTHALF;
 		break;
@@ -1752,8 +1883,9 @@ int wMouseMoveWindow(WWindow *wwin, XEvent *ev)
 			if (IS_RESIZABLE(wwin) && wPreferences.window_snapping) {
 				int snap_direction;
 
-				snap_direction = getSnapDirection(scr, moveData.mouseX, moveData.mouseY);
+				snap_direction = get_snap_direction(scr, moveData.mouseX, moveData.mouseY);
 
+				/* TODO: kix, check if this code is in wmaker */
 				if (!wPreferences.no_autowrap &&
 				    snap_direction != SNAP_TOP &&
 				    snap_direction != SNAP_BOTTOM)
@@ -1762,10 +1894,12 @@ int wMouseMoveWindow(WWindow *wwin, XEvent *ev)
 				if (moveData.snap != snap_direction) {
 					/* erase old frame */
 					if (moveData.snap)
-						drawSnapFrame(wwin, moveData.snap);
+						draw_snap_frame(wwin, moveData.snap);
+
 					/* draw new frame */
 					if (snap_direction)
-						drawSnapFrame(wwin, snap_direction);
+						draw_snap_frame(wwin, snap_direction);
+
 					moveData.snap = snap_direction;
 				}
 			}
@@ -1773,7 +1907,7 @@ int wMouseMoveWindow(WWindow *wwin, XEvent *ev)
 			if (started) {
 				/* erase snap frame */
 				if (moveData.snap)
-					drawSnapFrame(wwin, moveData.snap);
+					draw_snap_frame(wwin, moveData.snap);
 
 				updateWindowPosition(wwin, &moveData,
 						     scr->selected_windows == NULL
@@ -1782,7 +1916,7 @@ int wMouseMoveWindow(WWindow *wwin, XEvent *ev)
 
 				/* redraw snap frame */
 				if (moveData.snap)
-					drawSnapFrame(wwin, moveData.snap);
+					draw_snap_frame(wwin, moveData.snap);
 
 				if (!warped && !wPreferences.no_autowrap) {
 					int oldWorkspace = vscr->workspace.current;
@@ -1876,9 +2010,9 @@ int wMouseMoveWindow(WWindow *wwin, XEvent *ev)
 			if (started) {
 				XEvent e;
 
-				if (moveData.snap)
-					doSnap(wwin, &moveData, opaqueMove);
-				else if (!opaqueMove) {
+				if (moveData.snap) {
+					do_snap(wwin, &moveData, opaqueMove);
+				} else if (!opaqueMove) {
 					drawFrames(wwin, scr->selected_windows,
 						   moveData.realX - wwin->frame_x, moveData.realY - wwin->frame_y);
 					XSync(dpy, 0);
@@ -1886,6 +2020,7 @@ int wMouseMoveWindow(WWindow *wwin, XEvent *ev)
 						     moveData.realX - wwin->frame_x,
 						     moveData.realY - wwin->frame_y);
 				}
+
 #ifndef CONFIGURE_WINDOW_WHILE_MOVING
 				wWindowSynthConfigureNotify(wwin);
 #endif
