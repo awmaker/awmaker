@@ -1493,6 +1493,60 @@ static WMenu *makeDefaultMenu(void)
 	return menu;
 }
 
+static WMenu *configure_plstring_menu(virtual_screen *vscr, WMPropList *definition)
+{
+	WMenu *menu = NULL;
+	struct stat stat_buf;
+	char *tmp, *path = NULL;
+	Bool menu_is_default = False;
+
+	/* menu definition is a string. Probably a path, so parse the file */
+	tmp = wexpandpath(WMGetFromPLString(definition));
+	path = getLocalizedMenuFile(tmp);
+	if (!path)
+		path = wfindfile(DEF_CONFIG_PATHS, tmp);
+
+	if (!path) {
+		path = wfindfile(DEF_CONFIG_PATHS, DEF_MENU_FILE);
+		menu_is_default = True;
+	}
+
+	if (!path) {
+		werror(_("could not find menu file \"%s\" referenced in WMRootMenu"), tmp);
+		wfree(tmp);
+		return NULL;
+	}
+
+	if (stat(path, &stat_buf) < 0) {
+		werror(_("could not access menu \"%s\" referenced in WMRootMenu"), path);
+		wfree(path);
+		wfree(tmp);
+		return NULL;
+	}
+
+	if (!vscr->menu.root_menu ||
+	    stat_buf.st_mtime > vscr->menu.root_menu->timestamp ||
+	    /* if the pointer in WMRootMenu has changed */
+	    w_global.domain.root_menu->timestamp > vscr->menu.root_menu->timestamp) {
+		if (menu_is_default) {
+			wwarning(_
+				 ("using default menu file \"%s\" as the menu referenced in WMRootMenu could not be found "),
+				 path);
+		}
+
+		menu = readMenuFile(vscr, path);
+		if (menu)
+			menu->timestamp = WMAX(stat_buf.st_mtime, w_global.domain.root_menu->timestamp);
+	} else {
+		menu = NULL;
+	}
+
+	wfree(path);
+	wfree(tmp);
+
+	return menu;
+}
+
 /*
  *----------------------------------------------------------------------
  * configureMenu--
@@ -1508,58 +1562,8 @@ static WMenu *configureMenu(virtual_screen *vscr, WMPropList *definition)
 	WMPropList *title, *command, *params;
 	char *tmp, *mtitle;
 
-	if (WMIsPLString(definition)) {
-		struct stat stat_buf;
-		char *path = NULL;
-		Bool menu_is_default = False;
-
-		/* menu definition is a string. Probably a path, so parse the file */
-
-		tmp = wexpandpath(WMGetFromPLString(definition));
-
-		path = getLocalizedMenuFile(tmp);
-
-		if (!path)
-			path = wfindfile(DEF_CONFIG_PATHS, tmp);
-
-		if (!path) {
-			path = wfindfile(DEF_CONFIG_PATHS, DEF_MENU_FILE);
-			menu_is_default = True;
-		}
-
-		if (!path) {
-			werror(_("could not find menu file \"%s\" referenced in WMRootMenu"), tmp);
-			wfree(tmp);
-			return NULL;
-		}
-
-		if (stat(path, &stat_buf) < 0) {
-			werror(_("could not access menu \"%s\" referenced in WMRootMenu"), path);
-			wfree(path);
-			wfree(tmp);
-			return NULL;
-		}
-
-		if (!vscr->menu.root_menu || stat_buf.st_mtime > vscr->menu.root_menu->timestamp
-		    /* if the pointer in WMRootMenu has changed */
-		    || w_global.domain.root_menu->timestamp > vscr->menu.root_menu->timestamp) {
-			if (menu_is_default) {
-				wwarning(_
-					 ("using default menu file \"%s\" as the menu referenced in WMRootMenu could not be found "),
-					 path);
-			}
-
-			menu = readMenuFile(vscr, path);
-			if (menu)
-				menu->timestamp = WMAX(stat_buf.st_mtime, w_global.domain.root_menu->timestamp);
-		} else {
-			menu = NULL;
-		}
-		wfree(path);
-		wfree(tmp);
-
-		return menu;
-	}
+	if (WMIsPLString(definition))
+		return configure_plstring_menu(vscr, definition);
 
 	count = WMGetPropListItemCount(definition);
 	if (count == 0)
