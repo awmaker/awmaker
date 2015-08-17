@@ -106,20 +106,19 @@ $ wdwrite WindowMaker ApercuSize 4
 in multiples of the icon size (in this case the apercu size will be four
 times the icon size).
 
-The default size remains 2 (twice the icon size).
+The default size is 2 (twice the icon size).
 
 
 Support for up to 9-buttons mouse
-----------------------------------
+---------------------------------
 
-The new buttons action can be configured from WPrefs directly.
+The action for the newly supported buttons can be configured from WPrefs.
 
 
 wmiv, an image viewer application
------------------------------------
+---------------------------------
 
-wmiv is a fast image loader using wrlib, you can run it from the
-command line.
+wmiv is a quick image viewer using wrlib to be run from the command line.
 
 
 --- 0.95.5
