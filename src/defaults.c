@@ -361,8 +361,8 @@ WDefaultEntry staticOptionList[] = {
 	    NULL, getBool, setClipMergedInDock, NULL, NULL},
 	{"DisableMiniwindows", "NO", NULL,
 	    &wPreferences.disable_miniwindows, getBool, NULL, NULL, NULL},
-	{"DisableWorkspacePager", "NO", NULL,
-	    &wPreferences.disable_workspace_pager, getBool, NULL, NULL, NULL}
+	{"EnableWorkspacePager", "NO", NULL,
+	    &wPreferences.enable_workspace_pager, getBool, NULL, NULL, NULL}
 };
 
 #define NUM2STRING_(x) #x
@@ -472,6 +472,10 @@ WDefaultEntry optionList[] = {
 	    &wPreferences.no_autowrap, getBool, NULL, NULL, NULL},
 	{"WindowSnapping", "NO", NULL,
 	    &wPreferences.window_snapping, getBool, NULL, NULL, NULL},
+	{"SnapEdgeDetect", "1", NULL,
+	    &wPreferences.snap_edge_detect, getInt, NULL, NULL, NULL},
+	{"SnapCornerDetect", "10", NULL,
+	    &wPreferences.snap_corner_detect, getInt, NULL, NULL, NULL},
 	{"DragMaximizedWindow", "Move", seDragMaximizedWindow,
 	    &wPreferences.drag_maximized_window, getEnum, NULL, NULL, NULL},
 	{"HighlightActiveApp", "YES", NULL,

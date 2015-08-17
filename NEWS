@@ -9,13 +9,21 @@ Window snapping
 
 You can now "snap" a window, i.e., maximize it to a side or corner of the
 screen, by dragging it to that side or corner.  It is enabled by setting
-"WindowSnapping = YES" in ~/GNUstep/Defaults/WindowMaker or selecting "Enable
-window snapping" under "Expert User Preferences" in WPrefs.app.
+"WindowSnapping = YES" in ~/GNUstep/Defaults/WindowMaker or selecting "Maximize
+(snap) a window to edge or corner by dragging." under "Expert User Preferences"
+in WPrefs.app.
 
 Note that if "Switch workspaces while dragging windows" is selected under
 "Workspace Preferences" in WPrefs.app, or if "DontLinkWorkspaces = NO" in
 ~/GNUstep/Defaults/WindowMaker, then you may only snap a window to the top or
 bottom of the screen.
+
+You may set the distance (in pixels) from the edge or corner of the screen at
+which a window will begin snapping using "SnapEdgeDetect" and "SnapCornerDetect"
+in ~/GNUstep/Defaults/WindowMaker or setting "Distance from edge/corner to begin
+window snap." under "Expert User Preferences" in WPrefs.app.  (The defaults are
+1 pixel and 10 pixels, respectively).
+
 
 Dragging maximized windows
 --------------------------
@@ -44,6 +52,7 @@ Note that, to accomodate this option in the "Window Handling Preferences" tab in
 WPrefs.app, the option to "Open dialogs in the same workspace as their owners"
 (which sets the "OpenTransientOnOwnerWorkspace" option from
 ~/GNUstep/Defaults/WindowMaker) has been moved to "Expert User Preferences".
+
 
 Mini-Previews instead of Apercus
 --------------------------------
@@ -97,20 +106,19 @@ $ wdwrite WindowMaker ApercuSize 4
 in multiples of the icon size (in this case the apercu size will be four
 times the icon size).
 
-The default size remains 2 (twice the icon size).
+The default size is 2 (twice the icon size).
 
 
 Support for up to 9-buttons mouse
-----------------------------------
+---------------------------------
 
-The new buttons action can be configured from WPrefs directly.
+The action for the newly supported buttons can be configured from WPrefs.
 
 
 wmiv, an image viewer application
------------------------------------
+---------------------------------
 
-wmiv is a fast image loader using wrlib, you can run it from the
-command line.
+wmiv is a quick image viewer using wrlib to be run from the command line.
 
 
 --- 0.95.5

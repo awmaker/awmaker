@@ -20,19 +20,20 @@
 
 /* Many part of code are ripped of an example from JX's site */
 
-#include "wconfig.h"
+#include "config.h"
 
-#ifdef XDND
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+
+#include <X11/Xlib.h>
+#include <X11/Xatom.h>
 
 #include "WindowMaker.h"
 #include "dock.h"
 #include "xdnd.h"
 #include "workspace.h"
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <X11/Xatom.h>
 
 static Atom _XA_XdndAware;
 static Atom _XA_XdndEnter;
@@ -124,10 +125,10 @@ Bool wXDNDProcessSelection(XEvent *event)
 		int total_size = 0;
 		char *tmp;
 
-		scr->xdestring = delme;
+		vscr->screen_ptr->xdestring = delme;
 		items = WMCreateArray(4);
-		retain = wstrdup(scr->xdestring);
-		XFree(scr->xdestring);	/* since xdestring was created by Xlib */
+		retain = wstrdup(vscr->screen_ptr->xdestring);
+		XFree(vscr->screen_ptr->xdestring);	/* since xdestring was created by Xlib */
 
 		length = strlen(retain);
 
@@ -153,24 +154,24 @@ Bool wXDNDProcessSelection(XEvent *event)
 		wfree(retain);
 
 		/* now pack new string */
-		scr->xdestring = wmalloc(total_size);
-		scr->xdestring[0] = 0;	/* empty string */
+		vscr->screen_ptr->xdestring = wmalloc(total_size);
+		vscr->screen_ptr->xdestring[0] = 0;	/* empty string */
 		WM_ETARETI_ARRAY(items, tmp, iter) {
 			/* only supporting file: URI objects */
 			if (!strncmp(tmp, "file://", 7)) {
 				/* drag-and-drop file name format as per the spec is encoded as an URI */
 				wXDNDDecodeURI(&tmp[7]);
-				strcat(scr->xdestring, " \"");
-				strcat(scr->xdestring, &tmp[7]);
-				strcat(scr->xdestring, "\"");
+				strcat(vscr->screen_ptr->xdestring, " \"");
+				strcat(vscr->screen_ptr->xdestring, &tmp[7]);
+				strcat(vscr->screen_ptr->xdestring, "\"");
 			}
 			wfree(tmp);
 		}
 		WMFreeArray(items);
-		if (scr->xdestring[0])
+		if (vscr->screen_ptr->xdestring[0])
 			wDockReceiveDNDDrop(vscr, event);
 
-		wfree(scr->xdestring);	/* this xdestring is not from Xlib (no XFree) */
+		wfree(vscr->screen_ptr->xdestring);	/* this xdestring is not from Xlib (no XFree) */
 	}
 
 	return True;
@@ -317,4 +318,3 @@ Bool wXDNDProcessClientMessage(XClientMessageEvent *event)
 	}
 	return False;
 }
-#endif

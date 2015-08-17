@@ -1052,15 +1052,21 @@ void wMenuPaint(WMenu *menu)
 		paintEntry(menu, i, i == menu->selected_entry);
 }
 
-void wMenuSetEnabled(WMenu *menu, int index, int enable)
+void menu_entry_set_enabled(WMenu *menu, int index, int enable)
 {
 	if (index >= menu->entry_no)
 		return;
 
 	menu->entries[index]->flags.enabled = enable;
-	paintEntry(menu, index, index == menu->selected_entry);
 }
 
+void menu_entry_set_enabled_paint(WMenu *menu, int index)
+{
+	if (index >= menu->entry_no)
+		return;
+
+	paintEntry(menu, index, index == menu->selected_entry);
+}
 
 static void selectEntry(WMenu *menu, int entry_no)
 {
@@ -1645,9 +1651,9 @@ static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
 		} else if (!delayed_select) {
 			if (menu == vscr->menu.switch_menu && event->xbutton.button == Button3) {
 				selectEntry(menu, entry_no);
-				OpenWindowMenu2((WWindow *)entry->clientdata,
+				windowmenu_at_switchmenu_open((WWindow *)entry->clientdata,
 								event->xbutton.x_root,
-								event->xbutton.y_root, False);
+								event->xbutton.y_root);
 				wwin = (WWindow *)entry->clientdata;
 				desc = &wwin->vscr->menu.window_menu->menu->descriptor;
 				event->xany.send_event = True;

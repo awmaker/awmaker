@@ -369,6 +369,8 @@ extern struct WPreferences {
 	char no_animations;                /* enable/disable animations */
 	char no_autowrap;                  /* wrap workspace when window is moved to the edge */
 	char window_snapping;              /* enable window snapping */
+	int snap_edge_detect;              /* how far from edge to begin snap */
+	int snap_corner_detect;            /* how far from corner to begin snap */
 	char drag_maximized_window;        /* behavior when a maximized window is dragged */
 
 	char highlight_active_app;         /* show the focused app by highlighting its icon */
@@ -402,7 +404,7 @@ extern struct WPreferences {
 	char sticky_icons;                 /* If miniwindows will be onmipresent */
 	char dont_confirm_kill;            /* do not confirm Kill application */
 	char disable_miniwindows;
-	char disable_workspace_pager;
+	char enable_workspace_pager;
 	char ignore_gtk_decoration_hints;
 	char dont_blink;                   /* do not blink icon selection */
 

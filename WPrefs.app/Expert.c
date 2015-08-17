@@ -33,7 +33,8 @@ static const struct {
 	enum {
 		OPTION_WMAKER,
 		OPTION_WMAKER_ARRAY,
-		OPTION_USERDEF
+		OPTION_USERDEF,
+		OPTION_WMAKER_INT
 	} class;
 
 	const char *op_name;  /* The identifier for the option in the config file */
@@ -46,8 +47,8 @@ static const struct {
 	{ N_("Ignore decoration hints for GTK applications."),
 	  /* default: */ False, OPTION_WMAKER, "IgnoreGtkHints" },
 
-	{ N_("Disable workspace pager."),
-	  /* default: */ False, OPTION_WMAKER, "DisableWorkspacePager" },
+	{ N_("Enable workspace pager."),
+	  /* default: */ False, OPTION_WMAKER, "EnableWorkspacePager" },
 
 	{ N_("Do not set non-WindowMaker specific parameters (do not use xset)."),
 	  /* default: */ False, OPTION_USERDEF, "NoXSetStuff" },
@@ -87,13 +88,20 @@ static const struct {
 	  /* default: */ False, OPTION_WMAKER, "KbdModeLock" },
 #endif /* XKB_MODELOCK */
 
-	{ N_("Maximize a window to side or corner by dragging."),
+	{ N_("Maximize (snap) a window to edge or corner by dragging."),
 	  /* default: */ False, OPTION_WMAKER, "WindowSnapping" },
+
+	{ N_("Distance from edge to begin window snap."),
+	  /* default: */ 1, OPTION_WMAKER_INT, "SnapEdgeDetect" },
+
+	{ N_("Distance from corner to begin window snap."),
+	  /* default: */ 10, OPTION_WMAKER_INT, "SnapCornerDetect" },
 
 	{ N_("Open dialogs in the same workspace as their owners."),
 	  /* default: */ False, OPTION_WMAKER, "OpenTransientOnOwnerWorkspace" }
 
 };
+
 
 
 typedef struct _Panel {
@@ -108,10 +116,37 @@ typedef struct _Panel {
 
 	WMButton *swi[wlengthof_nocheck(expert_options)];
 
+	WMTextField *textfield[wlengthof_nocheck(expert_options)];
+
 } _Panel;
 
 #define ICON_FILE	"expert"
 
+static void changeIntTextfield(void *data, int delta)
+{
+	WMTextField *textfield;
+	char *text;
+	int value;
+
+	textfield = (WMTextField *)data;
+	text = WMGetTextFieldText(textfield);
+	value = atoi(text);
+	value += delta;
+	sprintf(text, "%d", value);
+	WMSetTextFieldText(textfield, text);
+}
+
+static void downButtonCallback(WMWidget *self, void *data)
+{
+	(void) self;
+	changeIntTextfield(data, -1);
+}
+
+static void upButtonCallback(WMWidget *self, void *data)
+{
+	(void) self;
+	changeIntTextfield(data, 1);
+}
 
 static void createPanel(Panel *p)
 {
@@ -137,11 +172,13 @@ static void createPanel(Panel *p)
 
 	udb = WMGetStandardUserDefaults();
 	for (i = 0; i < wlengthof(expert_options); i++) {
-		panel->swi[i] = WMCreateSwitchButton(f);
-		WMResizeWidget(panel->swi[i], FRAME_WIDTH - 40, 25);
-		WMMoveWidget(panel->swi[i], 5, 5 + i * 25);
+		if (expert_options[i].class != OPTION_WMAKER_INT) {
+			panel->swi[i] = WMCreateSwitchButton(f);
+			WMResizeWidget(panel->swi[i], FRAME_WIDTH - 40, 25);
+			WMMoveWidget(panel->swi[i], 5, 5 + i * 25);
 
-		WMSetButtonText(panel->swi[i], _(expert_options[i].label));
+			WMSetButtonText(panel->swi[i], _(expert_options[i].label));
+		}
 
 		switch (expert_options[i].class) {
 		case OPTION_WMAKER:
@@ -163,6 +200,49 @@ static void createPanel(Panel *p)
 			state = WMGetUDBoolForKey(udb, expert_options[i].op_name);
 			break;
 
+		case OPTION_WMAKER_INT:
+		{
+			char tmp[10];
+			WMButton *up, *down;
+			WMLabel *label;
+
+			panel->textfield[i] = WMCreateTextField(f);
+			WMResizeWidget(panel->textfield[i], 41, 20);
+			WMMoveWidget(panel->textfield[i], 22, 7 + i * 25);
+
+			down = WMCreateCommandButton(f);
+			WMSetButtonImage(down, WMGetSystemPixmap(WMWidgetScreen(down), WSIArrowDown));
+			WMSetButtonAltImage(down,
+					    WMGetSystemPixmap(WMWidgetScreen(down), WSIHighlightedArrowDown));
+			WMSetButtonImagePosition(down, WIPImageOnly);
+			WMSetButtonAction(down, downButtonCallback, panel->textfield[i]);
+			WMResizeWidget(down, 16, 16);
+			WMMoveWidget(down, 5, 9 + i * 25);
+
+			up = WMCreateCommandButton(f);
+			WMSetButtonImage(up, WMGetSystemPixmap(WMWidgetScreen(up), WSIArrowUp));
+			WMSetButtonAltImage(up, WMGetSystemPixmap(WMWidgetScreen(up), WSIHighlightedArrowUp));
+			WMSetButtonImagePosition(up, WIPImageOnly);
+			WMSetButtonAction(up, upButtonCallback, panel->textfield[i]);
+			WMResizeWidget(up, 16, 16);
+			WMMoveWidget(up, 64, 9 + i * 25);
+
+			label = WMCreateLabel(f);
+			WMSetLabelText(label, _(expert_options[i].label));
+			WMResizeWidget(label, FRAME_WIDTH - 99, 25);
+			WMMoveWidget(label, 85, 5 + i * 25);
+
+			if (GetStringForKey(expert_options[i].op_name))
+				state = GetIntegerForKey(expert_options[i].op_name);
+			else
+				state = expert_options[i].def_state;
+
+			sprintf(tmp, "%d", state);
+			WMSetTextFieldText(panel->textfield[i], tmp);
+
+			break;
+		}
+
 		default:
 #ifdef DEBUG
 			wwarning("export_options[%d].class = %d, this should not happen\n",
@@ -171,7 +251,8 @@ static void createPanel(Panel *p)
 			state = expert_options[i].def_state;
 			break;
 		}
-		WMSetButtonSelected(panel->swi[i], state);
+		if (expert_options[i].class != OPTION_WMAKER_INT)
+			WMSetButtonSelected(panel->swi[i], state);
 	}
 
 	WMMapSubwidgets(panel->box);
@@ -204,6 +285,18 @@ static void storeDefaults(_Panel *panel)
 		case OPTION_USERDEF:
 			WMSetUDBoolForKey(udb, WMGetButtonSelected(panel->swi[i]), expert_options[i].op_name);
 			break;
+
+		case OPTION_WMAKER_INT:
+		{
+			char *text;
+			int value;
+
+			text = WMGetTextFieldText(panel->textfield[i]);
+			value = atoi(text);
+
+			SetIntegerForKey(value, expert_options[i].op_name);
+			break;
+		}
 		}
 	}
 }

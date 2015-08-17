@@ -71,7 +71,7 @@ static void updatePasteCommand(WAppIcon *icon, char *command)
 	icon->paste_command = command;
 }
 
-#ifdef XDND
+#ifdef USE_DOCK_XDND
 static void updateDNDCommand(WAppIcon *icon, char *command)
 {
 	if (icon->dnd_command)
@@ -84,7 +84,7 @@ static void updateDNDCommand(WAppIcon *icon, char *command)
 
 	icon->dnd_command = command;
 }
-#endif				/* XDND */
+#endif				/* USE_DOCK_XDND */
 
 static void updateSettingsPanelIcon(AppSettingsPanel *panel)
 {
@@ -209,7 +209,7 @@ static void panelBtnCallback(WMWidget *self, void *data)
 		}
 
 		updateCommand(panel->editedIcon, text);
-#ifdef XDND
+#ifdef USE_DOCK_XDND
 		/* cannot free text from this, because it will be not be duplicated
 		 * in updateDNDCommand */
 		text = WMGetTextFieldText(panel->dndCommandField);
@@ -315,7 +315,7 @@ void ShowDockAppSettingsPanel(WAppIcon *aicon)
 	panel->dndCommandLabel = WMCreateLabel(panel->dndCommandFrame);
 	WMResizeWidget(panel->dndCommandLabel, 256, 18);
 	WMMoveWidget(panel->dndCommandLabel, 10, 45);
-#ifdef XDND
+#ifdef USE_DOCK_XDND
 	WMSetTextFieldText(panel->dndCommandField, aicon->dnd_command);
 	WMSetLabelText(panel->dndCommandLabel, _("%d will be replaced with the file name"));
 #else
