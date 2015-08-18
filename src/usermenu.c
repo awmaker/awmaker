@@ -237,7 +237,6 @@ static WMenu *configureUserMenu(virtual_screen *vscr, WMPropList *plum)
 				mentry = wMenuAddCallback(menu, submenu->frame->title, NULL, NULL);
 
 			wMenuEntrySetCascade_create(menu, mentry, submenu);
-			wMenuEntrySetCascade_map(menu, submenu);
 		} else {
 			int idx = 0;
 			WMPropList *instances = 0;
@@ -323,10 +322,13 @@ static WMenu *readUserMenuFile(virtual_screen *vscr, const char *file_name)
 	WMPropList *plum;
 
 	plum = WMReadPropListFromFile(file_name);
-	if (plum) {
-		menu = configureUserMenu(vscr, plum);
-		WMReleasePropList(plum);
-	}
+	if (!plum)
+		return NULL;
+
+	menu = configureUserMenu(vscr, plum);
+	WMReleasePropList(plum);
+
+	wMenuRealize(menu);
 
 	return menu;
 }
