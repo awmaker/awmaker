@@ -1547,40 +1547,12 @@ static WMenu *configure_plstring_menu(virtual_screen *vscr, WMPropList *definiti
 	return menu;
 }
 
-/*
- *----------------------------------------------------------------------
- * configureMenu--
- * 	Reads root menu configuration from defaults database.
- *
- *----------------------------------------------------------------------
- */
-static WMenu *configureMenu(virtual_screen *vscr, WMPropList *definition)
+void configure_menu_entries(virtual_screen *vscr, WMPropList *definition, WMenu *menu, int count)
 {
-	WMenu *menu = NULL;
 	WMPropList *elem;
-	int i, count;
 	WMPropList *title, *command, *params;
-	char *tmp, *mtitle;
-
-	if (WMIsPLString(definition))
-		return configure_plstring_menu(vscr, definition);
-
-	count = WMGetPropListItemCount(definition);
-	if (count == 0)
-		return NULL;
-
-	elem = WMGetFromPLArray(definition, 0);
-	if (!WMIsPLString(elem)) {
-		tmp = WMGetPropListDescription(elem, False);
-		wwarning(_("%s:format error in root menu configuration \"%s\""), "WMRootMenu", tmp);
-		wfree(tmp);
-		return NULL;
-	}
-
-	mtitle = WMGetFromPLString(elem);
-	menu = menu_create(M_(mtitle));
-	menu_map(menu, vscr);
-	menu->on_destroy = removeShortcutsForMenu;
+	char *tmp;
+	int i;
 
 	for (i = 1; i < count; i++) {
 		elem = WMGetFromPLArray(definition, i);
@@ -1616,8 +1588,8 @@ static WMenu *configureMenu(virtual_screen *vscr, WMPropList *definition)
 				command = shortcut;
 				shortcut = NULL;
 			}
-			params = WMGetFromPLArray(elem, idx++);
 
+			params = WMGetFromPLArray(elem, idx++);
 			if (!title || !command) {
 				tmp = WMGetPropListDescription(elem, False);
 				wwarning(_("%s:format error in root menu configuration \"%s\""), "WMRootMenu", tmp);
@@ -1631,6 +1603,43 @@ static WMenu *configureMenu(virtual_screen *vscr, WMPropList *definition)
 				     params ? WMGetFromPLString(params) : NULL, "WMRootMenu");
 		}
 	}
+}
+
+/*
+ *----------------------------------------------------------------------
+ * configureMenu--
+ * 	Reads root menu configuration from defaults database.
+ *
+ *----------------------------------------------------------------------
+ */
+static WMenu *configureMenu(virtual_screen *vscr, WMPropList *definition)
+{
+	WMenu *menu = NULL;
+	WMPropList *elem;
+	int count;
+	char *tmp, *mtitle;
+
+	if (WMIsPLString(definition))
+		return configure_plstring_menu(vscr, definition);
+
+	count = WMGetPropListItemCount(definition);
+	if (count == 0)
+		return NULL;
+
+	elem = WMGetFromPLArray(definition, 0);
+	if (!WMIsPLString(elem)) {
+		tmp = WMGetPropListDescription(elem, False);
+		wwarning(_("%s:format error in root menu configuration \"%s\""), "WMRootMenu", tmp);
+		wfree(tmp);
+		return NULL;
+	}
+
+	mtitle = WMGetFromPLString(elem);
+	menu = menu_create(M_(mtitle));
+	menu_map(menu, vscr);
+	menu->on_destroy = removeShortcutsForMenu;
+
+	configure_menu_entries(vscr, definition, menu, count);
 
 	return menu;
 }
