@@ -195,7 +195,6 @@ static WMenu *parseMenuCommand(virtual_screen *vscr, Window win, char **slist, i
 			}
 
 			wMenuEntrySetCascade_create(menu, entry, submenu);
-			wMenuEntrySetCascade_map(menu, submenu);
 		} else {
 			wMenuDestroy(menu, True);
 			wwarning(_("appmenu: bad menu entry \"%s\" in window %lx"), slist[*index], win);
@@ -235,6 +234,7 @@ WMenu *wAppMenuGet(virtual_screen *vscr, Window window)
 
 	XFreeStringList(slist);
 
+	wMenuRealize(menu);
 	return menu;
 }
 
