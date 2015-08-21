@@ -1070,7 +1070,7 @@ static void updateWorkspaceMenu(WMenu *menu, WAppIcon *icon)
 	for (i = 0; i < vscr->workspace.count; i++)
 		menu_entry_set_enabled_paint(menu, i);
 
-	wMenuRealize(menu);
+	menu->flags.realized = 0;
 }
 
 static WMenu *makeWorkspaceMenu(void)
@@ -1125,7 +1125,6 @@ static void updateOptionsMenu(WDock *dock, WMenu *menu)
 	menu_entry_set_enabled_paint(menu, OM_KEEP_ON_TOP);
 	menu_entry_set_enabled_paint(menu, OM_AUTORAISE);
 	menu->flags.realized = 0;
-	wMenuRealize(menu);
 }
 
 static WMenu *clip_make_options_menu(void)
