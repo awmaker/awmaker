@@ -1482,10 +1482,10 @@ static void drawer_menu_map(WMenu *menu, virtual_screen *vscr)
 {
 	menu_map(menu, vscr);
 
-	if (vscr->dock.drawer_opt_menu) {
+	if (vscr->dock.drawer_opt_menu)
 		menu_map(vscr->dock.drawer_opt_menu, vscr);
-		wMenuRealize(vscr->dock.drawer_opt_menu);
-	}
+
+	wMenuRealize(menu);
 }
 
 static void drawer_menu_unmap(virtual_screen *vscr, WMenu *menu)
