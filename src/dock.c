@@ -122,6 +122,7 @@ enum
 	RM_SETTINGS,
 	RM_KILL
 };
+
 /***** Local variables ****/
 
 static WMPropList *dCommand = NULL;
@@ -5164,7 +5165,7 @@ static void set_dockmenu_drawer_code(virtual_screen *vscr, WDock *dock, WMenuEnt
 	menu_entry_set_enabled_paint(dock->menu, RM_BRING);
 	menu_entry_set_enabled_paint(dock->menu, RM_HIDE);
 	menu_entry_set_enabled_paint(dock->menu, RM_SETTINGS);
-	menu_entry_set_enabled_paint(dock->menu, CM_KILL);
+	menu_entry_set_enabled_paint(dock->menu, RM_KILL);
 }
 
 static void open_menu_dock(WDock *dock, WAppIcon *aicon, XEvent *event)
