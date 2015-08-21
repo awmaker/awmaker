@@ -92,7 +92,6 @@ static void wXDNDDecodeURI(char *uri)
 Bool wXDNDProcessSelection(XEvent *event)
 {
 	virtual_screen *vscr = wScreenForWindow(event->xselection.requestor);
-	WScreen *scr = vscr->screen_ptr;
 	char *retain;
 	Atom ret_type;
 	int ret_format;
