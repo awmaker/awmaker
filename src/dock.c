@@ -5165,9 +5165,6 @@ static void set_dockmenu_drawer_code(virtual_screen *vscr, WDock *dock, WMenuEnt
 	menu_entry_set_enabled_paint(dock->menu, RM_HIDE);
 	menu_entry_set_enabled_paint(dock->menu, RM_SETTINGS);
 	menu_entry_set_enabled_paint(dock->menu, CM_KILL);
-
-	wMenuRealize(dock->menu);
-
 }
 
 static void open_menu_dock(WDock *dock, WAppIcon *aicon, XEvent *event)
@@ -5228,6 +5225,9 @@ static void open_menu_drawer(WDock *dock, WAppIcon *aicon, XEvent *event)
 	int x_pos;
 
 	set_dockmenu_drawer_code(vscr, dock, entry, aicon);
+
+	if (!dock->menu->flags.realized)
+		wMenuRealize(dock->menu);
 
 	x_pos = event->xbutton.x_root - dock->menu->frame->core->width / 2 - 1;
 	if (x_pos < 0)
