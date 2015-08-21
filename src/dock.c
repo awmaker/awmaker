@@ -5229,9 +5229,6 @@ static void open_menu_drawer(WDock *dock, WAppIcon *aicon, XEvent *event)
 
 	set_dockmenu_drawer_code(vscr, dock, entry, aicon);
 
-	if (!dock->menu->flags.realized)
-		wMenuRealize(dock->menu);
-
 	x_pos = event->xbutton.x_root - dock->menu->frame->core->width / 2 - 1;
 	if (x_pos < 0)
 		x_pos = 0;
