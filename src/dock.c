@@ -1420,11 +1420,9 @@ static void clip_menu_map(WMenu *menu, virtual_screen *vscr)
 		wMenuRealize(vscr->clip.opt_menu);
 	}
 
-	wMenuEntrySetCascade_map(menu, vscr->clip.opt_menu);
 	if (vscr->clip.submenu) {
 		menu_map(vscr->clip.submenu, vscr);
 		wMenuRealize(vscr->clip.submenu);
-		wMenuEntrySetCascade_map(menu, vscr->clip.submenu);
 	}
 }
 
@@ -1490,8 +1488,6 @@ static void drawer_menu_map(WMenu *menu, virtual_screen *vscr)
 		menu_map(vscr->dock.drawer_opt_menu, vscr);
 		wMenuRealize(vscr->dock.drawer_opt_menu);
 	}
-
-	wMenuEntrySetCascade_map(menu, vscr->dock.drawer_opt_menu);
 }
 
 static void drawer_menu_unmap(virtual_screen *vscr, WMenu *menu)
@@ -1535,7 +1531,6 @@ static WMenu *dock_menu_create(virtual_screen *vscr)
 static void dock_menu_map(WMenu *menu, virtual_screen *vscr)
 {
 	menu_map(menu, vscr);
-	wMenuEntrySetCascade_map(menu, vscr->dock.pos_menu);
 	if (vscr->dock.pos_menu) {
 		menu_map(vscr->dock.pos_menu, vscr);
 		wMenuRealize(vscr->dock.pos_menu);
