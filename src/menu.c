@@ -319,17 +319,6 @@ void wMenuEntrySetCascade_create(WMenu *menu, WMenuEntry *entry, WMenu *cascade)
 	}
 }
 
-void wMenuEntrySetCascade_map(WMenu *menu, WMenu *cascade)
-{
-	if (menu->flags.lowered) {
-		cascade->flags.lowered = 1;
-		ChangeStackingLevel(cascade->frame->core, WMNormalLevel);
-	}
-
-	if (!menu->flags.realized)
-		wMenuRealize(menu);
-}
-
 void wMenuEntryRemoveCascade(WMenu *menu, WMenuEntry *entry)
 {
 	/* destroy cascade menu */
