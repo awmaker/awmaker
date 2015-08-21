@@ -1486,14 +1486,15 @@ static void drawer_menu_map(WMenu *menu, virtual_screen *vscr)
 
 	if (vscr->dock.drawer_opt_menu)
 		menu_map(vscr->dock.drawer_opt_menu, vscr);
-
-	wMenuRealize(menu);
 }
 
 static void drawer_menu_unmap(virtual_screen *vscr, WMenu *menu)
 {
 	menu_unmap(vscr->dock.drawer_opt_menu);
 	menu_unmap(menu);
+
+	vscr->dock.drawer_opt_menu->flags.realized = 0;
+	menu->flags.realized = 0;
 }
 
 static WMenu *dock_menu_create(virtual_screen *vscr)
