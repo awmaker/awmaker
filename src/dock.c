@@ -1069,8 +1069,7 @@ static void updateWorkspaceMenu(WMenu *menu, WAppIcon *icon)
 	for (i = 0; i < vscr->workspace.count; i++)
 		menu_entry_set_enabled_paint(menu, i);
 
-	if (!menu->flags.realized)
-		wMenuRealize(menu);
+	wMenuRealize(menu);
 }
 
 static WMenu *makeWorkspaceMenu(void)
@@ -1415,15 +1414,13 @@ static void clip_menu_map(WMenu *menu, virtual_screen *vscr)
 {
 	menu_map(menu, vscr);
 
-	if (vscr->clip.opt_menu) {
+	if (vscr->clip.opt_menu)
 		menu_map(vscr->clip.opt_menu, vscr);
-		wMenuRealize(vscr->clip.opt_menu);
-	}
 
-	if (vscr->clip.submenu) {
+	if (vscr->clip.submenu)
 		menu_map(vscr->clip.submenu, vscr);
-		wMenuRealize(vscr->clip.submenu);
-	}
+
+	wMenuRealize(menu);
 }
 
 static void clip_menu_unmap(virtual_screen *vscr, WMenu *menu)
