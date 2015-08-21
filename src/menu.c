@@ -973,10 +973,8 @@ void wMenuMapAt(virtual_screen *vscr, WMenu *menu, int x, int y, int keyboard)
 	/* Set the vscr */
 	menu->frame->vscr = vscr;
 
-	if (!menu->flags.realized) {
-		menu->flags.realized = 1;
+	if (!menu->flags.realized)
 		wMenuRealize(menu);
-	}
 
 	if (!menu->flags.mapped) {
 		if (wPreferences.wrap_menus) {
