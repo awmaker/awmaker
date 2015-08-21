@@ -5053,8 +5053,6 @@ static void set_dockmenu_clip_code(WDock *dock, WMenuEntry *entry, WAppIcon *aic
 	menu_entry_set_enabled_paint(dock->menu, CM_HIDE);
 	menu_entry_set_enabled_paint(dock->menu, CM_SETTINGS);
 	menu_entry_set_enabled_paint(dock->menu, CM_KILL);
-
-	wMenuRealize(dock->menu);
 }
 
 static void set_dockmenu_drawer_code(virtual_screen *vscr, WDock *dock, WMenuEntry *entry, WAppIcon *aicon)
