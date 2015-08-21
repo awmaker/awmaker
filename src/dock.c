@@ -1532,14 +1532,15 @@ static void dock_menu_map(WMenu *menu, virtual_screen *vscr)
 
 	if (vscr->dock.pos_menu)
 		menu_map(vscr->dock.pos_menu, vscr);
-
-	wMenuRealize(menu);
 }
 
 static void dock_menu_unmap(virtual_screen *vscr, WMenu *menu)
 {
 	menu_unmap(vscr->dock.pos_menu);
 	menu_unmap(menu);
+
+	vscr->dock.pos_menu->flags.realized = 0;
+	menu->flags.realized = 0;
 }
 
 static WDock *dock_create_core(void)
