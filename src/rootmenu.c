@@ -1669,10 +1669,8 @@ void OpenRootMenu(virtual_screen *vscr, int x, int y, int keyboard)
 		} else {
 			wRaiseFrame(menu->frame->core);
 
-			if (keyboard) {
-				wMenuRealize(menu);
+			if (keyboard)
 				wMenuMapAt(vscr, menu, 0, 0, True);
-			}
 		}
 		return;
 	}
@@ -1726,7 +1724,6 @@ void OpenRootMenu(virtual_screen *vscr, int x, int y, int keyboard)
 			newy = y;
 		}
 
-		wMenuRealize(menu);
 		wMenuMapAt(vscr, menu, newx, newy, keyboard);
 	}
 

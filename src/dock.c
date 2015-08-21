@@ -5179,9 +5179,6 @@ static void open_menu_dock(WDock *dock, WAppIcon *aicon, XEvent *event)
 
 	set_dockmenu_dock_code(vscr, dock, entry, aicon);
 
-	if (!dock->menu->flags.realized)
-		wMenuRealize(dock->menu);
-
 	x_pos = dock->on_right_side ? scr->scr_width - dock->menu->frame->core->width - 3 : 0;
 	wMenuMapAt(vscr, dock->menu, x_pos, event->xbutton.y_root + 2, False);
 
@@ -5200,9 +5197,6 @@ static void open_menu_clip(WDock *dock, WAppIcon *aicon, XEvent *event)
 	int x_pos;
 
 	set_dockmenu_clip_code(dock, entry, aicon);
-
-	if (!dock->menu->flags.realized)
-		wMenuRealize(dock->menu);
 
 	x_pos = event->xbutton.x_root - dock->menu->frame->core->width / 2 - 1;
 	if (x_pos < 0)
@@ -5227,9 +5221,6 @@ static void open_menu_drawer(WDock *dock, WAppIcon *aicon, XEvent *event)
 	int x_pos;
 
 	set_dockmenu_drawer_code(vscr, dock, entry, aicon);
-
-	if (!dock->menu->flags.realized)
-		wMenuRealize(dock->menu);
 
 	x_pos = event->xbutton.x_root - dock->menu->frame->core->width / 2 - 1;
 	if (x_pos < 0)

@@ -675,7 +675,6 @@ static void openApplicationMenu(WApplication *wapp, int x, int y)
 		menu->entries[1]->text = _("Hide");
 
 	menu->flags.realized = 0;
-	wMenuRealize(menu);
 
 	x -= menu->frame->core->width / 2;
 	if (x + menu->frame->core->width > scr->scr_width)
