@@ -3721,6 +3721,9 @@ void wDockDetach(WDock *dock, WAppIcon *icon)
 
 	dock->icon_count--;
 
+	/* Remove the Cached Icon */
+	remove_cache_icon(icon->icon->file_name);
+
 	/* if the dock is not attached to an application or
 	 * the application did not set the appropriate hints yet,
 	 * destroy the icon */
