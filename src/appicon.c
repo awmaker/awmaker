@@ -1214,7 +1214,7 @@ static void create_appicon_from_dock(WWindow *wwin, WApplication *wapp)
 	}
 
 	/* If created, then set some flags */
-	if (wapp->app_icon) {
+	if (wapp->app_icon && !WFLAGP(wapp->main_window_desc, no_appicon)) {
 		WWindow *mainw = wapp->main_window_desc;
 
 		wapp->app_icon->running = 1;
