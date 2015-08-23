@@ -726,7 +726,7 @@ static void keepIconsCallback(WMenu *menu, WMenuEntry *entry)
 				wAppIconPaint(aicon);
 			}
 		}
-		save_appicon(aicon, True);
+		save_appicon(aicon);
 	}
 	WMFreeArray(selectedIcons);
 }
@@ -1964,7 +1964,7 @@ static void dockIconPaint(WAppIcon *btn)
 		wDrawerIconPaint(btn);
 	} else {
 		wAppIconPaint(btn);
-		save_appicon(btn, True);
+		save_appicon(btn);
 	}
 }
 
@@ -3239,7 +3239,7 @@ Bool dock_attach_icon(WDock *dock, WAppIcon *icon, int x, int y, Bool update_ico
 	wAppIconPaint(icon);
 
 	/* Save it */
-	save_appicon(icon, True);
+	save_appicon(icon);
 
 	if (wPreferences.auto_arrange_icons)
 		wArrangeIcons(dock->vscr, True);
@@ -3351,7 +3351,7 @@ Bool clip_attach_icon(WDock *dock, WAppIcon *icon, int x, int y, Bool update_ico
 	wAppIconPaint(icon);
 
 	/* Save it */
-	save_appicon(icon, True);
+	save_appicon(icon);
 
 	if (wPreferences.auto_arrange_icons)
 		wArrangeIcons(dock->vscr, True);
@@ -3457,7 +3457,7 @@ Bool drawer_attach_icon(WDock *dock, WAppIcon *icon, int x, int y, Bool update_i
 	wAppIconPaint(icon);
 
 	/* Save it */
-	save_appicon(icon, True);
+	save_appicon(icon);
 
 	if (wPreferences.auto_arrange_icons)
 		wArrangeIcons(dock->vscr, True);
@@ -3609,7 +3609,7 @@ Bool wDockMoveIconBetweenDocks(WDock *src, WDock *dest, WAppIcon *icon, int x, i
 				update_icon = True;
 			}
 
-			save_appicon(icon, True);
+			save_appicon(icon);
 		}
 
 		if (src->auto_collapse || src->auto_raise_lower)
@@ -3638,7 +3638,7 @@ Bool wDockMoveIconBetweenDocks(WDock *src, WDock *dest, WAppIcon *icon, int x, i
 				update_icon = True;
 			}
 
-			save_appicon(icon, True);
+			save_appicon(icon);
 		}
 
 		if (src->auto_collapse || src->auto_raise_lower)

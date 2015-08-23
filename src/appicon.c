@@ -446,14 +446,14 @@ void wAppIconPaint(WAppIcon *aicon)
 }
 
 /* Save the application icon, if it's a dockapp then use it with dock = True */
-void save_appicon(WAppIcon *aicon, Bool dock)
+void save_appicon(WAppIcon *aicon)
 {
 	char *path;
 
 	if (!aicon)
 		return;
 
-	if (dock && (!aicon->docked || aicon->attracted))
+	if (!aicon->docked || aicon->attracted)
 		return;
 
 	path = wIconStore(aicon->icon);
@@ -1224,7 +1224,7 @@ static void create_appicon_from_dock(WWindow *wwin, WApplication *wapp)
 
 		/* Paint it */
 		wAppIconPaint(wapp->app_icon);
-		save_appicon(wapp->app_icon, True);
+		save_appicon(wapp->app_icon);
 	}
 }
 
