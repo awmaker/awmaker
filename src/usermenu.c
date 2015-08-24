@@ -137,13 +137,12 @@ static WUserMenuData *convertShortcuts(virtual_screen *vscr, WMPropList *shortcu
 	char *k, buf[MAX_SHORTCUT_LENGTH], *b;
 	int keycount, i, j, mod;
 
-	if (WMIsPLString(shortcut)) {
+	if (WMIsPLString(shortcut))
 		keycount = 1;
-	} else if (WMIsPLArray(shortcut)) {
+	else if (WMIsPLArray(shortcut))
 		keycount = WMGetPropListItemCount(shortcut);
-	} else {
+	else
 		return NULL;
-	}
 
 	data = wmalloc(sizeof(WUserMenuData));
 	if (!data)
@@ -162,7 +161,7 @@ static WUserMenuData *convertShortcuts(virtual_screen *vscr, WMPropList *shortcu
 		else
 			wstrlcpy(buf, WMGetFromPLString(shortcut), MAX_SHORTCUT_LENGTH);
 
-		b = (char *)buf;
+		b = (char *) buf;
 
 		while ((k = strchr(b, '+')) != NULL) {
 			*k = 0;
@@ -201,7 +200,7 @@ static WMenu *configureUserMenu(virtual_screen *vscr, WMPropList *plum)
 {
 	char *mtitle;
 	WMenu *menu = NULL;
-	WMPropList *elem, *title, *command, *params;
+	WMPropList *elem, *title, *command, *params = NULL;
 	int count, i;
 	WUserMenuData *data;
 
@@ -281,7 +280,7 @@ static WMenu *configureUserMenu(virtual_screen *vscr, WMPropList *plum)
 	return menu;
 }
 
-void wUserMenuRefreshInstances(WMenu * menu, WWindow * wwin)
+void wUserMenuRefreshInstances(WMenu *menu, WWindow *wwin)
 {
 	int i, j, count, paintflag;
 
@@ -305,6 +304,7 @@ void wUserMenuRefreshInstances(WMenu * menu, WWindow * wwin)
 					break;
 				}
 			}
+
 			if (oldflag != menu->entries[i]->flags.enabled)
 				paintflag = 1;
 		}
@@ -336,8 +336,8 @@ static WMenu *readUserMenuFile(virtual_screen *vscr, const char *file_name)
 WMenu *wUserMenuGet(virtual_screen *vscr, WWindow *wwin)
 {
 	WMenu *menu = NULL;
-	char *path = NULL;
-	char *tmp;
+	char *tmp, *path = NULL;
+
 	if (wwin && wwin->wm_instance && wwin->wm_class) {
 		int len = strlen(wwin->wm_instance) + strlen(wwin->wm_class) + 7;
 		tmp = wmalloc(len);
@@ -351,6 +351,7 @@ WMenu *wUserMenuGet(virtual_screen *vscr, WWindow *wwin)
 		menu = readUserMenuFile(vscr, path);
 		wfree(path);
 	}
+
 	return menu;
 }
 
