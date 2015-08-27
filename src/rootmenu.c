@@ -866,8 +866,8 @@ static WMenuEntry *addWindowsMenu(virtual_screen *vscr, WMenu *menu, const char 
 		tmp = vscr->menu.switch_menu->frame->top_width + 5;
 		/* if menu got unreachable, bring it to a visible place */
 		if (vscr->menu.switch_menu->frame_x < tmp - (int) vscr->menu.switch_menu->frame->core->width)
-		wMenuMove(vscr->menu.switch_menu, tmp - (int) vscr->menu.switch_menu->frame->core->width,
-			  vscr->menu.switch_menu->frame_y, False);
+			wMenuMove(vscr->menu.switch_menu, tmp - (int) vscr->menu.switch_menu->frame->core->width,
+				  vscr->menu.switch_menu->frame_y, False);
 
 		wMenuPaint(vscr->menu.switch_menu);
 
