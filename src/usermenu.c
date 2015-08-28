@@ -196,13 +196,44 @@ static WUserMenuData *convertShortcuts(virtual_screen *vscr, WMPropList *shortcu
 	return data;
 }
 
+static void add_shortcut_entry(virtual_screen *vscr, WMenu *menu, WMPropList *title,
+			       WMPropList *elem, WMPropList *params, int idx)
+{
+	WMPropList *instances = 0;
+	WUserMenuData *data;
+	WMenuEntry *entry;
+
+	data = convertShortcuts(vscr, params);
+
+	if (!data)
+		return;
+
+	entry = wMenuAddCallback(menu, WMGetFromPLString(title), notifyClient, data);
+	if (!entry)
+		return;
+
+	if (WMIsPLString(params))
+		entry->rtext = GetShortcutString(WMGetFromPLString(params));
+
+	entry->free_cdata = removeUserMenudata;
+
+	if (WMGetPropListItemCount(elem) < 4)
+		return;
+
+	instances = WMGetFromPLArray(elem, idx++);
+	if (!WMIsPLArray(instances))
+		return;
+
+	if (WMGetPropListItemCount(instances))
+		entry->instances = WMRetainPropList(instances);
+}
+
 static WMenu *configureUserMenu(virtual_screen *vscr, WMPropList *plum)
 {
 	char *mtitle;
 	WMenu *menu = NULL;
 	WMPropList *elem, *title, *command, *params = NULL;
 	int count, i;
-	WUserMenuData *data;
 
 	if (!plum)
 		return NULL;
@@ -238,7 +269,6 @@ static WMenu *configureUserMenu(virtual_screen *vscr, WMPropList *plum)
 			wMenuEntrySetCascade_create(menu, mentry, submenu);
 		} else {
 			int idx = 0;
-			WMPropList *instances = 0;
 
 			title = WMGetFromPLArray(elem, idx++);
 			command = WMGetFromPLArray(elem, idx++);
@@ -248,32 +278,8 @@ static WMenu *configureUserMenu(virtual_screen *vscr, WMPropList *plum)
 			if (!title || !command)
 				return menu;
 
-			if (!strcmp("SHORTCUT", WMGetFromPLString(command))) {
-				WMenuEntry *entry;
-
-				data = convertShortcuts(vscr, params);
-				if (data) {
-					entry = wMenuAddCallback(menu, WMGetFromPLString(title),
-								 notifyClient, data);
-
-					if (entry) {
-						if (WMIsPLString(params))
-							entry->rtext =
-							    GetShortcutString(WMGetFromPLString(params));
-
-						entry->free_cdata = removeUserMenudata;
-
-						if (WMGetPropListItemCount(elem) >= 4) {
-							instances = WMGetFromPLArray(elem, idx++);
-							if (WMIsPLArray(instances))
-								if (instances && WMGetPropListItemCount(instances)
-								    && WMIsPLArray(instances))
-									entry->instances = WMRetainPropList(instances);
-						}
-					}
-				}
-			}
-
+			if (!strcmp("SHORTCUT", WMGetFromPLString(command)))
+				add_shortcut_entry(vscr, menu, title, elem, params, idx);
 		}
 	}
 
