@@ -1010,13 +1010,8 @@ static WMenuEntry *addMenuEntry(WMenu *menu, const char *title, const char *shor
 		if (!shortcutOk) {
 			wwarning(_("%s:can't add shortcut for entry \"%s\""), file_name, title);
 		} else {
-			if (addShortcut(file_name, shortcut, menu, entry)) {
-
+			if (addShortcut(file_name, shortcut, menu, entry))
 				entry->rtext = GetShortcutString(shortcut);
-				/*
-				   entry->rtext = wstrdup(shortcut);
-				 */
-			}
 		}
 	}
 
@@ -1540,7 +1535,7 @@ static WMenu *configure_plstring_menu(virtual_screen *vscr, WMPropList *definiti
 	return menu;
 }
 
-void configure_menu_entries(virtual_screen *vscr, WMPropList *definition, WMenu *menu, int count)
+static void configure_menu_entries(virtual_screen *vscr, WMPropList *definition, WMenu *menu, int count)
 {
 	WMPropList *elem;
 	WMPropList *title, *command, *params;
