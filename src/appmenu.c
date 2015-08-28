@@ -248,13 +248,13 @@ void wAppMenuMap(WMenu *menu, WWindow *wwin)
 {
 	int x, min;
 
-	if (!menu)
+	if (!menu || !wwin)
 		return;
 
 	x = 0;
 	min = 20;	/* Keep at least 20 pixels visible */
 
-	if (wwin && (wPreferences.focus_mode != WKF_CLICK)) {
+	if (wPreferences.focus_mode != WKF_CLICK) {
 		if (wwin->frame_x > min)
 			x = wwin->frame_x - menu->frame->core->width;
 		else
