@@ -250,7 +250,7 @@ static int calcSumOfCoveredAreas(WWindow *wwin, int x, int y, int w, int h)
 	WWindow *test_window;
 	int tw, tx, ty, th;
 
-	test_window = wwin->vscr->screen_ptr->focused_window;
+	test_window = wwin->vscr->window.focused;
 	for (; test_window != NULL && test_window->prev != NULL;)
 		test_window = test_window->prev;
 
@@ -315,9 +315,9 @@ window_overlaps(WWindow *win, int x, int y, int w, int h, Bool ignore_sunken)
 }
 
 static Bool
-screen_has_space(WScreen *scr, int x, int y, int w, int h, Bool ignore_sunken)
+screen_has_space(virtual_screen *vscr, int x, int y, int w, int h, Bool ignore_sunken)
 {
-	WWindow *focused = scr->focused_window, *i;
+	WWindow *focused = vscr->window.focused, *i;
 
 	for (i = focused; i; i = i->next)
 		if (window_overlaps(i, x, y, w, h, ignore_sunken))
@@ -415,7 +415,7 @@ autoPlaceWindow(WWindow *wwin, int *x_ret, int *y_ret,
 		unsigned int width, unsigned int height,
 		Bool ignore_sunken, WArea usableArea)
 {
-	WScreen *scr = wwin->vscr->screen_ptr;
+	virtual_screen *vscr = wwin->vscr;
 	int x, y;
 	int sw, sh;
 
@@ -425,7 +425,7 @@ autoPlaceWindow(WWindow *wwin, int *x_ret, int *y_ret,
 
 	/* try placing at center first */
 	if (center_place_window(wwin, &x, &y, width, height, usableArea) &&
-	    screen_has_space(scr, x, y, width, height, False)) {
+	    screen_has_space(vscr, x, y, width, height, False)) {
 		*x_ret = x;
 		*y_ret = y;
 		return True;
@@ -434,7 +434,7 @@ autoPlaceWindow(WWindow *wwin, int *x_ret, int *y_ret,
 	/* this was based on fvwm2's smart placement */
 	for (y = Y_ORIGIN; (y + height) < sh; y += PLACETEST_VSTEP) {
 		for (x = X_ORIGIN; (x + width) < sw; x += PLACETEST_HSTEP) {
-			if (screen_has_space(scr, x, y,
+			if (screen_has_space(vscr, x, y,
 					     width, height, ignore_sunken)) {
 				*x_ret = x;
 				*y_ret = y;

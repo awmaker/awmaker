@@ -296,7 +296,8 @@ static int matchWindow(const void *item, const void *cdata)
 
 static void killCallback(WMenu *menu, WMenuEntry *entry)
 {
-	WScreen *scr = menu->menu->vscr->screen_ptr;
+	virtual_screen *vscr = menu->menu->vscr;
+	WScreen *scr = vscr->screen_ptr;
 	WAppIcon *icon;
 	WFakeGroupLeader *fPtr;
 	char *buffer, *shortname, **argv;
@@ -342,7 +343,7 @@ static void killCallback(WMenu *menu, WMenuEntry *entry)
 		if (fPtr != NULL) {
 			WWindow *wwin, *twin;
 
-			wwin = scr->focused_window;
+			wwin = vscr->window.focused;
 			while (wwin) {
 				twin = wwin->prev;
 				if (wwin->fake_group == fPtr)

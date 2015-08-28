@@ -469,11 +469,11 @@ void save_appicon(WAppIcon *aicon)
 /* main_window may not have the full command line; try to find one which does */
 static void relaunchApplication(WApplication *wapp)
 {
-	WScreen *scr;
+	virtual_screen *vscr;
 	WWindow *wlist, *next;
 
-	scr = wapp->main_window_desc->vscr->screen_ptr;
-	wlist = scr->focused_window;
+	vscr = wapp->main_window_desc->vscr;
+	wlist = vscr->window.focused;
 	if (! wlist)
 		return;
 
@@ -595,7 +595,7 @@ static void killCallback(WMenu *menu, WMenuEntry *entry)
 		if (fPtr != NULL) {
 			WWindow *wwin, *twin;
 
-			wwin = wapp->main_window_desc->vscr->screen_ptr->focused_window;
+			wwin = wapp->main_window_desc->vscr->window.focused;
 			while (wwin) {
 				twin = wwin->prev;
 				if (wwin->fake_group == fPtr)

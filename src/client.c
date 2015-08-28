@@ -536,8 +536,7 @@ void wClientCheckProperty(WWindow *wwin, XPropertyEvent *event)
 
 				if (wwin->fake_group) {
 					virtual_screen *vscr = wwin->vscr;
-					WScreen *scr = vscr->screen_ptr;
-					WWindow *foo = scr->focused_window;
+					WWindow *foo = vscr->window.focused;
 					WFakeGroupLeader *fPtr = wwin->fake_group;
 
 					wApplicationDestroy(wapp);
@@ -580,7 +579,7 @@ void wClientCheckProperty(WWindow *wwin, XPropertyEvent *event)
 
 				/* make the appmenu be mapped */
 				wSetFocusTo(wwin->vscr, NULL);
-				wSetFocusTo(wwin->vscr, wwin->vscr->screen_ptr->focused_window);
+				wSetFocusTo(wwin->vscr, wwin->vscr->window.focused);
 			}
 		} else if (event->atom == w_global.atom.gnustep.wm_attr) {
 			GNUstepWMAttributes *attr;

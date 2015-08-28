@@ -293,7 +293,7 @@ static void hideOthersCommand(WMenu *menu, WMenuEntry *entry)
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 
-	wHideOtherApplications(menu->frame->vscr->screen_ptr->focused_window);
+	wHideOtherApplications(menu->frame->vscr->window.focused);
 }
 
 static void saveSessionCommand(WMenu *menu, WMenuEntry *entry)
@@ -415,11 +415,11 @@ void wRootMenuBindShortcuts(Window window)
 	}
 }
 
-static void rebindKeygrabs(WScreen *scr)
+static void rebindKeygrabs(virtual_screen *vscr)
 {
 	WWindow *wwin;
 
-	wwin = scr->focused_window;
+	wwin = vscr->window.focused;
 
 	while (wwin != NULL) {
 		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
@@ -858,7 +858,7 @@ static WMenuEntry *addWindowsMenu(virtual_screen *vscr, WMenu *menu, const char 
 
 	wwmenu->on_destroy = cleanupWindowsMenu;
 	vscr->menu.switch_menu = wwmenu;
-	wwin = vscr->screen_ptr->focused_window;
+	wwin = vscr->window.focused;
 	while (wwin) {
 		switchmenu_additem(vscr->menu.switch_menu, vscr, wwin);
 		wMenuRealize(vscr->menu.switch_menu);
@@ -1723,5 +1723,5 @@ void OpenRootMenu(virtual_screen *vscr, int x, int y, int keyboard)
 	}
 
 	if (vscr->menu.flags.root_menu_changed_shortcuts)
-		rebindKeygrabs(vscr->screen_ptr);
+		rebindKeygrabs(vscr);
 }

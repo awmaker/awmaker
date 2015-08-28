@@ -588,9 +588,9 @@ char *ExpandOptions(virtual_screen *vscr, const char *cmdline)
 			state = S_NORMAL;
 			switch (cmdline[ptr]) {
 			case 'w':
-				if (vscr->screen_ptr->focused_window && vscr->screen_ptr->focused_window->flags.focused) {
+				if (vscr->window.focused && vscr->window.focused->flags.focused) {
 					snprintf(tmpbuf, sizeof(tmpbuf), "0x%x",
-						 (unsigned int) vscr->screen_ptr->focused_window->client_win);
+						 (unsigned int) vscr->window.focused->client_win);
 					slen = strlen(tmpbuf);
 					olen += slen;
 					nout = realloc(out, olen);

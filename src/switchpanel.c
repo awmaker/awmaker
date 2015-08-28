@@ -360,13 +360,13 @@ static void drawTitle(WSwitchPanel *panel, int idecks, const char *title)
 static WMArray *makeWindowListArray(virtual_screen *vscr, int include_unmapped, Bool class_only)
 {
 	WMArray *windows = WMCreateArray(10);
-	WWindow *wwin = vscr->screen_ptr->focused_window;
+	WWindow *wwin = vscr->window.focused;
 
 	while (wwin) {
 		if ((canReceiveFocus(wwin) != 0) &&
 		    (wwin->flags.mapped || wwin->flags.shaded || include_unmapped)) {
 			if (class_only)
-				if (!sameWindowClass(vscr->screen_ptr->focused_window, wwin))
+				if (!sameWindowClass(vscr->window.focused, wwin))
 					continue;
 			if (!WFLAGP(wwin, skip_switchpanel))
 				WMAddToArray(windows, wwin);

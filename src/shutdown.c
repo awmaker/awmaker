@@ -193,7 +193,7 @@ static void wipeDesktop(virtual_screen *vscr)
 {
 	WWindow *wwin;
 
-	wwin = vscr->screen_ptr->focused_window;
+	wwin = vscr->window.focused;
 	while (wwin) {
 		if (wwin->protocols.DELETE_WINDOW)
 			wClientSendProtocol(wwin, w_global.atom.wm.delete_window,

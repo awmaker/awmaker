@@ -131,6 +131,17 @@ struct virtual_screen {
 		struct WDock *attracting_drawer; /* The drawer that auto-attracts icons,
                                                   * or NULL */
 	} drawer;
+
+	/* Windows related */
+	struct {
+		struct WWindow *focused;         /* Window that has the focus.
+                                                  * Use this list if you want to
+                                                  * traverse the entire window list
+                                                  */
+		struct WWindow *bfs_focused;     /* Window that had focus before
+                                                  * another window entered fullscreen
+                                                  */
+	} window;
 };
 
 /* each WScreen is saved into a context associated with it's root window */
@@ -163,14 +174,6 @@ struct WScreen {
 
     Window no_focus_win;	       /* window to get focus when nobody
                                         * else can do it */
-
-    struct WWindow *focused_window;    /* window that has the focus
-                                        * Use this list if you want to
-                                        * traverse the entire window list
-                                        */
-    struct WWindow *bfs_focused_window; /* window that had focus before
-                                        * another window entered fullscreen
-                                        */
 
     WMArray *selected_windows;
 

@@ -740,12 +740,11 @@ static void freeMoveData(MoveData *data)
 static void updateMoveData(WWindow *wwin, MoveData *data)
 {
 	virtual_screen *vscr = wwin->vscr;
-	WScreen *scr = vscr->screen_ptr;
 	WWindow *tmp;
 	int i;
 
 	data->count = 0;
-	tmp = scr->focused_window;
+	tmp = vscr->window.focused;
 	while (tmp) {
 		if (tmp != wwin && vscr->workspace.current == tmp->frame->workspace
 		    && !tmp->flags.miniaturized
@@ -815,7 +814,7 @@ static void initMoveData(WWindow *wwin, MoveData *data)
 
 	memset(data, 0, sizeof(MoveData));
 
-	for (i = 0, tmp = wwin->vscr->screen_ptr->focused_window; tmp != NULL; tmp = tmp->prev, i++) ;
+	for (i = 0, tmp = wwin->vscr->window.focused; tmp != NULL; tmp = tmp->prev, i++) ;
 
 	if (i > 1) {
 		data->topList = wmalloc(sizeof(WWindow *) * i);
@@ -2305,10 +2304,9 @@ void wUnselectWindows(virtual_screen *vscr)
 static void selectWindowsInside(virtual_screen *vscr, int x1, int y1, int x2, int y2)
 {
 	WWindow *tmpw;
-	WScreen *scr = vscr->screen_ptr;
 
 	/* select the windows and put them in the selected window list */
-	tmpw = scr->focused_window;
+	tmpw = vscr->window.focused;
 	while (tmpw != NULL) {
 		if (!(tmpw->flags.miniaturized || tmpw->flags.hidden)) {
 			if ((tmpw->frame->workspace == vscr->workspace.current || IS_OMNIPRESENT(tmpw))

@@ -231,10 +231,11 @@ Bool wWorkspaceDelete(virtual_screen *vscr, int workspace)
 		return False;
 
 	/* verify if workspace is in use by some window */
-	tmp = vscr->screen_ptr->focused_window;
+	tmp = vscr->window.focused;
 	while (tmp) {
 		if (!IS_OMNIPRESENT(tmp) && tmp->frame->workspace == workspace)
 			return False;
+
 		tmp = tmp->prev;
 	}
 
@@ -592,7 +593,7 @@ void wWorkspaceForceChange(virtual_screen *vscr, int workspace)
 	wWorkspaceMenuUpdate(vscr, vscr->workspace.menu);
 	wWorkspaceMenuUpdate(vscr, vscr->clip.ws_menu);
 
-	tmp = vscr->screen_ptr->focused_window;
+	tmp = vscr->window.focused;
 	if (tmp != NULL) {
 		WWindow **toUnmap;
 		int toUnmapSize, toUnmapCount;
@@ -694,7 +695,7 @@ void wWorkspaceForceChange(virtual_screen *vscr, int workspace)
 			Bool found;
 
 			found = False;
-			for (parse = vscr->screen_ptr->focused_window; parse != NULL; parse = parse->prev) {
+			for (parse = vscr->window.focused; parse != NULL; parse = parse->prev) {
 				if (parse == foc) {
 					found = True;
 					break;
@@ -704,8 +705,8 @@ void wWorkspaceForceChange(virtual_screen *vscr, int workspace)
 				foc = NULL;
 		}
 
-		if (vscr->screen_ptr->focused_window->flags.mapped && !foc)
-			foc = vscr->screen_ptr->focused_window;
+		if (vscr->window.focused->flags.mapped && !foc)
+			foc = vscr->window.focused;
 
 		if (wPreferences.focus_mode == WKF_CLICK) {
 			wSetFocusTo(vscr, foc);

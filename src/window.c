@@ -99,7 +99,7 @@ static void resizebarMouseDown(WCoreWindow *sender, void *data, XEvent *event);
 static void release_wwindowstate(WWindowState *wstate);
 
 static WWindow *window_focus_sloppy(WScreen *scr, WWindow *wwin);
-static WWindow *window_focus_click(WScreen *scr, WWindow *wwin);
+static WWindow *window_focus_click(virtual_screen *vscr, WWindow *wwin);
 
 /****** Notification Observers ******/
 
@@ -1254,16 +1254,16 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 	else
 		wwin->frame->core->stacking->child_of = NULL;
 
-	if (!vscr->screen_ptr->focused_window) {
+	if (!vscr->window.focused) {
 		/* first window on the list */
 		wwin->next = NULL;
 		wwin->prev = NULL;
-		vscr->screen_ptr->focused_window = wwin;
+		vscr->window.focused = wwin;
 	} else {
 		WWindow *tmp;
 
 		/* add window at beginning of focus window list */
-		tmp = vscr->screen_ptr->focused_window;
+		tmp = vscr->window.focused;
 		while (tmp->prev)
 			tmp = tmp->prev;
 
@@ -1430,16 +1430,16 @@ WWindow *wManageInternalWindow(virtual_screen *vscr, Window window, Window owner
 		wwin->frame->core->stacking->child_of = NULL;
 	}
 
-	if (!vscr->screen_ptr->focused_window) {
+	if (!vscr->window.focused) {
 		/* first window on the list */
 		wwin->next = NULL;
 		wwin->prev = NULL;
-		vscr->screen_ptr->focused_window = wwin;
+		vscr->window.focused = wwin;
 	} else {
 		WWindow *tmp;
 
 		/* add window at beginning of focus window list */
-		tmp = vscr->screen_ptr->focused_window;
+		tmp = vscr->window.focused;
 		while (tmp->prev)
 			tmp = tmp->prev;
 
@@ -1490,8 +1490,8 @@ void wUnmanageWindow(WWindow *wwin, Bool restore, Bool destroyed)
 
 	/* Don't restore focus to this window after a window exits
 	 * fullscreen mode */
-	if (scr->bfs_focused_window == wwin)
-		scr->bfs_focused_window = NULL;
+	if (vscr->window.bfs_focused == wwin)
+		vscr->window.bfs_focused = NULL;
 
 	if (!destroyed) {
 		if (!wwin->flags.internal_window)
@@ -1541,7 +1541,7 @@ void wUnmanageWindow(WWindow *wwin, Bool restore, Bool destroyed)
 	/* remove from window focus list */
 	if (!wwin->prev && !wwin->next) {
 		/* was the only window */
-		scr->focused_window = NULL;
+		vscr->window.focused = NULL;
 		newFocusedWindow = NULL;
 	} else {
 		if (wwin->prev)
@@ -1550,12 +1550,12 @@ void wUnmanageWindow(WWindow *wwin, Bool restore, Bool destroyed)
 		if (wwin->next) {
 			wwin->next->prev = wwin->prev;
 		} else {
-			scr->focused_window = wwin->prev;
-			scr->focused_window->next = NULL;
+			vscr->window.focused = wwin->prev;
+			vscr->window.focused->next = NULL;
 		}
 
 		if (wPreferences.focus_mode == WKF_CLICK)
-			newFocusedWindow = window_focus_click(scr, wwin);
+			newFocusedWindow = window_focus_click(vscr, wwin);
 		else if (wPreferences.focus_mode == WKF_SLOPPY)
 			newFocusedWindow = window_focus_sloppy(scr, wwin);
 		else
@@ -1575,7 +1575,7 @@ void wUnmanageWindow(WWindow *wwin, Bool restore, Bool destroyed)
 
 	/* Close menu and unhighlight */
 	WApplication *oapp = wApplicationOf(wwin->main_window);
-	WApplication *napp = scr->focused_window ? wApplicationOf(scr->focused_window->main_window) : NULL;
+	WApplication *napp = vscr->window.focused ? wApplicationOf(vscr->window.focused->main_window) : NULL;
 	if (oapp && oapp != napp) {
 		wAppMenuUnmap(oapp->menu);
 		if (wPreferences.highlight_active_app)
@@ -3055,7 +3055,7 @@ static WWindow *window_focus_sloppy(WScreen *scr, WWindow *wwin) {
 	return tmp;
 }
 
-static WWindow *window_focus_click(WScreen *scr, WWindow *wwin) {
+static WWindow *window_focus_click(virtual_screen *vscr, WWindow *wwin) {
 	WWindow *tmp = NULL;
 
 	/* if in click to focus mode and the window
@@ -3067,7 +3067,7 @@ static WWindow *window_focus_click(WScreen *scr, WWindow *wwin) {
 
 	/* otherwise, focus the next one in the focus list */
 	if (!tmp) {
-		tmp = scr->focused_window;
+		tmp = vscr->window.focused;
 		while (tmp) {	/* look for one in the window list first */
 			if (!WFLAGP(tmp, no_focusable) && !WFLAGP(tmp, skip_window_list)
 			    && (tmp->flags.mapped || tmp->flags.shaded))
@@ -3075,7 +3075,7 @@ static WWindow *window_focus_click(WScreen *scr, WWindow *wwin) {
 			tmp = tmp->prev;
 		}
 		if (!tmp) {	/* if unsuccessful, choose any focusable window */
-			tmp = scr->focused_window;
+			tmp = vscr->window.focused;
 			while (tmp) {
 				if (!WFLAGP(tmp, no_focusable)
 				    && (tmp->flags.mapped || tmp->flags.shaded))

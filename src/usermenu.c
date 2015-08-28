@@ -97,7 +97,7 @@ static void notifyClient(WMenu *menu, WMenuEntry *entry)
 
 	(void) menu;
 
-	window = vscr->screen_ptr->focused_window->client_win;
+	window = vscr->window.focused->client_win;
 
 	for (i = 0; i < data->key_no; i++) {
 		event.xkey.type = KeyPress;

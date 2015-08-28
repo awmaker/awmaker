@@ -337,7 +337,7 @@ void wAppBounce(WApplication *wapp)
 
 static int appIsUrgent(WApplication *wapp)
 {
-	WScreen *scr;
+	virtual_screen *vscr;
 	WWindow *wlist;
 
 	if (!wapp->main_window_desc) {
@@ -345,8 +345,8 @@ static int appIsUrgent(WApplication *wapp)
 		return 0;
 	}
 
-	scr = wapp->main_window_desc->vscr->screen_ptr;
-	wlist = scr->focused_window;
+	vscr = wapp->main_window_desc->vscr;
+	wlist = vscr->window.focused;
 	if (!wlist)
 		return 0;
 

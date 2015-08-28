@@ -694,7 +694,7 @@ static void handleDestroyNotify(XEvent *event)
 	if (app) {
 		if (window == app->main_window) {
 			app->refcount = 0;
-			wwin = app->main_window_desc->vscr->screen_ptr->focused_window;
+			wwin = app->main_window_desc->vscr->window.focused;
 			while (wwin) {
 				if (wwin->main_window == window)
 					wwin->main_window = None;
@@ -724,7 +724,6 @@ static void executeWheelAction(virtual_screen *vscr, XEvent *event, int action)
 {
 	WWindow *wwin;
 	Bool next_direction = True;
-	WScreen *scr = vscr->screen_ptr;
 
 	if (event->xbutton.button == Button5 || event->xbutton.button == Button6)
 		next_direction = False;
@@ -737,7 +736,7 @@ static void executeWheelAction(virtual_screen *vscr, XEvent *event, int action)
 			wWorkspaceRelativeChange(vscr, -1);
 		break;
 	case WA_SWITCH_WINDOWS:
-		wwin = scr->focused_window;
+		wwin = vscr->window.focused;
 		if (next_direction)
 			wWindowFocusNext(wwin, True);
 		else
@@ -772,11 +771,11 @@ static void executeButtonAction(virtual_screen *vscr, XEvent *event, int action)
 		wWorkspaceRelativeChange(vscr, 1);
 		break;
 	case WA_MOVE_PREVWINDOW:
-		wwin = vscr->screen_ptr->focused_window;
+		wwin = vscr->window.focused;
 		wWindowFocusPrev(wwin, True);
 		break;
 	case WA_MOVE_NEXTWINDOW:
-		wwin = vscr->screen_ptr->focused_window;
+		wwin = vscr->window.focused;
 		wWindowFocusNext(wwin, True);
 		break;
 	}
@@ -1177,7 +1176,7 @@ static void handleEnterNotify(XEvent *event)
 	    event->xcrossing.detail == NotifyNormal &&
 	    event->xcrossing.detail != NotifyInferior &&
 	    wPreferences.focus_mode != WKF_CLICK)
-		wSetFocusTo(vscr, vscr->screen_ptr->focused_window);
+		wSetFocusTo(vscr, vscr->window.focused);
 
 #ifdef BALLOON_TEXT
 	wBalloonEnteredObject(vscr, desc);
@@ -1244,7 +1243,7 @@ static void handleXkbIndicatorStateNotify(XkbEvent *event)
 
 	for (i = 0; i < w_global.screen_count; i++) {
 		vscr = wScreenWithNumber(i);
-		wwin = vscr->screen_ptr->focused_window;
+		wwin = vscr->window.focused;
 		if (wwin && wwin->flags.focused) {
 			XkbGetState(dpy, XkbUseCoreKbd, &staterec);
 			if (wwin->frame->languagemode != staterec.group) {
@@ -1347,7 +1346,7 @@ static WWindow *windowUnderPointer(virtual_screen *vscr)
 
 static int CheckFullScreenWindowFocused(virtual_screen *vscr)
 {
-	if (vscr->screen_ptr->focused_window && vscr->screen_ptr->focused_window->flags.fullscreen)
+	if (vscr->window.focused && vscr->window.focused->flags.fullscreen)
 		return 1;
 
 	return 0;
@@ -1357,7 +1356,7 @@ static void handleKeyPress(XEvent *event)
 {
 	virtual_screen *vscr = wScreenForRootWindow(event->xkey.root);
 	WScreen *scr = vscr->screen_ptr;
-	WWindow *wwin = scr->focused_window;
+	WWindow *wwin = vscr->window.focused;
 	short i, widx;
 	int modifiers, command = -1;
 #ifdef KEEP_XKB_LOCK_STATUS
