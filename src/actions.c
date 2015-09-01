@@ -118,10 +118,10 @@ static inline void shade_animate(WWindow *wwin, Bool what)
  */
 void wSetFocusTo(virtual_screen *vscr, WWindow *wwin)
 {
-	static WScreen *old_scr = NULL;
+	static virtual_screen *old_scr = NULL;
 
 	WWindow *old_focused;
-	WWindow *focused = vscr->screen_ptr->focused_window;
+	WWindow *focused = vscr->window.focused;
 	Time timestamp = w_global.timestamp.last_event;
 	WApplication *oapp = NULL, *napp = NULL;
 	int wasfocused;
@@ -130,9 +130,9 @@ void wSetFocusTo(virtual_screen *vscr, WWindow *wwin)
 		return;
 
 	if (!old_scr)
-		old_scr = vscr->screen_ptr;
+		old_scr = vscr;
 
-	old_focused = old_scr->focused_window;
+	old_focused = old_scr->window.focused;
 
 	w_global.timestamp.focus_change = timestamp;
 
@@ -154,7 +154,7 @@ void wSetFocusTo(virtual_screen *vscr, WWindow *wwin)
 		return;
 	}
 
-	if (old_scr != vscr->screen_ptr && old_focused)
+	if (old_scr != vscr && old_focused)
 		wWindowUnfocus(old_focused);
 
 	wasfocused = wwin->flags.focused;
@@ -206,7 +206,7 @@ void wSetFocusTo(virtual_screen *vscr, WWindow *wwin)
 		wwin->prev = focused;
 		focused->next = wwin;
 		wwin->next = NULL;
-		vscr->screen_ptr->focused_window = wwin;
+		vscr->window.focused = wwin;
 
 		if (oapp && oapp != napp) {
 			wAppMenuUnmap(oapp->menu);
@@ -230,7 +230,7 @@ void wSetFocusTo(virtual_screen *vscr, WWindow *wwin)
 		wApplicationActivate(napp);
 
 	XFlush(dpy);
-	old_scr = vscr->screen_ptr;
+	old_scr = vscr;
 }
 
 void wShadeWindow(WWindow *wwin)
@@ -737,7 +737,7 @@ void wFullscreenWindow(WWindow *wwin)
 	rect = wGetRectForHead(wwin->vscr->screen_ptr, head);
 	wWindowConfigure(wwin, rect.pos.x, rect.pos.y, rect.size.width, rect.size.height);
 
-	wwin->vscr->screen_ptr->bfs_focused_window = wwin->vscr->screen_ptr->focused_window;
+	wwin->vscr->window.bfs_focused = wwin->vscr->window.focused;
 	wSetFocusTo(wwin->vscr, wwin);
 
 	WMPostNotificationName(WMNChangedState, wwin, "fullscreen");
@@ -762,9 +762,9 @@ void wUnfullscreenWindow(WWindow *wwin)
 
 	WMPostNotificationName(WMNChangedState, wwin, "fullscreen");
 
-	if (wwin->vscr->screen_ptr->bfs_focused_window) {
-		wSetFocusTo(wwin->vscr, wwin->vscr->screen_ptr->bfs_focused_window);
-		wwin->vscr->screen_ptr->bfs_focused_window = NULL;
+	if (wwin->vscr->window.bfs_focused) {
+		wSetFocusTo(wwin->vscr, wwin->vscr->window.bfs_focused);
+		wwin->vscr->window.bfs_focused = NULL;
 	}
 }
 
@@ -995,7 +995,7 @@ static void unmapTransientsFor(WWindow *wwin)
 {
 	WWindow *tmp;
 
-	tmp = wwin->vscr->screen_ptr->focused_window;
+	tmp = wwin->vscr->window.focused;
 	while (tmp) {
 		/* unmap the transients for this transient */
 		if (tmp != wwin && tmp->transient_for == wwin->client_win
@@ -1019,7 +1019,7 @@ static void mapTransientsFor(WWindow *wwin)
 {
 	WWindow *tmp;
 
-	tmp = wwin->vscr->screen_ptr->focused_window;
+	tmp = wwin->vscr->window.focused;
 	while (tmp) {
 		/* recursively map the transients for this transient */
 		if (tmp != wwin && tmp->transient_for == wwin->client_win && /*!tmp->flags.mapped */ tmp->flags.miniaturized
@@ -1220,7 +1220,7 @@ void wIconifyWindow(WWindow *wwin)
 	}
 
 	if (present) {
-		WWindow *owner = recursiveTransientFor(wwin->vscr->screen_ptr->focused_window);
+		WWindow *owner = recursiveTransientFor(wwin->vscr->window.focused);
 
 		if ((wwin->flags.focused || (owner && wwin->client_win == owner->client_win))
 		    && wPreferences.focus_mode == WKF_CLICK) {
@@ -1464,7 +1464,7 @@ void wHideOtherApplications(WWindow *awin)
 	if (!awin)
 		return;
 
-	wwin = awin->vscr->screen_ptr->focused_window;
+	wwin = awin->vscr->window.focused;
 	while (wwin) {
 		if (wwin != awin
 		    && wwin->frame->workspace == awin->vscr->workspace.current
@@ -1512,7 +1512,7 @@ void wHideApplication(WApplication *wapp)
 
 	vscr = wapp->main_window_desc->vscr;
 	hadfocus = 0;
-	wlist = vscr->screen_ptr->focused_window;
+	wlist = vscr->window.focused;
 	if (!wlist)
 		return;
 
@@ -1540,7 +1540,7 @@ void wHideApplication(WApplication *wapp)
 
 	if (hadfocus) {
 		if (wPreferences.focus_mode == WKF_CLICK) {
-			wlist = vscr->screen_ptr->focused_window;
+			wlist = vscr->window.focused;
 			while (wlist) {
 				if (!WFLAGP(wlist, no_focusable) && !wlist->flags.hidden
 				    && (wlist->flags.mapped || wlist->flags.shaded))
@@ -1606,7 +1606,7 @@ void wUnhideApplication(WApplication *wapp, Bool miniwindows, Bool bringToCurren
 		return;
 
 	vscr = wapp->main_window_desc->vscr;
-	wlist = vscr->screen_ptr->focused_window;
+	wlist = vscr->window.focused;
 	if (!wlist)
 		return;
 
@@ -1700,10 +1700,10 @@ void wUnhideApplication(WApplication *wapp, Bool miniwindows, Bool bringToCurren
 
 void wShowAllWindows(virtual_screen *vscr)
 {
-	WWindow *wwin, *old_foc;
 	WApplication *wapp;
+	WWindow *wwin, *old_foc;
 
-	old_foc = wwin = vscr->screen_ptr->focused_window;
+	old_foc = wwin = vscr->window.focused;
 	while (wwin) {
 		if (!wwin->flags.internal_window &&
 		    (vscr->workspace.current == wwin->frame->workspace || IS_OMNIPRESENT(wwin))) {
@@ -1856,7 +1856,7 @@ void wArrangeIcons(virtual_screen *vscr, Bool arrangeAll)
 	}
 
 	/* arrange miniwindows */
-	wwin = vscr->screen_ptr->focused_window;
+	wwin = vscr->window.focused;
 	/* reverse them to avoid unnecessarily shuffling */
 	while (wwin && wwin->prev)
 		wwin = wwin->prev;

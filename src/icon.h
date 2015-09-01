@@ -85,4 +85,5 @@ void unmap_icon_image(WIcon *icon);
 void icon_appearanceObserver(void *self, WMNotification *notif);
 void icon_tileObserver(void *self, WMNotification *notif);
 
+void remove_cache_icon(char *filename);
 #endif /* WMICON_H_ */

@@ -97,7 +97,7 @@ static void notifyClient(WMenu *menu, WMenuEntry *entry)
 
 	(void) menu;
 
-	window = vscr->screen_ptr->focused_window->client_win;
+	window = vscr->window.focused->client_win;
 
 	for (i = 0; i < data->key_no; i++) {
 		event.xkey.type = KeyPress;
@@ -137,13 +137,12 @@ static WUserMenuData *convertShortcuts(virtual_screen *vscr, WMPropList *shortcu
 	char *k, buf[MAX_SHORTCUT_LENGTH], *b;
 	int keycount, i, j, mod;
 
-	if (WMIsPLString(shortcut)) {
+	if (WMIsPLString(shortcut))
 		keycount = 1;
-	} else if (WMIsPLArray(shortcut)) {
+	else if (WMIsPLArray(shortcut))
 		keycount = WMGetPropListItemCount(shortcut);
-	} else {
+	else
 		return NULL;
-	}
 
 	data = wmalloc(sizeof(WUserMenuData));
 	if (!data)
@@ -162,7 +161,7 @@ static WUserMenuData *convertShortcuts(virtual_screen *vscr, WMPropList *shortcu
 		else
 			wstrlcpy(buf, WMGetFromPLString(shortcut), MAX_SHORTCUT_LENGTH);
 
-		b = (char *)buf;
+		b = (char *) buf;
 
 		while ((k = strchr(b, '+')) != NULL) {
 			*k = 0;
@@ -197,13 +196,44 @@ static WUserMenuData *convertShortcuts(virtual_screen *vscr, WMPropList *shortcu
 	return data;
 }
 
+static void add_shortcut_entry(virtual_screen *vscr, WMenu *menu, WMPropList *title,
+			       WMPropList *elem, WMPropList *params, int idx)
+{
+	WMPropList *instances = 0;
+	WUserMenuData *data;
+	WMenuEntry *entry;
+
+	data = convertShortcuts(vscr, params);
+
+	if (!data)
+		return;
+
+	entry = wMenuAddCallback(menu, WMGetFromPLString(title), notifyClient, data);
+	if (!entry)
+		return;
+
+	if (WMIsPLString(params))
+		entry->rtext = GetShortcutString(WMGetFromPLString(params));
+
+	entry->free_cdata = removeUserMenudata;
+
+	if (WMGetPropListItemCount(elem) < 4)
+		return;
+
+	instances = WMGetFromPLArray(elem, idx++);
+	if (!WMIsPLArray(instances))
+		return;
+
+	if (WMGetPropListItemCount(instances))
+		entry->instances = WMRetainPropList(instances);
+}
+
 static WMenu *configureUserMenu(virtual_screen *vscr, WMPropList *plum)
 {
 	char *mtitle;
 	WMenu *menu = NULL;
-	WMPropList *elem, *title, *command, *params;
+	WMPropList *elem, *title, *command, *params = NULL;
 	int count, i;
-	WUserMenuData *data;
 
 	if (!plum)
 		return NULL;
@@ -237,10 +267,8 @@ static WMenu *configureUserMenu(virtual_screen *vscr, WMPropList *plum)
 				mentry = wMenuAddCallback(menu, submenu->frame->title, NULL, NULL);
 
 			wMenuEntrySetCascade_create(menu, mentry, submenu);
-			wMenuEntrySetCascade_map(menu, submenu);
 		} else {
 			int idx = 0;
-			WMPropList *instances = 0;
 
 			title = WMGetFromPLArray(elem, idx++);
 			command = WMGetFromPLArray(elem, idx++);
@@ -250,39 +278,15 @@ static WMenu *configureUserMenu(virtual_screen *vscr, WMPropList *plum)
 			if (!title || !command)
 				return menu;
 
-			if (!strcmp("SHORTCUT", WMGetFromPLString(command))) {
-				WMenuEntry *entry;
-
-				data = convertShortcuts(vscr, params);
-				if (data) {
-					entry = wMenuAddCallback(menu, WMGetFromPLString(title),
-								 notifyClient, data);
-
-					if (entry) {
-						if (WMIsPLString(params))
-							entry->rtext =
-							    GetShortcutString(WMGetFromPLString(params));
-
-						entry->free_cdata = removeUserMenudata;
-
-						if (WMGetPropListItemCount(elem) >= 4) {
-							instances = WMGetFromPLArray(elem, idx++);
-							if (WMIsPLArray(instances))
-								if (instances && WMGetPropListItemCount(instances)
-								    && WMIsPLArray(instances))
-									entry->instances = WMRetainPropList(instances);
-						}
-					}
-				}
-			}
-
+			if (!strcmp("SHORTCUT", WMGetFromPLString(command)))
+				add_shortcut_entry(vscr, menu, title, elem, params, idx);
 		}
 	}
 
 	return menu;
 }
 
-void wUserMenuRefreshInstances(WMenu * menu, WWindow * wwin)
+void wUserMenuRefreshInstances(WMenu *menu, WWindow *wwin)
 {
 	int i, j, count, paintflag;
 
@@ -306,6 +310,7 @@ void wUserMenuRefreshInstances(WMenu * menu, WWindow * wwin)
 					break;
 				}
 			}
+
 			if (oldflag != menu->entries[i]->flags.enabled)
 				paintflag = 1;
 		}
@@ -323,10 +328,13 @@ static WMenu *readUserMenuFile(virtual_screen *vscr, const char *file_name)
 	WMPropList *plum;
 
 	plum = WMReadPropListFromFile(file_name);
-	if (plum) {
-		menu = configureUserMenu(vscr, plum);
-		WMReleasePropList(plum);
-	}
+	if (!plum)
+		return NULL;
+
+	menu = configureUserMenu(vscr, plum);
+	WMReleasePropList(plum);
+
+	wMenuRealize(menu);
 
 	return menu;
 }
@@ -334,8 +342,8 @@ static WMenu *readUserMenuFile(virtual_screen *vscr, const char *file_name)
 WMenu *wUserMenuGet(virtual_screen *vscr, WWindow *wwin)
 {
 	WMenu *menu = NULL;
-	char *path = NULL;
-	char *tmp;
+	char *tmp, *path = NULL;
+
 	if (wwin && wwin->wm_instance && wwin->wm_class) {
 		int len = strlen(wwin->wm_instance) + strlen(wwin->wm_class) + 7;
 		tmp = wmalloc(len);
@@ -349,6 +357,7 @@ WMenu *wUserMenuGet(virtual_screen *vscr, WWindow *wwin)
 		menu = readUserMenuFile(vscr, path);
 		wfree(path);
 	}
+
 	return menu;
 }
 

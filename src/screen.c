@@ -950,7 +950,7 @@ void wScreenSaveState(virtual_screen *vscr)
 	dDrawers = WMCreatePLString("Drawers");
 
 	/* save state of windows */
-	wwin = vscr->screen_ptr->focused_window;
+	wwin = vscr->window.focused;
 	while (wwin) {
 		wWindowSaveState(wwin);
 		wwin = wwin->prev;

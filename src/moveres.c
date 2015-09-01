@@ -740,12 +740,11 @@ static void freeMoveData(MoveData *data)
 static void updateMoveData(WWindow *wwin, MoveData *data)
 {
 	virtual_screen *vscr = wwin->vscr;
-	WScreen *scr = vscr->screen_ptr;
 	WWindow *tmp;
 	int i;
 
 	data->count = 0;
-	tmp = scr->focused_window;
+	tmp = vscr->window.focused;
 	while (tmp) {
 		if (tmp != wwin && vscr->workspace.current == tmp->frame->workspace
 		    && !tmp->flags.miniaturized
@@ -815,7 +814,7 @@ static void initMoveData(WWindow *wwin, MoveData *data)
 
 	memset(data, 0, sizeof(MoveData));
 
-	for (i = 0, tmp = wwin->vscr->screen_ptr->focused_window; tmp != NULL; tmp = tmp->prev, i++) ;
+	for (i = 0, tmp = wwin->vscr->window.focused; tmp != NULL; tmp = tmp->prev, i++) ;
 
 	if (i > 1) {
 		data->topList = wmalloc(sizeof(WWindow *) * i);
@@ -1261,130 +1260,6 @@ static void do_snap(WWindow *wwin, MoveData *data, Bool opaqueMove)
 		drawFrames(wwin, scr->selected_windows, data->realX - wwin->frame_x, data->realY - wwin->frame_y);
 
 	draw_snap_frame(wwin, data->snap);
-
-	switch (data->snap) {
-	case SNAP_NONE:
-		return;
-
-	case SNAP_LEFT:
-		directions = MAX_VERTICAL | MAX_LEFTHALF;
-		break;
-
-	case SNAP_RIGHT:
-		directions = MAX_VERTICAL | MAX_RIGHTHALF;
-		break;
-
-	case SNAP_TOP:
-		directions = MAX_HORIZONTAL | MAX_TOPHALF;
-		break;
-
-	case SNAP_BOTTOM:
-		directions = MAX_HORIZONTAL | MAX_BOTTOMHALF;
-		break;
-
-	case SNAP_TOPLEFT:
-		directions = MAX_TOPHALF | MAX_LEFTHALF;
-		break;
-
-	case SNAP_TOPRIGHT:
-		directions = MAX_TOPHALF | MAX_RIGHTHALF;
-		break;
-
-	case SNAP_BOTTOMLEFT:
-		directions = MAX_BOTTOMHALF | MAX_LEFTHALF;
-		break;
-
-	case SNAP_BOTTOMRIGHT:
-		directions = MAX_BOTTOMHALF | MAX_RIGHTHALF;
-		break;
-	}
-
-	if (directions)
-		handleMaximize(wwin, directions);
-
-	data->snap = SNAP_NONE;
-}
-
-
-static void drawSnapFrame(WWindow *wwin, int direction)
-{
-	WScreen *scr;
-
-	scr = wwin->vscr->screen_ptr;
-
-	switch (direction) {
-	case SNAP_LEFT:
-		drawTransparentFrame(wwin, 0, 0, scr->scr_width / 2, scr->scr_height);
-		break;
-
-	case SNAP_RIGHT:
-		drawTransparentFrame(wwin, scr->scr_width / 2, 0, scr->scr_width / 2, scr->scr_height);
-		break;
-
-	case SNAP_TOP:
-		drawTransparentFrame(wwin, 0, 0, scr->scr_width, scr->scr_height / 2);
-		break;
-
-	case SNAP_BOTTOM:
-		drawTransparentFrame(wwin, 0, scr->scr_height / 2, scr->scr_width, scr->scr_height / 2);
-		break;
-
-	case SNAP_TOPLEFT:
-		drawTransparentFrame(wwin, 0, 0, scr->scr_width / 2, scr->scr_height / 2);
-		break;
-
-	case SNAP_TOPRIGHT:
-		drawTransparentFrame(wwin, scr->scr_width / 2, 0, scr->scr_width / 2, scr->scr_height / 2);
-		break;
-
-	case SNAP_BOTTOMLEFT:
-		drawTransparentFrame(wwin, 0, scr->scr_height / 2, scr->scr_width / 2, scr->scr_height / 2);
-		break;
-
-	case SNAP_BOTTOMRIGHT:
-		drawTransparentFrame(wwin, scr->scr_width / 2, scr->scr_height / 2,
-				     scr->scr_width / 2, scr->scr_height / 2);
-		break;
-	}
-}
-
-static int getSnapDirection(WScreen *scr, int x, int y)
-{
-	if (x < 1) {
-		if (y < 1)
-			return SNAP_TOPLEFT;
-		if (y > scr->scr_height - 2)
-			return SNAP_BOTTOMLEFT;
-		return SNAP_LEFT;
-	}
-
-	if (x > scr->scr_width - 2) {
-		if (y < 1)
-			return SNAP_TOPRIGHT;
-		if (y > scr->scr_height - 2)
-			return SNAP_BOTTOMRIGHT;
-		return SNAP_RIGHT;
-	}
-
-	if (y < 1)
-		return SNAP_TOP;
-
-	if (y > scr->scr_height - 2)
-		return SNAP_BOTTOM;
-
-	return SNAP_NONE;
-}
-
-static void doSnap(WWindow *wwin, MoveData *data, Bool opaqueMove)
-{
-	int directions = 0;
-	WScreen *scr = wwin->vscr->screen_ptr;
-
-	/* erase frames */
-	if (!opaqueMove)
-		drawFrames(wwin, scr->selected_windows, data->realX - wwin->frame_x, data->realY - wwin->frame_y);
-
-	drawSnapFrame(wwin, data->snap);
 
 	switch (data->snap) {
 	case SNAP_NONE:
@@ -2429,10 +2304,9 @@ void wUnselectWindows(virtual_screen *vscr)
 static void selectWindowsInside(virtual_screen *vscr, int x1, int y1, int x2, int y2)
 {
 	WWindow *tmpw;
-	WScreen *scr = vscr->screen_ptr;
 
 	/* select the windows and put them in the selected window list */
-	tmpw = scr->focused_window;
+	tmpw = vscr->window.focused;
 	while (tmpw != NULL) {
 		if (!(tmpw->flags.miniaturized || tmpw->flags.hidden)) {
 			if ((tmpw->frame->workspace == vscr->workspace.current || IS_OMNIPRESENT(tmpw))

@@ -1305,7 +1305,7 @@ void wDefaultUpdateIcons(virtual_screen *vscr)
 {
 	WAppIcon *aicon = w_global.app_icon_list;
 	WDrawerChain *dc;
-	WWindow *wwin = vscr->screen_ptr->focused_window;
+	WWindow *wwin = vscr->window.focused;
 
 	while (aicon) {
 		/* Get the application icon, default included */
@@ -3261,7 +3261,7 @@ static int setKeyGrab(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, v
 
 	wKeyBindings[widx] = *shortcut;
 
-	wwin = vscr->screen_ptr->focused_window;
+	wwin = vscr->window.focused;
 
 	while (wwin != NULL) {
 		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);

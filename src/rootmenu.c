@@ -293,7 +293,7 @@ static void hideOthersCommand(WMenu *menu, WMenuEntry *entry)
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 
-	wHideOtherApplications(menu->frame->vscr->screen_ptr->focused_window);
+	wHideOtherApplications(menu->frame->vscr->window.focused);
 }
 
 static void saveSessionCommand(WMenu *menu, WMenuEntry *entry)
@@ -415,11 +415,11 @@ void wRootMenuBindShortcuts(Window window)
 	}
 }
 
-static void rebindKeygrabs(WScreen *scr)
+static void rebindKeygrabs(virtual_screen *vscr)
 {
 	WWindow *wwin;
 
-	wwin = scr->focused_window;
+	wwin = vscr->window.focused;
 
 	while (wwin != NULL) {
 		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
@@ -739,7 +739,6 @@ static void constructMenu(WMenu *menu, WMenuEntry *entry)
 	if (submenu) {
 		wMenuEntryRemoveCascade(menu, entry);
 		wMenuEntrySetCascade_create(menu, entry, submenu);
-		wMenuEntrySetCascade_map(menu, submenu);
 	}
 
 	i = 0;
@@ -792,7 +791,6 @@ static void constructPLMenuFromPipe(WMenu * menu, WMenuEntry * entry)
 	if (submenu) {
 		wMenuEntryRemoveCascade(menu, entry);
 		wMenuEntrySetCascade_create(menu, entry, submenu);
-		wMenuEntrySetCascade_map(menu, submenu);
 	}
 
 	i = 0;
@@ -829,7 +827,6 @@ static WMenuEntry *addWorkspaceMenu(virtual_screen *vscr, WMenu *menu, const cha
 	vscr->workspace.menu = wsmenu;
 	entry = wMenuAddCallback(menu, title, NULL, NULL);
 	wMenuEntrySetCascade_create(menu, entry, wsmenu);
-	wMenuEntrySetCascade_map(menu, wsmenu);
 	wWorkspaceMenuUpdate(vscr, wsmenu);
 
 	return entry;
@@ -861,7 +858,7 @@ static WMenuEntry *addWindowsMenu(virtual_screen *vscr, WMenu *menu, const char 
 
 	wwmenu->on_destroy = cleanupWindowsMenu;
 	vscr->menu.switch_menu = wwmenu;
-	wwin = vscr->screen_ptr->focused_window;
+	wwin = vscr->window.focused;
 	while (wwin) {
 		switchmenu_additem(vscr->menu.switch_menu, vscr, wwin);
 		wMenuRealize(vscr->menu.switch_menu);
@@ -869,8 +866,8 @@ static WMenuEntry *addWindowsMenu(virtual_screen *vscr, WMenu *menu, const char 
 		tmp = vscr->menu.switch_menu->frame->top_width + 5;
 		/* if menu got unreachable, bring it to a visible place */
 		if (vscr->menu.switch_menu->frame_x < tmp - (int) vscr->menu.switch_menu->frame->core->width)
-		wMenuMove(vscr->menu.switch_menu, tmp - (int) vscr->menu.switch_menu->frame->core->width,
-			  vscr->menu.switch_menu->frame_y, False);
+			wMenuMove(vscr->menu.switch_menu, tmp - (int) vscr->menu.switch_menu->frame->core->width,
+				  vscr->menu.switch_menu->frame_y, False);
 
 		wMenuPaint(vscr->menu.switch_menu);
 
@@ -879,7 +876,6 @@ static WMenuEntry *addWindowsMenu(virtual_screen *vscr, WMenu *menu, const char 
 
 	entry = wMenuAddCallback(menu, title, NULL, NULL);
 	wMenuEntrySetCascade_create(menu, entry, wwmenu);
-	wMenuEntrySetCascade_map(menu, wwmenu);
 
 	return entry;
 }
@@ -912,7 +908,6 @@ static WMenuEntry *addMenuEntry(WMenu *menu, const char *title, const char *shor
 			entry = wMenuAddCallback(menu, title, constructMenu, path);
 			entry->free_cdata = wfree;
 			wMenuEntrySetCascade_create(menu, entry, dummy);
-			wMenuEntrySetCascade_map(menu, dummy);
 		}
 	} else if (strcmp(command, "OPEN_PLMENU") == 0) {
 		if (!params) {
@@ -931,7 +926,6 @@ static WMenuEntry *addMenuEntry(WMenu *menu, const char *title, const char *shor
 			entry = wMenuAddCallback(menu, title, constructPLMenuFromPipe, path);
 			entry->free_cdata = wfree;
 			wMenuEntrySetCascade_create(menu, entry, dummy);
-			wMenuEntrySetCascade_map(menu, dummy);
 		}
 	} else if (strcmp(command, "EXEC") == 0) {
 		if (!params)
@@ -1016,13 +1010,8 @@ static WMenuEntry *addMenuEntry(WMenu *menu, const char *title, const char *shor
 		if (!shortcutOk) {
 			wwarning(_("%s:can't add shortcut for entry \"%s\""), file_name, title);
 		} else {
-			if (addShortcut(file_name, shortcut, menu, entry)) {
-
+			if (addShortcut(file_name, shortcut, menu, entry))
 				entry->rtext = GetShortcutString(shortcut);
-				/*
-				   entry->rtext = wstrdup(shortcut);
-				 */
-			}
 		}
 	}
 
@@ -1057,12 +1046,11 @@ static WMenu *parseCascade(virtual_screen *vscr, WMenu *menu, WMenuParser parser
 			cascade = menu_create(M_(title));
 			menu_map(cascade, vscr);
 			cascade->on_destroy = removeShortcutsForMenu;
-			if (!parseCascade(vscr, cascade, parser)) {
+			if (!parseCascade(vscr, cascade, parser))
 				wMenuDestroy(cascade, True);
-			} else {
+			else
 				wMenuEntrySetCascade_create(menu, wMenuAddCallback(menu, M_(title), NULL, NULL), cascade);
-				wMenuEntrySetCascade_map(menu, cascade);
-			}
+
 		} else if (strcasecmp(command, "END") == 0) {
 			/* end of menu */
 			freeline(title, command, params, shortcut);
@@ -1493,90 +1481,66 @@ static WMenu *makeDefaultMenu(void)
 	return menu;
 }
 
-/*
- *----------------------------------------------------------------------
- * configureMenu--
- * 	Reads root menu configuration from defaults database.
- *
- *----------------------------------------------------------------------
- */
-static WMenu *configureMenu(virtual_screen *vscr, WMPropList *definition)
+static WMenu *configure_plstring_menu(virtual_screen *vscr, WMPropList *definition)
 {
 	WMenu *menu = NULL;
-	WMPropList *elem;
-	int i, count;
-	WMPropList *title, *command, *params;
-	char *tmp, *mtitle;
+	struct stat stat_buf;
+	char *tmp, *path = NULL;
+	Bool menu_is_default = False;
 
-	if (WMIsPLString(definition)) {
-		struct stat stat_buf;
-		char *path = NULL;
-		Bool menu_is_default = False;
+	/* menu definition is a string. Probably a path, so parse the file */
+	tmp = wexpandpath(WMGetFromPLString(definition));
+	path = getLocalizedMenuFile(tmp);
+	if (!path)
+		path = wfindfile(DEF_CONFIG_PATHS, tmp);
 
-		/* menu definition is a string. Probably a path, so parse the file */
+	if (!path) {
+		path = wfindfile(DEF_CONFIG_PATHS, DEF_MENU_FILE);
+		menu_is_default = True;
+	}
 
-		tmp = wexpandpath(WMGetFromPLString(definition));
+	if (!path) {
+		werror(_("could not find menu file \"%s\" referenced in WMRootMenu"), tmp);
+		wfree(tmp);
+		return NULL;
+	}
 
-		path = getLocalizedMenuFile(tmp);
-
-		if (!path)
-			path = wfindfile(DEF_CONFIG_PATHS, tmp);
-
-		if (!path) {
-			path = wfindfile(DEF_CONFIG_PATHS, DEF_MENU_FILE);
-			menu_is_default = True;
-		}
-
-		if (!path) {
-			werror(_("could not find menu file \"%s\" referenced in WMRootMenu"), tmp);
-			wfree(tmp);
-			return NULL;
-		}
-
-		if (stat(path, &stat_buf) < 0) {
-			werror(_("could not access menu \"%s\" referenced in WMRootMenu"), path);
-			wfree(path);
-			wfree(tmp);
-			return NULL;
-		}
-
-		if (!vscr->menu.root_menu || stat_buf.st_mtime > vscr->menu.root_menu->timestamp
-		    /* if the pointer in WMRootMenu has changed */
-		    || w_global.domain.root_menu->timestamp > vscr->menu.root_menu->timestamp) {
-			if (menu_is_default) {
-				wwarning(_
-					 ("using default menu file \"%s\" as the menu referenced in WMRootMenu could not be found "),
-					 path);
-			}
-
-			menu = readMenuFile(vscr, path);
-			if (menu)
-				menu->timestamp = WMAX(stat_buf.st_mtime, w_global.domain.root_menu->timestamp);
-		} else {
-			menu = NULL;
-		}
+	if (stat(path, &stat_buf) < 0) {
+		werror(_("could not access menu \"%s\" referenced in WMRootMenu"), path);
 		wfree(path);
 		wfree(tmp);
-
-		return menu;
-	}
-
-	count = WMGetPropListItemCount(definition);
-	if (count == 0)
-		return NULL;
-
-	elem = WMGetFromPLArray(definition, 0);
-	if (!WMIsPLString(elem)) {
-		tmp = WMGetPropListDescription(elem, False);
-		wwarning(_("%s:format error in root menu configuration \"%s\""), "WMRootMenu", tmp);
-		wfree(tmp);
 		return NULL;
 	}
 
-	mtitle = WMGetFromPLString(elem);
-	menu = menu_create(M_(mtitle));
-	menu_map(menu, vscr);
-	menu->on_destroy = removeShortcutsForMenu;
+	if (!vscr->menu.root_menu ||
+	    stat_buf.st_mtime > vscr->menu.root_menu->timestamp ||
+	    /* if the pointer in WMRootMenu has changed */
+	    w_global.domain.root_menu->timestamp > vscr->menu.root_menu->timestamp) {
+		if (menu_is_default) {
+			wwarning(_
+				 ("using default menu file \"%s\" as the menu referenced in WMRootMenu could not be found "),
+				 path);
+		}
+
+		menu = readMenuFile(vscr, path);
+		if (menu)
+			menu->timestamp = WMAX(stat_buf.st_mtime, w_global.domain.root_menu->timestamp);
+	} else {
+		menu = NULL;
+	}
+
+	wfree(path);
+	wfree(tmp);
+
+	return menu;
+}
+
+static void configure_menu_entries(virtual_screen *vscr, WMPropList *definition, WMenu *menu, int count)
+{
+	WMPropList *elem;
+	WMPropList *title, *command, *params;
+	char *tmp;
+	int i;
 
 	for (i = 1; i < count; i++) {
 		elem = WMGetFromPLArray(definition, i);
@@ -1596,7 +1560,6 @@ static WMenu *configureMenu(virtual_screen *vscr, WMPropList *definition)
 			if (submenu) {
 				mentry = wMenuAddCallback(menu, submenu->frame->title, NULL, NULL);
 				wMenuEntrySetCascade_create(menu, mentry, submenu);
-				wMenuEntrySetCascade_map(menu, submenu);
 			}
 		} else {
 			int idx = 0;
@@ -1612,8 +1575,8 @@ static WMenu *configureMenu(virtual_screen *vscr, WMPropList *definition)
 				command = shortcut;
 				shortcut = NULL;
 			}
-			params = WMGetFromPLArray(elem, idx++);
 
+			params = WMGetFromPLArray(elem, idx++);
 			if (!title || !command) {
 				tmp = WMGetPropListDescription(elem, False);
 				wwarning(_("%s:format error in root menu configuration \"%s\""), "WMRootMenu", tmp);
@@ -1627,6 +1590,44 @@ static WMenu *configureMenu(virtual_screen *vscr, WMPropList *definition)
 				     params ? WMGetFromPLString(params) : NULL, "WMRootMenu");
 		}
 	}
+}
+
+/*
+ *----------------------------------------------------------------------
+ * configureMenu--
+ * 	Reads root menu configuration from defaults database.
+ *
+ *----------------------------------------------------------------------
+ */
+static WMenu *configureMenu(virtual_screen *vscr, WMPropList *definition)
+{
+	WMenu *menu = NULL;
+	WMPropList *elem;
+	int count;
+	char *tmp, *mtitle;
+
+	if (WMIsPLString(definition))
+		return configure_plstring_menu(vscr, definition);
+
+	count = WMGetPropListItemCount(definition);
+	if (count == 0)
+		return NULL;
+
+	elem = WMGetFromPLArray(definition, 0);
+	if (!WMIsPLString(elem)) {
+		tmp = WMGetPropListDescription(elem, False);
+		wwarning(_("%s:format error in root menu configuration \"%s\""), "WMRootMenu", tmp);
+		wfree(tmp);
+		return NULL;
+	}
+
+	mtitle = WMGetFromPLString(elem);
+	menu = menu_create(M_(mtitle));
+	menu_map(menu, vscr);
+	menu->on_destroy = removeShortcutsForMenu;
+
+	configure_menu_entries(vscr, definition, menu, count);
+	wMenuRealize(menu);
 
 	return menu;
 }
@@ -1722,5 +1723,5 @@ void OpenRootMenu(virtual_screen *vscr, int x, int y, int keyboard)
 	}
 
 	if (vscr->menu.flags.root_menu_changed_shortcuts)
-		rebindKeygrabs(vscr->screen_ptr);
+		rebindKeygrabs(vscr);
 }

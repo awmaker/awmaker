@@ -276,7 +276,7 @@ static WMPropList *makeWindowState(WWindow *wwin, WApplication *wapp)
 
 void wSessionSaveState(virtual_screen *vscr)
 {
-	WWindow *wwin = vscr->screen_ptr->focused_window;
+	WWindow *wwin = vscr->window.focused;
 	WMPropList *win_info, *wks;
 	WMPropList *list = NULL;
 	WMArray *wapp_list = NULL;

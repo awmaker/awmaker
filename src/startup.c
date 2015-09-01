@@ -779,7 +779,7 @@ void hide_all_applications(virtual_screen *vscr)
 	WWindow *wwin;
 	WApplication *wapp;
 
-	wwin = vscr->screen_ptr->focused_window;
+	wwin = vscr->window.focused;
 	while (wwin) {
 		if (wwin->flags.hidden) {
 			wapp = wApplicationOf(wwin->main_window);

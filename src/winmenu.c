@@ -593,11 +593,8 @@ static WMenu *createWindowMenu(virtual_screen *vscr)
 					 (window_menu_entries[i].generate_submenu == NULL) ? execMenuCommand : NULL,
 					 NULL);
 		if (window_menu_entries[i].generate_submenu != NULL) {
-			WMenu *submenu;
-
-			submenu = window_menu_entries[i].generate_submenu(vscr);
+			WMenu *submenu = window_menu_entries[i].generate_submenu(vscr);
 			wMenuEntrySetCascade_create(menu, entry, submenu);
-			wMenuEntrySetCascade_map(menu, submenu);
 		}
 	}
 
@@ -774,6 +771,7 @@ void window_menu_create(virtual_screen *vscr)
 		return;
 
 	vscr->menu.window_menu = createWindowMenu(vscr);
+	wMenuRealize(vscr->menu.window_menu);
 
 	/* hack to save some memory allocation/deallocation */
 	wfree(vscr->menu.window_menu->entries[MC_MINIATURIZE]->text);

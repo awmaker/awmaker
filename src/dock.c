@@ -122,6 +122,7 @@ enum
 	RM_SETTINGS,
 	RM_KILL
 };
+
 /***** Local variables ****/
 
 static WMPropList *dCommand = NULL;
@@ -295,7 +296,8 @@ static int matchWindow(const void *item, const void *cdata)
 
 static void killCallback(WMenu *menu, WMenuEntry *entry)
 {
-	WScreen *scr = menu->menu->vscr->screen_ptr;
+	virtual_screen *vscr = menu->menu->vscr;
+	WScreen *scr = vscr->screen_ptr;
 	WAppIcon *icon;
 	WFakeGroupLeader *fPtr;
 	char *buffer, *shortname, **argv;
@@ -341,7 +343,7 @@ static void killCallback(WMenu *menu, WMenuEntry *entry)
 		if (fPtr != NULL) {
 			WWindow *wwin, *twin;
 
-			wwin = scr->focused_window;
+			wwin = vscr->window.focused;
 			while (wwin) {
 				twin = wwin->prev;
 				if (wwin->fake_group == fPtr)
@@ -725,7 +727,7 @@ static void keepIconsCallback(WMenu *menu, WMenuEntry *entry)
 				wAppIconPaint(aicon);
 			}
 		}
-		save_appicon(aicon, True);
+		save_appicon(aicon);
 	}
 	WMFreeArray(selectedIcons);
 }
@@ -1069,8 +1071,7 @@ static void updateWorkspaceMenu(WMenu *menu, WAppIcon *icon)
 	for (i = 0; i < vscr->workspace.count; i++)
 		menu_entry_set_enabled_paint(menu, i);
 
-	if (!menu->flags.realized)
-		wMenuRealize(menu);
+	menu->flags.realized = 0;
 }
 
 static WMenu *makeWorkspaceMenu(void)
@@ -1125,7 +1126,6 @@ static void updateOptionsMenu(WDock *dock, WMenu *menu)
 	menu_entry_set_enabled_paint(menu, OM_KEEP_ON_TOP);
 	menu_entry_set_enabled_paint(menu, OM_AUTORAISE);
 	menu->flags.realized = 0;
-	wMenuRealize(menu);
 }
 
 static WMenu *clip_make_options_menu(void)
@@ -1415,17 +1415,11 @@ static void clip_menu_map(WMenu *menu, virtual_screen *vscr)
 {
 	menu_map(menu, vscr);
 
-	if (vscr->clip.opt_menu) {
+	if (vscr->clip.opt_menu)
 		menu_map(vscr->clip.opt_menu, vscr);
-		wMenuRealize(vscr->clip.opt_menu);
-	}
 
-	wMenuEntrySetCascade_map(menu, vscr->clip.opt_menu);
-	if (vscr->clip.submenu) {
+	if (vscr->clip.submenu)
 		menu_map(vscr->clip.submenu, vscr);
-		wMenuRealize(vscr->clip.submenu);
-		wMenuEntrySetCascade_map(menu, vscr->clip.submenu);
-	}
 }
 
 static void clip_menu_unmap(virtual_screen *vscr, WMenu *menu)
@@ -1433,6 +1427,10 @@ static void clip_menu_unmap(virtual_screen *vscr, WMenu *menu)
 	menu_unmap(vscr->clip.opt_menu);
 	menu_unmap(vscr->clip.submenu);
 	menu_unmap(menu);
+
+	vscr->clip.opt_menu->flags.realized = 0;
+	vscr->clip.submenu->flags.realized = 0;
+	menu->flags.realized = 0;
 }
 
 static void drawer_menu_create(virtual_screen *vscr)
@@ -1486,18 +1484,17 @@ static void drawer_menu_map(WMenu *menu, virtual_screen *vscr)
 {
 	menu_map(menu, vscr);
 
-	if (vscr->dock.drawer_opt_menu) {
+	if (vscr->dock.drawer_opt_menu)
 		menu_map(vscr->dock.drawer_opt_menu, vscr);
-		wMenuRealize(vscr->dock.drawer_opt_menu);
-	}
-
-	wMenuEntrySetCascade_map(menu, vscr->dock.drawer_opt_menu);
 }
 
 static void drawer_menu_unmap(virtual_screen *vscr, WMenu *menu)
 {
 	menu_unmap(vscr->dock.drawer_opt_menu);
 	menu_unmap(menu);
+
+	vscr->dock.drawer_opt_menu->flags.realized = 0;
+	menu->flags.realized = 0;
 }
 
 static WMenu *dock_menu_create(virtual_screen *vscr)
@@ -1535,17 +1532,18 @@ static WMenu *dock_menu_create(virtual_screen *vscr)
 static void dock_menu_map(WMenu *menu, virtual_screen *vscr)
 {
 	menu_map(menu, vscr);
-	wMenuEntrySetCascade_map(menu, vscr->dock.pos_menu);
-	if (vscr->dock.pos_menu) {
+
+	if (vscr->dock.pos_menu)
 		menu_map(vscr->dock.pos_menu, vscr);
-		wMenuRealize(vscr->dock.pos_menu);
-	}
 }
 
 static void dock_menu_unmap(virtual_screen *vscr, WMenu *menu)
 {
 	menu_unmap(vscr->dock.pos_menu);
 	menu_unmap(menu);
+
+	vscr->dock.pos_menu->flags.realized = 0;
+	menu->flags.realized = 0;
 }
 
 static WDock *dock_create_core(void)
@@ -1967,7 +1965,7 @@ static void dockIconPaint(WAppIcon *btn)
 		wDrawerIconPaint(btn);
 	} else {
 		wAppIconPaint(btn);
-		save_appicon(btn, True);
+		save_appicon(btn);
 	}
 }
 
@@ -3242,7 +3240,7 @@ Bool dock_attach_icon(WDock *dock, WAppIcon *icon, int x, int y, Bool update_ico
 	wAppIconPaint(icon);
 
 	/* Save it */
-	save_appicon(icon, True);
+	save_appicon(icon);
 
 	if (wPreferences.auto_arrange_icons)
 		wArrangeIcons(dock->vscr, True);
@@ -3354,7 +3352,7 @@ Bool clip_attach_icon(WDock *dock, WAppIcon *icon, int x, int y, Bool update_ico
 	wAppIconPaint(icon);
 
 	/* Save it */
-	save_appicon(icon, True);
+	save_appicon(icon);
 
 	if (wPreferences.auto_arrange_icons)
 		wArrangeIcons(dock->vscr, True);
@@ -3460,7 +3458,7 @@ Bool drawer_attach_icon(WDock *dock, WAppIcon *icon, int x, int y, Bool update_i
 	wAppIconPaint(icon);
 
 	/* Save it */
-	save_appicon(icon, True);
+	save_appicon(icon);
 
 	if (wPreferences.auto_arrange_icons)
 		wArrangeIcons(dock->vscr, True);
@@ -3611,8 +3609,6 @@ Bool wDockMoveIconBetweenDocks(WDock *src, WDock *dest, WAppIcon *icon, int x, i
 				icon->icon->shadowed = 0;
 				update_icon = True;
 			}
-
-			save_appicon(icon, True);
 		}
 
 		if (src->auto_collapse || src->auto_raise_lower)
@@ -3641,7 +3637,7 @@ Bool wDockMoveIconBetweenDocks(WDock *src, WDock *dest, WAppIcon *icon, int x, i
 				update_icon = True;
 			}
 
-			save_appicon(icon, True);
+			save_appicon(icon);
 		}
 
 		if (src->auto_collapse || src->auto_raise_lower)
@@ -3725,6 +3721,9 @@ void wDockDetach(WDock *dock, WAppIcon *icon)
 	icon->xindex = -1;
 
 	dock->icon_count--;
+
+	/* Remove the Cached Icon */
+	remove_cache_icon(icon->icon->file_name);
 
 	/* if the dock is not attached to an application or
 	 * the application did not set the appropriate hints yet,
@@ -5061,8 +5060,6 @@ static void set_dockmenu_clip_code(WDock *dock, WMenuEntry *entry, WAppIcon *aic
 	menu_entry_set_enabled_paint(dock->menu, CM_HIDE);
 	menu_entry_set_enabled_paint(dock->menu, CM_SETTINGS);
 	menu_entry_set_enabled_paint(dock->menu, CM_KILL);
-
-	wMenuRealize(dock->menu);
 }
 
 static void set_dockmenu_drawer_code(virtual_screen *vscr, WDock *dock, WMenuEntry *entry, WAppIcon *aicon)
@@ -5174,10 +5171,7 @@ static void set_dockmenu_drawer_code(virtual_screen *vscr, WDock *dock, WMenuEnt
 	menu_entry_set_enabled_paint(dock->menu, RM_BRING);
 	menu_entry_set_enabled_paint(dock->menu, RM_HIDE);
 	menu_entry_set_enabled_paint(dock->menu, RM_SETTINGS);
-	menu_entry_set_enabled_paint(dock->menu, CM_KILL);
-
-	wMenuRealize(dock->menu);
-
+	menu_entry_set_enabled_paint(dock->menu, RM_KILL);
 }
 
 static void open_menu_dock(WDock *dock, WAppIcon *aicon, XEvent *event)
@@ -5189,9 +5183,6 @@ static void open_menu_dock(WDock *dock, WAppIcon *aicon, XEvent *event)
 	int x_pos;
 
 	set_dockmenu_dock_code(vscr, dock, entry, aicon);
-
-	if (!dock->menu->flags.realized)
-		wMenuRealize(dock->menu);
 
 	x_pos = dock->on_right_side ? scr->scr_width - dock->menu->frame->core->width - 3 : 0;
 	wMenuMapAt(vscr, dock->menu, x_pos, event->xbutton.y_root + 2, False);
@@ -5211,9 +5202,6 @@ static void open_menu_clip(WDock *dock, WAppIcon *aicon, XEvent *event)
 	int x_pos;
 
 	set_dockmenu_clip_code(dock, entry, aicon);
-
-	if (!dock->menu->flags.realized)
-		wMenuRealize(dock->menu);
 
 	x_pos = event->xbutton.x_root - dock->menu->frame->core->width / 2 - 1;
 	if (x_pos < 0)
@@ -5238,9 +5226,6 @@ static void open_menu_drawer(WDock *dock, WAppIcon *aicon, XEvent *event)
 	int x_pos;
 
 	set_dockmenu_drawer_code(vscr, dock, entry, aicon);
-
-	if (!dock->menu->flags.realized)
-		wMenuRealize(dock->menu);
 
 	x_pos = event->xbutton.x_root - dock->menu->frame->core->width / 2 - 1;
 	if (x_pos < 0)

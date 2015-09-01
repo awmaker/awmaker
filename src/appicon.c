@@ -123,9 +123,6 @@ void create_appicon_for_application(WApplication *wapp, WWindow *wwin)
 		if (!WFLAGP(wapp->main_window_desc, no_appicon))
 			paint_app_icon(wapp);
 	}
-
-	/* Save the app_icon in a file */
-	save_appicon(wapp->app_icon, False);
 }
 
 void unpaint_app_icon(WApplication *wapp)
@@ -449,14 +446,14 @@ void wAppIconPaint(WAppIcon *aicon)
 }
 
 /* Save the application icon, if it's a dockapp then use it with dock = True */
-void save_appicon(WAppIcon *aicon, Bool dock)
+void save_appicon(WAppIcon *aicon)
 {
 	char *path;
 
 	if (!aicon)
 		return;
 
-	if (dock && (!aicon->docked || aicon->attracted))
+	if (!aicon->docked || aicon->attracted)
 		return;
 
 	path = wIconStore(aicon->icon);
@@ -472,11 +469,11 @@ void save_appicon(WAppIcon *aicon, Bool dock)
 /* main_window may not have the full command line; try to find one which does */
 static void relaunchApplication(WApplication *wapp)
 {
-	WScreen *scr;
+	virtual_screen *vscr;
 	WWindow *wlist, *next;
 
-	scr = wapp->main_window_desc->vscr->screen_ptr;
-	wlist = scr->focused_window;
+	vscr = wapp->main_window_desc->vscr;
+	wlist = vscr->window.focused;
 	if (! wlist)
 		return;
 
@@ -598,7 +595,7 @@ static void killCallback(WMenu *menu, WMenuEntry *entry)
 		if (fPtr != NULL) {
 			WWindow *wwin, *twin;
 
-			wwin = wapp->main_window_desc->vscr->screen_ptr->focused_window;
+			wwin = wapp->main_window_desc->vscr->window.focused;
 			while (wwin) {
 				twin = wwin->prev;
 				if (wwin->fake_group == fPtr)
@@ -675,7 +672,6 @@ static void openApplicationMenu(WApplication *wapp, int x, int y)
 		menu->entries[1]->text = _("Hide");
 
 	menu->flags.realized = 0;
-	wMenuRealize(menu);
 
 	x -= menu->frame->core->width / 2;
 	if (x + menu->frame->core->width > scr->scr_width)
@@ -1215,7 +1211,7 @@ static void create_appicon_from_dock(WWindow *wwin, WApplication *wapp)
 	}
 
 	/* If created, then set some flags */
-	if (wapp->app_icon) {
+	if (wapp->app_icon && !WFLAGP(wapp->main_window_desc, no_appicon)) {
 		WWindow *mainw = wapp->main_window_desc;
 
 		wapp->app_icon->running = 1;
@@ -1228,7 +1224,6 @@ static void create_appicon_from_dock(WWindow *wwin, WApplication *wapp)
 
 		/* Paint it */
 		wAppIconPaint(wapp->app_icon);
-		save_appicon(wapp->app_icon, True);
 	}
 }
 

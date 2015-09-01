@@ -195,7 +195,6 @@ static WMenu *parseMenuCommand(virtual_screen *vscr, Window win, char **slist, i
 			}
 
 			wMenuEntrySetCascade_create(menu, entry, submenu);
-			wMenuEntrySetCascade_map(menu, submenu);
 		} else {
 			wMenuDestroy(menu, True);
 			wwarning(_("appmenu: bad menu entry \"%s\" in window %lx"), slist[*index], win);
@@ -235,6 +234,7 @@ WMenu *wAppMenuGet(virtual_screen *vscr, Window window)
 
 	XFreeStringList(slist);
 
+	wMenuRealize(menu);
 	return menu;
 }
 
@@ -244,29 +244,17 @@ void wAppMenuDestroy(WMenu *menu)
 		wMenuDestroy(menu, True);
 }
 
-static void mapmenus(WMenu *menu)
-{
-	int i;
-
-	if (menu->flags.mapped)
-		XMapWindow(dpy, menu->frame->core->window);
-
-	for (i = 0; i < menu->cascade_no; i++)
-		if (menu->cascades[i])
-			mapmenus(menu->cascades[i]);
-}
-
 void wAppMenuMap(WMenu *menu, WWindow *wwin)
 {
 	int x, min;
 
-	if (!menu)
+	if (!menu || !wwin)
 		return;
 
 	x = 0;
 	min = 20;	/* Keep at least 20 pixels visible */
 
-	if (wwin && (wPreferences.focus_mode != WKF_CLICK)) {
+	if (wPreferences.focus_mode != WKF_CLICK) {
 		if (wwin->frame_x > min)
 			x = wwin->frame_x - menu->frame->core->width;
 		else
@@ -275,25 +263,10 @@ void wAppMenuMap(WMenu *menu, WWindow *wwin)
 
 	if (!menu->flags.mapped)
 		wMenuMapAt(wwin->vscr, menu, x, wwin->frame_y, False);
-
-	mapmenus(menu);
-
-}
-
-static void unmapmenus(WMenu *menu)
-{
-	int i;
-
-	if (menu->flags.mapped)
-		XUnmapWindow(dpy, menu->frame->core->window);
-
-	for (i = 0; i < menu->cascade_no; i++)
-		if (menu->cascades[i])
-			unmapmenus(menu->cascades[i]);
 }
 
 void wAppMenuUnmap(WMenu *menu)
 {
 	if (menu)
-		unmapmenus(menu);
+		wMenuUnmap(menu);
 }

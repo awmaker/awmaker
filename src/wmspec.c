@@ -556,7 +556,7 @@ static void wNETWMShowingDesktop(virtual_screen *vscr, Bool show)
 
 		wins = (WWindow **) wmalloc(sizeof(WWindow *) * (vscr->window_count + 1));
 
-		tmp = vscr->screen_ptr->focused_window;
+		tmp = vscr->window.focused;
 		while (tmp) {
 			if (!tmp->flags.hidden && !tmp->flags.miniaturized && !WFLAGP(tmp, skip_window_list)) {
 
@@ -810,7 +810,7 @@ static void updateClientList(virtual_screen *vscr)
 	windows = (Window *) wmalloc(sizeof(Window) * (vscr->window_count + 1));
 
 	count = 0;
-	wwin = vscr->screen_ptr->focused_window;
+	wwin = vscr->window.focused;
 	while (wwin) {
 		windows[count++] = wwin->client_win;
 		wwin = wwin->prev;
@@ -900,16 +900,22 @@ static void updateWorkspaceNames(virtual_screen *vscr)
 			PropModeReplace, (unsigned char *)buf, len);
 }
 
-static void updateFocusHint(WScreen *scr)
-{				/* changeable */
+static void updateFocusHint(WWindow *wwin)
+{
+	virtual_screen *vscr;
 	Window window;
 
-	if (!scr->focused_window || !scr->focused_window->flags.focused)
+	if (!wwin)
+		return;
+
+	vscr = wwin->vscr;
+
+	if (!vscr->window.focused || !vscr->window.focused->flags.focused)
 		window = None;
 	else
-		window = scr->focused_window->client_win;
+		window = vscr->window.focused->client_win;
 
-	XChangeProperty(dpy, scr->root_win, net_active_window, XA_WINDOW, 32,
+	XChangeProperty(dpy, vscr->screen_ptr->root_win, net_active_window, XA_WINDOW, 32,
 			PropModeReplace, (unsigned char *)&window, 1);
 }
 
@@ -1756,7 +1762,8 @@ static void observer(void *self, WMNotification *notif)
 	WWindow *wwin = (WWindow *) WMGetNotificationObject(notif);
 	const char *name = WMGetNotificationName(notif);
 	void *data = WMGetNotificationClientData(notif);
-	NetData *ndata = (NetData *) self;
+
+	(void) self;
 
 	if (strcmp(name, WMNManaged) == 0 && wwin) {
 		updateClientList(wwin->vscr);
@@ -1782,7 +1789,7 @@ static void observer(void *self, WMNotification *notif)
 		updateClientListStacking(wwin->vscr, NULL);
 		updateStateHint(wwin, False, False);
 	} else if (strcmp(name, WMNChangedFocus) == 0) {
-		updateFocusHint(ndata->scr);
+		updateFocusHint(wwin);
 	} else if (strcmp(name, WMNChangedWorkspace) == 0 && wwin) {
 		updateWorkspaceHint(wwin, False, False);
 		updateStateHint(wwin, True, False);
