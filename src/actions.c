@@ -1432,7 +1432,7 @@ void wHideAll(virtual_screen *vscr)
 			windows = wrealloc(windows, sizeof(WWindow *) * (wcount + 1));
 		}
 	} else {
-		wwin = vscr->screen_ptr->focused_window;
+		wwin = vscr->window.focused;
 		while (wwin) {
 			windows[wcount] = wwin;
 			wcount++;

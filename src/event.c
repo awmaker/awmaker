@@ -1797,7 +1797,7 @@ static void handleKeyPress(XEvent *event)
 	case WKBD_TOGGLE:
 		if (wPreferences.modelock) {
 			/*toggle */
-			wwin = scr->focused_window;
+			wwin = vscr->window.focused;
 
 			if (wwin && wwin->flags.mapped
 			    && wwin->frame->workspace == vscr->workspace.current
