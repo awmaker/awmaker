@@ -888,9 +888,6 @@ void wScreenRestoreState(virtual_screen *vscr)
 	switchmenu_create(vscr);
 	window_menu_create(vscr);
 
-	OpenRootMenu(vscr, -10000, -10000, False);
-	wMenuUnmap(vscr->menu.root_menu);
-
 	if (w_global.screen_count == 1) {
 		path = wdefaultspathfordomain("WMState");
 	} else {
