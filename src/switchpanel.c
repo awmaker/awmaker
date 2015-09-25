@@ -365,9 +365,13 @@ static WMArray *makeWindowListArray(virtual_screen *vscr, int include_unmapped, 
 	while (wwin) {
 		if ((canReceiveFocus(wwin) != 0) &&
 		    (wwin->flags.mapped || wwin->flags.shaded || include_unmapped)) {
-			if (class_only)
-				if (!sameWindowClass(vscr->window.focused, wwin))
+			if (class_only) {
+				if (!sameWindowClass(vscr->window.focused, wwin)) {
+					wwin = wwin->prev;
 					continue;
+				}
+			}
+
 			if (!WFLAGP(wwin, skip_switchpanel))
 				WMAddToArray(windows, wwin);
 		}
