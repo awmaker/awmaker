@@ -880,7 +880,7 @@ void wScreenUpdateUsableArea(virtual_screen *vscr)
 		wArrangeIcons(vscr, True);
 }
 
-void wScreenRestoreState(virtual_screen *vscr)
+void wScreenRestoreState(virtual_screen *vscr, char *screen_id)
 {
 	WMPropList *state, *dDock;
 	char *path, buf[16];
@@ -888,13 +888,10 @@ void wScreenRestoreState(virtual_screen *vscr)
 	switchmenu_create(vscr);
 	window_menu_create(vscr);
 
-	OpenRootMenu(vscr, -10000, -10000, False);
-	wMenuUnmap(vscr->menu.root_menu);
-
 	if (w_global.screen_count == 1) {
 		path = wdefaultspathfordomain("WMState");
 	} else {
-		snprintf(buf, sizeof(buf), "WMState.%i", vscr->screen_ptr->screen);
+		snprintf(buf, sizeof(buf), "WMState.%i", (int) screen_id);
 		path = wdefaultspathfordomain(buf);
 	}
 
