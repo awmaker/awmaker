@@ -2140,22 +2140,22 @@ static Bool saveMenuRecurs(WMPropList *menus, WMenu *menu, virtual_screen *vscr)
 	if (!menu)
 		return 0;
 
-	if (menu->flags.buttoned && menu != vscr->menu.switch_menu) {
-		buffer[0] = '\0';
-		ok = getMenuPath(menu, buffer, 510);
+	if (!menu->flags.buttoned || menu == vscr->menu.switch_menu)
+		return 0;
 
-		if (ok) {
-			key = WMCreatePLString(buffer);
-			saveMenuInfo(menus, menu, key);
-			WMReleasePropList(key);
+	buffer[0] = '\0';
+	ok = getMenuPath(menu, buffer, 510);
+	if (!ok)
+		return 0;
+
+	key = WMCreatePLString(buffer);
+	saveMenuInfo(menus, menu, key);
+	WMReleasePropList(key);
+	save_menus = 1;
+
+	for (i = 0; i < menu->cascade_no; i++)
+		if (saveMenuRecurs(menus, menu->cascades[i], vscr))
 			save_menus = 1;
-
-			for (i = 0; i < menu->cascade_no; i++) {
-				if (saveMenuRecurs(menus, menu->cascades[i], vscr))
-					save_menus = 1;
-			}
-		}
-	}
 
 	return save_menus;
 }
