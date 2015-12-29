@@ -756,7 +756,7 @@ void wWorkspaceForceChange(virtual_screen *vscr, int workspace)
 		XUnmapWindow(dpy, w_global.clip.icon->icon->core->window);
 		XMapWindow(dpy, w_global.clip.icon->icon->core->window);
 	} else if (w_global.clip.mapped) {
-		wClipIconPaint();
+		wClipIconPaint(w_global.clip.icon);
 	}
 
 	wScreenUpdateUsableArea(vscr);
@@ -847,7 +847,7 @@ void wWorkspaceRename(virtual_screen *vscr, int workspace, const char *name)
 	}
 
 	if (w_global.clip.icon)
-		wClipIconPaint();
+		wClipIconPaint(w_global.clip.icon);
 
 	WMPostNotificationName(WMNWorkspaceNameChanged, vscr, (void *)(uintptr_t) workspace);
 }

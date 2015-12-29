@@ -1912,9 +1912,8 @@ void clip_destroy(WDock *dock)
 	wfree(dock);
 }
 
-void wClipIconPaint(void)
+void wClipIconPaint(WAppIcon *aicon)
 {
-	WAppIcon *aicon = w_global.clip.icon;
 	virtual_screen *vscr = aicon->icon->core->vscr;
 	WScreen *scr = vscr->screen_ptr;
 	WWorkspace *workspace = vscr->workspace.array[vscr->workspace.current];
@@ -1960,7 +1959,7 @@ void wClipIconPaint(void)
 static void dockIconPaint(WAppIcon *btn)
 {
 	if (btn == w_global.clip.icon) {
-		wClipIconPaint();
+		wClipIconPaint(w_global.clip.icon);
 	} else if (wIsADrawer(btn)) {
 		wDrawerIconPaint(btn);
 	} else {
@@ -5548,7 +5547,7 @@ static void handleClipChangeWorkspace(virtual_screen *vscr, XEvent *event)
 	clip->lclip_button_pushed = direction == CLIP_REWIND;
 	clip->rclip_button_pushed = direction == CLIP_FORWARD;
 
-	wClipIconPaint();
+	wClipIconPaint(w_global.clip.icon);
 	done = 0;
 	while (!done) {
 		WMMaskEvent(dpy, ExposureMask | ButtonMotionMask | ButtonReleaseMask | ButtonPressMask, &ev);
@@ -5563,7 +5562,7 @@ static void handleClipChangeWorkspace(virtual_screen *vscr, XEvent *event)
 				direction = new_dir;
 				clip->lclip_button_pushed = direction == CLIP_REWIND;
 				clip->rclip_button_pushed = direction == CLIP_FORWARD;
-				wClipIconPaint();
+				wClipIconPaint(w_global.clip.icon);
 			}
 			break;
 
@@ -5595,7 +5594,7 @@ static void handleClipChangeWorkspace(virtual_screen *vscr, XEvent *event)
 			wWorkspaceChange(vscr, vscr->workspace.count - 1);
 	}
 
-	wClipIconPaint();
+	wClipIconPaint(w_global.clip.icon);
 }
 
 static void dock_icon_mouse_down(WObjDescriptor *desc, XEvent *event)
@@ -6360,7 +6359,7 @@ static void clip_icon_expose(WObjDescriptor *desc, XEvent *event)
 	(void) event;
 	(void) desc;
 
-	wClipIconPaint();
+	wClipIconPaint(w_global.clip.icon);
 }
 
 static void drawer_icon_expose(WObjDescriptor *desc, XEvent *event)

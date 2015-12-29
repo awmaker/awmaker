@@ -101,7 +101,7 @@ void dockedapps_autolaunch(int vscrno);
 int wDockReceiveDNDDrop(virtual_screen *vscr, XEvent *event);
 #endif
 
-void wClipIconPaint(void);
+void wClipIconPaint(WAppIcon *aicon);
 void wClipSaveState(virtual_screen *vscr);
 WMPropList *wClipSaveWorkspaceState(virtual_screen *vscr, int workspace);
 
