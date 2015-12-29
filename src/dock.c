@@ -1768,6 +1768,7 @@ void clip_map(WDock *dock, virtual_screen *vscr, WMPropList *state)
 	dock->x_pos = 0;
 	dock->y_pos = 0;
 	dock->vscr = vscr;
+	btn->icon->core->vscr = vscr;
 	wRaiseFrame(btn->icon->core);
 	XMoveWindow(dpy, btn->icon->core->window, btn->x_pos, btn->y_pos);
 
