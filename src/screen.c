@@ -760,7 +760,7 @@ void set_screen_options(virtual_screen *vscr)
 
 	/* map initial workspace */
 	if (vscr->workspace.count == 1)
-		workspace_map(vscr, vscr->workspace.array[vscr->workspace.count - 1], -1, NULL);
+		workspace_map(vscr, vscr->workspace.array[0], -1, NULL);
 
 	/* create shared pixmaps */
 	createPixmaps(vscr);
