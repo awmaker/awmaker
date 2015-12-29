@@ -2149,13 +2149,11 @@ static Bool saveMenuRecurs(WMPropList *menus, WMenu *menu, virtual_screen *vscr)
 			saveMenuInfo(menus, menu, key);
 			WMReleasePropList(key);
 			save_menus = 1;
-		}
-	}
 
-	if (ok) {
-		for (i = 0; i < menu->cascade_no; i++) {
-			if (saveMenuRecurs(menus, menu->cascades[i], vscr))
-				save_menus = 1;
+			for (i = 0; i < menu->cascade_no; i++) {
+				if (saveMenuRecurs(menus, menu->cascades[i], vscr))
+					save_menus = 1;
+			}
 		}
 	}
 
