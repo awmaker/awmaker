@@ -2137,6 +2137,9 @@ static Bool saveMenuRecurs(WMPropList *menus, WMenu *menu, virtual_screen *vscr)
 	char buffer[512];
 	Bool ok = True;
 
+	if (!menu)
+		return 0;
+
 	if (menu->flags.buttoned && menu != vscr->menu.switch_menu) {
 		buffer[0] = '\0';
 		ok = getMenuPath(menu, buffer, 510);
@@ -2155,6 +2158,7 @@ static Bool saveMenuRecurs(WMPropList *menus, WMenu *menu, virtual_screen *vscr)
 				save_menus = 1;
 		}
 	}
+
 	return save_menus;
 }
 
