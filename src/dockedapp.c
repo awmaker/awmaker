@@ -187,8 +187,8 @@ static void panelBtnCallback(WMWidget *self, void *data)
 		} else {
 			aicon = panel->editedIcon;
 
-			if (aicon == w_global.clip.icon)
-				wClipIconPaint(w_global.clip.icon);
+			if (aicon == aicon->icon->core->vscr->clip.icon)
+				wClipIconPaint(aicon);
 			else if (wIsADrawer(aicon))
 				wDrawerIconPaint(aicon);
 			else

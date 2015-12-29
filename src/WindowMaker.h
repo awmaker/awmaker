@@ -539,12 +539,6 @@ extern struct wmaker_global_variables {
 		struct RImage *drawer;	/* tile for a drawer (tile + arrow) */
 	} tile;
 
-	/* Clip related */
-	struct {
-		struct WAppIcon *icon;	/* The clip main icon, or the dock's, if they are merged */
-		int mapped;		/* The clip is mapped */
-	} clip;
-
 #ifdef HAVE_INOTIFY
 	struct {
 		int fd_event_queue;   /* Inotify's queue file descriptor */

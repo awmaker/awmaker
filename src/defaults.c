@@ -1315,7 +1315,7 @@ void wDefaultUpdateIcons(virtual_screen *vscr)
 	}
 
 	if (!wPreferences.flags.noclip || wPreferences.flags.clip_merged_in_dock)
-		wClipIconPaint(w_global.clip.icon);
+		wClipIconPaint(vscr->clip.icon);
 
 	for (dc = vscr->drawer.drawers; dc != NULL; dc = dc->next)
 		wDrawerIconPaint(dc->adrawer->icon_array[0]);

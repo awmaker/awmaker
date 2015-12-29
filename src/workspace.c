@@ -210,7 +210,7 @@ void workspace_map(virtual_screen *vscr, WWorkspace *wspace, int wksno, WMPropLi
 	if (parr != NULL)
 		wks_state = WMGetFromPLArray(parr, wksno);
 
-	if ((!wPreferences.flags.noclip) && (!w_global.clip.mapped))
+	if ((!wPreferences.flags.noclip) && (!vscr->clip.mapped))
 		clip_icon_map(vscr);
 
 	set_clip_in_workspace_map(vscr, wspace, wksno, wks_state);
@@ -753,10 +753,10 @@ void wWorkspaceForceChange(virtual_screen *vscr, int workspace)
 	if (!wPreferences.flags.noclip && (vscr->workspace.array[workspace]->clip->auto_collapse ||
 					   vscr->workspace.array[workspace]->clip->auto_raise_lower)) {
 		/* to handle enter notify. This will also */
-		XUnmapWindow(dpy, w_global.clip.icon->icon->core->window);
-		XMapWindow(dpy, w_global.clip.icon->icon->core->window);
-	} else if (w_global.clip.mapped) {
-		wClipIconPaint(w_global.clip.icon);
+		XUnmapWindow(dpy, vscr->clip.icon->icon->core->window);
+		XMapWindow(dpy, vscr->clip.icon->icon->core->window);
+	} else if (vscr->clip.mapped) {
+		wClipIconPaint(vscr->clip.icon);
 	}
 
 	wScreenUpdateUsableArea(vscr);
@@ -846,8 +846,8 @@ void wWorkspaceRename(virtual_screen *vscr, int workspace, const char *name)
 		}
 	}
 
-	if (w_global.clip.icon)
-		wClipIconPaint(w_global.clip.icon);
+	if (vscr->clip.icon)
+		wClipIconPaint(vscr->clip.icon);
 
 	WMPostNotificationName(WMNWorkspaceNameChanged, vscr, (void *)(uintptr_t) workspace);
 }
