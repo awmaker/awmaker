@@ -633,7 +633,7 @@ static void startup_set_defaults(void)
  */
 void StartUp(Bool defaultScreenOnly)
 {
-	int j, max;
+	int j, max, lastDesktop;
 	virtual_screen *vscr;
 
 	startup_set_atoms();
@@ -650,8 +650,16 @@ void StartUp(Bool defaultScreenOnly)
 	w_global.vscreens = wmalloc(sizeof(virtual_screen *) * max);
 
 	w_global.screen_count = 0;
+	w_global.vscreen_count = 0;
 
-	/* manage the screens */
+	/* Manage the Virtual Screens */
+	for (j = 0; j < max; j++) {
+		vscr = wmalloc(sizeof(virtual_screen));
+		w_global.vscreens[j] = vscr;
+		w_global.vscreen_count++;
+	}
+
+	/* Manage the Real Screens */
 	for (j = 0; j < max; j++) {
 		if (defaultScreenOnly || max == 1) {
 			wScreen[w_global.screen_count] = wScreenInit(DefaultScreen(dpy));
@@ -675,14 +683,10 @@ void StartUp(Bool defaultScreenOnly)
 		Exit(1);
 	}
 
-	/* Manage the virtual screens */
-	w_global.vscreen_count = 0;
+	/* Bind the Virtual Screens and the Real Screens */
 	for (j = 0; j < w_global.screen_count; j++) {
-		int lastDesktop;
-
-		vscr = wmalloc(sizeof(virtual_screen));
+		vscr = w_global.vscreens[j];
 		vscr->screen_ptr = wScreen[j];
-		w_global.vscreens[w_global.vscreen_count] = vscr;
 
 		/* read defaults for this screen */
 		wReadDefaults(vscr, w_global.domain.wmaker->dictionary);
@@ -690,8 +694,7 @@ void StartUp(Bool defaultScreenOnly)
 		vscr->clip.icon = clip_icon_create();
 		workspace_create(vscr, -1, NULL);
 
-		set_screen_options(w_global.vscreens[w_global.vscreen_count]);
-		w_global.vscreen_count++;
+		set_screen_options(w_global.vscreens[j]);
 
 		lastDesktop = wNETWMGetCurrentDesktopFromHint(wScreen[j]);
 
