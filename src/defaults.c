@@ -1147,17 +1147,16 @@ void wDefaultsCheckDomains(void *arg)
 #endif
 }
 
-void wReadDefaults(virtual_screen *vscr, WMPropList *new_dict)
+static unsigned int read_defaults_step1(virtual_screen *vscr, WMPropList *new_dict)
 {
-	WMPropList *plvalue, *old_value;
-	WDefaultEntry *entry;
-	unsigned int i;
+	unsigned int i, needs_refresh = 0;
 	int update_workspace_back = 0;	/* kluge :/ */
-	unsigned int needs_refresh;
+	WMPropList *plvalue, *old_value, *old_dict = NULL;
+	WDefaultEntry *entry;
 	void *tdata;
-	WMPropList *old_dict = (w_global.domain.wmaker->dictionary != new_dict ? w_global.domain.wmaker->dictionary : NULL);
 
-	needs_refresh = 0;
+	if (w_global.domain.wmaker->dictionary != new_dict)
+		old_dict = w_global.domain.wmaker->dictionary;
 
 	for (i = 0; i < wlengthof(optionList); i++) {
 		entry = &optionList[i];
@@ -1212,6 +1211,15 @@ void wReadDefaults(virtual_screen *vscr, WMPropList *new_dict)
 			}
 		}
 	}
+
+	return needs_refresh;
+}
+
+void wReadDefaults(virtual_screen *vscr, WMPropList *new_dict)
+{
+	unsigned int needs_refresh;
+
+	needs_refresh = read_defaults_step1(vscr, new_dict);
 
 	/*
 	 * Backward Compatibility:
