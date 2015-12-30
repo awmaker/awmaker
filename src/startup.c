@@ -657,6 +657,8 @@ void StartUp(Bool defaultScreenOnly)
 		vscr = wmalloc(sizeof(virtual_screen));
 		w_global.vscreens[j] = vscr;
 		w_global.vscreen_count++;
+
+		read_defaults_noscreen(vscr, w_global.domain.wmaker->dictionary);
 	}
 
 	/* Manage the Real Screens */
