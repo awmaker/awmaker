@@ -1150,7 +1150,7 @@ void wDefaultsCheckDomains(void *arg)
 static unsigned int read_defaults_step1(virtual_screen *vscr, WMPropList *new_dict)
 {
 	unsigned int i, needs_refresh = 0;
-	int update_workspace_back = 0;	/* kluge :/ */
+	int update_workspace_back = 0;
 	WMPropList *plvalue, *old_value, *old_dict = NULL;
 	WDefaultEntry *entry;
 	void *tdata;
@@ -1185,12 +1185,14 @@ static unsigned int read_defaults_step1(virtual_screen *vscr, WMPropList *new_di
 		} else if (!WMIsPropListEqualTo(plvalue, old_value)) {
 			/* value has changed */
 		} else {
-			if (strcmp(entry->key, "WorkspaceBack") == 0
-			    && update_workspace_back && vscr->screen_ptr->flags.backimage_helper_launched) {
-			} else {
-				/* value was not changed since last time */
+			/* Value was not changed since last time.
+			 * We must continue, except if WorkspaceSpecificBack
+			 * was updated previously
+			 */
+			if (!(strcmp(entry->key, "WorkspaceBack") == 0 &&
+			    update_workspace_back &&
+			    vscr->screen_ptr->flags.backimage_helper_launched))
 				continue;
-			}
 		}
 
 		if (plvalue) {
