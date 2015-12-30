@@ -1215,6 +1215,68 @@ static unsigned int read_defaults_step1(virtual_screen *vscr, WMPropList *new_di
 	return needs_refresh;
 }
 
+static void refresh_defaults(virtual_screen *vscr, unsigned int needs_refresh)
+{
+	int foo = 0;
+
+	if (needs_refresh & REFRESH_MENU_TITLE_TEXTURE)
+		foo |= WTextureSettings;
+	if (needs_refresh & REFRESH_MENU_TITLE_FONT)
+		foo |= WFontSettings;
+	if (needs_refresh & REFRESH_MENU_TITLE_COLOR)
+		foo |= WColorSettings;
+	if (foo)
+		WMPostNotificationName(WNMenuTitleAppearanceSettingsChanged, NULL,
+				       (void *)(uintptr_t) foo);
+
+	foo = 0;
+	if (needs_refresh & REFRESH_MENU_TEXTURE)
+		foo |= WTextureSettings;
+	if (needs_refresh & REFRESH_MENU_FONT)
+		foo |= WFontSettings;
+	if (needs_refresh & REFRESH_MENU_COLOR)
+		foo |= WColorSettings;
+	if (foo)
+		WMPostNotificationName(WNMenuAppearanceSettingsChanged, NULL, (void *)(uintptr_t) foo);
+
+	foo = 0;
+	if (needs_refresh & REFRESH_WINDOW_FONT)
+		foo |= WFontSettings;
+	if (needs_refresh & REFRESH_WINDOW_TEXTURES)
+		foo |= WTextureSettings;
+	if (needs_refresh & REFRESH_WINDOW_TITLE_COLOR)
+		foo |= WColorSettings;
+	if (foo)
+		WMPostNotificationName(WNWindowAppearanceSettingsChanged, NULL, (void *)(uintptr_t) foo);
+
+	if (!(needs_refresh & REFRESH_ICON_TILE)) {
+		foo = 0;
+		if (needs_refresh & REFRESH_ICON_FONT)
+			foo |= WFontSettings;
+		if (needs_refresh & REFRESH_ICON_TITLE_COLOR)
+			foo |= WTextureSettings;
+		if (needs_refresh & REFRESH_ICON_TITLE_BACK)
+			foo |= WTextureSettings;
+		if (foo)
+			WMPostNotificationName(WNIconAppearanceSettingsChanged, NULL,
+					       (void *)(uintptr_t) foo);
+	}
+
+	if (needs_refresh & REFRESH_ICON_TILE)
+		WMPostNotificationName(WNIconTileSettingsChanged, NULL, NULL);
+
+	if (needs_refresh & REFRESH_WORKSPACE_MENU) {
+		if (vscr->workspace.menu)
+			wWorkspaceMenuUpdate(vscr, vscr->workspace.menu);
+		if (vscr->clip.ws_menu)
+			wWorkspaceMenuUpdate(vscr, vscr->clip.ws_menu);
+		if (vscr->workspace.submenu)
+			vscr->workspace.submenu->flags.realized = 0;
+		if (vscr->clip.submenu)
+			vscr->clip.submenu->flags.realized = 0;
+	}
+}
+
 void wReadDefaults(virtual_screen *vscr, WMPropList *new_dict)
 {
 	unsigned int needs_refresh;
@@ -1247,66 +1309,8 @@ void wReadDefaults(virtual_screen *vscr, WMPropList *new_dict)
 		}
 	}
 
-	if (needs_refresh != 0 && !w_global.startup.phase1) {
-		int foo;
-
-		foo = 0;
-		if (needs_refresh & REFRESH_MENU_TITLE_TEXTURE)
-			foo |= WTextureSettings;
-		if (needs_refresh & REFRESH_MENU_TITLE_FONT)
-			foo |= WFontSettings;
-		if (needs_refresh & REFRESH_MENU_TITLE_COLOR)
-			foo |= WColorSettings;
-		if (foo)
-			WMPostNotificationName(WNMenuTitleAppearanceSettingsChanged, NULL,
-					       (void *)(uintptr_t) foo);
-
-		foo = 0;
-		if (needs_refresh & REFRESH_MENU_TEXTURE)
-			foo |= WTextureSettings;
-		if (needs_refresh & REFRESH_MENU_FONT)
-			foo |= WFontSettings;
-		if (needs_refresh & REFRESH_MENU_COLOR)
-			foo |= WColorSettings;
-		if (foo)
-			WMPostNotificationName(WNMenuAppearanceSettingsChanged, NULL, (void *)(uintptr_t) foo);
-
-		foo = 0;
-		if (needs_refresh & REFRESH_WINDOW_FONT)
-			foo |= WFontSettings;
-		if (needs_refresh & REFRESH_WINDOW_TEXTURES)
-			foo |= WTextureSettings;
-		if (needs_refresh & REFRESH_WINDOW_TITLE_COLOR)
-			foo |= WColorSettings;
-		if (foo)
-			WMPostNotificationName(WNWindowAppearanceSettingsChanged, NULL, (void *)(uintptr_t) foo);
-
-		if (!(needs_refresh & REFRESH_ICON_TILE)) {
-			foo = 0;
-			if (needs_refresh & REFRESH_ICON_FONT)
-				foo |= WFontSettings;
-			if (needs_refresh & REFRESH_ICON_TITLE_COLOR)
-				foo |= WTextureSettings;
-			if (needs_refresh & REFRESH_ICON_TITLE_BACK)
-				foo |= WTextureSettings;
-			if (foo)
-				WMPostNotificationName(WNIconAppearanceSettingsChanged, NULL,
-						       (void *)(uintptr_t) foo);
-		}
-		if (needs_refresh & REFRESH_ICON_TILE)
-			WMPostNotificationName(WNIconTileSettingsChanged, NULL, NULL);
-
-		if (needs_refresh & REFRESH_WORKSPACE_MENU) {
-			if (vscr->workspace.menu)
-				wWorkspaceMenuUpdate(vscr, vscr->workspace.menu);
-			if (vscr->clip.ws_menu)
-				wWorkspaceMenuUpdate(vscr, vscr->clip.ws_menu);
-			if (vscr->workspace.submenu)
-				vscr->workspace.submenu->flags.realized = 0;
-			if (vscr->clip.submenu)
-				vscr->clip.submenu->flags.realized = 0;
-		}
-	}
+	if (needs_refresh != 0 && !w_global.startup.phase1)
+		refresh_defaults(vscr, needs_refresh);
 }
 
 void wDefaultUpdateIcons(virtual_screen *vscr)
