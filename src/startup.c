@@ -708,6 +708,8 @@ void StartUp(Bool defaultScreenOnly)
 
 		manageAllWindows(w_global.vscreens[j], wPreferences.flags.restarting == 2);
 
+		w_global.startup.phase2 = 1;
+
 		while (XPending(dpy)) {
 			XEvent ev;
 			WMNextEvent(dpy, &ev);
@@ -715,8 +717,11 @@ void StartUp(Bool defaultScreenOnly)
 		}
 
 		vscr->workspace.last_used = 0;
+		wWorkspaceForceChange(vscr, 0);
 		if (!wPreferences.flags.noclip)
 			wDockShowIcons(vscr->workspace.array[vscr->workspace.current]->clip);
+
+		w_global.startup.phase2 = 0;
 
 		/* restore saved menus */
 		wMenuRestoreState(w_global.vscreens[j]);
