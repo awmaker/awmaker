@@ -2368,7 +2368,7 @@ static WAppIcon *restore_clip_icon_state(WMPropList *info, int index)
 
 	wfree(command);
 
-	aicon->icon->core->descriptor.handle_expose = clip_icon_expose;
+	aicon->icon->core->descriptor.handle_expose = dock_icon_expose;
 	aicon->icon->core->descriptor.handle_mousedown = clip_icon_mouse_down;
 	aicon->icon->core->descriptor.handle_enternotify = clip_enter_notify;
 	aicon->icon->core->descriptor.handle_leavenotify = clip_leave_notify;
@@ -6360,7 +6360,6 @@ static void clip_icon_expose(WObjDescriptor *desc, XEvent *event)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) event;
-	(void) desc;
 
 	wClipIconPaint(desc->parent);
 }
