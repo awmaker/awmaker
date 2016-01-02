@@ -633,7 +633,7 @@ static void startup_set_defaults(void)
  */
 void StartUp(Bool defaultScreenOnly)
 {
-	int j, max;
+	int j, max, lastDesktop;
 	virtual_screen *vscr;
 
 	startup_set_atoms();
@@ -650,8 +650,18 @@ void StartUp(Bool defaultScreenOnly)
 	w_global.vscreens = wmalloc(sizeof(virtual_screen *) * max);
 
 	w_global.screen_count = 0;
+	w_global.vscreen_count = 0;
 
-	/* manage the screens */
+	/* Manage the Virtual Screens */
+	for (j = 0; j < max; j++) {
+		vscr = wmalloc(sizeof(virtual_screen));
+		w_global.vscreens[j] = vscr;
+		w_global.vscreen_count++;
+
+		read_defaults_noscreen(vscr, w_global.domain.wmaker->dictionary);
+	}
+
+	/* Manage the Real Screens */
 	for (j = 0; j < max; j++) {
 		if (defaultScreenOnly || max == 1) {
 			wScreen[w_global.screen_count] = wScreenInit(DefaultScreen(dpy));
@@ -675,34 +685,30 @@ void StartUp(Bool defaultScreenOnly)
 		Exit(1);
 	}
 
-	/* Manage the virtual screens */
-	w_global.vscreen_count = 0;
+	/* Bind the Virtual Screens and the Real Screens */
 	for (j = 0; j < w_global.screen_count; j++) {
-		int lastDesktop;
-
-		vscr = wmalloc(sizeof(virtual_screen));
+		vscr = w_global.vscreens[j];
 		vscr->screen_ptr = wScreen[j];
-		w_global.vscreens[w_global.vscreen_count] = vscr;
 
 		/* read defaults for this screen */
 		wReadDefaults(vscr, w_global.domain.wmaker->dictionary);
 
-		clip_icon_create();
+		vscr->clip.icon = clip_icon_create();
 		workspace_create(vscr, -1, NULL);
 
-		set_screen_options(w_global.vscreens[w_global.vscreen_count]);
-		w_global.vscreen_count++;
+		set_screen_options(w_global.vscreens[j]);
 
 		lastDesktop = wNETWMGetCurrentDesktopFromHint(wScreen[j]);
 
-		wScreenRestoreState(w_global.vscreens[j],
-						 (char *) w_global.vscreens[j]->screen_ptr->screen);
+		wScreenRestoreState(w_global.vscreens[j]);
 
 		/* manage all windows that were already here before us */
 		if (!wPreferences.flags.nodock && w_global.vscreens[j]->dock.dock)
 			w_global.vscreens[j]->last_dock = w_global.vscreens[j]->dock.dock;
 
 		manageAllWindows(w_global.vscreens[j], wPreferences.flags.restarting == 2);
+
+		w_global.startup.phase2 = 1;
 
 		while (XPending(dpy)) {
 			XEvent ev;
@@ -711,8 +717,11 @@ void StartUp(Bool defaultScreenOnly)
 		}
 
 		vscr->workspace.last_used = 0;
+		wWorkspaceForceChange(vscr, 0);
 		if (!wPreferences.flags.noclip)
 			wDockShowIcons(vscr->workspace.array[vscr->workspace.current]->clip);
+
+		w_global.startup.phase2 = 0;
 
 		/* restore saved menus */
 		wMenuRestoreState(w_global.vscreens[j]);

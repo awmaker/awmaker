@@ -301,7 +301,8 @@ static WAppIcon *wAppIcon_create(WWindow *leader_win)
 
 static void wAppIcon_map(WAppIcon *aicon)
 {
-	icon_for_wwindow_map(aicon->icon);
+	icon_for_wwindow_miniwindow_map(aicon->icon);
+
 #ifdef USE_DOCK_XDND
 	wXDNDMakeAwareness(aicon->icon->core->window);
 #endif

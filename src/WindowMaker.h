@@ -504,6 +504,7 @@ extern struct wmaker_global_variables {
 	/* Window Maker startup phases */
 	struct {
 		unsigned int phase1:1;
+		unsigned int phase2:1;
 	} startup;
 
 	/* locale to use. NULL==POSIX or C */
@@ -538,12 +539,6 @@ extern struct wmaker_global_variables {
 		struct RImage *clip;	/* tile with arrows to change workspace */
 		struct RImage *drawer;	/* tile for a drawer (tile + arrow) */
 	} tile;
-
-	/* Clip related */
-	struct {
-		struct WAppIcon *icon;	/* The clip main icon, or the dock's, if they are merged */
-		int mapped;		/* The clip is mapped */
-	} clip;
 
 #ifdef HAVE_INOTIFY
 	struct {

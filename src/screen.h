@@ -107,12 +107,15 @@ struct virtual_screen {
 
 	/* Clip related */
 	struct {
+		struct WAppIcon *icon;        /* The clip main icon, or the dock's, if they are merged */
 		WAppIconChain *global_icons;  /* Omnipresent icons chain in clip */
 
 		struct WMenu *menu;           /* Menu for clips */
 		struct WMenu *submenu;        /* Workspace list for clips */
 		struct WMenu *opt_menu;       /* Options for Clip */
 		struct WMenu *ws_menu;        /* workspace menu for clip */
+
+		int mapped;             /* The clip is mapped */
 	} clip;
 
 	/* Dock related */
@@ -332,7 +335,7 @@ struct WScreen {
 
 WScreen *wScreenInit(int screen_number);
 void wScreenSaveState(virtual_screen *vscr);
-void wScreenRestoreState(virtual_screen *vscr, char *screen_id);
+void wScreenRestoreState(virtual_screen *vscr);
 
 int wScreenBringInside(virtual_screen *scr, int *x, int *y, int width, int height);
 int wScreenKeepInside(virtual_screen *scr, int *x, int *y, int width, int height);

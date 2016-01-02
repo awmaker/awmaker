@@ -67,9 +67,9 @@ void clip_unmap(WDock *dock);
 void dock_map(WDock *dock, virtual_screen *scr, WMPropList *dock_state);
 void dock_unmap(WDock *dock);
 
-void clip_icon_create(void);
+WAppIcon *clip_icon_create(void);
 void clip_icon_map(virtual_screen *vscr);
-void clip_icon_unmap(void);
+void clip_icon_unmap(virtual_screen *vscr);
 
 void clip_destroy(WDock *dock);
 void wDockHideIcons(WDock *dock);
@@ -101,7 +101,7 @@ void dockedapps_autolaunch(int vscrno);
 int wDockReceiveDNDDrop(virtual_screen *vscr, XEvent *event);
 #endif
 
-void wClipIconPaint(void);
+void wClipIconPaint(WAppIcon *aicon);
 void wClipSaveState(virtual_screen *vscr);
 WMPropList *wClipSaveWorkspaceState(virtual_screen *vscr, int workspace);
 

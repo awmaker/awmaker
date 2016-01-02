@@ -165,61 +165,64 @@ static void panelBtnCallback(WMWidget *self, void *data)
 	char *text, *buf;
 	int len;
 
-	if (panel->okBtn == btn) {
-		text = WMGetTextFieldText(panel->iconField);
-		if (text[0] == 0) {
-			wfree(text);
-			text = NULL;
-		}
-
-		if (!wIconChangeImageFile(panel->editedIcon->icon, text)) {
-			len = strlen(text) + 64;
-			buf = wmalloc(len);
-			snprintf(buf, len, _("Could not open specified icon file: %s"), text);
-			if (wMessageDialog(panel->wwin->vscr, _("Error"), buf,
-					   _("OK"), _("Ignore"), NULL) == WAPRDefault) {
-				wfree(text);
-				wfree(buf);
-				return;
-			}
-
-			wfree(buf);
-		} else {
-			aicon = panel->editedIcon;
-
-			if (aicon == w_global.clip.icon)
-				wClipIconPaint();
-			else if (wIsADrawer(aicon))
-				wDrawerIconPaint(aicon);
-			else
-				wAppIconPaint(aicon);
-
-			wDefaultChangeIcon(aicon->wm_instance, aicon->wm_class, text);
-		}
-
-		if (text)
-			wfree(text);
-
-		/* cannot free text from this, because it will be not be duplicated
-		 * in updateCommand */
-		text = WMGetTextFieldText(panel->commandField);
-		if (text[0] == 0) {
-			wfree(text);
-			text = NULL;
-		}
-
-		updateCommand(panel->editedIcon, text);
-#ifdef USE_DOCK_XDND
-		/* cannot free text from this, because it will be not be duplicated
-		 * in updateDNDCommand */
-		text = WMGetTextFieldText(panel->dndCommandField);
-		updateDNDCommand(panel->editedIcon, text);
-#endif
-		text = WMGetTextFieldText(panel->pasteCommandField);
-		updatePasteCommand(panel->editedIcon, text);
-		panel->editedIcon->auto_launch = WMGetButtonSelected(panel->autoLaunchBtn);
-		panel->editedIcon->lock = WMGetButtonSelected(panel->lockBtn);
+	if (panel->okBtn != btn) {
+		DestroyDockAppSettingsPanel(panel);
+		return;
 	}
+
+	text = WMGetTextFieldText(panel->iconField);
+	if (text[0] == 0) {
+		wfree(text);
+		text = NULL;
+	}
+
+	if (!wIconChangeImageFile(panel->editedIcon->icon, text)) {
+		len = strlen(text) + 64;
+		buf = wmalloc(len);
+		snprintf(buf, len, _("Could not open specified icon file: %s"), text);
+		if (wMessageDialog(panel->wwin->vscr, _("Error"), buf,
+				   _("OK"), _("Ignore"), NULL) == WAPRDefault) {
+			wfree(text);
+			wfree(buf);
+			return;
+		}
+
+		wfree(buf);
+	} else {
+		aicon = panel->editedIcon;
+
+		if (aicon == aicon->icon->core->vscr->clip.icon)
+			wClipIconPaint(aicon);
+		else if (wIsADrawer(aicon))
+			wDrawerIconPaint(aicon);
+		else
+			wAppIconPaint(aicon);
+
+		wDefaultChangeIcon(aicon->wm_instance, aicon->wm_class, text);
+	}
+
+	if (text)
+		wfree(text);
+
+	/* cannot free text from this, because it will be not be duplicated
+	 * in updateCommand */
+	text = WMGetTextFieldText(panel->commandField);
+	if (text[0] == 0) {
+		wfree(text);
+		text = NULL;
+	}
+
+	updateCommand(panel->editedIcon, text);
+#ifdef USE_DOCK_XDND
+	/* cannot free text from this, because it will be not be duplicated
+	 * in updateDNDCommand */
+	text = WMGetTextFieldText(panel->dndCommandField);
+	updateDNDCommand(panel->editedIcon, text);
+#endif
+	text = WMGetTextFieldText(panel->pasteCommandField);
+	updatePasteCommand(panel->editedIcon, text);
+	panel->editedIcon->auto_launch = WMGetButtonSelected(panel->autoLaunchBtn);
+	panel->editedIcon->lock = WMGetButtonSelected(panel->lockBtn);
 
 	DestroyDockAppSettingsPanel(panel);
 }

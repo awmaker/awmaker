@@ -365,6 +365,13 @@ WDefaultEntry staticOptionList[] = {
 	    &wPreferences.enable_workspace_pager, getBool, NULL, NULL, NULL}
 };
 
+WDefaultEntry noscreenOptionList[] = {
+	{"PixmapPath", DEF_PIXMAP_PATHS, NULL,
+	    &wPreferences.pixmap_path, getPathList, NULL, NULL, NULL},
+	{"IconPath", DEF_ICON_PATHS, NULL,
+	    &wPreferences.icon_path, getPathList, NULL, NULL, NULL},
+};
+
 #define NUM2STRING_(x) #x
 #define NUM2STRING(x) NUM2STRING_(x)
 
@@ -392,10 +399,6 @@ WDefaultEntry optionList[] = {
 	    &wPreferences.mouse_wheel_scroll, getEnum, NULL, NULL, NULL},
 	{"MouseWheelTiltAction", "None", seMouseWheelActions,
 	    &wPreferences.mouse_wheel_tilt, getEnum, NULL, NULL, NULL},
-	{"PixmapPath", DEF_PIXMAP_PATHS, NULL,
-	    &wPreferences.pixmap_path, getPathList, NULL, NULL, NULL},
-	{"IconPath", DEF_ICON_PATHS, NULL,
-	    &wPreferences.icon_path, getPathList, NULL, NULL, NULL},
 	{"ColormapMode", "auto", seColormapModes,
 	    &wPreferences.colormap_mode, getEnum, NULL, NULL, NULL},
 	{"AutoFocus", "NO", NULL,
@@ -849,6 +852,16 @@ static void initDefaults(void)
 			entry->plvalue = NULL;
 	}
 
+	for (i = 0; i < wlengthof(noscreenOptionList); i++) {
+		entry = &noscreenOptionList[i];
+
+		entry->plkey = WMCreatePLString(entry->key);
+		if (entry->default_value)
+			entry->plvalue = WMCreatePropListFromDescription(entry->default_value);
+		else
+			entry->plvalue = NULL;
+	}
+
 	for (i = 0; i < wlengthof(staticOptionList); i++) {
 		entry = &staticOptionList[i];
 
@@ -1147,17 +1160,81 @@ void wDefaultsCheckDomains(void *arg)
 #endif
 }
 
-void wReadDefaults(virtual_screen *vscr, WMPropList *new_dict)
+void read_defaults_noscreen(virtual_screen *vscr, WMPropList *new_dict)
 {
-	WMPropList *plvalue, *old_value;
-	WDefaultEntry *entry;
 	unsigned int i;
-	int update_workspace_back = 0;	/* kluge :/ */
-	unsigned int needs_refresh;
+	int update_workspace_back = 0;
+	WMPropList *plvalue, *old_value, *old_dict = NULL;
+	WDefaultEntry *entry;
 	void *tdata;
-	WMPropList *old_dict = (w_global.domain.wmaker->dictionary != new_dict ? w_global.domain.wmaker->dictionary : NULL);
 
-	needs_refresh = 0;
+	if (w_global.domain.wmaker->dictionary != new_dict)
+		old_dict = w_global.domain.wmaker->dictionary;
+
+	for (i = 0; i < wlengthof(noscreenOptionList); i++) {
+		entry = &noscreenOptionList[i];
+
+		if (new_dict)
+			plvalue = WMGetFromPLDictionary(new_dict, entry->plkey);
+		else
+			plvalue = NULL;
+
+		if (!old_dict)
+			old_value = NULL;
+		else
+			old_value = WMGetFromPLDictionary(old_dict, entry->plkey);
+
+		if (!plvalue && !old_value) {
+			/* no default in  the DB. Use builtin default */
+			plvalue = entry->plvalue;
+			if (plvalue && new_dict)
+				WMPutInPLDictionary(new_dict, entry->plkey, plvalue);
+
+		} else if (!plvalue) {
+			/* value was deleted from DB. Keep current value */
+			continue;
+		} else if (!old_value) {
+			/* set value for the 1st time */
+		} else if (!WMIsPropListEqualTo(plvalue, old_value)) {
+			/* value has changed */
+		} else {
+			/* Value was not changed since last time.
+			 * We must continue, except if WorkspaceSpecificBack
+			 * was updated previously
+			 */
+			if (!(strcmp(entry->key, "WorkspaceBack") == 0 &&
+			    update_workspace_back &&
+			    vscr->screen_ptr->flags.backimage_helper_launched))
+				continue;
+		}
+
+		if (plvalue) {
+			/* convert data */
+			if ((*entry->convert) (vscr, entry, plvalue, entry->addr, &tdata)) {
+				/*
+				 * If the WorkspaceSpecificBack data has been changed
+				 * so that the helper will be launched now, we must be
+				 * sure to send the default background texture config
+				 * to the helper.
+				 */
+				if (strcmp(entry->key, "WorkspaceSpecificBack") == 0 &&
+				    !vscr->screen_ptr->flags.backimage_helper_launched)
+					update_workspace_back = 1;
+			}
+		}
+	}
+}
+
+static unsigned int read_defaults_step1(virtual_screen *vscr, WMPropList *new_dict)
+{
+	unsigned int i, needs_refresh = 0;
+	int update_workspace_back = 0;
+	WMPropList *plvalue, *old_value, *old_dict = NULL;
+	WDefaultEntry *entry;
+	void *tdata;
+
+	if (w_global.domain.wmaker->dictionary != new_dict)
+		old_dict = w_global.domain.wmaker->dictionary;
 
 	for (i = 0; i < wlengthof(optionList); i++) {
 		entry = &optionList[i];
@@ -1186,12 +1263,14 @@ void wReadDefaults(virtual_screen *vscr, WMPropList *new_dict)
 		} else if (!WMIsPropListEqualTo(plvalue, old_value)) {
 			/* value has changed */
 		} else {
-			if (strcmp(entry->key, "WorkspaceBack") == 0
-			    && update_workspace_back && vscr->screen_ptr->flags.backimage_helper_launched) {
-			} else {
-				/* value was not changed since last time */
+			/* Value was not changed since last time.
+			 * We must continue, except if WorkspaceSpecificBack
+			 * was updated previously
+			 */
+			if (!(strcmp(entry->key, "WorkspaceBack") == 0 &&
+			    update_workspace_back &&
+			    vscr->screen_ptr->flags.backimage_helper_launched))
 				continue;
-			}
 		}
 
 		if (plvalue) {
@@ -1212,6 +1291,78 @@ void wReadDefaults(virtual_screen *vscr, WMPropList *new_dict)
 			}
 		}
 	}
+
+	return needs_refresh;
+}
+
+static void refresh_defaults(virtual_screen *vscr, unsigned int needs_refresh)
+{
+	int foo = 0;
+
+	if (needs_refresh & REFRESH_MENU_TITLE_TEXTURE)
+		foo |= WTextureSettings;
+	if (needs_refresh & REFRESH_MENU_TITLE_FONT)
+		foo |= WFontSettings;
+	if (needs_refresh & REFRESH_MENU_TITLE_COLOR)
+		foo |= WColorSettings;
+	if (foo)
+		WMPostNotificationName(WNMenuTitleAppearanceSettingsChanged, NULL,
+				       (void *)(uintptr_t) foo);
+
+	foo = 0;
+	if (needs_refresh & REFRESH_MENU_TEXTURE)
+		foo |= WTextureSettings;
+	if (needs_refresh & REFRESH_MENU_FONT)
+		foo |= WFontSettings;
+	if (needs_refresh & REFRESH_MENU_COLOR)
+		foo |= WColorSettings;
+	if (foo)
+		WMPostNotificationName(WNMenuAppearanceSettingsChanged, NULL, (void *)(uintptr_t) foo);
+
+	foo = 0;
+	if (needs_refresh & REFRESH_WINDOW_FONT)
+		foo |= WFontSettings;
+	if (needs_refresh & REFRESH_WINDOW_TEXTURES)
+		foo |= WTextureSettings;
+	if (needs_refresh & REFRESH_WINDOW_TITLE_COLOR)
+		foo |= WColorSettings;
+	if (foo)
+		WMPostNotificationName(WNWindowAppearanceSettingsChanged, NULL, (void *)(uintptr_t) foo);
+
+	if (!(needs_refresh & REFRESH_ICON_TILE)) {
+		foo = 0;
+		if (needs_refresh & REFRESH_ICON_FONT)
+			foo |= WFontSettings;
+		if (needs_refresh & REFRESH_ICON_TITLE_COLOR)
+			foo |= WTextureSettings;
+		if (needs_refresh & REFRESH_ICON_TITLE_BACK)
+			foo |= WTextureSettings;
+		if (foo)
+			WMPostNotificationName(WNIconAppearanceSettingsChanged, NULL,
+					       (void *)(uintptr_t) foo);
+	}
+
+	if (needs_refresh & REFRESH_ICON_TILE)
+		WMPostNotificationName(WNIconTileSettingsChanged, NULL, NULL);
+
+	if (needs_refresh & REFRESH_WORKSPACE_MENU) {
+		if (vscr->workspace.menu)
+			wWorkspaceMenuUpdate(vscr, vscr->workspace.menu);
+		if (vscr->clip.ws_menu)
+			wWorkspaceMenuUpdate(vscr, vscr->clip.ws_menu);
+		if (vscr->workspace.submenu)
+			vscr->workspace.submenu->flags.realized = 0;
+		if (vscr->clip.submenu)
+			vscr->clip.submenu->flags.realized = 0;
+	}
+}
+
+void wReadDefaults(virtual_screen *vscr, WMPropList *new_dict)
+{
+	unsigned int needs_refresh;
+
+	needs_refresh = read_defaults_step1(vscr, new_dict);
+	read_defaults_noscreen(vscr, new_dict);
 
 	/*
 	 * Backward Compatibility:
@@ -1239,66 +1390,8 @@ void wReadDefaults(virtual_screen *vscr, WMPropList *new_dict)
 		}
 	}
 
-	if (needs_refresh != 0 && !w_global.startup.phase1) {
-		int foo;
-
-		foo = 0;
-		if (needs_refresh & REFRESH_MENU_TITLE_TEXTURE)
-			foo |= WTextureSettings;
-		if (needs_refresh & REFRESH_MENU_TITLE_FONT)
-			foo |= WFontSettings;
-		if (needs_refresh & REFRESH_MENU_TITLE_COLOR)
-			foo |= WColorSettings;
-		if (foo)
-			WMPostNotificationName(WNMenuTitleAppearanceSettingsChanged, NULL,
-					       (void *)(uintptr_t) foo);
-
-		foo = 0;
-		if (needs_refresh & REFRESH_MENU_TEXTURE)
-			foo |= WTextureSettings;
-		if (needs_refresh & REFRESH_MENU_FONT)
-			foo |= WFontSettings;
-		if (needs_refresh & REFRESH_MENU_COLOR)
-			foo |= WColorSettings;
-		if (foo)
-			WMPostNotificationName(WNMenuAppearanceSettingsChanged, NULL, (void *)(uintptr_t) foo);
-
-		foo = 0;
-		if (needs_refresh & REFRESH_WINDOW_FONT)
-			foo |= WFontSettings;
-		if (needs_refresh & REFRESH_WINDOW_TEXTURES)
-			foo |= WTextureSettings;
-		if (needs_refresh & REFRESH_WINDOW_TITLE_COLOR)
-			foo |= WColorSettings;
-		if (foo)
-			WMPostNotificationName(WNWindowAppearanceSettingsChanged, NULL, (void *)(uintptr_t) foo);
-
-		if (!(needs_refresh & REFRESH_ICON_TILE)) {
-			foo = 0;
-			if (needs_refresh & REFRESH_ICON_FONT)
-				foo |= WFontSettings;
-			if (needs_refresh & REFRESH_ICON_TITLE_COLOR)
-				foo |= WTextureSettings;
-			if (needs_refresh & REFRESH_ICON_TITLE_BACK)
-				foo |= WTextureSettings;
-			if (foo)
-				WMPostNotificationName(WNIconAppearanceSettingsChanged, NULL,
-						       (void *)(uintptr_t) foo);
-		}
-		if (needs_refresh & REFRESH_ICON_TILE)
-			WMPostNotificationName(WNIconTileSettingsChanged, NULL, NULL);
-
-		if (needs_refresh & REFRESH_WORKSPACE_MENU) {
-			if (vscr->workspace.menu)
-				wWorkspaceMenuUpdate(vscr, vscr->workspace.menu);
-			if (vscr->clip.ws_menu)
-				wWorkspaceMenuUpdate(vscr, vscr->clip.ws_menu);
-			if (vscr->workspace.submenu)
-				vscr->workspace.submenu->flags.realized = 0;
-			if (vscr->clip.submenu)
-				vscr->clip.submenu->flags.realized = 0;
-		}
-	}
+	if (needs_refresh != 0 && !w_global.startup.phase1)
+		refresh_defaults(vscr, needs_refresh);
 }
 
 void wDefaultUpdateIcons(virtual_screen *vscr)
@@ -1315,7 +1408,7 @@ void wDefaultUpdateIcons(virtual_screen *vscr)
 	}
 
 	if (!wPreferences.flags.noclip || wPreferences.flags.clip_merged_in_dock)
-		wClipIconPaint();
+		wClipIconPaint(vscr->clip.icon);
 
 	for (dc = vscr->drawer.drawers; dc != NULL; dc = dc->next)
 		wDrawerIconPaint(dc->adrawer->icon_array[0]);

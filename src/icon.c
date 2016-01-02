@@ -139,6 +139,24 @@ void icon_for_wwindow_map(WIcon *icon)
 	WMAddNotificationObserver(icon_tileObserver, icon, WNIconTileSettingsChanged, icon);
 }
 
+void icon_for_wwindow_miniwindow_map(WIcon *icon)
+{
+	WWindow *wwin = icon->owner;
+	virtual_screen *vscr = wwin->vscr;
+	WScreen *scr = vscr->screen_ptr;
+
+	wcore_map_toplevel(icon->core, vscr, wwin->icon_x, wwin->icon_y, 0, scr->w_depth,
+			   scr->w_visual, scr->w_colormap, scr->white_pixel);
+
+	if (wwin->wm_hints && (wwin->wm_hints->flags & IconWindowHint))
+		icon->icon_win = wwin->wm_hints->icon_window;
+
+	map_icon_image(icon);
+
+	WMAddNotificationObserver(icon_appearanceObserver, icon, WNIconAppearanceSettingsChanged, icon);
+	WMAddNotificationObserver(icon_tileObserver, icon, WNIconTileSettingsChanged, icon);
+}
+
 WIcon *icon_create_core(void)
 {
 	WIcon *icon;

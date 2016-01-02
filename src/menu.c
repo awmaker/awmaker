@@ -2133,29 +2133,29 @@ static Bool getMenuPath(WMenu *menu, char *buffer, int bufSize)
 static Bool saveMenuRecurs(WMPropList *menus, WMenu *menu, virtual_screen *vscr)
 {
 	WMPropList *key;
-	int save_menus = 0, i;
+	int i;
 	char buffer[512];
 	Bool ok = True;
 
-	if (menu->flags.buttoned && menu != vscr->menu.switch_menu) {
-		buffer[0] = '\0';
-		ok = getMenuPath(menu, buffer, 510);
+	if (!menu)
+		return 0;
 
-		if (ok) {
-			key = WMCreatePLString(buffer);
-			saveMenuInfo(menus, menu, key);
-			WMReleasePropList(key);
-			save_menus = 1;
-		}
-	}
+	if (!menu->flags.buttoned || menu == vscr->menu.switch_menu)
+		return 0;
 
-	if (ok) {
-		for (i = 0; i < menu->cascade_no; i++) {
-			if (saveMenuRecurs(menus, menu->cascades[i], vscr))
-				save_menus = 1;
-		}
-	}
-	return save_menus;
+	buffer[0] = '\0';
+	ok = getMenuPath(menu, buffer, 510);
+	if (!ok)
+		return 0;
+
+	key = WMCreatePLString(buffer);
+	saveMenuInfo(menus, menu, key);
+	WMReleasePropList(key);
+
+	for (i = 0; i < menu->cascade_no; i++)
+		saveMenuRecurs(menus, menu->cascades[i], vscr);
+
+	return 1;
 }
 
 static Bool getMenuInfo(WMPropList *info, int *x, int *y, Bool *lowered)

@@ -33,6 +33,7 @@ WDDomain *wDefaultsInitDomain(const char *domain, Bool requireDictionary);
 void wDefaultsMergeGlobalMenus(WDDomain *menuDomain);
 
 void wReadDefaults(virtual_screen *vscr, WMPropList *new_dict);
+void read_defaults_noscreen(virtual_screen *vscr, WMPropList *new_dict);
 void wDefaultUpdateIcons(virtual_screen *vscr);
 void wReadStaticDefaults(WMPropList *dict);
 void wDefaultsCheckDomains(void *arg);

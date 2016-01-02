@@ -760,7 +760,7 @@ void set_screen_options(virtual_screen *vscr)
 
 	/* map initial workspace */
 	if (vscr->workspace.count == 1)
-		workspace_map(vscr, vscr->workspace.array[vscr->workspace.count - 1], -1, NULL);
+		workspace_map(vscr, vscr->workspace.array[0], -1, NULL);
 
 	/* create shared pixmaps */
 	createPixmaps(vscr);
@@ -880,10 +880,11 @@ void wScreenUpdateUsableArea(virtual_screen *vscr)
 		wArrangeIcons(vscr, True);
 }
 
-void wScreenRestoreState(virtual_screen *vscr, char *screen_id)
+void wScreenRestoreState(virtual_screen *vscr)
 {
 	WMPropList *state, *dDock;
 	char *path, buf[16];
+	int screen_id = vscr->screen_ptr->screen;
 
 	switchmenu_create(vscr);
 	window_menu_create(vscr);
@@ -891,7 +892,7 @@ void wScreenRestoreState(virtual_screen *vscr, char *screen_id)
 	if (w_global.screen_count == 1) {
 		path = wdefaultspathfordomain("WMState");
 	} else {
-		snprintf(buf, sizeof(buf), "WMState.%i", (int) screen_id);
+		snprintf(buf, sizeof(buf), "WMState.%i", screen_id);
 		path = wdefaultspathfordomain(buf);
 	}
 

@@ -65,7 +65,8 @@
 #define COPYRIGHT_TEXT  \
 	"Copyright \xc2\xa9 1997-2006 Alfredo K. Kojima\n"\
 	"Copyright \xc2\xa9 1998-2006 Dan Pascu\n"\
-	"Copyright \xc2\xa9 2013-2014 Window Maker Developers Team"
+	"Copyright \xc2\xa9 2013-2014 Window Maker Developers Team\n" \
+	"Copyright \xc2\xa9 2015-2016 Rodolfo García (kix)"
 
 #define LEGAL_TEXT \
 	"    Window Maker is free software; you can redistribute it and/or "\
@@ -1194,7 +1195,7 @@ void wShowInfoPanel(virtual_screen *vscr)
 
 	name = "Lucida Sans,Comic Sans MS,URW Gothic L,Trebuchet MS" ":italic:pixelsize=28:antialias=true";
 	font = WMCreateFont(vscr->screen_ptr->wmscreen, name);
-	strbuf = "Window Maker";
+	strbuf = "AW Maker";
 	if (font) {
 		width = WMWidthOfString(font, strbuf, strlen(strbuf));
 		WMSetLabelFont(panel->name1L, font);
@@ -1222,7 +1223,7 @@ void wShowInfoPanel(virtual_screen *vscr)
 	}
 
 	WMSetLabelTextAlignment(panel->name2L, WACenter);
-	WMSetLabelText(panel->name2L, _("Window Manager for X"));
+	WMSetLabelText(panel->name2L, _("Abstracting Window Maker"));
 
 	snprintf(buffer, sizeof(buffer), _("Version %s"), VERSION);
 	panel->versionL = WMCreateLabel(panel->win);

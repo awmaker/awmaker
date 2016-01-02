@@ -123,13 +123,20 @@ static void set_clip_in_workspace(virtual_screen *vscr, WWorkspace *wspace)
 static void set_clip_in_workspace_map(virtual_screen *vscr, WWorkspace *wspace, int wksno, WMPropList *wks_state)
 {
 	WMPropList *clip_state, *tmp_state;
-	char *path;
+	int screen_id = vscr->screen_ptr->screen;
+	char *path, buf[16];
 
 	make_keys();
 
 	if (wksno < 0) {
+		if (w_global.screen_count == 1) {
+			path = wdefaultspathfordomain("WMState");
+		} else {
+			snprintf(buf, sizeof(buf), "WMState.%i", screen_id);
+			path = wdefaultspathfordomain(buf);
+		}
+
 		/* We need load the WMState file to set the Clip session state */
-		path = wdefaultspathfordomain("WMState");
 		w_global.session_state = WMReadPropListFromFile(path);
 		tmp_state = w_global.session_state;
 		wfree(path);
@@ -160,6 +167,30 @@ static void set_clip_in_workspace_map(virtual_screen *vscr, WWorkspace *wspace, 
 	}
 }
 
+void set_clip_in_workspace_map2(virtual_screen *vscr, WMPropList *wks_state, int wksno)
+{
+	WMPropList *clip_state;
+
+        if (!wPreferences.flags.noclip) {
+                clip_state = WMGetFromPLDictionary(wks_state, dClip);
+                if (!vscr->clip.mapped)
+                        clip_icon_map(vscr);
+
+                vscr->workspace.array[wksno]->clip = clip_create(vscr);
+                clip_map(vscr->workspace.array[wksno]->clip, vscr, clip_state);
+
+                if (wksno > 0)
+                        wDockHideIcons(vscr->workspace.array[wksno]->clip);
+
+                /* We set the global icons here, because scr->workspaces[wksno]->clip
+                 * was not valid in wDockRestoreState().
+                 * There we only set icon->omnipresent to know which icons we
+                 * need to set here.
+                 */
+                vscr->workspace.array[0]->clip->icon_count += set_clip_omnipresent(vscr, wksno);
+        }
+}
+
 void workspace_create(virtual_screen *vscr, int wksno, WMPropList *parr)
 {
 	WMPropList *pstr, *wks_state = NULL;
@@ -177,12 +208,16 @@ void workspace_create(virtual_screen *vscr, int wksno, WMPropList *parr)
 
 		wksname = WMGetFromPLString(pstr);
 
-		if (wksno < vscr->workspace.count)
+		if (wksno < vscr->workspace.count) {
+			set_clip_in_workspace_map2(vscr, wks_state, wksno);
 			return;
+		}
 	}
 
-	if (vscr->workspace.count >= MAX_WORKSPACES)
+	if (vscr->workspace.count >= MAX_WORKSPACES) {
+		set_clip_in_workspace_map2(vscr, wks_state, wksno);
 		return;
+	}
 
 	/* Create a new one */
 	wspace = wmalloc(sizeof(WWorkspace));
@@ -210,7 +245,7 @@ void workspace_map(virtual_screen *vscr, WWorkspace *wspace, int wksno, WMPropLi
 	if (parr != NULL)
 		wks_state = WMGetFromPLArray(parr, wksno);
 
-	if ((!wPreferences.flags.noclip) && (!w_global.clip.mapped))
+	if ((!wPreferences.flags.noclip) && (!vscr->clip.mapped))
 		clip_icon_map(vscr);
 
 	set_clip_in_workspace_map(vscr, wspace, wksno, wks_state);
@@ -530,7 +565,7 @@ static void showWorkspaceName(virtual_screen *vscr, int workspace)
 
 void wWorkspaceChange(virtual_screen *vscr, int workspace)
 {
-	if (w_global.startup.phase1 || vscr->screen_ptr->flags.ignore_focus_events)
+	if (w_global.startup.phase1 || w_global.startup.phase2 || vscr->screen_ptr->flags.ignore_focus_events)
 		return;
 
 	if (workspace != vscr->workspace.current)
@@ -753,10 +788,10 @@ void wWorkspaceForceChange(virtual_screen *vscr, int workspace)
 	if (!wPreferences.flags.noclip && (vscr->workspace.array[workspace]->clip->auto_collapse ||
 					   vscr->workspace.array[workspace]->clip->auto_raise_lower)) {
 		/* to handle enter notify. This will also */
-		XUnmapWindow(dpy, w_global.clip.icon->icon->core->window);
-		XMapWindow(dpy, w_global.clip.icon->icon->core->window);
-	} else if (w_global.clip.mapped) {
-		wClipIconPaint();
+		XUnmapWindow(dpy, vscr->clip.icon->icon->core->window);
+		XMapWindow(dpy, vscr->clip.icon->icon->core->window);
+	} else if (vscr->clip.mapped) {
+		wClipIconPaint(vscr->clip.icon);
 	}
 
 	wScreenUpdateUsableArea(vscr);
@@ -846,8 +881,8 @@ void wWorkspaceRename(virtual_screen *vscr, int workspace, const char *name)
 		}
 	}
 
-	if (w_global.clip.icon)
-		wClipIconPaint();
+	if (vscr->clip.icon)
+		wClipIconPaint(vscr->clip.icon);
 
 	WMPostNotificationName(WMNWorkspaceNameChanged, vscr, (void *)(uintptr_t) workspace);
 }

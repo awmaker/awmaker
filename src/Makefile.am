@@ -174,7 +174,7 @@ am__v_CHKOPTS_  = $(am__v_CHKOPTS_$(AM_DEFAULT_VERBOSITY))
 am__v_CHKOPTS_0 = @echo "  CHK      $@" ;
 am__v_CHKOPTS_1 =
 
-check-local: defaults-callbacks-static defaults-callbacks-dynamic
+check-local: defaults-callbacks-static defaults-callbacks-dynamic defaults-callbacks-noscreen
 
 # Check that the callback functions used to load the configuration match
 # the type of the variable where the value will be stored
@@ -194,3 +194,13 @@ defaults-callbacks-dynamic:
 		--struct-def "legacy_minipreview_config=$(srcdir)/defaults.c"  \
 		--callback "getBool=char, getEnum=char, getInt=int"  \
 		--callback "getPathList=char*, getCoord=WCoord"
+
+defaults-callbacks-noscreen:
+	$(AM_V_CHKOPTS)$(top_srcdir)/script/check-wmaker-loaddef-callbacks.sh  \
+		--source "$(srcdir)/defaults.c" --structure "noscreenOptionList"  \
+		--field-value-ptr 4 --field-callback 5  \
+		--struct-def "wPreferences=$(srcdir)/WindowMaker.h"  \
+		--struct-def "legacy_minipreview_config=$(srcdir)/defaults.c"  \
+		--callback "getBool=char, getEnum=char, getInt=int"  \
+		--callback "getPathList=char*, getCoord=WCoord" \
+		--callback "getModMask=int"

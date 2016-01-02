@@ -507,7 +507,7 @@ static void appiconBalloon(WObjDescriptor *object)
 	char *tmp;
 
 	/* Show balloon if it is the Clip and the workspace name is > 5 chars */
-	if (object->parent == w_global.clip.icon) {
+	if (object->parent == vscr->clip.icon) {
 		if (strlen(vscr->workspace.array[vscr->workspace.current]->name) > 5) {
 			scr->balloon->text = wstrdup(vscr->workspace.array[vscr->workspace.current]->name);
 		} else {
