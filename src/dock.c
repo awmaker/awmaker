@@ -1841,7 +1841,12 @@ void drawer_map(WDock *dock, virtual_screen *vscr)
 {
 	WAppIcon *btn = dock->icon_array[0];
 
-	wcore_map_toplevel(btn->icon->core, vscr, 0, 0, 0,
+	dock->x_pos = vscr->screen_ptr->scr_width - ICON_SIZE - DOCK_EXTRA_SPACE;
+
+	btn->x_pos = dock->x_pos;
+	btn->y_pos = dock->y_pos;
+
+	wcore_map_toplevel(btn->icon->core, vscr, btn->x_pos, btn->y_pos, 0,
 			   vscr->screen_ptr->w_depth, vscr->screen_ptr->w_visual,
 			   vscr->screen_ptr->w_colormap, vscr->screen_ptr->white_pixel);
 
@@ -1861,14 +1866,10 @@ void drawer_map(WDock *dock, virtual_screen *vscr)
 	btn->icon->core->descriptor.handle_enternotify = drawer_enter_notify;
 	btn->icon->core->descriptor.handle_leavenotify = drawer_leave_notify;
 
-	btn->x_pos = dock->x_pos;
-	btn->y_pos = dock->y_pos;
-
 	dock->vscr = vscr;
 
 	XMapWindow(dpy, btn->icon->core->window);
 	wRaiseFrame(btn->icon->core);
-	XMoveWindow(dpy, btn->icon->core->window, btn->x_pos, btn->y_pos);
 }
 
 void drawer_unmap(WDock *dock)
