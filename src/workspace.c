@@ -171,7 +171,6 @@ void set_clip_in_workspace_map2(virtual_screen *vscr, WMPropList *wks_state, int
 	if (!vscr->clip.mapped)
 		clip_icon_map(vscr);
 
-	vscr->workspace.array[wksno]->clip = clip_create(vscr, wks_state);
 	clip_map(vscr->workspace.array[wksno]->clip, vscr, clip_state);
 
 	if (wksno > 0)
@@ -198,12 +197,14 @@ void workspace_create(virtual_screen *vscr, int wksno, WMPropList *parr)
 		wksname = WMGetFromPLString(pstr);
 
 		if (wksno < vscr->workspace.count) {
+			vscr->workspace.array[wksno]->clip = clip_create(vscr, wks_state);
 			set_clip_in_workspace_map2(vscr, wks_state, wksno);
 			return;
 		}
 	}
 
 	if (vscr->workspace.count >= MAX_WORKSPACES) {
+		vscr->workspace.array[wksno]->clip = clip_create(vscr, wks_state);
 		set_clip_in_workspace_map2(vscr, wks_state, wksno);
 		return;
 	}
