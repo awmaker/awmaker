@@ -149,11 +149,6 @@ static void set_clip_in_workspace_map(virtual_screen *vscr, WWorkspace *wspace, 
 		if (wksno > 0)
 			wDockHideIcons(vscr->workspace.array[wksno]->clip);
 
-		/* We set the global icons here, because scr->workspaces[wksno]->clip
-		 * was not valid in wDockRestoreState().
-		 * There we only set icon->omnipresent to know which icons we
-		 * need to set here.
-		 */
 		vscr->workspace.array[0]->clip->icon_count += set_clip_omnipresent(vscr, wksno);
 	}
 }
@@ -162,24 +157,20 @@ void set_clip_in_workspace_map2(virtual_screen *vscr, WMPropList *wks_state, int
 {
 	WMPropList *clip_state;
 
-        if (!wPreferences.flags.noclip) {
-                clip_state = WMGetFromPLDictionary(wks_state, dClip);
-                if (!vscr->clip.mapped)
-                        clip_icon_map(vscr);
+	if (wPreferences.flags.noclip)
+		return;
 
-                vscr->workspace.array[wksno]->clip = clip_create(vscr, wks_state);
-                clip_map(vscr->workspace.array[wksno]->clip, vscr, clip_state);
+	clip_state = WMGetFromPLDictionary(wks_state, dClip);
+	if (!vscr->clip.mapped)
+		clip_icon_map(vscr);
 
-                if (wksno > 0)
-                        wDockHideIcons(vscr->workspace.array[wksno]->clip);
+	vscr->workspace.array[wksno]->clip = clip_create(vscr, wks_state);
+	clip_map(vscr->workspace.array[wksno]->clip, vscr, clip_state);
 
-                /* We set the global icons here, because scr->workspaces[wksno]->clip
-                 * was not valid in wDockRestoreState().
-                 * There we only set icon->omnipresent to know which icons we
-                 * need to set here.
-                 */
-                vscr->workspace.array[0]->clip->icon_count += set_clip_omnipresent(vscr, wksno);
-        }
+	if (wksno > 0)
+		wDockHideIcons(vscr->workspace.array[wksno]->clip);
+
+	vscr->workspace.array[0]->clip->icon_count += set_clip_omnipresent(vscr, wksno);
 }
 
 void workspace_create(virtual_screen *vscr, int wksno, WMPropList *parr)
