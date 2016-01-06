@@ -1072,7 +1072,7 @@ int set_clip_omnipresent(virtual_screen *vscr, int wksno)
 	return added_omnipresent_icons;
 }
 
-void wWorkspaceRestoreState(virtual_screen *vscr)
+void workspaces_restore(virtual_screen *vscr)
 {
 	WMPropList *parr;
 	int wksno;
@@ -1088,9 +1088,30 @@ void wWorkspaceRestoreState(virtual_screen *vscr)
 
 	for (wksno = 0; wksno < WMIN(WMGetPropListItemCount(parr), MAX_WORKSPACES); wksno++)
 		workspace_create(vscr, wksno, parr);
+}
+
+void workspaces_restore_map(virtual_screen *vscr)
+{
+	WMPropList *parr;
+	int wksno;
+
+	make_keys();
+
+	if (w_global.session_state == NULL)
+		return;
+
+	parr = WMGetFromPLDictionary(w_global.session_state, dWorkspaces);
+	if (!parr)
+		return;
 
 	for (wksno = 0; wksno < vscr->workspace.count; wksno++)
 		workspace_map(vscr, vscr->workspace.array[wksno], wksno, parr);
+}
+
+void wWorkspaceRestoreState(virtual_screen *vscr)
+{
+	workspaces_restore(vscr);
+	workspaces_restore_map(vscr);
 }
 
 /* Returns the workspace number for a given workspace name */

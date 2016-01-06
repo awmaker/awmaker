@@ -45,4 +45,6 @@ void wWorkspaceRestoreState(virtual_screen *vscr);
 void wWorkspaceRename(virtual_screen *vscr, int workspace, const char *name);
 void wWorkspaceRelativeChange(virtual_screen *vscr, int amount);
 
+void workspaces_restore(virtual_screen *vscr);
+void workspaces_restore_map(virtual_screen *vscr);
 #endif
