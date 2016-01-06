@@ -6598,6 +6598,7 @@ void wDrawerIconPaint(WAppIcon *dicon)
 		color = scr->clip_title_color[CLIP_NORMAL];
 	else
 		color = scr->clip_title_color[CLIP_COLLAPSED];
+
 	XSetForeground(dpy, gc, WMColorPixel(color));
 
 	if (dicon->dock->on_right_side) {
@@ -6607,15 +6608,15 @@ void wDrawerIconPaint(WAppIcon *dicon)
 		p[1].y = ICON_SIZE / 2 + 5;
 		p[2].x = 5;
 		p[2].y = ICON_SIZE / 2;
-	}
-	else {
-		p[0].x = p[3].x = ICON_SIZE-1 - 10;
+	} else {
+		p[0].x = p[3].x = ICON_SIZE - 1 - 10;
 		p[0].y = p[3].y = ICON_SIZE / 2 - 5;
-		p[1].x = ICON_SIZE-1 - 10;
+		p[1].x = ICON_SIZE - 1 - 10;
 		p[1].y = ICON_SIZE / 2 + 5;
-		p[2].x = ICON_SIZE-1 - 5;
+		p[2].x = ICON_SIZE - 1 - 5;
 		p[2].y = ICON_SIZE / 2;
 	}
+
 	XFillPolygon(dpy, win, gc, p,3,Convex,CoordModeOrigin);
 	XDrawLines(dpy, win, gc, p,4,CoordModeOrigin);
 }
