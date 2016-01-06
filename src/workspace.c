@@ -153,32 +153,6 @@ static void set_clip_in_workspace_map(virtual_screen *vscr, WWorkspace *wspace, 
 	}
 }
 
-void set_clip_in_workspace_map2(virtual_screen *vscr, WMPropList *wks_state, int wksno)
-{
-	WMPropList *clip_state, *tmp_state;
-
-	make_keys();
-
-	if (wksno < 0)
-		tmp_state = w_global.session_state;
-	else
-		tmp_state = wks_state;
-
-	if (wPreferences.flags.noclip)
-		return;
-
-	clip_state = WMGetFromPLDictionary(tmp_state, dClip);
-	if (!vscr->clip.mapped)
-		clip_icon_map(vscr);
-
-	clip_map(vscr->workspace.array[wksno]->clip, vscr, clip_state);
-
-	if (wksno > 0)
-		wDockHideIcons(vscr->workspace.array[wksno]->clip);
-
-	vscr->workspace.array[0]->clip->icon_count += set_clip_omnipresent(vscr, wksno);
-}
-
 void workspace_create(virtual_screen *vscr, int wksno, WMPropList *parr)
 {
 	WMPropList *pstr, *wks_state = NULL;
@@ -198,14 +172,12 @@ void workspace_create(virtual_screen *vscr, int wksno, WMPropList *parr)
 
 		if (wksno < vscr->workspace.count) {
 			vscr->workspace.array[wksno]->clip = clip_create(vscr, wks_state);
-			set_clip_in_workspace_map2(vscr, wks_state, wksno);
 			return;
 		}
 	}
 
 	if (vscr->workspace.count >= MAX_WORKSPACES) {
 		vscr->workspace.array[wksno]->clip = clip_create(vscr, wks_state);
-		set_clip_in_workspace_map2(vscr, wks_state, wksno);
 		return;
 	}
 
