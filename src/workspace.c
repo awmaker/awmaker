@@ -123,31 +123,13 @@ static void set_clip_in_workspace(virtual_screen *vscr, WWorkspace *wspace)
 static void set_clip_in_workspace_map(virtual_screen *vscr, WWorkspace *wspace, int wksno, WMPropList *wks_state)
 {
 	WMPropList *clip_state, *tmp_state;
-	int screen_id = vscr->screen_ptr->screen;
-	char *path, buf[16];
 
 	make_keys();
 
-	if (wksno < 0) {
-		if (w_global.screen_count == 1) {
-			path = wdefaultspathfordomain("WMState");
-		} else {
-			snprintf(buf, sizeof(buf), "WMState.%i", screen_id);
-			path = wdefaultspathfordomain(buf);
-		}
-
-		/* We need load the WMState file to set the Clip session state */
-		w_global.session_state = WMReadPropListFromFile(path);
+	if (wksno < 0)
 		tmp_state = w_global.session_state;
-		wfree(path);
-		if (!w_global.session_state && w_global.screen_count > 1) {
-			path = wdefaultspathfordomain("WMState");
-			w_global.session_state = WMReadPropListFromFile(path);
-			wfree(path);
-		}
-	} else {
+	else
 		tmp_state = wks_state;
-	}
 
 	if (!wPreferences.flags.noclip) {
 		clip_state = WMGetFromPLDictionary(tmp_state, dClip);
