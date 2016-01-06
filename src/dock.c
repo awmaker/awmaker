@@ -1639,15 +1639,14 @@ void dock_map(WDock *dock, virtual_screen *vscr, WMPropList *state)
 	btn->icon->core->descriptor.handle_mousedown = dock_icon_mouse_down;
 	btn->icon->core->descriptor.handle_enternotify = dock_enter_notify;
 	btn->icon->core->descriptor.handle_leavenotify = dock_leave_notify;
-	XMapWindow(dpy, btn->icon->core->window);
 	btn->x_pos = scr->scr_width - ICON_SIZE - DOCK_EXTRA_SPACE;
 	btn->y_pos = 0;
 
 	dock->x_pos = btn->x_pos;
 	dock->y_pos = btn->y_pos;
+	XMapWindow(dpy, btn->icon->core->window);
 
 	wRaiseFrame(btn->icon->core);
-	XMoveWindow(dpy, btn->icon->core->window, btn->x_pos, btn->y_pos);
 
 	if (!state)
 		return;
