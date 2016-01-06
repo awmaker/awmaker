@@ -2935,10 +2935,10 @@ static void restore_clip_position(WDock *dock, virtual_screen *vscr, WMPropList 
 		return;
 
 	if (!WMIsPLString(value)) {
-		COMPLAIN("Position");
+		wwarning(_("Bad value in clip state info: Position"));
 	} else {
 		if (sscanf(WMGetFromPLString(value), "%i,%i", &dock->x_pos, &dock->y_pos) != 2)
-			COMPLAIN("Position");
+			wwarning(_("Bad value in clip state info: Position"));
 
 		/* check position sanity */
 		if (!onScreen(vscr, dock->x_pos, dock->y_pos)) {
