@@ -2535,6 +2535,9 @@ static void restore_state_lowered(WDock *dock, WMPropList *state)
 
 	dock->lowered = 0;
 
+	if (!state)
+		return;
+
 	value = WMGetFromPLDictionary(state, dLowered);
 	if (value) {
 		if (!WMIsPLString(value)) {
@@ -2553,6 +2556,9 @@ static void restore_state_collapsed(WDock *dock, WMPropList *state)
 
 	dock->collapsed = 0;
 
+	if (!state)
+		return;
+
 	value = WMGetFromPLDictionary(state, dCollapsed);
 	if (value) {
 		if (!WMIsPLString(value)) {
@@ -2569,6 +2575,9 @@ static int restore_state_autocollapsed(WDock *dock, WMPropList *state)
 {
 	WMPropList *value;
 	int ret = 0;
+
+	if (!state)
+		return 0;
 
 	value = WMGetFromPLDictionary(state, dAutoCollapse);
 	if (value) {
@@ -2591,6 +2600,9 @@ static void restore_state_autoraise(WDock *dock, WMPropList *state)
 {
 	WMPropList *value;
 
+	if (!state)
+		return;
+
 	value = WMGetFromPLDictionary(state, dAutoRaiseLower);
 	if (value) {
 		if (!WMIsPLString(value)) {
@@ -2609,6 +2621,9 @@ static int restore_state_autoattracticons(WDock *dock, WMPropList *state)
 	int ret = 0;
 
 	dock->attract_icons = 0;
+
+	if (!state)
+		return 0;
 
 	value = WMGetFromPLDictionary(state, dAutoAttractIcons);
 	if (value) {
