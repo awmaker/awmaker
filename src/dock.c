@@ -5526,6 +5526,16 @@ static void handleDockMove(WDock *dock, WAppIcon *aicon, XEvent *event)
 				moveDock(dock, shad_x, shad_y);
 				XResizeWindow(dpy, scr->dock_shadow, ICON_SIZE, ICON_SIZE);
 			}
+
+			if (dock->type == WM_CLIP) {
+				for (i = 0; i < vscr->workspace.count; i++) {
+					if ((vscr->workspace.array[i]) && (vscr->workspace.array[i]->clip)) {
+						vscr->workspace.array[i]->clip->x_pos = x;
+						vscr->workspace.array[i]->clip->y_pos = y;
+					}
+				}
+			}
+
 			done = 1;
 			break;
 		}
