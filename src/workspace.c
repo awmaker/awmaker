@@ -1075,7 +1075,7 @@ int set_clip_omnipresent(virtual_screen *vscr, int wksno)
 void wWorkspaceRestoreState(virtual_screen *vscr)
 {
 	WMPropList *parr;
-	int wksno, s1, s2;
+	int wksno;
 
 	make_keys();
 
@@ -1086,13 +1086,11 @@ void wWorkspaceRestoreState(virtual_screen *vscr)
 	if (!parr)
 		return;
 
-	for (wksno = 0; wksno < WMIN(WMGetPropListItemCount(parr), MAX_WORKSPACES); wksno++) {
-		s1 = vscr->workspace.count;
+	for (wksno = 0; wksno < WMIN(WMGetPropListItemCount(parr), MAX_WORKSPACES); wksno++)
 		workspace_create(vscr, wksno, parr);
-		s2 = vscr->workspace.count;
-		if (s2 > s1)
-			workspace_map(vscr, vscr->workspace.array[wksno - 1], wksno, parr);
-	}
+
+	for (wksno = 0; wksno < vscr->workspace.count; wksno++)
+		workspace_map(vscr, vscr->workspace.array[wksno], wksno, parr);
 }
 
 /* Returns the workspace number for a given workspace name */
