@@ -909,12 +909,6 @@ void virtual_screen_restore_map(virtual_screen *vscr)
 	wScreenUpdateUsableArea(vscr);
 }
 
-void wScreenRestoreState(virtual_screen *vscr)
-{
-	virtual_screen_restore(vscr);
-	virtual_screen_restore_map(vscr);
-}
-
 void wScreenSaveState(virtual_screen *vscr)
 {
 	WWindow *wwin;
