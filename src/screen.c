@@ -876,7 +876,19 @@ void wScreenUpdateUsableArea(virtual_screen *vscr)
 		wArrangeIcons(vscr, True);
 }
 
-void wScreenRestoreState(virtual_screen *vscr)
+void virtual_screen_restore(virtual_screen *vscr)
+{
+
+	if (!wPreferences.flags.nodock)
+		vscr->dock.dock = dock_create(vscr);
+
+	if (!wPreferences.flags.nodrawer)
+		wDrawersRestoreState(vscr);
+
+	workspaces_restore(vscr);
+}
+
+void virtual_screen_restore_map(virtual_screen *vscr)
 {
 	WMPropList *state, *dDock;
 
@@ -886,28 +898,21 @@ void wScreenRestoreState(virtual_screen *vscr)
 	if (!wPreferences.flags.nodock) {
 		dDock = WMCreatePLString("Dock");
 		state = WMGetFromPLDictionary(w_global.session_state, dDock);
-		vscr->dock.dock = dock_create(vscr);
 		dock_map(vscr->dock.dock, vscr, state);
 	}
 
-	if (!wPreferences.flags.nodrawer) {
-		if (!vscr->dock.dock->on_right_side) {
-			/* Drawer tile was created early in wScreenInit() -> wReadDefaults(). At
-			 * that time, vscr->dock was NULL and the tile was created as if we were on
-			 * the right side. If we aren't, redo it now. */
-			assert(w_global.tile.drawer);
-			RReleaseImage(w_global.tile.drawer);
-			w_global.tile.drawer = wDrawerMakeTile(vscr, w_global.tile.icon);
-		}
-
-		wDrawersRestoreState(vscr);
+	if (!wPreferences.flags.nodrawer)
 		wDrawersRestoreState_map(vscr);
-	}
 
-	workspaces_restore(vscr);
 	workspaces_restore_map(vscr);
 
 	wScreenUpdateUsableArea(vscr);
+}
+
+void wScreenRestoreState(virtual_screen *vscr)
+{
+	virtual_screen_restore(vscr);
+	virtual_screen_restore_map(vscr);
 }
 
 void wScreenSaveState(virtual_screen *vscr)
