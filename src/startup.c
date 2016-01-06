@@ -621,6 +621,30 @@ static void startup_set_defaults(void)
 	InitializeSwitchMenu();
 }
 
+static void set_session_state(virtual_screen *vscr)
+{
+	char *path, buf[16];
+	int screen_id = vscr->screen_ptr->screen;
+
+	if (w_global.screen_count == 1) {
+		path = wdefaultspathfordomain("WMState");
+	} else {
+		snprintf(buf, sizeof(buf), "WMState.%i", screen_id);
+		path = wdefaultspathfordomain(buf);
+	}
+
+	w_global.session_state = WMReadPropListFromFile(path);
+	wfree(path);
+	if (!w_global.session_state && w_global.screen_count > 1) {
+		path = wdefaultspathfordomain("WMState");
+		w_global.session_state = WMReadPropListFromFile(path);
+		wfree(path);
+	}
+
+	if (!w_global.session_state)
+		w_global.session_state = WMCreatePLDictionary(NULL, NULL);
+}
+
 /*
  *----------------------------------------------------------
  * StartUp--
@@ -692,6 +716,7 @@ void StartUp(Bool defaultScreenOnly)
 
 		/* read defaults for this screen */
 		wReadDefaults(vscr, w_global.domain.wmaker->dictionary);
+		set_session_state(vscr);
 
 		vscr->clip.icon = clip_icon_create();
 		workspace_create(vscr, -1, NULL);
