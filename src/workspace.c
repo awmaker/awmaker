@@ -171,13 +171,13 @@ void workspace_create(virtual_screen *vscr, int wksno, WMPropList *parr)
 		wksname = WMGetFromPLString(pstr);
 
 		if (wksno < vscr->workspace.count) {
-			vscr->workspace.array[wksno]->clip = clip_create(vscr, wks_state);
+			set_clip_in_workspace(vscr, vscr->workspace.array[wksno], wks_state);
 			return;
 		}
 	}
 
 	if (vscr->workspace.count >= MAX_WORKSPACES) {
-		vscr->workspace.array[wksno]->clip = clip_create(vscr, wks_state);
+		set_clip_in_workspace(vscr, vscr->workspace.array[wksno], wks_state);
 		return;
 	}
 
