@@ -102,7 +102,6 @@ int wDockReceiveDNDDrop(virtual_screen *vscr, XEvent *event);
 #endif
 
 void wClipIconPaint(WAppIcon *aicon);
-void wClipSaveState(virtual_screen *vscr);
 WMPropList *wClipSaveWorkspaceState(virtual_screen *vscr, int workspace);
 
 void wDrawerIconPaint(WAppIcon *dicon);

@@ -938,13 +938,12 @@ void wScreenSaveState(virtual_screen *vscr)
 	char *str;
 	WMPropList *old_state, *foo;
 	WMPropList *dApplications, *dDrawers;
-	WMPropList *dWorkspace, *dDock, *dClip;
+	WMPropList *dWorkspace, *dDock;
 	char buf[16];
 
 	dApplications = WMCreatePLString("Applications");
 	dWorkspace = WMCreatePLString("Workspace");
 	dDock = WMCreatePLString("Dock");
-	dClip = WMCreatePLString("Clip");
 	dDrawers = WMCreatePLString("Drawers");
 
 	/* save state of windows */
@@ -969,14 +968,6 @@ void wScreenSaveState(virtual_screen *vscr)
 		foo = WMGetFromPLDictionary(old_state, dDock);
 		if (foo != NULL)
 			WMPutInPLDictionary(w_global.session_state, dDock, foo);
-	}
-
-	if (!wPreferences.flags.noclip) {
-		wClipSaveState(vscr);
-	} else {
-		foo = WMGetFromPLDictionary(old_state, dClip);
-		if (foo != NULL)
-			WMPutInPLDictionary(w_global.session_state, dClip, foo);
 	}
 
 	wWorkspaceSaveState(vscr, old_state);

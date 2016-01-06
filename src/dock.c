@@ -132,7 +132,7 @@ static WMPropList *dDropCommand = NULL;
 #endif
 static WMPropList *dAutoLaunch, *dLock;
 static WMPropList *dName, *dForced, *dBuggyApplication, *dYes, *dNo;
-static WMPropList *dHost, *dDock, *dClip;
+static WMPropList *dHost, *dDock;
 static WMPropList *dAutoAttractIcons;
 
 static WMPropList *dPosition, *dApplications, *dLowered, *dCollapsed;
@@ -248,7 +248,6 @@ static void make_keys(void)
 	dOmnipresent = WMCreatePLString("Omnipresent");
 
 	dDock = WMCreatePLString("Dock");
-	dClip = WMCreatePLString("Clip");
 	dDrawers = WMCreatePLString("Drawers");
 }
 
@@ -2197,16 +2196,6 @@ void wDockSaveState(virtual_screen *vscr, WMPropList *old_state)
 
 	WMPutInPLDictionary(w_global.session_state, dDock, dock_state);
 	WMReleasePropList(dock_state);
-}
-
-void wClipSaveState(virtual_screen *vscr)
-{
-	WMPropList *clip_state;
-
-	clip_state = make_icon_state(vscr, vscr->clip.icon);
-
-	WMPutInPLDictionary(w_global.session_state, dClip, clip_state);
-	WMReleasePropList(clip_state);
 }
 
 WMPropList *wClipSaveWorkspaceState(virtual_screen *vscr, int workspace)
