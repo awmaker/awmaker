@@ -2931,30 +2931,31 @@ static void restore_clip_position(WDock *dock, virtual_screen *vscr, WMPropList 
 	WMPropList *value;
 
 	value = WMGetFromPLDictionary(state, dPosition);
-	if (value) {
-		if (!WMIsPLString(value)) {
+	if (!value)
+		return;
+
+	if (!WMIsPLString(value)) {
+		COMPLAIN("Position");
+	} else {
+		if (sscanf(WMGetFromPLString(value), "%i,%i", &dock->x_pos, &dock->y_pos) != 2)
 			COMPLAIN("Position");
-		} else {
-			if (sscanf(WMGetFromPLString(value), "%i,%i", &dock->x_pos, &dock->y_pos) != 2)
-				COMPLAIN("Position");
 
-			/* check position sanity */
-			if (!onScreen(vscr, dock->x_pos, dock->y_pos)) {
-				int x = dock->x_pos;
-				wScreenKeepInside(vscr, &x, &dock->y_pos, ICON_SIZE, ICON_SIZE);
-			}
-
-			/* Is this needed any more? */
-			if (dock->x_pos < 0) {
-				dock->x_pos = 0;
-			} else if (dock->x_pos > vscr->screen_ptr->scr_width - ICON_SIZE) {
-				dock->x_pos = vscr->screen_ptr->scr_width - ICON_SIZE;
-			}
-
-			/* Copy the dock coords in the appicon coords */
-			vscr->clip.icon->x_pos = dock->x_pos;
-			vscr->clip.icon->y_pos = dock->y_pos;
+		/* check position sanity */
+		if (!onScreen(vscr, dock->x_pos, dock->y_pos)) {
+			int x = dock->x_pos;
+			wScreenKeepInside(vscr, &x, &dock->y_pos, ICON_SIZE, ICON_SIZE);
 		}
+
+		/* Is this needed any more? */
+		if (dock->x_pos < 0) {
+			dock->x_pos = 0;
+		} else if (dock->x_pos > vscr->screen_ptr->scr_width - ICON_SIZE) {
+			dock->x_pos = vscr->screen_ptr->scr_width - ICON_SIZE;
+		}
+
+		/* Copy the dock coords in the appicon coords */
+		vscr->clip.icon->x_pos = dock->x_pos;
+		vscr->clip.icon->y_pos = dock->y_pos;
 	}
 }
 
