@@ -1759,6 +1759,12 @@ WDock *clip_create(virtual_screen *vscr, WMPropList *state)
 
 	dock->menu = vscr->clip.menu;
 
+	restore_state_lowered(dock, state);
+	restore_state_collapsed(dock, state);
+	(void) restore_state_autocollapsed(dock, state);
+	restore_state_autoraise(dock, state);
+	(void) restore_state_autoattracticons(dock, state);
+
 	return dock;
 }
 
@@ -1779,12 +1785,6 @@ void clip_map(WDock *dock, virtual_screen *vscr, WMPropList *state)
 	/* restore position */
 	restore_clip_position(dock, dock->vscr, state);
 	restore_clip_position_map(dock);
-
-	restore_state_lowered(dock, state);
-	restore_state_collapsed(dock, state);
-	(void) restore_state_autocollapsed(dock, state);
-	restore_state_autoraise(dock, state);
-	(void) restore_state_autoattracticons(dock, state);
 
 	/* application list */
 	clip_set_attacheddocks(dock->vscr, dock, state);
