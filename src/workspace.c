@@ -155,12 +155,19 @@ static void set_clip_in_workspace_map(virtual_screen *vscr, WWorkspace *wspace, 
 
 void set_clip_in_workspace_map2(virtual_screen *vscr, WMPropList *wks_state, int wksno)
 {
-	WMPropList *clip_state;
+	WMPropList *clip_state, *tmp_state;
+
+	make_keys();
+
+	if (wksno < 0)
+		tmp_state = w_global.session_state;
+	else
+		tmp_state = wks_state;
 
 	if (wPreferences.flags.noclip)
 		return;
 
-	clip_state = WMGetFromPLDictionary(wks_state, dClip);
+	clip_state = WMGetFromPLDictionary(tmp_state, dClip);
 	if (!vscr->clip.mapped)
 		clip_icon_map(vscr);
 
