@@ -904,7 +904,9 @@ void wScreenRestoreState(virtual_screen *vscr)
 		wDrawersRestoreState_map(vscr);
 	}
 
-	wWorkspaceRestoreState(vscr);
+	workspaces_restore(vscr);
+	workspaces_restore_map(vscr);
+
 	wScreenUpdateUsableArea(vscr);
 }
 

@@ -1108,12 +1108,6 @@ void workspaces_restore_map(virtual_screen *vscr)
 		workspace_map(vscr, vscr->workspace.array[wksno], wksno, parr);
 }
 
-void wWorkspaceRestoreState(virtual_screen *vscr)
-{
-	workspaces_restore(vscr);
-	workspaces_restore_map(vscr);
-}
-
 /* Returns the workspace number for a given workspace name */
 int wGetWorkspaceNumber(virtual_screen *vscr, const char *value)
 {

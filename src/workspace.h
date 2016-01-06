@@ -41,7 +41,6 @@ WMenu *wWorkspaceMenuMake(virtual_screen *vscr, Bool titled);
 void wWorkspaceMenuUpdate(virtual_screen *vscr, WMenu *menu);
 void wWorkspaceMenuEdit(virtual_screen *vscr);
 void wWorkspaceSaveState(virtual_screen *vscr, WMPropList *old_state);
-void wWorkspaceRestoreState(virtual_screen *vscr);
 void wWorkspaceRename(virtual_screen *vscr, int workspace, const char *name);
 void wWorkspaceRelativeChange(virtual_screen *vscr, int amount);
 
