@@ -2580,15 +2580,16 @@ static int restore_state_autocollapsed(WDock *dock, WMPropList *state)
 		return 0;
 
 	value = WMGetFromPLDictionary(state, dAutoCollapse);
-	if (value) {
-		if (!WMIsPLString(value)) {
-			COMPLAIN("AutoCollapse");
-		} else {
-			if (strcasecmp(WMGetFromPLString(value), "YES") == 0) {
-				dock->auto_collapse = 1;
-				dock->collapsed = 1;
-				ret = 1;
-			}
+	if (!value)
+		return 0;
+
+	if (!WMIsPLString(value)) {
+		COMPLAIN("AutoCollapse");
+	} else {
+		if (strcasecmp(WMGetFromPLString(value), "YES") == 0) {
+			dock->auto_collapse = 1;
+			dock->collapsed = 1;
+			ret = 1;
 		}
 	}
 
@@ -2604,13 +2605,14 @@ static void restore_state_autoraise(WDock *dock, WMPropList *state)
 		return;
 
 	value = WMGetFromPLDictionary(state, dAutoRaiseLower);
-	if (value) {
-		if (!WMIsPLString(value)) {
-			COMPLAIN("AutoRaiseLower");
-		} else {
-			if (strcasecmp(WMGetFromPLString(value), "YES") == 0)
-				dock->auto_raise_lower = 1;
-		}
+	if (!value)
+		return;
+
+	if (!WMIsPLString(value)) {
+		COMPLAIN("AutoRaiseLower");
+	} else {
+		if (strcasecmp(WMGetFromPLString(value), "YES") == 0)
+			dock->auto_raise_lower = 1;
 	}
 }
 
@@ -2626,14 +2628,15 @@ static int restore_state_autoattracticons(WDock *dock, WMPropList *state)
 		return 0;
 
 	value = WMGetFromPLDictionary(state, dAutoAttractIcons);
-	if (value) {
-		if (!WMIsPLString(value)) {
-			COMPLAIN("AutoAttractIcons");
-		} else {
-			if (strcasecmp(WMGetFromPLString(value), "YES") == 0) {
-				dock->attract_icons = 1;
-				ret = 1;
-			}
+	if (!value)
+		return 0;
+
+	if (!WMIsPLString(value)) {
+		COMPLAIN("AutoAttractIcons");
+	} else {
+		if (strcasecmp(WMGetFromPLString(value), "YES") == 0) {
+			dock->attract_icons = 1;
+			ret = 1;
 		}
 	}
 
