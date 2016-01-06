@@ -2303,14 +2303,11 @@ static WAppIcon *restore_dock_icon_state(WMPropList *info, int index)
 	if (value && WMIsPLString(value)) {
 		if (sscanf(WMGetFromPLString(value), "%hi,%hi", &aicon->xindex, &aicon->yindex) != 2)
 			wwarning(_("bad value in docked icon state info %s"), WMGetFromPLString(dPosition));
-
-		/* check position sanity */
-		/* *Very* incomplete section! */
-		aicon->xindex = 0;
 	} else {
 		aicon->yindex = index;
-		aicon->xindex = 0;
 	}
+
+	aicon->xindex = 0;
 
 	/* check if icon is omnipresent */
 	value = WMGetFromPLDictionary(info, dOmnipresent);
