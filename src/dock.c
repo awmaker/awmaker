@@ -203,6 +203,7 @@ static void save_application_list(WMPropList *state, WMPropList *list, char *scr
 
 static void restore_dock_position(WDock *dock, virtual_screen *vscr, WMPropList *state);
 static void restore_clip_position(WDock *dock, virtual_screen *vscr, WMPropList *state);
+static void restore_clip_position_map(WDock *dock);
 static void restore_state_lowered(WDock *dock, WMPropList *state);
 static void restore_state_collapsed(WDock *dock, WMPropList *state);
 static void restore_state_autoraise(WDock *dock, WMPropList *state);
@@ -1736,12 +1737,13 @@ void clip_icon_unmap(virtual_screen *vscr)
 	wcore_unmap(vscr->clip.icon->icon->core);
 }
 
-WDock *clip_create(virtual_screen *vscr)
+WDock *clip_create(virtual_screen *vscr, WMPropList *state)
 {
 	WDock *dock;
 	WAppIcon *btn;
 
 	dock = dock_create_core();
+	restore_clip_position(dock, vscr, state);
 
 	btn = vscr->clip.icon;
 	btn->dock = dock;
@@ -1764,8 +1766,6 @@ void clip_map(WDock *dock, virtual_screen *vscr, WMPropList *state)
 {
 	WAppIcon *btn = vscr->clip.icon;
 
-	dock->x_pos = 0;
-	dock->y_pos = 0;
 	dock->vscr = vscr;
 	btn->icon->core->vscr = vscr;
 	wRaiseFrame(btn->icon->core);
@@ -1778,6 +1778,7 @@ void clip_map(WDock *dock, virtual_screen *vscr, WMPropList *state)
 
 	/* restore position */
 	restore_clip_position(dock, dock->vscr, state);
+	restore_clip_position_map(dock);
 
 	restore_state_lowered(dock, state);
 	restore_state_collapsed(dock, state);
@@ -2948,6 +2949,20 @@ static void restore_clip_position(WDock *dock, virtual_screen *vscr, WMPropList 
 {
 	WMPropList *value;
 
+	if (!state) {
+		/* If no state is a new workspace+clip,
+		 * copy from clip at workspace 0
+		 */
+		if (vscr->workspace.array[0]->clip) {
+			dock->x_pos = vscr->workspace.array[0]->clip->x_pos;
+			dock->y_pos = vscr->workspace.array[0]->clip->y_pos;
+			vscr->clip.icon->x_pos = dock->x_pos;
+			vscr->clip.icon->y_pos = dock->y_pos;
+		}
+
+		return;
+	}
+
 	value = WMGetFromPLDictionary(state, dPosition);
 	if (!value)
 		return;
@@ -2960,22 +2975,29 @@ static void restore_clip_position(WDock *dock, virtual_screen *vscr, WMPropList 
 	if (sscanf(WMGetFromPLString(value), "%i,%i", &dock->x_pos, &dock->y_pos) != 2)
 		wwarning(_("Bad value in clip state info: Position"));
 
+	/* Copy the dock coords in the appicon coords */
+	vscr->clip.icon->x_pos = dock->x_pos;
+	vscr->clip.icon->y_pos = dock->y_pos;
+}
+
+static void restore_clip_position_map(WDock *dock)
+{
 	/* check position sanity */
-	if (!onScreen(vscr, dock->x_pos, dock->y_pos)) {
+	if (!onScreen(dock->vscr, dock->x_pos, dock->y_pos)) {
 		int x = dock->x_pos;
-		wScreenKeepInside(vscr, &x, &dock->y_pos, ICON_SIZE, ICON_SIZE);
+		wScreenKeepInside(dock->vscr, &x, &dock->y_pos, ICON_SIZE, ICON_SIZE);
 	}
 
 	/* Is this needed any more? */
 	if (dock->x_pos < 0) {
 		dock->x_pos = 0;
-	} else if (dock->x_pos > vscr->screen_ptr->scr_width - ICON_SIZE) {
-		dock->x_pos = vscr->screen_ptr->scr_width - ICON_SIZE;
+	} else if (dock->x_pos > dock->vscr->screen_ptr->scr_width - ICON_SIZE) {
+		dock->x_pos = dock->vscr->screen_ptr->scr_width - ICON_SIZE;
 	}
 
 	/* Copy the dock coords in the appicon coords */
-	vscr->clip.icon->x_pos = dock->x_pos;
-	vscr->clip.icon->y_pos = dock->y_pos;
+	dock->vscr->clip.icon->x_pos = dock->x_pos;
+	dock->vscr->clip.icon->y_pos = dock->y_pos;
 }
 
 void restore_drawer_position(virtual_screen *vscr, WDock *drawer, WMPropList *state)
