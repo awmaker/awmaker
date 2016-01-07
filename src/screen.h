@@ -335,7 +335,6 @@ struct WScreen {
 
 WScreen *wScreenInit(int screen_number);
 void wScreenSaveState(virtual_screen *vscr);
-void wScreenRestoreState(virtual_screen *vscr);
 
 int wScreenBringInside(virtual_screen *scr, int *x, int *y, int width, int height);
 int wScreenKeepInside(virtual_screen *scr, int *x, int *y, int width, int height);
@@ -350,4 +349,7 @@ void wScreenUpdateUsableArea(virtual_screen *vscr);
 
 void create_logo_image(virtual_screen *vscr);
 void set_screen_options(virtual_screen *vscr);
+
+void virtual_screen_restore(virtual_screen *vscr);
+void virtual_screen_restore_map(virtual_screen *vscr);
 #endif

@@ -828,10 +828,12 @@ static void update_icon_title(WIcon *icon)
 
 void wIconPaint(WIcon *icon)
 {
+	WScreen *scr;
+
 	if (!icon || !icon->core || !icon->core->vscr->screen_ptr)
 		return;
 
-	WScreen *scr = icon->core->vscr->screen_ptr;
+	scr = icon->core->vscr->screen_ptr;
 
 	XClearWindow(dpy, icon->core->window);
 

@@ -60,7 +60,7 @@ typedef struct WDock {
     struct WDDomain *defaults;
 } WDock;
 
-WDock *clip_create(virtual_screen *vscr);
+WDock *clip_create(virtual_screen *vscr, WMPropList *state);
 WDock *dock_create(virtual_screen *vscr);
 void clip_map(WDock *dock, virtual_screen *scr, WMPropList *state);
 void clip_unmap(WDock *dock);
@@ -102,7 +102,6 @@ int wDockReceiveDNDDrop(virtual_screen *vscr, XEvent *event);
 #endif
 
 void wClipIconPaint(WAppIcon *aicon);
-void wClipSaveState(virtual_screen *vscr);
 WMPropList *wClipSaveWorkspaceState(virtual_screen *vscr, int workspace);
 
 void wDrawerIconPaint(WAppIcon *dicon);

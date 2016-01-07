@@ -113,82 +113,44 @@ static void update_workspace_list(virtual_screen *vscr, WWorkspace *wspace)
 	vscr->workspace.array = list;
 }
 
-static void set_clip_in_workspace(virtual_screen *vscr, WWorkspace *wspace)
+static void set_clip_in_workspace(virtual_screen *vscr, WWorkspace *wspace, WMPropList *wks_state)
 {
+	WMPropList *clip_state = NULL;
 	wspace->clip = NULL;
+
+	if (wPreferences.flags.noclip)
+		return;
+
+	if (wks_state)
+		clip_state = WMGetFromPLDictionary(wks_state, dClip);
+
 	if (!wPreferences.flags.noclip)
-		wspace->clip = clip_create(vscr);
+		wspace->clip = clip_create(vscr, clip_state);
 }
 
 static void set_clip_in_workspace_map(virtual_screen *vscr, WWorkspace *wspace, int wksno, WMPropList *wks_state)
 {
 	WMPropList *clip_state, *tmp_state;
-	int screen_id = vscr->screen_ptr->screen;
-	char *path, buf[16];
 
 	make_keys();
 
-	if (wksno < 0) {
-		if (w_global.screen_count == 1) {
-			path = wdefaultspathfordomain("WMState");
-		} else {
-			snprintf(buf, sizeof(buf), "WMState.%i", screen_id);
-			path = wdefaultspathfordomain(buf);
-		}
-
-		/* We need load the WMState file to set the Clip session state */
-		w_global.session_state = WMReadPropListFromFile(path);
+	if (wksno < 0)
 		tmp_state = w_global.session_state;
-		wfree(path);
-		if (!w_global.session_state && w_global.screen_count > 1) {
-			path = wdefaultspathfordomain("WMState");
-			w_global.session_state = WMReadPropListFromFile(path);
-			wfree(path);
-		}
-	} else {
+	else
 		tmp_state = wks_state;
+
+	if (wPreferences.flags.noclip)
+		return;
+
+	clip_state = WMGetFromPLDictionary(tmp_state, dClip);
+	clip_map(wspace->clip, vscr, clip_state);
+
+	if (wksno >= 0) {
+		if (wksno > 0)
+			wDockHideIcons(vscr->workspace.array[wksno]->clip);
+
+		vscr->workspace.array[0]->clip->icon_count += set_clip_omnipresent(vscr, wksno);
 	}
-
-	if (!wPreferences.flags.noclip) {
-		clip_state = WMGetFromPLDictionary(tmp_state, dClip);
-		clip_map(wspace->clip, vscr, clip_state);
-
-		if (wksno >= 0) {
-			if (wksno > 0)
-				wDockHideIcons(vscr->workspace.array[wksno]->clip);
-
-			/* We set the global icons here, because scr->workspaces[wksno]->clip
-			 * was not valid in wDockRestoreState().
-			 * There we only set icon->omnipresent to know which icons we
-			 * need to set here.
-			 */
-			vscr->workspace.array[0]->clip->icon_count += set_clip_omnipresent(vscr, wksno);
-		}
-	}
-}
-
-void set_clip_in_workspace_map2(virtual_screen *vscr, WMPropList *wks_state, int wksno)
-{
-	WMPropList *clip_state;
-
-        if (!wPreferences.flags.noclip) {
-                clip_state = WMGetFromPLDictionary(wks_state, dClip);
-                if (!vscr->clip.mapped)
-                        clip_icon_map(vscr);
-
-                vscr->workspace.array[wksno]->clip = clip_create(vscr);
-                clip_map(vscr->workspace.array[wksno]->clip, vscr, clip_state);
-
-                if (wksno > 0)
-                        wDockHideIcons(vscr->workspace.array[wksno]->clip);
-
-                /* We set the global icons here, because scr->workspaces[wksno]->clip
-                 * was not valid in wDockRestoreState().
-                 * There we only set icon->omnipresent to know which icons we
-                 * need to set here.
-                 */
-                vscr->workspace.array[0]->clip->icon_count += set_clip_omnipresent(vscr, wksno);
-        }
 }
 
 void workspace_create(virtual_screen *vscr, int wksno, WMPropList *parr)
@@ -209,13 +171,13 @@ void workspace_create(virtual_screen *vscr, int wksno, WMPropList *parr)
 		wksname = WMGetFromPLString(pstr);
 
 		if (wksno < vscr->workspace.count) {
-			set_clip_in_workspace_map2(vscr, wks_state, wksno);
+			set_clip_in_workspace(vscr, vscr->workspace.array[wksno], wks_state);
 			return;
 		}
 	}
 
 	if (vscr->workspace.count >= MAX_WORKSPACES) {
-		set_clip_in_workspace_map2(vscr, wks_state, wksno);
+		set_clip_in_workspace(vscr, vscr->workspace.array[wksno], wks_state);
 		return;
 	}
 
@@ -227,7 +189,7 @@ void workspace_create(virtual_screen *vscr, int wksno, WMPropList *parr)
 	set_workspace_name(vscr, wspace, wksname);
 	update_workspace_list(vscr, wspace);
 
-	set_clip_in_workspace(vscr, wspace);
+	set_clip_in_workspace(vscr, wspace, wks_state);
 
 	menu_workspace_addwks(vscr, vscr->workspace.menu);
 	menu_workspace_shortcut_labels(vscr, vscr->workspace.menu);
@@ -825,20 +787,21 @@ static void deleteWSCommand(WMenu *menu, WMenuEntry *entry)
 static void newWSCommand(WMenu *menu, WMenuEntry *foo)
 {
 	int s1, s2;
+	virtual_screen *vscr = menu->frame->vscr;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) foo;
 
-	s1 = menu->frame->vscr->workspace.count;
-	workspace_create(menu->frame->vscr, -1, NULL);
-	s2 = menu->frame->vscr->workspace.count;
+	s1 = vscr->workspace.count;
+	workspace_create(vscr, -1, NULL);
+	s2 = vscr->workspace.count;
 
 	/* autochange workspace */
 	if (s2 > s1) {
-		workspace_map(menu->frame->vscr,
-			      menu->frame->vscr->workspace.array[menu->frame->vscr->workspace.count - 1],
+		workspace_map(vscr,
+			      vscr->workspace.array[vscr->workspace.count - 1],
 			      -1, NULL);
-		wWorkspaceChange(menu->frame->vscr, s2 - 1);
+		wWorkspaceChange(vscr, s2 - 1);
 	}
 }
 
@@ -1109,10 +1072,10 @@ int set_clip_omnipresent(virtual_screen *vscr, int wksno)
 	return added_omnipresent_icons;
 }
 
-void wWorkspaceRestoreState(virtual_screen *vscr)
+void workspaces_restore(virtual_screen *vscr)
 {
 	WMPropList *parr;
-	int wksno, s1, s2;
+	int wksno;
 
 	make_keys();
 
@@ -1123,13 +1086,26 @@ void wWorkspaceRestoreState(virtual_screen *vscr)
 	if (!parr)
 		return;
 
-	for (wksno = 0; wksno < WMIN(WMGetPropListItemCount(parr), MAX_WORKSPACES); wksno++) {
-		s1 = vscr->workspace.count;
+	for (wksno = 0; wksno < WMIN(WMGetPropListItemCount(parr), MAX_WORKSPACES); wksno++)
 		workspace_create(vscr, wksno, parr);
-		s2 = vscr->workspace.count;
-		if (s2 > s1)
-			workspace_map(vscr, vscr->workspace.array[wksno - 1], wksno, parr);
-	}
+}
+
+void workspaces_restore_map(virtual_screen *vscr)
+{
+	WMPropList *parr;
+	int wksno;
+
+	make_keys();
+
+	if (w_global.session_state == NULL)
+		return;
+
+	parr = WMGetFromPLDictionary(w_global.session_state, dWorkspaces);
+	if (!parr)
+		return;
+
+	for (wksno = 0; wksno < vscr->workspace.count; wksno++)
+		workspace_map(vscr, vscr->workspace.array[wksno], wksno, parr);
 }
 
 /* Returns the workspace number for a given workspace name */

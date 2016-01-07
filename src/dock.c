@@ -132,7 +132,7 @@ static WMPropList *dDropCommand = NULL;
 #endif
 static WMPropList *dAutoLaunch, *dLock;
 static WMPropList *dName, *dForced, *dBuggyApplication, *dYes, *dNo;
-static WMPropList *dHost, *dDock, *dClip;
+static WMPropList *dHost, *dDock;
 static WMPropList *dAutoAttractIcons;
 
 static WMPropList *dPosition, *dApplications, *dLowered, *dCollapsed;
@@ -203,6 +203,7 @@ static void save_application_list(WMPropList *state, WMPropList *list, char *scr
 
 static void restore_dock_position(WDock *dock, virtual_screen *vscr, WMPropList *state);
 static void restore_clip_position(WDock *dock, virtual_screen *vscr, WMPropList *state);
+static void restore_clip_position_map(WDock *dock);
 static void restore_state_lowered(WDock *dock, WMPropList *state);
 static void restore_state_collapsed(WDock *dock, WMPropList *state);
 static void restore_state_autoraise(WDock *dock, WMPropList *state);
@@ -248,7 +249,6 @@ static void make_keys(void)
 	dOmnipresent = WMCreatePLString("Omnipresent");
 
 	dDock = WMCreatePLString("Dock");
-	dClip = WMCreatePLString("Clip");
 	dDrawers = WMCreatePLString("Drawers");
 }
 
@@ -1639,15 +1639,14 @@ void dock_map(WDock *dock, virtual_screen *vscr, WMPropList *state)
 	btn->icon->core->descriptor.handle_mousedown = dock_icon_mouse_down;
 	btn->icon->core->descriptor.handle_enternotify = dock_enter_notify;
 	btn->icon->core->descriptor.handle_leavenotify = dock_leave_notify;
-	XMapWindow(dpy, btn->icon->core->window);
 	btn->x_pos = scr->scr_width - ICON_SIZE - DOCK_EXTRA_SPACE;
 	btn->y_pos = 0;
 
 	dock->x_pos = btn->x_pos;
 	dock->y_pos = btn->y_pos;
+	XMapWindow(dpy, btn->icon->core->window);
 
 	wRaiseFrame(btn->icon->core);
-	XMoveWindow(dpy, btn->icon->core->window, btn->x_pos, btn->y_pos);
 
 	if (!state)
 		return;
@@ -1737,12 +1736,13 @@ void clip_icon_unmap(virtual_screen *vscr)
 	wcore_unmap(vscr->clip.icon->icon->core);
 }
 
-WDock *clip_create(virtual_screen *vscr)
+WDock *clip_create(virtual_screen *vscr, WMPropList *state)
 {
 	WDock *dock;
 	WAppIcon *btn;
 
 	dock = dock_create_core();
+	restore_clip_position(dock, vscr, state);
 
 	btn = vscr->clip.icon;
 	btn->dock = dock;
@@ -1758,6 +1758,12 @@ WDock *clip_create(virtual_screen *vscr)
 
 	dock->menu = vscr->clip.menu;
 
+	restore_state_lowered(dock, state);
+	restore_state_collapsed(dock, state);
+	(void) restore_state_autocollapsed(dock, state);
+	restore_state_autoraise(dock, state);
+	(void) restore_state_autoattracticons(dock, state);
+
 	return dock;
 }
 
@@ -1765,8 +1771,6 @@ void clip_map(WDock *dock, virtual_screen *vscr, WMPropList *state)
 {
 	WAppIcon *btn = vscr->clip.icon;
 
-	dock->x_pos = 0;
-	dock->y_pos = 0;
 	dock->vscr = vscr;
 	btn->icon->core->vscr = vscr;
 	wRaiseFrame(btn->icon->core);
@@ -1779,12 +1783,7 @@ void clip_map(WDock *dock, virtual_screen *vscr, WMPropList *state)
 
 	/* restore position */
 	restore_clip_position(dock, dock->vscr, state);
-
-	restore_state_lowered(dock, state);
-	restore_state_collapsed(dock, state);
-	(void) restore_state_autocollapsed(dock, state);
-	restore_state_autoraise(dock, state);
-	(void) restore_state_autoattracticons(dock, state);
+	restore_clip_position_map(dock);
 
 	/* application list */
 	clip_set_attacheddocks(dock->vscr, dock, state);
@@ -1841,7 +1840,12 @@ void drawer_map(WDock *dock, virtual_screen *vscr)
 {
 	WAppIcon *btn = dock->icon_array[0];
 
-	wcore_map_toplevel(btn->icon->core, vscr, 0, 0, 0,
+	dock->x_pos = vscr->screen_ptr->scr_width - ICON_SIZE - DOCK_EXTRA_SPACE;
+
+	btn->x_pos = dock->x_pos;
+	btn->y_pos = dock->y_pos;
+
+	wcore_map_toplevel(btn->icon->core, vscr, btn->x_pos, btn->y_pos, 0,
 			   vscr->screen_ptr->w_depth, vscr->screen_ptr->w_visual,
 			   vscr->screen_ptr->w_colormap, vscr->screen_ptr->white_pixel);
 
@@ -1861,14 +1865,10 @@ void drawer_map(WDock *dock, virtual_screen *vscr)
 	btn->icon->core->descriptor.handle_enternotify = drawer_enter_notify;
 	btn->icon->core->descriptor.handle_leavenotify = drawer_leave_notify;
 
-	btn->x_pos = dock->x_pos;
-	btn->y_pos = dock->y_pos;
-
 	dock->vscr = vscr;
 
 	XMapWindow(dpy, btn->icon->core->window);
 	wRaiseFrame(btn->icon->core);
-	XMoveWindow(dpy, btn->icon->core->window, btn->x_pos, btn->y_pos);
 }
 
 void drawer_unmap(WDock *dock)
@@ -2087,6 +2087,7 @@ static WMPropList *clip_save_state(virtual_screen *vscr, WDock *dock)
 	WMPropList *icon_info;
 	WMPropList *list = NULL, *dock_state = NULL;
 	WMPropList *value;
+	char buffer[256];
 
 	list = WMCreatePLArray(NULL);
 
@@ -2120,6 +2121,16 @@ static WMPropList *clip_save_state(virtual_screen *vscr, WDock *dock)
 
 	value = (dock->auto_raise_lower ? dYes : dNo);
 	WMPutInPLDictionary(dock_state, dAutoRaiseLower, value);
+
+	/* TODO: Check why in the last workspace, clip is at x=0, y=0
+	 * Save the Clip position using the Clip in workspace 1
+	 */
+	snprintf(buffer, sizeof(buffer), "%i,%i",
+		 vscr->workspace.array[0]->clip->x_pos,
+		 vscr->workspace.array[0]->clip->y_pos);
+	value = WMCreatePLString(buffer);
+	WMPutInPLDictionary(dock_state, dPosition, value);
+	WMReleasePropList(value);
 
 	return dock_state;
 }
@@ -2186,16 +2197,6 @@ void wDockSaveState(virtual_screen *vscr, WMPropList *old_state)
 
 	WMPutInPLDictionary(w_global.session_state, dDock, dock_state);
 	WMReleasePropList(dock_state);
-}
-
-void wClipSaveState(virtual_screen *vscr)
-{
-	WMPropList *clip_state;
-
-	clip_state = make_icon_state(vscr, vscr->clip.icon);
-
-	WMPutInPLDictionary(w_global.session_state, dClip, clip_state);
-	WMReleasePropList(clip_state);
 }
 
 WMPropList *wClipSaveWorkspaceState(virtual_screen *vscr, int workspace)
@@ -2303,14 +2304,11 @@ static WAppIcon *restore_dock_icon_state(WMPropList *info, int index)
 	if (value && WMIsPLString(value)) {
 		if (sscanf(WMGetFromPLString(value), "%hi,%hi", &aicon->xindex, &aicon->yindex) != 2)
 			wwarning(_("bad value in docked icon state info %s"), WMGetFromPLString(dPosition));
-
-		/* check position sanity */
-		/* *Very* incomplete section! */
-		aicon->xindex = 0;
 	} else {
 		aicon->yindex = index;
-		aicon->xindex = 0;
 	}
+
+	aicon->xindex = 0;
 
 	/* check if icon is omnipresent */
 	value = WMGetFromPLDictionary(info, dOmnipresent);
@@ -2538,6 +2536,9 @@ static void restore_state_lowered(WDock *dock, WMPropList *state)
 
 	dock->lowered = 0;
 
+	if (!state)
+		return;
+
 	value = WMGetFromPLDictionary(state, dLowered);
 	if (value) {
 		if (!WMIsPLString(value)) {
@@ -2556,6 +2557,9 @@ static void restore_state_collapsed(WDock *dock, WMPropList *state)
 
 	dock->collapsed = 0;
 
+	if (!state)
+		return;
+
 	value = WMGetFromPLDictionary(state, dCollapsed);
 	if (value) {
 		if (!WMIsPLString(value)) {
@@ -2573,16 +2577,20 @@ static int restore_state_autocollapsed(WDock *dock, WMPropList *state)
 	WMPropList *value;
 	int ret = 0;
 
+	if (!state)
+		return 0;
+
 	value = WMGetFromPLDictionary(state, dAutoCollapse);
-	if (value) {
-		if (!WMIsPLString(value)) {
-			COMPLAIN("AutoCollapse");
-		} else {
-			if (strcasecmp(WMGetFromPLString(value), "YES") == 0) {
-				dock->auto_collapse = 1;
-				dock->collapsed = 1;
-				ret = 1;
-			}
+	if (!value)
+		return 0;
+
+	if (!WMIsPLString(value)) {
+		COMPLAIN("AutoCollapse");
+	} else {
+		if (strcasecmp(WMGetFromPLString(value), "YES") == 0) {
+			dock->auto_collapse = 1;
+			dock->collapsed = 1;
+			ret = 1;
 		}
 	}
 
@@ -2594,14 +2602,18 @@ static void restore_state_autoraise(WDock *dock, WMPropList *state)
 {
 	WMPropList *value;
 
+	if (!state)
+		return;
+
 	value = WMGetFromPLDictionary(state, dAutoRaiseLower);
-	if (value) {
-		if (!WMIsPLString(value)) {
-			COMPLAIN("AutoRaiseLower");
-		} else {
-			if (strcasecmp(WMGetFromPLString(value), "YES") == 0)
-				dock->auto_raise_lower = 1;
-		}
+	if (!value)
+		return;
+
+	if (!WMIsPLString(value)) {
+		COMPLAIN("AutoRaiseLower");
+	} else {
+		if (strcasecmp(WMGetFromPLString(value), "YES") == 0)
+			dock->auto_raise_lower = 1;
 	}
 }
 
@@ -2613,15 +2625,19 @@ static int restore_state_autoattracticons(WDock *dock, WMPropList *state)
 
 	dock->attract_icons = 0;
 
+	if (!state)
+		return 0;
+
 	value = WMGetFromPLDictionary(state, dAutoAttractIcons);
-	if (value) {
-		if (!WMIsPLString(value)) {
-			COMPLAIN("AutoAttractIcons");
-		} else {
-			if (strcasecmp(WMGetFromPLString(value), "YES") == 0) {
-				dock->attract_icons = 1;
-				ret = 1;
-			}
+	if (!value)
+		return 0;
+
+	if (!WMIsPLString(value)) {
+		COMPLAIN("AutoAttractIcons");
+	} else {
+		if (strcasecmp(WMGetFromPLString(value), "YES") == 0) {
+			dock->attract_icons = 1;
+			ret = 1;
 		}
 	}
 
@@ -2933,32 +2949,55 @@ static void restore_clip_position(WDock *dock, virtual_screen *vscr, WMPropList 
 {
 	WMPropList *value;
 
-	value = WMGetFromPLDictionary(state, dPosition);
-	if (value) {
-		if (!WMIsPLString(value)) {
-			COMPLAIN("Position");
-		} else {
-			if (sscanf(WMGetFromPLString(value), "%i,%i", &dock->x_pos, &dock->y_pos) != 2)
-				COMPLAIN("Position");
-
-			/* check position sanity */
-			if (!onScreen(vscr, dock->x_pos, dock->y_pos)) {
-				int x = dock->x_pos;
-				wScreenKeepInside(vscr, &x, &dock->y_pos, ICON_SIZE, ICON_SIZE);
-			}
-
-			/* Is this needed any more? */
-			if (dock->x_pos < 0) {
-				dock->x_pos = 0;
-			} else if (dock->x_pos > vscr->screen_ptr->scr_width - ICON_SIZE) {
-				dock->x_pos = vscr->screen_ptr->scr_width - ICON_SIZE;
-			}
-
-			/* Copy the dock coords in the appicon coords */
+	if (!state) {
+		/* If no state is a new workspace+clip,
+		 * copy from clip at workspace 0
+		 */
+		if (vscr->workspace.array[0]->clip) {
+			dock->x_pos = vscr->workspace.array[0]->clip->x_pos;
+			dock->y_pos = vscr->workspace.array[0]->clip->y_pos;
 			vscr->clip.icon->x_pos = dock->x_pos;
 			vscr->clip.icon->y_pos = dock->y_pos;
 		}
+
+		return;
 	}
+
+	value = WMGetFromPLDictionary(state, dPosition);
+	if (!value)
+		return;
+
+	if (!WMIsPLString(value)) {
+		wwarning(_("Bad value in clip state info: Position"));
+		return;
+	}
+
+	if (sscanf(WMGetFromPLString(value), "%i,%i", &dock->x_pos, &dock->y_pos) != 2)
+		wwarning(_("Bad value in clip state info: Position"));
+
+	/* Copy the dock coords in the appicon coords */
+	vscr->clip.icon->x_pos = dock->x_pos;
+	vscr->clip.icon->y_pos = dock->y_pos;
+}
+
+static void restore_clip_position_map(WDock *dock)
+{
+	/* check position sanity */
+	if (!onScreen(dock->vscr, dock->x_pos, dock->y_pos)) {
+		int x = dock->x_pos;
+		wScreenKeepInside(dock->vscr, &x, &dock->y_pos, ICON_SIZE, ICON_SIZE);
+	}
+
+	/* Is this needed any more? */
+	if (dock->x_pos < 0) {
+		dock->x_pos = 0;
+	} else if (dock->x_pos > dock->vscr->screen_ptr->scr_width - ICON_SIZE) {
+		dock->x_pos = dock->vscr->screen_ptr->scr_width - ICON_SIZE;
+	}
+
+	/* Copy the dock coords in the appicon coords */
+	dock->vscr->clip.icon->x_pos = dock->x_pos;
+	dock->vscr->clip.icon->y_pos = dock->y_pos;
 }
 
 void restore_drawer_position(virtual_screen *vscr, WDock *drawer, WMPropList *state)
@@ -5509,6 +5548,16 @@ static void handleDockMove(WDock *dock, WAppIcon *aicon, XEvent *event)
 				moveDock(dock, shad_x, shad_y);
 				XResizeWindow(dpy, scr->dock_shadow, ICON_SIZE, ICON_SIZE);
 			}
+
+			if (dock->type == WM_CLIP) {
+				for (i = 0; i < vscr->workspace.count; i++) {
+					if ((vscr->workspace.array[i]) && (vscr->workspace.array[i]->clip)) {
+						vscr->workspace.array[i]->clip->x_pos = x;
+						vscr->workspace.array[i]->clip->y_pos = y;
+					}
+				}
+			}
+
 			done = 1;
 			break;
 		}
@@ -6548,6 +6597,7 @@ void wDrawerIconPaint(WAppIcon *dicon)
 		color = scr->clip_title_color[CLIP_NORMAL];
 	else
 		color = scr->clip_title_color[CLIP_COLLAPSED];
+
 	XSetForeground(dpy, gc, WMColorPixel(color));
 
 	if (dicon->dock->on_right_side) {
@@ -6557,15 +6607,15 @@ void wDrawerIconPaint(WAppIcon *dicon)
 		p[1].y = ICON_SIZE / 2 + 5;
 		p[2].x = 5;
 		p[2].y = ICON_SIZE / 2;
-	}
-	else {
-		p[0].x = p[3].x = ICON_SIZE-1 - 10;
+	} else {
+		p[0].x = p[3].x = ICON_SIZE - 1 - 10;
 		p[0].y = p[3].y = ICON_SIZE / 2 - 5;
-		p[1].x = ICON_SIZE-1 - 10;
+		p[1].x = ICON_SIZE - 1 - 10;
 		p[1].y = ICON_SIZE / 2 + 5;
-		p[2].x = ICON_SIZE-1 - 5;
+		p[2].x = ICON_SIZE - 1 - 5;
 		p[2].y = ICON_SIZE / 2;
 	}
+
 	XFillPolygon(dpy, win, gc, p,3,Convex,CoordModeOrigin);
 	XDrawLines(dpy, win, gc, p,4,CoordModeOrigin);
 }

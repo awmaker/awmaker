@@ -758,10 +758,6 @@ void set_screen_options(virtual_screen *vscr)
 
 	wNETWMInitStuff(vscr);
 
-	/* map initial workspace */
-	if (vscr->workspace.count == 1)
-		workspace_map(vscr, vscr->workspace.array[0], -1, NULL);
-
 	/* create shared pixmaps */
 	createPixmaps(vscr);
 
@@ -880,55 +876,36 @@ void wScreenUpdateUsableArea(virtual_screen *vscr)
 		wArrangeIcons(vscr, True);
 }
 
-void wScreenRestoreState(virtual_screen *vscr)
+void virtual_screen_restore(virtual_screen *vscr)
+{
+
+	if (!wPreferences.flags.nodock)
+		vscr->dock.dock = dock_create(vscr);
+
+	if (!wPreferences.flags.nodrawer)
+		wDrawersRestoreState(vscr);
+
+	workspaces_restore(vscr);
+}
+
+void virtual_screen_restore_map(virtual_screen *vscr)
 {
 	WMPropList *state, *dDock;
-	char *path, buf[16];
-	int screen_id = vscr->screen_ptr->screen;
 
 	switchmenu_create(vscr);
 	window_menu_create(vscr);
 
-	if (w_global.screen_count == 1) {
-		path = wdefaultspathfordomain("WMState");
-	} else {
-		snprintf(buf, sizeof(buf), "WMState.%i", screen_id);
-		path = wdefaultspathfordomain(buf);
-	}
-
-	w_global.session_state = WMReadPropListFromFile(path);
-	wfree(path);
-	if (!w_global.session_state && w_global.screen_count > 1) {
-		path = wdefaultspathfordomain("WMState");
-		w_global.session_state = WMReadPropListFromFile(path);
-		wfree(path);
-	}
-
-	if (!w_global.session_state)
-		w_global.session_state = WMCreatePLDictionary(NULL, NULL);
-
 	if (!wPreferences.flags.nodock) {
 		dDock = WMCreatePLString("Dock");
 		state = WMGetFromPLDictionary(w_global.session_state, dDock);
-		vscr->dock.dock = dock_create(vscr);
 		dock_map(vscr->dock.dock, vscr, state);
 	}
 
-	if (!wPreferences.flags.nodrawer) {
-		if (!vscr->dock.dock->on_right_side) {
-			/* Drawer tile was created early in wScreenInit() -> wReadDefaults(). At
-			 * that time, vscr->dock was NULL and the tile was created as if we were on
-			 * the right side. If we aren't, redo it now. */
-			assert(w_global.tile.drawer);
-			RReleaseImage(w_global.tile.drawer);
-			w_global.tile.drawer = wDrawerMakeTile(vscr, w_global.tile.icon);
-		}
-
-		wDrawersRestoreState(vscr);
+	if (!wPreferences.flags.nodrawer)
 		wDrawersRestoreState_map(vscr);
-	}
 
-	wWorkspaceRestoreState(vscr);
+	workspaces_restore_map(vscr);
+
 	wScreenUpdateUsableArea(vscr);
 }
 
@@ -938,13 +915,12 @@ void wScreenSaveState(virtual_screen *vscr)
 	char *str;
 	WMPropList *old_state, *foo;
 	WMPropList *dApplications, *dDrawers;
-	WMPropList *dWorkspace, *dDock, *dClip;
+	WMPropList *dWorkspace, *dDock;
 	char buf[16];
 
 	dApplications = WMCreatePLString("Applications");
 	dWorkspace = WMCreatePLString("Workspace");
 	dDock = WMCreatePLString("Dock");
-	dClip = WMCreatePLString("Clip");
 	dDrawers = WMCreatePLString("Drawers");
 
 	/* save state of windows */
@@ -969,14 +945,6 @@ void wScreenSaveState(virtual_screen *vscr)
 		foo = WMGetFromPLDictionary(old_state, dDock);
 		if (foo != NULL)
 			WMPutInPLDictionary(w_global.session_state, dDock, foo);
-	}
-
-	if (!wPreferences.flags.noclip) {
-		wClipSaveState(vscr);
-	} else {
-		foo = WMGetFromPLDictionary(old_state, dClip);
-		if (foo != NULL)
-			WMPutInPLDictionary(w_global.session_state, dClip, foo);
 	}
 
 	wWorkspaceSaveState(vscr, old_state);
