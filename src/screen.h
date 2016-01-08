@@ -55,6 +55,8 @@ typedef struct virtual_screen virtual_screen;
 
 /* This virtual screen includes all items located in the screen */
 struct virtual_screen {
+	int id;                        /* Virtual screen ID */
+
 	WScreen *screen_ptr;           /* screen where vscreen is mapped, else NULL */
 	int window_count;	       /* number of windows in window_list */
 

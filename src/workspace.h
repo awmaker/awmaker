@@ -30,7 +30,7 @@ typedef struct WWorkspace {
 	RImage *map;
 } WWorkspace;
 
-void workspace_create(virtual_screen *vscr, int wksno, WMPropList *parr);
+void workspace_create(virtual_screen *vscr);
 void workspace_map(virtual_screen *vscr, WWorkspace *wspace, int wksno, WMPropList *parr);
 
 int wGetWorkspaceNumber(virtual_screen *vscr, const char *value);

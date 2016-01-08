@@ -623,18 +623,12 @@ static void startup_set_defaults(void)
 
 static void set_session_state(virtual_screen *vscr)
 {
-	char *path, buf[16];
-	int screen_id = vscr->screen_ptr->screen;
+	char *path;
 
-	if (w_global.screen_count == 1) {
-		path = wdefaultspathfordomain("WMState");
-	} else {
-		snprintf(buf, sizeof(buf), "WMState.%i", screen_id);
-		path = wdefaultspathfordomain(buf);
-	}
-
+	path = get_wmstate_file(vscr);
 	w_global.session_state = WMReadPropListFromFile(path);
 	wfree(path);
+
 	if (!w_global.session_state && w_global.screen_count > 1) {
 		path = wdefaultspathfordomain("WMState");
 		w_global.session_state = WMReadPropListFromFile(path);
@@ -679,10 +673,13 @@ void StartUp(Bool defaultScreenOnly)
 	/* Manage the Virtual Screens */
 	for (j = 0; j < max; j++) {
 		vscr = wmalloc(sizeof(virtual_screen));
+		vscr->id = w_global.vscreen_count;
 		w_global.vscreens[j] = vscr;
 		w_global.vscreen_count++;
 
 		read_defaults_noscreen(vscr, w_global.domain.wmaker->dictionary);
+
+		vscr->clip.icon = clip_icon_create();
 	}
 
 	/* Manage the Real Screens */
@@ -717,9 +714,6 @@ void StartUp(Bool defaultScreenOnly)
 		/* read defaults for this screen */
 		wReadDefaults(vscr, w_global.domain.wmaker->dictionary);
 		set_session_state(vscr);
-
-		vscr->clip.icon = clip_icon_create();
-		workspace_create(vscr, -1, NULL);
 
 		set_screen_options(w_global.vscreens[j]);
 

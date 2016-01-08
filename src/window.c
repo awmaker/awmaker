@@ -1972,7 +1972,7 @@ void window_move_next_workspace(WWindow *wwin)
 
 		while (count > 0) {
 			s1 = vscr->workspace.count;
-			workspace_create(vscr, -1, NULL);
+			workspace_create(vscr);
 			s2 = vscr->workspace.count;
 			if (s2 > s1)
 				workspace_map(vscr, vscr->workspace.array[vscr->workspace.count - 1], -1, NULL);

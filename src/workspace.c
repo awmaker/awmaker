@@ -153,33 +153,14 @@ static void set_clip_in_workspace_map(virtual_screen *vscr, WWorkspace *wspace, 
 	}
 }
 
-void workspace_create(virtual_screen *vscr, int wksno, WMPropList *parr)
+static void workspace_create_core(virtual_screen *vscr, WMPropList *wks_state, char *wksname)
 {
-	WMPropList *pstr, *wks_state = NULL;
 	WWorkspace *wspace;
-	char *wksname = NULL;
+
+	if (vscr->workspace.count >= MAX_WORKSPACES)
+		return;
 
 	make_keys();
-
-	if (parr != NULL) {
-		wks_state = WMGetFromPLArray(parr, wksno);
-		if (WMIsPLDictionary(wks_state))
-			pstr = WMGetFromPLDictionary(wks_state, dName);
-		else
-			pstr = wks_state;
-
-		wksname = WMGetFromPLString(pstr);
-
-		if (wksno < vscr->workspace.count) {
-			set_clip_in_workspace(vscr, vscr->workspace.array[wksno], wks_state);
-			return;
-		}
-	}
-
-	if (vscr->workspace.count >= MAX_WORKSPACES) {
-		set_clip_in_workspace(vscr, vscr->workspace.array[wksno], wks_state);
-		return;
-	}
 
 	/* Create a new one */
 	wspace = wmalloc(sizeof(WWorkspace));
@@ -196,6 +177,29 @@ void workspace_create(virtual_screen *vscr, int wksno, WMPropList *parr)
 
 	menu_workspace_addwks(vscr, vscr->clip.ws_menu);
 	menu_workspace_shortcut_labels(vscr, vscr->clip.ws_menu);
+}
+
+void workspace_create(virtual_screen *vscr)
+{
+	workspace_create_core(vscr, NULL, NULL);
+}
+
+static void workspace_create_with_state(virtual_screen *vscr, int wksno, WMPropList *parr)
+{
+	WMPropList *pstr, *wks_state = NULL;
+	char *wksname = NULL;
+
+	make_keys();
+
+	wks_state = WMGetFromPLArray(parr, wksno);
+	if (WMIsPLDictionary(wks_state))
+		pstr = WMGetFromPLDictionary(wks_state, dName);
+	else
+		pstr = wks_state;
+
+	wksname = WMGetFromPLString(pstr);
+
+	workspace_create_core(vscr, wks_state, wksname);
 }
 
 void workspace_map(virtual_screen *vscr, WWorkspace *wspace, int wksno, WMPropList *parr)
@@ -580,7 +584,7 @@ void wWorkspaceForceChange(virtual_screen *vscr, int workspace)
 		count = workspace - vscr->workspace.count + 1;
 		while (count > 0) {
 			s1 = vscr->workspace.count;
-			workspace_create(vscr, -1, NULL);
+			workspace_create(vscr);
 			s2 = vscr->workspace.count;
 			if (s2 > s1)
 				workspace_map(vscr, vscr->workspace.array[vscr->workspace.count - 1], -1, NULL);
@@ -793,7 +797,7 @@ static void newWSCommand(WMenu *menu, WMenuEntry *foo)
 	(void) foo;
 
 	s1 = vscr->workspace.count;
-	workspace_create(vscr, -1, NULL);
+	workspace_create(vscr);
 	s2 = vscr->workspace.count;
 
 	/* autochange workspace */
@@ -1087,7 +1091,7 @@ void workspaces_restore(virtual_screen *vscr)
 		return;
 
 	for (wksno = 0; wksno < WMIN(WMGetPropListItemCount(parr), MAX_WORKSPACES); wksno++)
-		workspace_create(vscr, wksno, parr);
+		workspace_create_with_state(vscr, wksno, parr);
 }
 
 void workspaces_restore_map(virtual_screen *vscr)
