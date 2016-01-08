@@ -623,18 +623,12 @@ static void startup_set_defaults(void)
 
 static void set_session_state(virtual_screen *vscr)
 {
-	char *path, buf[16];
-	int screen_id = vscr->screen_ptr->screen;
+	char *path;
 
-	if (w_global.screen_count == 1) {
-		path = wdefaultspathfordomain("WMState");
-	} else {
-		snprintf(buf, sizeof(buf), "WMState.%i", screen_id);
-		path = wdefaultspathfordomain(buf);
-	}
-
+	path = get_wmstate_file(vscr);
 	w_global.session_state = WMReadPropListFromFile(path);
 	wfree(path);
+
 	if (!w_global.session_state && w_global.screen_count > 1) {
 		path = wdefaultspathfordomain("WMState");
 		w_global.session_state = WMReadPropListFromFile(path);

@@ -916,7 +916,6 @@ void wScreenSaveState(virtual_screen *vscr)
 	WMPropList *old_state, *foo;
 	WMPropList *dApplications, *dDrawers;
 	WMPropList *dWorkspace, *dDock;
-	char buf[16];
 
 	dApplications = WMCreatePLString("Applications");
 	dWorkspace = WMCreatePLString("Workspace");
@@ -974,12 +973,7 @@ void wScreenSaveState(virtual_screen *vscr)
 
 	wMenuSaveState(vscr);
 
-	if (w_global.screen_count == 1) {
-		str = wdefaultspathfordomain("WMState");
-	} else {
-		snprintf(buf, sizeof(buf), "WMState.%i", vscr->screen_ptr->screen);
-		str = wdefaultspathfordomain(buf);
-	}
+	str = get_wmstate_file(vscr);
 
 	if (!WMWritePropListToFile(w_global.session_state, str))
 		werror(_("could not save session state in %s"), str);
