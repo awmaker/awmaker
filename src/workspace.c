@@ -176,10 +176,8 @@ void workspace_create(virtual_screen *vscr, int wksno, WMPropList *parr)
 		}
 	}
 
-	if (vscr->workspace.count >= MAX_WORKSPACES) {
-		set_clip_in_workspace(vscr, vscr->workspace.array[wksno], wks_state);
+	if (vscr->workspace.count >= MAX_WORKSPACES)
 		return;
-	}
 
 	/* Create a new one */
 	wspace = wmalloc(sizeof(WWorkspace));
