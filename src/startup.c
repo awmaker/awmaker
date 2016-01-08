@@ -714,7 +714,6 @@ void StartUp(Bool defaultScreenOnly)
 		set_session_state(vscr);
 
 		vscr->clip.icon = clip_icon_create();
-		workspace_create(vscr);
 
 		set_screen_options(w_global.vscreens[j]);
 
