@@ -187,7 +187,6 @@ void workspace_create(virtual_screen *vscr)
 static void workspace_create_with_state(virtual_screen *vscr, int wksno, WMPropList *parr)
 {
 	WMPropList *pstr, *wks_state = NULL;
-	WWorkspace *wspace;
 	char *wksname = NULL;
 
 	make_keys();
@@ -207,24 +206,7 @@ static void workspace_create_with_state(virtual_screen *vscr, int wksno, WMPropL
 		}
 	}
 
-	if (vscr->workspace.count >= MAX_WORKSPACES)
-		return;
-
-	/* Create a new one */
-	wspace = wmalloc(sizeof(WWorkspace));
-	vscr->workspace.count++;
-
-	/* Set the workspace name */
-	set_workspace_name(vscr, wspace, wksname);
-	update_workspace_list(vscr, wspace);
-
-	set_clip_in_workspace(vscr, wspace, wks_state);
-
-	menu_workspace_addwks(vscr, vscr->workspace.menu);
-	menu_workspace_shortcut_labels(vscr, vscr->workspace.menu);
-
-	menu_workspace_addwks(vscr, vscr->clip.ws_menu);
-	menu_workspace_shortcut_labels(vscr, vscr->clip.ws_menu);
+	workspace_create_core(vscr, wks_state, wksname);
 }
 
 void workspace_map(virtual_screen *vscr, WWorkspace *wspace, int wksno, WMPropList *parr)
