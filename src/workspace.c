@@ -196,6 +196,49 @@ void workspace_create(virtual_screen *vscr, int wksno, WMPropList *parr)
 	menu_workspace_shortcut_labels(vscr, vscr->clip.ws_menu);
 }
 
+static void workspace_create_with_state(virtual_screen *vscr, int wksno, WMPropList *parr)
+{
+	WMPropList *pstr, *wks_state = NULL;
+	WWorkspace *wspace;
+	char *wksname = NULL;
+
+	make_keys();
+
+	if (parr != NULL) {
+		wks_state = WMGetFromPLArray(parr, wksno);
+		if (WMIsPLDictionary(wks_state))
+			pstr = WMGetFromPLDictionary(wks_state, dName);
+		else
+			pstr = wks_state;
+
+		wksname = WMGetFromPLString(pstr);
+
+		if (wksno < vscr->workspace.count) {
+			set_clip_in_workspace(vscr, vscr->workspace.array[wksno], wks_state);
+			return;
+		}
+	}
+
+	if (vscr->workspace.count >= MAX_WORKSPACES)
+		return;
+
+	/* Create a new one */
+	wspace = wmalloc(sizeof(WWorkspace));
+	vscr->workspace.count++;
+
+	/* Set the workspace name */
+	set_workspace_name(vscr, wspace, wksname);
+	update_workspace_list(vscr, wspace);
+
+	set_clip_in_workspace(vscr, wspace, wks_state);
+
+	menu_workspace_addwks(vscr, vscr->workspace.menu);
+	menu_workspace_shortcut_labels(vscr, vscr->workspace.menu);
+
+	menu_workspace_addwks(vscr, vscr->clip.ws_menu);
+	menu_workspace_shortcut_labels(vscr, vscr->clip.ws_menu);
+}
+
 void workspace_map(virtual_screen *vscr, WWorkspace *wspace, int wksno, WMPropList *parr)
 {
 	WMPropList *wks_state = NULL;
@@ -1085,7 +1128,7 @@ void workspaces_restore(virtual_screen *vscr)
 		return;
 
 	for (wksno = 0; wksno < WMIN(WMGetPropListItemCount(parr), MAX_WORKSPACES); wksno++)
-		workspace_create(vscr, wksno, parr);
+		workspace_create_with_state(vscr, wksno, parr);
 }
 
 void workspaces_restore_map(virtual_screen *vscr)
