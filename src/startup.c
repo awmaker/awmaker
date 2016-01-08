@@ -678,6 +678,8 @@ void StartUp(Bool defaultScreenOnly)
 		w_global.vscreen_count++;
 
 		read_defaults_noscreen(vscr, w_global.domain.wmaker->dictionary);
+
+		vscr->clip.icon = clip_icon_create();
 	}
 
 	/* Manage the Real Screens */
@@ -712,8 +714,6 @@ void StartUp(Bool defaultScreenOnly)
 		/* read defaults for this screen */
 		wReadDefaults(vscr, w_global.domain.wmaker->dictionary);
 		set_session_state(vscr);
-
-		vscr->clip.icon = clip_icon_create();
 
 		set_screen_options(w_global.vscreens[j]);
 
