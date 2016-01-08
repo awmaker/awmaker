@@ -3623,3 +3623,18 @@ static int setCursor(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, vo
 
 	return 0;
 }
+
+char *get_wmstate_file(virtual_screen *vscr)
+{
+	char *str;
+	char buf[16];
+
+	if (w_global.screen_count == 1) {
+		str = wdefaultspathfordomain("WMState");
+	} else {
+		snprintf(buf, sizeof(buf), "WMState.%i", vscr->id);
+		str = wdefaultspathfordomain(buf);
+	}
+
+	return str;
+}

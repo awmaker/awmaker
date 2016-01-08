@@ -58,4 +58,5 @@ RImage *get_rimage_from_file(virtual_screen *vscr, const char *file_name, int ma
 
 void wDefaultPurgeInfo(const char *instance, const char *class);
 
+char *get_wmstate_file(virtual_screen *vscr);
 #endif /* WMDEFAULTS_H_ */
