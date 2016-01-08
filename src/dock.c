@@ -199,7 +199,7 @@ static int onScreen(virtual_screen *scr, int x, int y);
 
 static void moveDock(WDock *dock, int new_x, int new_y);
 
-static void save_application_list(WMPropList *state, WMPropList *list, char *screen_id);
+static void save_application_list(WMPropList *state, WMPropList *list, virtual_screen *vscr);
 
 static void restore_dock_position(WDock *dock, virtual_screen *vscr, WMPropList *state);
 static void restore_clip_position(WDock *dock, virtual_screen *vscr, WMPropList *state);
@@ -2062,9 +2062,7 @@ static WMPropList *dock_save_state(virtual_screen *vscr, WDock *dock)
 	dock_state = WMCreatePLDictionary(dApplications, list, NULL);
 
 	/* Save with the same screen_id. See get_application_list() */
-	snprintf(buffer, sizeof(buffer), "%ix%i",
-		 dock->vscr->screen_ptr->scr_width, dock->vscr->screen_ptr->scr_height);
-	save_application_list(dock_state, list, buffer);
+	save_application_list(dock_state, list, vscr);
 
 	snprintf(buffer, sizeof(buffer), "%i,%i", (dock->on_right_side ? -ICON_SIZE : 0), dock->y_pos);
 	value = WMCreatePLString(buffer);
@@ -2644,22 +2642,31 @@ static int restore_state_autoattracticons(WDock *dock, WMPropList *state)
 	return ret;
 }
 
-static WMPropList *get_application_list(WMPropList *dock_state, char *screen_id)
+WMPropList *get_applications_string(virtual_screen *vscr)
 {
-	WMPropList *tmp, *apps;
+	WMPropList *key;
 	char buffer[64];
+
+	snprintf(buffer, sizeof(buffer), "Applications_%d", vscr->id);
+	key = WMCreatePLString(buffer);
+
+	return key;
+}
+
+static WMPropList *get_application_list(WMPropList *dock_state, virtual_screen *vscr)
+{
+	WMPropList *key, *apps;
 
 	/*
 	 * When saving, it saves the dock state in
-	 * Applications and Applicationsnnn
+	 * Applications and Applications_nnn
 	 *
 	 * When loading, it will first try Applications_nnn.
 	 * If it does not exist, use Applications as default.
 	 */
-	snprintf(buffer, sizeof(buffer), "Applications_%s", screen_id);
-	tmp = WMCreatePLString(buffer);
-	apps = WMGetFromPLDictionary(dock_state, tmp);
-	WMReleasePropList(tmp);
+	key = get_applications_string(vscr);
+	apps = WMGetFromPLDictionary(dock_state, key);
+	WMReleasePropList(key);
 
 	if (!apps)
 		apps = WMGetFromPLDictionary(dock_state, dApplications);
@@ -2667,13 +2674,11 @@ static WMPropList *get_application_list(WMPropList *dock_state, char *screen_id)
 	return apps;
 }
 
-static void save_application_list(WMPropList *state, WMPropList *list, char *screen_id)
+static void save_application_list(WMPropList *state, WMPropList *list, virtual_screen *vscr)
 {
-	char buffer[64];
 	WMPropList *key;
 
-	snprintf(buffer, sizeof(buffer), "Applications_%s", screen_id);
-	key = WMCreatePLString(buffer);
+	key = get_applications_string(vscr);
 	WMPutInPLDictionary(state, key, list);
 	WMReleasePropList(key);
 }
@@ -2836,7 +2841,7 @@ static void dock_set_attacheddocks(virtual_screen *vscr, WDock *dock, WMPropList
 	old_top = dock->icon_array[0];
 
 	snprintf(screen_id, sizeof(screen_id), "%ix%i", vscr->screen_ptr->scr_width, vscr->screen_ptr->scr_height);
-	apps = get_application_list(state, screen_id);
+	apps = get_application_list(state, vscr);
 	if (!apps)
 		return;
 
@@ -2877,7 +2882,7 @@ static void clip_set_attacheddocks(virtual_screen *vscr, WDock *dock, WMPropList
 	old_top = dock->icon_array[0];
 
 	snprintf(screen_id, sizeof(screen_id), "%ix%i", vscr->screen_ptr->scr_width, vscr->screen_ptr->scr_height);
-	apps = get_application_list(state, screen_id);
+	apps = get_application_list(state, vscr);
 	if (!apps)
 		return;
 
