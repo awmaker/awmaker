@@ -153,28 +153,13 @@ static void set_clip_in_workspace_map(virtual_screen *vscr, WWorkspace *wspace, 
 	}
 }
 
-void workspace_create(virtual_screen *vscr, int wksno, WMPropList *parr)
+void workspace_create(virtual_screen *vscr)
 {
-	WMPropList *pstr, *wks_state = NULL;
+	WMPropList *wks_state = NULL;
 	WWorkspace *wspace;
 	char *wksname = NULL;
 
 	make_keys();
-
-	if (parr != NULL) {
-		wks_state = WMGetFromPLArray(parr, wksno);
-		if (WMIsPLDictionary(wks_state))
-			pstr = WMGetFromPLDictionary(wks_state, dName);
-		else
-			pstr = wks_state;
-
-		wksname = WMGetFromPLString(pstr);
-
-		if (wksno < vscr->workspace.count) {
-			set_clip_in_workspace(vscr, vscr->workspace.array[wksno], wks_state);
-			return;
-		}
-	}
 
 	if (vscr->workspace.count >= MAX_WORKSPACES)
 		return;
@@ -621,7 +606,7 @@ void wWorkspaceForceChange(virtual_screen *vscr, int workspace)
 		count = workspace - vscr->workspace.count + 1;
 		while (count > 0) {
 			s1 = vscr->workspace.count;
-			workspace_create(vscr, -1, NULL);
+			workspace_create(vscr);
 			s2 = vscr->workspace.count;
 			if (s2 > s1)
 				workspace_map(vscr, vscr->workspace.array[vscr->workspace.count - 1], -1, NULL);
@@ -834,7 +819,7 @@ static void newWSCommand(WMenu *menu, WMenuEntry *foo)
 	(void) foo;
 
 	s1 = vscr->workspace.count;
-	workspace_create(vscr, -1, NULL);
+	workspace_create(vscr);
 	s2 = vscr->workspace.count;
 
 	/* autochange workspace */
