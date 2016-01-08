@@ -153,16 +153,14 @@ static void set_clip_in_workspace_map(virtual_screen *vscr, WWorkspace *wspace, 
 	}
 }
 
-void workspace_create(virtual_screen *vscr)
+static void workspace_create_core(virtual_screen *vscr, WMPropList *wks_state, char *wksname)
 {
-	WMPropList *wks_state = NULL;
 	WWorkspace *wspace;
-	char *wksname = NULL;
-
-	make_keys();
 
 	if (vscr->workspace.count >= MAX_WORKSPACES)
 		return;
+
+	make_keys();
 
 	/* Create a new one */
 	wspace = wmalloc(sizeof(WWorkspace));
@@ -179,6 +177,11 @@ void workspace_create(virtual_screen *vscr)
 
 	menu_workspace_addwks(vscr, vscr->clip.ws_menu);
 	menu_workspace_shortcut_labels(vscr, vscr->clip.ws_menu);
+}
+
+void workspace_create(virtual_screen *vscr)
+{
+	workspace_create_core(vscr, NULL, NULL);
 }
 
 static void workspace_create_with_state(virtual_screen *vscr, int wksno, WMPropList *parr)
