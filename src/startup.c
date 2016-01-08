@@ -679,6 +679,7 @@ void StartUp(Bool defaultScreenOnly)
 	/* Manage the Virtual Screens */
 	for (j = 0; j < max; j++) {
 		vscr = wmalloc(sizeof(virtual_screen));
+		vscr->id = w_global.vscreen_count;
 		w_global.vscreens[j] = vscr;
 		w_global.vscreen_count++;
 
