@@ -191,19 +191,17 @@ static void workspace_create_with_state(virtual_screen *vscr, int wksno, WMPropL
 
 	make_keys();
 
-	if (parr != NULL) {
-		wks_state = WMGetFromPLArray(parr, wksno);
-		if (WMIsPLDictionary(wks_state))
-			pstr = WMGetFromPLDictionary(wks_state, dName);
-		else
-			pstr = wks_state;
+	wks_state = WMGetFromPLArray(parr, wksno);
+	if (WMIsPLDictionary(wks_state))
+		pstr = WMGetFromPLDictionary(wks_state, dName);
+	else
+		pstr = wks_state;
 
-		wksname = WMGetFromPLString(pstr);
+	wksname = WMGetFromPLString(pstr);
 
-		if (wksno < vscr->workspace.count) {
-			set_clip_in_workspace(vscr, vscr->workspace.array[wksno], wks_state);
-			return;
-		}
+	if (wksno < vscr->workspace.count) {
+		set_clip_in_workspace(vscr, vscr->workspace.array[wksno], wks_state);
+		return;
 	}
 
 	workspace_create_core(vscr, wks_state, wksname);
