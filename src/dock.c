@@ -1611,7 +1611,6 @@ void dock_map(WDock *dock, virtual_screen *vscr, WMPropList *state)
 	WAppIcon *btn = dock->icon_array[0];
 	WScreen *scr;
 
-	dock->vscr = vscr;
 	scr = dock->vscr->screen_ptr;
 
 	/* Return if virtual screen is not mapped */
@@ -1771,8 +1770,6 @@ void clip_map(WDock *dock, virtual_screen *vscr, WMPropList *state)
 {
 	WAppIcon *btn = vscr->clip.icon;
 
-	dock->vscr = vscr;
-	btn->icon->core->vscr = vscr;
 	wRaiseFrame(btn->icon->core);
 	XMoveWindow(dpy, btn->icon->core->window, btn->x_pos, btn->y_pos);
 
@@ -1863,8 +1860,6 @@ void drawer_map(WDock *dock, virtual_screen *vscr)
 	btn->icon->core->descriptor.handle_mousedown = drawer_icon_mouse_down;
 	btn->icon->core->descriptor.handle_enternotify = drawer_enter_notify;
 	btn->icon->core->descriptor.handle_leavenotify = drawer_leave_notify;
-
-	dock->vscr = vscr;
 
 	XMapWindow(dpy, btn->icon->core->window);
 	wRaiseFrame(btn->icon->core);
