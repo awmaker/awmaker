@@ -1784,7 +1784,6 @@ void clip_map(WDock *dock, virtual_screen *vscr, WMPropList *state)
 	WMRetainPropList(state);
 
 	/* restore position */
-	restore_clip_position(dock, dock->vscr, state);
 	restore_clip_position_map(dock);
 
 	/* application list */
