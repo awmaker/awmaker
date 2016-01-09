@@ -67,7 +67,7 @@
 static void iconDblClick(WObjDescriptor *desc, XEvent *event);
 static void iconExpose(WObjDescriptor *desc, XEvent *event);
 static void wApplicationSaveIconPathFor(const char *iconPath, const char *wm_instance, const char *wm_class);
-static WAppIcon *wAppIcon_create(WWindow *leader_win);
+static void wAppIcon_create(WApplication *wapp);
 static void wAppIcon_map(WAppIcon *aicon);
 static void remove_from_appicon_list(WAppIcon *appicon);
 static void create_appicon_from_dock(WWindow *wwin, WApplication *wapp);
@@ -115,7 +115,7 @@ void create_appicon_for_application(WApplication *wapp, WWindow *wwin)
 	/* If app_icon was not found, create it */
 	if (!wapp->app_icon) {
 		/* Create the icon */
-		wapp->app_icon = wAppIcon_create(wapp->main_window_desc);
+		wAppIcon_create(wapp);
 		wAppIcon_map(wapp->app_icon);
 		wIconUpdate(wapp->app_icon->icon);
 
@@ -276,9 +276,10 @@ static WAppIcon *dock_icon_create_core(virtual_screen *vscr, char *command, char
 	return btn;
 }
 
-static WAppIcon *wAppIcon_create(WWindow *leader_win)
+static void wAppIcon_create(WApplication *wapp)
 {
 	WAppIcon *aicon;
+	WWindow *leader_win = wapp->main_window_desc;
 	virtual_screen *vscr = leader_win->vscr;
 
 	aicon = dock_icon_create_core(vscr, NULL, leader_win->wm_class, leader_win->wm_instance);
@@ -297,7 +298,7 @@ static WAppIcon *wAppIcon_create(WWindow *leader_win)
 	aicon->icon->core->descriptor.parent_type = WCLASS_APPICON;
 	aicon->icon->core->descriptor.parent = aicon;
 
-	return aicon;
+	wapp->app_icon = aicon;
 }
 
 static void wAppIcon_map(WAppIcon *aicon)
