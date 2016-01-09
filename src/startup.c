@@ -713,7 +713,7 @@ void StartUp(Bool defaultScreenOnly)
 
 		/* read defaults for this screen */
 		wReadDefaults(vscr, w_global.domain.wmaker->dictionary);
-		set_session_state(vscr);
+		set_session_state(vscr); /* kix: This function needs the physical screens :-( */
 
 		set_screen_options(w_global.vscreens[j]);
 
