@@ -1122,7 +1122,7 @@ void wIconifyWindow(WWindow *wwin)
 		if (!wwin->flags.icon_moved)
 			PlaceIcon(wwin->vscr, &wwin->icon_x, &wwin->icon_y, wGetHeadForWindow(wwin));
 
-		wwin->icon = icon_create_core();
+		wwin->icon = icon_create_core(wwin->vscr);
 		wwin->icon->owner = wwin;
 		wwin->icon->tile_type = TILE_NORMAL;
 		set_icon_image_from_database(wwin->icon, wwin->wm_instance, wwin->wm_class, NULL);

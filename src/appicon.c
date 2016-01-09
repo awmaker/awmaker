@@ -260,7 +260,7 @@ static WAppIcon *dock_icon_create_core(virtual_screen *vscr, char *command, char
 	btn = wmalloc(sizeof(WAppIcon));
 	wretain(btn);
 
-	btn->icon = icon_create_core();
+	btn->icon = icon_create_core(vscr);
 
 	if (command)
 		btn->command = wstrdup(command);
