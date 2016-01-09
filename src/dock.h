@@ -67,7 +67,7 @@ void clip_unmap(WDock *dock);
 void dock_map(WDock *dock, virtual_screen *scr, WMPropList *dock_state);
 void dock_unmap(WDock *dock);
 
-WAppIcon *clip_icon_create(void);
+WAppIcon *clip_icon_create(virtual_screen *vscr);
 void clip_icon_map(virtual_screen *vscr);
 void clip_icon_unmap(virtual_screen *vscr);
 

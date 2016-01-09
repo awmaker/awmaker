@@ -679,7 +679,7 @@ void StartUp(Bool defaultScreenOnly)
 
 		read_defaults_noscreen(vscr, w_global.domain.wmaker->dictionary);
 
-		vscr->clip.icon = clip_icon_create();
+		vscr->clip.icon = clip_icon_create(vscr);
 	}
 
 	/* Manage the Real Screens */

@@ -1584,7 +1584,7 @@ WDock *dock_create(virtual_screen *vscr)
 	/* create dock menu */
 	dock->menu = dock_menu_create(vscr);
 
-	btn = dock_icon_create(NULL, "WMDock", "Logo");
+	btn = dock_icon_create(vscr, NULL, "WMDock", "Logo");
 
 	btn->icon->core->vscr = vscr;
 
@@ -1682,11 +1682,11 @@ void dock_unmap(WDock *dock)
 }
 
 /* Create appicon's icon */
-WAppIcon *clip_icon_create(void)
+WAppIcon *clip_icon_create(virtual_screen *vscr)
 {
 	WAppIcon *btn;
 
-	btn = dock_icon_create(NULL, "WMClip", "Logo");
+	btn = dock_icon_create(vscr, NULL, "WMClip", "Logo");
 
 	btn->icon->tile_type = TILE_CLIP;
 
@@ -1814,7 +1814,7 @@ WDock *drawer_create(virtual_screen *vscr, const char *name)
 	if (!name)
 		name = findUniqueName(vscr, "Drawer");
 
-	btn = dock_icon_create(NULL, "WMDrawer", (char *) name);
+	btn = dock_icon_create(vscr, NULL, "WMDrawer", (char *) name);
 
 	/* Create appicon's icon */
 	btn->xindex = 0;

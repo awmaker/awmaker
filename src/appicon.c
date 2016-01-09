@@ -253,7 +253,7 @@ void removeAppIconFor(WApplication *wapp)
 		wArrangeIcons(wapp->main_window_desc->vscr, True);
 }
 
-static WAppIcon *dock_icon_create_core(char *command, char *wm_class, char *wm_instance)
+static WAppIcon *dock_icon_create_core(virtual_screen *vscr, char *command, char *wm_class, char *wm_instance)
 {
 	WAppIcon *btn;
 
@@ -279,8 +279,9 @@ static WAppIcon *dock_icon_create_core(char *command, char *wm_class, char *wm_i
 static WAppIcon *wAppIcon_create(WWindow *leader_win)
 {
 	WAppIcon *aicon;
+	virtual_screen *vscr = leader_win->vscr;
 
-	aicon = dock_icon_create_core(NULL, leader_win->wm_class, leader_win->wm_instance);
+	aicon = dock_icon_create_core(vscr, NULL, leader_win->wm_class, leader_win->wm_instance);
 	aicon->yindex = -1;
 	aicon->xindex = -1;
 	aicon->prev = NULL;
@@ -310,11 +311,11 @@ static void wAppIcon_map(WAppIcon *aicon)
 	AddToStackList(aicon->icon->core);
 }
 
-WAppIcon *dock_icon_create(char *command, char *wm_class, char *wm_instance)
+WAppIcon *dock_icon_create(virtual_screen *vscr, char *command, char *wm_class, char *wm_instance)
 {
 	WAppIcon *btn;
 
-	btn = dock_icon_create_core(command, wm_class, wm_instance);
+	btn = dock_icon_create_core(vscr, command, wm_class, wm_instance);
 	add_to_appicon_list(btn);
 
 	return btn;
@@ -324,7 +325,7 @@ WAppIcon *create_appicon(virtual_screen *vscr, char *command, char *wm_class, ch
 {
 	WAppIcon *aicon;
 
-	aicon = dock_icon_create(command, wm_class, wm_instance);
+	aicon = dock_icon_create(vscr, command, wm_class, wm_instance);
 	aicon->yindex = -1;
 	aicon->xindex = -1;
 
