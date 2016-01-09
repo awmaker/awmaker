@@ -1546,7 +1546,7 @@ static void dock_menu_unmap(virtual_screen *vscr, WMenu *menu)
 	menu->flags.realized = 0;
 }
 
-static WDock *dock_create_core(void)
+static WDock *dock_create_core(virtual_screen *vscr)
 {
 	WDock *dock;
 
@@ -1557,6 +1557,7 @@ static WDock *dock_create_core(void)
 	dock->icon_array = wmalloc(sizeof(WAppIcon *) * dock->max_icons);
 
 	/* Set basic variables */
+	dock->vscr = vscr;
 	dock->icon_count = 1;
 	dock->collapsed = 0;
 	dock->auto_collapse = 0;
@@ -1575,7 +1576,7 @@ WDock *dock_create(virtual_screen *vscr)
 	WDock *dock;
 	WAppIcon *btn;
 
-	dock = dock_create_core();
+	dock = dock_create_core(vscr);
 
 	/* Set basic variables */
 	dock->type = WM_DOCK;
@@ -1584,6 +1585,8 @@ WDock *dock_create(virtual_screen *vscr)
 	dock->menu = dock_menu_create(vscr);
 
 	btn = dock_icon_create(NULL, "WMDock", "Logo");
+
+	btn->icon->core->vscr = vscr;
 
 	btn->xindex = 0;
 	btn->yindex = 0;
@@ -1741,7 +1744,7 @@ WDock *clip_create(virtual_screen *vscr, WMPropList *state)
 	WDock *dock;
 	WAppIcon *btn;
 
-	dock = dock_create_core();
+	dock = dock_create_core(vscr);
 	restore_clip_position(dock, vscr, state);
 
 	btn = vscr->clip.icon;
@@ -1750,7 +1753,6 @@ WDock *clip_create(virtual_screen *vscr, WMPropList *state)
 	dock->type = WM_CLIP;
 	dock->on_right_side = 1;
 	dock->icon_array[0] = btn;
-	dock->vscr = vscr;
 
 	/* create clip menu */
 	if (!vscr->clip.menu)
@@ -1803,7 +1805,7 @@ WDock *drawer_create(virtual_screen *vscr, const char *name)
 
 	make_keys();
 
-	dock = dock_create_core();
+	dock = dock_create_core(vscr);
 
 	/* Set basic variables */
 	dock->type = WM_DRAWER;
