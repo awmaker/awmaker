@@ -1586,8 +1586,6 @@ WDock *dock_create(virtual_screen *vscr)
 
 	btn = dock_icon_create(vscr, NULL, "WMDock", "Logo");
 
-	btn->icon->core->vscr = vscr;
-
 	btn->xindex = 0;
 	btn->yindex = 0;
 	btn->docked = 1;
