@@ -112,17 +112,17 @@ void create_appicon_for_application(WApplication *wapp, WWindow *wwin)
 	/* Try to create an icon from the dock or clip */
 	create_appicon_from_dock(wwin, wapp);
 
-	/* If app_icon was not found, create it */
-	if (!wapp->app_icon) {
-		/* Create the icon */
-		wAppIcon_create(wapp);
-		wAppIcon_map(wapp->app_icon);
-		wIconUpdate(wapp->app_icon->icon);
+	if (wapp->app_icon)
+		return;
 
-		/* Now, paint the icon */
-		if (!WFLAGP(wapp->main_window_desc, no_appicon))
-			paint_app_icon(wapp);
-	}
+	/* Create the icon */
+	wAppIcon_create(wapp);
+	wAppIcon_map(wapp->app_icon);
+	wIconUpdate(wapp->app_icon->icon);
+
+	/* Now, paint the icon */
+	if (!WFLAGP(wapp->main_window_desc, no_appicon))
+		paint_app_icon(wapp);
 }
 
 void unpaint_app_icon(WApplication *wapp)
