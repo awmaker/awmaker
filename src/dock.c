@@ -2217,7 +2217,7 @@ static Bool getBooleanDockValue(WMPropList *value, WMPropList *key)
 	return False;
 }
 
-static WAppIcon *restore_dock_icon_state(WMPropList *info, int index)
+static WAppIcon *restore_dock_icon_state(virtual_screen *vscr, WMPropList *info, int index)
 {
 	WAppIcon *aicon;
 	WMPropList *cmd, *value;
@@ -2252,7 +2252,7 @@ static WAppIcon *restore_dock_icon_state(WMPropList *info, int index)
 	}
 
 	/* Create appicon's icon */
-	aicon = create_appicon(command, wclass, winstance);
+	aicon = create_appicon(vscr, command, wclass, winstance);
 
 	if (wclass)
 		wfree(wclass);
@@ -2321,7 +2321,7 @@ static WAppIcon *restore_dock_icon_state(WMPropList *info, int index)
 	return aicon;
 }
 
-static WAppIcon *restore_clip_icon_state(WMPropList *info, int index)
+static WAppIcon *restore_clip_icon_state(virtual_screen *vscr, WMPropList *info, int index)
 {
 	WAppIcon *aicon;
 	WMPropList *cmd, *value;
@@ -2356,7 +2356,7 @@ static WAppIcon *restore_clip_icon_state(WMPropList *info, int index)
 	}
 
 	/* Create appicon's icon */
-	aicon = create_appicon(command, wclass, winstance);
+	aicon = create_appicon(vscr, command, wclass, winstance);
 
 	if (wclass)
 		wfree(wclass);
@@ -2424,7 +2424,7 @@ static WAppIcon *restore_clip_icon_state(WMPropList *info, int index)
 	return aicon;
 }
 
-static WAppIcon *restore_drawer_icon_state(WMPropList *info, int index)
+static WAppIcon *restore_drawer_icon_state(virtual_screen *vscr, WMPropList *info, int index)
 {
 	WAppIcon *aicon;
 	WMPropList *cmd, *value;
@@ -2459,7 +2459,7 @@ static WAppIcon *restore_drawer_icon_state(WMPropList *info, int index)
 	}
 
 	/* Create appicon's icon */
-	aicon = create_appicon(command, wclass, winstance);
+	aicon = create_appicon(vscr, command, wclass, winstance);
 
 	if (wclass)
 		wfree(wclass);
@@ -2733,7 +2733,7 @@ static void set_attacheddocks_unmap(WDock *dock)
 	}
 }
 
-static int dock_set_attacheddocks_do(WDock *dock, WMPropList *apps)
+static int dock_set_attacheddocks_do(virtual_screen *vscr, WDock *dock, WMPropList *apps)
 {
 	int count, i;
 	WMPropList *value;
@@ -2756,7 +2756,7 @@ static int dock_set_attacheddocks_do(WDock *dock, WMPropList *apps)
 		}
 
 		value = WMGetFromPLArray(apps, i);
-		aicon = restore_dock_icon_state(value, dock->icon_count);
+		aicon = restore_dock_icon_state(vscr, value, dock->icon_count);
 		dock->icon_array[dock->icon_count] = aicon;
 
 		if (aicon) {
@@ -2772,7 +2772,7 @@ static int dock_set_attacheddocks_do(WDock *dock, WMPropList *apps)
 	return 0;
 }
 
-static int clip_set_attacheddocks_do(WDock *dock, WMPropList *apps)
+static int clip_set_attacheddocks_do(virtual_screen *vscr, WDock *dock, WMPropList *apps)
 {
 	int count, i;
 	WMPropList *value;
@@ -2789,7 +2789,7 @@ static int clip_set_attacheddocks_do(WDock *dock, WMPropList *apps)
 		}
 
 		value = WMGetFromPLArray(apps, i);
-		aicon = restore_clip_icon_state(value, dock->icon_count);
+		aicon = restore_clip_icon_state(vscr, value, dock->icon_count);
 		dock->icon_array[dock->icon_count] = aicon;
 
 		if (aicon) {
@@ -2803,7 +2803,7 @@ static int clip_set_attacheddocks_do(WDock *dock, WMPropList *apps)
 	return 0;
 }
 
-static int drawer_set_attacheddocks_do(WDock *dock, WMPropList *apps)
+static int drawer_set_attacheddocks_do(virtual_screen *vscr, WDock *dock, WMPropList *apps)
 {
 	int count, i;
 	WMPropList *value;
@@ -2820,7 +2820,7 @@ static int drawer_set_attacheddocks_do(WDock *dock, WMPropList *apps)
 		}
 
 		value = WMGetFromPLArray(apps, i);
-		aicon = restore_drawer_icon_state(value, dock->icon_count);
+		aicon = restore_drawer_icon_state(vscr, value, dock->icon_count);
 		dock->icon_array[dock->icon_count] = aicon;
 
 		if (aicon) {
@@ -2847,7 +2847,7 @@ static void dock_set_attacheddocks(virtual_screen *vscr, WDock *dock, WMPropList
 	if (!apps)
 		return;
 
-	if (dock_set_attacheddocks_do(dock, apps))
+	if (dock_set_attacheddocks_do(vscr, dock, apps))
 		return;
 
 	set_attacheddocks_map(vscr, dock);
@@ -2888,7 +2888,7 @@ static void clip_set_attacheddocks(virtual_screen *vscr, WDock *dock, WMPropList
 	if (!apps)
 		return;
 
-	if (clip_set_attacheddocks_do(dock, apps))
+	if (clip_set_attacheddocks_do(vscr, dock, apps))
 		return;
 
 	set_attacheddocks_map(vscr, dock);
@@ -6913,7 +6913,7 @@ static WDock *drawerRestoreState(virtual_screen *vscr, WMPropList *drawer_state)
 	/* application list */
 	apps = WMGetFromPLDictionary(dock_state, dApplications);
 	if (apps)
-		drawer_set_attacheddocks_do(drawer, apps);
+		drawer_set_attacheddocks_do(vscr, drawer, apps);
 
 	WMReleasePropList(drawer_state);
 

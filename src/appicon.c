@@ -320,7 +320,7 @@ WAppIcon *dock_icon_create(char *command, char *wm_class, char *wm_instance)
 	return btn;
 }
 
-WAppIcon *create_appicon(char *command, char *wm_class, char *wm_instance)
+WAppIcon *create_appicon(virtual_screen *vscr, char *command, char *wm_class, char *wm_instance)
 {
 	WAppIcon *aicon;
 
@@ -1280,7 +1280,7 @@ void move_appicon_to_dock(virtual_screen *vscr, WAppIcon *icon, char *wm_class, 
 	int x0, y0;
 
 	/* Create appicon's icon */
-	aicon = create_appicon(NULL, wm_class, wm_instance);
+	aicon = create_appicon(vscr, NULL, wm_class, wm_instance);
 	aicon->icon->core->descriptor.parent_type = WCLASS_APPICON;
 	aicon->icon->core->descriptor.parent = aicon;
 	appicon_map(aicon, vscr);
