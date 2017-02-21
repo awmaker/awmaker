@@ -1466,18 +1466,21 @@ static void handleKeyPress(XEvent *event)
 		if (ISMAPPED(wwin) && ISFOCUSED(wwin) && IS_RESIZABLE(wwin)) {
 			CloseWindowMenu(vscr);
 			handleMaximize(wwin, MAX_HORIZONTAL | MAX_KEYBOARD);
+			movePionterToWindowCenter(wwin);
 		}
 		break;
 	case WKBD_LHMAXIMIZE:
 		if (ISMAPPED(wwin) && ISFOCUSED(wwin) && IS_RESIZABLE(wwin)) {
 			CloseWindowMenu(vscr);
 			handleMaximize(wwin, MAX_VERTICAL | MAX_LEFTHALF | MAX_KEYBOARD);
+			movePionterToWindowCenter(wwin);
 		}
 		break;
 	case WKBD_RHMAXIMIZE:
 		if (ISMAPPED(wwin) && ISFOCUSED(wwin) && IS_RESIZABLE(wwin)) {
 			CloseWindowMenu(vscr);
 			handleMaximize(wwin, MAX_VERTICAL | MAX_RIGHTHALF | MAX_KEYBOARD);
+			movePionterToWindowCenter(wwin);
 		}
 		break;
 	case WKBD_THMAXIMIZE:
@@ -1490,30 +1493,35 @@ static void handleKeyPress(XEvent *event)
 		if (ISMAPPED(wwin) && ISFOCUSED(wwin) && IS_RESIZABLE(wwin)) {
 			CloseWindowMenu(vscr);
 			handleMaximize(wwin, MAX_HORIZONTAL | MAX_BOTTOMHALF | MAX_KEYBOARD);
+			movePionterToWindowCenter(wwin);
 		}
 		break;
 	case WKBD_LTCMAXIMIZE:
 		if (ISMAPPED(wwin) && ISFOCUSED(wwin) && IS_RESIZABLE(wwin)) {
 			CloseWindowMenu(vscr);
 			handleMaximize(wwin, MAX_LEFTHALF | MAX_TOPHALF | MAX_KEYBOARD);
+			movePionterToWindowCenter(wwin);
 		}
 		break;
 	case WKBD_RTCMAXIMIZE:
 		if (ISMAPPED(wwin) && ISFOCUSED(wwin) && IS_RESIZABLE(wwin)) {
 			CloseWindowMenu(vscr);
 			handleMaximize(wwin, MAX_RIGHTHALF | MAX_TOPHALF | MAX_KEYBOARD);
+			movePionterToWindowCenter(wwin);
 		}
 		break;
 	case WKBD_LBCMAXIMIZE:
 		if (ISMAPPED(wwin) && ISFOCUSED(wwin) && IS_RESIZABLE(wwin)) {
 			CloseWindowMenu(vscr);
 			handleMaximize(wwin, MAX_LEFTHALF | MAX_BOTTOMHALF | MAX_KEYBOARD);
+			movePionterToWindowCenter(wwin);
 		}
 		 break;
 	case WKBD_RBCMAXIMIZE:
 		if (ISMAPPED(wwin) && ISFOCUSED(wwin) && IS_RESIZABLE(wwin)) {
 			CloseWindowMenu(vscr);
 			handleMaximize(wwin, MAX_RIGHTHALF | MAX_BOTTOMHALF | MAX_KEYBOARD);
+			movePionterToWindowCenter(wwin);
 		}
 		break;
 	case WKBD_MAXIMUS:

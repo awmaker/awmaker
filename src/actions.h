@@ -81,5 +81,7 @@ void wUnfullscreenWindow(WWindow *wwin);
 void animateResize(virtual_screen *vscr, int x, int y, int w, int h, int fx, int fy, int fw, int fh);
 void update_saved_geometry(WWindow *wwin);
 
+void movePionterToWindowCenter(WWindow *wwin);
+
 #endif
 
