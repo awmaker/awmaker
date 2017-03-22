@@ -12,8 +12,9 @@ WMWindowAttributes: $(srcdir)/WMWindowAttributes.in
 	chmod 644 WMWindowAttributes
 
 WindowMaker: $(srcdir)/WindowMaker.in
-	$(AM_V_GEN)sed -e "s:#pkgdatadir#:$(pkgdatadir):" $(srcdir)/WindowMaker.in \
-	> WindowMaker ; \
+	$(AM_V_GEN)sed -e "s:#pkgdatadir#:$(pkgdatadir):" \
+		-e "s:#pixmapdir#:$(pixmapdir):" $(srcdir)/WindowMaker.in \
+		> WindowMaker ; \
 	chmod 644 WindowMaker
 
 WMState: $(srcdir)/WMState.in
