@@ -213,6 +213,10 @@ void wSetFocusTo(virtual_screen *vscr, WWindow *wwin)
 			if (wPreferences.highlight_active_app)
 				wApplicationDeactivate(oapp);
 		}
+
+		/* reset fullscreen if temporarily removed due to lost focus*/
+		if (wwin->flags.fullscreen)
+			ChangeStackingLevel(wwin->frame->core, WMFullscreenLevel);
 	}
 
 	wWindowFocus(wwin, focused);
