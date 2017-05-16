@@ -66,7 +66,7 @@
 	"Copyright \xc2\xa9 1997-2006 Alfredo K. Kojima\n"\
 	"Copyright \xc2\xa9 1998-2006 Dan Pascu\n"\
 	"Copyright \xc2\xa9 2013-2014 Window Maker Developers Team\n" \
-	"Copyright \xc2\xa9 2015-2016 Rodolfo García (kix)"
+	"Copyright \xc2\xa9 2015-2017 Rodolfo García (kix)"
 
 #define LEGAL_TEXT \
 	"    Window Maker is free software; you can redistribute it and/or "\
