@@ -307,7 +307,7 @@ void wSessionSaveState(virtual_screen *vscr)
 			if (win_info != NULL) {
 				WMAddToPLArray(list, win_info);
 				WMReleasePropList(win_info);
-				/* If we were succesful in saving the info for this window
+				/* If we were successful in saving the info for this window
 				 * add the application the window belongs to, to the
 				 * application list, so no multiple entries for the same
 				 * application are saved.
