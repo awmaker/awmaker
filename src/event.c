@@ -1521,6 +1521,26 @@ static void handleKeyPress(XEvent *event)
 			handleMaximize(wwin, MAX_MAXIMUS | MAX_KEYBOARD);
 		}
 		break;
+	case WKBD_KEEP_ON_TOP:
+		if (ISMAPPED(wwin) && ISFOCUSED(wwin)) {
+			CloseWindowMenu(vscr);
+
+			if (wwin->frame->core->stacking->window_level != WMFloatingLevel)
+				ChangeStackingLevel(wwin->frame->core, WMFloatingLevel);
+			else
+				ChangeStackingLevel(wwin->frame->core, WMNormalLevel);
+		}
+		break;
+	case WKBD_KEEP_AT_BOTTOM:
+		if (ISMAPPED(wwin) && ISFOCUSED(wwin)) {
+			CloseWindowMenu(vscr);
+
+			if (wwin->frame->core->stacking->window_level != WMSunkenLevel)
+				ChangeStackingLevel(wwin->frame->core, WMSunkenLevel);
+			else
+				ChangeStackingLevel(wwin->frame->core, WMNormalLevel);
+		}
+		break;
 	case WKBD_OMNIPRESENT:
 		if (ISMAPPED(wwin) && ISFOCUSED(wwin)) {
 			CloseWindowMenu(vscr);
