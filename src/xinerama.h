@@ -26,6 +26,14 @@
 #include "window.h"
 #include <WINGs/WINGs.h>
 
+enum {
+	DIRECTION_LEFT,
+	DIRECTION_RIGHT,
+	DIRECTION_UP,
+	DIRECTION_DOWN
+};
+
+
 void wInitXinerama(WScreen *scr);
 
 #define wXineramaHeads(scr) ((scr)->xine_info.count ? (scr)->xine_info.count : 1)
@@ -40,6 +48,7 @@ int wGetHeadForRect(virtual_screen *vscr, WMRect rect);
 int wGetHeadForWindow(WWindow *wwin);
 int wGetHeadForPoint(virtual_screen *vscr, WMPoint point);
 int wGetHeadForPointerLocation(virtual_screen *vscr);
+int wGetHeadRelativeToCurrentHead(virtual_screen *vscr, int current_head, int direction);
 
 WMRect wGetRectForHead(WScreen *scr, int head);
 WArea wGetUsableAreaForHead(virtual_screen *vscr, int head, WArea *totalAreaPtr, Bool noicons);

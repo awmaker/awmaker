@@ -20,6 +20,8 @@
 
 #include "wconfig.h"
 
+#include <stdlib.h>
+
 #include "xinerama.h"
 
 #include "screen.h"
@@ -346,4 +348,74 @@ WMPoint wGetPointToCenterRectInHead(virtual_screen *vscr, int head, int width, i
 	p.y = rect.pos.y + (rect.size.height - height) / 2;
 
 	return p;
+}
+
+/*
+ * Find head on left, right, up or down direction relative to current
+ * head. If there is no screen available on pointed direction, -1 will be
+ * returned.*/
+int wGetHeadRelativeToCurrentHead(virtual_screen *vscr, int current_head, int direction)
+{
+	short int found = 0;
+	int i;
+	int distance = 0;
+	int smallest_distance = 0;
+	WScreen *scr = vscr->screen_ptr;
+	int nearest_head = scr->xine_info.primary_head;
+	WMRect crect = wGetRectForHead(scr, current_head);
+
+	for (i = 0; i < scr->xine_info.count; i++) {
+		if (i == current_head)
+			continue;
+
+		WMRect *rect = &scr->xine_info.screens[i];
+
+		/* calculate distance from the next screen to current one */
+		switch (direction) {
+			case DIRECTION_LEFT:
+				if (rect->pos.x < crect.pos.x) {
+					found = 1;
+					distance = abs((rect->pos.x + rect->size.width)
+							- crect.pos.x) + abs(rect->pos.y + crect.pos.y);
+				}
+				break;
+			case DIRECTION_RIGHT:
+				if (rect->pos.x > crect.pos.x) {
+					found = 1;
+					distance = abs((crect.pos.x + crect.size.width)
+							- rect->pos.x) + abs(rect->pos.y + crect.pos.y);
+				}
+				break;
+			case DIRECTION_UP:
+				if (rect->pos.y < crect.pos.y) {
+					found = 1;
+					distance = abs((rect->pos.y + rect->size.height)
+							- crect.pos.y) + abs(rect->pos.x + crect.pos.x);
+				}
+				break;
+			case DIRECTION_DOWN:
+				if (rect->pos.y > crect.pos.y) {
+					found = 1;
+					distance = abs((crect.pos.y + crect.size.height)
+							- rect->pos.y) + abs(rect->pos.x + crect.pos.x);
+				}
+				break;
+		}
+
+		if (found && distance == 0)
+			return i;
+
+		if (smallest_distance == 0)
+			smallest_distance = distance;
+
+		if (abs(distance) <= smallest_distance) {
+			smallest_distance = distance;
+			nearest_head = i;
+		}
+	}
+
+	if (found && smallest_distance != 0 && nearest_head != current_head)
+		return nearest_head;
+
+	return -1;
 }
