@@ -57,7 +57,7 @@ void wSelectWindows(virtual_screen *vscr, XEvent *ev);
 void wSelectWindow(WWindow *wwin, Bool flag);
 void wUnselectWindows(virtual_screen *vscr);
 
-void wMaximizeWindow(WWindow *wwin, int directions);
+void wMaximizeWindow(WWindow *wwin, int directions, int head);
 void wUnmaximizeWindow(WWindow *wwin);
 void handleMaximize(WWindow *wwin, int directions);
 

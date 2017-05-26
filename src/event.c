@@ -631,7 +631,8 @@ static void handleMapRequest(XEvent *ev)
 	if (wwin) {
 		wClientSetState(wwin, NormalState, None);
 		if (wwin->flags.maximized)
-			wMaximizeWindow(wwin, wwin->flags.maximized);
+			wMaximizeWindow(wwin, wwin->flags.maximized,
+					 wGetHeadForWindow(wwin));
 
 		if (wwin->flags.shaded) {
 			wwin->flags.shaded = 0;

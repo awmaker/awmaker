@@ -278,7 +278,8 @@ static void execMenuCommand(WMenu *menu, WMenuEntry *entry)
 		if (wwin->flags.maximized)
 			wUnmaximizeWindow(wwin);
 		else
-			wMaximizeWindow(wwin, MAX_VERTICAL | MAX_HORIZONTAL);
+			wMaximizeWindow(wwin, MAX_VERTICAL | MAX_HORIZONTAL,
+					wGetHeadForWindow(wwin));
 		break;
 
 	case MC_SHADE:
