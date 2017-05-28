@@ -390,9 +390,11 @@ void wMaximizeWindow(WWindow *wwin, int directions, int head)
 	totalArea.x1 = 0;
 	totalArea.y1 = 0;
 
-	/* ignore provided head information for toggling full maximize/unmaximize */
-	if (directions & MAX_KEYBOARD)
-		head = wGetHeadForWindow(wwin);
+
+	/* In case of mouse initiated maximize, use the head in which pointer is
+	 * located, rather than window position, which is passed to the function */
+	if (!(directions & MAX_IGNORE_XINERAMA) && !(directions & MAX_KEYBOARD))
+		head = wGetHeadForPointerLocation(wwin->vscr);
 
 	usableArea = wGetUsableAreaForHead(wwin->vscr, head, &totalArea, True);
 
@@ -504,7 +506,7 @@ void handleMaximize(WWindow *wwin, int directions)
 			/* Select windows, which are only horizontally or vertically
 			 * maximized. Quarters cannot be handled here, since there is not
 			 * clear on which direction user intend to move such window. */
-			if ((current & MAX_VERTICAL) || (current & MAX_HORIZONTAL)) {
+			if (current & (MAX_VERTICAL | MAX_HORIZONTAL)) {
 				if (requested & MAX_LEFTHALF && current & MAX_LEFTHALF) {
 					dest_head = wGetHeadRelativeToCurrentHead(wwin->vscr,
 							head, DIRECTION_LEFT);
@@ -539,10 +541,15 @@ void handleMaximize(WWindow *wwin, int directions)
 						effective |= MAX_HORIZONTAL;
 						effective &= ~(MAX_VERTICAL | MAX_BOTTOMHALF);
 					}
-				} if (dest_head == -1)
-					wUnmaximizeWindow(wwin);
+				} if (dest_head != -1)
+					/* tell wMaximizeWindow that we were using keyboard, not
+					 * mouse, so that it will use calculated head as
+					 * destination for move_half_max_between_heads feature,
+					 * not from mouse pointer */
+					wMaximizeWindow(wwin, (effective | flags | MAX_KEYBOARD),
+							dest_head);
 				else
-					wMaximizeWindow(wwin, effective | flags, dest_head);
+					wUnmaximizeWindow(wwin);
 			} else
 				wUnmaximizeWindow(wwin);
 		} else
