@@ -2,11 +2,11 @@ AUTOMAKE_OPTIONS =
 
 BUILT_SOURCES = wconfig.h
 
-bin_PROGRAMS = wmaker
+bin_PROGRAMS = awmaker
 
 EXTRA_DIST = 
 
-wmaker_SOURCES = 	\
+awmaker_SOURCES = 	\
 	GNUstep.h \
 	WindowMaker.h \
 	actions.c \
@@ -108,33 +108,33 @@ wmaker_SOURCES = 	\
 	wsmap.h
 
 if USE_DOCK_XDND
-wmaker_SOURCES += xdnd.c
+awmaker_SOURCES += xdnd.c
 endif
 if USE_MWM_HINTS
-wmaker_SOURCES += motif.h motif.c
+awmaker_SOURCES += motif.h motif.c
 endif
 
 if WM_OSDEP_BSD
-wmaker_SOURCES += osdep_bsd.c
+awmaker_SOURCES += osdep_bsd.c
 endif
 if WM_OSDEP_DARWIN
-wmaker_SOURCES += osdep_darwin.c
+awmaker_SOURCES += osdep_darwin.c
 endif
 if WM_OSDEP_LINUX
-wmaker_SOURCES += osdep_linux.c
+awmaker_SOURCES += osdep_linux.c
 endif
 if WM_OSDEP_GENERIC
-wmaker_SOURCES += osdep_stub.c
+awmaker_SOURCES += osdep_stub.c
 endif
 
 if USE_NESTED_FUNC
-wmaker_SOURCES += misc.c \
+awmaker_SOURCES += misc.c \
 	xmodifier.c
 else
-nodist_wmaker_SOURCES = misc.hack_nf.c \
+nodist_awmaker_SOURCES = misc.hack_nf.c \
 	xmodifier.hack_nf.c
 
-CLEANFILES = $(nodist_wmaker_SOURCES)
+CLEANFILES = $(nodist_awmaker_SOURCES)
 
 misc.hack_nf.c: misc.c $(top_srcdir)/script/nested-func-to-macro.sh
 	$(top_srcdir)/script/nested-func-to-macro.sh \
@@ -155,7 +155,7 @@ AM_CPPFLAGS = $(DFLAGS) \
 	-I$(top_srcdir)/WINGs @HEADER_SEARCH_PATH@ 
 
 
-wmaker_LDADD = \
+awmaker_LDADD = \
 	$(top_builddir)/WINGs/libWINGs.la\
 	$(top_builddir)/WINGs/libWUtil.la\
 	$(top_builddir)/wrlib/libwraster.la\
