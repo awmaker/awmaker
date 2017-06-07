@@ -112,6 +112,16 @@ void PlaceIcon(virtual_screen *vscr, int *x_ret, int *y_ret, int head)
 	WMBagIterator iter;
 	WArea area = wGetUsableAreaForHead(vscr, head, NULL, False);
 
+	/* Do not place icons under the dock. */
+	if (vscr->dock.dock) {
+		int offset = wPreferences.icon_size + DOCK_EXTRA_SPACE;
+
+		if (vscr->dock.dock->on_right_side)
+			area.x2 -= offset;
+		else
+		    area.x1 += offset;
+	}
+
 	/* Find out screen boundaries. */
 
 	/* Allows each head to have miniwindows */
