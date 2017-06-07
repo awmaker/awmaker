@@ -66,11 +66,6 @@
 
 #define MAX_SHORTCUT_LENGTH 32
 
-#ifndef GLOBAL_DEFAULTS_SUBDIR
-#define GLOBAL_DEFAULTS_SUBDIR "WindowMaker"
-#endif
-
-
 typedef struct _WDefaultEntry  WDefaultEntry;
 typedef int (WDECallbackConvert) (virtual_screen *vscr, WDefaultEntry *entry, WMPropList *plvalue, void *addr, void **tdata);
 typedef int (WDECallbackUpdate) (virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data);
@@ -891,7 +886,7 @@ static WMPropList *readGlobalDomain(const char *domainName, Bool requireDictiona
 	char path[PATH_MAX];
 	struct stat stbuf;
 
-	snprintf(path, sizeof(path), "%s/%s/%s", SYSCONFDIR, GLOBAL_DEFAULTS_SUBDIR, domainName);
+	snprintf(path, sizeof(path), "%s/%s", DEFSDATADIR, domainName);
 	if (stat(path, &stbuf) >= 0) {
 		globalDict = WMReadPropListFromFile(path);
 		if (globalDict && requireDictionary && !WMIsPLDictionary(globalDict)) {
@@ -941,7 +936,7 @@ void wDefaultsMergeGlobalMenus(WDDomain *menuDomain)
 		return;
 
 #ifdef GLOBAL_PREAMBLE_MENU_FILE
-	submenu = WMReadPropListFromFile(SYSCONFDIR "/" GLOBAL_DEFAULTS_SUBDIR "/" GLOBAL_PREAMBLE_MENU_FILE);
+	submenu = WMReadPropListFromFile(DEFSDATADIR "/" GLOBAL_PREAMBLE_MENU_FILE);
 
 	if (submenu && !WMIsPLArray(submenu)) {
 		wwarning(_("invalid global menu file %s"), GLOBAL_PREAMBLE_MENU_FILE);
@@ -955,7 +950,7 @@ void wDefaultsMergeGlobalMenus(WDDomain *menuDomain)
 #endif
 
 #ifdef GLOBAL_EPILOGUE_MENU_FILE
-	submenu = WMReadPropListFromFile(SYSCONFDIR "/" GLOBAL_DEFAULTS_SUBDIR "/" GLOBAL_EPILOGUE_MENU_FILE);
+	submenu = WMReadPropListFromFile(DEFSDATADIR "/" GLOBAL_EPILOGUE_MENU_FILE);
 
 	if (submenu && !WMIsPLArray(submenu)) {
 		wwarning(_("invalid global menu file %s"), GLOBAL_EPILOGUE_MENU_FILE);
