@@ -59,6 +59,7 @@ enum {
 	WMSubmenuLevel = 15,
 	WMMainMenuLevel = 20,
 	WMStatusLevel = 21,
+	WMFullscreenLevel = 50,
 	WMModalLevel = 100,
 	WMPopUpLevel = 101,
 	WMScreensaverLevel = 1000,
@@ -371,7 +372,11 @@ extern struct WPreferences {
 	char window_snapping;              /* enable window snapping */
 	int snap_edge_detect;              /* how far from edge to begin snap */
 	int snap_corner_detect;            /* how far from corner to begin snap */
+	char snap_to_top_maximizes_fullscreen;
 	char drag_maximized_window;        /* behavior when a maximized window is dragged */
+	char move_half_max_between_heads;  /* move half maximized window between available heads */
+	char alt_half_maximize;            /* alternative half-maximize feature behavior */
+	char pointer_with_half_max_windows;
 
 	char highlight_active_app;         /* show the focused app by highlighting its icon */
 	char auto_arrange_icons;           /* automagically arrange icons */

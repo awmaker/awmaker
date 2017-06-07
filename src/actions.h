@@ -57,7 +57,7 @@ void wSelectWindows(virtual_screen *vscr, XEvent *ev);
 void wSelectWindow(WWindow *wwin, Bool flag);
 void wUnselectWindows(virtual_screen *vscr);
 
-void wMaximizeWindow(WWindow *wwin, int directions);
+void wMaximizeWindow(WWindow *wwin, int directions, int head);
 void wUnmaximizeWindow(WWindow *wwin);
 void handleMaximize(WWindow *wwin, int directions);
 
@@ -80,6 +80,8 @@ void wUnfullscreenWindow(WWindow *wwin);
 
 void animateResize(virtual_screen *vscr, int x, int y, int w, int h, int fx, int fy, int fw, int fh);
 void update_saved_geometry(WWindow *wwin);
+
+void movePionterToWindowCenter(WWindow *wwin);
 
 #endif
 

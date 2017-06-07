@@ -130,27 +130,23 @@ void OpenSwitchMenu(virtual_screen *vscr, int x, int y, int keyboard)
 
 static int menuIndexForWindow(WMenu * menu, WWindow * wwin, int old_pos)
 {
-	int idx;
+	int idx, move_down;
 
 	if (menu->entry_no <= old_pos)
 		return -1;
 
-#define WS(i)  ((WWindow*)menu->entries[i]->clientdata)->frame->workspace
-	if (old_pos >= 0) {
-		if (WS(old_pos) >= wwin->frame->workspace
-		    && (old_pos == 0 || WS(old_pos - 1) <= wwin->frame->workspace)) {
-			return old_pos;
-		}
-	}
-#undef WS
-
-	for (idx = 0; idx < menu->entry_no; idx++) {
+	for (idx = 0, move_down = 0; idx < menu->entry_no; idx++) {
 		WWindow *tw = (WWindow *) menu->entries[idx]->clientdata;
 
-		if (!IS_OMNIPRESENT(tw)
-		    && tw->frame->workspace > wwin->frame->workspace) {
-			break;
-		}
+		/* Is the window moving down in the menu?  If so, we'll need to
+		 * adjust its new index by 1.
+		 */
+		if (tw == wwin)
+			move_down = 1;
+
+		if (IS_OMNIPRESENT(tw) || (tw != wwin &&
+					   tw->frame->workspace >= wwin->frame->workspace))
+			return idx - move_down;
 	}
 
 	return idx;
@@ -176,7 +172,7 @@ void switchmenu_additem(WMenu *menu, virtual_screen *vscr, WWindow *wwin)
 		snprintf(title, len, "%s", DEF_WINDOW_TITLE);
 
 	if (!IS_OMNIPRESENT(wwin))
-		idx = menuIndexForWindow(menu, wwin, -1);
+		idx = menuIndexForWindow(menu, wwin, 0);
 
 	t = ShrinkString(vscr->screen_ptr->menu_entry_font, title, MAX_WINDOWLIST_WIDTH);
 	entry = wMenuInsertCallback(menu, idx, t, focusWindow, wwin);

@@ -6,12 +6,8 @@ DIST_SUBDIRS = build cs ru sk
 dist_man_MANS = \
 	geticonset.1 \
 	getstyle.1 \
-	get-wings-flags.1 \
-	get-wraster-flags.1 \
-	get-wutil-flags.1 \
 	seticons.1 \
 	setstyle.1 \
-	upgrade-windowmaker-defaults.8 \
 	wdread.1 \
 	wdwrite.1 \
 	WindowMaker.1 \
@@ -35,8 +31,8 @@ wmaker.1: wmaker.in Makefile $(top_builddir)/config.h
 	$(AM_V_GEN)$(top_srcdir)/script/replace-ac-keywords.sh \
 		--header "$(top_builddir)/config.h" --filter "HAVE_INOTIFY" \
 		--filter "USE_ICCCM_WMREPLACE" \
-		-D"sysconfdir=$(sysconfdir)" --replace "sysconfdir" \
 		-D"pkgdatadir=$(pkgdatadir)" --replace "pkgdatadir" \
+		-D"defsdatadir=$(defsdatadir)" --replace "defsdatadir" \
 		-o "wmaker.1"  "$(srcdir)/wmaker.in"
 
 wmsetbg.1: wmsetbg.in Makefile $(top_builddir)/config.h

@@ -18,14 +18,16 @@ libWMaker_la_SOURCES = 	\
 	app.h		\
 	menu.h	
 
-DISTCLEANFILES = wmlib.pc
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = wmlib.pc
 
-install-exec-local:
-	@$(NORMAL_INSTALL)
-	$(mkinstalldirs) $(DESTDIR)$(libdir)/pkgconfig
-	@list='wmlib.pc'; for p in $$list; do \
-	  if test -f $$p; then \
-	    echo "$(INSTALL_DATA) $$p $(DESTDIR)$(libdir)/pkgconfig/"; \
-	    $(INSTALL_DATA) $$p $(DESTDIR)$(libdir)/pkgconfig/; \
-	  else :; fi; \
-	done
+DISTCLEANFILES = $(pkgconfig_DATA)
+
+wmlib.pc: Makefile
+	@echo "Generating $@"
+	@echo 'Name: wmlib' > $@
+	@echo 'Description: Window Maker interface definitions' >> $@
+	@echo 'Version: $(VERSION)' >> $@
+	@echo 'Requires: x11' >> $@
+	@echo 'Libs: $(lib_search_path) -lWMaker' >> $@
+	@echo 'Cflags: $(inc_search_path)' >> $@

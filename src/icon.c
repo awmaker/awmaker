@@ -157,12 +157,13 @@ void icon_for_wwindow_miniwindow_map(WIcon *icon)
 	WMAddNotificationObserver(icon_tileObserver, icon, WNIconTileSettingsChanged, icon);
 }
 
-WIcon *icon_create_core(void)
+WIcon *icon_create_core(virtual_screen *vscr)
 {
 	WIcon *icon;
 
 	icon = wmalloc(sizeof(WIcon));
 	icon->core = wcore_create(wPreferences.icon_size, wPreferences.icon_size);
+	icon->core->vscr = vscr;
 
 	/* will be overriden if this is a application icon */
 	icon->core->descriptor.handle_mousedown = miniwindowMouseDown;

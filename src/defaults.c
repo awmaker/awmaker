@@ -66,11 +66,6 @@
 
 #define MAX_SHORTCUT_LENGTH 32
 
-#ifndef GLOBAL_DEFAULTS_SUBDIR
-#define GLOBAL_DEFAULTS_SUBDIR "WindowMaker"
-#endif
-
-
 typedef struct _WDefaultEntry  WDefaultEntry;
 typedef int (WDECallbackConvert) (virtual_screen *vscr, WDefaultEntry *entry, WMPropList *plvalue, void *addr, void **tdata);
 typedef int (WDECallbackUpdate) (virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data);
@@ -180,12 +175,12 @@ static WDECallbackUpdate setCursor;
 #define REFRESH_ICON_TILE	(1<<9)
 #define REFRESH_ICON_FONT	(1<<10)
 
-#define REFRESH_BUTTON_IMAGES   (1<<12)
+#define REFRESH_BUTTON_IMAGES   (1<<11)
 
-#define REFRESH_ICON_TITLE_COLOR (1<<13)
-#define REFRESH_ICON_TITLE_BACK (1<<14)
+#define REFRESH_ICON_TITLE_COLOR (1<<12)
+#define REFRESH_ICON_TITLE_BACK (1<<13)
 
-#define REFRESH_WORKSPACE_MENU	(1<<15)
+#define REFRESH_WORKSPACE_MENU	(1<<14)
 
 #define REFRESH_FRAME_BORDER REFRESH_MENU_FONT|REFRESH_WINDOW_FONT
 
@@ -317,19 +312,10 @@ static WOptionEnumeration seDragMaximizedWindow[] = {
 };
 
 /*
- * Backward Compatibility:
- * The Mini-Previews were introduced in 0.95.6 under the name "Apercu".
- * For compatibility, we still support the old names in configuration files,
- * which are loaded in this structure, so this should stay for at least
- * 2 years (that means until 2017) */
-static struct {
-	char enable;
-	int  size;
-} legacy_minipreview_config;
-
-/*
- * ALL entries in the tables bellow, NEED to have a default value
+ * ALL entries in the tables below NEED to have a default value
  * defined, and this value needs to be correct.
+ *
+ * Also add the default key/value pair to WindowMaker/Defaults/WindowMaker.in
  */
 
 /* these options will only affect the window manager on startup
@@ -401,13 +387,13 @@ WDefaultEntry optionList[] = {
 	    &wPreferences.mouse_wheel_tilt, getEnum, NULL, NULL, NULL},
 	{"ColormapMode", "auto", seColormapModes,
 	    &wPreferences.colormap_mode, getEnum, NULL, NULL, NULL},
-	{"AutoFocus", "NO", NULL,
+	{"AutoFocus", "YES", NULL,
 	    &wPreferences.auto_focus, getBool, NULL, NULL, NULL},
 	{"RaiseDelay", "0", NULL,
 	    &wPreferences.raise_delay, getInt, NULL, NULL, NULL},
 	{"CirculateRaise", "NO", NULL,
 	    &wPreferences.circ_raise, getBool, NULL, NULL, NULL},
-	{"Superfluous", "NO", NULL,
+	{"Superfluous", "YES", NULL,
 	    &wPreferences.superfluous, getBool, NULL, NULL, NULL},
 	{"AdvanceToNewWorkspace", "NO", NULL,
 	    &wPreferences.ws_advance, getBool, NULL, NULL, NULL},
@@ -425,13 +411,13 @@ WDefaultEntry optionList[] = {
 	    &wPreferences.save_session_on_exit, getBool, NULL, NULL, NULL},
 	{"WrapMenus", "NO", NULL,
 	    &wPreferences.wrap_menus, getBool, NULL, NULL, NULL},
-	{"ScrollableMenus", "NO", NULL,
+	{"ScrollableMenus", "YES", NULL,
 	    &wPreferences.scrollable_menus, getBool, NULL, NULL, NULL},
-	{"MenuScrollSpeed", "medium", seSpeeds,
+	{"MenuScrollSpeed", "fast", seSpeeds,
 	    &wPreferences.menu_scroll_speed, getEnum, NULL, NULL, NULL},
-	{"IconSlideSpeed", "medium", seSpeeds,
+	{"IconSlideSpeed", "fast", seSpeeds,
 	    &wPreferences.icon_slide_speed, getEnum, NULL, NULL, NULL},
-	{"ShadeSpeed", "medium", seSpeeds,
+	{"ShadeSpeed", "fast", seSpeeds,
 	    &wPreferences.shade_speed, getEnum, NULL, NULL, NULL},
 	{"BounceAppIconsWhenUrgent", "YES", NULL,
 	    &wPreferences.bounce_appicons_when_urgent, getBool, NULL, NULL, NULL},
@@ -463,7 +449,7 @@ WDefaultEntry optionList[] = {
 	    &wPreferences.ignore_focus_click, getBool, NULL, NULL, NULL},
 	{"UseSaveUnders", "NO", NULL,
 	    &wPreferences.use_saveunders, getBool, NULL, NULL, NULL},
-	{"OpaqueMove", "NO", NULL,
+	{"OpaqueMove", "YES", NULL,
 	    &wPreferences.opaque_move, getBool, NULL, NULL, NULL},
 	{"OpaqueResize", "NO", NULL,
 	    &wPreferences.opaque_resize, getBool, NULL, NULL, NULL},
@@ -471,7 +457,7 @@ WDefaultEntry optionList[] = {
 	    &wPreferences.opaque_move_resize_keyboard, getBool, NULL, NULL, NULL},
 	{"DisableAnimations", "NO", NULL,
 	    &wPreferences.no_animations, getBool, NULL, NULL, NULL},
-	{"DontLinkWorkspaces", "NO", NULL,
+	{"DontLinkWorkspaces", "YES", NULL,
 	    &wPreferences.no_autowrap, getBool, NULL, NULL, NULL},
 	{"WindowSnapping", "NO", NULL,
 	    &wPreferences.window_snapping, getBool, NULL, NULL, NULL},
@@ -479,8 +465,16 @@ WDefaultEntry optionList[] = {
 	    &wPreferences.snap_edge_detect, getInt, NULL, NULL, NULL},
 	{"SnapCornerDetect", "10", NULL,
 	    &wPreferences.snap_corner_detect, getInt, NULL, NULL, NULL},
+	{"SnapToTopMaximezesFullscreen", "NO", NULL,
+	    &wPreferences.snap_to_top_maximizes_fullscreen, getBool, NULL, NULL, NULL},
 	{"DragMaximizedWindow", "Move", seDragMaximizedWindow,
 	    &wPreferences.drag_maximized_window, getEnum, NULL, NULL, NULL},
+	{"MoveHalfMaximizedWindowsBetweenScreens", "NO", NULL,
+	    &wPreferences.move_half_max_between_heads, getBool, NULL, NULL, NULL},
+	{"AlternativeHalfMaximized", "NO", NULL,
+	    &wPreferences.alt_half_maximize, getBool, NULL, NULL, NULL},
+	{"PointerWithHalfMaxWindows", "NO", NULL,
+	    &wPreferences.pointer_with_half_max_windows, getBool, NULL, NULL, NULL},
 	{"HighlightActiveApp", "YES", NULL,
 	    &wPreferences.highlight_active_app, getBool, NULL, NULL, NULL},
 	{"AutoArrangeIcons", "NO", NULL,
@@ -489,15 +483,15 @@ WDefaultEntry optionList[] = {
 	    &wPreferences.no_window_over_dock, getBool, updateUsableArea, NULL, NULL},
 	{"NoWindowOverIcons", "NO", NULL,
 	    &wPreferences.no_window_over_icons, getBool, updateUsableArea, NULL, NULL},
-	{"WindowPlaceOrigin", "(0, 0)", NULL,
+	{"WindowPlaceOrigin", "(64, 0)", NULL,
 	    &wPreferences.window_place_origin, getCoord, NULL, NULL, NULL},
-	{"ResizeDisplay", "corner", seGeomDisplays,
+	{"ResizeDisplay", "center", seGeomDisplays,
 	    &wPreferences.size_display, getEnum, NULL, NULL, NULL},
-	{"MoveDisplay", "corner", seGeomDisplays,
+	{"MoveDisplay", "floating", seGeomDisplays,
 	    &wPreferences.move_display, getEnum, NULL, NULL, NULL},
 	{"DontConfirmKill", "NO", NULL,
 	    &wPreferences.dont_confirm_kill, getBool, NULL, NULL, NULL},
-	{"WindowTitleBalloons", "NO", NULL,
+	{"WindowTitleBalloons", "YES", NULL,
 	    &wPreferences.window_balloon, getBool, NULL, NULL, NULL},
 	{"MiniwindowTitleBalloons", "NO", NULL,
 	    &wPreferences.miniwin_title_balloon, getBool, NULL, NULL, NULL},
@@ -526,17 +520,6 @@ WDefaultEntry optionList[] = {
 	{"IgnoreGtkHints", "NO", NULL,
 	    &wPreferences.ignore_gtk_decoration_hints, getBool, NULL, NULL, NULL},
 
-	/*
-	 * Backward Compatibility:
-	 * The Mini-Previews were introduced in 0.95.6 under the name "Apercu".
-	 * For compatibility, we still support the old names in configuration files,
-	 * so this should stay for at least 2 years (that means until 2017)
-	 */
-	{"MiniwindowApercuBalloons", "NO", NULL,
-	    &legacy_minipreview_config.enable, getBool, NULL, NULL, NULL},
-	{"ApercuSize", "0", NULL,
-	    &legacy_minipreview_config.size, getInt, NULL, NULL, NULL},
-
 	/* style options */
 
 	{"MenuStyle", "normal", seMenuStyles,
@@ -546,13 +529,13 @@ WDefaultEntry optionList[] = {
 	{"WorkspaceSpecificBack", "()", NULL,
 	    NULL, getWSSpecificBackground, setWorkspaceSpecificBack, NULL, NULL},
 	/* WorkspaceBack must come after WorkspaceSpecificBack or
-	 * WorkspaceBack wont know WorkspaceSpecificBack was also
+	 * WorkspaceBack won't know WorkspaceSpecificBack was also
 	 * specified and 2 copies of wmsetbg will be launched */
-	{"WorkspaceBack", "(solid, black)", NULL,
+	{"WorkspaceBack", "(solid, \"rgb:50/50/75\")", NULL,
 	    NULL, getWSBackground, setWorkspaceBack, NULL, NULL},
 	{"SmoothWorkspaceBack", "NO", NULL,
 	    NULL, getBool, NULL, NULL, NULL},
-	{"IconBack", "(solid, gray)", NULL,
+	{"IconBack", "(dgradient, \"rgb:a6/a6/b6\", \"rgb:51/55/61\")", NULL,
 	    NULL, getTexture, setIconTile, NULL, NULL},
 	{"TitleJustify", "center", seJustifications,
 	    &wPreferences.title_justification, getEnum, setJustify, NULL, NULL},
@@ -590,7 +573,7 @@ WDefaultEntry optionList[] = {
 	    NULL, getColor, setHightlightText, NULL, NULL},
 	{"ClipTitleColor", "black", (void *)CLIP_NORMAL,
 	    NULL, getColor, setClipTitleColor, NULL, NULL},
-	{"CClipTitleColor", "\"#454045\"", (void *)CLIP_COLLAPSED,
+	{"CClipTitleColor", "\"rgb:61/61/61\"", (void *)CLIP_COLLAPSED,
 	    NULL, getColor, setClipTitleColor, NULL, NULL},
 	{"FTitleColor", "white", (void *)WS_FOCUSED,
 	    NULL, getColor, setWTitleColor, NULL, NULL},
@@ -600,21 +583,21 @@ WDefaultEntry optionList[] = {
 	    NULL, getColor, setWTitleColor, NULL, NULL},
 	{"FTitleBack", "(solid, black)", NULL,
 	    NULL, getTexture, setFTitleBack, NULL, NULL},
-	{"PTitleBack", "(solid, \"#616161\")", NULL,
+	{"PTitleBack", "(solid, gray40)", NULL,
 	    NULL, getTexture, setPTitleBack, NULL, NULL},
-	{"UTitleBack", "(solid, gray)", NULL,
+	{"UTitleBack", "(solid, \"rgb:aa/aa/aa\")", NULL,
 	    NULL, getTexture, setUTitleBack, NULL, NULL},
-	{"ResizebarBack", "(solid, gray)", NULL,
+	{"ResizebarBack", "(solid, \"rgb:aa/aa/aa\")", NULL,
 	    NULL, getTexture, setResizebarBack, NULL, NULL},
 	{"MenuTitleColor", "white", NULL,
 	    NULL, getColor, setMenuTitleColor, NULL, NULL},
 	{"MenuTextColor", "black", NULL,
 	    NULL, getColor, setMenuTextColor, NULL, NULL},
-	{"MenuDisabledColor", "\"#616161\"", NULL,
+	{"MenuDisabledColor", "gray50", NULL,
 	    NULL, getColor, setMenuDisabledColor, NULL, NULL},
 	{"MenuTitleBack", "(solid, black)", NULL,
 	    NULL, getTexture, setMenuTitleBack, NULL, NULL},
-	{"MenuTextBack", "(solid, gray)", NULL,
+	{"MenuTextBack", "(solid, \"rgb:aa/aa/aa\")", NULL,
 	    NULL, getTexture, setMenuTextBack, NULL, NULL},
 	{"IconTitleColor", "white", NULL,
 	    NULL, getColor, setIconTitleColor, NULL, NULL},
@@ -637,21 +620,21 @@ WDefaultEntry optionList[] = {
 
 	/* keybindings */
 
-	{"RootMenuKey", "None", (void *)WKBD_ROOTMENU,
+	{"RootMenuKey", "F12", (void *)WKBD_ROOTMENU,
 	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"WindowListKey", "None", (void *)WKBD_WINDOWLIST,
+	{"WindowListKey", "F11", (void *)WKBD_WINDOWLIST,
 	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"WindowMenuKey", "None", (void *)WKBD_WINDOWMENU,
+	{"WindowMenuKey", "Control+Escape", (void *)WKBD_WINDOWMENU,
 	    NULL, getKeybind, setKeyGrab, NULL, NULL},
 	{"DockRaiseLowerKey", "None", (void*)WKBD_DOCKRAISELOWER,
 	    NULL, getKeybind, setKeyGrab, NULL, NULL},
 	{"ClipRaiseLowerKey", "None", (void *)WKBD_CLIPRAISELOWER,
 	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"MiniaturizeKey", "None", (void *)WKBD_MINIATURIZE,
+	{"MiniaturizeKey", "Mod1+M", (void *)WKBD_MINIATURIZE,
 	    NULL, getKeybind, setKeyGrab, NULL, NULL},
 	{"MinimizeAllKey", "None", (void *)WKBD_MINIMIZEALL,
 	    NULL, getKeybind, setKeyGrab, NULL, NULL },
-	{"HideKey", "None", (void *)WKBD_HIDE,
+	{"HideKey", "Mod1+H", (void *)WKBD_HIDE,
 	    NULL, getKeybind, setKeyGrab, NULL, NULL},
 	{"HideOthersKey", "None", (void *)WKBD_HIDE_OTHERS,
 	    NULL, getKeybind, setKeyGrab, NULL, NULL},
@@ -683,11 +666,15 @@ WDefaultEntry optionList[] = {
 		NULL, getKeybind, setKeyGrab, NULL, NULL},
 	{"MaximusKey", "None", (void*)WKBD_MAXIMUS,
 		NULL, getKeybind, setKeyGrab, NULL, NULL},
+	{"KeepOnTopKey", "None", (void *)WKBD_KEEP_ON_TOP,
+	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	{"KeepAtBottomKey", "None", (void *)WKBD_KEEP_AT_BOTTOM,
+	    NULL, getKeybind, setKeyGrab, NULL, NULL},
 	{"OmnipresentKey", "None", (void *)WKBD_OMNIPRESENT,
 	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"RaiseKey", "\"Meta+Up\"", (void *)WKBD_RAISE,
+	{"RaiseKey", "Mod1+Up", (void *)WKBD_RAISE,
 	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"LowerKey", "\"Meta+Down\"", (void *)WKBD_LOWER,
+	{"LowerKey", "Mod1+Down", (void *)WKBD_LOWER,
 	    NULL, getKeybind, setKeyGrab, NULL, NULL},
 	{"RaiseLowerKey", "None", (void *)WKBD_RAISELOWER,
 	    NULL, getKeybind, setKeyGrab, NULL, NULL},
@@ -697,17 +684,17 @@ WDefaultEntry optionList[] = {
 	    NULL, getKeybind, setKeyGrab, NULL, NULL},
 	{"WorkspaceMapKey", "None", (void *)WKBD_WORKSPACEMAP,
 	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"FocusNextKey", "None", (void *)WKBD_FOCUSNEXT,
+	{"FocusNextKey", "Mod1+Tab", (void *)WKBD_FOCUSNEXT,
 	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"FocusPrevKey", "None", (void *)WKBD_FOCUSPREV,
+	{"FocusPrevKey", "Mod1+Shift+Tab", (void *)WKBD_FOCUSPREV,
 	    NULL, getKeybind, setKeyGrab, NULL, NULL},
 	{"GroupNextKey", "None", (void *)WKBD_GROUPNEXT,
 	    NULL, getKeybind, setKeyGrab, NULL, NULL},
 	{"GroupPrevKey", "None", (void *)WKBD_GROUPPREV,
 	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"NextWorkspaceKey", "None", (void *)WKBD_NEXTWORKSPACE,
+	{"NextWorkspaceKey", "Mod1+Control+Right", (void *)WKBD_NEXTWORKSPACE,
 	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"PrevWorkspaceKey", "None", (void *)WKBD_PREVWORKSPACE,
+	{"PrevWorkspaceKey", "Mod1+Control+Left", (void *)WKBD_PREVWORKSPACE,
 	    NULL, getKeybind, setKeyGrab, NULL, NULL},
 	{"LastWorkspaceKey", "None", (void *)WKBD_LASTWORKSPACE,
 	    NULL, getKeybind, setKeyGrab, NULL, NULL},
@@ -715,25 +702,25 @@ WDefaultEntry optionList[] = {
 	    NULL, getKeybind, setKeyGrab, NULL, NULL},
 	{"PrevWorkspaceLayerKey", "None", (void *)WKBD_PREVWSLAYER,
 	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"Workspace1Key", "None", (void *)WKBD_WORKSPACE1,
+	{"Workspace1Key", "Mod1+1", (void *)WKBD_WORKSPACE1,
 	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"Workspace2Key", "None", (void *)WKBD_WORKSPACE2,
+	{"Workspace2Key", "Mod1+2", (void *)WKBD_WORKSPACE2,
 	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"Workspace3Key", "None", (void *)WKBD_WORKSPACE3,
+	{"Workspace3Key", "Mod1+3", (void *)WKBD_WORKSPACE3,
 	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"Workspace4Key", "None", (void *)WKBD_WORKSPACE4,
+	{"Workspace4Key", "Mod1+4", (void *)WKBD_WORKSPACE4,
 	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"Workspace5Key", "None", (void *)WKBD_WORKSPACE5,
+	{"Workspace5Key", "Mod1+5", (void *)WKBD_WORKSPACE5,
 	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"Workspace6Key", "None", (void *)WKBD_WORKSPACE6,
+	{"Workspace6Key", "Mod1+6", (void *)WKBD_WORKSPACE6,
 	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"Workspace7Key", "None", (void *)WKBD_WORKSPACE7,
+	{"Workspace7Key", "Mod1+7", (void *)WKBD_WORKSPACE7,
 	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"Workspace8Key", "None", (void *)WKBD_WORKSPACE8,
+	{"Workspace8Key", "Mod1+8", (void *)WKBD_WORKSPACE8,
 	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"Workspace9Key", "None", (void *)WKBD_WORKSPACE9,
+	{"Workspace9Key", "Mod1+9", (void *)WKBD_WORKSPACE9,
 	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"Workspace10Key", "None", (void *)WKBD_WORKSPACE10,
+	{"Workspace10Key", "Mod1+0", (void *)WKBD_WORKSPACE10,
 	    NULL, getKeybind, setKeyGrab, NULL, NULL},
 	{"MoveToWorkspace1Key", "None", (void *)WKBD_MOVE_WORKSPACE1,
 	    NULL, getKeybind, setKeyGrab, NULL, NULL},
@@ -879,7 +866,7 @@ static WMPropList *readGlobalDomain(const char *domainName, Bool requireDictiona
 	char path[PATH_MAX];
 	struct stat stbuf;
 
-	snprintf(path, sizeof(path), "%s/%s/%s", SYSCONFDIR, GLOBAL_DEFAULTS_SUBDIR, domainName);
+	snprintf(path, sizeof(path), "%s/%s", DEFSDATADIR, domainName);
 	if (stat(path, &stbuf) >= 0) {
 		globalDict = WMReadPropListFromFile(path);
 		if (globalDict && requireDictionary && !WMIsPLDictionary(globalDict)) {
@@ -929,7 +916,7 @@ void wDefaultsMergeGlobalMenus(WDDomain *menuDomain)
 		return;
 
 #ifdef GLOBAL_PREAMBLE_MENU_FILE
-	submenu = WMReadPropListFromFile(SYSCONFDIR "/" GLOBAL_DEFAULTS_SUBDIR "/" GLOBAL_PREAMBLE_MENU_FILE);
+	submenu = WMReadPropListFromFile(DEFSDATADIR "/" GLOBAL_PREAMBLE_MENU_FILE);
 
 	if (submenu && !WMIsPLArray(submenu)) {
 		wwarning(_("invalid global menu file %s"), GLOBAL_PREAMBLE_MENU_FILE);
@@ -943,7 +930,7 @@ void wDefaultsMergeGlobalMenus(WDDomain *menuDomain)
 #endif
 
 #ifdef GLOBAL_EPILOGUE_MENU_FILE
-	submenu = WMReadPropListFromFile(SYSCONFDIR "/" GLOBAL_DEFAULTS_SUBDIR "/" GLOBAL_EPILOGUE_MENU_FILE);
+	submenu = WMReadPropListFromFile(DEFSDATADIR "/" GLOBAL_EPILOGUE_MENU_FILE);
 
 	if (submenu && !WMIsPLArray(submenu)) {
 		wwarning(_("invalid global menu file %s"), GLOBAL_EPILOGUE_MENU_FILE);
@@ -1363,32 +1350,6 @@ void wReadDefaults(virtual_screen *vscr, WMPropList *new_dict)
 
 	needs_refresh = read_defaults_step1(vscr, new_dict);
 	read_defaults_noscreen(vscr, new_dict);
-
-	/*
-	 * Backward Compatibility:
-	 * Support the old setting names for Apercu, now called Mini-Preview
-	 *
-	 * This code should probably stay for at least 2 years, you should not consider removing
-	 * it before year 2017
-	 */
-	if (legacy_minipreview_config.enable) {
-		wwarning(_("your configuration is using old syntax for Mini-Preview settings; consider running WPrefs.app to update"));
-		wPreferences.miniwin_preview_balloon = legacy_minipreview_config.enable;
-
-		if (legacy_minipreview_config.size > 0) {
-			/*
-			 * the option 'ApercuSize' used to be coded as a multiple of the icon size in v0.95.6
-			 * it is now expressed directly in pixels, but to avoid breaking user's setting we check
-			 * for old coding and convert it now.
-			 */
-			if (legacy_minipreview_config.size < 24) {
-				/* 24 is the minimum icon size proposed in WPref's settings */
-				wPreferences.minipreview_size = legacy_minipreview_config.size * wPreferences.icon_size;
-			} else {
-				wPreferences.minipreview_size = legacy_minipreview_config.size;
-			}
-		}
-	}
 
 	if (needs_refresh != 0 && !w_global.startup.phase1)
 		refresh_defaults(vscr, needs_refresh);

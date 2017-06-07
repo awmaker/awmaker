@@ -213,6 +213,10 @@ void wSetFocusTo(virtual_screen *vscr, WWindow *wwin)
 			if (wPreferences.highlight_active_app)
 				wApplicationDeactivate(oapp);
 		}
+
+		/* reset fullscreen if temporarily removed due to lost focus*/
+		if (wwin->flags.fullscreen)
+			ChangeStackingLevel(wwin->frame->core, WMFullscreenLevel);
 	}
 
 	wWindowFocus(wwin, focused);
@@ -351,7 +355,7 @@ void update_saved_geometry(WWindow *wwin)
 		save_old_geometry(wwin, SAVE_GEOMETRY_X);
 }
 
-void wMaximizeWindow(WWindow *wwin, int directions)
+void wMaximizeWindow(WWindow *wwin, int directions, int head)
 {
 	unsigned int new_width, new_height, half_scr_width, half_scr_height;
 	int new_x = 0;
@@ -385,19 +389,14 @@ void wMaximizeWindow(WWindow *wwin, int directions)
 	totalArea.y2 = scr->scr_height;
 	totalArea.x1 = 0;
 	totalArea.y1 = 0;
-	usableArea = totalArea;
 
-	if (!(directions & MAX_IGNORE_XINERAMA)) {
-		virtual_screen *vscr = wwin->vscr;
-		int head;
 
-		if (directions & MAX_KEYBOARD)
-			head = wGetHeadForWindow(wwin);
-		else
-			head = wGetHeadForPointerLocation(vscr);
+	/* In case of mouse initiated maximize, use the head in which pointer is
+	 * located, rather than window position, which is passed to the function */
+	if (!(directions & MAX_IGNORE_XINERAMA) && !(directions & MAX_KEYBOARD))
+		head = wGetHeadForPointerLocation(wwin->vscr);
 
-		usableArea = wGetUsableAreaForHead(vscr, head, &totalArea, True);
-	}
+	usableArea = wGetUsableAreaForHead(wwin->vscr, head, &totalArea, True);
 
 
 	/* Only save directions, not kbd or xinerama hints */
@@ -494,20 +493,131 @@ void handleMaximize(WWindow *wwin, int directions)
 	int requested = directions & (MAX_HORIZONTAL | MAX_VERTICAL | MAX_LEFTHALF | MAX_RIGHTHALF | MAX_TOPHALF | MAX_BOTTOMHALF | MAX_MAXIMUS);
 	int effective = requested ^ current;
 	int flags = directions & ~requested;
+	int head = wGetHeadForWindow(wwin);
+	int dest_head = -1;
 
 	if (!effective) {
 		/* allow wMaximizeWindow to restore the Maximusized size */
 		if ((wwin->flags.old_maximized & MAX_MAXIMUS) &&
 				!(requested & MAX_MAXIMUS))
-			wMaximizeWindow(wwin, MAX_MAXIMUS | flags);
-		else
+			wMaximizeWindow(wwin, MAX_MAXIMUS | flags, head);
+		else if (wPreferences.alt_half_maximize &&
+			 current & MAX_HORIZONTAL && current & MAX_VERTICAL &&
+			 requested & MAX_HORIZONTAL && requested & MAX_VERTICAL)
 			wUnmaximizeWindow(wwin);
-	/* these alone mean vertical|horizontal toggle */
-	} else if ((effective == MAX_LEFTHALF) ||
-			(effective == MAX_RIGHTHALF) ||
-			(effective == MAX_TOPHALF) ||
-			(effective == MAX_BOTTOMHALF))
+
+		/* Apply for window state, which is only horizontally or vertically
+		 * maximized. Quarters cannot be handled here, since there is not clear
+		 * on which direction user intend to move such window. */
+		else if (wPreferences.move_half_max_between_heads &&
+			 current & (MAX_VERTICAL | MAX_HORIZONTAL)) {
+			if (requested & MAX_LEFTHALF && current & MAX_LEFTHALF) {
+				dest_head = wGetHeadRelativeToCurrentHead(wwin->vscr,
+						head, DIRECTION_LEFT);
+				if (dest_head != -1) {
+					effective |= MAX_RIGHTHALF;
+					effective |= MAX_VERTICAL;
+					effective &= ~(MAX_HORIZONTAL | MAX_LEFTHALF);
+				}
+			} else if (requested & MAX_RIGHTHALF &&
+					current & MAX_RIGHTHALF) {
+				dest_head = wGetHeadRelativeToCurrentHead(wwin->vscr,
+						head, DIRECTION_RIGHT);
+				if (dest_head != -1) {
+					effective |= MAX_LEFTHALF;
+					effective |= MAX_VERTICAL;
+					effective &= ~(MAX_HORIZONTAL | MAX_RIGHTHALF);
+				}
+			} else if (requested & MAX_TOPHALF && current & MAX_TOPHALF) {
+				dest_head = wGetHeadRelativeToCurrentHead(wwin->vscr,
+						head, DIRECTION_UP);
+				if (dest_head != -1) {
+					effective |= MAX_BOTTOMHALF;
+					effective |= MAX_HORIZONTAL;
+					effective &= ~(MAX_VERTICAL | MAX_TOPHALF);
+				}
+			} else if (requested & MAX_BOTTOMHALF &&
+					current & MAX_BOTTOMHALF) {
+				dest_head = wGetHeadRelativeToCurrentHead(wwin->vscr,
+						head, DIRECTION_DOWN);
+				if (dest_head != -1) {
+					effective |= MAX_TOPHALF;
+					effective |= MAX_HORIZONTAL;
+					effective &= ~(MAX_VERTICAL | MAX_BOTTOMHALF);
+				}
+			}
+		}
+
+		if (dest_head != -1)
+			/* tell wMaximizeWindow that we were using keyboard, not mouse,
+			 * so that it will use calculated head as destination for
+			 * move_half_max_between_heads feature, not from mouse pointer */
+			wMaximizeWindow(wwin, (effective | flags | MAX_KEYBOARD),
+					dest_head);
+		else if (!wPreferences.alt_half_maximize)
+			wUnmaximizeWindow(wwin);
+
+	} else if (!wPreferences.alt_half_maximize)
 		wUnmaximizeWindow(wwin);
+
+	/* these alone mean vertical|horizontal toggle */
+	if ((effective == MAX_LEFTHALF) ||
+	    (effective == MAX_RIGHTHALF) ||
+	    (effective == MAX_TOPHALF) ||
+	    (effective == MAX_BOTTOMHALF))
+		wUnmaximizeWindow(wwin);
+
+	/* Following conditions might look complicated, but they are really simple:
+	 * allow fullscreen transition only for half maximized state (and not
+	 * corners) and only when requested state is also half maximized, but on
+	 * opposite side of the screen. As for corners, it is similar, but
+	 * expected is that only quarter maximized windows on corner can change
+	 * it's state to half maximized window, depending on direction. Note, that
+	 * MAX_KEYBOARD is passed to the wMaximizeWindow function, to preserve the
+	 * head, even if mouse was used for triggering the action. */
+
+	/* Quarters alternative transition. */
+	else if (wPreferences.alt_half_maximize &&
+			((requested & MAX_LEFTHALF && requested & MAX_TOPHALF &&
+			  current & MAX_RIGHTHALF && current & MAX_TOPHALF) ||
+			(requested & MAX_RIGHTHALF && requested & MAX_TOPHALF &&
+			  current & MAX_LEFTHALF && current & MAX_TOPHALF)))
+		wMaximizeWindow(wwin, (MAX_TOPHALF | MAX_HORIZONTAL | MAX_KEYBOARD),
+				head);
+	else if (wPreferences.alt_half_maximize &&
+			((requested & MAX_LEFTHALF && requested & MAX_BOTTOMHALF &&
+			 current & MAX_RIGHTHALF && current & MAX_BOTTOMHALF) ||
+			(requested & MAX_RIGHTHALF && requested & MAX_BOTTOMHALF &&
+			 current & MAX_LEFTHALF && current & MAX_BOTTOMHALF)))
+		wMaximizeWindow(wwin, (MAX_BOTTOMHALF | MAX_HORIZONTAL | MAX_KEYBOARD),
+				head);
+	else if (wPreferences.alt_half_maximize &&
+			((requested & MAX_LEFTHALF && requested & MAX_BOTTOMHALF &&
+			 current & MAX_LEFTHALF && current & MAX_TOPHALF) ||
+			(requested & MAX_LEFTHALF && requested & MAX_TOPHALF &&
+			 current & MAX_LEFTHALF && current & MAX_BOTTOMHALF)))
+		wMaximizeWindow(wwin, (MAX_LEFTHALF | MAX_VERTICAL| MAX_KEYBOARD),
+				head);
+	else if (wPreferences.alt_half_maximize &&
+			((requested & MAX_RIGHTHALF && requested & MAX_BOTTOMHALF &&
+			 current & MAX_RIGHTHALF && current & MAX_TOPHALF) ||
+			(requested & MAX_RIGHTHALF && requested & MAX_TOPHALF &&
+			 current & MAX_RIGHTHALF && current & MAX_BOTTOMHALF)))
+		wMaximizeWindow(wwin, (MAX_RIGHTHALF | MAX_VERTICAL| MAX_KEYBOARD),
+				head);
+
+	/* Half-maximized alternative transition */
+	else if (wPreferences.alt_half_maximize && (
+				(requested & MAX_LEFTHALF && requested & MAX_VERTICAL &&
+				 current & MAX_RIGHTHALF && current & MAX_VERTICAL) ||
+				(requested & MAX_RIGHTHALF && requested & MAX_VERTICAL &&
+				 current & MAX_LEFTHALF && current & MAX_VERTICAL) ||
+				(requested & MAX_TOPHALF && requested & MAX_HORIZONTAL &&
+				 current & MAX_BOTTOMHALF && current & MAX_HORIZONTAL) ||
+				(requested & MAX_BOTTOMHALF && requested & MAX_HORIZONTAL &&
+				 current & MAX_TOPHALF && current & MAX_HORIZONTAL)))
+		wMaximizeWindow(wwin, (MAX_HORIZONTAL|MAX_VERTICAL|MAX_KEYBOARD),
+				head);
 	else {
 		if ((requested == (MAX_HORIZONTAL | MAX_VERTICAL)) ||
 				(requested == MAX_MAXIMUS))
@@ -549,7 +659,7 @@ void handleMaximize(WWindow *wwin, int directions)
 				effective &= ~(MAX_TOPHALF | MAX_BOTTOMHALF);
 			effective &= ~MAX_MAXIMUS;
 		}
-		wMaximizeWindow(wwin, effective | flags);
+		wMaximizeWindow(wwin, effective | flags, head);
 	}
 }
 
@@ -725,8 +835,7 @@ void wFullscreenWindow(WWindow *wwin)
 
 	wWindowConfigureBorders(wwin);
 
-	ChangeStackingLevel(wwin->frame->core, WMNormalLevel);
-	wRaiseFrame(wwin->frame->core);
+	ChangeStackingLevel(wwin->frame->core, WMFullscreenLevel);
 
 	wwin->bfs_geometry.x = wwin->frame_x;
 	wwin->bfs_geometry.y = wwin->frame_y;
@@ -750,10 +859,15 @@ void wUnfullscreenWindow(WWindow *wwin)
 
 	wwin->flags.fullscreen = False;
 
-	if (WFLAGP(wwin, sunken))
-		ChangeStackingLevel(wwin->frame->core, WMSunkenLevel);
-	else if (WFLAGP(wwin, floating))
-		ChangeStackingLevel(wwin->frame->core, WMFloatingLevel);
+	if (wwin->frame->core->stacking->window_level == WMFullscreenLevel) {
+		if (WFLAGP(wwin, sunken)) {
+			ChangeStackingLevel(wwin->frame->core, WMSunkenLevel);
+		} else if (WFLAGP(wwin, floating)) {
+			ChangeStackingLevel(wwin->frame->core, WMFloatingLevel);
+		} else {
+			ChangeStackingLevel(wwin->frame->core, WMNormalLevel);
+		}
+	}
 
 	wWindowConfigure(wwin, wwin->bfs_geometry.x, wwin->bfs_geometry.y,
 			 wwin->bfs_geometry.width, wwin->bfs_geometry.height);
@@ -1122,7 +1236,7 @@ void wIconifyWindow(WWindow *wwin)
 		if (!wwin->flags.icon_moved)
 			PlaceIcon(wwin->vscr, &wwin->icon_x, &wwin->icon_y, wGetHeadForWindow(wwin));
 
-		wwin->icon = icon_create_core();
+		wwin->icon = icon_create_core(wwin->vscr);
 		wwin->icon->owner = wwin;
 		wwin->icon->tile_type = TILE_NORMAL;
 		set_icon_image_from_database(wwin->icon, wwin->wm_instance, wwin->wm_class, NULL);
@@ -1135,7 +1249,7 @@ void wIconifyWindow(WWindow *wwin)
 		icon_for_wwindow_map(wwin->icon);
 		wwin->icon->mapped = 1;
 
-		/* extract the window screenshot everytime, as the option can be enable anytime */
+		/* extract the window screenshot every time, as the option can be enable anytime */
 		if (wwin->client_win && wwin->flags.mapped) {
 			RImage *mini_preview;
 			XImage *pimg;
@@ -1166,7 +1280,7 @@ void wIconifyWindow(WWindow *wwin)
 				} else {
 					const char *title;
 					char title_buf[32];
- 
+
 					if (wwin->frame->title) {
 						title = wwin->frame->title;
 					} else {
@@ -1958,6 +2072,18 @@ void wMakeWindowVisible(WWindow *wwin)
 
 		wRaiseFrame(wwin->frame->core);
 	}
+}
+
+void movePionterToWindowCenter(WWindow *wwin)
+{
+	if (!wPreferences.pointer_with_half_max_windows)
+		return;
+
+	XSelectInput(dpy, wwin->client_win, wwin->event_mask);
+	XWarpPointer(dpy, None, wwin->vscr->screen_ptr->root_win, 0, 0, 0, 0,
+			wwin->frame_x + wwin->client.width / 2,
+			wwin->frame_y + wwin->client.height / 2);
+	XFlush(dpy);
 }
 
 /*

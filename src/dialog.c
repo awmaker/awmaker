@@ -66,7 +66,7 @@
 	"Copyright \xc2\xa9 1997-2006 Alfredo K. Kojima\n"\
 	"Copyright \xc2\xa9 1998-2006 Dan Pascu\n"\
 	"Copyright \xc2\xa9 2013-2014 Window Maker Developers Team\n" \
-	"Copyright \xc2\xa9 2015-2016 Rodolfo García (kix)"
+	"Copyright \xc2\xa9 2015-2017 Rodolfo García (kix)"
 
 #define LEGAL_TEXT \
 	"    Window Maker is free software; you can redistribute it and/or "\
@@ -1604,7 +1604,7 @@ int wShowCrashingDialogPanel(int whatSig)
 	WMMoveWidget(panel->note2L, 10, 130);
 	WMSetLabelTextAlignment(panel->note2L, WALeft);
 	snprintf(buf, sizeof(buf), /* Comment for the PO file: the %s is an email address */
-		 _(" This fatal error occured probably due to a bug."
+		 _(" This fatal error occurred probably due to a bug."
 		   " Please fill the included BUGFORM and report it to %s."),
 		 PACKAGE_BUGREPORT);
 	WMSetLabelText(panel->note2L, buf);

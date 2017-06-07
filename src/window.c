@@ -785,7 +785,7 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 
 #define ADEQUATE(x) ((x)!=None && (x)!=wwin->client_win && (x)!=fPtr->leader)
 
-		/* // only enter here if PropGetWMClass() succeds */
+		/* // only enter here if PropGetWMClass() succeeds */
 		PropGetWMClass(wwin->main_window, &class, &instance);
 		buffer = StrConcatDot(instance, class);
 
@@ -969,9 +969,8 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 	wWindowConstrainSize(wwin, &width, &height);
 
 	/* do not ask for window placement if the window is
-	 * transient, during startup, if the initial workspace is another one
-	 * or if the window wants to start iconic.
-	 * If geometry was saved, restore it. */
+	 * transient, during startup, or if the window wants
+	 * to start iconic.  If geometry was saved, restore it. */
 	{
 		Bool dontBring = False;
 
@@ -980,7 +979,6 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 			y = win_state->state->y;
 		} else if ((wwin->transient_for == None || wPreferences.window_placement != WPM_MANUAL)
 			   && !w_global.startup.phase1
-			   && workspace == vscr->workspace.current
 			   && !wwin->flags.miniaturized
 			   && !wwin->flags.maximized && !(wwin->normal_hints->flags & (USPosition | PPosition))) {
 
@@ -1238,7 +1236,7 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 		     * the window focusing (if the mouse is over that window)
 		     * will be processed by wmaker.
 		     * But since this event will be rather delayed
-		     * (step 3 has a large delay) the time when the event ocurred
+		     * (step 3 has a large delay) the time when the event occurred
 		     * and when it is processed, the client that owns that window
 		     * will reject the XSetInputFocus() for it.
 		     */
@@ -2511,7 +2509,7 @@ void wWindowResetMouseGrabs(WWindow * wwin)
 	/* Mouse grabs can't be done on the client window because of
 	 * ICCCM and because clients that try to do the same will crash.
 	 *
-	 * But there is a problem wich makes tbar buttons of unfocused
+	 * But there is a problem which makes tbar buttons of unfocused
 	 * windows not usable as the click goes to the frame window instead
 	 * of the button itself. Must figure a way to fix that.
 	 */
@@ -2786,7 +2784,7 @@ static void titlebarDblClick(WCoreWindow *sender, void *data, XEvent *event)
 				int ndir = dir ^ wwin->flags.maximized;
 
 				if (ndir != 0)
-					wMaximizeWindow(wwin, ndir);
+					wMaximizeWindow(wwin, ndir, wGetHeadForWindow(wwin));
 				else
 					wUnmaximizeWindow(wwin);
 			}

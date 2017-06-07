@@ -1194,7 +1194,10 @@ static void draw_snap_frame(WWindow *wwin, int direction)
 		break;
 
 	case SNAP_TOP:
-		drawTransparentFrame(wwin, 0, 0, scr->scr_width, scr->scr_height/2);
+		if (wPreferences.snap_to_top_maximizes_fullscreen)
+			drawTransparentFrame(wwin, 0, 0, scr->scr_width, scr->scr_height);
+		else
+			drawTransparentFrame(wwin, 0, 0, scr->scr_width, scr->scr_height/2);
 		break;
 
 	case SNAP_BOTTOM:
@@ -1274,7 +1277,10 @@ static void do_snap(WWindow *wwin, MoveData *data, Bool opaqueMove)
 		break;
 
 	case SNAP_TOP:
-		directions = MAX_HORIZONTAL | MAX_TOPHALF;
+		if (wPreferences.snap_to_top_maximizes_fullscreen)
+			directions = MAX_HORIZONTAL | MAX_VERTICAL;
+		else
+			directions = MAX_HORIZONTAL | MAX_TOPHALF;
 		break;
 
 	case SNAP_BOTTOM:

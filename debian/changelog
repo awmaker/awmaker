@@ -1,3 +1,180 @@
+wmaker (0.95.8-1~exp1) experimental; urgency=medium
+
+  * New upstream release.
+    - Menus may be shaded (Closes: #72038).
+    - Follow window placement rules when placing windows on non-active
+      workspaces (Closes: #181735).
+    - Windows list sorted by workspace (Closes: #280851).
+    - New keyboard shortcuts (Closes: #306808).
+    - Default menu uses correct path to WPrefs (Closes: #851737).
+    - Use PKG_PROG_PKG_CONFIG macro to allow cross building
+      (Closes: #853236).
+  * debian/control
+    - Add xterm to Suggests as it is referenced in the default Window
+      Maker menus (LP: #1429495).
+  * debian/libwraster*
+    - Rename libwraster5 -> libwraster6 for soname version bump.
+  * debian/patches
+     - Remove patches which were either applied or otherwise made
+       unnecessary with the new upstream release.  In particular,
+       + 51_wmaker_man.diff
+       + 55_ungif_problem.diff
+       + 56_ignore_runstatedir.diff
+       + 57_ignore_with-aix-soname.diff
+       + 60_fix_wraster_symbol_versioning.diff
+       + 61_fix_wmmenugen_segfault.diff
+  * debian/rules
+    - Use new --with-defsdatadir configure option to specify global
+      defaults directory instead of old GLOBAL_DEFAULTS_SUBDIR macro.
+    - Use renamed --with-xlocale configure option instead of old
+      --with-locale.
+    - Drop --with-localedir configure option, as it does not exist.
+      It should have been --localedir, but the default is what we
+      want anyway.
+    - Add -Wl,--as-needed to LDFLAGS to avoid useless dependencies.
+  * debian/wmaker-common.install
+    - Update path for system WMGLOBAL and WMState config files.
+
+ -- Doug Torrance <dtorrance@piedmont.edu>  Mon, 13 Mar 2017 14:26:52 -0400
+
+wmaker (0.95.7-8) unstable; urgency=medium
+
+  * debian/control
+    - Add libwmaker1 to libwmaker-dev Depends (Closes: #857164).
+
+ -- Doug Torrance <dtorrance@piedmont.edu>  Wed, 08 Mar 2017 10:59:29 -0500
+
+wmaker (0.95.7-7) unstable; urgency=medium
+
+  * Add missing license information to debian/copyright.
+  * Fix segfault in wmmenugen (Closes: #844783).
+
+ -- Doug Torrance <dtorrance@piedmont.edu>  Sat, 19 Nov 2016 10:35:50 -0500
+
+wmaker (0.95.7-6) unstable; urgency=medium
+
+  * Split wxcopy and wxpaste into new wmaker-utils package (Closes: #78119).
+  * Restore libwmaker packages.
+
+ -- Doug Torrance <dtorrance@piedmont.edu>  Wed, 09 Mar 2016 00:08:43 -0500
+
+wmaker (0.95.7-5) unstable; urgency=medium
+
+  * Clean up debian/copyright. Add some files which were missed in the LGPL
+    paragraph and bump its version to 2+.  Restore debian/* paragraph.
+  * Remove useless debian/*.changelog-upstream files.
+  * Remove out of date file README.build.
+  * Drop wmaker-dbg package in favor of automatically generated wmaker-dbgsym.
+  * New file debian/wmaker-common.maintscript; removes obsolete config files
+    (Closes: #726075).
+  * Do not use buggy --enable-randr configure option (Closes: #816993).
+
+ -- Doug Torrance <dtorrance@piedmont.edu>  Mon, 07 Mar 2016 11:04:33 -0500
+
+wmaker (0.95.7-4) unstable; urgency=medium
+
+  * Update Vcs-Browser to use https; fixes vcs-field-uses-insecure-uri Lintian
+    warning.
+  * Fix typo in README.Debian; fixes spelling-error-in-readme-debian Lintian
+    warning.
+  * Enable all hardening flags; fixes hardening-no-{bindnow,pie} Lintian
+    warnings.
+  * Bump Standards-Version to 3.9.7, no changes required.
+  * 57_ignore_with-aix-soname.diff: Ignore missing documentation for
+    --with-aix-soname in INSTALL-WMAKER (Closes: #814213).
+
+ -- Doug Torrance <dtorrance@piedmont.edu>  Fri, 12 Feb 2016 22:27:08 -0500
+
+wmaker (0.95.7-3) unstable; urgency=low
+
+  * Patch back libwraster symbol version to LIBWRASTER3. Temporarily mark
+    RDrawLine@LIBWRASTER3 with a dep >= 0.95.7-3~ to force lockstep upgrades
+    from broken 0.95.7-2. Closes: #811304
+
+ -- Andreas Metzler <ametzler@debian.org>  Wed, 20 Jan 2016 20:19:27 +0100
+
+wmaker (0.95.7-2) unstable; urgency=medium
+
+  [ Andreas Metzler ]
+  * Drop unused (since at least 0.95.0+20111028-1) b-d on grep-dctrl.
+  * Upload to unstable.
+
+  [ Doug Torrance ]
+  * Switch Build-Depends from libtiff5-dev to libtiff-dev for possible future
+    libtiff transitions; also allows backports to earlier releases, e.g.,
+    wheezy/precise.
+  * The theme that was removed in version 0.92.0-6 has been reintroduced as an
+    option, now named "DebianLegacy".  Because it now contains two themes, the
+    directory debian/debianfiles/Theme has been renamed to Themes.  The file
+    Debian.theme.txt in this directory, which actually describes the
+    DebianLegacy theme but was never removed, has been renamed to
+    DebianLegacy.txt.  A corresponding paragraph has been added to
+    debian/copyright. (Closes: #393143)
+
+ -- Andreas Metzler <ametzler@debian.org>  Sat, 16 Jan 2016 17:53:44 +0100
+
+wmaker (0.95.7-1) experimental; urgency=medium
+
+  [ Rodolfo García Peñas (kix) ]
+  * New upstream version 0.95.7.
+  * debian/changelog, removed debian files (lintian warning).
+  * Updated debian/libwings3.symbols.
+  * Updated libwraster5.symbols
+  * Changed the test for the update-menu command in these files to avoid
+    a lintian warning (command-with-path-in-maintainer-script):
+    * debian/wmaker.postrm
+    * debian/wmaker-common.postrm
+  * Removed the Encoding field in debian/debianfiles/wmaker-common.desktop
+    to avoid a lintian warning (desktop-entry-contains-encoding-key).
+  * Updated debian/rules to include pango support (--enable-pango).
+  * Updated all debian/patches only with quilt refresh.
+  * Updated some debian files because the manpages are moved from
+    section 1x to 1:
+    * debian/patches/51_wmaker_man.diff
+    * debian/wmaker-common.manpages
+    * debian/wmaker.install
+    * debian/wmaker.manpages
+  * Removed upstream file FAQ.I18N in debian/wmaker-common.docs.
+
+  [ Andreas Metzler ]
+  * 56_ignore_runstatedir.diff: Ignore missing documentation for --runstatedir
+    in INSTALL.
+  * Use dh_autoreconf instead of invoking autogen.sh in the configure target.
+  * Simplify debian/rules and use dh_auto_configure, especially for handling
+    dpkg-buildflags.
+  * wmaker manpage was also moved from section 1x to 1. Fix pointer in
+    README.Debian and update-alternatives slave link.
+
+  [ Doug Torrance ]
+  * Switch maintenance to Debian Window Maker Team with kix, Andreas, and
+    myself as uploaders.
+  * Tidy up packaging using wrap-and-sort.
+  * Remove Breaks/Replaces wmaker (<< 0.95.0+20111028-3); this version is no
+    longer in Debian.
+  * Switch Depends to wmaker-common (= ${source:Version}) so common files
+    are also updated on upgrade.
+  * Add Vcs-* fields to debian/control.
+  * Update Format field in debian/copyright.
+  * Update debian/watch from sepwatch project.
+  * Remove files from debian/source/options which are handled now by
+    dh-autoreconf.  Add distros directory (present in upstream git but not
+    tarball) and doc files modified during build.
+  * Add multiarch support.  In particular, add Multi-Arch fields to
+    debian/control, add wildcards for multiarch triplets to debian/*.install,
+    and remove --libdir from dh_auto_configure in debian/rules.
+  * Use wildcards for locales in debian/wmaker-common.install for
+    maintainability.
+
+ -- Andreas Metzler <ametzler@debian.org>  Sun, 10 Jan 2016 11:38:11 +0100
+
+wmaker (0.95.6-1.2) unstable; urgency=medium
+
+  * Non-maintainer upload, with maintainer approval.
+  * Pull 56_wrlib-add-support-for-release-5.1.0-of-the-libgif.patch from
+    upstream to allow building against giflib 5. Closes: #803292
+
+ -- Andreas Metzler <ametzler@debian.org>  Wed, 16 Dec 2015 19:16:51 +0100
+
 wmaker (0.95.6-1.1) unstable; urgency=medium
 
   * Non-maintainer upload.

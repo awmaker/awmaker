@@ -34,7 +34,7 @@ AC_PREREQ([2.69])
 
 dnl Configuration for Autoconf and Automake
 dnl =======================================
-AC_INIT([WindowMaker],[0.95.7],[wmaker-dev@lists.windowmaker.org],[WindowMaker],[http://www.windowmaker.org/])
+AC_INIT([WindowMaker],[0.95.8],[wmaker-dev@lists.windowmaker.org],[WindowMaker],[http://www.windowmaker.org/])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_HEADERS([config.h])
 
@@ -71,7 +71,7 @@ dnl 6. If any interfaces have been removed or changed since the last
 dnl public release, then set age to 0.
 dnl
 dnl libwraster
-WRASTER_CURRENT=5
+WRASTER_CURRENT=6
 WRASTER_REVISION=0
 WRASTER_AGE=0
 WRASTER_VERSION=$WRASTER_CURRENT:$WRASTER_REVISION:$WRASTER_AGE
@@ -435,7 +435,8 @@ WM_TYPE_SIGNAL
 
 dnl pkg-config
 dnl ==========
-AC_CHECK_PROG([PKGCONFIG], [pkg-config], [pkg-config])
+PKG_PROG_PKG_CONFIG
+AS_IF([test -z "$PKG_CONFIG"],[AC_MSG_ERROR([pkg-config is required.])])
 
 
 
@@ -446,12 +447,6 @@ dnl that the gettext environment works
 WM_I18N_LANGUAGES
 WM_I18N_XGETTEXT
 WM_I18N_MENUTEXTDOMAIN
-
-dnl 2014/12/29: The option is deprecated, we should keep this message for at
-dnl least 2 years to ensure users see it and update their build scripts
-AC_ARG_WITH([nlsdir], [],
-    [AC_MSG_ERROR([option '--with-nlsdir' is deprecated, please use autoconf's standard '--localedir' instead])])
-
 
 dnl ===========================================
 dnl 		Stuff that uses X
@@ -601,7 +596,7 @@ dnl FontConfig
 dnl ==========
 dnl libWINGS uses FcPatternDel from libfontconfig
 AC_MSG_CHECKING([for fontconfig library])
-FCLIBS=`$PKGCONFIG fontconfig --libs`
+FCLIBS=`$PKG_CONFIG fontconfig --libs`
 if test "x$FCLIBS" = "x" ; then
         AC_MSG_RESULT([not found])
 else
@@ -616,8 +611,8 @@ dnl =============================
 xft=yes
 XFTLIBS=""
 
-if test "x$PKGCONFIG" != x -a "`$PKGCONFIG xft; echo $?`" = 0; then
-        XFTCONFIG="$PKGCONFIG xft"
+if test "x$PKG_CONFIG" != x -a "`$PKG_CONFIG xft; echo $?`" = 0; then
+        XFTCONFIG="$PKG_CONFIG xft"
         pkgconfig_xft=yes
 else
         AC_CHECK_PROG(XFTCONFIG, xft-config, xft-config)
@@ -667,8 +662,8 @@ AC_ARG_ENABLE(pango, AS_HELP_STRING([--enable-pango], [enable Pango text layout 
 PANGOFLAGS=
 PANGOLIBS=
 if test "$pango" = yes; then
-	PANGOLIBS=`$PKGCONFIG pangoxft --libs`
-	PANGOFLAGS=`$PKGCONFIG pangoxft --cflags`
+	PANGOLIBS=`$PKG_CONFIG pangoxft --libs`
+	PANGOFLAGS=`$PKG_CONFIG pangoxft --cflags`
 	if test "x$PANGOLIBS" = "x" ; then
 	        AC_MSG_RESULT([not found])
 	else
@@ -855,6 +850,21 @@ AS_IF([test "x$with_gnustepdir" = "x"],
 AC_SUBST([wprefs_datadir])dnl
 AC_SUBST([wprefs_bindir])dnl
 
+dnl Support for DEFSDATADIR option
+dnl ============================
+AC_ARG_WITH([defsdatadir],
+    [AS_HELP_STRING([--with-defsdatadir=PATH], [specify where global defaults are located [SYSCONFDIR/WindowMaker]])],
+    [AS_CASE([$withval],
+        [yes|no], [AC_MSG_ERROR([bad value '$withval' for --with-defsdatadir, expected a path]) ],
+        [/*],  [], dnl Absolute path, ok
+        [\$*], [], dnl Assumes it starts with a reference to $prefix or a similar variable, ok
+        [AC_MSG_ERROR([bad path '$withval' for defsdatadir, expecting an absolute path])])],
+    [with_defsdatadir=""])
+
+AS_IF([test "x$with_defsdatadir" != "x"],
+    [defsdatadir="$with_defsdatadir"],
+    [defsdatadir='${sysconfdir}/WindowMaker'])
+AC_SUBST([defsdatadir])dnl
 
 dnl Enable User Defined Menu thing
 dnl ==============================

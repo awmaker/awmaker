@@ -1,20 +1,51 @@
 Source: wmaker
 Section: x11
 Priority: optional
-Maintainer: Rodolfo García Peñas (kix) <kix@debian.org>
-Standards-Version: 3.9.6
-Build-Depends: debhelper (>= 9), automake (>= 1:1.12), gettext,
- libfontconfig1-dev, libjpeg-dev, libpng-dev, libsm-dev, libtiff5-dev,
- libtool, libgif-dev, libx11-dev, libxext-dev, libxft-dev, libxinerama-dev,
- libxkbfile-dev, libxpm-dev, libxt-dev, libxrender-dev, sharutils, libxmu-dev,
- libxrandr-dev, dctrl-tools, autotools-dev
+Maintainer: Debian Window Maker Team <pkg-wmaker-devel@lists.alioth.debian.org>
+Uploaders: Rodolfo García Peñas (kix) <kix@debian.org>,
+           Andreas Metzler <ametzler@debian.org>,
+           Doug Torrance <dtorrance@piedmont.edu>
+Standards-Version: 3.9.7
+Build-Depends: automake (>= 1:1.12),
+               debhelper (>= 9),
+               dh-autoreconf,
+               gettext,
+               libfontconfig1-dev,
+               libgif-dev,
+               libjpeg-dev,
+               libpng-dev,
+               libsm-dev,
+               libtiff-dev,
+               libtool,
+               libx11-dev,
+               libxext-dev,
+               libxft-dev,
+               libxinerama-dev,
+               libxkbfile-dev,
+               libxmu-dev,
+               libxpm-dev,
+               libxrandr-dev,
+               libxrender-dev,
+               libxt-dev,
+               sharutils
 Homepage: http://windowmaker.org/
+Vcs-Browser: https://anonscm.debian.org/git/pkg-wmaker/wmaker.git
+Vcs-Git: https://anonscm.debian.org/git/pkg-wmaker/wmaker.git
 
 Package: wmaker
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, wmaker-common (>= 0.95.0+20111028-3)
+Multi-Arch: foreign
+Depends: wmaker-common (= ${source:Version}),
+         ${misc:Depends},
+         ${shlibs:Depends}
 Provides: x-window-manager
-Suggests: wmaker-data, menu, x11-apps, x-terminal-emulator, desktop-base
+Suggests: desktop-base,
+          menu,
+          wmaker-data,
+          wmaker-utils,
+          x-terminal-emulator,
+          x11-apps,
+          xterm
 Description: NeXTSTEP-like window manager for X
  Written by Alfredo Kojima almost from scratch, resembles the NeXTStep look
  very closely, and it is now an official GNU project. Window Maker (originally
@@ -25,10 +56,9 @@ Description: NeXTSTEP-like window manager for X
 
 Package: wmaker-common
 Architecture: all
+Multi-Arch: foreign
 Depends: ${misc:Depends}
 Suggests: wmaker
-Replaces: wmaker (<< 0.95.0+20111028-3)
-Breaks: wmaker (<< 0.95.0+20111028-3)
 Description: Window Maker - Architecture independent files
  Written by Alfredo Kojima almost from scratch, resembles the NeXTStep look
  very closely, and it is now an official GNU project. Window Maker (originally
@@ -39,12 +69,38 @@ Description: Window Maker - Architecture independent files
  .
  This package contains the architecture independent files.
 
+Package: wmaker-utils
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Breaks: wmaker (<< 0.95.7-6)
+Replaces: wmaker (<< 0.95.7-6)
+Description: Window Maker - Utilities
+ Written by Alfredo Kojima almost from scratch, resembles the NeXTStep look
+ very closely, and it is now an official GNU project. Window Maker (originally
+ named WindowMaker) is not overloaded with features, and it is easier to
+ configure than most other window managers. Its final goal is to produce a
+ window manager that doesn't require editing of configuration files.
+ Window Maker is fast and doesn't require tons of memory to run.
+ .
+ This package contains wxcopy and wxpaste, two utilities ordinarily shipped with
+ Window Maker but not depending on it or any of its libraries.  These
+ utilities allow users to interact with cut buffers on the command line.
+
 Package: libwraster-dev
 Architecture: any
+Multi-Arch: same
 Section: libdevel
-Depends: libwraster5 (= ${binary:Version}), libc6-dev, libx11-dev,
- libxext-dev, libxpm-dev, libjpeg-dev, libpng-dev, libgif-dev,
- libtiff5-dev, ${misc:Depends}
+Depends: libc6-dev,
+         libgif-dev,
+         libjpeg-dev,
+         libpng-dev,
+         libtiff5-dev,
+         libwraster6 (= ${binary:Version}),
+         libx11-dev,
+         libxext-dev,
+         libxpm-dev,
+         ${misc:Depends}
 Breaks: libwraster3-dev
 Replaces: libwraster3-dev
 Description: Static libraries and headers of Window Maker rasterizer
@@ -55,10 +111,11 @@ Description: Static libraries and headers of Window Maker rasterizer
  Contains libwraster and header files, for manipulating and
  rasterizing images.
 
-Package: libwraster5
+Package: libwraster6
 Architecture: any
+Multi-Arch: same
 Section: libs
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: ${misc:Depends}, ${shlibs:Depends}
 Description: Shared libraries of Window Maker rasterizer
  This library is used to manipulate images and convert them to
  a format that can be displayed through the X window system.
@@ -66,10 +123,17 @@ Description: Shared libraries of Window Maker rasterizer
 
 Package: libwings-dev
 Architecture: any
+Multi-Arch: same
 Section: libdevel
-Depends: libc6-dev, libx11-dev, libxext-dev, libwraster-dev, libxft-dev,
- libfontconfig1-dev, libwutil5 (= ${binary:Version}),
- libwings3 (= ${binary:Version}), ${misc:Depends}
+Depends: libc6-dev,
+         libfontconfig1-dev,
+         libwings3 (= ${binary:Version}),
+         libwraster-dev,
+         libwutil5 (= ${binary:Version}),
+         libx11-dev,
+         libxext-dev,
+         libxft-dev,
+         ${misc:Depends}
 Description: Window Maker's own widget set
  WINGs Is Not GNUstep (WINGs) is a small widget set with the NeXTSTEP
  look and feel. Its API is inspired in OpenSTEP and its
@@ -80,8 +144,9 @@ Description: Window Maker's own widget set
 
 Package: libwutil5
 Architecture: any
+Multi-Arch: same
 Section: libs
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: ${misc:Depends}, ${shlibs:Depends}
 Description: Window Maker's own widget set - utility library
  WINGs Is Not GNUstep (WINGs) is a small widget set with the NeXTSTEP
  look and feel. Its API is inspired in OpenSTEP and its
@@ -94,8 +159,9 @@ Description: Window Maker's own widget set - utility library
 
 Package: libwings3
 Architecture: any
+Multi-Arch: same
 Section: libs
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: ${misc:Depends}, ${shlibs:Depends}
 Description: Window Maker's own widget set - runtime library
  WINGs Is Not GNUstep (WINGs) is a small widget set with the NeXTSTEP
  look and feel. Its API is inspired in OpenSTEP and its
@@ -106,20 +172,24 @@ Description: Window Maker's own widget set - runtime library
  .
  This package contains the libWINGs runtime library.
 
-Package: wmaker-dbg
+Package: libwmaker-dev
 Architecture: any
-Section: debug
-Priority: extra
-Depends: libwraster5 (= ${binary:Version}) | libwings3 (= ${binary:Version}) |
- libwutil5 (= ${binary:Version}) | wmaker (= ${binary:Version}),
- ${misc:Depends}
-Description: Debugging symbols for WindowMaker packages
- Written by Alfredo Kojima almost from scratch, resembles the NeXTStep look
- very closely, and it is now an official GNU project. Window Maker is not
- overloaded with features, and it is easier to configure than most other window
- managers. Its final goal is to produce a window manager that doesn't require
- editing of configuration files. Window Maker is fast and doesn't require tons
- of memory to run.
+Multi-Arch: same
+Section: libdevel
+Depends: libwmaker1 (= ${binary:Version}), libx11-dev, ${misc:Depends}
+Description: Static libraries and headers for Window Maker applications
+ Window Maker is a NeXTSTEP-like window manager for X.
  .
- This package contains debugging symbols for Window Maker and its core
- libraries (libWINGs, libWutils, libwraster).
+ This package contains libWMaker and header files, for building
+ Window Maker aware applications.
+
+Package: libwmaker1
+Architecture: any
+Multi-Arch: same
+Section: libs
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Description: Runtime library for Window Maker applications
+ Window Maker is a NeXTSTEP-like window manager for X.
+ .
+ This package contains the libWMaker runtime library for Window Maker
+ aware applications.

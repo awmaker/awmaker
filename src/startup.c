@@ -163,7 +163,7 @@ static RETSIGTYPE handleExitSig(int sig)
 	}
 
 	sigprocmask(SIG_UNBLOCK, &sigs, NULL);
-	DispatchEvent(NULL);	/* Dispatch events imediately. */
+	DispatchEvent(NULL);	/* Dispatch events immediately. */
 }
 
 /* Dummy signal handler */
@@ -523,7 +523,7 @@ static void startup_set_signals(void)
 
 	/* ignore dead pipe */
 	/* Because POSIX mandates that only signal with handlers are reset
-	 * accross an exec*(), we do not want to propagate ignoring SIGPIPEs
+	 * across an exec*(), we do not want to propagate ignoring SIGPIPEs
 	 * to children. Hence the dummy handler.
 	 * Philippe Troin <phil@fifi.org>
 	 */
@@ -539,9 +539,9 @@ static void startup_set_signals(void)
 	/* Now we unblock all signals, that may have been blocked by the parent
 	 * who exec()-ed us. This can happen for example if Window Maker crashes
 	 * and restarts itself or another window manager from the signal handler.
-	 * In this case, the new proccess inherits the blocked signal mask and
+	 * In this case, the new process inherits the blocked signal mask and
 	 * will no longer react to that signal, until unblocked.
-	 * This is because the signal handler of the proccess who crashed (parent)
+	 * This is because the signal handler of the process who crashed (parent)
 	 * didn't return, and the signal remained blocked. -Dan
 	 */
 	sigfillset(&sig_action.sa_mask);
@@ -679,7 +679,7 @@ void StartUp(Bool defaultScreenOnly)
 
 		read_defaults_noscreen(vscr, w_global.domain.wmaker->dictionary);
 
-		vscr->clip.icon = clip_icon_create();
+		vscr->clip.icon = clip_icon_create(vscr);
 	}
 
 	/* Manage the Real Screens */
@@ -713,7 +713,7 @@ void StartUp(Bool defaultScreenOnly)
 
 		/* read defaults for this screen */
 		wReadDefaults(vscr, w_global.domain.wmaker->dictionary);
-		set_session_state(vscr);
+		set_session_state(vscr); /* kix: This function needs the physical screens :-( */
 
 		set_screen_options(w_global.vscreens[j]);
 

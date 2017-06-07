@@ -1,0 +1,224 @@
+/*
+ * Haadmenu-útwurking foar WindowMaker
+ *
+ * Opmaak is:
+ *
+ * <Titel> [SHORTCUT <Fluchtoets>] <Kommando> <Parameters>
+ *
+ * <Titel> is elke tekenrige te brûken as titel. Moat tusken " stean as it
+ * 	spaasjes hat.
+ * 
+ * SHORTCUT jout in fluchtoets op foar dy yngong. <Fluchtoets> hat
+ * deselde opmaak as de fluchtoetsopsjes yn it
+ * $HOME/GNUstep/Defaults/WindowMaker bestân, sa as RootMenuKey of MiniaturizeKey.
+ *
+ * Jo kinne gjin fluchtoets opjaan foar in MENU- of OPEN_MENU-ûnderdiel.
+ * 
+ * <Kommando> ien fan 'e jildige kommando's: 
+ *	MENU - begjint (sub)menubepaling
+ *	END  - beëiniget (sub)menubepaling
+ *	OPEN_MENU - iepenet in menu út in bestân, 'pipe' of map(pen)ynhâld,
+ *		    en giet eventueel elk foarôf mei in kommando.
+ *	WORKSPACE_MENU - foeget in submenu foar wurkromtehannelingen ta. Mar ien
+ *		    workspace_menu is tastien. 		
+ *	EXEC <programma> - fiert in ekstern programma út
+ *	SHEXEC <kommando> - fiert in 'shell'-kommando út (sa as gimp > /dev/null)
+ *	EXIT - slút de finsterbehearder ôf
+ *	RESTART [<finsterbehearder>] - werstart WindowMaker, of start in oare
+ *			finsterbehearder
+ *	REFRESH - fernijt it buroblêd
+ *	ARRANGE_ICONS - werskikt de ikoanen yn 'e wurkromte
+ *	SHUTDOWN - deadet alle kliïnten (en slút de X Window-sesje ôf)
+ *	SHOW_ALL - pleatst alle finsters yn 'e wurkromte werom
+ *	HIDE_OTHERS - ferberget alle finsters yn 'e wurkromte, útsein dy't
+ *		fokus hat (of de lêste dy't fokus hie)
+ *	SAVE_SESSION - bewaret de hjoeddeiske steat fan it buroblêd, ynsletten
+ *		       alle rinnende programma's, al har 'hints' (ôfmjittingen,
+ *		       posysje op it skerm, wurkromte dêr't se yn libje, Dok
+ *		       of Klip fan wêrút se opstart waarden, en wannear
+ *		       miniaturisearre, oprôle of ferburgen). Bewaret teffens de aktuele
+ *		       wurkromte fan 'e brûker. Alles sil wersteld wurde by elke
+ *		       start fan windowmaker, oant in oare SAVE_SESSION of
+ *		       CLEAR_SESSION brûkt wurdt. As SaveSessionOnExit = Yes; yn
+ *		       it WindowMaker-domeinbestân, dan wurdt bewarjen automatysk
+ *		       dien by elke windowmaker-ôfsluting, en wurdt in
+ *		       SAVE_SESSION of CLEAR_SESSION oerskreaun (sjoch hjirnei).
+ *	CLEAR_SESSION - wisket in earder bewarre sesje. Dit sil gjin
+ *		       effekt hawwe as SaveSessionOnExit is True.
+ *	INFO - toant it Ynfopaniel
+ *
+ * OPEN_MENU-opmaak:
+ *   1. Menu-ôfhanneling út bestân.
+ *	// iepenet bestân.menu, dat in jildich menubestân befetsje moat, en foeget
+ *	// it yn op 'e hjoeddeiske plak
+ *	OPEN_MENU bestân.menu
+ *   2. Menu-ôfhanneling út pipe.
+ *	// iepenet kommando en brûkt syn 'stdout' om in menu oan te meitsjen.
+ *	// Kommando-output moat in jildige menubeskriuwing wêze.
+ *	// De romte tusken '|' en it kommando sels is opsjoneel.
+ *      // Brûk '||' yn plak fan '|' as jo it menu altiten bywurkje wolle
+ *	// by iepenjen. Dat soe traach wurkje kinne.
+ *	OPEN_MENU | kommando
+ *      OPEN_MENU || kommando
+ *   3. Mapôfhanneling.
+ *	// Iepenet ien of mear mappen en makket in menu oan, mei dêryn alle
+ *	// submappen en útfierbere bestannen alfabetysk
+ *	// sortearre.
+ *	OPEN_MENU /in/map [/in/oare/map ...]
+ *   4. Mapôfhanneling mei kommando.
+ *	// Iepenet ien of mear mappen en makket in menu oan, mei dêryn alle
+ *	// submappen en lêsbere bestannen alfabetysk sortearre,
+ *	// elk fan har foarôfgien mei kommando.
+ *	OPEN_MENU [opsjes] /in/map [/in/oare/map ...] WITH kommando -opsjes
+ *		Opsjes:
+ * 			-noext 	lit alles fan 'e lêste punt yn 'e
+ *				bestânsnamme ôf wei
+ *
+ * <Parameters> is it út te fieren programma.
+ *
+ * ** Kommandorigelopsjes yn EXEC:
+ * %s - wurdt ferfongen troch de aktuele seleksje
+ * %a(titel[,oanwizing]) - iepenet in ynfierfjild mei de opjûne titel en de
+ *			opsjonele oanwizing, en wurdt ferfongen troch wat jo yntype
+ * %w - wurdt ferfongen troch XID foar it aktuele fokust finster
+ * %W - wurdt ferfongen troch it nûmer fan 'e aktuele wurkromte
+ * 
+ * Jo kinne spesjale karakters (sa as % en ") útskeakelje mei it \-teken:
+ * fb.: xterm -T "\"Hallo Wrâld\""
+ *
+ * Jo kinne ek ûntsnappingstekens brûke, sa as \n
+ *
+ * Elke MENU-deklaraasje moat ien keppele END-deklaraasje op it ein hawwe.
+ *
+ * Foarbyld:
+ *
+ * "Test" MENU
+ *	"XTerm" EXEC xterm
+ *		// makket in submenu mei de ynhâld fan /usr/openwin/bin oan
+ *	"XView-progr" OPEN_MENU "/usr/openwin/bin"
+ *		// wat X11-programma's yn ferskate mappen
+ *	"X11-progr" OPEN_MENU /usr/X11/bin $HOME/bin/X11
+ *		// wat eftergrûnôfbyldingen ynstelle
+ *	"Eftergrûn" OPEN_MENU -noext $HOME/ôfbyldingen /usr/share/images WITH wmsetbg -u -t
+ *		// foeget it style.menu yn mei dit ûnderdiel
+ *	"Styl" OPEN_MENU style.menu
+ * "Test" END
+ */
+
+#include "wmmacros"
+
+"Programma's" MENU
+	"Ynfo" MENU
+		"Ynfopaniel" INFO_PANEL
+		"Juridyske ynfo" LEGAL_PANEL
+		"Systeemconsole" EXEC xconsole
+		"Systeembelêsting" SHEXEC xosview || xload
+		"Proseslist" EXEC xterm -e top
+		"Hantliedingblêder" EXEC xman
+	"Ynfo" END
+	"Utfiere..." SHEXEC %a(Utfiere,Typ út te fieren kommando:)
+	"XTerm" EXEC xterm -sb 
+	"Mozilla Firefox" EXEC firefox
+	"Wurkromten" WORKSPACE_MENU
+	"Programma's" MENU
+		"Gimp" SHEXEC gimp >/dev/null
+  		"Ghostview" EXEC ghostview %a(GhostView,Fier te besjen bestân yn)
+		"Xpdf" EXEC xpdf %a(Xpdf,Fier te besjen PDF yn)
+		"Abiword" EXEC abiword
+		"Dia" EXEC dia
+		"OpenOffice.org" MENU
+			"OpenOffice.org" EXEC ooffice
+			"Writer" EXEC oowriter
+			"Rekkenblêd" EXEC oocalc
+			"Draw" EXEC oodraw
+			"Impress" EXEC ooimpress
+		"OpenOffice.org" END 
+
+		"Tekstbewurkers" MENU
+			"XEmacs" EXEC xemacs
+			"Emacs" EXEC emacs
+			"XJed" EXEC xjed 
+			"VI" EXEC xterm -e vi
+			"GVIM" EXEC gvim
+			"NEdit" EXEC nedit
+			"Xedit" EXEC xedit
+		"Tekstbewurkers" END
+
+		"Multymedia" MENU
+			"XMMS" MENU
+				"XMMS" EXEC xmms
+				"XMMS ôfspylje/skoftsje" EXEC xmms -t
+				"XMMS stopje" EXEC xmms -s
+			"XMMS" END
+			"Xine fideospiler" EXEC xine
+			"MPlayer" EXEC mplayer
+		"Multymedia" END
+	"Programma's" END
+
+	"Helpmiddels" MENU
+		"Rekkenmasine" EXEC xcalc
+		"Finstereigenskippen" SHEXEC xprop | xmessage -center -title 'xprop' -file -
+		"Lettertypekiezer" EXEC xfontsel
+		"Fergrutsje" EXEC wmagnify
+		"Kleurekaart" EXEC xcmap
+		"X-programma deadzje" EXEC xkill
+	"Helpmiddels" END
+
+	"Seleksje" MENU
+		"Kopiearje" SHEXEC echo '%s' | wxcopy
+		"E-maile nei" EXEC xterm -name mail -T "Pine" -e pine %s
+		"Navigearje" EXEC netscape %s
+		"Sykje yn hantlieding" SHEXEC MANUAL_SEARCH(%s)
+	"Seleksje" END
+
+	"Kommando's" MENU
+		"Oare ferbergje" HIDE_OTHERS
+		"Alles toane" SHOW_ALL
+		"Ikoanen skikke" ARRANGE_ICONS
+		"Fernije" REFRESH
+		"Beskoattelje" EXEC xlock -allowroot -usefirst
+	"Kommando's" END
+
+	"Uterlik" MENU
+		"Tema's" OPEN_MENU -noext THEMES_DIR $HOME/GNUstep/Library/WindowMaker/Themes WITH setstyle
+		"Stilen" OPEN_MENU -noext STYLES_DIR $HOME/GNUstep/Library/WindowMaker/Styles WITH setstyle
+		"Ikoanesets" OPEN_MENU -noext ICON_SETS_DIR $HOME/GNUstep/Library/WindowMaker/IconSets WITH seticons
+		"Eftergrûn" MENU
+			"Effen" MENU
+				"Swart" WS_BACK '(solid, black)'
+				"Blau"  WS_BACK '(solid, "#505075")'
+				"Indigo" WS_BACK '(solid, "#243e6c")'
+				"Marineblau" WS_BACK '(solid, "#224477")'
+				"Poarper" WS_BACK '(solid, "#554466")'
+				"Weet"  WS_BACK '(solid, "wheat4")'
+				"Donkergriis"  WS_BACK '(solid, "#333340")'
+				"Wynread" WS_BACK '(solid, "#400020")'
+				"Effen" END
+			"Kleurferrin" MENU
+				"Sinneûndergong" WS_BACK '(mvgradient, deepskyblue4, black, deepskyblue4, tomato4)'
+				"Loft" WS_BACK '(vgradient, blue4, white)'
+    			"Blautinten" WS_BACK '(vgradient, "#7080a5", "#101020")'
+				"Indigotinten" WS_BACK '(vgradient, "#746ebc", "#242e4c")'
+			    "Poarpertinten" WS_BACK '(vgradient, "#654c66", "#151426")'
+    			"Weettinten" WS_BACK '(vgradient, "#a09060", "#302010")'
+    			"Griistinten" WS_BACK '(vgradient, "#636380", "#131318")'
+    			"Wynreadtinten" WS_BACK '(vgradient, "#600040", "#180010")'
+			"Kleurferrin" END
+			"Ofbyldingen" OPEN_MENU -noext BACKGROUNDS_DIR $HOME/GNUstep/Library/WindowMaker/Backgrounds WITH wmsetbg -u -t
+		"Eftergrûn" END
+		"Tema bewarje" SHEXEC getstyle -t $HOME/GNUstep/Library/WindowMaker/Themes/"%a(Temanamme,Fier bestânsnamme yn:)"
+		"Ikoaneset bewarje" SHEXEC geticonset $HOME/GNUstep/Library/WindowMaker/IconSets/"%a(Ikoanesetnamme,Fier bestânsnamme yn:)"
+		"Foarkarrehelpmiddel" EXEC #wprefs#
+	"Uterlik" END
+
+	"Sesje" MENU
+		"Sesje bewarje" SAVE_SESSION
+		"Sesje wiskje" CLEAR_SESSION
+		"Window Maker werstarte" RESTART
+		"BlackBox starte" RESTART blackbox
+		"IceWM starte" RESTART icewm
+		"Ofslute"  EXIT
+	"Sesje" END
+"Programma's" END
+
+

@@ -21,8 +21,8 @@ config-paths.h: Makefile
 	@echo '/* where shared data is stored */' >> $@
 	@echo '#define PKGDATADIR "$(datadir)/WindowMaker"' >> $@
 	@echo '' >> $@
-	@echo '/* where the configuration is stored */' >> $@
-	@echo '#define SYSCONFDIR "$(sysconfdir)"' >> $@
+	@echo '/* where the global defaults are stored */' >> $@
+	@echo '#define DEFSDATADIR "$(defsdatadir)"' >> $@
 
 ACLOCAL_AMFLAGS = -I m4
 
@@ -106,6 +106,8 @@ configure-documentation:
 		--ignore-prg 'enable-shared,enable-static # should be in INSTALL' \
 		--ignore-prg 'disable-option-checking,enable-fast-install # should be in INSTALL' \
 		--ignore-prg 'disable-libtool-lock,with-pic,with-gnu-ld,with-sysroot # for libtool' \
+		--ignore-prg 'runstatedir #new in autoconf 2.70, backported in Debian' \
+		--ignore-prg 'with-aix-soname #new in libtool 2.4.4' \
 		--ignore-prg 'with-x # no use, it would not work without X'
 
 .PHONY: configure-documentation
