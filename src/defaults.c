@@ -312,17 +312,6 @@ static WOptionEnumeration seDragMaximizedWindow[] = {
 };
 
 /*
- * Backward Compatibility:
- * The Mini-Previews were introduced in 0.95.6 under the name "Apercu".
- * For compatibility, we still support the old names in configuration files,
- * which are loaded in this structure, so this should stay for at least
- * 2 years (that means until 2017) */
-static struct {
-	char enable;
-	int  size;
-} legacy_minipreview_config;
-
-/*
  * ALL entries in the tables bellow, NEED to have a default value
  * defined, and this value needs to be correct.
  */
@@ -528,17 +517,6 @@ WDefaultEntry optionList[] = {
 	    &wPreferences.minipreview_size, getInt, NULL, NULL, NULL},
 	{"IgnoreGtkHints", "NO", NULL,
 	    &wPreferences.ignore_gtk_decoration_hints, getBool, NULL, NULL, NULL},
-
-	/*
-	 * Backward Compatibility:
-	 * The Mini-Previews were introduced in 0.95.6 under the name "Apercu".
-	 * For compatibility, we still support the old names in configuration files,
-	 * so this should stay for at least 2 years (that means until 2017)
-	 */
-	{"MiniwindowApercuBalloons", "NO", NULL,
-	    &legacy_minipreview_config.enable, getBool, NULL, NULL, NULL},
-	{"ApercuSize", "0", NULL,
-	    &legacy_minipreview_config.size, getInt, NULL, NULL, NULL},
 
 	/* style options */
 
@@ -1370,32 +1348,6 @@ void wReadDefaults(virtual_screen *vscr, WMPropList *new_dict)
 
 	needs_refresh = read_defaults_step1(vscr, new_dict);
 	read_defaults_noscreen(vscr, new_dict);
-
-	/*
-	 * Backward Compatibility:
-	 * Support the old setting names for Apercu, now called Mini-Preview
-	 *
-	 * This code should probably stay for at least 2 years, you should not consider removing
-	 * it before year 2017
-	 */
-	if (legacy_minipreview_config.enable) {
-		wwarning(_("your configuration is using old syntax for Mini-Preview settings; consider running WPrefs.app to update"));
-		wPreferences.miniwin_preview_balloon = legacy_minipreview_config.enable;
-
-		if (legacy_minipreview_config.size > 0) {
-			/*
-			 * the option 'ApercuSize' used to be coded as a multiple of the icon size in v0.95.6
-			 * it is now expressed directly in pixels, but to avoid breaking user's setting we check
-			 * for old coding and convert it now.
-			 */
-			if (legacy_minipreview_config.size < 24) {
-				/* 24 is the minimum icon size proposed in WPref's settings */
-				wPreferences.minipreview_size = legacy_minipreview_config.size * wPreferences.icon_size;
-			} else {
-				wPreferences.minipreview_size = legacy_minipreview_config.size;
-			}
-		}
-	}
 
 	if (needs_refresh != 0 && !w_global.startup.phase1)
 		refresh_defaults(vscr, needs_refresh);
