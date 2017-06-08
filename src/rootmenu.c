@@ -55,9 +55,9 @@
 #include "shutdown.h"
 #include "xmodifier.h"
 #include "rootmenu.h"
-#include "startup.h"
 #include "switchmenu.h"
 #include "screen.h"
+#include "input.h"
 
 #include <WINGs/WUtil.h>
 
@@ -408,7 +408,7 @@ void wRootMenuBindShortcuts(Window window)
 			XGrabKey(dpy, ptr->keycode, ptr->modifier | LockMask,
 				 window, True, GrabModeAsync, GrabModeAsync);
 #ifdef NUMLOCK_HACK
-			wHackedGrabKey(ptr->keycode, ptr->modifier, window, True, GrabModeAsync, GrabModeAsync);
+			wHackedGrabKey(dpy, ptr->keycode, ptr->modifier, window, True, GrabModeAsync, GrabModeAsync);
 #endif
 		}
 		XGrabKey(dpy, ptr->keycode, ptr->modifier, window, True, GrabModeAsync, GrabModeAsync);

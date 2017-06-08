@@ -44,9 +44,9 @@
 #include "appicon.h"
 #include "wmspec.h"
 #include "misc.h"
-#include "startup.h"
 #include "event.h"
 #include "winmenu.h"
+#include "input.h"
 
 /**** Global varianebles ****/
 
@@ -771,7 +771,7 @@ static void set_dockapp_in_icon(WIcon *icon)
 	/* Needed to move the icon clicking on the application part */
 	if ((XGetWindowAttributes(dpy, icon->icon_win, &attr)) &&
 	    (attr.all_event_masks & ButtonPressMask))
-		wHackedGrabButton(Button1, MOD_MASK, icon->core->window, True,
+		wHackedGrabButton(dpy, Button1, MOD_MASK, icon->core->window, True,
 				  ButtonPressMask, GrabModeSync, GrabModeAsync,
 				  None, wPreferences.cursor[WCUR_ARROW]);
 }

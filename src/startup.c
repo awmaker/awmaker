@@ -34,7 +34,6 @@
 
 #include <X11/Xlib.h>
 #include <X11/Xresource.h>
-#include <X11/Xutil.h>
 #include <X11/cursorfont.h>
 #include <X11/Xproto.h>
 #include <X11/keysym.h>
@@ -72,6 +71,7 @@
 #endif
 
 #include "xutil.h"
+#include "input.h"
 
 /* for SunOS */
 #ifndef SA_RESTART
@@ -86,8 +86,6 @@
 /***** Local *****/
 static WScreen **wScreen = NULL;
 
-static unsigned int _NumLockMask = 0;
-static unsigned int _ScrollLockMask = 0;
 static void manageAllWindows(virtual_screen *scr, int crashed);
 static void hide_all_applications(virtual_screen *vscr);
 static void remove_icon_windows(Window *children, unsigned int nchildren);
@@ -225,115 +223,6 @@ static RETSIGTYPE buryChild(int foo)
 	errno = save_errno;
 }
 
-static void getOffendingModifiers(void)
-{
-	int i;
-	XModifierKeymap *modmap;
-	KeyCode nlock, slock;
-	static int mask_table[8] = {
-		ShiftMask, LockMask, ControlMask, Mod1Mask,
-		Mod2Mask, Mod3Mask, Mod4Mask, Mod5Mask
-	};
-
-	nlock = XKeysymToKeycode(dpy, XK_Num_Lock);
-	slock = XKeysymToKeycode(dpy, XK_Scroll_Lock);
-
-	/*
-	 * Find out the masks for the NumLock and ScrollLock modifiers,
-	 * so that we can bind the grabs for when they are enabled too.
-	 */
-	modmap = XGetModifierMapping(dpy);
-
-	if (modmap != NULL && modmap->max_keypermod > 0) {
-		for (i = 0; i < 8 * modmap->max_keypermod; i++) {
-			if (modmap->modifiermap[i] == nlock && nlock != 0)
-				_NumLockMask = mask_table[i / modmap->max_keypermod];
-			else if (modmap->modifiermap[i] == slock && slock != 0)
-				_ScrollLockMask = mask_table[i / modmap->max_keypermod];
-		}
-	}
-
-	if (modmap)
-		XFreeModifiermap(modmap);
-}
-
-#ifdef NUMLOCK_HACK
-void
-wHackedGrabKey(int keycode, unsigned int modifiers,
-	       Window grab_window, Bool owner_events, int pointer_mode, int keyboard_mode)
-{
-	if (modifiers == AnyModifier)
-		return;
-
-	/* grab all combinations of the modifier with CapsLock, NumLock and
-	 * ScrollLock. How much memory/CPU does such a monstrosity consume
-	 * in the server?
-	 */
-	if (_NumLockMask)
-		XGrabKey(dpy, keycode, modifiers | _NumLockMask,
-			 grab_window, owner_events, pointer_mode, keyboard_mode);
-	if (_ScrollLockMask)
-		XGrabKey(dpy, keycode, modifiers | _ScrollLockMask,
-			 grab_window, owner_events, pointer_mode, keyboard_mode);
-	if (_NumLockMask && _ScrollLockMask)
-		XGrabKey(dpy, keycode, modifiers | _NumLockMask | _ScrollLockMask,
-			 grab_window, owner_events, pointer_mode, keyboard_mode);
-	if (_NumLockMask)
-		XGrabKey(dpy, keycode, modifiers | _NumLockMask | LockMask,
-			 grab_window, owner_events, pointer_mode, keyboard_mode);
-	if (_ScrollLockMask)
-		XGrabKey(dpy, keycode, modifiers | _ScrollLockMask | LockMask,
-			 grab_window, owner_events, pointer_mode, keyboard_mode);
-	if (_NumLockMask && _ScrollLockMask)
-		XGrabKey(dpy, keycode, modifiers | _NumLockMask | _ScrollLockMask | LockMask,
-			 grab_window, owner_events, pointer_mode, keyboard_mode);
-	/* phew, I guess that's all, right? */
-}
-#endif
-
-void
-wHackedGrabButton(unsigned int button, unsigned int modifiers,
-		  Window grab_window, Bool owner_events,
-		  unsigned int event_mask, int pointer_mode, int keyboard_mode, Window confine_to, Cursor cursor)
-{
-	XGrabButton(dpy, button, modifiers, grab_window, owner_events,
-		    event_mask, pointer_mode, keyboard_mode, confine_to, cursor);
-
-	if (modifiers == AnyModifier)
-		return;
-
-	XGrabButton(dpy, button, modifiers | LockMask, grab_window, owner_events,
-		    event_mask, pointer_mode, keyboard_mode, confine_to, cursor);
-
-#ifdef NUMLOCK_HACK
-	/* same as above, but for mouse buttons */
-	if (_NumLockMask)
-		XGrabButton(dpy, button, modifiers | _NumLockMask,
-			    grab_window, owner_events, event_mask, pointer_mode,
-			    keyboard_mode, confine_to, cursor);
-	if (_ScrollLockMask)
-		XGrabButton(dpy, button, modifiers | _ScrollLockMask,
-			    grab_window, owner_events, event_mask, pointer_mode,
-			    keyboard_mode, confine_to, cursor);
-	if (_NumLockMask && _ScrollLockMask)
-		XGrabButton(dpy, button, modifiers | _ScrollLockMask | _NumLockMask,
-			    grab_window, owner_events, event_mask, pointer_mode,
-			    keyboard_mode, confine_to, cursor);
-	if (_NumLockMask)
-		XGrabButton(dpy, button, modifiers | _NumLockMask | LockMask,
-			    grab_window, owner_events, event_mask, pointer_mode,
-			    keyboard_mode, confine_to, cursor);
-	if (_ScrollLockMask)
-		XGrabButton(dpy, button, modifiers | _ScrollLockMask | LockMask,
-			    grab_window, owner_events, event_mask, pointer_mode,
-			    keyboard_mode, confine_to, cursor);
-	if (_NumLockMask && _ScrollLockMask)
-		XGrabButton(dpy, button, modifiers | _ScrollLockMask | _NumLockMask | LockMask,
-			    grab_window, owner_events, event_mask, pointer_mode,
-			    keyboard_mode, confine_to, cursor);
-#endif				/* NUMLOCK_HACK */
-}
-
 static char *atomNames[] = {
 	"WM_STATE",
 	"WM_CHANGE_STATE",
@@ -370,10 +259,13 @@ static void startup_set_atoms(void)
 	int k;
 #endif
 
+	_NumLockMask = 0;
+	_ScrollLockMask = 0;
+
 	/* Ignore CapsLock in modifiers */
 	w_global.shortcut.modifiers_mask = 0xff & ~LockMask;
 
-	getOffendingModifiers();
+	getOffendingModifiers(dpy);
 
 	/* Ignore NumLock and ScrollLock too */
 	w_global.shortcut.modifiers_mask &= ~(_NumLockMask | _ScrollLockMask);

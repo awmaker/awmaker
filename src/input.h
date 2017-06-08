@@ -1,8 +1,6 @@
-/*
- *  Window Maker window manager
+/* input.h
  *
- *  Copyright (c) 1997-2003 Alfredo K. Kojima
- *  Copyright (c) 2013 Window Maker Team
+ *  Copyright (c) 2017 Rodolfo García Peñas <kix@kix.es>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,9 +17,27 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef WMSTARTUP_H
-#define WMSTARTUP_H
+#ifndef _WM_INPUT_H_
+#define _WM_INPUT_H_
 
-void StartUp(Bool defaultScreenOnly);
+#include "wconfig.h"
 
-#endif /* WMSTARTUP_H */
+/* Keyboard definitions */
+unsigned int _NumLockMask;
+unsigned int _ScrollLockMask;
+
+/* Keyboard functions */
+void wHackedGrabButton(Display *dpy, unsigned int button, unsigned int modifiers,
+		       Window grab_window, Bool owner_events,
+		       unsigned int event_mask, int pointer_mode,
+		       int keyboard_mode, Window confine_to, Cursor cursor);
+
+#ifdef NUMLOCK_HACK
+void wHackedGrabKey(Display *dpy, int keycode, unsigned int modifiers,
+		    Window grab_window, Bool owner_events, int pointer_mode,
+		    int keyboard_mode);
+#endif
+
+void getOffendingModifiers(Display *dpy);
+
+#endif

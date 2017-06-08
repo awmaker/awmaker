@@ -44,6 +44,8 @@ awmaker_SOURCES = 	\
 	osdep.h \
 	icon.c \
 	icon.h \
+	input.c \
+	input.h \
 	keybind.h \
 	main.c \
 	main.h \

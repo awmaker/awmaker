@@ -60,9 +60,9 @@
 #include "rootmenu.h"
 #include "placement.h"
 #include "misc.h"
-#include "startup.h"
 #include "winmenu.h"
 #include "osdep.h"
+#include "input.h"
 
 #ifdef USE_MWM_HINTS
 # include "motif.h"
@@ -2488,12 +2488,13 @@ void wWindowSetKeyGrabs(WWindow * wwin)
 		if (key->modifier != AnyModifier) {
 			XGrabKey(dpy, key->keycode, key->modifier | LockMask,
 				 wwin->frame->core->window, True, GrabModeAsync, GrabModeAsync);
+
 #ifdef NUMLOCK_HACK
 			/* Also grab all modifier combinations possible that include,
 			 * LockMask, ScrollLockMask and NumLockMask, so that keygrabs
 			 * work even if the NumLock/ScrollLock key is on.
 			 */
-			wHackedGrabKey(key->keycode, key->modifier,
+			wHackedGrabKey(dpy, key->keycode, key->modifier,
 				       wwin->frame->core->window, True, GrabModeAsync, GrabModeAsync);
 #endif
 		}
@@ -2518,7 +2519,7 @@ void wWindowResetMouseGrabs(WWindow * wwin)
 
 	if (!WFLAGP(wwin, no_bind_mouse)) {
 		/* grabs for Meta+drag */
-		wHackedGrabButton(AnyButton, MOD_MASK, wwin->client_win,
+		wHackedGrabButton(dpy, AnyButton, MOD_MASK, wwin->client_win,
 				  True, ButtonPressMask | ButtonReleaseMask,
 				  GrabModeSync, GrabModeAsync, None, None);
 
@@ -2527,17 +2528,17 @@ void wWindowResetMouseGrabs(WWindow * wwin)
 		 * use CTRL+Button1-3 for app related functionality
 		 */
 		if (wPreferences.resize_increment > 0) {
-			wHackedGrabButton(Button4, ControlMask, wwin->client_win,
+			wHackedGrabButton(dpy, Button4, ControlMask, wwin->client_win,
 							  True, ButtonPressMask | ButtonReleaseMask,
 							  GrabModeSync, GrabModeAsync, None, None);
-			wHackedGrabButton(Button5, ControlMask, wwin->client_win,
+			wHackedGrabButton(dpy, Button5, ControlMask, wwin->client_win,
 							  True, ButtonPressMask | ButtonReleaseMask,
 							  GrabModeSync, GrabModeAsync, None, None);
 
-			wHackedGrabButton(Button4, MOD_MASK | ControlMask, wwin->client_win,
+			wHackedGrabButton(dpy, Button4, MOD_MASK | ControlMask, wwin->client_win,
 							  True, ButtonPressMask | ButtonReleaseMask,
 							  GrabModeSync, GrabModeAsync, None, None);
-			wHackedGrabButton(Button5, MOD_MASK | ControlMask, wwin->client_win,
+			wHackedGrabButton(dpy, Button5, MOD_MASK | ControlMask, wwin->client_win,
 							  True, ButtonPressMask | ButtonReleaseMask,
 							  GrabModeSync, GrabModeAsync, None, None);
 		}
