@@ -21,7 +21,6 @@
 #ifndef _WMXINERAMA_H_
 #define _WMXINERAMA_H_
 
-#include "appicon.h"
 #include "screen.h"
 #include "window.h"
 #include <WINGs/WINGs.h>
@@ -55,6 +54,5 @@ WArea wGetUsableAreaForHead(virtual_screen *vscr, int head, WArea *totalAreaPtr,
 WMPoint wGetPointToCenterRectInHead(virtual_screen *vscr, int head, int width, int height);
 
 Bool wWindowTouchesHead(WWindow *wwin, int head);
-Bool wAppIconTouchesHead(WAppIcon *aicon, int head);
 
 #endif
