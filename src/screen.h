@@ -334,8 +334,6 @@ void wScreenSaveState(virtual_screen *vscr);
 int wScreenBringInside(virtual_screen *scr, int *x, int *y, int width, int height);
 int wScreenKeepInside(virtual_screen *scr, int *x, int *y, int width, int height);
 
-
-/* in startup.c */
 virtual_screen *wScreenWithNumber(int i);
 virtual_screen *wScreenForRootWindow(Window window);   /* window must be valid */
 virtual_screen *wScreenForWindow(Window window);       /* slower than above functions */

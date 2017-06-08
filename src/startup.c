@@ -334,44 +334,6 @@ wHackedGrabButton(unsigned int button, unsigned int modifiers,
 #endif				/* NUMLOCK_HACK */
 }
 
-virtual_screen *wScreenWithNumber(int i)
-{
-	assert(i < w_global.vscreen_count);
-
-	return w_global.vscreens[i];
-}
-
-virtual_screen *wScreenForRootWindow(Window window)
-{
-	int i;
-
-	if (w_global.vscreen_count == 1)
-		return w_global.vscreens[0];
-
-	/* Since the number of heads will probably be small (normally 2),
-	 * it should be faster to use this than a hash table, because
-	 * of the overhead. */
-	for (i = 0; i < w_global.vscreen_count; i++)
-		if (w_global.vscreens[i]->screen_ptr &&
-		    w_global.vscreens[i]->screen_ptr->root_win == window)
-			return w_global.vscreens[i];
-
-	return wScreenForWindow(window);
-}
-
-virtual_screen *wScreenForWindow(Window window)
-{
-	XWindowAttributes attr;
-
-	if (w_global.vscreen_count == 1)
-		return w_global.vscreens[0];
-
-	if (XGetWindowAttributes(dpy, window, &attr))
-		return wScreenForRootWindow(attr.root);
-
-	return NULL;
-}
-
 static char *atomNames[] = {
 	"WM_STATE",
 	"WM_CHANGE_STATE",

@@ -57,6 +57,7 @@
 #include "rootmenu.h"
 #include "startup.h"
 #include "switchmenu.h"
+#include "screen.h"
 
 #include <WINGs/WUtil.h>
 
