@@ -89,8 +89,8 @@ static WScreen **wScreen = NULL;
 static unsigned int _NumLockMask = 0;
 static unsigned int _ScrollLockMask = 0;
 static void manageAllWindows(virtual_screen *scr, int crashed);
-void hide_all_applications(virtual_screen *vscr);
-void remove_icon_windows(Window *children, unsigned int nchildren);
+static void hide_all_applications(virtual_screen *vscr);
+static void remove_icon_windows(Window *children, unsigned int nchildren);
 
 static int catchXError(Display *dpy, XErrorEvent *error)
 {
@@ -740,7 +740,7 @@ static Bool windowInList(Window window, Window *list, int count)
 	return False;
 }
 
-void remove_icon_windows(Window *children, unsigned int nchildren)
+static void remove_icon_windows(Window *children, unsigned int nchildren)
 {
 	unsigned int i, j;
 	XWMHints *wmhints;
@@ -766,7 +766,7 @@ void remove_icon_windows(Window *children, unsigned int nchildren)
 	}
 }
 
-void hide_all_applications(virtual_screen *vscr)
+static void hide_all_applications(virtual_screen *vscr)
 {
 	WWindow *wwin;
 	WApplication *wapp;
