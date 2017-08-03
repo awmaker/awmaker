@@ -89,8 +89,8 @@ static WScreen **wScreen = NULL;
 static unsigned int _NumLockMask = 0;
 static unsigned int _ScrollLockMask = 0;
 static void manageAllWindows(virtual_screen *scr, int crashed);
-void hide_all_applications(virtual_screen *vscr);
-void remove_icon_windows(Window *children, unsigned int nchildren);
+static void hide_all_applications(virtual_screen *vscr);
+static void remove_icon_windows(Window *children, unsigned int nchildren);
 
 static int catchXError(Display *dpy, XErrorEvent *error)
 {
@@ -332,44 +332,6 @@ wHackedGrabButton(unsigned int button, unsigned int modifiers,
 			    grab_window, owner_events, event_mask, pointer_mode,
 			    keyboard_mode, confine_to, cursor);
 #endif				/* NUMLOCK_HACK */
-}
-
-virtual_screen *wScreenWithNumber(int i)
-{
-	assert(i < w_global.vscreen_count);
-
-	return w_global.vscreens[i];
-}
-
-virtual_screen *wScreenForRootWindow(Window window)
-{
-	int i;
-
-	if (w_global.vscreen_count == 1)
-		return w_global.vscreens[0];
-
-	/* Since the number of heads will probably be small (normally 2),
-	 * it should be faster to use this than a hash table, because
-	 * of the overhead. */
-	for (i = 0; i < w_global.vscreen_count; i++)
-		if (w_global.vscreens[i]->screen_ptr &&
-		    w_global.vscreens[i]->screen_ptr->root_win == window)
-			return w_global.vscreens[i];
-
-	return wScreenForWindow(window);
-}
-
-virtual_screen *wScreenForWindow(Window window)
-{
-	XWindowAttributes attr;
-
-	if (w_global.vscreen_count == 1)
-		return w_global.vscreens[0];
-
-	if (XGetWindowAttributes(dpy, window, &attr))
-		return wScreenForRootWindow(attr.root);
-
-	return NULL;
 }
 
 static char *atomNames[] = {
@@ -778,7 +740,7 @@ static Bool windowInList(Window window, Window *list, int count)
 	return False;
 }
 
-void remove_icon_windows(Window *children, unsigned int nchildren)
+static void remove_icon_windows(Window *children, unsigned int nchildren)
 {
 	unsigned int i, j;
 	XWMHints *wmhints;
@@ -804,7 +766,7 @@ void remove_icon_windows(Window *children, unsigned int nchildren)
 	}
 }
 
-void hide_all_applications(virtual_screen *vscr)
+static void hide_all_applications(virtual_screen *vscr)
 {
 	WWindow *wwin;
 	WApplication *wapp;

@@ -38,6 +38,7 @@
 #include "window.h"
 #include "actions.h"
 #include "xinerama.h"
+#include "appicon.h"
 #include "stacking.h"
 
 #define PIECES ((64/ICON_KABOOM_PIECE_SIZE)*(64/ICON_KABOOM_PIECE_SIZE))

@@ -132,6 +132,11 @@ void parse_xdg(const char *file, cb_add_menu_entry *addWMMenuEntryCallback)
 			/* start processing group */
 			memset(buf, 0, sizeof(buf));
 			continue;
+		} else if (p[0] == '[') {
+			/* If we find a new group and the previous group was the main one,
+			 * we stop all further processing
+			 */
+			if (InGroup) break;
 		}
 
 		if (!InGroup) {
@@ -172,6 +177,9 @@ void parse_xdg(const char *file, cb_add_menu_entry *addWMMenuEntryCallback)
 			getStringValue(&xdg->Category, p);
 			getMenuHierarchyFor(&xdg->Category);
 		}
+
+		if (xdg->Category == NULL)
+			xdg->Category = wstrdup(_("Other"));
 
 		wfree(key);
 		key = NULL;
@@ -518,6 +526,9 @@ static void  getMenuHierarchyFor(char **xdgmenuspec)
 		} else if (strcmp(p, "Office") == 0) {
 			snprintf(buf, sizeof(buf), "%s", _("Office"));
 			break;
+		} else if (strcmp(p, "Science") == 0) {
+			snprintf(buf, sizeof(buf), "%s", _("Science"));
+			break;
 		} else if (strcmp(p, "Settings") == 0) {
 			snprintf(buf, sizeof(buf), "%s", _("Settings"));
 			break;
@@ -527,13 +538,26 @@ static void  getMenuHierarchyFor(char **xdgmenuspec)
 		} else if (strcmp(p, "Utility") == 0) {
 			snprintf(buf, sizeof(buf), "%s", _("Utility"));
 			break;
+		/* reserved categories */
+		} else if (strcmp(p, "Screensaver") == 0) {
+			snprintf(buf, sizeof(buf), "%s", _("Screensaver"));
+			break;
+		} else if (strcmp(p, "TrayIcon") == 0) {
+			snprintf(buf, sizeof(buf), "%s", _("Tray Icon"));
+			break;
+		} else if (strcmp(p, "Applet") == 0) {
+			snprintf(buf, sizeof(buf), "%s", _("Applet"));
+			break;
+		} else if (strcmp(p, "Shell") == 0) {
+			snprintf(buf, sizeof(buf), "%s", _("Shell"));
+			break;
 		}
 		p = strtok(NULL, ";");
 	}
 
 
 	if (!*buf)		/* come up with something if nothing found */
-		snprintf(buf, sizeof(buf), "%s", _("Applications"));
+		snprintf(buf, sizeof(buf), "%s", _("Other"));
 
 	*xdgmenuspec = wstrdup(buf);
 }

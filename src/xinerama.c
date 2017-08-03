@@ -38,6 +38,8 @@
 # endif
 #endif
 
+static Bool wAppIconTouchesHead(WAppIcon *aicon, int head);
+
 void wInitXinerama(WScreen *scr)
 {
 	scr->xine_info.primary_head = 0;
