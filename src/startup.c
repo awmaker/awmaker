@@ -495,6 +495,28 @@ static void set_session_state(virtual_screen *vscr)
 
 void startup_virtual(void)
 {
+	virtual_screen *vscr;
+	int j;
+	/*
+	 * I am using only one virtual screen. I must read the config
+	 * file to get the virtual screen numbers. To develop. kix.
+	 */
+	int max = 1;
+
+	w_global.vscreens = wmalloc(sizeof(virtual_screen *) * max);
+	w_global.vscreen_count = 0;
+
+	/* Manage the Virtual Screens */
+	for (j = 0; j < max; j++) {
+		vscr = wmalloc(sizeof(virtual_screen));
+		vscr->id = w_global.vscreen_count;
+		w_global.vscreens[j] = vscr;
+		w_global.vscreen_count++;
+
+		read_defaults_noscreen(vscr, w_global.domain.wmaker->dictionary);
+
+		vscr->clip.icon = clip_icon_create(vscr);
+	}
 }
 
 /*
@@ -523,22 +545,7 @@ void StartUp(Bool defaultScreenOnly)
 		max = ScreenCount(dpy);
 
 	wScreen = wmalloc(sizeof(WScreen *) * max);
-	w_global.vscreens = wmalloc(sizeof(virtual_screen *) * max);
-
 	w_global.screen_count = 0;
-	w_global.vscreen_count = 0;
-
-	/* Manage the Virtual Screens */
-	for (j = 0; j < max; j++) {
-		vscr = wmalloc(sizeof(virtual_screen));
-		vscr->id = w_global.vscreen_count;
-		w_global.vscreens[j] = vscr;
-		w_global.vscreen_count++;
-
-		read_defaults_noscreen(vscr, w_global.domain.wmaker->dictionary);
-
-		vscr->clip.icon = clip_icon_create(vscr);
-	}
 
 	/* Manage the Real Screens */
 	for (j = 0; j < max; j++) {
