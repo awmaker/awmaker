@@ -408,11 +408,8 @@ static void startup_set_signals(void)
 	WMHookEventHandler(DispatchEvent);
 }
 
-static void startup_set_defaults(void)
+static void startup_set_defaults_virtual(void)
 {
-	char **formats;
-	int foo, i;
-
 	/* initialize defaults stuff */
 	w_global.domain.wmaker = wDefaultsInitDomain("WindowMaker", True);
 	if (!w_global.domain.wmaker->dictionary)
@@ -440,6 +437,12 @@ static void startup_set_defaults(void)
 	w_global.domain.window_attr = wDefaultsInitDomain("WMWindowAttributes", True);
 	if (!w_global.domain.window_attr->dictionary)
 		wwarning(_("could not read domain \"%s\" from defaults database"), "WMWindowAttributes");
+}
+
+static void startup_set_defaults(void)
+{
+	char **formats;
+	int foo, i;
 
 	XSetErrorHandler((XErrorHandler) catchXError);
 
@@ -515,6 +518,7 @@ void StartUp(Bool defaultScreenOnly)
 	startup_set_atoms();
 	startup_set_cursors();
 	startup_set_signals();
+	startup_set_defaults_virtual();
 	startup_set_defaults();
 
 	if (defaultScreenOnly)
