@@ -503,6 +503,8 @@ void startup_virtual(void)
 	 */
 	int max = 1;
 
+	startup_set_defaults();
+
 	w_global.vscreens = wmalloc(sizeof(virtual_screen *) * max);
 	w_global.vscreen_count = 0;
 
@@ -537,7 +539,6 @@ void StartUp(Bool defaultScreenOnly)
 	startup_set_atoms();
 	startup_set_cursors();
 	startup_set_signals();
-	startup_set_defaults();
 
 	if (defaultScreenOnly)
 		max = 1;
