@@ -31,9 +31,7 @@ typedef struct {
         char *command;
 } _tuple;
 
-static void shellCommandHandler(pid_t pid, unsigned int status, void *client_data);
-
-static void shellCommandHandler(pid_t pid, unsigned int status, void *client_data)
+void shellCommandHandler(pid_t pid, unsigned int status, void *client_data)
 {
         _tuple *data = (_tuple *) client_data;
 

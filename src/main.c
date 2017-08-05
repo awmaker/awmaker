@@ -56,6 +56,7 @@
 #include "dialog.h"
 #include "main.h"
 #include "monitor.h"
+#include "shell.h"
 
 #include <WINGs/WUtil.h>
 
@@ -270,26 +271,6 @@ typedef struct {
 	virtual_screen *vscr;
 	char *command;
 } _tuple;
-
-static void shellCommandHandler(pid_t pid, unsigned int status, void *client_data)
-{
-	_tuple *data = (_tuple *) client_data;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) pid;
-
-	if (status == 127) {
-		char *buffer;
-
-		buffer = wstrconcat(_("Could not execute command: "), data->command);
-
-		wMessageDialog(data->vscr, _("Error"), buffer, _("OK"), NULL, NULL);
-		wfree(buffer);
-	}
-
-	wfree(data->command);
-	wfree(data);
-}
 
 /*
  *---------------------------------------------------------------------
