@@ -597,7 +597,7 @@ int main(int argc, char **argv)
 static int real_main(int argc, char **argv)
 {
 	int i, d, s;
-	char *pos;
+	char *pos = NULL;
 
 	setlocale(LC_ALL, "");
 	wsetabort(wAbort);
@@ -770,12 +770,10 @@ static int real_main(int argc, char **argv)
 	if (getWVisualID(0) < 0)
 		setWVisualID(0, (int)DefaultVisual(dpy, DefaultScreen(dpy))->visualid);
 
-	/* check if the user specified a complete display name (with screen).
+	/* Check if the user specified a complete display name (with screen).
 	 * If so, only manage the specified screen */
 	if (DisplayName)
 		pos = strchr(DisplayName, ':');
-	else
-		pos = NULL;
 
 	if (pos && sscanf(pos, ":%i.%i", &d, &s) == 2)
 		multiHead = False;
