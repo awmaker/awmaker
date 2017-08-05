@@ -56,7 +56,7 @@
 #include "keybind.h"
 #include "xmodifier.h"
 #include "icon.h"
-#include "main.h"
+#include "shell.h"
 #include "actions.h"
 #include "dock.h"
 #include "workspace.h"

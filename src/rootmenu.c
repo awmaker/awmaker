@@ -45,6 +45,7 @@
 #include "menu.h"
 #include "misc.h"
 #include "main.h"
+#include "shell.h"
 #include "dialog.h"
 #include "keybind.h"
 #include "stacking.h"
