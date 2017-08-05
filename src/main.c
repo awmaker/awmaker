@@ -125,9 +125,9 @@ static void setWVisualID(int screen, int val)
 		 * and init with default value */
 		wVisualID_len = screen + 1;
 		wVisualID = (int *)malloc(wVisualID_len * sizeof(int));
-		for (i = 0; i < wVisualID_len; i++) {
+		for (i = 0; i < wVisualID_len; i++)
 			wVisualID[i] = -1;
-		}
+
 	} else if (screen >= wVisualID_len) {
 		/* larger screen number than previously allocated
 		 so enlarge array */
@@ -135,9 +135,8 @@ static void setWVisualID(int screen, int val)
 
 		wVisualID_len = screen + 1;
 		wVisualID = (int *)wrealloc(wVisualID, wVisualID_len * sizeof(int));
-		for (i = oldlen; i < wVisualID_len; i++) {
+		for (i = oldlen; i < wVisualID_len; i++)
 			wVisualID[i] = -1;
-		}
 	}
 
 	wVisualID[screen] = val;
@@ -178,9 +177,9 @@ static int initWVisualID(const char *user_str)
 			break;
 
                 /* if the current char is no delimiter put it into mystr */
-		if (user_str[cur_in_pos] != ',') {
+		if (user_str[cur_in_pos] != ',')
 			mystr[cur_out_pos++] = user_str[cur_in_pos];
-		}
+
 		cur_in_pos++;
 	}
 
@@ -213,9 +212,8 @@ void Restart(char *manager, Bool abortOnFailure)
 		prog = argv[0] = strtok(manager, " ");
 		for (i = 1; i < MAX_RESTART_ARGS; i++) {
 			argv[i] = strtok(NULL, " ");
-			if (argv[i] == NULL) {
+			if (argv[i] == NULL)
 				break;
-			}
 		}
 	}
 	if (dpy) {
@@ -598,9 +596,8 @@ int main(int argc, char **argv)
 
 static int real_main(int argc, char **argv)
 {
-	int i;
+	int i, d, s;
 	char *pos;
-	int d, s;
 
 	setlocale(LC_ALL, "");
 	wsetabort(wAbort);
@@ -698,24 +695,23 @@ static int real_main(int argc, char **argv)
 		}
 	}
 
-	if (!wPreferences.flags.noupdates) {
-		/* check existence of Defaults DB directory */
+	/* check existence of Defaults DB directory */
+	if (!wPreferences.flags.noupdates)
 		check_defaults();
-	}
 
 	if (w_global.locale) {
 		setenv("LANG", w_global.locale, 1);
 	} else {
 		w_global.locale = getenv("LC_ALL");
-		if (!w_global.locale) {
+		if (!w_global.locale)
 			w_global.locale = getenv("LANG");
-		}
 	}
 
 	setlocale(LC_ALL, "");
 
 	if (!w_global.locale || strcmp(w_global.locale, "C") == 0 || strcmp(w_global.locale, "POSIX") == 0)
 		w_global.locale = NULL;
+
 #ifdef I18N
 	if (getenv("NLSPATH")) {
 		bindtextdomain("WindowMaker", getenv("NLSPATH"));
@@ -728,19 +724,18 @@ static int real_main(int argc, char **argv)
 		bindtextdomain(MENU_TEXTDOMAIN, LOCALEDIR);
 #endif
 	}
+
 	bind_textdomain_codeset("WindowMaker", "UTF-8");
 #if defined(MENU_TEXTDOMAIN)
 	bind_textdomain_codeset(MENU_TEXTDOMAIN, "UTF-8");
 #endif
 	textdomain("WindowMaker");
 
-	if (!XSupportsLocale()) {
+	if (!XSupportsLocale())
 		wwarning(_("X server does not support locale"));
-	}
 
-	if (XSetLocaleModifiers("") == NULL) {
+	if (XSetLocaleModifiers("") == NULL)
 		wwarning(_("cannot set locale modifiers"));
-	}
 #endif
 
 	if (w_global.locale) {
@@ -765,16 +760,15 @@ static int real_main(int argc, char **argv)
 	}
 
 
-	if (getWVisualID(0) < 0) {
-		/*
-		 *   If unspecified, use default visual instead of waiting
-		 * for wrlib/context.c:bestContext() that may end up choosing
-		 * the "fake" 24 bits added by the Composite extension.
-		 *   This is required to avoid all sort of corruptions when
-		 * composite is enabled, and at a depth other than 24.
-		 */
+	/*
+	 * If unspecified, use default visual instead of waiting
+	 * for wrlib/context.c:bestContext() that may end up choosing
+	 * the "fake" 24 bits added by the Composite extension.
+	 * This is required to avoid all sort of corruptions when
+	 * composite is enabled, and at a depth other than 24.
+	 */
+	if (getWVisualID(0) < 0)
 		setWVisualID(0, (int)DefaultVisual(dpy, DefaultScreen(dpy))->visualid);
-        }
 
 	/* check if the user specified a complete display name (with screen).
 	 * If so, only manage the specified screen */
