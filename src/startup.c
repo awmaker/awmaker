@@ -493,6 +493,10 @@ static void set_session_state(virtual_screen *vscr)
 		w_global.session_state = WMCreatePLDictionary(NULL, NULL);
 }
 
+void startup_virtual(void)
+{
+}
+
 /*
  *----------------------------------------------------------
  * StartUp--

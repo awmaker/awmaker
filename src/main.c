@@ -790,6 +790,8 @@ static int real_main(int argc, char **argv)
 	setenv("DISPLAY", DisplayName, 1);
 
 	wXModifierInitialize();
+
+	startup_virtual();
 	StartUp(!multiHead);
 
 	if (w_global.screen_count == 1)

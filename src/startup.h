@@ -22,6 +22,7 @@
 #ifndef WMSTARTUP_H
 #define WMSTARTUP_H
 
+void startup_virtual(void);
 void StartUp(Bool defaultScreenOnly);
 
 #endif /* WMSTARTUP_H */
