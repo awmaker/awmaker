@@ -69,6 +69,8 @@ awmaker_SOURCES = 	\
 	screen.h \
 	session.h \
 	session.c \
+	shell.h \
+	shell.c \
 	shutdown.h \
 	shutdown.c \
 	switchpanel.c \

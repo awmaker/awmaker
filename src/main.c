@@ -291,47 +291,6 @@ static void shellCommandHandler(pid_t pid, unsigned int status, void *client_dat
 	wfree(data);
 }
 
-void ExecuteShellCommand(virtual_screen *vscr, const char *command)
-{
-	static char *shell = NULL;
-	pid_t pid;
-
-	/*
-	 * This have a problem: if the shell is tcsh (not sure about others)
-	 * and ~/.tcshrc have /bin/stty erase ^H somewhere on it, the shell
-	 * will block and the command will not be executed.
-	 if (!shell) {
-	 shell = getenv("SHELL");
-	 if (!shell)
-	 shell = "/bin/sh";
-	 }
-	 */
-	shell = "/bin/sh";
-
-	pid = fork();
-
-	if (pid == 0) {
-
-		SetupEnvironment(vscr);
-
-#ifdef HAVE_SETSID
-		setsid();
-#endif
-		execl(shell, shell, "-c", command, NULL);
-		werror("could not execute %s -c %s", shell, command);
-		Exit(-1);
-	} else if (pid < 0) {
-		werror("cannot fork a new process");
-	} else {
-		_tuple *data = wmalloc(sizeof(_tuple));
-
-		data->vscr = vscr;
-		data->command = wstrdup(command);
-
-		wAddDeathHandler(pid, shellCommandHandler, data);
-	}
-}
-
 /*
  *---------------------------------------------------------------------
  * RelaunchWindow--

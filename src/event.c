@@ -57,6 +57,7 @@
 #include "window.h"
 #include "actions.h"
 #include "client.h"
+#include "shell.h"
 #include "main.h"
 #include "cycling.h"
 #include "keybind.h"
