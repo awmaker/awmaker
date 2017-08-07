@@ -22,7 +22,6 @@
 
 #include "wconfig.h"
 
-void shellCommandHandler(pid_t pid, unsigned int status, void *client_data);
 void ExecuteShellCommand(virtual_screen *vscr, const char *command);
 int execute_command(virtual_screen *vscr, char **argv, int argc);
 
