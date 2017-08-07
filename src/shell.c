@@ -135,3 +135,32 @@ int execute_command(virtual_screen *vscr, char **argv, int argc)
 
 	return ret;
 }
+
+int execute_command2(virtual_screen *vscr, char **argv, int argc)
+{
+	int ret, i;
+	char **args;
+
+	pid_t pid = fork();
+	ret = pid;
+	if (pid == 0) {
+		SetupEnvironment(vscr);
+
+#ifdef HAVE_SETSID
+		setsid();
+#endif
+
+		args = malloc(sizeof(char *) * (argc + 1));
+		if (!args)
+			exit(111);
+
+		for (i = 0; i < argc; i++)
+			args[i] = argv[i];
+
+		args[argc] = NULL;
+		execvp(argv[0], args);
+		exit(111);
+	}
+
+	return ret;
+}

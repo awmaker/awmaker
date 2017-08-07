@@ -24,5 +24,6 @@
 
 void ExecuteShellCommand(virtual_screen *vscr, const char *command);
 int execute_command(virtual_screen *vscr, char **argv, int argc);
+int execute_command2(virtual_screen *vscr, char **argv, int argc);
 
 #endif
