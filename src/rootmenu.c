@@ -154,18 +154,11 @@ static void execCommand(WMenu *menu, WMenuEntry *entry)
 	char *cmdline;
 
 	cmdline = ExpandOptions(menu->frame->vscr, (char *)entry->clientdata);
+	if (!cmdline)
+		return;
 
-	XGrabPointer(dpy, menu->frame->vscr->screen_ptr->root_win, True, 0,
-		     GrabModeAsync, GrabModeAsync, None, wPreferences.cursor[WCUR_WAIT], CurrentTime);
-	XSync(dpy, 0);
-
-	if (cmdline) {
-		ExecuteShellCommand(menu->frame->vscr, cmdline);
-		wfree(cmdline);
-	}
-
-	XUngrabPointer(dpy, CurrentTime);
-	XSync(dpy, 0);
+	ExecuteShellCommand(menu->frame->vscr, cmdline);
+	wfree(cmdline);
 }
 
 static void exitCommand(WMenu *menu, WMenuEntry *entry)
