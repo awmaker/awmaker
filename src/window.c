@@ -63,6 +63,7 @@
 #include "winmenu.h"
 #include "osdep.h"
 #include "input.h"
+#include "shell.h"
 
 #ifdef USE_MWM_HINTS
 # include "motif.h"
