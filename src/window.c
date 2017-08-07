@@ -107,6 +107,7 @@ static void discard_hints_from_gtk(WWindow *wwin);
 static void fixLeaderProperties(WWindow *wwin);
 static Window createFakeWindowGroupLeader(virtual_screen *vscr, Window win, char *instance, char *class);
 static int matchIdentifier(const void *item, const void *cdata);
+static void setupGNUstepHints_defaults(WWindow *wwin);
 /****** Notification Observers ******/
 
 static void appearanceObserver(void *self, WMNotification *notif)
@@ -245,18 +246,23 @@ void wWindowDestroy(WWindow *wwin)
 	wrelease(wwin);
 }
 
+static void setupGNUstepHints_defaults(WWindow *wwin)
+{
+	wwin->client_flags.no_border = 1;
+	wwin->client_flags.no_titlebar = 1;
+	wwin->client_flags.no_closable = 1;
+	wwin->client_flags.no_miniaturizable = 1;
+	wwin->client_flags.no_resizable = 1;
+	wwin->client_flags.no_close_button = 1;
+	wwin->client_flags.no_miniaturize_button = 1;
+	wwin->client_flags.no_resizebar = 1;
+}
+
 static void setupGNUstepHints(WWindow *wwin, GNUstepWMAttributes *gs_hints)
 {
 	if (gs_hints->flags & GSWindowStyleAttr) {
 		if (gs_hints->window_style == WMBorderlessWindowMask) {
-			wwin->client_flags.no_border = 1;
-			wwin->client_flags.no_titlebar = 1;
-			wwin->client_flags.no_closable = 1;
-			wwin->client_flags.no_miniaturizable = 1;
-			wwin->client_flags.no_resizable = 1;
-			wwin->client_flags.no_close_button = 1;
-			wwin->client_flags.no_miniaturize_button = 1;
-			wwin->client_flags.no_resizebar = 1;
+			setupGNUstepHints_defaults(wwin);
 		} else {
 			wwin->client_flags.no_close_button =
 			    ((gs_hints->window_style & WMClosableWindowMask) ? 0 : 1);
