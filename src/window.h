@@ -379,8 +379,8 @@ void wWindowMap(WWindow *wwin);
 void wWindowUnmap(WWindow *wwin);
 void wWindowDeleteSavedStatesForPID(pid_t pid);
 
-WMagicNumber wWindowAddSavedState(const char *instance, const char *class, const char *command,
-                                  pid_t pid, WSavedState *state);
+void wWindowAddSavedState(const char *instance, const char *class, const char *command,
+			  pid_t pid, WSavedState *state);
 
 WMagicNumber wWindowGetSavedState(Window win);
 void wWindowDeleteSavedState(WMagicNumber id);

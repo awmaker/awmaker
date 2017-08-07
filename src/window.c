@@ -2598,14 +2598,14 @@ void wWindowUpdateGNUstepAttr(WWindow * wwin, GNUstepWMAttributes * attr)
 	}
 }
 
-WMagicNumber wWindowAddSavedState(const char *instance, const char *class,
-											 const char *command, pid_t pid, WSavedState * state)
+void wWindowAddSavedState(const char *instance, const char *class,
+			  const char *command, pid_t pid, WSavedState * state)
 {
 	WWindowState *wstate;
 
 	wstate = malloc(sizeof(WWindowState));
 	if (!wstate)
-		return NULL;
+		return;
 
 	memset(wstate, 0, sizeof(WWindowState));
 	wstate->pid = pid;
@@ -2615,12 +2615,10 @@ WMagicNumber wWindowAddSavedState(const char *instance, const char *class,
 		wstate->class = wstrdup(class);
 	if (command)
 		wstate->command = wstrdup(command);
-	wstate->state = state;
 
+	wstate->state = state;
 	wstate->next = windowState;
 	windowState = wstate;
-
-	return wstate;
 }
 
 static inline int is_same(const char *x, const char *y)
