@@ -107,7 +107,7 @@ static void discard_hints_from_gtk(WWindow *wwin);
 static void fixLeaderProperties(WWindow *wwin);
 static Window createFakeWindowGroupLeader(virtual_screen *vscr, Window win, char *instance, char *class);
 static int matchIdentifier(const void *item, const void *cdata);
-static void setupGNUstepHints_defaults(WWindow *wwin);
+static void setupGNUstepHints_defaults(WWindow *wwin, int value);
 /****** Notification Observers ******/
 
 static void appearanceObserver(void *self, WMNotification *notif)
@@ -246,23 +246,23 @@ void wWindowDestroy(WWindow *wwin)
 	wrelease(wwin);
 }
 
-static void setupGNUstepHints_defaults(WWindow *wwin)
+static void setupGNUstepHints_defaults(WWindow *wwin, int value)
 {
-	wwin->client_flags.no_border = 1;
-	wwin->client_flags.no_titlebar = 1;
-	wwin->client_flags.no_closable = 1;
-	wwin->client_flags.no_miniaturizable = 1;
-	wwin->client_flags.no_resizable = 1;
-	wwin->client_flags.no_close_button = 1;
-	wwin->client_flags.no_miniaturize_button = 1;
-	wwin->client_flags.no_resizebar = 1;
+	wwin->client_flags.no_border = value;
+	wwin->client_flags.no_titlebar = value;
+	wwin->client_flags.no_closable = value;
+	wwin->client_flags.no_miniaturizable = value;
+	wwin->client_flags.no_resizable = value;
+	wwin->client_flags.no_close_button = value;
+	wwin->client_flags.no_miniaturize_button = value;
+	wwin->client_flags.no_resizebar = value;
 }
 
 static void setupGNUstepHints(WWindow *wwin, GNUstepWMAttributes *gs_hints)
 {
 	if (gs_hints->flags & GSWindowStyleAttr) {
 		if (gs_hints->window_style == WMBorderlessWindowMask) {
-			setupGNUstepHints_defaults(wwin);
+			setupGNUstepHints_defaults(wwin, 1);
 		} else {
 			wwin->client_flags.no_close_button =
 			    ((gs_hints->window_style & WMClosableWindowMask) ? 0 : 1);
@@ -291,15 +291,7 @@ static void setupGNUstepHints(WWindow *wwin, GNUstepWMAttributes *gs_hints)
 
 		}
 	} else {
-		/* setup the defaults */
-		wwin->client_flags.no_border = 0;
-		wwin->client_flags.no_titlebar = 0;
-		wwin->client_flags.no_closable = 0;
-		wwin->client_flags.no_miniaturizable = 0;
-		wwin->client_flags.no_resizable = 0;
-		wwin->client_flags.no_close_button = 0;
-		wwin->client_flags.no_miniaturize_button = 0;
-		wwin->client_flags.no_resizebar = 0;
+		setupGNUstepHints_defaults(wwin, 0);
 	}
 	if (gs_hints->extra_flags & GSNoApplicationIconFlag)
 		wwin->client_flags.no_appicon = 1;
