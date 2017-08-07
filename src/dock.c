@@ -48,6 +48,7 @@
 #include "dockedapp.h"
 #include "dialog.h"
 #include "main.h"
+#include "shell.h"
 #include "properties.h"
 #include "menu.h"
 #include "client.h"

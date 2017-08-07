@@ -269,39 +269,6 @@ void SetupEnvironment(virtual_screen *vscr)
 
 /*
  *---------------------------------------------------------------------
- * RelaunchWindow--
- * 	Launch a new instance of the active window
- *
- *----------------------------------------------------------------------
- */
-Bool RelaunchWindow(WWindow *wwin)
-{
-	char **argv;
-	int argc, ret;
-
-	if (!wwin || !wwin->client_win) {
-		werror("no window to relaunch");
-		return False;
-	}
-
-	if (!XGetCommand(dpy, wwin->client_win, &argv, &argc) || argc == 0 || argv == NULL) {
-		werror("cannot relaunch the application because no WM_COMMAND property is set");
-		return False;
-	}
-
-	ret = execute_command(wwin->vscr, argv, argc);
-	if (ret < 0) {
-		XFreeStringList(argv);
-		return False;
-	} else if (ret > 0) {
-		XFreeStringList(argv);
-	}
-
-	return True;
-}
-
-/*
- *---------------------------------------------------------------------
  * wAbort--
  * 	Do a major cleanup and exit the program
  *

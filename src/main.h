@@ -31,7 +31,6 @@
 noreturn void Exit(int status);
 void Restart(char *manager, Bool abortOnFailure);
 void SetupEnvironment(virtual_screen *vscr);
-Bool RelaunchWindow(WWindow *wwin);
 noreturn void wAbort(Bool dumpCore);
 void ExecExitScript(void);
 int getWVisualID(int screen);
