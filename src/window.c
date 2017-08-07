@@ -102,9 +102,14 @@ static void release_wwindowstate(WWindowState *wstate);
 static WWindow *window_focus_sloppy(WScreen *scr, WWindow *wwin);
 static WWindow *window_focus_click(virtual_screen *vscr, WWindow *wwin);
 
+static void appearanceObserver(void *self, WMNotification *notif);
+static void discard_hints_from_gtk(WWindow *wwin);
+static void fixLeaderProperties(WWindow *wwin);
+static Window createFakeWindowGroupLeader(virtual_screen *vscr, Window win, char *instance, char *class);
+static int matchIdentifier(const void *item, const void *cdata);
 /****** Notification Observers ******/
 
-static void appearanceObserver(void *self, WMNotification * notif)
+static void appearanceObserver(void *self, WMNotification *notif)
 {
 	WWindow *wwin = (WWindow *) self;
 	uintptr_t flags = (uintptr_t)WMGetNotificationClientData(notif);
@@ -2362,7 +2367,7 @@ void wWindowSaveState(WWindow *wwin)
 			w_global.atom.wmaker.state, 32, PropModeReplace, (unsigned char *)data, 10);
 }
 
-static int getSavedState(Window window, WSavedState ** state)
+static int getSavedState(Window window, WSavedState **state)
 {
 	Atom type_ret;
 	int fmt_ret;
@@ -2487,7 +2492,7 @@ void wWindowSetShape(WWindow * wwin)
 
 /* ====================================================================== */
 
-static FocusMode getFocusMode(WWindow * wwin)
+static FocusMode getFocusMode(WWindow *wwin)
 {
 	FocusMode mode;
 
@@ -3067,7 +3072,8 @@ static void windowIconifyClick(WCoreWindow *sender, void *data, XEvent *event)
 	}
 }
 
-static WWindow *window_focus_sloppy(WScreen *scr, WWindow *wwin) {
+static WWindow *window_focus_sloppy(WScreen *scr, WWindow *wwin)
+{
 	WWindow *tmp = NULL;
 	unsigned int mask;
 	int foo;
@@ -3086,7 +3092,8 @@ static WWindow *window_focus_sloppy(WScreen *scr, WWindow *wwin) {
 	return tmp;
 }
 
-static WWindow *window_focus_click(virtual_screen *vscr, WWindow *wwin) {
+static WWindow *window_focus_click(virtual_screen *vscr, WWindow *wwin)
+{
 	WWindow *tmp = NULL;
 
 	/* if in click to focus mode and the window
