@@ -267,11 +267,6 @@ void SetupEnvironment(virtual_screen *vscr)
 	putenv(tmp);
 }
 
-typedef struct {
-	virtual_screen *vscr;
-	char *command;
-} _tuple;
-
 /*
  *---------------------------------------------------------------------
  * RelaunchWindow--
@@ -282,7 +277,7 @@ typedef struct {
 Bool RelaunchWindow(WWindow *wwin)
 {
 	char **argv;
-	int argc;
+	int argc, ret;
 
 	if (!wwin || !wwin->client_win) {
 		werror("no window to relaunch");
@@ -294,40 +289,11 @@ Bool RelaunchWindow(WWindow *wwin)
 		return False;
 	}
 
-	pid_t pid = fork();
-	if (pid == 0) {
-		SetupEnvironment(wwin->vscr);
-#ifdef HAVE_SETSID
-		setsid();
-#endif
-		/* argv is not null-terminated */
-		char **a = (char **) malloc(argc + 1);
-		if (!a) {
-			werror("out of memory trying to relaunch the application");
-			Exit(-1);
-		}
-
-		int i;
-		for (i = 0; i < argc; i++)
-			a[i] = argv[i];
-
-		a[i] = NULL;
-
-		execvp(a[0], a);
-		Exit(-1);
-	} else if (pid < 0) {
-		werror("cannot fork a new process");
-
+	ret = execute_command(wwin->vscr, argv, argc);
+	if (ret < 0) {
 		XFreeStringList(argv);
 		return False;
-	} else {
-		_tuple *data = wmalloc(sizeof(_tuple));
-
-		data->vscr = wwin->vscr;
-		data->command = wtokenjoin(argv, argc);
-
-		/* not actually a shell command */
-		wAddDeathHandler(pid, shellCommandHandler, data);
+	} else if (ret > 0) {
 		XFreeStringList(argv);
 	}
 

@@ -25,6 +25,7 @@
 
 #include <sys/types.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 typedef struct {
 	virtual_screen *vscr;
@@ -90,4 +91,45 @@ void ExecuteShellCommand(virtual_screen *vscr, const char *command)
 
 		wAddDeathHandler(pid, shellCommandHandler, data);
 	}
+}
+
+int execute_command(virtual_screen *vscr, char **argv, int argc)
+{
+	int ret, i;
+	char **a;
+
+	pid_t pid = fork();
+	ret = pid;
+	if (pid == 0) {
+		SetupEnvironment(vscr);
+#ifdef HAVE_SETSID
+		setsid();
+#endif
+		/* argv is not null-terminated */
+		a = (char **) malloc(argc + 1);
+		if (!a) {
+			werror("out of memory trying to relaunch the application");
+			Exit(-1);
+		}
+
+		for (i = 0; i < argc; i++)
+			a[i] = argv[i];
+
+		a[i] = NULL;
+
+		execvp(a[0], a);
+		Exit(-1);
+	} else if (pid < 0) {
+		werror("cannot fork a new process");
+	} else {
+		_tuple *data = wmalloc(sizeof(_tuple));
+
+		data->vscr = vscr;
+		data->command = wtokenjoin(argv, argc);
+
+		/* not actually a shell command */
+		wAddDeathHandler(pid, shellCommandHandler, data);
+	}
+
+	return ret;
 }
