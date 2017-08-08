@@ -114,6 +114,7 @@ Bool wwindow_set_wmhints(WWindow *wwin, Bool withdraw);
 static void wwindow_set_fakegroupleader(virtual_screen *vscr, WWindow *wwin);
 static int window_restarting_restore(Window window, WWindow *wwin, WWindowState *win_state, int workspace);
 static void window_restore_shortcut(WWindow *wwin, WWindowState *win_state, WSavedState *wstate);
+static void wwindow_set_workspace(virtual_screen *vscr, WWindow *wwin, WWindow *transientOwner, int *workspace);
 /****** Notification Observers ******/
 
 static void appearanceObserver(void *self, WMNotification *notif)
@@ -764,6 +765,27 @@ static int window_restarting_restore(Window window, WWindow *wwin, WWindowState 
 	return workspace;
 }
 
+static void wwindow_set_workspace(virtual_screen *vscr, WWindow *wwin, WWindow *transientOwner, int *workspace)
+{
+	if (*workspace >= 0) {
+		if (*workspace > vscr->workspace.count - 1)
+			*workspace = *workspace % vscr->workspace.count;
+	} else {
+		int w;
+
+		w = wDefaultGetStartWorkspace(vscr, wwin->wm_instance, wwin->wm_class);
+
+		if (w >= 0 && w < vscr->workspace.count && !(IS_OMNIPRESENT(wwin))) {
+			*workspace = w;
+		} else {
+			if (wPreferences.open_transients_with_parent && transientOwner)
+				*workspace = transientOwner->frame->workspace;
+			else
+				*workspace = vscr->workspace.current;
+		}
+	}
+}
+
 /*
  *----------------------------------------------------------------
  * wManageWindow--
@@ -997,23 +1019,7 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 	}
 
 	/* set workspace on which the window starts */
-	if (workspace >= 0) {
-		if (workspace > vscr->workspace.count - 1)
-			workspace = workspace % vscr->workspace.count;
-	} else {
-		int w;
-
-		w = wDefaultGetStartWorkspace(vscr, wwin->wm_instance, wwin->wm_class);
-
-		if (w >= 0 && w < vscr->workspace.count && !(IS_OMNIPRESENT(wwin))) {
-			workspace = w;
-		} else {
-			if (wPreferences.open_transients_with_parent && transientOwner)
-				workspace = transientOwner->frame->workspace;
-			else
-				workspace = vscr->workspace.current;
-		}
-	}
+	wwindow_set_workspace(vscr, wwin, transientOwner, &workspace);
 
 	/* setup window geometry */
 	if (win_state && win_state->state->w > 0) {
