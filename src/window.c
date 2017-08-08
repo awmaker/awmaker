@@ -110,6 +110,7 @@ static int matchIdentifier(const void *item, const void *cdata);
 static void setupGNUstepHints_defaults(WWindow *wwin, int value);
 static void setupGNUstepHints_withborder(WWindow *wwin, GNUstepWMAttributes *gs_hints);
 static void wWindowSetupInitialAttributes_GNUStep(WWindow *wwin, int *level, int *workspace);
+Bool wwindow_set_wmhints(WWindow *wwin, Bool withdraw);
 /****** Notification Observers ******/
 
 static void appearanceObserver(void *self, WMNotification *notif)
@@ -616,33 +617,33 @@ void wwindow_set_xshape(Display *dpy, Window window, WWindow *wwin)
 }
 #endif
 
-Bool wwindow_set_wmhints(WWindow *wwin, Bool withdraw);
 Bool wwindow_set_wmhints(WWindow *wwin, Bool withdraw)
 {
-	if (wwin->wm_hints) {
-		if (wwin->wm_hints->flags & StateHint) {
-			if (wwin->wm_hints->initial_state == IconicState) {
-				wwin->flags.miniaturized = 1;
-			} else if (wwin->wm_hints->initial_state == WithdrawnState) {
-				wwin->flags.is_dockapp = 1;
-				withdraw = True;
-			}
-		}
+	if (!wwin->wm_hints) {
+		wwin->group_id = None;
+		return withdraw;
+	}
 
-		if (wwin->wm_hints->flags & WindowGroupHint) {
-			wwin->group_id = wwin->wm_hints->window_group;
-			/* window_group has priority over CLIENT_LEADER */
-			wwin->main_window = wwin->group_id;
-		} else {
-			wwin->group_id = None;
+	if (wwin->wm_hints->flags & StateHint) {
+		if (wwin->wm_hints->initial_state == IconicState) {
+			wwin->flags.miniaturized = 1;
+		} else if (wwin->wm_hints->initial_state == WithdrawnState) {
+			wwin->flags.is_dockapp = 1;
+			withdraw = True;
 		}
+	}
 
-		if (wwin->wm_hints->flags & UrgencyHint) {
-			wwin->flags.urgent = 1;
-			wAppBounceWhileUrgent(wApplicationOf(wwin->main_window));
-		}
+	if (wwin->wm_hints->flags & WindowGroupHint) {
+		wwin->group_id = wwin->wm_hints->window_group;
+		/* window_group has priority over CLIENT_LEADER */
+		wwin->main_window = wwin->group_id;
 	} else {
 		wwin->group_id = None;
+	}
+
+	if (wwin->wm_hints->flags & UrgencyHint) {
+		wwin->flags.urgent = 1;
+		wAppBounceWhileUrgent(wApplicationOf(wwin->main_window));
 	}
 
 	return withdraw;
