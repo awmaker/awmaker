@@ -115,6 +115,10 @@ static void wwindow_set_fakegroupleader(virtual_screen *vscr, WWindow *wwin);
 static int window_restarting_restore(Window window, WWindow *wwin, WWindowState *win_state, int workspace);
 static void window_restore_shortcut(WWindow *wwin, WWindowState *win_state, WSavedState *wstate);
 static void wwindow_set_workspace(virtual_screen *vscr, WWindow *wwin, WWindow *transientOwner, int *workspace);
+static void wwindow_set_placement_auto(virtual_screen *vscr,
+				       WWindow *wwin, WWindow *transientOwner,
+				       int *x, int *y,
+				       unsigned int *width, unsigned int *height);
 static void wwindow_set_placement_xine(virtual_screen *vscr, int *x, int *y,
 				       unsigned int *width, unsigned int *height);
 /****** Notification Observers ******/
@@ -789,6 +793,46 @@ static void wwindow_set_workspace(virtual_screen *vscr, WWindow *wwin, WWindow *
 	}
 }
 
+
+void wwindow_set_placement_auto(virtual_screen *vscr,
+				WWindow *wwin, WWindow *transientOwner,
+				int *x, int *y,
+				unsigned int *width, unsigned int *height)
+{
+	if (transientOwner && transientOwner->flags.mapped) {
+		int offs = WMAX(20, 2 * transientOwner->frame->top_width);
+		WMRect rect;
+		int head;
+
+		*x = transientOwner->frame_x +
+		    abs((transientOwner->frame->core->width - *width) / 2) + offs;
+		*y = transientOwner->frame_y +
+		    abs((transientOwner->frame->core->height - *height) / 3) + offs;
+
+		/* limit transient windows to be inside their parent's head */
+		rect.pos.x = transientOwner->frame_x;
+		rect.pos.y = transientOwner->frame_y;
+		rect.size.width = transientOwner->frame->core->width;
+		rect.size.height = transientOwner->frame->core->height;
+
+		head = wGetHeadForRect(vscr, rect);
+		rect = wGetRectForHead(vscr->screen_ptr, head);
+
+		if (*x < rect.pos.x)
+			*x = rect.pos.x;
+		else if (*x + *width > rect.pos.x + rect.size.width)
+			*x = rect.pos.x + rect.size.width - *width;
+
+		if (*y < rect.pos.y)
+			*y = rect.pos.y;
+		else if (*y + *height > rect.pos.y + rect.size.height)
+			*y = rect.pos.y + rect.size.height - *height;
+
+	} else {
+		PlaceWindow(wwin, x, y, *width, *height);
+	}
+}
+
 static void wwindow_set_placement_xine(virtual_screen *vscr, int *x, int *y,
 				       unsigned int *width, unsigned int *height)
 {
@@ -1092,43 +1136,11 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 			   && !w_global.startup.phase1
 			   && !wwin->flags.miniaturized
 			   && !wwin->flags.maximized && !(wwin->normal_hints->flags & (USPosition | PPosition))) {
-
-			if (transientOwner && transientOwner->flags.mapped) {
-				int offs = WMAX(20, 2 * transientOwner->frame->top_width);
-				WMRect rect;
-				int head;
-
-				x = transientOwner->frame_x +
-				    abs((transientOwner->frame->core->width - width) / 2) + offs;
-				y = transientOwner->frame_y +
-				    abs((transientOwner->frame->core->height - height) / 3) + offs;
-
-				/* limit transient windows to be inside their parent's head */
-				rect.pos.x = transientOwner->frame_x;
-				rect.pos.y = transientOwner->frame_y;
-				rect.size.width = transientOwner->frame->core->width;
-				rect.size.height = transientOwner->frame->core->height;
-
-				head = wGetHeadForRect(vscr, rect);
-				rect = wGetRectForHead(vscr->screen_ptr, head);
-
-				if (x < rect.pos.x)
-					x = rect.pos.x;
-				else if (x + width > rect.pos.x + rect.size.width)
-					x = rect.pos.x + rect.size.width - width;
-
-				if (y < rect.pos.y)
-					y = rect.pos.y;
-				else if (y + height > rect.pos.y + rect.size.height)
-					y = rect.pos.y + rect.size.height - height;
-
-			} else {
-				PlaceWindow(wwin, &x, &y, width, height);
-			}
+			wwindow_set_placement_auto(vscr, wwin, transientOwner,
+						   &x, &y, &width, &height);
 
 			if (wPreferences.window_placement == WPM_MANUAL)
 				dontBring = True;
-
 		} else if (vscr->screen_ptr->xine_info.count && (wwin->normal_hints->flags & PPosition)) {
 			wwindow_set_placement_xine(vscr, &x, &y, &width, &height);
 		}
