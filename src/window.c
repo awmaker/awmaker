@@ -794,7 +794,6 @@ static void wwindow_set_placement_xine(virtual_screen *vscr, int *x, int *y,
 {
 	int head, flags;
 	WMRect rect;
-	int reposition = 0;
 
 	/* Make spash screens come out in the center of a head
 	 * trouble is that most splashies never get here
@@ -804,32 +803,26 @@ static void wwindow_set_placement_xine(virtual_screen *vscr, int *x, int *y,
 	 * Most of them are not managed, they have set
 	 * OverrideRedirect, which means we can't do anything about
 	 * them. -alfredo */
-	{
-		/* xinerama checks for: across head and dead space */
-		rect.pos.x = *x;
-		rect.pos.y = *y;
-		rect.size.width = *width;
-		rect.size.height = *height;
 
-		head = wGetRectPlacementInfo(vscr, rect, &flags);
+	/* xinerama checks for: across head and dead space */
+	rect.pos.x = *x;
+	rect.pos.y = *y;
+	rect.size.width = *width;
+	rect.size.height = *height;
 
-		if (flags & XFLAG_DEAD)
-			reposition = 1;
+	head = wGetRectPlacementInfo(vscr, rect, &flags);
 
-		if (flags & XFLAG_MULTIPLE)
-			reposition = 2;
-	}
-
-	switch (reposition) {
-	case 1:
+	if (flags & XFLAG_DEAD) {
 		head = wGetHeadForPointerLocation(vscr);
 		rect = wGetRectForHead(vscr->screen_ptr, head);
 
 		*x = rect.pos.x + (*x * rect.size.width) / vscr->screen_ptr->scr_width;
 		*y = rect.pos.y + (*y * rect.size.height) / vscr->screen_ptr->scr_height;
-		break;
 
-	case 2:
+		return;
+	}
+
+	if (flags & XFLAG_MULTIPLE) {
 		rect = wGetRectForHead(vscr->screen_ptr, head);
 
 		if (*x < rect.pos.x)
@@ -841,11 +834,6 @@ static void wwindow_set_placement_xine(virtual_screen *vscr, int *x, int *y,
 			*y = rect.pos.y;
 		else if (*y + *height > rect.pos.y + rect.size.height)
 			*y = rect.pos.y + rect.size.height - *height;
-
-		break;
-
-	default:
-		break;
 	}
 }
 /*
