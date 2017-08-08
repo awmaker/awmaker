@@ -799,38 +799,41 @@ void wwindow_set_placement_auto(virtual_screen *vscr,
 				int *x, int *y,
 				unsigned int *width, unsigned int *height)
 {
-	if (transientOwner && transientOwner->flags.mapped) {
-		int offs = WMAX(20, 2 * transientOwner->frame->top_width);
-		WMRect rect;
-		int head;
+	int offs, head;
+	WMRect rect;
 
-		*x = transientOwner->frame_x +
-		    abs((transientOwner->frame->core->width - *width) / 2) + offs;
-		*y = transientOwner->frame_y +
-		    abs((transientOwner->frame->core->height - *height) / 3) + offs;
-
-		/* limit transient windows to be inside their parent's head */
-		rect.pos.x = transientOwner->frame_x;
-		rect.pos.y = transientOwner->frame_y;
-		rect.size.width = transientOwner->frame->core->width;
-		rect.size.height = transientOwner->frame->core->height;
-
-		head = wGetHeadForRect(vscr, rect);
-		rect = wGetRectForHead(vscr->screen_ptr, head);
-
-		if (*x < rect.pos.x)
-			*x = rect.pos.x;
-		else if (*x + *width > rect.pos.x + rect.size.width)
-			*x = rect.pos.x + rect.size.width - *width;
-
-		if (*y < rect.pos.y)
-			*y = rect.pos.y;
-		else if (*y + *height > rect.pos.y + rect.size.height)
-			*y = rect.pos.y + rect.size.height - *height;
-
-	} else {
+	/* transientOwner mapped */
+	if (!(transientOwner && transientOwner->flags.mapped)) {
 		PlaceWindow(wwin, x, y, *width, *height);
+		return;
 	}
+
+	/* Not transientOwner or not mapped */
+	offs = WMAX(20, 2 * transientOwner->frame->top_width);
+
+	*x = transientOwner->frame_x +
+	    abs((transientOwner->frame->core->width - *width) / 2) + offs;
+	*y = transientOwner->frame_y +
+	    abs((transientOwner->frame->core->height - *height) / 3) + offs;
+
+	/* limit transient windows to be inside their parent's head */
+	rect.pos.x = transientOwner->frame_x;
+	rect.pos.y = transientOwner->frame_y;
+	rect.size.width = transientOwner->frame->core->width;
+	rect.size.height = transientOwner->frame->core->height;
+
+	head = wGetHeadForRect(vscr, rect);
+	rect = wGetRectForHead(vscr->screen_ptr, head);
+
+	if (*x < rect.pos.x)
+		*x = rect.pos.x;
+	else if (*x + *width > rect.pos.x + rect.size.width)
+		*x = rect.pos.x + rect.size.width - *width;
+
+	if (*y < rect.pos.y)
+		*y = rect.pos.y;
+	else if (*y + *height > rect.pos.y + rect.size.height)
+		*y = rect.pos.y + rect.size.height - *height;
 }
 
 static void wwindow_set_placement_xine(virtual_screen *vscr, int *x, int *y,
