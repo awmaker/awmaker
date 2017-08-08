@@ -616,6 +616,38 @@ void wwindow_set_xshape(Display *dpy, Window window, WWindow *wwin)
 }
 #endif
 
+Bool wwindow_set_wmhints(WWindow *wwin, Bool withdraw);
+Bool wwindow_set_wmhints(WWindow *wwin, Bool withdraw)
+{
+	if (wwin->wm_hints) {
+		if (wwin->wm_hints->flags & StateHint) {
+			if (wwin->wm_hints->initial_state == IconicState) {
+				wwin->flags.miniaturized = 1;
+			} else if (wwin->wm_hints->initial_state == WithdrawnState) {
+				wwin->flags.is_dockapp = 1;
+				withdraw = True;
+			}
+		}
+
+		if (wwin->wm_hints->flags & WindowGroupHint) {
+			wwin->group_id = wwin->wm_hints->window_group;
+			/* window_group has priority over CLIENT_LEADER */
+			wwin->main_window = wwin->group_id;
+		} else {
+			wwin->group_id = None;
+		}
+
+		if (wwin->wm_hints->flags & UrgencyHint) {
+			wwin->flags.urgent = 1;
+			wAppBounceWhileUrgent(wApplicationOf(wwin->main_window));
+		}
+	} else {
+		wwin->group_id = None;
+	}
+
+	return withdraw;
+}
+
 /*
  *----------------------------------------------------------------
  * wManageWindow--
@@ -728,32 +760,7 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 		wwin->main_window = wwin->client_leader;
 
 	wwin->wm_hints = XGetWMHints(dpy, window);
-
-	if (wwin->wm_hints) {
-		if (wwin->wm_hints->flags & StateHint) {
-			if (wwin->wm_hints->initial_state == IconicState) {
-				wwin->flags.miniaturized = 1;
-			} else if (wwin->wm_hints->initial_state == WithdrawnState) {
-				wwin->flags.is_dockapp = 1;
-				withdraw = True;
-			}
-		}
-
-		if (wwin->wm_hints->flags & WindowGroupHint) {
-			wwin->group_id = wwin->wm_hints->window_group;
-			/* window_group has priority over CLIENT_LEADER */
-			wwin->main_window = wwin->group_id;
-		} else {
-			wwin->group_id = None;
-		}
-
-		if (wwin->wm_hints->flags & UrgencyHint) {
-			wwin->flags.urgent = 1;
-			wAppBounceWhileUrgent(wApplicationOf(wwin->main_window));
-		}
-	} else {
-		wwin->group_id = None;
-	}
+	withdraw = wwindow_set_wmhints(wwin, withdraw);
 
 	PropGetProtocols(window, &wwin->protocols);
 
