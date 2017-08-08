@@ -110,9 +110,6 @@ static int matchIdentifier(const void *item, const void *cdata);
 static void setupGNUstepHints_defaults(WWindow *wwin, int value);
 static void setupGNUstepHints_withborder(WWindow *wwin, GNUstepWMAttributes *gs_hints);
 static void wWindowSetupInitialAttributes_GNUStep(WWindow *wwin, int *level, int *workspace);
-#ifndef USE_XSHAPE
-static void wwindow_set_xshape(Display *dpy, Window window, WWindow *wwin);
-#endif
 /****** Notification Observers ******/
 
 static void appearanceObserver(void *self, WMNotification *notif)
@@ -603,7 +600,7 @@ static int matchIdentifier(const void *item, const void *cdata)
 }
 
 #ifdef USE_XSHAPE
-static void wwindow_set_xshape(Display *dpy, Window window, WWindow *wwin)
+void wwindow_set_xshape(Display *dpy, Window window, WWindow *wwin)
 {
 	int junk;
 	unsigned int ujunk;

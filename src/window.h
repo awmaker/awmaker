@@ -332,6 +332,7 @@ WWindow *wWindowCreate(void);
 #ifdef USE_XSHAPE
 void wWindowSetShape(WWindow *wwin);
 void wWindowClearShape(WWindow *wwin);
+void wwindow_set_xshape(Display *dpy, Window window, WWindow *wwin);
 #endif
 
 void wUnmanageWindow(WWindow *wwin, Bool restore, Bool destroyed);
