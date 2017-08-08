@@ -798,6 +798,24 @@ static void wwindow_set_workspace(virtual_screen *vscr, WWindow *wwin, WWindow *
 	}
 }
 
+static void wwindow_set_position(virtual_screen *vscr, int head,
+				 int *x, int *y,
+				 unsigned int *width, unsigned int *height)
+{
+	WMRect rect;
+
+	rect = wGetRectForHead(vscr->screen_ptr, head);
+
+	if (*x < rect.pos.x)
+		*x = rect.pos.x;
+	else if (*x + *width > rect.pos.x + rect.size.width)
+		*x = rect.pos.x + rect.size.width - *width;
+
+	if (*y < rect.pos.y)
+		*y = rect.pos.y;
+	else if (*y + *height > rect.pos.y + rect.size.height)
+		*y = rect.pos.y + rect.size.height - *height;
+}
 
 void wwindow_set_placement_auto(virtual_screen *vscr,
 				WWindow *wwin, WWindow *transientOwner,
@@ -828,17 +846,7 @@ void wwindow_set_placement_auto(virtual_screen *vscr,
 	rect.size.height = transientOwner->frame->core->height;
 
 	head = wGetHeadForRect(vscr, rect);
-	rect = wGetRectForHead(vscr->screen_ptr, head);
-
-	if (*x < rect.pos.x)
-		*x = rect.pos.x;
-	else if (*x + *width > rect.pos.x + rect.size.width)
-		*x = rect.pos.x + rect.size.width - *width;
-
-	if (*y < rect.pos.y)
-		*y = rect.pos.y;
-	else if (*y + *height > rect.pos.y + rect.size.height)
-		*y = rect.pos.y + rect.size.height - *height;
+	wwindow_set_position(vscr, head, x, y, width, height);
 }
 
 static void wwindow_set_placement_xine(virtual_screen *vscr, int *x, int *y,
