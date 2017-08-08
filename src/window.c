@@ -109,6 +109,7 @@ static Window createFakeWindowGroupLeader(virtual_screen *vscr, Window win, char
 static int matchIdentifier(const void *item, const void *cdata);
 static void setupGNUstepHints_defaults(WWindow *wwin, int value);
 static void setupGNUstepHints_withborder(WWindow *wwin, GNUstepWMAttributes *gs_hints);
+static void wWindowSetupInitialAttributes_GNUStep(WWindow *wwin, int *level, int *workspace);
 /****** Notification Observers ******/
 
 static void appearanceObserver(void *self, WMNotification *notif)
@@ -330,6 +331,70 @@ static void discard_hints_from_gtk(WWindow *wwin)
 	wwin->client_flags.no_resizebar = 0;
 }
 
+static void wWindowSetupInitialAttributes_GNUStep(WWindow *wwin, int *level, int *workspace)
+{
+	virtual_screen *vscr = wwin->vscr;
+	WScreen *scr = vscr->screen_ptr;
+	int tmp_workspace, tmp_level, ownerLevel;
+
+	/* GNUStep attributes found */
+	if (wwin->wm_gnustep_attr) {
+		setupGNUstepHints(wwin, wwin->wm_gnustep_attr);
+
+		if (wwin->wm_gnustep_attr->flags & GSWindowLevelAttr) {
+			*level = wwin->wm_gnustep_attr->window_level;
+			/* INT_MIN is the only illegal window level. */
+			if (*level == INT_MIN)
+				*level = INT_MIN + 1;
+		} else {
+			/* setup defaults */
+			*level = WMNormalLevel;
+		}
+
+		return;
+	}
+
+	/* No GNUStep attributes found */
+	tmp_workspace = -1;
+	tmp_level = INT_MIN;	/* INT_MIN is never used by the window levels */
+
+#ifdef USE_MWM_HINTS
+	wMWMCheckClientHints(wwin);
+#endif
+
+	wNETWMCheckClientHints(wwin, &tmp_level, &tmp_workspace);
+
+	if (wPreferences.ignore_gtk_decoration_hints)
+		discard_hints_from_gtk(wwin);
+
+	/*
+	 * Window levels are between INT_MIN+1 and INT_MAX, so if we still
+	 * have INT_MIN that means that no window level was requested. -Dan
+	 */
+	if (tmp_level == INT_MIN) {
+		if (WFLAGP(wwin, floating))
+			*level = WMFloatingLevel;
+		else if (WFLAGP(wwin, sunken))
+			*level = WMSunkenLevel;
+		else
+			*level = WMNormalLevel;
+	} else {
+		*level = tmp_level;
+	}
+
+	if (wwin->transient_for != None && wwin->transient_for != scr->root_win) {
+		WWindow *transientOwner = wWindowFor(wwin->transient_for);
+		if (transientOwner) {
+			ownerLevel = transientOwner->frame->core->stacking->window_level;
+			if (ownerLevel > *level)
+				*level = ownerLevel;
+		}
+	}
+
+	if (tmp_workspace >= 0)
+		*workspace = tmp_workspace % vscr->workspace.count;
+}
+
 void wWindowSetupInitialAttributes(WWindow *wwin, int *level, int *workspace)
 {
 	virtual_screen *vscr = wwin->vscr;
@@ -368,60 +433,8 @@ void wWindowSetupInitialAttributes(WWindow *wwin, int *level, int *workspace)
 		wwin->client_flags.no_resizebar = 1;
 	}
 
-	/* set GNUstep window attributes */
-	if (wwin->wm_gnustep_attr) {
-		setupGNUstepHints(wwin, wwin->wm_gnustep_attr);
-
-		if (wwin->wm_gnustep_attr->flags & GSWindowLevelAttr) {
-			*level = wwin->wm_gnustep_attr->window_level;
-			/*
-			 * INT_MIN is the only illegal window level.
-			 */
-			if (*level == INT_MIN)
-				*level = INT_MIN + 1;
-		} else {
-			/* setup defaults */
-			*level = WMNormalLevel;
-		}
-	} else {
-		int tmp_workspace = -1;
-		int tmp_level = INT_MIN;	/* INT_MIN is never used by the window levels */
-
-#ifdef USE_MWM_HINTS
-		wMWMCheckClientHints(wwin);
-#endif	/* USE_MWM_HINTS */
-
-		wNETWMCheckClientHints(wwin, &tmp_level, &tmp_workspace);
-
-		if (wPreferences.ignore_gtk_decoration_hints)
-			discard_hints_from_gtk(wwin);
-
-		/* window levels are between INT_MIN+1 and INT_MAX, so if we still
-		 * have INT_MIN that means that no window level was requested. -Dan
-		 */
-		if (tmp_level == INT_MIN) {
-			if (WFLAGP(wwin, floating))
-				*level = WMFloatingLevel;
-			else if (WFLAGP(wwin, sunken))
-				*level = WMSunkenLevel;
-			else
-				*level = WMNormalLevel;
-		} else {
-			*level = tmp_level;
-		}
-
-		if (wwin->transient_for != None && wwin->transient_for != scr->root_win) {
-			WWindow *transientOwner = wWindowFor(wwin->transient_for);
-			if (transientOwner) {
-				int ownerLevel = transientOwner->frame->core->stacking->window_level;
-				if (ownerLevel > *level)
-					*level = ownerLevel;
-			}
-		}
-
-		if (tmp_workspace >= 0)
-			*workspace = tmp_workspace % vscr->workspace.count;
-	}
+	/* Set GNUstep window attributes */
+	wWindowSetupInitialAttributes_GNUStep(wwin, level, workspace);
 
 	/*
 	 * Set attributes specified only for that window/class.
@@ -429,9 +442,8 @@ void wWindowSetupInitialAttributes(WWindow *wwin, int *level, int *workspace)
 	 */
 	wDefaultFillAttributes(wwin->wm_instance, wwin->wm_class, &wwin->user_flags,
 			       &wwin->defined_user_flags, False);
-	/*
-	 * Sanity checks for attributes that depend on other attributes
-	 */
+
+	/* Sanity checks for attributes that depend on other attributes */
 	if (wwin->user_flags.no_appicon && wwin->defined_user_flags.no_appicon)
 		wwin->user_flags.emulate_appicon = 0;
 
