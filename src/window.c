@@ -882,19 +882,8 @@ static void wwindow_set_placement_xine(virtual_screen *vscr, int *x, int *y,
 		return;
 	}
 
-	if (flags & XFLAG_MULTIPLE) {
-		rect = wGetRectForHead(vscr->screen_ptr, head);
-
-		if (*x < rect.pos.x)
-			*x = rect.pos.x;
-		else if (*x + *width > rect.pos.x + rect.size.width)
-			*x = rect.pos.x + rect.size.width - *width;
-
-		if (*y < rect.pos.y)
-			*y = rect.pos.y;
-		else if (*y + *height > rect.pos.y + rect.size.height)
-			*y = rect.pos.y + rect.size.height - *height;
-	}
+	if (flags & XFLAG_MULTIPLE)
+		wwindow_set_position(vscr, head, x, y, width, height);
 }
 
 static void wwindow_set_placement(virtual_screen *vscr,
