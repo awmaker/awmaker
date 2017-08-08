@@ -112,6 +112,7 @@ static void setupGNUstepHints_withborder(WWindow *wwin, GNUstepWMAttributes *gs_
 static void wWindowSetupInitialAttributes_GNUStep(WWindow *wwin, int *level, int *workspace);
 Bool wwindow_set_wmhints(WWindow *wwin, Bool withdraw);
 static void wwindow_set_fakegroupleader(virtual_screen *vscr, WWindow *wwin);
+static int window_restarting_restore(Window window, WWindow *wwin, WWindowState *win_state, int workspace);
 /****** Notification Observers ******/
 
 static void appearanceObserver(void *self, WMNotification *notif)
@@ -707,6 +708,57 @@ static void wwindow_set_fakegroupleader(virtual_screen *vscr, WWindow *wwin)
 #undef ADEQUATE
 }
 
+static int window_restarting_restore(Window window, WWindow *wwin, WWindowState *win_state, int workspace)
+{
+	WSavedState *wstate;
+
+	if (getSavedState(window, &wstate)) {
+		wwin->flags.shaded = wstate->shaded;
+		wwin->flags.hidden = wstate->hidden;
+		wwin->flags.miniaturized = wstate->miniaturized;
+		wwin->flags.maximized = wstate->maximized;
+		if (wwin->flags.maximized) {
+			wwin->old_geometry.x = wstate->x;
+			wwin->old_geometry.y = wstate->y;
+			wwin->old_geometry.width = wstate->w;
+			wwin->old_geometry.height = wstate->h;
+		}
+
+		workspace = wstate->workspace;
+	} else {
+		wstate = NULL;
+	}
+
+	/* restore window shortcut */
+	if (wstate != NULL || win_state != NULL) {
+		unsigned mask = 0;
+
+		if (win_state != NULL)
+			mask = win_state->state->window_shortcuts;
+
+		if (wstate != NULL && mask == 0)
+			mask = wstate->window_shortcuts;
+
+		if (mask > 0) {
+			int i;
+
+			for (i = 0; i < MAX_WINDOW_SHORTCUTS; i++) {
+				if (mask & (1 << i)) {
+					if (!w_global.shortcut.windows[i])
+						w_global.shortcut.windows[i] = WMCreateArray(4);
+
+					WMAddToArray(w_global.shortcut.windows[i], wwin);
+				}
+			}
+		}
+	}
+
+	if (wstate != NULL)
+		wfree(wstate);
+
+	return workspace;
+}
+
 /*
  *----------------------------------------------------------------
  * wManageWindow--
@@ -930,53 +982,7 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 
 	/* if we're restarting, restore saved state (from hints).
 	 * This will overwrite previous */
-	{
-		WSavedState *wstate;
-
-		if (getSavedState(window, &wstate)) {
-			wwin->flags.shaded = wstate->shaded;
-			wwin->flags.hidden = wstate->hidden;
-			wwin->flags.miniaturized = wstate->miniaturized;
-			wwin->flags.maximized = wstate->maximized;
-			if (wwin->flags.maximized) {
-				wwin->old_geometry.x = wstate->x;
-				wwin->old_geometry.y = wstate->y;
-				wwin->old_geometry.width = wstate->w;
-				wwin->old_geometry.height = wstate->h;
-			}
-
-			workspace = wstate->workspace;
-		} else {
-			wstate = NULL;
-		}
-
-		/* restore window shortcut */
-		if (wstate != NULL || win_state != NULL) {
-			unsigned mask = 0;
-
-			if (win_state != NULL)
-				mask = win_state->state->window_shortcuts;
-
-			if (wstate != NULL && mask == 0)
-				mask = wstate->window_shortcuts;
-
-			if (mask > 0) {
-				int i;
-
-				for (i = 0; i < MAX_WINDOW_SHORTCUTS; i++) {
-					if (mask & (1 << i)) {
-						if (!w_global.shortcut.windows[i])
-							w_global.shortcut.windows[i] = WMCreateArray(4);
-
-						WMAddToArray(w_global.shortcut.windows[i], wwin);
-					}
-				}
-			}
-		}
-
-		if (wstate != NULL)
-			wfree(wstate);
-	}
+	workspace = window_restarting_restore(window, wwin, win_state, workspace);
 
 	/* don't let transients start miniaturized if their owners are not */
 	if (transientOwner && !transientOwner->flags.miniaturized && wwin->flags.miniaturized && !withdraw) {
