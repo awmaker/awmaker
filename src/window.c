@@ -108,6 +108,7 @@ static void fixLeaderProperties(WWindow *wwin);
 static Window createFakeWindowGroupLeader(virtual_screen *vscr, Window win, char *instance, char *class);
 static int matchIdentifier(const void *item, const void *cdata);
 static void setupGNUstepHints_defaults(WWindow *wwin, int value);
+static void setupGNUstepHints_withborder(WWindow *wwin, GNUstepWMAttributes *gs_hints);
 /****** Notification Observers ******/
 
 static void appearanceObserver(void *self, WMNotification *notif)
@@ -258,41 +259,49 @@ static void setupGNUstepHints_defaults(WWindow *wwin, int value)
 	wwin->client_flags.no_resizebar = value;
 }
 
+static void setupGNUstepHints_withborder(WWindow *wwin, GNUstepWMAttributes *gs_hints)
+{
+	wwin->client_flags.no_close_button =
+		((gs_hints->window_style & WMClosableWindowMask) ? 0 : 1);
+
+	wwin->client_flags.no_closable =
+		((gs_hints->window_style & WMClosableWindowMask) ? 0 : 1);
+
+	wwin->client_flags.no_miniaturize_button =
+		((gs_hints->window_style & WMMiniaturizableWindowMask) ? 0 : 1);
+
+	wwin->client_flags.no_miniaturizable =
+		wwin->client_flags.no_miniaturize_button;
+
+	wwin->client_flags.no_resizebar =
+		((gs_hints->window_style & WMResizableWindowMask) ? 0 : 1);
+
+	wwin->client_flags.no_resizable = wwin->client_flags.no_resizebar;
+
+	/* these attributes supposedly imply in the existence of a titlebar */
+	if (gs_hints->window_style & (WMResizableWindowMask |
+				      WMClosableWindowMask |
+				      WMMiniaturizableWindowMask))
+		wwin->client_flags.no_titlebar = 0;
+	else
+		wwin->client_flags.no_titlebar =
+		    ((gs_hints->window_style & WMTitledWindowMask) ? 0 : 1);
+}
+
 static void setupGNUstepHints(WWindow *wwin, GNUstepWMAttributes *gs_hints)
 {
 	if (gs_hints->flags & GSWindowStyleAttr) {
-		if (gs_hints->window_style == WMBorderlessWindowMask) {
+		if (gs_hints->window_style == WMBorderlessWindowMask)
+			/* GNUStep hints, but no border */
 			setupGNUstepHints_defaults(wwin, 1);
-		} else {
-			wwin->client_flags.no_close_button =
-			    ((gs_hints->window_style & WMClosableWindowMask) ? 0 : 1);
-
-			wwin->client_flags.no_closable = ((gs_hints->window_style & WMClosableWindowMask) ? 0 : 1);
-
-			wwin->client_flags.no_miniaturize_button =
-			    ((gs_hints->window_style & WMMiniaturizableWindowMask) ? 0 : 1);
-
-			wwin->client_flags.no_miniaturizable = wwin->client_flags.no_miniaturize_button;
-
-			wwin->client_flags.no_resizebar =
-			    ((gs_hints->window_style & WMResizableWindowMask) ? 0 : 1);
-
-			wwin->client_flags.no_resizable = wwin->client_flags.no_resizebar;
-
-			/* these attributes supposedly imply in the existence
-			 * of a titlebar */
-			if (gs_hints->window_style & (WMResizableWindowMask |
-						      WMClosableWindowMask | WMMiniaturizableWindowMask)) {
-				wwin->client_flags.no_titlebar = 0;
-			} else {
-				wwin->client_flags.no_titlebar =
-				    ((gs_hints->window_style & WMTitledWindowMask) ? 0 : 1);
-			}
-
-		}
+		else
+			/* GNUStep hints, with border */
+			setupGNUstepHints_withborder(wwin, gs_hints);
 	} else {
+		/* No GNUStep style */
 		setupGNUstepHints_defaults(wwin, 0);
 	}
+
 	if (gs_hints->extra_flags & GSNoApplicationIconFlag)
 		wwin->client_flags.no_appicon = 1;
 }
