@@ -115,6 +115,8 @@ static void wwindow_set_fakegroupleader(virtual_screen *vscr, WWindow *wwin);
 static int window_restarting_restore(Window window, WWindow *wwin, WWindowState *win_state, int workspace);
 static void window_restore_shortcut(WWindow *wwin, WWindowState *win_state, WSavedState *wstate);
 static void wwindow_set_workspace(virtual_screen *vscr, WWindow *wwin, WWindow *transientOwner, int *workspace);
+static void wwindow_set_placement_xine(virtual_screen *vscr, int *x, int *y,
+				       unsigned int *width, unsigned int *height);
 /****** Notification Observers ******/
 
 static void appearanceObserver(void *self, WMNotification *notif)
@@ -787,6 +789,65 @@ static void wwindow_set_workspace(virtual_screen *vscr, WWindow *wwin, WWindow *
 	}
 }
 
+static void wwindow_set_placement_xine(virtual_screen *vscr, int *x, int *y,
+				       unsigned int *width, unsigned int *height)
+{
+	int head, flags;
+	WMRect rect;
+	int reposition = 0;
+
+	/* Make spash screens come out in the center of a head
+	 * trouble is that most splashies never get here
+	 * they are managed trough atoms but god knows where.
+	 * Dan, do you know ? -peter
+	 *
+	 * Most of them are not managed, they have set
+	 * OverrideRedirect, which means we can't do anything about
+	 * them. -alfredo */
+	{
+		/* xinerama checks for: across head and dead space */
+		rect.pos.x = *x;
+		rect.pos.y = *y;
+		rect.size.width = *width;
+		rect.size.height = *height;
+
+		head = wGetRectPlacementInfo(vscr, rect, &flags);
+
+		if (flags & XFLAG_DEAD)
+			reposition = 1;
+
+		if (flags & XFLAG_MULTIPLE)
+			reposition = 2;
+	}
+
+	switch (reposition) {
+	case 1:
+		head = wGetHeadForPointerLocation(vscr);
+		rect = wGetRectForHead(vscr->screen_ptr, head);
+
+		*x = rect.pos.x + (*x * rect.size.width) / vscr->screen_ptr->scr_width;
+		*y = rect.pos.y + (*y * rect.size.height) / vscr->screen_ptr->scr_height;
+		break;
+
+	case 2:
+		rect = wGetRectForHead(vscr->screen_ptr, head);
+
+		if (*x < rect.pos.x)
+			*x = rect.pos.x;
+		else if (*x + *width > rect.pos.x + rect.size.width)
+			*x = rect.pos.x + rect.size.width - *width;
+
+		if (*y < rect.pos.y)
+			*y = rect.pos.y;
+		else if (*y + *height > rect.pos.y + rect.size.height)
+			*y = rect.pos.y + rect.size.height - *height;
+
+		break;
+
+	default:
+		break;
+	}
+}
 /*
  *----------------------------------------------------------------
  * wManageWindow--
@@ -1081,61 +1142,7 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 				dontBring = True;
 
 		} else if (vscr->screen_ptr->xine_info.count && (wwin->normal_hints->flags & PPosition)) {
-			int head, flags;
-			WMRect rect;
-			int reposition = 0;
-
-			/* Make spash screens come out in the center of a head
-			 * trouble is that most splashies never get here
-			 * they are managed trough atoms but god knows where.
-			 * Dan, do you know ? -peter
-			 *
-			 * Most of them are not managed, they have set
-			 * OverrideRedirect, which means we can't do anything about
-			 * them. -alfredo */
-			{
-				/* xinerama checks for: across head and dead space */
-				rect.pos.x = x;
-				rect.pos.y = y;
-				rect.size.width = width;
-				rect.size.height = height;
-
-				head = wGetRectPlacementInfo(vscr, rect, &flags);
-
-				if (flags & XFLAG_DEAD)
-					reposition = 1;
-
-				if (flags & XFLAG_MULTIPLE)
-					reposition = 2;
-			}
-
-			switch (reposition) {
-			case 1:
-				head = wGetHeadForPointerLocation(vscr);
-				rect = wGetRectForHead(vscr->screen_ptr, head);
-
-				x = rect.pos.x + (x * rect.size.width) / vscr->screen_ptr->scr_width;
-				y = rect.pos.y + (y * rect.size.height) / vscr->screen_ptr->scr_height;
-				break;
-
-			case 2:
-				rect = wGetRectForHead(vscr->screen_ptr, head);
-
-				if (x < rect.pos.x)
-					x = rect.pos.x;
-				else if (x + width > rect.pos.x + rect.size.width)
-					x = rect.pos.x + rect.size.width - width;
-
-				if (y < rect.pos.y)
-					y = rect.pos.y;
-				else if (y + height > rect.pos.y + rect.size.height)
-					y = rect.pos.y + rect.size.height - height;
-
-				break;
-
-			default:
-				break;
-			}
+			wwindow_set_placement_xine(vscr, &x, &y, &width, &height);
 		}
 
 		if (WFLAGP(wwin, dont_move_off) && dontBring)
