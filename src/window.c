@@ -900,27 +900,29 @@ static void wwindow_set_placement(virtual_screen *vscr,
 	 * transient, during startup, or if the window wants
 	 * to start iconic.  If geometry was saved, restore it.
 	 */
-	Bool dontBring = False;
-
 	if (win_state && win_state->state->w > 0) {
 		*x = win_state->state->x;
 		*y = win_state->state->y;
-	} else if ((wwin->transient_for == None || wPreferences.window_placement != WPM_MANUAL) &&
-		   !w_global.startup.phase1 &&
-		   !wwin->flags.miniaturized &&
-		   !wwin->flags.maximized &&
-		   !(wwin->normal_hints->flags & (USPosition | PPosition))) {
+		return;
+	}
+
+	if ((wwin->transient_for == None || wPreferences.window_placement != WPM_MANUAL) &&
+	    !w_global.startup.phase1 &&
+	    !wwin->flags.miniaturized &&
+	    !wwin->flags.maximized &&
+	    !(wwin->normal_hints->flags & (USPosition | PPosition))) {
 		wwindow_set_placement_auto(vscr, wwin, transientOwner,
 					   x, y, width, height);
 
-		if (wPreferences.window_placement == WPM_MANUAL)
-			dontBring = True;
-	} else if (vscr->screen_ptr->xine_info.count && (wwin->normal_hints->flags & PPosition)) {
-		wwindow_set_placement_xine(vscr, x, y, width, height);
+		if ((wPreferences.window_placement == WPM_MANUAL) &&
+		    (WFLAGP(wwin, dont_move_off)))
+			wScreenBringInside(vscr, x, y, *width, *height);
+
+		return;
 	}
 
-	if (WFLAGP(wwin, dont_move_off) && dontBring)
-		wScreenBringInside(vscr, x, y, *width, *height);
+	if (vscr->screen_ptr->xine_info.count && (wwin->normal_hints->flags & PPosition))
+		wwindow_set_placement_xine(vscr, x, y, width, height);
 }
 
 /*
