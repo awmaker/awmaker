@@ -110,6 +110,9 @@ static int matchIdentifier(const void *item, const void *cdata);
 static void setupGNUstepHints_defaults(WWindow *wwin, int value);
 static void setupGNUstepHints_withborder(WWindow *wwin, GNUstepWMAttributes *gs_hints);
 static void wWindowSetupInitialAttributes_GNUStep(WWindow *wwin, int *level, int *workspace);
+#ifndef USE_XSHAPE
+static void wwindow_set_xshape(Display *dpy, Window window, WWindow *wwin);
+#endif
 /****** Notification Observers ******/
 
 static void appearanceObserver(void *self, WMNotification *notif)
@@ -599,6 +602,23 @@ static int matchIdentifier(const void *item, const void *cdata)
 	return (strcmp(((WFakeGroupLeader *) item)->identifier, (char *)cdata) == 0);
 }
 
+#ifdef USE_XSHAPE
+static void wwindow_set_xshape(Display *dpy, Window window, WWindow *wwin)
+{
+	int junk;
+	unsigned int ujunk;
+	int b_shaped;
+
+	if (!w_global.xext.shape.supported)
+		return;
+
+	XShapeSelectInput(dpy, window, ShapeNotifyMask);
+	XShapeQueryExtents(dpy, window, &b_shaped, &junk, &junk, &ujunk,
+			   &ujunk, &junk, &junk, &junk, &ujunk, &ujunk);
+	wwin->flags.shaped = b_shaped;
+}
+#endif
+
 /*
  *----------------------------------------------------------------
  * wManageWindow--
@@ -675,17 +695,8 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 
 	XSaveContext(dpy, window, w_global.context.client_win, (XPointer) & wwin->client_descriptor);
 
-#ifdef USE_XSHAPE
-	if (w_global.xext.shape.supported) {
-		int junk;
-		unsigned int ujunk;
-		int b_shaped;
-
-		XShapeSelectInput(dpy, window, ShapeNotifyMask);
-		XShapeQueryExtents(dpy, window, &b_shaped, &junk, &junk, &ujunk,
-				   &ujunk, &junk, &junk, &junk, &ujunk, &ujunk);
-		wwin->flags.shaped = b_shaped;
-	}
+#ifndef USE_XSHAPE
+	wwindow_set_xshape(dpy, window, wwin);
 #endif
 
 	/* Get hints and other information in properties */
