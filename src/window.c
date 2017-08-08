@@ -113,6 +113,7 @@ static void wWindowSetupInitialAttributes_GNUStep(WWindow *wwin, int *level, int
 Bool wwindow_set_wmhints(WWindow *wwin, Bool withdraw);
 static void wwindow_set_fakegroupleader(virtual_screen *vscr, WWindow *wwin);
 static int window_restarting_restore(Window window, WWindow *wwin, WWindowState *win_state, int workspace);
+static void window_restore_shortcut(WWindow *wwin, WWindowState *win_state, WSavedState *wstate);
 /****** Notification Observers ******/
 
 static void appearanceObserver(void *self, WMNotification *notif)
@@ -708,6 +709,30 @@ static void wwindow_set_fakegroupleader(virtual_screen *vscr, WWindow *wwin)
 #undef ADEQUATE
 }
 
+static void window_restore_shortcut(WWindow *wwin, WWindowState *win_state, WSavedState *wstate)
+{
+	unsigned mask = 0;
+	int i;
+
+	if (win_state != NULL)
+		mask = win_state->state->window_shortcuts;
+
+	if (wstate != NULL && mask == 0)
+		mask = wstate->window_shortcuts;
+
+	if (mask <= 0)
+		return;
+
+	for (i = 0; i < MAX_WINDOW_SHORTCUTS; i++) {
+		if (mask & (1 << i)) {
+			if (!w_global.shortcut.windows[i])
+				w_global.shortcut.windows[i] = WMCreateArray(4);
+
+			WMAddToArray(w_global.shortcut.windows[i], wwin);
+		}
+	}
+}
+
 static int window_restarting_restore(Window window, WWindow *wwin, WWindowState *win_state, int workspace)
 {
 	WSavedState *wstate;
@@ -730,28 +755,8 @@ static int window_restarting_restore(Window window, WWindow *wwin, WWindowState 
 	}
 
 	/* restore window shortcut */
-	if (wstate != NULL || win_state != NULL) {
-		unsigned mask = 0;
-
-		if (win_state != NULL)
-			mask = win_state->state->window_shortcuts;
-
-		if (wstate != NULL && mask == 0)
-			mask = wstate->window_shortcuts;
-
-		if (mask > 0) {
-			int i;
-
-			for (i = 0; i < MAX_WINDOW_SHORTCUTS; i++) {
-				if (mask & (1 << i)) {
-					if (!w_global.shortcut.windows[i])
-						w_global.shortcut.windows[i] = WMCreateArray(4);
-
-					WMAddToArray(w_global.shortcut.windows[i], wwin);
-				}
-			}
-		}
-	}
+	if (wstate != NULL || win_state != NULL)
+		window_restore_shortcut(wwin, win_state, wstate);
 
 	if (wstate != NULL)
 		wfree(wstate);
