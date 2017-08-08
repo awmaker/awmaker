@@ -111,6 +111,7 @@ static void setupGNUstepHints_defaults(WWindow *wwin, int value);
 static void setupGNUstepHints_withborder(WWindow *wwin, GNUstepWMAttributes *gs_hints);
 static void wWindowSetupInitialAttributes_GNUStep(WWindow *wwin, int *level, int *workspace);
 Bool wwindow_set_wmhints(WWindow *wwin, Bool withdraw);
+static void wwindow_set_fakegroupleader(virtual_screen *vscr, WWindow *wwin);
 /****** Notification Observers ******/
 
 static void appearanceObserver(void *self, WMNotification *notif)
@@ -649,6 +650,63 @@ Bool wwindow_set_wmhints(WWindow *wwin, Bool withdraw)
 	return withdraw;
 }
 
+static void wwindow_set_fakegroupleader(virtual_screen *vscr, WWindow *wwin)
+{
+	char *buffer, *instance, *class;
+	WFakeGroupLeader *fPtr;
+	int index;
+
+#define ADEQUATE(x) ((x)!=None && (x)!=wwin->client_win && (x)!=fPtr->leader)
+
+	/* only enter here if PropGetWMClass() succeeds */
+	PropGetWMClass(wwin->main_window, &class, &instance);
+	buffer = StrConcatDot(instance, class);
+
+	index = WMFindInArray(vscr->screen_ptr->fakeGroupLeaders, matchIdentifier, (void *)buffer);
+	if (index != WANotFound) {
+		fPtr = WMGetFromArray(vscr->screen_ptr->fakeGroupLeaders, index);
+		if (fPtr->retainCount == 0)
+			fPtr->leader = createFakeWindowGroupLeader(vscr, wwin->main_window,
+								   instance, class);
+
+		fPtr->retainCount++;
+		if (fPtr->origLeader == None) {
+			if (ADEQUATE(wwin->main_window)) {
+				fPtr->retainCount++;
+				fPtr->origLeader = wwin->main_window;
+			}
+		}
+
+		wwin->fake_group = fPtr;
+		wwin->main_window = fPtr->leader;
+		wfree(buffer);
+	} else {
+		fPtr = (WFakeGroupLeader *) wmalloc(sizeof(WFakeGroupLeader));
+
+		fPtr->identifier = buffer;
+		fPtr->leader = createFakeWindowGroupLeader(vscr, wwin->main_window, instance, class);
+		fPtr->origLeader = None;
+		fPtr->retainCount = 1;
+
+		WMAddToArray(vscr->screen_ptr->fakeGroupLeaders, fPtr);
+
+		if (ADEQUATE(wwin->main_window)) {
+			fPtr->retainCount++;
+			fPtr->origLeader = wwin->main_window;
+		}
+
+		wwin->fake_group = fPtr;
+		wwin->main_window = fPtr->leader;
+	}
+
+	if (instance)
+		free(instance);
+
+	if (class)
+		free(class);
+#undef ADEQUATE
+}
+
 /*
  *----------------------------------------------------------------
  * wManageWindow--
@@ -819,65 +877,10 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 		wwin->client_flags.shared_appicon = 0;
         }
 
-	if (!withdraw && wwin->main_window && WFLAGP(wwin, shared_appicon)) {
-		char *buffer, *instance, *class;
-		WFakeGroupLeader *fPtr;
-		int index;
+	if (!withdraw && wwin->main_window && WFLAGP(wwin, shared_appicon))
+		wwindow_set_fakegroupleader(vscr, wwin);
 
-#define ADEQUATE(x) ((x)!=None && (x)!=wwin->client_win && (x)!=fPtr->leader)
-
-		/* // only enter here if PropGetWMClass() succeeds */
-		PropGetWMClass(wwin->main_window, &class, &instance);
-		buffer = StrConcatDot(instance, class);
-
-		index = WMFindInArray(vscr->screen_ptr->fakeGroupLeaders, matchIdentifier, (void *)buffer);
-		if (index != WANotFound) {
-			fPtr = WMGetFromArray(vscr->screen_ptr->fakeGroupLeaders, index);
-			if (fPtr->retainCount == 0)
-				fPtr->leader = createFakeWindowGroupLeader(vscr, wwin->main_window,
-									   instance, class);
-
-			fPtr->retainCount++;
-			if (fPtr->origLeader == None) {
-				if (ADEQUATE(wwin->main_window)) {
-					fPtr->retainCount++;
-					fPtr->origLeader = wwin->main_window;
-				}
-			}
-
-			wwin->fake_group = fPtr;
-			wwin->main_window = fPtr->leader;
-			wfree(buffer);
-		} else {
-			fPtr = (WFakeGroupLeader *) wmalloc(sizeof(WFakeGroupLeader));
-
-			fPtr->identifier = buffer;
-			fPtr->leader = createFakeWindowGroupLeader(vscr, wwin->main_window, instance, class);
-			fPtr->origLeader = None;
-			fPtr->retainCount = 1;
-
-			WMAddToArray(vscr->screen_ptr->fakeGroupLeaders, fPtr);
-
-			if (ADEQUATE(wwin->main_window)) {
-				fPtr->retainCount++;
-				fPtr->origLeader = wwin->main_window;
-			}
-
-			wwin->fake_group = fPtr;
-			wwin->main_window = fPtr->leader;
-		}
-
-		if (instance)
-			free(instance);
-
-		if (class)
-			free(class);
-#undef ADEQUATE
-	}
-
-	/*
-	 * Setup the initial state of the window
-	 */
+	/* Setup the initial state of the window */
 	if (WFLAGP(wwin, start_miniaturized) && !WFLAGP(wwin, no_miniaturizable))
 		wwin->flags.miniaturized = 1;
 
