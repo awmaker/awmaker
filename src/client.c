@@ -149,18 +149,11 @@ void wClientConfigure(WWindow * wwin, XConfigureRequestEvent * xcre)
 		XConfigureWindow(dpy, xcre->window, xcre->value_mask, &xwc);
 		return;
 	}
-#ifdef USE_XSHAPE
-	if (w_global.xext.shape.supported) {
-		int junk;
-		unsigned int ujunk;
-		int b_shaped;
 
-		XShapeSelectInput(dpy, wwin->client_win, ShapeNotifyMask);
-		XShapeQueryExtents(dpy, wwin->client_win, &b_shaped, &junk, &junk,
-				   &ujunk, &ujunk, &junk, &junk, &junk, &ujunk, &ujunk);
-		wwin->flags.shaped = b_shaped;
-	}
+#ifdef USE_XSHAPE
+	wwindow_set_xshape(dpy, wwin->client_win, wwin);
 #endif
+
 	if (xcre->value_mask & CWStackMode) {
 		WObjDescriptor *desc;
 		WWindow *sibling;
