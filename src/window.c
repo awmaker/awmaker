@@ -938,26 +938,27 @@ static int wwindow_set_mainwindow(WWindow *wwin, int workspace)
 		leader->main_window = leader->client_win;
 
 	app = wApplicationCreate(wwin);
-	if (app) {
-		app->last_workspace = workspace;
+	if (!app)
+		return raise;
 
-		/* Do application specific stuff, like setting application
-		 * wide attributes. */
+	app->last_workspace = workspace;
 
-		if (wwin->flags.hidden) {
-			/* if the window was set to hidden because it was hidden
-			 * in a previous incarnation and that state was restored */
-			app->flags.hidden = 1;
-		} else if (app->flags.hidden) {
-			if (WFLAGP(app->main_window_desc, start_hidden)) {
-				wwin->flags.hidden = 1;
-			} else {
-				wUnhideApplication(app, False, False);
-				raise = True;
-			}
+	/* Do application specific stuff, like setting application
+	 * wide attributes. */
+	if (wwin->flags.hidden) {
+		/* If the window was set to hidden because it was hidden
+		 * in a previous incarnation and that state was restored */
+		app->flags.hidden = 1;
+	} else if (app->flags.hidden) {
+		if (WFLAGP(app->main_window_desc, start_hidden)) {
+			wwin->flags.hidden = 1;
+		} else {
+			wUnhideApplication(app, False, False);
+			raise = True;
 		}
-		wAppBounce(app);
 	}
+
+	wAppBounce(app);
 
 	return raise;
 }
