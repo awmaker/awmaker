@@ -184,6 +184,7 @@ typedef struct InspectorPanel {
 	WWindow *inspected;	/* the window that's being inspected */
 	WMWindow *wwin;
 	Window parent;
+	char *title;		/* InspectorPanel title */
 
 	/* common stuff */
 	WMButton *revertBtn;
@@ -1033,7 +1034,9 @@ static void selectSpecification(WMWidget *bPtr, void *data)
 	         wwin->wm_instance ? wwin->wm_instance : "?",
 	         wwin->wm_class ? wwin->wm_class : "?");
 
-	wFrameWindowChangeTitle(panel->frame->frame, str);
+	panel->title = str;
+
+	wFrameWindowChangeTitle(panel->frame->frame, panel->title);
 }
 
 static void selectWindow(WMWidget *bPtr, void *data)
