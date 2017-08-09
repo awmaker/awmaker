@@ -287,6 +287,7 @@ typedef struct WWindow {
 						 * else is NULL! */
 	int icon_x, icon_y;			/* position of the icon */
 	int icon_w, icon_h;
+	char *title;				/* Window title */
 	RImage *net_icon_image;			/* Window Image */
 	Atom type;
 } WWindow;

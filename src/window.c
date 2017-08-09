@@ -193,6 +193,7 @@ WWindow *wWindowCreate(void)
 	wwin->client_descriptor.parent = wwin;
 	wwin->client_descriptor.self = wwin;
 	wwin->client_descriptor.parent_type = WCLASS_WINDOW;
+	wwin->title = NULL;
 
 	return wwin;
 }
@@ -261,6 +262,9 @@ void wWindowDestroy(WWindow *wwin)
 		if (wPreferences.auto_arrange_icons)
 			wArrangeIcons(wwin->vscr, True);
 	}
+
+	if (wwin->title)
+		wfree(wwin->title);
 
 	if (wwin->net_icon_image)
 		RReleaseImage(wwin->net_icon_image);
@@ -1149,6 +1153,9 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 	else if (!wFetchName(dpy, window, &title))
 		title = NULL;
 
+	if (title)
+		wwin->title = wstrdup(title);
+
 	XSaveContext(dpy, window, w_global.context.client_win, (XPointer) & wwin->client_descriptor);
 
 #ifndef USE_XSHAPE
@@ -1909,6 +1916,13 @@ void wWindowUpdateName(WWindow *wwin, const char *newTitle)
 		title = DEF_WINDOW_TITLE; /* the hint was removed */
 	else
 		title = newTitle;
+
+	if (title) {
+		if (wwin->title)
+			wfree(wwin->title);
+
+		wwin->title = wstrdup(title);
+	}
 
 	if (wFrameWindowChangeTitle(wwin->frame, title))
 		WMPostNotificationName(WMNChangedName, wwin, NULL);
