@@ -182,7 +182,7 @@ typedef struct InspectorPanel {
 
 	WWindow *frame;
 	WWindow *inspected;	/* the window that's being inspected */
-	WMWindow *win;
+	WMWindow *wwin;
 	Window parent;
 
 	/* common stuff */
@@ -342,7 +342,7 @@ static void freeInspector(InspectorPanel *panel)
 	if (panel->choosingIcon)
 		return;
 
-	WMDestroyWidget(panel->win);
+	WMDestroyWidget(panel->wwin);
 	XDestroyWindow(dpy, panel->parent);
 	wfree(panel);
 }
@@ -387,7 +387,7 @@ void wDestroyInspectorPanels(void)
 		panel = panelList;
 		panelList = panelList->nextPtr;
 		wUnmanageWindow(panel->frame, False, False);
-		WMDestroyWidget(panel->win);
+		WMDestroyWidget(panel->wwin);
 
 		panel->inspected->flags.inspector_open = 0;
 		panel->inspected->inspector = NULL;
@@ -1014,7 +1014,7 @@ static void textEditedObserver(void *observerData, WMNotification *notification)
 	if ((long)WMGetNotificationClientData(notification) != WMReturnTextMovement)
 		return;
 
-	showIconFor(WMWidgetScreen(panel->win), panel, NULL, NULL, USE_TEXT_FIELD);
+	showIconFor(WMWidgetScreen(panel->wwin), panel, NULL, NULL, USE_TEXT_FIELD);
 }
 
 static void selectSpecification(WMWidget *bPtr, void *data)
@@ -1090,13 +1090,13 @@ static InspectorPanel *createInspectorForWindow(WWindow *wwin, int xpos, int ypo
 	panel->inspected = wwin;
 	panel->nextPtr = panelList;
 	panelList = panel;
-	panel->win = WMCreateWindow(scr->wmscreen, "windowInspector");
-	WMResizeWidget(panel->win, PWIDTH, PHEIGHT);
+	panel->wwin = WMCreateWindow(scr->wmscreen, "windowInspector");
+	WMResizeWidget(panel->wwin, PWIDTH, PHEIGHT);
 
 	/**** create common stuff ****/
 	/* command buttons */
 	btn_width = (PWIDTH - (2 * 15) - (2 * 10)) / 3;
-	panel->saveBtn = WMCreateCommandButton(panel->win);
+	panel->saveBtn = WMCreateCommandButton(panel->wwin);
 	WMSetButtonAction(panel->saveBtn, saveSettings, panel);
 	WMMoveWidget(panel->saveBtn, (2 * (btn_width + 10)) + 15, PHEIGHT - 40);
 	WMSetButtonText(panel->saveBtn, _("Save"));
@@ -1104,20 +1104,20 @@ static InspectorPanel *createInspectorForWindow(WWindow *wwin, int xpos, int ypo
 	if (wPreferences.flags.noupdates || !(wwin->wm_class || wwin->wm_instance))
 		WMSetButtonEnabled(panel->saveBtn, False);
 
-	panel->applyBtn = WMCreateCommandButton(panel->win);
+	panel->applyBtn = WMCreateCommandButton(panel->wwin);
 	WMSetButtonAction(panel->applyBtn, applySettings, panel);
 	WMMoveWidget(panel->applyBtn, btn_width + 10 + 15, PHEIGHT - 40);
 	WMSetButtonText(panel->applyBtn, _("Apply"));
 	WMResizeWidget(panel->applyBtn, btn_width, 28);
 
-	panel->revertBtn = WMCreateCommandButton(panel->win);
+	panel->revertBtn = WMCreateCommandButton(panel->wwin);
 	WMSetButtonAction(panel->revertBtn, revertSettings, panel);
 	WMMoveWidget(panel->revertBtn, 15, PHEIGHT - 40);
 	WMSetButtonText(panel->revertBtn, _("Reload"));
 	WMResizeWidget(panel->revertBtn, btn_width, 28);
 
 	/* page selection popup button */
-	panel->pagePopUp = WMCreatePopUpButton(panel->win);
+	panel->pagePopUp = WMCreatePopUpButton(panel->wwin);
 	WMSetPopUpButtonAction(panel->pagePopUp, changePage, panel);
 	WMMoveWidget(panel->pagePopUp, 25, 15);
 	WMResizeWidget(panel->pagePopUp, PWIDTH - 50, 20);
@@ -1131,7 +1131,7 @@ static InspectorPanel *createInspectorForWindow(WWindow *wwin, int xpos, int ypo
 	/**** window spec ****/
 	frame_width = PWIDTH - (2 * 15);
 
-	panel->specFrm = WMCreateFrame(panel->win);
+	panel->specFrm = WMCreateFrame(panel->wwin);
 	WMSetFrameTitle(panel->specFrm, _("Window Specification"));
 	WMMoveWidget(panel->specFrm, 15, 65);
 	WMResizeWidget(panel->specFrm, frame_width, 145);
@@ -1193,7 +1193,7 @@ static InspectorPanel *createInspectorForWindow(WWindow *wwin, int xpos, int ypo
 	WMSetButtonText(panel->selWinB, _("Select window"));
 	WMSetButtonAction(panel->selWinB, selectWindow, panel);
 
-	panel->specLbl = WMCreateLabel(panel->win);
+	panel->specLbl = WMCreateLabel(panel->wwin);
 	WMMoveWidget(panel->specLbl, 15, 210);
 	WMResizeWidget(panel->specLbl, frame_width, 100);
 	WMSetLabelText(panel->specLbl, spec_text);
@@ -1216,9 +1216,9 @@ static InspectorPanel *createInspectorForWindow(WWindow *wwin, int xpos, int ypo
 	if (!wwin->wm_class && !wwin->wm_instance)
 		WMSetPopUpButtonItemEnabled(panel->pagePopUp, 0, False);
 
-	WMRealizeWidget(panel->win);
+	WMRealizeWidget(panel->wwin);
 
-	WMMapSubwidgets(panel->win);
+	WMMapSubwidgets(panel->wwin);
 	WMMapSubwidgets(panel->specFrm);
 	WMMapSubwidgets(panel->attrFrm);
 	WMMapSubwidgets(panel->moreFrm);
@@ -1238,9 +1238,9 @@ static InspectorPanel *createInspectorForWindow(WWindow *wwin, int xpos, int ypo
 	parent = XCreateSimpleWindow(dpy, scr->root_win, 0, 0, PWIDTH, PHEIGHT, 0, 0, 0);
 	XSelectInput(dpy, parent, KeyPressMask | KeyReleaseMask);
 	panel->parent = parent;
-	XReparentWindow(dpy, WMWidgetXID(panel->win), parent, 0, 0);
+	XReparentWindow(dpy, WMWidgetXID(panel->wwin), parent, 0, 0);
 
-	WMMapWidget(panel->win);
+	WMMapWidget(panel->wwin);
 
 	XSetTransientForHint(dpy, parent, wwin->client_win);
 
@@ -1265,7 +1265,7 @@ static InspectorPanel *createInspectorForWindow(WWindow *wwin, int xpos, int ypo
 	selectSpecification(selectedBtn, panel);
 
 	/* kluge to know who should get the key events */
-	panel->frame->client_leader = WMWidgetXID(panel->win);
+	panel->frame->client_leader = WMWidgetXID(panel->wwin);
 
 	panel->frame->client_flags.no_closable = 0;
 	panel->frame->client_flags.no_close_button = 0;
@@ -1334,7 +1334,7 @@ static void create_tab_window_attributes(WWindow *wwin, InspectorPanel *panel, i
 {
 	int i = 0;
 
-	panel->attrFrm = WMCreateFrame(panel->win);
+	panel->attrFrm = WMCreateFrame(panel->wwin);
 	WMSetFrameTitle(panel->attrFrm, _("Attributes"));
 	WMMoveWidget(panel->attrFrm, 15, 45);
 	WMResizeWidget(panel->attrFrm, frame_width, 250);
@@ -1362,7 +1362,7 @@ static void create_tab_window_advanced(WWindow *wwin, InspectorPanel *panel, int
 {
 	int i = 0;
 
-	panel->moreFrm = WMCreateFrame(panel->win);
+	panel->moreFrm = WMCreateFrame(panel->wwin);
 	WMSetFrameTitle(panel->moreFrm, _("Advanced"));
 	WMMoveWidget(panel->moreFrm, 15, 45);
 	WMResizeWidget(panel->moreFrm, frame_width, 265);
@@ -1391,7 +1391,7 @@ static void create_tab_icon_workspace(WWindow *wwin, InspectorPanel *panel)
 	int i = 0;
 
 	/* miniwindow/workspace */
-	panel->iconFrm = WMCreateFrame(panel->win);
+	panel->iconFrm = WMCreateFrame(panel->wwin);
 	WMMoveWidget(panel->iconFrm, 15, 50);
 	WMResizeWidget(panel->iconFrm, PWIDTH - (2 * 15), 170);
 	WMSetFrameTitle(panel->iconFrm, _("Miniwindow Image"));
@@ -1425,7 +1425,7 @@ static void create_tab_icon_workspace(WWindow *wwin, InspectorPanel *panel)
 	WMSetButtonText(panel->alwChk, _("Ignore client supplied icon"));
 	WMSetButtonSelected(panel->alwChk, WFLAGP(wwin, always_user_icon));
 
-	panel->wsFrm = WMCreateFrame(panel->win);
+	panel->wsFrm = WMCreateFrame(panel->wwin);
 	WMMoveWidget(panel->wsFrm, 15, 225);
 	WMResizeWidget(panel->wsFrm, PWIDTH - (2 * 15), 70);
 	WMSetFrameTitle(panel->wsFrm, _("Initial Workspace"));
@@ -1456,7 +1456,7 @@ static void create_tab_app_specific(WWindow *wwin, InspectorPanel *panel, int fr
 	if (wwin->main_window != None) {
 		WApplication *wapp = wApplicationOf(wwin->main_window);
 
-		panel->appFrm = WMCreateFrame(panel->win);
+		panel->appFrm = WMCreateFrame(panel->wwin);
 		WMSetFrameTitle(panel->appFrm, _("Application Attributes"));
 		WMMoveWidget(panel->appFrm, 15, 50);
 		WMResizeWidget(panel->appFrm, frame_width, 240);
