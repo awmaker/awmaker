@@ -128,6 +128,7 @@ static void wwindow_set_placement(virtual_screen *vscr,
 				  WWindowState *win_state);
 static int wwindow_set_mainwindow(WWindow *wwin, int workspace);
 static void wwindow_map(virtual_screen *vscr, WWindow *wwin, int workspace, Bool withdraw);
+static void wwindow_add_to_windowfocuslist(virtual_screen *vscr, WWindow *wwin);
 /****** Notification Observers ******/
 
 static void appearanceObserver(void *self, WMNotification *notif)
@@ -1004,6 +1005,27 @@ static void wwindow_map(virtual_screen *vscr, WWindow *wwin, int workspace, Bool
 	}
 }
 
+static void wwindow_add_to_windowfocuslist(virtual_screen *vscr, WWindow *wwin)
+{
+	if (!vscr->window.focused) {
+		/* first window on the list */
+		wwin->next = NULL;
+		wwin->prev = NULL;
+		vscr->window.focused = wwin;
+	} else {
+		WWindow *tmp;
+
+		/* add window at beginning of focus window list */
+		tmp = vscr->window.focused;
+		while (tmp->prev)
+			tmp = tmp->prev;
+
+		tmp->prev = wwin;
+		wwin->next = tmp;
+		wwin->prev = NULL;
+	}
+}
+
 /*
  *----------------------------------------------------------------
  * wManageWindow--
@@ -1534,23 +1556,7 @@ WWindow *wManageInternalWindow(virtual_screen *vscr, Window window, Window owner
 		wwin->frame->core->stacking->child_of = NULL;
 	}
 
-	if (!vscr->window.focused) {
-		/* first window on the list */
-		wwin->next = NULL;
-		wwin->prev = NULL;
-		vscr->window.focused = wwin;
-	} else {
-		WWindow *tmp;
-
-		/* add window at beginning of focus window list */
-		tmp = vscr->window.focused;
-		while (tmp->prev)
-			tmp = tmp->prev;
-
-		tmp->prev = wwin;
-		wwin->next = tmp;
-		wwin->prev = NULL;
-	}
+	wwindow_add_to_windowfocuslist(vscr, wwin);
 
 	if (wwin->flags.is_gnustep == 0)
 		wFrameWindowChangeState(wwin->frame, WS_UNFOCUSED);
