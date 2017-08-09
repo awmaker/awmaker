@@ -1918,12 +1918,10 @@ void wWindowUpdateName(WWindow *wwin, const char *newTitle)
 	else
 		title = newTitle;
 
-	if (title) {
-		if (wwin->title)
-			wfree(wwin->title);
+	if (wwin->title)
+		wfree(wwin->title);
 
-		wwin->title = wstrdup(title);
-	}
+	wwin->title = wstrdup(title);
 
 	if (!wwin->frame)
 		return;
