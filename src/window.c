@@ -129,6 +129,7 @@ static void wwindow_set_placement(virtual_screen *vscr,
 static int wwindow_set_mainwindow(WWindow *wwin, int workspace);
 static void wwindow_map(virtual_screen *vscr, WWindow *wwin, int workspace, Bool withdraw);
 static void wwindow_add_to_windowfocuslist(virtual_screen *vscr, WWindow *wwin);
+static void wwindow_set_frame_descriptor(WWindow *wwin);
 /****** Notification Observers ******/
 
 static void appearanceObserver(void *self, WMNotification *notif)
@@ -1066,6 +1067,13 @@ static void wwindow_setfocus_tomouse(virtual_screen *vscr, WWindow *wwin,
 		wSetFocusTo(vscr, wwin);
 }
 
+static void wwindow_set_frame_descriptor(WWindow *wwin)
+{
+	wwin->frame->core->descriptor.handle_mousedown = frameMouseDown;
+	wwin->frame->core->descriptor.parent = wwin;
+	wwin->frame->core->descriptor.parent_type = WCLASS_WINDOW;
+}
+
 /*
  *----------------------------------------------------------------
  * wManageWindow--
@@ -1401,10 +1409,7 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 	if (wwin->main_window != None)
 		raise = wwindow_set_mainwindow(wwin, workspace);
 
-	/* setup the frame descriptor */
-	wwin->frame->core->descriptor.handle_mousedown = frameMouseDown;
-	wwin->frame->core->descriptor.parent = wwin;
-	wwin->frame->core->descriptor.parent_type = WCLASS_WINDOW;
+	wwindow_set_frame_descriptor(wwin);
 
 	/* don't let windows go away if we die */
 	XAddToSaveSet(dpy, window);
@@ -1541,10 +1546,7 @@ WWindow *wManageInternalWindow(virtual_screen *vscr, Window window, Window owner
 	XReparentWindow(dpy, wwin->client_win, wwin->frame->core->window, 0, wwin->frame->top_width);
 	wWindowConfigure(wwin, wwin->frame_x, wwin->frame_y, wwin->client.width, wwin->client.height);
 
-	/* setup the frame descriptor */
-	wwin->frame->core->descriptor.handle_mousedown = frameMouseDown;
-	wwin->frame->core->descriptor.parent = wwin;
-	wwin->frame->core->descriptor.parent_type = WCLASS_WINDOW;
+	wwindow_set_frame_descriptor(wwin);
 
 	XLowerWindow(dpy, window);
 	XMapSubwindows(dpy, wwin->frame->core->window);
