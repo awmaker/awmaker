@@ -1029,28 +1029,34 @@ static void wwindow_add_to_windowfocuslist(virtual_screen *vscr, WWindow *wwin)
 static void wwindow_setfocus_tomouse(virtual_screen *vscr, WWindow *wwin,
 				     WWindow *transientOwner, int workspace)
 {
-	if (!wwin->flags.miniaturized && workspace == vscr->workspace.current && !wwin->flags.hidden) {
-		if (((transientOwner && transientOwner->flags.focused)
-		     || wPreferences.auto_focus) && !WFLAGP(wwin, no_focusable)) {
+	short same_screen, same_head;
+	int foo;
+	unsigned int bar;
+	Window dummy;
 
-			/* only auto_focus if on same screen as mouse
-			 * (and same head for xinerama mode)
-			 * TODO: make it an option */
+	if (wwin->flags.miniaturized || wwin->flags.hidden)
+		return;
 
-			/*TODO add checking the head of the window, is it available? */
-			short same_screen = 0, same_head = 1;
+	if (workspace != vscr->workspace.current)
+		return;
 
-			int foo;
-			unsigned int bar;
-			Window dummy;
+	if (((transientOwner && transientOwner->flags.focused) || wPreferences.auto_focus) &&
+	!WFLAGP(wwin, no_focusable)) {
 
-			if (XQueryPointer(dpy, vscr->screen_ptr->root_win, &dummy, &dummy,
-					  &foo, &foo, &foo, &foo, &bar) != False)
-				same_screen = 1;
+		/* only auto_focus if on same screen as mouse
+		 * (and same head for xinerama mode)
+		 * TODO: make it an option */
 
-			if (same_screen == 1 && same_head == 1)
-				wSetFocusTo(vscr, wwin);
-		}
+		/*TODO add checking the head of the window, is it available? */
+		same_screen = 0;
+		same_head = 1;
+
+		if (XQueryPointer(dpy, vscr->screen_ptr->root_win, &dummy, &dummy,
+				  &foo, &foo, &foo, &foo, &bar) != False)
+			same_screen = 1;
+
+		if (same_screen == 1 && same_head == 1)
+			wSetFocusTo(vscr, wwin);
 	}
 }
 
