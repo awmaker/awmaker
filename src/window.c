@@ -1147,15 +1147,6 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 
 	wwin = wWindowCreate();
 
-	title = wNETWMGetWindowName(window);
-	if (title)
-		wwin->flags.net_has_title = 1;
-	else if (!wFetchName(dpy, window, &title))
-		title = NULL;
-
-	if (title)
-		wwin->title = wstrdup(title);
-
 	XSaveContext(dpy, window, w_global.context.client_win, (XPointer) & wwin->client_descriptor);
 
 #ifndef USE_XSHAPE
@@ -1440,6 +1431,15 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 		wRaiseFrame(wwin->frame->core);
 
 	/* Update name must come after WApplication stuff is done */
+	title = wNETWMGetWindowName(window);
+	if (title)
+		wwin->flags.net_has_title = 1;
+	else if (!wFetchName(dpy, window, &title))
+		title = NULL;
+
+	if (title)
+		wwin->title = wstrdup(title);
+
 	wWindowUpdateName(wwin, title);
 	if (title)
 		XFree(title);
