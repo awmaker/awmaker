@@ -126,6 +126,7 @@ static void wwindow_set_placement(virtual_screen *vscr,
 				  int *x, int *y,
 				  unsigned int *width, unsigned int *height,
 				  WWindowState *win_state);
+static int wwindow_set_mainwindow(WWindow *wwin, int workspace);
 /****** Notification Observers ******/
 
 static void appearanceObserver(void *self, WMNotification *notif)
@@ -923,6 +924,44 @@ static void wwindow_set_placement(virtual_screen *vscr,
 		wwindow_set_placement_xine(vscr, x, y, width, height);
 }
 
+static int wwindow_set_mainwindow(WWindow *wwin, int workspace)
+{
+	WApplication *app;
+	WWindow *leader;
+	Bool raise = False;
+
+	/* Leader windows do not necessary set themselves as leaders.
+	 * If this is the case, point the leader of this window to
+	 * itself */
+	leader = wWindowFor(wwin->main_window);
+	if (leader && leader->main_window == None)
+		leader->main_window = leader->client_win;
+
+	app = wApplicationCreate(wwin);
+	if (app) {
+		app->last_workspace = workspace;
+
+		/* Do application specific stuff, like setting application
+		 * wide attributes. */
+
+		if (wwin->flags.hidden) {
+			/* if the window was set to hidden because it was hidden
+			 * in a previous incarnation and that state was restored */
+			app->flags.hidden = 1;
+		} else if (app->flags.hidden) {
+			if (WFLAGP(app->main_window_desc, start_hidden)) {
+				wwin->flags.hidden = 1;
+			} else {
+				wUnhideApplication(app, False, False);
+				raise = True;
+			}
+		}
+		wAppBounce(app);
+	}
+
+	return raise;
+}
+
 /*
  *----------------------------------------------------------------
  * wManageWindow--
@@ -1255,39 +1294,8 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 	wWindowSynthConfigureNotify(wwin);
 
 	/* Setup descriptors and save window to internal lists */
-	if (wwin->main_window != None) {
-		WApplication *app;
-		WWindow *leader;
-
-		/* Leader windows do not necessary set themselves as leaders.
-		 * If this is the case, point the leader of this window to
-		 * itself */
-		leader = wWindowFor(wwin->main_window);
-		if (leader && leader->main_window == None)
-			leader->main_window = leader->client_win;
-
-		app = wApplicationCreate(wwin);
-		if (app) {
-			app->last_workspace = workspace;
-
-			/* Do application specific stuff, like setting application
-			 * wide attributes. */
-
-			if (wwin->flags.hidden) {
-				/* if the window was set to hidden because it was hidden
-				 * in a previous incarnation and that state was restored */
-				app->flags.hidden = 1;
-			} else if (app->flags.hidden) {
-				if (WFLAGP(app->main_window_desc, start_hidden)) {
-					wwin->flags.hidden = 1;
-				} else {
-					wUnhideApplication(app, False, False);
-					raise = True;
-				}
-			}
-			wAppBounce(app);
-		}
-	}
+	if (wwin->main_window != None)
+		raise = wwindow_set_mainwindow(wwin, workspace);
 
 	/* setup the frame descriptor */
 	wwin->frame->core->descriptor.handle_mousedown = frameMouseDown;
