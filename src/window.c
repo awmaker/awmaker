@@ -961,6 +961,7 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 	int wm_state;
 	int flags = 0;
 	int workspace = -1;
+	int gx, gy;
 	char *title;
 	Bool withdraw = False;
 	Bool raise = False;
@@ -1237,15 +1238,12 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 	XReparentWindow(dpy, wwin->client_win, wwin->frame->core->window, 0, wwin->frame->top_width);
 	XSelectInput(dpy, wwin->client_win, wwin->event_mask);
 
-	{
-		int gx, gy;
+	/* Window Gravity */
+	wClientGetGravityOffsets(wwin, &gx, &gy);
 
-		wClientGetGravityOffsets(wwin, &gx, &gy);
-
-		/* if gravity is to the south, account for the border sizes */
-		if (gy > 0)
-			y -= wwin->frame->top_width + wwin->frame->bottom_width;
-	}
+	/* if gravity is to the south, account for the border sizes */
+	if (gy > 0)
+		y -= wwin->frame->top_width + wwin->frame->bottom_width;
 
 	/*
 	 * wWindowConfigure() will init the client window's size
