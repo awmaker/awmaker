@@ -1918,6 +1918,10 @@ void wWindowUpdateName(WWindow *wwin, const char *newTitle)
 	else
 		title = newTitle;
 
+	/* check if the title is the same as before */
+	if ((wwin->title) && (!strcmp(wwin->title, title)))
+		return;
+
 	if (wwin->title)
 		wfree(wwin->title);
 
