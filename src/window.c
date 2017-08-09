@@ -1083,17 +1083,14 @@ static void wwindow_update_title(Display *dpy, Window window, WWindow *wwin)
 {
 	char *title;
 
-	/* Update name must come after WApplication stuff is done */
 	title = wNETWMGetWindowName(window);
 	if (title)
 		wwin->flags.net_has_title = 1;
 	else if (!wFetchName(dpy, window, &title))
 		title = NULL;
 
-	if (title)
-		wwin->title = wstrdup(title);
-
 	wWindowUpdateName(wwin, title);
+
 	if (title)
 		XFree(title);
 }
