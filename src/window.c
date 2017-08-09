@@ -787,6 +787,7 @@ static void wwindow_set_workspace(virtual_screen *vscr, WWindow *wwin, WWindow *
 		return;
 	}
 
+	/* kix - This block is similar a block in ManageWindow function? */
 	w = wDefaultGetStartWorkspace(vscr, wwin->wm_instance, wwin->wm_class);
 	if (w >= 0 && w < vscr->workspace.count && !(IS_OMNIPRESENT(wwin))) {
 		*workspace = w;
@@ -1129,6 +1130,7 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 		if (win_state->state->miniaturized > 0 && !WFLAGP(wwin, no_miniaturizable))
 			wwin->flags.miniaturized = win_state->state->miniaturized;
 
+		/* kix - this block is the same than other in wwindow_set_workspace? */
 		if (!IS_OMNIPRESENT(wwin)) {
 			int w = wDefaultGetStartWorkspace(vscr, wwin->wm_instance, wwin->wm_class);
 			if (w < 0 || w >= vscr->workspace.count) {
