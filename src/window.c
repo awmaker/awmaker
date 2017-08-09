@@ -1380,23 +1380,7 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 	else
 		wwin->frame->core->stacking->child_of = NULL;
 
-	if (!vscr->window.focused) {
-		/* first window on the list */
-		wwin->next = NULL;
-		wwin->prev = NULL;
-		vscr->window.focused = wwin;
-	} else {
-		WWindow *tmp;
-
-		/* add window at beginning of focus window list */
-		tmp = vscr->window.focused;
-		while (tmp->prev)
-			tmp = tmp->prev;
-
-		tmp->prev = wwin;
-		wwin->next = tmp;
-		wwin->prev = NULL;
-	}
+	wwindow_add_to_windowfocuslist(vscr, wwin);
 
 	/* raise is set to true if we un-hid the app when this window was born.
 	 * we raise, else old windows of this app will be above this new one. */
