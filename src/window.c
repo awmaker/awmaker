@@ -1026,6 +1026,34 @@ static void wwindow_add_to_windowfocuslist(virtual_screen *vscr, WWindow *wwin)
 	}
 }
 
+static void wwindow_setfocus_tomouse(virtual_screen *vscr, WWindow *wwin,
+				     WWindow *transientOwner, int workspace)
+{
+	if (!wwin->flags.miniaturized && workspace == vscr->workspace.current && !wwin->flags.hidden) {
+		if (((transientOwner && transientOwner->flags.focused)
+		     || wPreferences.auto_focus) && !WFLAGP(wwin, no_focusable)) {
+
+			/* only auto_focus if on same screen as mouse
+			 * (and same head for xinerama mode)
+			 * TODO: make it an option */
+
+			/*TODO add checking the head of the window, is it available? */
+			short same_screen = 0, same_head = 1;
+
+			int foo;
+			unsigned int bar;
+			Window dummy;
+
+			if (XQueryPointer(dpy, vscr->screen_ptr->root_win, &dummy, &dummy,
+					  &foo, &foo, &foo, &foo, &bar) != False)
+				same_screen = 1;
+
+			if (same_screen == 1 && same_head == 1)
+				wSetFocusTo(vscr, wwin);
+		}
+	}
+}
+
 /*
  *----------------------------------------------------------------
  * wManageWindow--
@@ -1397,29 +1425,8 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 	/* Final preparations before window is ready to go */
 	wFrameWindowChangeState(wwin->frame, WS_UNFOCUSED);
 
-	if (!wwin->flags.miniaturized && workspace == vscr->workspace.current && !wwin->flags.hidden) {
-		if (((transientOwner && transientOwner->flags.focused)
-		     || wPreferences.auto_focus) && !WFLAGP(wwin, no_focusable)) {
+	wwindow_setfocus_tomouse(vscr, wwin, transientOwner, workspace);
 
-			/* only auto_focus if on same screen as mouse
-			 * (and same head for xinerama mode)
-			 * TODO: make it an option */
-
-			/*TODO add checking the head of the window, is it available? */
-			short same_screen = 0, same_head = 1;
-
-			int foo;
-			unsigned int bar;
-			Window dummy;
-
-			if (XQueryPointer(dpy, vscr->screen_ptr->root_win, &dummy, &dummy,
-					  &foo, &foo, &foo, &foo, &bar) != False)
-				same_screen = 1;
-
-			if (same_screen == 1 && same_head == 1)
-				wSetFocusTo(vscr, wwin);
-		}
-	}
 	wWindowResetMouseGrabs(wwin);
 
 	if (!WFLAGP(wwin, no_bind_keys))
