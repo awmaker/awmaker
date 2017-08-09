@@ -1007,14 +1007,14 @@ static void wwindow_map(virtual_screen *vscr, WWindow *wwin, int workspace, Bool
 
 static void wwindow_add_to_windowfocuslist(virtual_screen *vscr, WWindow *wwin)
 {
+	WWindow *tmp;
+
 	if (!vscr->window.focused) {
 		/* first window on the list */
 		wwin->next = NULL;
 		wwin->prev = NULL;
 		vscr->window.focused = wwin;
 	} else {
-		WWindow *tmp;
-
 		/* add window at beginning of focus window list */
 		tmp = vscr->window.focused;
 		while (tmp->prev)
