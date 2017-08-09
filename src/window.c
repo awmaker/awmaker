@@ -127,6 +127,7 @@ static void wwindow_set_placement(virtual_screen *vscr,
 				  unsigned int *width, unsigned int *height,
 				  WWindowState *win_state);
 static int wwindow_set_mainwindow(WWindow *wwin, int workspace);
+static void wwindow_map(virtual_screen *vscr, WWindow *wwin, int workspace, Bool withdraw);
 /****** Notification Observers ******/
 
 static void appearanceObserver(void *self, WMNotification *notif)
@@ -963,6 +964,46 @@ static int wwindow_set_mainwindow(WWindow *wwin, int workspace)
 	return raise;
 }
 
+static void wwindow_map(virtual_screen *vscr, WWindow *wwin, int workspace, Bool withdraw)
+{
+	if (!wwin->flags.miniaturized &&
+	    (workspace == vscr->workspace.current || IS_OMNIPRESENT(wwin)) &&
+	    !wwin->flags.hidden &&
+	    !withdraw) {
+
+		/* The following "if" is to avoid crashing of clients that expect
+		 * WM_STATE set before they get mapped. Else WM_STATE is set later,
+		 * after the return from this function. */
+		if (wwin->wm_hints && (wwin->wm_hints->flags & StateHint))
+			wClientSetState(wwin, wwin->wm_hints->initial_state, None);
+		else
+			wClientSetState(wwin, NormalState, None);
+
+		if (wPreferences.superfluous && !wPreferences.no_animations && !w_global.startup.phase1 &&
+		    (wwin->transient_for == None || wwin->transient_for == vscr->screen_ptr->root_win) &&
+		    /*
+		     * The brain damaged idiotic non-click to focus modes will
+		     * have trouble with this because:
+		     *
+		     * 1. window is created and mapped by the client
+		     * 2. window is mapped by wmaker in small size
+		     * 3. window is animated to grow to normal size
+		     * 4. this function returns to normal event loop
+		     * 5. eventually, the EnterNotify event that would trigger
+		     * the window focusing (if the mouse is over that window)
+		     * will be processed by wmaker.
+		     * But since this event will be rather delayed
+		     * (step 3 has a large delay) the time when the event occurred
+		     * and when it is processed, the client that owns that window
+		     * will reject the XSetInputFocus() for it.
+		     */
+		    (wPreferences.focus_mode == WKF_CLICK || wPreferences.auto_focus))
+			DoWindowBirth(wwin);
+
+		wWindowMap(wwin);
+	}
+}
+
 /*
  *----------------------------------------------------------------
  * wManageWindow--
@@ -1309,40 +1350,7 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 	XLowerWindow(dpy, window);
 
 	/* if window is in this workspace and should be mapped, then  map it */
-	if (!wwin->flags.miniaturized && (workspace == vscr->workspace.current || IS_OMNIPRESENT(wwin))
-	    && !wwin->flags.hidden && !withdraw) {
-
-		/* The following "if" is to avoid crashing of clients that expect
-		 * WM_STATE set before they get mapped. Else WM_STATE is set later,
-		 * after the return from this function. */
-		if (wwin->wm_hints && (wwin->wm_hints->flags & StateHint))
-			wClientSetState(wwin, wwin->wm_hints->initial_state, None);
-		else
-			wClientSetState(wwin, NormalState, None);
-
-		if (wPreferences.superfluous && !wPreferences.no_animations && !w_global.startup.phase1 &&
-		    (wwin->transient_for == None || wwin->transient_for == vscr->screen_ptr->root_win) &&
-		    /*
-		     * The brain damaged idiotic non-click to focus modes will
-		     * have trouble with this because:
-		     *
-		     * 1. window is created and mapped by the client
-		     * 2. window is mapped by wmaker in small size
-		     * 3. window is animated to grow to normal size
-		     * 4. this function returns to normal event loop
-		     * 5. eventually, the EnterNotify event that would trigger
-		     * the window focusing (if the mouse is over that window)
-		     * will be processed by wmaker.
-		     * But since this event will be rather delayed
-		     * (step 3 has a large delay) the time when the event occurred
-		     * and when it is processed, the client that owns that window
-		     * will reject the XSetInputFocus() for it.
-		     */
-		    (wPreferences.focus_mode == WKF_CLICK || wPreferences.auto_focus))
-			DoWindowBirth(wwin);
-
-		wWindowMap(wwin);
-	}
+	wwindow_map(vscr, wwin, workspace, withdraw);
 
 	/* setup stacking descriptor */
 	if (transientOwner)
