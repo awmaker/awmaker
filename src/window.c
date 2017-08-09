@@ -130,6 +130,7 @@ static int wwindow_set_mainwindow(WWindow *wwin, int workspace);
 static void wwindow_map(virtual_screen *vscr, WWindow *wwin, int workspace, Bool withdraw);
 static void wwindow_add_to_windowfocuslist(virtual_screen *vscr, WWindow *wwin);
 static void wwindow_set_frame_descriptor(WWindow *wwin);
+static void wwindow_update_title(Display *dpy, Window window, WWindow *wwin);
 /****** Notification Observers ******/
 
 static void appearanceObserver(void *self, WMNotification *notif)
@@ -1078,6 +1079,25 @@ static void wwindow_set_frame_descriptor(WWindow *wwin)
 	wwin->frame->core->descriptor.parent_type = WCLASS_WINDOW;
 }
 
+static void wwindow_update_title(Display *dpy, Window window, WWindow *wwin)
+{
+	char *title;
+
+	/* Update name must come after WApplication stuff is done */
+	title = wNETWMGetWindowName(window);
+	if (title)
+		wwin->flags.net_has_title = 1;
+	else if (!wFetchName(dpy, window, &title))
+		title = NULL;
+
+	if (title)
+		wwin->title = wstrdup(title);
+
+	wWindowUpdateName(wwin, title);
+	if (title)
+		XFree(title);
+}
+
 /*
  *----------------------------------------------------------------
  * wManageWindow--
@@ -1117,7 +1137,6 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 	int flags = 0;
 	int workspace = -1;
 	int gx, gy;
-	char *title;
 	Bool withdraw = False;
 	Bool raise = False;
 
@@ -1430,19 +1449,7 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 	if (raise)
 		wRaiseFrame(wwin->frame->core);
 
-	/* Update name must come after WApplication stuff is done */
-	title = wNETWMGetWindowName(window);
-	if (title)
-		wwin->flags.net_has_title = 1;
-	else if (!wFetchName(dpy, window, &title))
-		title = NULL;
-
-	if (title)
-		wwin->title = wstrdup(title);
-
-	wWindowUpdateName(wwin, title);
-	if (title)
-		XFree(title);
+	wwindow_update_title(dpy, window, wwin);
 
 	XUngrabServer(dpy);
 
