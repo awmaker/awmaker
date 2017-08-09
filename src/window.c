@@ -1916,9 +1916,6 @@ void wWindowUpdateName(WWindow *wwin, const char *newTitle)
 {
 	const char *title;
 
-	if (!wwin->frame)
-		return;
-
 	if (!newTitle)
 		title = DEF_WINDOW_TITLE; /* the hint was removed */
 	else
@@ -1930,6 +1927,9 @@ void wWindowUpdateName(WWindow *wwin, const char *newTitle)
 
 		wwin->title = wstrdup(title);
 	}
+
+	if (!wwin->frame)
+		return;
 
 	if (wFrameWindowChangeTitle(wwin->frame, title))
 		WMPostNotificationName(WMNChangedName, wwin, NULL);
