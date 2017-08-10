@@ -615,23 +615,12 @@ void set_icon_image_from_image(WIcon *icon, RImage *image)
 	icon->file_image = image;
 }
 
-void set_icon_minipreview(WIcon *icon, RImage *image)
+void set_icon_minipreview(WIcon *icon, Pixmap image)
 {
-	Pixmap tmp;
-	RImage *scaled_mini_preview;
-	WScreen *scr = icon->core->vscr->screen_ptr;
+	if (icon->mini_preview != None)
+		XFreePixmap(dpy, icon->mini_preview);
 
-	scaled_mini_preview = RSmoothScaleImage(image, wPreferences.minipreview_size - 2 * MINIPREVIEW_BORDER,
-					  wPreferences.minipreview_size - 2 * MINIPREVIEW_BORDER);
-
-	if (RConvertImage(scr->rcontext, scaled_mini_preview, &tmp)) {
-		if (icon->mini_preview != None)
-			XFreePixmap(dpy, icon->mini_preview);
-
-		icon->mini_preview = tmp;
-	}
-
-	RReleaseImage(scaled_mini_preview);
+	icon->mini_preview = image;
 }
 
 void wIconUpdate(WIcon *icon)
@@ -993,7 +982,8 @@ void unmap_icon_image(WIcon *icon)
 
 int create_minipreview(WWindow *wwin)
 {
-	RImage *mini_preview;
+	Pixmap pixmap;
+	RImage *mini_preview, *scaled_mini_preview;
 	XImage *pimg;
 	unsigned int w, h;
 	int x, y;
@@ -1024,7 +1014,14 @@ int create_minipreview(WWindow *wwin)
 		XDestroyImage(pimg);
 
 		if (mini_preview) {
-			set_icon_minipreview(wwin->icon, mini_preview);
+			scaled_mini_preview = RSmoothScaleImage(mini_preview,
+				wPreferences.minipreview_size - 2 * MINIPREVIEW_BORDER,
+				wPreferences.minipreview_size - 2 * MINIPREVIEW_BORDER);
+
+			if (RConvertImage(wwin->vscr->screen_ptr->rcontext, scaled_mini_preview, &pixmap))
+				set_icon_minipreview(wwin->icon, pixmap);
+
+			RReleaseImage(scaled_mini_preview);
 			RReleaseImage(mini_preview);
 		} else {
 			create_minipreview_showerror(wwin);
