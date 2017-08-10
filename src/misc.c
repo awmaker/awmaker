@@ -1136,3 +1136,86 @@ char *GetCommandForWindow(Window win)
 {
 	return getCommandForWindow(win, 0);
 }
+
+/*
+ * For a Window, in a virtual_screen, creates a resized Pixmap.
+ * If error, returns -1. If OK, returns 0
+ */
+int create_minipixmap_for_window(virtual_screen *vscr, Window win, Pixmap *tmp)
+{
+	WScreen *scr = vscr->screen_ptr;
+
+	XSetClipMask(dpy, scr->copy_gc, None);
+	*tmp = XCreatePixmap(dpy, scr->root_win, wPreferences.icon_size, wPreferences.icon_size, scr->depth);
+	if (scr->w_visual == DefaultVisual(dpy, scr->screen)) {
+		XCopyArea(dpy, win, *tmp, scr->copy_gc, 0, 0, wPreferences.icon_size, wPreferences.icon_size, 0, 0);
+	} else {
+		XImage *image;
+
+		image = XGetImage(dpy, win, 0, 0, wPreferences.icon_size,
+				  wPreferences.icon_size, AllPlanes, ZPixmap);
+		if (!image) {
+			XUnmapWindow(dpy, win);
+			return -1;
+		}
+
+		XPutImage(dpy, *tmp, scr->copy_gc, image, 0, 0, 0, 0,
+			  wPreferences.icon_size, wPreferences.icon_size);
+		XDestroyImage(image);
+	}
+
+	return 0;
+}
+
+/*
+ * For a WWindow, in a virtual_screen, creates a resized Pixmap.
+ * If error, returns -1. If OK, returns 0
+ */
+int create_minipixmap_for_wwindow(virtual_screen *vscr, WWindow *wwin, Pixmap *pixmap)
+{
+	RImage *mini_preview, *scaled_mini_preview;
+	XImage *pimg;
+	unsigned int w, h;
+	int x, y, ret;
+	Window baz;
+	XWindowAttributes attribs;
+
+	/* the window doesn't exist anymore */
+	if (!XGetWindowAttributes(dpy, wwin->client_win, &attribs))
+		return -1;
+
+	XRaiseWindow(dpy, wwin->frame->core->window);
+	XTranslateCoordinates(dpy, wwin->client_win, vscr->screen_ptr->root_win, 0, 0, &x, &y, &baz);
+
+	w = attribs.width;
+	h = attribs.height;
+
+	if (x - attribs.x + attribs.width > vscr->screen_ptr->scr_width)
+		w = vscr->screen_ptr->scr_width - x + attribs.x;
+
+	if (y - attribs.y + attribs.height > vscr->screen_ptr->scr_height)
+		h = vscr->screen_ptr->scr_height - y + attribs.y;
+
+	pimg = XGetImage(dpy, wwin->client_win, 0, 0, w, h, AllPlanes, ZPixmap);
+	if (!pimg)
+		return -1;
+
+	mini_preview = RCreateImageFromXImage(vscr->screen_ptr->rcontext, pimg, NULL);
+	XDestroyImage(pimg);
+
+	if (!mini_preview)
+		return -1;
+
+	scaled_mini_preview = RSmoothScaleImage(mini_preview,
+		wPreferences.minipreview_size - 2 * MINIPREVIEW_BORDER,
+		wPreferences.minipreview_size - 2 * MINIPREVIEW_BORDER);
+
+	ret = RConvertImage(vscr->screen_ptr->rcontext, scaled_mini_preview, pixmap);
+	RReleaseImage(scaled_mini_preview);
+	RReleaseImage(mini_preview);
+
+	if (!ret)
+		return -1;
+
+	return 0;
+}

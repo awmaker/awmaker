@@ -40,6 +40,7 @@
 #include "xinerama.h"
 #include "appicon.h"
 #include "stacking.h"
+#include "misc.h"
 
 #define PIECES ((64/ICON_KABOOM_PIECE_SIZE)*(64/ICON_KABOOM_PIECE_SIZE))
 #define KAB_PRECISION		4
@@ -49,34 +50,6 @@
 #define BOUNCE_LENGTH		0.3
 #define BOUNCE_DAMP		0.6
 #define URGENT_BOUNCE_DELAY	3000
-
-#ifdef NORMAL_ICON_KABOOM
-static int create_minipixmap_for_window(virtual_screen *vscr, Window win, Pixmap *tmp)
-{
-	WScreen *scr = vscr->screen_ptr;
-
-	XSetClipMask(dpy, scr->copy_gc, None);
-	*tmp = XCreatePixmap(dpy, scr->root_win, wPreferences.icon_size, wPreferences.icon_size, scr->depth);
-	if (scr->w_visual == DefaultVisual(dpy, scr->screen)) {
-		XCopyArea(dpy, win, *tmp, scr->copy_gc, 0, 0, wPreferences.icon_size, wPreferences.icon_size, 0, 0);
-	} else {
-		XImage *image;
-
-		image = XGetImage(dpy, win, 0, 0, wPreferences.icon_size,
-				  wPreferences.icon_size, AllPlanes, ZPixmap);
-		if (!image) {
-			XUnmapWindow(dpy, win);
-			return -1;
-		}
-
-		XPutImage(dpy, *tmp, scr->copy_gc, image, 0, 0, 0, 0,
-			  wPreferences.icon_size, wPreferences.icon_size);
-		XDestroyImage(image);
-	}
-
-	return 0;
-}
-#endif	/* NORMAL_ICON_KABOOM */
 
 void DoKaboom(virtual_screen *vscr, Window win, int x, int y)
 {
