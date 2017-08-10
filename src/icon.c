@@ -615,14 +615,6 @@ void set_icon_image_from_image(WIcon *icon, RImage *image)
 	icon->file_image = image;
 }
 
-void set_icon_minipreview(WIcon *icon, Pixmap image)
-{
-	if (icon->mini_preview != None)
-		XFreePixmap(dpy, icon->mini_preview);
-
-	icon->mini_preview = image;
-}
-
 void wIconUpdate(WIcon *icon)
 {
 	WWindow *wwin = NULL;
@@ -1018,8 +1010,12 @@ int create_minipreview(WWindow *wwin)
 				wPreferences.minipreview_size - 2 * MINIPREVIEW_BORDER,
 				wPreferences.minipreview_size - 2 * MINIPREVIEW_BORDER);
 
-			if (RConvertImage(wwin->vscr->screen_ptr->rcontext, scaled_mini_preview, &pixmap))
-				set_icon_minipreview(wwin->icon, pixmap);
+			if (RConvertImage(wwin->vscr->screen_ptr->rcontext, scaled_mini_preview, &pixmap)) {
+				if (wwin->icon->mini_preview != None)
+					XFreePixmap(dpy, wwin->icon->mini_preview);
+
+				wwin->icon->mini_preview = pixmap;
+			}
 
 			RReleaseImage(scaled_mini_preview);
 			RReleaseImage(mini_preview);
