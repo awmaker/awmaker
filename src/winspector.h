@@ -24,16 +24,11 @@
 
 #include "window.h"
 
+void winspector_destroy(struct InspectorPanel *panel);
 void wShowInspectorForWindow(WWindow *wwin);
-
 void wHideInspectorForWindow(WWindow *wwin);
-
 void wUnhideInspectorForWindow(WWindow *wwin);
-
-void wDestroyInspectorPanels(void);
-
-WWindow *wGetWindowOfInspectorForWindow(WWindow *wwin);
-
 void wCloseInspectorForWindow(WWindow *wwin);
-
+void wDestroyInspectorPanels(void);
+WWindow *wGetWindowOfInspectorForWindow(WWindow *wwin);
 #endif

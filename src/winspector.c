@@ -352,27 +352,22 @@ static void freeInspector(InspectorPanel *panel)
 	wfree(panel);
 }
 
-static void destroyInspector(WCoreWindow *foo, void *data, XEvent *event)
+void winspector_destroy(InspectorPanel *panel)
 {
-	InspectorPanel *panel, *tmp;
+	InspectorPanel *tmp_panel;
 
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) foo;
-	(void) event;
-
-	panel = panelList;
-	while (panel->frame != data)
-		panel = panel->nextPtr;
-
+	/* Remove the panel from the panel list */
 	if (panelList == panel) {
 		panelList = panel->nextPtr;
 	} else {
-		tmp = panelList;
-		while (tmp->nextPtr != panel)
-			tmp = tmp->nextPtr;
+		tmp_panel = panelList;
+		while (tmp_panel->nextPtr != panel)
+			tmp_panel = tmp_panel->nextPtr;
 
-		tmp->nextPtr = panel->nextPtr;
+		tmp_panel->nextPtr = panel->nextPtr;
 	}
+
+	/* Remove the panel stuff */
 	panel->inspected->flags.inspector_open = 0;
 	panel->inspected->inspector = NULL;
 
@@ -382,6 +377,21 @@ static void destroyInspector(WCoreWindow *foo, void *data, XEvent *event)
 	wUnmanageWindow(panel->frame, True, False);
 
 	freeInspector(panel);
+}
+
+static void destroyInspector(WCoreWindow *foo, void *data, XEvent *event)
+{
+	InspectorPanel *panel;
+
+	/* Parameter not used, but tell the compiler that it is ok */
+	(void) foo;
+	(void) event;
+
+	panel = panelList;
+	while (panel->frame != data)
+		panel = panel->nextPtr;
+
+	winspector_destroy(panel);
 }
 
 void wDestroyInspectorPanels(void)
