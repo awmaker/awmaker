@@ -972,9 +972,9 @@ void unmap_icon_image(WIcon *icon)
 	unset_icon_file_image(icon);
 }
 
-int create_minipreview(WWindow *wwin)
+
+int create_minipixmap_window(virtual_screen *vscr, WWindow *wwin, Pixmap *pixmap)
 {
-	Pixmap pixmap;
 	RImage *mini_preview, *scaled_mini_preview;
 	XImage *pimg;
 	unsigned int w, h;
@@ -982,46 +982,52 @@ int create_minipreview(WWindow *wwin)
 	Window baz;
 	XWindowAttributes attribs;
 
-	if (!XGetWindowAttributes(dpy, wwin->client_win, &attribs)) {
-		/* the window doesn't exist anymore */
-		create_minipreview_showerror(wwin);
+	/* the window doesn't exist anymore */
+	if (!XGetWindowAttributes(dpy, wwin->client_win, &attribs))
 		return -1;
-	}
 
 	XRaiseWindow(dpy, wwin->frame->core->window);
-	XTranslateCoordinates(dpy, wwin->client_win, wwin->vscr->screen_ptr->root_win, 0, 0, &x, &y, &baz);
+	XTranslateCoordinates(dpy, wwin->client_win, vscr->screen_ptr->root_win, 0, 0, &x, &y, &baz);
 
 	w = attribs.width;
 	h = attribs.height;
 
-	if (x - attribs.x + attribs.width > wwin->vscr->screen_ptr->scr_width)
-		w = wwin->vscr->screen_ptr->scr_width - x + attribs.x;
+	if (x - attribs.x + attribs.width > vscr->screen_ptr->scr_width)
+		w = vscr->screen_ptr->scr_width - x + attribs.x;
 
-	if (y - attribs.y + attribs.height > wwin->vscr->screen_ptr->scr_height)
-		h = wwin->vscr->screen_ptr->scr_height - y + attribs.y;
+	if (y - attribs.y + attribs.height > vscr->screen_ptr->scr_height)
+		h = vscr->screen_ptr->scr_height - y + attribs.y;
 
 	pimg = XGetImage(dpy, wwin->client_win, 0, 0, w, h, AllPlanes, ZPixmap);
-	if (!pimg) {
-		create_minipreview_showerror(wwin);
+	if (!pimg)
 		return -1;
-	}
 
-	mini_preview = RCreateImageFromXImage(wwin->vscr->screen_ptr->rcontext, pimg, NULL);
+	mini_preview = RCreateImageFromXImage(vscr->screen_ptr->rcontext, pimg, NULL);
 	XDestroyImage(pimg);
 
-	if (!mini_preview) {
-		create_minipreview_showerror(wwin);
+	if (!mini_preview)
 		return -1;
-	}
 
 	scaled_mini_preview = RSmoothScaleImage(mini_preview,
 		wPreferences.minipreview_size - 2 * MINIPREVIEW_BORDER,
 		wPreferences.minipreview_size - 2 * MINIPREVIEW_BORDER);
 
-	ret = RConvertImage(wwin->vscr->screen_ptr->rcontext, scaled_mini_preview, &pixmap);
+	ret = RConvertImage(vscr->screen_ptr->rcontext, scaled_mini_preview, pixmap);
 	RReleaseImage(scaled_mini_preview);
 	RReleaseImage(mini_preview);
 
+	if (!ret)
+		return -1;
+
+	return 0;
+}
+
+int create_minipreview(WWindow *wwin)
+{
+	Pixmap pixmap;
+	int ret;
+
+	ret = create_minipixmap_window(wwin->vscr, wwin, &pixmap);
 	if (!ret) {
 		create_minipreview_showerror(wwin);
 		return -1;
