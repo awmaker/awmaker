@@ -87,5 +87,5 @@ void icon_tileObserver(void *self, WMNotification *notif);
 
 void remove_cache_icon(char *filename);
 
-int create_minipreview(WWindow *wwin);
+int create_icon_minipreview(WWindow *wwin);
 #endif /* WMICON_H_ */

@@ -972,7 +972,7 @@ void unmap_icon_image(WIcon *icon)
 	unset_icon_file_image(icon);
 }
 
-int create_minipreview(WWindow *wwin)
+int create_icon_minipreview(WWindow *wwin)
 {
 	Pixmap pixmap;
 	int ret;
