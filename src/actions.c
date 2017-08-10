@@ -62,8 +62,6 @@
 static void find_Maximus_geometry(WWindow *wwin, WArea usableArea, int *new_x, int *new_y,
 				  unsigned int *new_width, unsigned int *new_height);
 static void save_old_geometry(WWindow *wwin, int directions);
-static int create_minipreview(WWindow *wwin);
-static void create_minipreview_showerror(WWindow *wwin);
 /******* Local Variables *******/
 static struct {
 	int steps;
@@ -1204,65 +1202,6 @@ static int getAnimationGeometry(WWindow *wwin, int *ix, int *iy, int *iw, int *i
 	}
 
 	return 1;
-}
-
-static void create_minipreview_showerror(WWindow *wwin)
-{
-	const char *title;
-	char title_buf[32];
-
-	if (wwin->frame->title) {
-		title = wwin->frame->title;
-	} else {
-		snprintf(title_buf, sizeof(title_buf), "(id=0x%lx)", wwin->client_win);
-		title = title_buf;
-	}
-
-	wwarning(_("creation of mini-preview failed for window \"%s\""), title);
-}
-
-static int create_minipreview(WWindow *wwin)
-{
-	RImage *mini_preview;
-	XImage *pimg;
-	unsigned int w, h;
-	int x, y;
-	Window baz;
-	XWindowAttributes attribs;
-
-	if (!XGetWindowAttributes(dpy, wwin->client_win, &attribs)) {
-		/* the window doesn't exist anymore */
-		create_minipreview_showerror(wwin);
-		return -1;
-	}
-
-	XRaiseWindow(dpy, wwin->frame->core->window);
-	XTranslateCoordinates(dpy, wwin->client_win, wwin->vscr->screen_ptr->root_win, 0, 0, &x, &y, &baz);
-
-	w = attribs.width;
-	h = attribs.height;
-
-	if (x - attribs.x + attribs.width > wwin->vscr->screen_ptr->scr_width)
-		w = wwin->vscr->screen_ptr->scr_width - x + attribs.x;
-
-	if (y - attribs.y + attribs.height > wwin->vscr->screen_ptr->scr_height)
-		h = wwin->vscr->screen_ptr->scr_height - y + attribs.y;
-
-	pimg = XGetImage(dpy, wwin->client_win, 0, 0, w, h, AllPlanes, ZPixmap);
-	if (pimg) {
-		mini_preview = RCreateImageFromXImage(wwin->vscr->screen_ptr->rcontext, pimg, NULL);
-		XDestroyImage(pimg);
-
-		if (mini_preview) {
-			set_icon_minipreview(wwin->icon, mini_preview);
-			RReleaseImage(mini_preview);
-		} else {
-			create_minipreview_showerror(wwin);
-			return -1;
-		}
-	}
-
-	return 0;
 }
 
 void wIconifyWindow(WWindow *wwin)

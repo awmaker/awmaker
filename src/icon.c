@@ -47,6 +47,7 @@
 #include "event.h"
 #include "winmenu.h"
 #include "input.h"
+#include "framewin.h"
 
 /**** Global varianebles ****/
 
@@ -66,6 +67,8 @@ static void get_rimage_icon_from_x11(WIcon *icon);
 
 static void icon_update_pixmap(WIcon *icon, RImage *image);
 static void unset_icon_image(WIcon *icon);
+
+static void create_minipreview_showerror(WWindow *wwin);
 
 /****** Notification Observers ******/
 
@@ -986,4 +989,63 @@ void unmap_icon_image(WIcon *icon)
 		XFreePixmap(dpy, icon->pixmap);
 
 	unset_icon_file_image(icon);
+}
+
+int create_minipreview(WWindow *wwin)
+{
+	RImage *mini_preview;
+	XImage *pimg;
+	unsigned int w, h;
+	int x, y;
+	Window baz;
+	XWindowAttributes attribs;
+
+	if (!XGetWindowAttributes(dpy, wwin->client_win, &attribs)) {
+		/* the window doesn't exist anymore */
+		create_minipreview_showerror(wwin);
+		return -1;
+	}
+
+	XRaiseWindow(dpy, wwin->frame->core->window);
+	XTranslateCoordinates(dpy, wwin->client_win, wwin->vscr->screen_ptr->root_win, 0, 0, &x, &y, &baz);
+
+	w = attribs.width;
+	h = attribs.height;
+
+	if (x - attribs.x + attribs.width > wwin->vscr->screen_ptr->scr_width)
+		w = wwin->vscr->screen_ptr->scr_width - x + attribs.x;
+
+	if (y - attribs.y + attribs.height > wwin->vscr->screen_ptr->scr_height)
+		h = wwin->vscr->screen_ptr->scr_height - y + attribs.y;
+
+	pimg = XGetImage(dpy, wwin->client_win, 0, 0, w, h, AllPlanes, ZPixmap);
+	if (pimg) {
+		mini_preview = RCreateImageFromXImage(wwin->vscr->screen_ptr->rcontext, pimg, NULL);
+		XDestroyImage(pimg);
+
+		if (mini_preview) {
+			set_icon_minipreview(wwin->icon, mini_preview);
+			RReleaseImage(mini_preview);
+		} else {
+			create_minipreview_showerror(wwin);
+			return -1;
+		}
+	}
+
+	return 0;
+}
+
+static void create_minipreview_showerror(WWindow *wwin)
+{
+	const char *title;
+	char title_buf[32];
+
+	if (wwin->frame->title) {
+		title = wwin->frame->title;
+	} else {
+		snprintf(title_buf, sizeof(title_buf), "(id=0x%lx)", wwin->client_win);
+		title = title_buf;
+	}
+
+	wwarning(_("creation of mini-preview failed for window \"%s\""), title);
 }
