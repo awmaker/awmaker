@@ -356,6 +356,10 @@ void winspector_destroy(InspectorPanel *panel)
 {
 	InspectorPanel *tmp_panel;
 
+	/* If choosing the icon panel is open, do not do anything */
+	if (panel->choosingIcon)
+		return;
+
 	/* Remove the panel from the panel list */
 	if (panelList == panel) {
 		panelList = panel->nextPtr;
