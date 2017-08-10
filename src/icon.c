@@ -1001,29 +1001,32 @@ int create_minipreview(WWindow *wwin)
 		h = wwin->vscr->screen_ptr->scr_height - y + attribs.y;
 
 	pimg = XGetImage(dpy, wwin->client_win, 0, 0, w, h, AllPlanes, ZPixmap);
-	if (pimg) {
-		mini_preview = RCreateImageFromXImage(wwin->vscr->screen_ptr->rcontext, pimg, NULL);
-		XDestroyImage(pimg);
-
-		if (mini_preview) {
-			scaled_mini_preview = RSmoothScaleImage(mini_preview,
-				wPreferences.minipreview_size - 2 * MINIPREVIEW_BORDER,
-				wPreferences.minipreview_size - 2 * MINIPREVIEW_BORDER);
-
-			if (RConvertImage(wwin->vscr->screen_ptr->rcontext, scaled_mini_preview, &pixmap)) {
-				if (wwin->icon->mini_preview != None)
-					XFreePixmap(dpy, wwin->icon->mini_preview);
-
-				wwin->icon->mini_preview = pixmap;
-			}
-
-			RReleaseImage(scaled_mini_preview);
-			RReleaseImage(mini_preview);
-		} else {
-			create_minipreview_showerror(wwin);
-			return -1;
-		}
+	if (!pimg) {
+		create_minipreview_showerror(wwin);
+		return -1;
 	}
+
+	mini_preview = RCreateImageFromXImage(wwin->vscr->screen_ptr->rcontext, pimg, NULL);
+	XDestroyImage(pimg);
+
+	if (!mini_preview) {
+		create_minipreview_showerror(wwin);
+		return -1;
+	}
+
+	scaled_mini_preview = RSmoothScaleImage(mini_preview,
+		wPreferences.minipreview_size - 2 * MINIPREVIEW_BORDER,
+		wPreferences.minipreview_size - 2 * MINIPREVIEW_BORDER);
+
+	if (RConvertImage(wwin->vscr->screen_ptr->rcontext, scaled_mini_preview, &pixmap)) {
+		if (wwin->icon->mini_preview != None)
+			XFreePixmap(dpy, wwin->icon->mini_preview);
+
+		wwin->icon->mini_preview = pixmap;
+	}
+
+	RReleaseImage(scaled_mini_preview);
+	RReleaseImage(mini_preview);
 
 	return 0;
 }
