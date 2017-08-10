@@ -345,6 +345,10 @@ static void freeInspector(InspectorPanel *panel)
 
 	WMDestroyWidget(panel->wwin);
 	XDestroyWindow(dpy, panel->parent);
+
+	if (panel->title)
+		wfree(panel->title);
+
 	wfree(panel);
 }
 
@@ -1021,7 +1025,8 @@ static void textEditedObserver(void *observerData, WMNotification *notification)
 static void selectSpecification(WMWidget *bPtr, void *data)
 {
 	InspectorPanel *panel = (InspectorPanel *) data;
-	char str[256];
+	int len;
+	char *title;
 	WWindow *wwin = panel->inspected;
 
 	if (bPtr == panel->defaultRb && (wwin->wm_instance || wwin->wm_class))
@@ -1029,12 +1034,26 @@ static void selectSpecification(WMWidget *bPtr, void *data)
 	else
 		WMSetButtonEnabled(panel->applyBtn, True);
 
-	snprintf(str, sizeof(str),
-	         _("Inspecting  %s.%s"),
-	         wwin->wm_instance ? wwin->wm_instance : "?",
-	         wwin->wm_class ? wwin->wm_class : "?");
+	len = 16;
+	if (wwin->wm_instance)
+		len += strlen(wwin->wm_instance);
+	else
+		len += 1;
 
-	panel->title = str;
+	if (wwin->wm_class)
+		len += strlen(wwin->wm_class);
+	else
+		len += 1;
+
+	title = wmalloc(len);
+	sprintf(title, "Inspecting %s.%s",
+		wwin->wm_instance ? wwin->wm_instance : "?",
+		wwin->wm_class ? wwin->wm_class : "?");
+
+	if (panel->title)
+		wfree(panel->title);
+
+	panel->title = title;
 
 	wFrameWindowChangeTitle(panel->frame->frame, panel->title);
 }
@@ -1082,6 +1101,7 @@ static InspectorPanel *createInspectorForWindow(WWindow *wwin, int xpos, int ypo
 	int x, y, btn_width, frame_width;
 	WMButton *selectedBtn = NULL;
 
+
 	spec_text = _("The configuration will apply to all\n"
 		      "windows that have their WM_CLASS\n"
 		      "property set to the above selected\n" "name, when saved.");
@@ -1089,6 +1109,7 @@ static InspectorPanel *createInspectorForWindow(WWindow *wwin, int xpos, int ypo
 	panel = wmalloc(sizeof(InspectorPanel));
 	memset(panel, 0, sizeof(InspectorPanel));
 
+	panel->title = NULL;
 	panel->destroyed = 0;
 	panel->inspected = wwin;
 	panel->nextPtr = panelList;
