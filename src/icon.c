@@ -978,7 +978,7 @@ int create_minipreview(WWindow *wwin)
 	RImage *mini_preview, *scaled_mini_preview;
 	XImage *pimg;
 	unsigned int w, h;
-	int x, y;
+	int x, y, ret;
 	Window baz;
 	XWindowAttributes attribs;
 
@@ -1018,15 +1018,19 @@ int create_minipreview(WWindow *wwin)
 		wPreferences.minipreview_size - 2 * MINIPREVIEW_BORDER,
 		wPreferences.minipreview_size - 2 * MINIPREVIEW_BORDER);
 
-	if (RConvertImage(wwin->vscr->screen_ptr->rcontext, scaled_mini_preview, &pixmap)) {
-		if (wwin->icon->mini_preview != None)
-			XFreePixmap(dpy, wwin->icon->mini_preview);
-
-		wwin->icon->mini_preview = pixmap;
-	}
-
+	ret = RConvertImage(wwin->vscr->screen_ptr->rcontext, scaled_mini_preview, &pixmap);
 	RReleaseImage(scaled_mini_preview);
 	RReleaseImage(mini_preview);
+
+	if (!ret) {
+		create_minipreview_showerror(wwin);
+		return -1;
+	}
+
+	if (wwin->icon->mini_preview != None)
+		XFreePixmap(dpy, wwin->icon->mini_preview);
+
+	wwin->icon->mini_preview = pixmap;
 
 	return 0;
 }
