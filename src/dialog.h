@@ -22,6 +22,9 @@
 #ifndef WMDIALOG_H_
 #define WMDIALOG_H_
 
+#include "appicon.h"
+#include "dockedapp.h"
+#include "winspector.h"
 
 enum {
     WMAbort=0,
@@ -37,7 +40,7 @@ int wInputDialog(virtual_screen *vscr, const char *title, const char *message, c
 int wExitDialog(virtual_screen *vscr, const char *title, const char *message, const char *defBtn,
                 const char *altBtn, const char *othBtn);
 
-Bool wIconChooserDialog(virtual_screen *vscr, char **file, const char *instance, const char *class);
+Bool wIconChooserDialog(AppSettingsPanel *app_panel, InspectorPanel *ins_panel, WAppIcon *icon, char **file);
 
 void wShowInfoPanel(virtual_screen *vscr);
 void wShowLegalPanel(virtual_screen *vscr);

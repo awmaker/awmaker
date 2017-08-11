@@ -919,9 +919,11 @@ static void keyPressHandler(XEvent *event, void *data)
 	}
 }
 
-Bool wIconChooserDialog(virtual_screen *vscr, char **file, const char *instance, const char *class)
+Bool wIconChooserDialog(AppSettingsPanel *app_panel, InspectorPanel *ins_panel, WAppIcon *icon, char **file)
 {
-	WScreen *scr = vscr->screen_ptr;
+	virtual_screen *vscr;
+	WScreen *scr;
+	const char *instance, *class;
 	const int win_width = 450;
 	const int win_height = 280;
 	WWindow *wwin;
@@ -930,6 +932,25 @@ Bool wIconChooserDialog(virtual_screen *vscr, char **file, const char *instance,
 	WMColor *color;
 	WMFont *boldFont;
 	Bool result;
+
+	if (app_panel) {
+		/* Set values if parent is AppSettingsPanel */
+		instance = app_panel->editedIcon->wm_instance;
+		class = app_panel->editedIcon->wm_class;
+		vscr = app_panel->wwin->vscr;
+	} else if (ins_panel) {
+		/* Set values if parent is InspectorPanel */
+		instance = ins_panel->inspected->wm_instance;
+		class = ins_panel->inspected->wm_class;
+		vscr = ins_panel->frame->vscr;
+	} else {
+		/* Set values if parent is Icon */
+		instance = icon->wm_instance;
+		class = icon->wm_class;
+		vscr = icon->icon->core->vscr;
+	}
+	scr = vscr->screen_ptr;
+
 
 	panel = wmalloc(sizeof(IconPanel));
 	panel->vscr = vscr;

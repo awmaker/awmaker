@@ -133,13 +133,10 @@ static void chooseIconCallback(WMWidget *self, void *clientData)
 	(void) self;
 
 	panel->choosingIcon = 1;
-
 	WMSetButtonEnabled(panel->browseBtn, False);
-
-	result = wIconChooserDialog(panel->wwin->vscr, &file,
-				    panel->editedIcon->wm_instance, panel->editedIcon->wm_class);
-
+	result = wIconChooserDialog(panel, NULL, NULL, &file);
 	panel->choosingIcon = 0;
+
 	if (!panel->destroyed) {
 		if (result) {
 			WMSetTextFieldText(panel->iconField, file);

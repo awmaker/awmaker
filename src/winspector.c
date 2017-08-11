@@ -950,13 +950,8 @@ static void chooseIconCallback(WMWidget *self, void *clientData)
 	int result;
 
 	panel->choosingIcon = 1;
-
 	WMSetButtonEnabled(panel->browseIconBtn, False);
-
-	result = wIconChooserDialog(panel->frame->vscr, &file,
-				    panel->inspected->wm_instance,
-				    panel->inspected->wm_class);
-
+	result = wIconChooserDialog(NULL, panel, NULL, &file);
 	panel->choosingIcon = 0;
 
 	if (result) {
