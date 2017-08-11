@@ -83,6 +83,7 @@
 	"02110-1301 USA."
 
 static void create_dialog_iconchooser_widgets(IconPanel *panel, const int win_width, const int win_height);
+static char *create_dialog_iconchooser_title(const char *instance, const char *class);
 
 static LegalPanel *legalPanel = NULL;
 static InfoPanel *infoPanel = NULL;
@@ -972,6 +973,40 @@ static void create_dialog_iconchooser_widgets(IconPanel *panel, const int win_wi
 	WMMapSubwidgets(panel->win);
 }
 
+static char *create_dialog_iconchooser_title(const char *instance, const char *class)
+{
+	static const char *prefix = NULL;
+	char *title;
+	int len;
+
+	if (prefix == NULL)
+		prefix = _("Icon Chooser");
+
+	len = strlen(prefix)
+		+ 2	// " ["
+		+ (instance ? strlen(instance) : 0)
+		+ 1	// "."
+		+ (class ? strlen(class) : 0)
+		+ 1	// "]"
+		+ 1;	// final NUL
+
+	title = wmalloc(len);
+	strcpy(title, prefix);
+
+	if (instance || class) {
+		strcat(title, " [");
+		if (instance != NULL)
+			strcat(title, instance);
+		if (instance && class)
+			strcat(title, ".");
+		if (class != NULL)
+			strcat(title, class);
+		strcat(title, "]");
+	}
+
+	return title;
+}
+
 Bool wIconChooserDialog(AppSettingsPanel *app_panel, InspectorPanel *ins_panel, WAppIcon *icon, char **file)
 {
 	virtual_screen *vscr;
@@ -979,10 +1014,12 @@ Bool wIconChooserDialog(AppSettingsPanel *app_panel, InspectorPanel *ins_panel, 
 	const char *instance, *class;
 	const int win_width = 450;
 	const int win_height = 280;
+	char *title;
 	WWindow *wwin;
 	Window parent;
 	IconPanel *panel;
 	Bool result;
+	WMPoint center;
 
 	panel = wmalloc(sizeof(IconPanel));
 	if (app_panel) {
@@ -1014,36 +1051,8 @@ Bool wIconChooserDialog(AppSettingsPanel *app_panel, InspectorPanel *ins_panel, 
 	XReparentWindow(dpy, WMWidgetXID(panel->win), parent, 0, 0);
 
 	{
-		static const char *prefix = NULL;
-		char *title;
-		int len;
-		WMPoint center;
 
-		if (prefix == NULL)
-			prefix = _("Icon Chooser");
-
-		len = strlen(prefix)
-			+ 2	// " ["
-			+ (instance ? strlen(instance) : 0)
-			+ 1	// "."
-			+ (class ? strlen(class) : 0)
-			+ 1	// "]"
-			+ 1;	// final NUL
-
-		title = wmalloc(len);
-		strcpy(title, prefix);
-
-		if (instance || class) {
-			strcat(title, " [");
-			if (instance != NULL)
-				strcat(title, instance);
-			if (instance && class)
-				strcat(title, ".");
-			if (class != NULL)
-				strcat(title, class);
-			strcat(title, "]");
-		}
-
+		title = create_dialog_iconchooser_title(instance, class);
 		center = getCenter(vscr, win_width, win_height);
 
 		wwin = wManageInternalWindow(vscr, parent, None, title, center.x, center.y, win_width, win_height);
