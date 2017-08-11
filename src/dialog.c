@@ -979,16 +979,14 @@ static char *create_dialog_iconchooser_title(const char *instance, const char *c
 	char *title;
 	int len;
 
-	if (prefix == NULL)
-		prefix = _("Icon Chooser");
-
+	prefix = _("Icon Chooser");
 	len = strlen(prefix)
-		+ 2	// " ["
-		+ (instance ? strlen(instance) : 0)
-		+ 1	// "."
-		+ (class ? strlen(class) : 0)
-		+ 1	// "]"
-		+ 1;	// final NUL
+		+ 2					/* " ["            */
+		+ (instance ? strlen(instance) : 1)	/* instance or "?" */
+		+ 1					/* "."             */
+		+ (class ? strlen(class) : 1)		/* class or "?"    */
+		+ 1					/* "]"             */
+		+ 1;					/* final NUL       */
 
 	title = wmalloc(len);
 	strcpy(title, prefix);
@@ -997,10 +995,15 @@ static char *create_dialog_iconchooser_title(const char *instance, const char *c
 		strcat(title, " [");
 		if (instance != NULL)
 			strcat(title, instance);
-		if (instance && class)
-			strcat(title, ".");
+		else
+			strcat(title, "?");
+
+		strcat(title, ".");
 		if (class != NULL)
 			strcat(title, class);
+		else
+			strcat(title, "?");
+
 		strcat(title, "]");
 	}
 
