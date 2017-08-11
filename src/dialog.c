@@ -1018,7 +1018,6 @@ Bool wIconChooserDialog(AppSettingsPanel *app_panel, InspectorPanel *ins_panel, 
 	const int win_width = 450;
 	const int win_height = 280;
 	char *title;
-	WWindow *wwin;
 	Window parent;
 	IconPanel *panel;
 	Bool result;
@@ -1055,14 +1054,14 @@ Bool wIconChooserDialog(AppSettingsPanel *app_panel, InspectorPanel *ins_panel, 
 
 	title = create_dialog_iconchooser_title(instance, class);
 	center = getCenter(vscr, win_width, win_height);
-	wwin = wManageInternalWindow(vscr, parent, None, title, center.x, center.y, win_width, win_height);
+	panel->wwin = wManageInternalWindow(vscr, parent, None, title, center.x, center.y, win_width, win_height);
 	wfree(title);
 
 	/* put icon paths in the list */
 	listIconPaths(panel->dirList);
 
 	WMMapWidget(panel->win);
-	wWindowMap(wwin);
+	wWindowMap(panel->wwin);
 
 	while (!panel->done) {
 		XEvent event;
@@ -1099,10 +1098,11 @@ Bool wIconChooserDialog(AppSettingsPanel *app_panel, InspectorPanel *ins_panel, 
 	}
 
 	result = panel->result;
+
 	WMReleaseFont(panel->normalfont);
 	WMUnmapWidget(panel->win);
 	WMDestroyWidget(panel->win);
-	wUnmanageWindow(wwin, False, False);
+	wUnmanageWindow(panel->wwin, False, False);
 	wfree(panel);
 	XDestroyWindow(dpy, parent);
 
