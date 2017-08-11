@@ -1095,21 +1095,22 @@ Bool wIconChooserDialog(AppSettingsPanel *app_panel, InspectorPanel *ins_panel, 
 	if (**file == 0) {
 		wfree(*file);
 		*file = NULL;
-	} else {
-		defaultPath = FindImage(wPreferences.icon_path, *file);
-		wantedPath = WMGetTextFieldText(panel->fileField);
-
-		/* if the file is not the default, use full path */
-		if (strcmp(wantedPath, defaultPath) != 0) {
-			*file = wantedPath;
-		} else {
-			*file = wstrdup(*file);
-			wfree(wantedPath);
-		}
-
-		wfree(defaultPath);
+		destroy_dialog_iconchooser(panel, parent);
+		return False;
 	}
 
+	defaultPath = FindImage(wPreferences.icon_path, *file);
+	wantedPath = WMGetTextFieldText(panel->fileField);
+
+	/* If the file is not the default, use full path */
+	if (strcmp(wantedPath, defaultPath) != 0) {
+		*file = wantedPath;
+	} else {
+		*file = wstrdup(*file);
+		wfree(wantedPath);
+	}
+
+	wfree(defaultPath);
 	result = panel->result;
 	destroy_dialog_iconchooser(panel, parent);
 
