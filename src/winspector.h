@@ -22,10 +22,12 @@
 #ifndef WINSPECTOR_H_
 #define WINSPECTOR_H_
 
-#include "window.h"
-#include "config.h"
+typedef struct InspectorPanel InspectorPanel;
 
-typedef struct InspectorPanel {
+#include "config.h"
+#include "window.h"
+
+struct InspectorPanel {
 	struct InspectorPanel *nextPtr;
 
 	WWindow *frame;
@@ -78,7 +80,7 @@ typedef struct InspectorPanel {
 	unsigned int done:1;
 	unsigned int destroyed:1;
 	unsigned int choosingIcon:1;
-} InspectorPanel;
+};
 
 void winspector_destroy(struct InspectorPanel *panel);
 void wShowInspectorForWindow(WWindow *wwin);

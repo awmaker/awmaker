@@ -22,6 +22,10 @@
 #ifndef WMDIALOG_H_
 #define WMDIALOG_H_
 
+typedef struct IconPanel IconPanel;
+typedef struct LegalPanel LegalPanel;
+typedef struct InfoPanel InfoPanel;
+
 #include "appicon.h"
 #include "dockedapp.h"
 #include "winspector.h"
@@ -32,7 +36,7 @@ enum {
 	WMStartAlternate
 };
 
-typedef struct IconPanel {
+struct IconPanel {
 	virtual_screen *vscr;
 	WMWindow *win;
 
@@ -56,16 +60,16 @@ typedef struct IconPanel {
 	short done;
 	short result;
 	short preview;
-} IconPanel;
+};
 
-typedef struct {
+struct LegalPanel {
 	virtual_screen *vscr;
 	WWindow *wwin;
 	WMWindow *win;
 	WMLabel *licenseL;
-} LegalPanel;
+};
 
-typedef struct {
+struct InfoPanel {
 	virtual_screen *vscr;
 	WWindow *wwin;
 	WMWindow *win;
@@ -76,7 +80,7 @@ typedef struct {
 	WMLabel *versionL;
 	WMLabel *infoL;
 	WMLabel *copyrL;
-} InfoPanel;
+};
 
 int wMessageDialog(virtual_screen *vscr, const char *title, const char *message,
 		   const char *defBtn, const char *altBtn, const char *othBtn);
