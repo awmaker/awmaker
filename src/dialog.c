@@ -82,6 +82,31 @@
 	"Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA"\
 	"02110-1301 USA."
 
+#define MESSAGE_WIDTH 400
+#define MESSAGE_HEIGHT 180
+
+#define EXIT_WIDTH 400
+#define EXIT_HEIGHT 180
+
+#define ADVANCED_WIDTH 320
+#define ADVANCED_HEIGHT 160
+
+#define INPUT_WIDTH 320
+#define INPUT_HEIGHT 160
+
+#define ICONDLG_WIDTH 450
+#define ICONDLG_HEIGHT 280
+
+#define INFOPANEL_WIDTH 382
+#define INFOPANEL_HEIGHT 250
+
+#define LEGALPANEL_WIDTH 420
+#define LEGALPANEL_HEIGHT 250
+#define LEGALPANEL_MARGIN 10
+
+#define CRASHING_WIDTH 295
+#define CRASHING_HEIGHT 345
+
 static int pstrcmp(const char **str1, const char **str2);
 static int strmatch(const void *str1, const void *str2);
 static void ScanFiles(const char *dir, const char *prefix, unsigned acceptmask, unsigned declinemask, WMArray *result);
@@ -120,8 +145,8 @@ static WMPoint getCenter(virtual_screen *vscr, int width, int height)
 int wMessageDialog(virtual_screen *vscr, const char *title, const char *message, const char *defBtn, const char *altBtn, const char *othBtn)
 {
 	WScreen *scr = vscr->screen_ptr;
-	const int win_width = 400;
-	const int win_height = 180;
+	const int win_width = MESSAGE_WIDTH;
+	const int win_height = MESSAGE_HEIGHT;
 	WMAlertPanel *panel;
 	Window parent;
 	WWindow *wwin;
@@ -157,8 +182,8 @@ static void toggleSaveSession(WMWidget *w, void *data)
 int wExitDialog(virtual_screen *vscr, const char *title, const char *message, const char *defBtn, const char *altBtn, const char *othBtn)
 {
 	WScreen *scr = vscr->screen_ptr;
-	const int win_width = 400;
-	const int win_height = 180;
+	const int win_width = EXIT_WIDTH;
+	const int win_height = EXIT_HEIGHT;
 	WMAlertPanel *panel;
 	WMButton *saveSessionBtn;
 	Window parent;
@@ -449,8 +474,8 @@ int wAdvancedInputDialog(virtual_screen *vscr, const char *title,
 			 const char *message, const char *name, char **text)
 {
 	WScreen *scr = vscr->screen_ptr;
-	const int win_width = 320;
-	const int win_height = 160;
+	const int win_width = ADVANCED_WIDTH;
+	const int win_height = ADVANCED_HEIGHT;
 	WWindow *wwin;
 	Window parent;
 	char *result;
@@ -506,8 +531,8 @@ int wAdvancedInputDialog(virtual_screen *vscr, const char *title,
 int wInputDialog(virtual_screen *vscr, const char *title, const char *message, char **text)
 {
 	WScreen *scr = vscr->screen_ptr;
-	const int win_width = 320;
-	const int win_height = 160;
+	const int win_width = INPUT_WIDTH;
+	const int win_height = INPUT_HEIGHT;
 	WWindow *wwin;
 	Window parent;
 	WMInputPanel *panel;
@@ -1001,8 +1026,8 @@ Bool wIconChooserDialog(AppSettingsPanel *app_panel, InspectorPanel *ins_panel, 
 	WScreen *scr;
 	char *defaultPath, *wantedPath, *title;
 	const char *instance, *class;
-	const int win_width = 450;
-	const int win_height = 280;
+	const int win_width = ICONDLG_WIDTH;
+	const int win_height = ICONDLG_HEIGHT;
 	Window parent;
 	IconPanel *panel;
 	Bool result;
@@ -1110,8 +1135,8 @@ static void destroyInfoPanel(WCoreWindow *foo, void *data, XEvent *event)
 
 void wShowInfoPanel(virtual_screen *vscr)
 {
-	const int win_width = 382;
-	const int win_height = 250;
+	const int win_width = INFOPANEL_WIDTH;
+	const int win_height = INFOPANEL_HEIGHT;
 	InfoPanel *panel;
 	WMPixmap *logo;
 	WMFont *font;
@@ -1370,9 +1395,9 @@ static void destroyLegalPanel(WCoreWindow *foo, void *data, XEvent *event)
 
 void wShowLegalPanel(virtual_screen *vscr)
 {
-	const int win_width = 420;
-	const int win_height = 250;
-	const int margin = 10;
+	const int win_width = LEGALPANEL_WIDTH;
+	const int win_height = LEGALPANEL_HEIGHT;
+	const int margin = LEGALPANEL_MARGIN;
 	LegalPanel *panel;
 	Window parent;
 	WWindow *wwin;
@@ -1495,9 +1520,6 @@ static WMPixmap *getWindowMakerIconImage(WMScreen *scr)
 	return pix;
 }
 
-#define PWIDTH	295
-#define PHEIGHT	345
-
 int wShowCrashingDialogPanel(int whatSig)
 {
 	CrashPanel *panel;
@@ -1520,8 +1542,8 @@ int wShowCrashingDialogPanel(int whatSig)
 
 	panel->retKey = XKeysymToKeycode(dpy, XK_Return);
 	panel->win = WMCreateWindow(scr, "crashingDialog");
-	WMResizeWidget(panel->win, PWIDTH, PHEIGHT);
-	WMMoveWidget(panel->win, (scr_width - PWIDTH) / 2, (scr_height - PHEIGHT) / 2);
+	WMResizeWidget(panel->win, CRASHING_WIDTH, CRASHING_HEIGHT);
+	WMMoveWidget(panel->win, (scr_width - CRASHING_WIDTH) / 2, (scr_height - CRASHING_HEIGHT) / 2);
 
 	logo = getWindowMakerIconImage(scr);
 	if (logo) {
@@ -1542,18 +1564,18 @@ int wShowCrashingDialogPanel(int whatSig)
 	WMSetLabelText(panel->nameL, _("Fatal error"));
 
 	panel->sepF = WMCreateFrame(panel->win);
-	WMResizeWidget(panel->sepF, PWIDTH + 4, 2);
+	WMResizeWidget(panel->sepF, CRASHING_WIDTH + 4, 2);
 	WMMoveWidget(panel->sepF, -2, 80);
 
 	panel->noteL = WMCreateLabel(panel->win);
-	WMResizeWidget(panel->noteL, PWIDTH - 20, 40);
+	WMResizeWidget(panel->noteL, CRASHING_WIDTH - 20, 40);
 	WMMoveWidget(panel->noteL, 10, 90);
 	WMSetLabelTextAlignment(panel->noteL, WAJustified);
 	snprintf(buf, sizeof(buf), _("Window Maker received signal %i."), whatSig);
 	WMSetLabelText(panel->noteL, buf);
 
 	panel->note2L = WMCreateLabel(panel->win);
-	WMResizeWidget(panel->note2L, PWIDTH - 20, 100);
+	WMResizeWidget(panel->note2L, CRASHING_WIDTH - 20, 100);
 	WMMoveWidget(panel->note2L, 10, 130);
 	WMSetLabelTextAlignment(panel->note2L, WALeft);
 	snprintf(buf, sizeof(buf), /* Comment for the PO file: the %s is an email address */
@@ -1564,12 +1586,12 @@ int wShowCrashingDialogPanel(int whatSig)
 	WMSetLabelWraps(panel->note2L, True);
 
 	panel->whatF = WMCreateFrame(panel->win);
-	WMResizeWidget(panel->whatF, PWIDTH - 20, 50);
+	WMResizeWidget(panel->whatF, CRASHING_WIDTH - 20, 50);
 	WMMoveWidget(panel->whatF, 10, 240);
 	WMSetFrameTitle(panel->whatF, _("What do you want to do now?"));
 
 	panel->whatP = WMCreatePopUpButton(panel->whatF);
-	WMResizeWidget(panel->whatP, PWIDTH - 20 - 70, 20);
+	WMResizeWidget(panel->whatP, CRASHING_WIDTH - 20 - 70, 20);
 	WMMoveWidget(panel->whatP, 35, 20);
 	WMSetPopUpButtonPullsDown(panel->whatP, False);
 	WMSetPopUpButtonText(panel->whatP, _("Select action"));
