@@ -82,9 +82,32 @@
 	"Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA"\
 	"02110-1301 USA."
 
+static int pstrcmp(const char **str1, const char **str2);
+static int strmatch(const void *str1, const void *str2);
+static void ScanFiles(const char *dir, const char *prefix, unsigned acceptmask, unsigned declinemask, WMArray *result);
+static void buttonCallback(void *self, void *clientData);
+static void drawIconProc(WMList *lPtr, int index, Drawable d, char *text, int state, WMRect *rect);
+static void handleHistoryKeyPress(XEvent *event, void *clientData);
+static void handleKeyPress(XEvent *event, void *clientData);
+static void keyPressHandler(XEvent *event, void *data);
+static void listCallback(void *self, void *data);
+static void listIconPaths(WMList *lPtr);
+static void listPixmaps(virtual_screen *vscr, WMList *lPtr, const char *path);
+static void okButtonCallback(void *self, void *clientData);
+static void SaveHistory(WMArray *history, const char *filename);
+static void setCrashAction(void *self, void *clientData);
+static void setViewedImage(IconPanel *panel, const char *file);
+static void toggleSaveSession(WMWidget *w, void *data);
 static void create_dialog_iconchooser_widgets(IconPanel *panel, const int win_width, const int win_height);
-static char *create_dialog_iconchooser_title(const char *instance, const char *class);
 static void destroy_dialog_iconchooser(IconPanel *panel, Window parent);
+static void destroyInfoPanel(WCoreWindow *foo, void *data, XEvent *event);
+static void destroyLegalPanel(WCoreWindow *foo, void *data, XEvent *event);
+static char *HistoryFileName(const char *name);
+static char *create_dialog_iconchooser_title(const char *instance, const char *class);
+static WMArray *GenerateVariants(const char *complete);
+static WMArray *LoadHistory(const char *filename, int max);
+static WMPixmap *getWindowMakerIconImage(WMScreen *scr);
+static WMPoint getCenter(virtual_screen *vscr, int width, int height);
 
 static LegalPanel *legalPanel = NULL;
 static InfoPanel *infoPanel = NULL;
