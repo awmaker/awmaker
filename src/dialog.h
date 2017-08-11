@@ -38,6 +38,7 @@ enum {
 
 struct IconPanel {
 	virtual_screen *vscr;
+	WWindow *wwin;
 	WMWindow *win;
 
 	WMLabel *dirLabel;
