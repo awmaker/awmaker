@@ -82,52 +82,6 @@
 	"Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA"\
 	"02110-1301 USA."
 
-typedef struct IconPanel {
-	virtual_screen *vscr;
-	WMWindow *win;
-
-	WMLabel *dirLabel;
-	WMLabel *iconLabel;
-
-	WMList *dirList;
-	WMList *iconList;
-	WMFont *normalfont;
-
-	WMButton *previewButton;
-
-	WMLabel *iconView;
-
-	WMLabel *fileLabel;
-	WMTextField *fileField;
-
-	WMButton *okButton;
-	WMButton *cancelButton;
-
-	short done;
-	short result;
-	short preview;
-} IconPanel;
-
-typedef struct {
-	virtual_screen *vscr;
-	WWindow *wwin;
-	WMWindow *win;
-	WMLabel *licenseL;
-} LegalPanel;
-
-typedef struct {
-	virtual_screen *vscr;
-	WWindow *wwin;
-	WMWindow *win;
-	WMLabel *logoL;
-	WMLabel *name1L;
-	WMFrame *lineF;
-	WMLabel *name2L;
-	WMLabel *versionL;
-	WMLabel *infoL;
-	WMLabel *copyrL;
-} InfoPanel;
-
 static LegalPanel *legalPanel = NULL;
 static InfoPanel *infoPanel = NULL;
 

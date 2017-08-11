@@ -27,18 +27,64 @@
 #include "winspector.h"
 
 enum {
-    WMAbort=0,
-    WMRestart,
-    WMStartAlternate
+	WMAbort = 0,
+	WMRestart,
+	WMStartAlternate
 };
 
+typedef struct IconPanel {
+	virtual_screen *vscr;
+	WMWindow *win;
+
+	WMLabel *dirLabel;
+	WMLabel *iconLabel;
+
+	WMList *dirList;
+	WMList *iconList;
+	WMFont *normalfont;
+
+	WMButton *previewButton;
+
+	WMLabel *iconView;
+
+	WMLabel *fileLabel;
+	WMTextField *fileField;
+
+	WMButton *okButton;
+	WMButton *cancelButton;
+
+	short done;
+	short result;
+	short preview;
+} IconPanel;
+
+typedef struct {
+	virtual_screen *vscr;
+	WWindow *wwin;
+	WMWindow *win;
+	WMLabel *licenseL;
+} LegalPanel;
+
+typedef struct {
+	virtual_screen *vscr;
+	WWindow *wwin;
+	WMWindow *win;
+	WMLabel *logoL;
+	WMLabel *name1L;
+	WMFrame *lineF;
+	WMLabel *name2L;
+	WMLabel *versionL;
+	WMLabel *infoL;
+	WMLabel *copyrL;
+} InfoPanel;
+
 int wMessageDialog(virtual_screen *vscr, const char *title, const char *message,
-                   const char *defBtn, const char *altBtn, const char *othBtn);
+		   const char *defBtn, const char *altBtn, const char *othBtn);
 int wAdvancedInputDialog(virtual_screen *vscr, const char *title, const char *message, const char *name, char **text);
 int wInputDialog(virtual_screen *vscr, const char *title, const char *message, char **text);
 
 int wExitDialog(virtual_screen *vscr, const char *title, const char *message, const char *defBtn,
-                const char *altBtn, const char *othBtn);
+		const char *altBtn, const char *othBtn);
 
 Bool wIconChooserDialog(AppSettingsPanel *app_panel, InspectorPanel *ins_panel, WAppIcon *icon, char **file);
 
