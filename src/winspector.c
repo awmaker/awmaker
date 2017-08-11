@@ -1013,15 +1013,13 @@ static void chooseIconCallback(WMWidget *self, void *clientData)
 
 	panel->choosingIcon = 0;
 
-	if (!panel->destroyed) {	/* kluge */
-		if (result) {
-			WMSetTextFieldText(panel->fileText, file);
-			showIconFor(WMWidgetScreen(self), panel, NULL, NULL, USE_TEXT_FIELD);
-		}
-		WMSetButtonEnabled(panel->browseIconBtn, True);
-	} else {
-		freeInspector(panel);
+	if (result) {
+		WMSetTextFieldText(panel->fileText, file);
+		showIconFor(WMWidgetScreen(self), panel, NULL, NULL, USE_TEXT_FIELD);
 	}
+
+	WMSetButtonEnabled(panel->browseIconBtn, True);
+
 	if (result)
 		wfree(file);
 }
