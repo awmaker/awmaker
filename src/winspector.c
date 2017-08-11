@@ -60,12 +60,14 @@
 #define UPDATE_DEFAULTS		1
 #define IS_BOOLEAN		2
 
-static const struct {
+typedef struct {
 	const char *key_name;
 	WWindowAttributes flag;
 	const char *caption;
 	const char *description;
-} window_attribute[] = {
+} winspectorpanel_attributes;
+
+static const winspectorpanel_attributes window_attribute[] = {
 	{ "NoTitlebar", { .no_titlebar = 1 }, N_("Disable titlebar"),
 	  N_("Remove the titlebar of this window.\n"
 	     "To access the window commands menu of a window\n"
@@ -107,8 +109,9 @@ static const struct {
 	  N_("Make the window use the whole screen space when it's\n"
 	     "maximized. The titlebar and resizebar will be moved\n"
 	     "to outside the screen.") }
+};
 
-}, advanced_option[] = {
+static const winspectorpanel_attributes advanced_option[] = {
 	{ "NoKeyBindings", { .no_bind_keys = 1 }, N_("Do not bind keyboard shortcuts"),
 	  N_("Do not bind keyboard shortcuts from Window Maker\n"
 	     "when this window is focused. This will allow the\n"
@@ -162,7 +165,9 @@ static const struct {
 	   N_("Remove the `toggle language' button of the window.") }
 #endif
 
-}, application_attr[] = {
+};
+
+static const winspectorpanel_attributes application_attr[] = {
 	{ "StartHidden", { .start_hidden = 1 }, N_("Start hidden"),
 	  N_("Automatically hide application when it's started.") },
 
@@ -203,11 +208,15 @@ typedef struct InspectorPanel {
 
 	/* second page. attributes */
 	WMFrame *attrFrm;
-	WMButton *attrChk[sizeof(window_attribute) / sizeof(window_attribute[0])];
+	WMButton *attrChk[11];
 
 	/* 3rd page. more attributes */
 	WMFrame *moreFrm;
-	WMButton *moreChk[sizeof(advanced_option) / sizeof(advanced_option[0])];
+#ifndef XKB_BUTTON_HINT
+	WMButton *moreChk[11];
+#else
+	WMButton *moreChk[12];
+#endif
 
 	/* 4th page. icon and workspace */
 	WMFrame *iconFrm;
@@ -221,7 +230,7 @@ typedef struct InspectorPanel {
 
 	/* 5th page. application wide attributes */
 	WMFrame *appFrm;
-	WMButton *appChk[sizeof(application_attr) / sizeof(application_attr[0])];
+	WMButton *appChk[3];
 
 	unsigned int done:1;
 	unsigned int destroyed:1;
