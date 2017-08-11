@@ -1050,14 +1050,10 @@ Bool wIconChooserDialog(AppSettingsPanel *app_panel, InspectorPanel *ins_panel, 
 
 	XReparentWindow(dpy, WMWidgetXID(panel->win), parent, 0, 0);
 
-	{
-
-		title = create_dialog_iconchooser_title(instance, class);
-		center = getCenter(vscr, win_width, win_height);
-
-		wwin = wManageInternalWindow(vscr, parent, None, title, center.x, center.y, win_width, win_height);
-		wfree(title);
-	}
+	title = create_dialog_iconchooser_title(instance, class);
+	center = getCenter(vscr, win_width, win_height);
+	wwin = wManageInternalWindow(vscr, parent, None, title, center.x, center.y, win_width, win_height);
+	wfree(title);
 
 	/* put icon paths in the list */
 	listIconPaths(panel->dirList);
