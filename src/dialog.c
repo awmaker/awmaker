@@ -1126,7 +1126,7 @@ static void destroyInfoPanel(WCoreWindow *foo, void *data, XEvent *event)
 	(void) data;
 	(void) event;
 
-	WMUnmapWidget(infoPanel);
+	WMUnmapWidget(infoPanel->win);
 	wUnmanageWindow(infoPanel->wwin, False, False);
 	WMDestroyWidget(infoPanel->win);
 	wfree(infoPanel);
