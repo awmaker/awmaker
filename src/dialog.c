@@ -1025,10 +1025,10 @@ Bool wIconChooserDialog(AppSettingsPanel *app_panel, InspectorPanel *ins_panel, 
 {
 	virtual_screen *vscr;
 	WScreen *scr;
+	char *defaultPath, *wantedPath, *title;
 	const char *instance, *class;
 	const int win_width = 450;
 	const int win_height = 280;
-	char *title;
 	Window parent;
 	IconPanel *panel;
 	Bool result;
@@ -1081,31 +1081,33 @@ Bool wIconChooserDialog(AppSettingsPanel *app_panel, InspectorPanel *ins_panel, 
 		WMHandleEvent(&event);
 	}
 
-	if (panel->result) {
-		char *defaultPath, *wantedPath;
-
-		/* check if the file the user selected is not the one that
-		 * would be loaded by default with the current search path */
-		*file = WMGetListSelectedItem(panel->iconList)->text;
-		if (**file == 0) {
-			wfree(*file);
-			*file = NULL;
-		} else {
-			defaultPath = FindImage(wPreferences.icon_path, *file);
-			wantedPath = WMGetTextFieldText(panel->fileField);
-
-			/* if the file is not the default, use full path */
-			if (strcmp(wantedPath, defaultPath) != 0) {
-				*file = wantedPath;
-			} else {
-				*file = wstrdup(*file);
-				wfree(wantedPath);
-			}
-
-			wfree(defaultPath);
-		}
-	} else {
+	if (!panel->result) {
 		*file = NULL;
+		destroy_dialog_iconchooser(panel, parent);
+		return False;
+	}
+
+	/*
+	 * Check if the file the user selected is not the one that
+	 * would be loaded by default with the current search path
+	 */
+	*file = WMGetListSelectedItem(panel->iconList)->text;
+	if (**file == 0) {
+		wfree(*file);
+		*file = NULL;
+	} else {
+		defaultPath = FindImage(wPreferences.icon_path, *file);
+		wantedPath = WMGetTextFieldText(panel->fileField);
+
+		/* if the file is not the default, use full path */
+		if (strcmp(wantedPath, defaultPath) != 0) {
+			*file = wantedPath;
+		} else {
+			*file = wstrdup(*file);
+			wfree(wantedPath);
+		}
+
+		wfree(defaultPath);
 	}
 
 	result = panel->result;
