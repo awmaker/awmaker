@@ -82,6 +82,8 @@
 	"Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA"\
 	"02110-1301 USA."
 
+static void create_dialog_iconchooser_widgets(IconPanel *panel, const int win_width, const int win_height);
+
 static LegalPanel *legalPanel = NULL;
 static InfoPanel *infoPanel = NULL;
 
@@ -873,42 +875,11 @@ static void keyPressHandler(XEvent *event, void *data)
 	}
 }
 
-Bool wIconChooserDialog(AppSettingsPanel *app_panel, InspectorPanel *ins_panel, WAppIcon *icon, char **file)
+static void create_dialog_iconchooser_widgets(IconPanel *panel, const int win_width, const int win_height)
 {
-	virtual_screen *vscr;
-	WScreen *scr;
-	const char *instance, *class;
-	const int win_width = 450;
-	const int win_height = 280;
-	WWindow *wwin;
-	Window parent;
-	IconPanel *panel;
-	WMColor *color;
+	WScreen *scr = panel->vscr->screen_ptr;
 	WMFont *boldFont;
-	Bool result;
-
-	panel = wmalloc(sizeof(IconPanel));
-	if (app_panel) {
-		/* Set values if parent is AppSettingsPanel */
-		app_panel->iconchooserdlg = panel;
-		instance = app_panel->editedIcon->wm_instance;
-		class = app_panel->editedIcon->wm_class;
-		vscr = app_panel->wwin->vscr;
-	} else if (ins_panel) {
-		/* Set values if parent is InspectorPanel */
-		ins_panel->iconchooserdlg = panel;
-		instance = ins_panel->inspected->wm_instance;
-		class = ins_panel->inspected->wm_class;
-		vscr = ins_panel->frame->vscr;
-	} else {
-		/* Set values if parent is Icon */
-		instance = icon->wm_instance;
-		class = icon->wm_class;
-		vscr = icon->icon->core->vscr;
-	}
-
-	scr = vscr->screen_ptr;
-	panel->vscr = vscr;
+	WMColor *color;
 
 	panel->win = WMCreateWindow(scr->wmscreen, "iconChooser");
 	WMResizeWidget(panel->win, win_width, win_height);
@@ -999,6 +970,44 @@ Bool wIconChooserDialog(AppSettingsPanel *app_panel, InspectorPanel *ins_panel, 
 
 	WMRealizeWidget(panel->win);
 	WMMapSubwidgets(panel->win);
+}
+
+Bool wIconChooserDialog(AppSettingsPanel *app_panel, InspectorPanel *ins_panel, WAppIcon *icon, char **file)
+{
+	virtual_screen *vscr;
+	WScreen *scr;
+	const char *instance, *class;
+	const int win_width = 450;
+	const int win_height = 280;
+	WWindow *wwin;
+	Window parent;
+	IconPanel *panel;
+	Bool result;
+
+	panel = wmalloc(sizeof(IconPanel));
+	if (app_panel) {
+		/* Set values if parent is AppSettingsPanel */
+		app_panel->iconchooserdlg = panel;
+		instance = app_panel->editedIcon->wm_instance;
+		class = app_panel->editedIcon->wm_class;
+		vscr = app_panel->wwin->vscr;
+	} else if (ins_panel) {
+		/* Set values if parent is InspectorPanel */
+		ins_panel->iconchooserdlg = panel;
+		instance = ins_panel->inspected->wm_instance;
+		class = ins_panel->inspected->wm_class;
+		vscr = ins_panel->frame->vscr;
+	} else {
+		/* Set values if parent is Icon */
+		instance = icon->wm_instance;
+		class = icon->wm_class;
+		vscr = icon->icon->core->vscr;
+	}
+
+	scr = vscr->screen_ptr;
+	panel->vscr = vscr;
+
+	create_dialog_iconchooser_widgets(panel, win_width, win_height);
 
 	parent = XCreateSimpleWindow(dpy, scr->root_win, 0, 0, win_width, win_height, 0, 0, 0);
 
