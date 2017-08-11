@@ -258,32 +258,36 @@ static WMArray *LoadHistory(const char *filename, int max)
 	history = WMCreateArrayWithDestructor(1, wfree);
 	WMAddToArray(history, wstrdup(""));
 	plhistory = WMReadPropListFromFile(filename);
-	if (plhistory) {
-		if (WMIsPLArray(plhistory)) {
-			num = WMGetPropListItemCount(plhistory);
+	if (!plhistory)
+		return history;
 
-			for (i = 0; i < num; ++i) {
-				plitem = WMGetFromPLArray(plhistory, i);
-				if (WMIsPLString(plitem)) {
-					str = WMGetFromPLString(plitem);
-					if (WMFindInArray(history, strmatch, str) == WANotFound) {
-						/*
-						 * The string here is duplicated because it will be freed
-						 * automatically when the array is deleted. This is not really
-						 * great because it is already an allocated string,
-						 * unfortunately we cannot re-use it because it will be freed
-						 * when we discard the PL (and we don't want to waste the PL's
-						 * memory either)
-						 */
-						WMAddToArray(history, wstrdup(str));
-						if (--max <= 0)
-							break;
-					}
-				}
+	if (WMIsPLArray(plhistory)) {
+		WMReleasePropList(plhistory);
+		return history;
+	}
+
+	num = WMGetPropListItemCount(plhistory);
+	for (i = 0; i < num; ++i) {
+		plitem = WMGetFromPLArray(plhistory, i);
+		if (WMIsPLString(plitem)) {
+			str = WMGetFromPLString(plitem);
+			if (WMFindInArray(history, strmatch, str) == WANotFound) {
+				/*
+				 * The string here is duplicated because it will be freed
+				 * automatically when the array is deleted. This is not really
+				 * great because it is already an allocated string,
+				 * unfortunately we cannot re-use it because it will be freed
+				 * when we discard the PL (and we don't want to waste the PL's
+				 * memory either)
+				 */
+				WMAddToArray(history, wstrdup(str));
+				if (--max <= 0)
+					break;
 			}
 		}
-		WMReleasePropList(plhistory);
 	}
+
+	WMReleasePropList(plhistory);
 
 	return history;
 }
