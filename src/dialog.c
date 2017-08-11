@@ -84,6 +84,7 @@
 
 static void create_dialog_iconchooser_widgets(IconPanel *panel, const int win_width, const int win_height);
 static char *create_dialog_iconchooser_title(const char *instance, const char *class);
+static void destroy_dialog_iconchooser(IconPanel *panel, Window parent);
 
 static LegalPanel *legalPanel = NULL;
 static InfoPanel *infoPanel = NULL;
@@ -1010,6 +1011,16 @@ static char *create_dialog_iconchooser_title(const char *instance, const char *c
 	return title;
 }
 
+static void destroy_dialog_iconchooser(IconPanel *panel, Window parent)
+{
+	WMReleaseFont(panel->normalfont);
+	WMUnmapWidget(panel->win);
+	WMDestroyWidget(panel->win);
+	wUnmanageWindow(panel->wwin, False, False);
+	wfree(panel);
+	XDestroyWindow(dpy, parent);
+}
+
 Bool wIconChooserDialog(AppSettingsPanel *app_panel, InspectorPanel *ins_panel, WAppIcon *icon, char **file)
 {
 	virtual_screen *vscr;
@@ -1098,13 +1109,7 @@ Bool wIconChooserDialog(AppSettingsPanel *app_panel, InspectorPanel *ins_panel, 
 	}
 
 	result = panel->result;
-
-	WMReleaseFont(panel->normalfont);
-	WMUnmapWidget(panel->win);
-	WMDestroyWidget(panel->win);
-	wUnmanageWindow(panel->wwin, False, False);
-	wfree(panel);
-	XDestroyWindow(dpy, parent);
+	destroy_dialog_iconchooser(panel, parent);
 
 	return result;
 }
