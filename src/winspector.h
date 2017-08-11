@@ -26,6 +26,7 @@ typedef struct InspectorPanel InspectorPanel;
 
 #include "config.h"
 #include "window.h"
+#include "dialog.h"
 
 struct InspectorPanel {
 	struct InspectorPanel *nextPtr;
@@ -35,6 +36,7 @@ struct InspectorPanel {
 	WMWindow *wwin;
 	Window parent;
 	char *title;		/* InspectorPanel title */
+	IconPanel *iconchooserdlg;
 
 	/* common stuff */
 	WMButton *revertBtn;

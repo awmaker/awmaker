@@ -887,13 +887,16 @@ Bool wIconChooserDialog(AppSettingsPanel *app_panel, InspectorPanel *ins_panel, 
 	WMFont *boldFont;
 	Bool result;
 
+	panel = wmalloc(sizeof(IconPanel));
 	if (app_panel) {
 		/* Set values if parent is AppSettingsPanel */
+		app_panel->iconchooserdlg = panel;
 		instance = app_panel->editedIcon->wm_instance;
 		class = app_panel->editedIcon->wm_class;
 		vscr = app_panel->wwin->vscr;
 	} else if (ins_panel) {
 		/* Set values if parent is InspectorPanel */
+		ins_panel->iconchooserdlg = panel;
 		instance = ins_panel->inspected->wm_instance;
 		class = ins_panel->inspected->wm_class;
 		vscr = ins_panel->frame->vscr;
@@ -903,10 +906,8 @@ Bool wIconChooserDialog(AppSettingsPanel *app_panel, InspectorPanel *ins_panel, 
 		class = icon->wm_class;
 		vscr = icon->icon->core->vscr;
 	}
+
 	scr = vscr->screen_ptr;
-
-
-	panel = wmalloc(sizeof(IconPanel));
 	panel->vscr = vscr;
 
 	panel->win = WMCreateWindow(scr->wmscreen, "iconChooser");

@@ -24,9 +24,12 @@
 
 typedef struct AppSettingsPanel AppSettingsPanel;
 
+#include "dialog.h"
+
 struct AppSettingsPanel {
 	WMWindow *win;
 	WAppIcon *editedIcon;
+	IconPanel *iconchooserdlg;
 
 	WWindow *wwin;
 
