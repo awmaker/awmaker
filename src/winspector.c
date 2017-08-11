@@ -336,22 +336,6 @@ static void make_keys(void)
 	No = WMCreatePLString("No");
 }
 
-static void freeInspector(InspectorPanel *panel)
-{
-	panel->destroyed = 1;
-
-	if (panel->choosingIcon)
-		return;
-
-	WMDestroyWidget(panel->wwin);
-	XDestroyWindow(dpy, panel->parent);
-
-	if (panel->title)
-		wfree(panel->title);
-
-	wfree(panel);
-}
-
 void winspector_destroy(InspectorPanel *panel)
 {
 	InspectorPanel *tmp_panel;
@@ -380,7 +364,15 @@ void winspector_destroy(InspectorPanel *panel)
 	wWindowUnmap(panel->frame);
 	wUnmanageWindow(panel->frame, True, False);
 
-	freeInspector(panel);
+	panel->destroyed = 1;
+
+	WMDestroyWidget(panel->wwin);
+	XDestroyWindow(dpy, panel->parent);
+
+	if (panel->title)
+		wfree(panel->title);
+
+	wfree(panel);
 }
 
 static void destroyInspector(WCoreWindow *foo, void *data, XEvent *event)
