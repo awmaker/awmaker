@@ -321,29 +321,32 @@ static void ScanFiles(const char *dir, const char *prefix,
 
 	prefixlen = strlen(prefix);
 	d = opendir(dir);
-	if (d != NULL) {
-		while ((de = readdir(d)) != NULL) {
-			if (strlen(de->d_name) > prefixlen &&
-			    !strncmp(prefix, de->d_name, prefixlen) &&
-			    strcmp(de->d_name, ".") != 0 && strcmp(de->d_name, "..")) {
-				fullfilename = wstrconcat((char *)dir, "/");
-				fullfilename = wstrappend(fullfilename, de->d_name);
+	if (!d)
+		return;
 
-				if (stat(fullfilename, &sb) == 0 &&
-				    (sb.st_mode & acceptmask) &&
-				    !(sb.st_mode & declinemask) &&
-				    WMFindInArray(result, (WMMatchDataProc *) strmatch,
-						  de->d_name + prefixlen) == WANotFound) {
-					suffix = wstrdup(de->d_name + prefixlen);
-					if (sb.st_mode & S_IFDIR)
-						suffix = wstrappend(suffix, "/");
-					WMAddToArray(result, suffix);
-				}
-				wfree(fullfilename);
+	while ((de = readdir(d)) != NULL) {
+		if (strlen(de->d_name) > prefixlen &&
+		    !strncmp(prefix, de->d_name, prefixlen) &&
+		    strcmp(de->d_name, ".") != 0 && strcmp(de->d_name, "..")) {
+			fullfilename = wstrconcat((char *)dir, "/");
+			fullfilename = wstrappend(fullfilename, de->d_name);
+
+			if (stat(fullfilename, &sb) == 0 &&
+			    (sb.st_mode & acceptmask) &&
+			    !(sb.st_mode & declinemask) &&
+			    WMFindInArray(result, (WMMatchDataProc *) strmatch,
+					  de->d_name + prefixlen) == WANotFound) {
+				suffix = wstrdup(de->d_name + prefixlen);
+				if (sb.st_mode & S_IFDIR)
+					suffix = wstrappend(suffix, "/");
+
+				WMAddToArray(result, suffix);
 			}
+			wfree(fullfilename);
 		}
-		closedir(d);
 	}
+
+	closedir(d);
 }
 
 static WMArray *GenerateVariants(const char *complete)
