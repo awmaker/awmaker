@@ -159,6 +159,17 @@ static int alert_panel(WMAlertPanel *panel, virtual_screen *vscr)
 	XReparentWindow(dpy, WMWidgetXID(panel->win), parent, 0, 0);
 	center = getCenter(vscr, win_width, win_height);
 	wwin = wManageInternalWindow(vscr, parent, None, NULL, center.x, center.y, win_width, win_height);
+
+	WSETUFLAG(wwin, no_closable, 0);
+	WSETUFLAG(wwin, no_close_button, 0);
+
+	wWindowUpdateButtonImages(wwin);
+	wframewindow_show_rightbutton(wwin->frame);
+#ifdef XKB_BUTTON_HINT
+	wframewindow_hide_languagebutton(wwin->frame);
+#endif
+	wframewindow_refresh_titlebar(wwin->frame);
+
 	wwin->client_leader = WMWidgetXID(panel->win);
 	WMMapWidget(panel->win);
 	wWindowMap(wwin);
