@@ -72,20 +72,21 @@ static void focusWindow(WMenu * menu, WMenuEntry * entry)
 
 void InitializeSwitchMenu(void)
 {
-	if (!initialized) {
-		initialized = 1;
+	if (initialized)
+		return;
 
-		WMAddNotificationObserver(observer, NULL, WMNManaged, NULL);
-		WMAddNotificationObserver(observer, NULL, WMNUnmanaged, NULL);
-		WMAddNotificationObserver(observer, NULL, WMNChangedWorkspace, NULL);
-		WMAddNotificationObserver(observer, NULL, WMNChangedState, NULL);
-		WMAddNotificationObserver(observer, NULL, WMNChangedFocus, NULL);
-		WMAddNotificationObserver(observer, NULL, WMNChangedStacking, NULL);
-		WMAddNotificationObserver(observer, NULL, WMNChangedName, NULL);
+	initialized = 1;
 
-		WMAddNotificationObserver(wsobserver, NULL, WMNWorkspaceChanged, NULL);
-		WMAddNotificationObserver(wsobserver, NULL, WMNWorkspaceNameChanged, NULL);
-	}
+	WMAddNotificationObserver(observer, NULL, WMNManaged, NULL);
+	WMAddNotificationObserver(observer, NULL, WMNUnmanaged, NULL);
+	WMAddNotificationObserver(observer, NULL, WMNChangedWorkspace, NULL);
+	WMAddNotificationObserver(observer, NULL, WMNChangedState, NULL);
+	WMAddNotificationObserver(observer, NULL, WMNChangedFocus, NULL);
+	WMAddNotificationObserver(observer, NULL, WMNChangedStacking, NULL);
+	WMAddNotificationObserver(observer, NULL, WMNChangedName, NULL);
+
+	WMAddNotificationObserver(wsobserver, NULL, WMNWorkspaceChanged, NULL);
+	WMAddNotificationObserver(wsobserver, NULL, WMNWorkspaceNameChanged, NULL);
 }
 
 void switchmenu_create(virtual_screen *vscr)

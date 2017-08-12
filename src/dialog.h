@@ -22,26 +22,105 @@
 #ifndef WMDIALOG_H_
 #define WMDIALOG_H_
 
+typedef struct IconPanel IconPanel;
+typedef struct Panel Panel;
+typedef struct InfoPanel InfoPanel;
+
+#include "appicon.h"
+#include "dockedapp.h"
+#include "winspector.h"
 
 enum {
-    WMAbort=0,
-    WMRestart,
-    WMStartAlternate
+	WMAbort = 0,
+	WMRestart,
+	WMStartAlternate
 };
 
+#define PANEL_LEGAL 1
+#define PANEL_INFO  2
+
+struct IconPanel {
+	virtual_screen *vscr;
+	WWindow *wwin;
+	WMWindow *win;
+
+	WMLabel *dirLabel;
+	WMLabel *iconLabel;
+
+	WMList *dirList;
+	WMList *iconList;
+	WMFont *normalfont;
+
+	WMButton *previewButton;
+
+	WMLabel *iconView;
+
+	WMLabel *fileLabel;
+	WMTextField *fileField;
+
+	WMButton *okButton;
+	WMButton *cancelButton;
+
+	short done;
+	short result;
+	short preview;
+};
+
+struct Panel {
+	virtual_screen *vscr;
+	WWindow *wwin;
+	WMWindow *win;
+	int type;
+
+	/* Legal Panel */
+	WMLabel *lbl_license;
+
+	/* Info Panel */
+	WMLabel *lbl_logo;
+	WMLabel *lbl_name1;
+	WMFrame *frm_line;
+	WMLabel *lbl_name2;
+	WMLabel *lbl_version;
+	WMLabel *lbl_info;
+	WMLabel *lbl_copyr;
+};
+
+typedef struct CrashPanel {
+	WMWindow *win;		/* main window */
+	WMLabel *iconL;		/* application icon */
+	WMLabel *nameL;		/* title of panel */
+	WMFrame *sepF;		/* separator frame */
+	WMLabel *noteL;		/* Title of note */
+	WMLabel *note2L;	/* body of note with what happened */
+	WMFrame *whatF;		/* "what to do next" frame */
+	WMPopUpButton *whatP;	/* action selection popup button */
+	WMButton *okB;		/* ok button */
+	Bool done;		/* if finished with this dialog */
+	int action;		/* what to do after */
+	KeyCode retKey;
+} CrashPanel;
+
+typedef struct WMInputPanelWithHistory {
+	WMInputPanel *panel;
+	WMArray *history;
+	int histpos;
+	char *prefix;
+	char *suffix;
+	char *rest;
+	WMArray *variants;
+	int varpos;
+} WMInputPanelWithHistory;
+
 int wMessageDialog(virtual_screen *vscr, const char *title, const char *message,
-                   const char *defBtn, const char *altBtn, const char *othBtn);
+		   const char *defBtn, const char *altBtn, const char *othBtn);
 int wAdvancedInputDialog(virtual_screen *vscr, const char *title, const char *message, const char *name, char **text);
 int wInputDialog(virtual_screen *vscr, const char *title, const char *message, char **text);
 
 int wExitDialog(virtual_screen *vscr, const char *title, const char *message, const char *defBtn,
-                const char *altBtn, const char *othBtn);
+		const char *altBtn, const char *othBtn);
 
-Bool wIconChooserDialog(virtual_screen *vscr, char **file, const char *instance, const char *class);
+Bool wIconChooserDialog(AppSettingsPanel *app_panel, InspectorPanel *ins_panel, WAppIcon *icon, char **file);
 
-void wShowInfoPanel(virtual_screen *vscr);
-void wShowLegalPanel(virtual_screen *vscr);
+void panel_show(virtual_screen *vscr, int type);
 int wShowCrashingDialogPanel(int whatSig);
-
-
 #endif

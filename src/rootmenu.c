@@ -45,6 +45,7 @@
 #include "menu.h"
 #include "misc.h"
 #include "main.h"
+#include "shell.h"
 #include "dialog.h"
 #include "keybind.h"
 #include "stacking.h"
@@ -55,9 +56,9 @@
 #include "shutdown.h"
 #include "xmodifier.h"
 #include "rootmenu.h"
-#include "startup.h"
 #include "switchmenu.h"
 #include "screen.h"
+#include "input.h"
 
 #include <WINGs/WUtil.h>
 
@@ -153,18 +154,11 @@ static void execCommand(WMenu *menu, WMenuEntry *entry)
 	char *cmdline;
 
 	cmdline = ExpandOptions(menu->frame->vscr, (char *)entry->clientdata);
+	if (!cmdline)
+		return;
 
-	XGrabPointer(dpy, menu->frame->vscr->screen_ptr->root_win, True, 0,
-		     GrabModeAsync, GrabModeAsync, None, wPreferences.cursor[WCUR_WAIT], CurrentTime);
-	XSync(dpy, 0);
-
-	if (cmdline) {
-		ExecuteShellCommand(menu->frame->vscr, cmdline);
-		wfree(cmdline);
-	}
-
-	XUngrabPointer(dpy, CurrentTime);
-	XSync(dpy, 0);
+	ExecuteShellCommand(menu->frame->vscr, cmdline);
+	wfree(cmdline);
 }
 
 static void exitCommand(WMenu *menu, WMenuEntry *entry)
@@ -322,7 +316,7 @@ static void infoPanelCommand(WMenu *menu, WMenuEntry *entry)
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 
-	wShowInfoPanel(menu->frame->vscr);
+	panel_show(menu->frame->vscr, PANEL_INFO);
 }
 
 static void legalPanelCommand(WMenu *menu, WMenuEntry *entry)
@@ -330,7 +324,7 @@ static void legalPanelCommand(WMenu *menu, WMenuEntry *entry)
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 
-	wShowLegalPanel(menu->frame->vscr);
+	panel_show(menu->frame->vscr, PANEL_LEGAL);
 }
 
 /********************************************************************/
@@ -408,7 +402,7 @@ void wRootMenuBindShortcuts(Window window)
 			XGrabKey(dpy, ptr->keycode, ptr->modifier | LockMask,
 				 window, True, GrabModeAsync, GrabModeAsync);
 #ifdef NUMLOCK_HACK
-			wHackedGrabKey(ptr->keycode, ptr->modifier, window, True, GrabModeAsync, GrabModeAsync);
+			wHackedGrabKey(dpy, ptr->keycode, ptr->modifier, window, True, GrabModeAsync, GrabModeAsync);
 #endif
 		}
 		XGrabKey(dpy, ptr->keycode, ptr->modifier, window, True, GrabModeAsync, GrabModeAsync);

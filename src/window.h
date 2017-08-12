@@ -287,6 +287,7 @@ typedef struct WWindow {
 						 * else is NULL! */
 	int icon_x, icon_y;			/* position of the icon */
 	int icon_w, icon_h;
+	char *title;				/* Window title */
 	RImage *net_icon_image;			/* Window Image */
 	Atom type;
 } WWindow;
@@ -332,6 +333,7 @@ WWindow *wWindowCreate(void);
 #ifdef USE_XSHAPE
 void wWindowSetShape(WWindow *wwin);
 void wWindowClearShape(WWindow *wwin);
+void wwindow_set_xshape(Display *dpy, Window window, WWindow *wwin);
 #endif
 
 void wUnmanageWindow(WWindow *wwin, Bool restore, Bool destroyed);
@@ -371,6 +373,7 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window);
 WWindow *wManageInternalWindow(virtual_screen *vscr, Window window, Window owner,
                                const char *title, int x, int y,
                                int width, int height);
+Bool RelaunchWindow(WWindow *wwin);
 
 void wWindowSetupInitialAttributes(WWindow *wwin, int *level, int *workspace);
 void wWindowUpdateGNUstepAttr(WWindow *wwin, GNUstepWMAttributes *attr);
@@ -378,8 +381,8 @@ void wWindowMap(WWindow *wwin);
 void wWindowUnmap(WWindow *wwin);
 void wWindowDeleteSavedStatesForPID(pid_t pid);
 
-WMagicNumber wWindowAddSavedState(const char *instance, const char *class, const char *command,
-                                  pid_t pid, WSavedState *state);
+void wWindowAddSavedState(const char *instance, const char *class, const char *command,
+			  pid_t pid, WSavedState *state);
 
 WMagicNumber wWindowGetSavedState(Window win);
 void wWindowDeleteSavedState(WMagicNumber id);

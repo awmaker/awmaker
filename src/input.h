@@ -1,8 +1,6 @@
-/*
- *  Window Maker window manager
+/* input.h
  *
- *  Copyright (c) 1997-2003 Alfredo K. Kojima
- *  Copyright (c) 1998-2003 Dan Pascu
+ *  Copyright (c) 2017 Rodolfo García Peñas <kix@kix.es>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,20 +17,27 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef WMMAIN_H_
-#define WMMAIN_H_
+#ifndef _WM_INPUT_H_
+#define _WM_INPUT_H_
 
-#include "config.h"
+#include "wconfig.h"
 
-#ifdef HAVE_STDNORETURN
-#include <stdnoreturn.h>
+/* Keyboard definitions */
+unsigned int _NumLockMask;
+unsigned int _ScrollLockMask;
+
+/* Keyboard functions */
+void wHackedGrabButton(Display *dpy, unsigned int button, unsigned int modifiers,
+		       Window grab_window, Bool owner_events,
+		       unsigned int event_mask, int pointer_mode,
+		       int keyboard_mode, Window confine_to, Cursor cursor);
+
+#ifdef NUMLOCK_HACK
+void wHackedGrabKey(Display *dpy, int keycode, unsigned int modifiers,
+		    Window grab_window, Bool owner_events, int pointer_mode,
+		    int keyboard_mode);
 #endif
 
-noreturn void Exit(int status);
-void Restart(char *manager, Bool abortOnFailure);
-void SetupEnvironment(virtual_screen *vscr);
-noreturn void wAbort(Bool dumpCore);
-void ExecExitScript(void);
-int getWVisualID(int screen);
+void getOffendingModifiers(Display *dpy);
 
 #endif

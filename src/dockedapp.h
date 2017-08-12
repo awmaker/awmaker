@@ -22,10 +22,14 @@
 #ifndef WMDOCKEDAPP_H_
 #define WMDOCKEDAPP_H_
 
+typedef struct AppSettingsPanel AppSettingsPanel;
 
-typedef struct _AppSettingsPanel {
+#include "dialog.h"
+
+struct AppSettingsPanel {
 	WMWindow *win;
 	WAppIcon *editedIcon;
+	IconPanel *iconchooserdlg;
 
 	WWindow *wwin;
 
@@ -58,7 +62,7 @@ typedef struct _AppSettingsPanel {
 	/* kluge */
 	unsigned int destroyed:1;
 	unsigned int choosingIcon:1;
-} AppSettingsPanel;
+};
 
 void DestroyDockAppSettingsPanel(AppSettingsPanel *panel);
 void ShowDockAppSettingsPanel(WAppIcon *aicon);

@@ -62,7 +62,6 @@
 static void find_Maximus_geometry(WWindow *wwin, WArea usableArea, int *new_x, int *new_y,
 				  unsigned int *new_width, unsigned int *new_height);
 static void save_old_geometry(WWindow *wwin, int directions);
-
 /******* Local Variables *******/
 static struct {
 	int steps;
@@ -1250,47 +1249,8 @@ void wIconifyWindow(WWindow *wwin)
 		wwin->icon->mapped = 1;
 
 		/* extract the window screenshot every time, as the option can be enable anytime */
-		if (wwin->client_win && wwin->flags.mapped) {
-			RImage *mini_preview;
-			XImage *pimg;
-			unsigned int w, h;
-			int x, y;
-			Window baz;
-
-			XRaiseWindow(dpy, wwin->frame->core->window);
-			XTranslateCoordinates(dpy, wwin->client_win, wwin->vscr->screen_ptr->root_win, 0, 0, &x, &y, &baz);
-
-			w = attribs.width;
-			h = attribs.height;
-
-			if (x - attribs.x + attribs.width > wwin->vscr->screen_ptr->scr_width)
-				w = wwin->vscr->screen_ptr->scr_width - x + attribs.x;
-
-			if (y - attribs.y + attribs.height > wwin->vscr->screen_ptr->scr_height)
-				h = wwin->vscr->screen_ptr->scr_height - y + attribs.y;
-
-			pimg = XGetImage(dpy, wwin->client_win, 0, 0, w, h, AllPlanes, ZPixmap);
-			if (pimg) {
-				mini_preview = RCreateImageFromXImage(wwin->vscr->screen_ptr->rcontext, pimg, NULL);
-				XDestroyImage(pimg);
-
-				if (mini_preview) {
-					set_icon_minipreview(wwin->icon, mini_preview);
-					RReleaseImage(mini_preview);
-				} else {
-					const char *title;
-					char title_buf[32];
-
-					if (wwin->frame->title) {
-						title = wwin->frame->title;
-					} else {
-						snprintf(title_buf, sizeof(title_buf), "(id=0x%lx)", wwin->client_win);
-						title = title_buf;
-					}
-					wwarning(_("creation of mini-preview failed for window \"%s\""), title);
-				}
-			}
-		}
+		if (wwin->client_win && wwin->flags.mapped)
+			(void) create_icon_minipreview(wwin);
 	}
 
 	wwin->flags.miniaturized = 1;

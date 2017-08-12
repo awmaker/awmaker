@@ -43,6 +43,7 @@
 #include "workspace.h"
 #include "balloon.h"
 #include "misc.h"
+#include "window.h"
 
 
 typedef struct _WBalloon {
@@ -460,15 +461,17 @@ static void frameBalloon(WObjDescriptor *object)
 	WFrameWindow *fwin = (WFrameWindow *) object->parent;
 	virtual_screen *vscr = fwin->core->vscr;
 	WScreen *scr = vscr->screen_ptr;
+	WWindow *wwin;
 
 	if (fwin->titlebar != object->self || !fwin->flags.is_client_window_frame) {
 		wBalloonHide(vscr);
 		return;
 	}
 
-	if (fwin->title && fwin->flags.incomplete_title) {
+	wwin = (WWindow *) fwin->child;
+	if (wwin->title && fwin->flags.incomplete_title) {
 		scr->balloon->h = (fwin->titlebar ? fwin->titlebar->height : 0);
-		scr->balloon->text = wstrdup(fwin->title);
+		scr->balloon->text = wstrdup(wwin->title);
 		scr->balloon->objectWindow = fwin->core->window;
 		scr->balloon->timer = WMAddTimerHandler(BALLOON_DELAY, (WMCallback *) showBalloon, scr);
 	}

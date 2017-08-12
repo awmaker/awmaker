@@ -48,7 +48,7 @@ typedef struct WAppIcon {
 	pid_t pid;			 /* for apps launched from the dock */
 	Window main_window;
 	struct WDock *dock;		 /* In which dock is docked. */
-	struct _AppSettingsPanel *panel; /* Settings Panel */
+	struct AppSettingsPanel *panel;  /* Settings Panel */
 	unsigned int docked:1;
 	unsigned int omnipresent:1;	 /* If omnipresent when
 					  * docked in clip */

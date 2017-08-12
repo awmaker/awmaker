@@ -40,7 +40,6 @@
 #include "actions.h"
 #include "stacking.h"
 #include "dock.h"
-#include "main.h"
 #include "defaults.h"
 #include "workspace.h"
 #include "superfluous.h"
@@ -547,8 +546,7 @@ static void setIconCallback(WMenu *menu, WMenuEntry *entry)
 
 	wretain(icon);
 
-	result = wIconChooserDialog(vscr, &file, icon->wm_instance, icon->wm_class);
-
+	result = wIconChooserDialog(NULL, NULL, icon, &file);
 	if (result) {
 		if (!icon->destroyed) {
 			if (!wIconChangeImageFile(icon->icon, file)) {

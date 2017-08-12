@@ -76,7 +76,7 @@
 #include "session.h"
 #include "framewin.h"
 #include "workspace.h"
-#include "main.h"
+#include "shell.h"
 #include "properties.h"
 #include "application.h"
 #include "appicon.h"
@@ -351,24 +351,7 @@ static pid_t execCommand(virtual_screen *vscr, char *command)
 	if (!argc)
 		return 0;
 
-	pid = fork();
-	if (pid == 0) {
-		char **args;
-		int i;
-
-		SetupEnvironment(vscr);
-
-		args = malloc(sizeof(char *) * (argc + 1));
-		if (!args)
-			exit(111);
-
-		for (i = 0; i < argc; i++)
-			args[i] = argv[i];
-
-		args[argc] = NULL;
-		execvp(argv[0], args);
-		exit(111);
-	}
+	pid = execute_command2(vscr, argv, argc);
 
 	while (argc > 0)
 		wfree(argv[--argc]);

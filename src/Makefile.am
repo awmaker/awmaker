@@ -44,6 +44,8 @@ awmaker_SOURCES = 	\
 	osdep.h \
 	icon.c \
 	icon.h \
+	input.c \
+	input.h \
 	keybind.h \
 	main.c \
 	main.h \
@@ -67,6 +69,8 @@ awmaker_SOURCES = 	\
 	screen.h \
 	session.h \
 	session.c \
+	shell.h \
+	shell.c \
 	shutdown.h \
 	shutdown.c \
 	switchpanel.c \

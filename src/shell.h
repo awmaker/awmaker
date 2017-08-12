@@ -1,8 +1,6 @@
-/*
- *  Window Maker window manager
+/* shell.h
  *
- *  Copyright (c) 1997-2003 Alfredo K. Kojima
- *  Copyright (c) 1998-2003 Dan Pascu
+ *  Copyright (c) 2017 Rodolfo García Peñas <kix@kix.es>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,20 +17,13 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef WMMAIN_H_
-#define WMMAIN_H_
+#ifndef _WM_SHELL_H_
+#define _WM_SHELL_H_
 
-#include "config.h"
+#include "wconfig.h"
 
-#ifdef HAVE_STDNORETURN
-#include <stdnoreturn.h>
-#endif
-
-noreturn void Exit(int status);
-void Restart(char *manager, Bool abortOnFailure);
-void SetupEnvironment(virtual_screen *vscr);
-noreturn void wAbort(Bool dumpCore);
-void ExecExitScript(void);
-int getWVisualID(int screen);
+void ExecuteShellCommand(virtual_screen *vscr, const char *command);
+int execute_command(virtual_screen *vscr, char **argv, int argc);
+int execute_command2(virtual_screen *vscr, char **argv, int argc);
 
 #endif

@@ -47,7 +47,7 @@
 #include "dock.h"
 #include "dockedapp.h"
 #include "dialog.h"
-#include "main.h"
+#include "shell.h"
 #include "properties.h"
 #include "menu.h"
 #include "client.h"
@@ -4514,29 +4514,7 @@ static pid_t execCommand(WAppIcon *btn, const char *command, WSavedState *state)
 		return 0;
 	}
 
-	pid = fork();
-	if (pid == 0) {
-		char **args;
-		int i;
-
-		SetupEnvironment(vscr);
-
-#ifdef HAVE_SETSID
-		setsid();
-#endif
-
-		args = malloc(sizeof(char *) * (argc + 1));
-		if (!args)
-			exit(111);
-
-		for (i = 0; i < argc; i++)
-			args[i] = argv[i];
-
-		args[argc] = NULL;
-		execvp(argv[0], args);
-		exit(111);
-	}
-
+	pid = execute_command2(vscr, argv, argc);
 	wtokenfree(argv, argc);
 
 	if (pid > 0) {
@@ -5318,7 +5296,7 @@ static void iconDblClick(WObjDescriptor *desc, XEvent *event)
 						if (!btn->launching && (!btn->running || (event->xbutton.state & ControlMask)))
 							launchDockedApplication(btn, False);
 					} else {
-						wShowInfoPanel(dock->vscr);
+						panel_show(dock->vscr, PANEL_INFO);
 					}
 				} else {
 					toggleCollapsed(dock);
@@ -5329,7 +5307,7 @@ static void iconDblClick(WObjDescriptor *desc, XEvent *event)
 				if (!btn->launching && (!btn->running || (event->xbutton.state & ControlMask)))
 					launchDockedApplication(btn, False);
 			} else if (btn->xindex == 0 && btn->yindex == 0 && btn->dock->type == WM_DOCK) {
-				wShowInfoPanel(dock->vscr);
+				panel_show(dock->vscr, PANEL_INFO);
 			}
 		}
 	}

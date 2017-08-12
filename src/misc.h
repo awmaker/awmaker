@@ -50,4 +50,7 @@ char *GetShortcutKey(WShortKey key);
 char *EscapeWM_CLASS(const char *name, const char *class);
 char *StrConcatDot(const char *a, const char *b);
 char *GetCommandForWindow(Window win);
+
+int create_minipixmap_for_window(virtual_screen *vscr, Window win, Pixmap *tmp);
+int create_minipixmap_for_wwindow(virtual_screen *vscr, WWindow *wwin, Pixmap *pixmap);
 #endif

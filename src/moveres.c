@@ -1772,7 +1772,6 @@ int wMouseMoveWindow(WWindow *wwin, XEvent *ev)
 
 				snap_direction = get_snap_direction(scr, moveData.mouseX, moveData.mouseY);
 
-				/* TODO: kix, check if this code is in wmaker */
 				if (!wPreferences.no_autowrap &&
 				    snap_direction != SNAP_TOP &&
 				    snap_direction != SNAP_BOTTOM)

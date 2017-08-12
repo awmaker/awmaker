@@ -60,9 +60,10 @@
 #include "rootmenu.h"
 #include "placement.h"
 #include "misc.h"
-#include "startup.h"
 #include "winmenu.h"
 #include "osdep.h"
+#include "input.h"
+#include "shell.h"
 
 #ifdef USE_MWM_HINTS
 # include "motif.h"
@@ -101,9 +102,38 @@ static void release_wwindowstate(WWindowState *wstate);
 static WWindow *window_focus_sloppy(WScreen *scr, WWindow *wwin);
 static WWindow *window_focus_click(virtual_screen *vscr, WWindow *wwin);
 
+static void appearanceObserver(void *self, WMNotification *notif);
+static void discard_hints_from_gtk(WWindow *wwin);
+static void fixLeaderProperties(WWindow *wwin);
+static Window createFakeWindowGroupLeader(virtual_screen *vscr, Window win, char *instance, char *class);
+static int matchIdentifier(const void *item, const void *cdata);
+static void setupGNUstepHints_defaults(WWindow *wwin, int value);
+static void setupGNUstepHints_withborder(WWindow *wwin, GNUstepWMAttributes *gs_hints);
+static void wWindowSetupInitialAttributes_GNUStep(WWindow *wwin, int *level, int *workspace);
+Bool wwindow_set_wmhints(WWindow *wwin, Bool withdraw);
+static void wwindow_set_fakegroupleader(virtual_screen *vscr, WWindow *wwin);
+static int window_restarting_restore(Window window, WWindow *wwin, WWindowState *win_state, int workspace);
+static void window_restore_shortcut(WWindow *wwin, WWindowState *win_state, WSavedState *wstate);
+static void wwindow_set_workspace(virtual_screen *vscr, WWindow *wwin, WWindow *transientOwner, int *workspace);
+static void wwindow_set_placement_auto(virtual_screen *vscr,
+				       WWindow *wwin, WWindow *transientOwner,
+				       int *x, int *y,
+				       unsigned int *width, unsigned int *height);
+static void wwindow_set_placement_xine(virtual_screen *vscr, int *x, int *y,
+				       unsigned int *width, unsigned int *height);
+static void wwindow_set_placement(virtual_screen *vscr,
+				  WWindow *wwin, WWindow *transientOwner,
+				  int *x, int *y,
+				  unsigned int *width, unsigned int *height,
+				  WWindowState *win_state);
+static int wwindow_set_mainwindow(WWindow *wwin, int workspace);
+static void wwindow_map(virtual_screen *vscr, WWindow *wwin, int workspace, Bool withdraw);
+static void wwindow_add_to_windowfocuslist(virtual_screen *vscr, WWindow *wwin);
+static void wwindow_set_frame_descriptor(WWindow *wwin);
+static void wwindow_update_title(Display *dpy, Window window, WWindow *wwin);
 /****** Notification Observers ******/
 
-static void appearanceObserver(void *self, WMNotification * notif)
+static void appearanceObserver(void *self, WMNotification *notif)
 {
 	WWindow *wwin = (WWindow *) self;
 	uintptr_t flags = (uintptr_t)WMGetNotificationClientData(notif);
@@ -164,6 +194,7 @@ WWindow *wWindowCreate(void)
 	wwin->client_descriptor.parent = wwin;
 	wwin->client_descriptor.self = wwin;
 	wwin->client_descriptor.parent_type = WCLASS_WINDOW;
+	wwin->title = NULL;
 
 	return wwin;
 }
@@ -233,62 +264,70 @@ void wWindowDestroy(WWindow *wwin)
 			wArrangeIcons(wwin->vscr, True);
 	}
 
+	if (wwin->title)
+		wfree(wwin->title);
+
 	if (wwin->net_icon_image)
 		RReleaseImage(wwin->net_icon_image);
 
 	wrelease(wwin);
 }
 
+static void setupGNUstepHints_defaults(WWindow *wwin, int value)
+{
+	wwin->client_flags.no_border = value;
+	wwin->client_flags.no_titlebar = value;
+	wwin->client_flags.no_closable = value;
+	wwin->client_flags.no_miniaturizable = value;
+	wwin->client_flags.no_resizable = value;
+	wwin->client_flags.no_close_button = value;
+	wwin->client_flags.no_miniaturize_button = value;
+	wwin->client_flags.no_resizebar = value;
+}
+
+static void setupGNUstepHints_withborder(WWindow *wwin, GNUstepWMAttributes *gs_hints)
+{
+	wwin->client_flags.no_close_button =
+		((gs_hints->window_style & WMClosableWindowMask) ? 0 : 1);
+
+	wwin->client_flags.no_closable =
+		((gs_hints->window_style & WMClosableWindowMask) ? 0 : 1);
+
+	wwin->client_flags.no_miniaturize_button =
+		((gs_hints->window_style & WMMiniaturizableWindowMask) ? 0 : 1);
+
+	wwin->client_flags.no_miniaturizable =
+		wwin->client_flags.no_miniaturize_button;
+
+	wwin->client_flags.no_resizebar =
+		((gs_hints->window_style & WMResizableWindowMask) ? 0 : 1);
+
+	wwin->client_flags.no_resizable = wwin->client_flags.no_resizebar;
+
+	/* these attributes supposedly imply in the existence of a titlebar */
+	if (gs_hints->window_style & (WMResizableWindowMask |
+				      WMClosableWindowMask |
+				      WMMiniaturizableWindowMask))
+		wwin->client_flags.no_titlebar = 0;
+	else
+		wwin->client_flags.no_titlebar =
+		    ((gs_hints->window_style & WMTitledWindowMask) ? 0 : 1);
+}
+
 static void setupGNUstepHints(WWindow *wwin, GNUstepWMAttributes *gs_hints)
 {
 	if (gs_hints->flags & GSWindowStyleAttr) {
-		if (gs_hints->window_style == WMBorderlessWindowMask) {
-			wwin->client_flags.no_border = 1;
-			wwin->client_flags.no_titlebar = 1;
-			wwin->client_flags.no_closable = 1;
-			wwin->client_flags.no_miniaturizable = 1;
-			wwin->client_flags.no_resizable = 1;
-			wwin->client_flags.no_close_button = 1;
-			wwin->client_flags.no_miniaturize_button = 1;
-			wwin->client_flags.no_resizebar = 1;
-		} else {
-			wwin->client_flags.no_close_button =
-			    ((gs_hints->window_style & WMClosableWindowMask) ? 0 : 1);
-
-			wwin->client_flags.no_closable = ((gs_hints->window_style & WMClosableWindowMask) ? 0 : 1);
-
-			wwin->client_flags.no_miniaturize_button =
-			    ((gs_hints->window_style & WMMiniaturizableWindowMask) ? 0 : 1);
-
-			wwin->client_flags.no_miniaturizable = wwin->client_flags.no_miniaturize_button;
-
-			wwin->client_flags.no_resizebar =
-			    ((gs_hints->window_style & WMResizableWindowMask) ? 0 : 1);
-
-			wwin->client_flags.no_resizable = wwin->client_flags.no_resizebar;
-
-			/* these attributes supposedly imply in the existence
-			 * of a titlebar */
-			if (gs_hints->window_style & (WMResizableWindowMask |
-						      WMClosableWindowMask | WMMiniaturizableWindowMask)) {
-				wwin->client_flags.no_titlebar = 0;
-			} else {
-				wwin->client_flags.no_titlebar =
-				    ((gs_hints->window_style & WMTitledWindowMask) ? 0 : 1);
-			}
-
-		}
+		if (gs_hints->window_style == WMBorderlessWindowMask)
+			/* GNUStep hints, but no border */
+			setupGNUstepHints_defaults(wwin, 1);
+		else
+			/* GNUStep hints, with border */
+			setupGNUstepHints_withborder(wwin, gs_hints);
 	} else {
-		/* setup the defaults */
-		wwin->client_flags.no_border = 0;
-		wwin->client_flags.no_titlebar = 0;
-		wwin->client_flags.no_closable = 0;
-		wwin->client_flags.no_miniaturizable = 0;
-		wwin->client_flags.no_resizable = 0;
-		wwin->client_flags.no_close_button = 0;
-		wwin->client_flags.no_miniaturize_button = 0;
-		wwin->client_flags.no_resizebar = 0;
+		/* No GNUStep style */
+		setupGNUstepHints_defaults(wwin, 0);
 	}
+
 	if (gs_hints->extra_flags & GSNoApplicationIconFlag)
 		wwin->client_flags.no_appicon = 1;
 }
@@ -315,6 +354,70 @@ static void discard_hints_from_gtk(WWindow *wwin)
 	wwin->client_flags.no_close_button = 0;
 	wwin->client_flags.no_miniaturize_button = 0;
 	wwin->client_flags.no_resizebar = 0;
+}
+
+static void wWindowSetupInitialAttributes_GNUStep(WWindow *wwin, int *level, int *workspace)
+{
+	virtual_screen *vscr = wwin->vscr;
+	WScreen *scr = vscr->screen_ptr;
+	int tmp_workspace, tmp_level, ownerLevel;
+
+	/* GNUStep attributes found */
+	if (wwin->wm_gnustep_attr) {
+		setupGNUstepHints(wwin, wwin->wm_gnustep_attr);
+
+		if (wwin->wm_gnustep_attr->flags & GSWindowLevelAttr) {
+			*level = wwin->wm_gnustep_attr->window_level;
+			/* INT_MIN is the only illegal window level. */
+			if (*level == INT_MIN)
+				*level = INT_MIN + 1;
+		} else {
+			/* setup defaults */
+			*level = WMNormalLevel;
+		}
+
+		return;
+	}
+
+	/* No GNUStep attributes found */
+	tmp_workspace = -1;
+	tmp_level = INT_MIN;	/* INT_MIN is never used by the window levels */
+
+#ifdef USE_MWM_HINTS
+	wMWMCheckClientHints(wwin);
+#endif
+
+	wNETWMCheckClientHints(wwin, &tmp_level, &tmp_workspace);
+
+	if (wPreferences.ignore_gtk_decoration_hints)
+		discard_hints_from_gtk(wwin);
+
+	/*
+	 * Window levels are between INT_MIN+1 and INT_MAX, so if we still
+	 * have INT_MIN that means that no window level was requested. -Dan
+	 */
+	if (tmp_level == INT_MIN) {
+		if (WFLAGP(wwin, floating))
+			*level = WMFloatingLevel;
+		else if (WFLAGP(wwin, sunken))
+			*level = WMSunkenLevel;
+		else
+			*level = WMNormalLevel;
+	} else {
+		*level = tmp_level;
+	}
+
+	if (wwin->transient_for != None && wwin->transient_for != scr->root_win) {
+		WWindow *transientOwner = wWindowFor(wwin->transient_for);
+		if (transientOwner) {
+			ownerLevel = transientOwner->frame->core->stacking->window_level;
+			if (ownerLevel > *level)
+				*level = ownerLevel;
+		}
+	}
+
+	if (tmp_workspace >= 0)
+		*workspace = tmp_workspace % vscr->workspace.count;
 }
 
 void wWindowSetupInitialAttributes(WWindow *wwin, int *level, int *workspace)
@@ -355,60 +458,8 @@ void wWindowSetupInitialAttributes(WWindow *wwin, int *level, int *workspace)
 		wwin->client_flags.no_resizebar = 1;
 	}
 
-	/* set GNUstep window attributes */
-	if (wwin->wm_gnustep_attr) {
-		setupGNUstepHints(wwin, wwin->wm_gnustep_attr);
-
-		if (wwin->wm_gnustep_attr->flags & GSWindowLevelAttr) {
-			*level = wwin->wm_gnustep_attr->window_level;
-			/*
-			 * INT_MIN is the only illegal window level.
-			 */
-			if (*level == INT_MIN)
-				*level = INT_MIN + 1;
-		} else {
-			/* setup defaults */
-			*level = WMNormalLevel;
-		}
-	} else {
-		int tmp_workspace = -1;
-		int tmp_level = INT_MIN;	/* INT_MIN is never used by the window levels */
-
-#ifdef USE_MWM_HINTS
-		wMWMCheckClientHints(wwin);
-#endif	/* USE_MWM_HINTS */
-
-		wNETWMCheckClientHints(wwin, &tmp_level, &tmp_workspace);
-
-		if (wPreferences.ignore_gtk_decoration_hints)
-			discard_hints_from_gtk(wwin);
-
-		/* window levels are between INT_MIN+1 and INT_MAX, so if we still
-		 * have INT_MIN that means that no window level was requested. -Dan
-		 */
-		if (tmp_level == INT_MIN) {
-			if (WFLAGP(wwin, floating))
-				*level = WMFloatingLevel;
-			else if (WFLAGP(wwin, sunken))
-				*level = WMSunkenLevel;
-			else
-				*level = WMNormalLevel;
-		} else {
-			*level = tmp_level;
-		}
-
-		if (wwin->transient_for != None && wwin->transient_for != scr->root_win) {
-			WWindow *transientOwner = wWindowFor(wwin->transient_for);
-			if (transientOwner) {
-				int ownerLevel = transientOwner->frame->core->stacking->window_level;
-				if (ownerLevel > *level)
-					*level = ownerLevel;
-			}
-		}
-
-		if (tmp_workspace >= 0)
-			*workspace = tmp_workspace % vscr->workspace.count;
-	}
+	/* Set GNUstep window attributes */
+	wWindowSetupInitialAttributes_GNUStep(wwin, level, workspace);
 
 	/*
 	 * Set attributes specified only for that window/class.
@@ -416,9 +467,8 @@ void wWindowSetupInitialAttributes(WWindow *wwin, int *level, int *workspace)
 	 */
 	wDefaultFillAttributes(wwin->wm_instance, wwin->wm_class, &wwin->user_flags,
 			       &wwin->defined_user_flags, False);
-	/*
-	 * Sanity checks for attributes that depend on other attributes
-	 */
+
+	/* Sanity checks for attributes that depend on other attributes */
 	if (wwin->user_flags.no_appicon && wwin->defined_user_flags.no_appicon)
 		wwin->user_flags.emulate_appicon = 0;
 
@@ -574,6 +624,477 @@ static int matchIdentifier(const void *item, const void *cdata)
 	return (strcmp(((WFakeGroupLeader *) item)->identifier, (char *)cdata) == 0);
 }
 
+#ifdef USE_XSHAPE
+void wwindow_set_xshape(Display *dpy, Window window, WWindow *wwin)
+{
+	int junk;
+	unsigned int ujunk;
+	int b_shaped;
+
+	if (!w_global.xext.shape.supported)
+		return;
+
+	XShapeSelectInput(dpy, window, ShapeNotifyMask);
+	XShapeQueryExtents(dpy, window, &b_shaped, &junk, &junk, &ujunk,
+			   &ujunk, &junk, &junk, &junk, &ujunk, &ujunk);
+	wwin->flags.shaped = b_shaped;
+}
+#endif
+
+Bool wwindow_set_wmhints(WWindow *wwin, Bool withdraw)
+{
+	if (!wwin->wm_hints) {
+		wwin->group_id = None;
+		return withdraw;
+	}
+
+	if (wwin->wm_hints->flags & StateHint) {
+		if (wwin->wm_hints->initial_state == IconicState) {
+			wwin->flags.miniaturized = 1;
+		} else if (wwin->wm_hints->initial_state == WithdrawnState) {
+			wwin->flags.is_dockapp = 1;
+			withdraw = True;
+		}
+	}
+
+	if (wwin->wm_hints->flags & WindowGroupHint) {
+		wwin->group_id = wwin->wm_hints->window_group;
+		/* window_group has priority over CLIENT_LEADER */
+		wwin->main_window = wwin->group_id;
+	} else {
+		wwin->group_id = None;
+	}
+
+	if (wwin->wm_hints->flags & UrgencyHint) {
+		wwin->flags.urgent = 1;
+		wAppBounceWhileUrgent(wApplicationOf(wwin->main_window));
+	}
+
+	return withdraw;
+}
+
+static void wwindow_set_fakegroupleader(virtual_screen *vscr, WWindow *wwin)
+{
+	char *buffer, *instance, *class;
+	WFakeGroupLeader *fPtr;
+	int index;
+
+#define ADEQUATE(x) ((x)!=None && (x)!=wwin->client_win && (x)!=fPtr->leader)
+
+	/* only enter here if PropGetWMClass() succeeds */
+	PropGetWMClass(wwin->main_window, &class, &instance);
+	buffer = StrConcatDot(instance, class);
+
+	index = WMFindInArray(vscr->screen_ptr->fakeGroupLeaders, matchIdentifier, (void *)buffer);
+	if (index != WANotFound) {
+		fPtr = WMGetFromArray(vscr->screen_ptr->fakeGroupLeaders, index);
+		if (fPtr->retainCount == 0)
+			fPtr->leader = createFakeWindowGroupLeader(vscr, wwin->main_window,
+								   instance, class);
+
+		fPtr->retainCount++;
+		if (fPtr->origLeader == None) {
+			if (ADEQUATE(wwin->main_window)) {
+				fPtr->retainCount++;
+				fPtr->origLeader = wwin->main_window;
+			}
+		}
+
+		wwin->fake_group = fPtr;
+		wwin->main_window = fPtr->leader;
+		wfree(buffer);
+	} else {
+		fPtr = (WFakeGroupLeader *) wmalloc(sizeof(WFakeGroupLeader));
+
+		fPtr->identifier = buffer;
+		fPtr->leader = createFakeWindowGroupLeader(vscr, wwin->main_window, instance, class);
+		fPtr->origLeader = None;
+		fPtr->retainCount = 1;
+
+		WMAddToArray(vscr->screen_ptr->fakeGroupLeaders, fPtr);
+
+		if (ADEQUATE(wwin->main_window)) {
+			fPtr->retainCount++;
+			fPtr->origLeader = wwin->main_window;
+		}
+
+		wwin->fake_group = fPtr;
+		wwin->main_window = fPtr->leader;
+	}
+
+	if (instance)
+		free(instance);
+
+	if (class)
+		free(class);
+#undef ADEQUATE
+}
+
+static void window_restore_shortcut(WWindow *wwin, WWindowState *win_state, WSavedState *wstate)
+{
+	unsigned mask = 0;
+	int i;
+
+	if (win_state != NULL)
+		mask = win_state->state->window_shortcuts;
+
+	if (wstate != NULL && mask == 0)
+		mask = wstate->window_shortcuts;
+
+	if (mask <= 0)
+		return;
+
+	for (i = 0; i < MAX_WINDOW_SHORTCUTS; i++) {
+		if (mask & (1 << i)) {
+			if (!w_global.shortcut.windows[i])
+				w_global.shortcut.windows[i] = WMCreateArray(4);
+
+			WMAddToArray(w_global.shortcut.windows[i], wwin);
+		}
+	}
+}
+
+static int window_restarting_restore(Window window, WWindow *wwin, WWindowState *win_state, int workspace)
+{
+	WSavedState *wstate;
+
+	if (getSavedState(window, &wstate)) {
+		wwin->flags.shaded = wstate->shaded;
+		wwin->flags.hidden = wstate->hidden;
+		wwin->flags.miniaturized = wstate->miniaturized;
+		wwin->flags.maximized = wstate->maximized;
+		if (wwin->flags.maximized) {
+			wwin->old_geometry.x = wstate->x;
+			wwin->old_geometry.y = wstate->y;
+			wwin->old_geometry.width = wstate->w;
+			wwin->old_geometry.height = wstate->h;
+		}
+
+		workspace = wstate->workspace;
+	} else {
+		wstate = NULL;
+	}
+
+	/* restore window shortcut */
+	if (wstate != NULL || win_state != NULL)
+		window_restore_shortcut(wwin, win_state, wstate);
+
+	if (wstate != NULL)
+		wfree(wstate);
+
+	return workspace;
+}
+
+static void wwindow_set_workspace(virtual_screen *vscr, WWindow *wwin, WWindow *transientOwner, int *workspace)
+{
+	int w;
+
+	if ((*workspace >= 0) &&
+	    (*workspace > vscr->workspace.count - 1)) {
+		*workspace = *workspace % vscr->workspace.count;
+
+		return;
+	}
+
+	/* kix - This block is similar a block in ManageWindow function? */
+	w = wDefaultGetStartWorkspace(vscr, wwin->wm_instance, wwin->wm_class);
+	if (w >= 0 && w < vscr->workspace.count && !(IS_OMNIPRESENT(wwin))) {
+		*workspace = w;
+	} else {
+		if (wPreferences.open_transients_with_parent && transientOwner)
+			*workspace = transientOwner->frame->workspace;
+		else
+			*workspace = vscr->workspace.current;
+	}
+}
+
+static void wwindow_set_position(virtual_screen *vscr, int head,
+				 int *x, int *y,
+				 unsigned int *width, unsigned int *height)
+{
+	WMRect rect;
+
+	rect = wGetRectForHead(vscr->screen_ptr, head);
+
+	if (*x < rect.pos.x)
+		*x = rect.pos.x;
+	else if (*x + *width > rect.pos.x + rect.size.width)
+		*x = rect.pos.x + rect.size.width - *width;
+
+	if (*y < rect.pos.y)
+		*y = rect.pos.y;
+	else if (*y + *height > rect.pos.y + rect.size.height)
+		*y = rect.pos.y + rect.size.height - *height;
+}
+
+void wwindow_set_placement_auto(virtual_screen *vscr,
+				WWindow *wwin, WWindow *transientOwner,
+				int *x, int *y,
+				unsigned int *width, unsigned int *height)
+{
+	int offs, head;
+	WMRect rect;
+
+	/* transientOwner mapped */
+	if (!(transientOwner && transientOwner->flags.mapped)) {
+		PlaceWindow(wwin, x, y, *width, *height);
+		return;
+	}
+
+	/* Not transientOwner or not mapped */
+	offs = WMAX(20, 2 * transientOwner->frame->top_width);
+
+	*x = transientOwner->frame_x +
+	    abs((transientOwner->frame->core->width - *width) / 2) + offs;
+	*y = transientOwner->frame_y +
+	    abs((transientOwner->frame->core->height - *height) / 3) + offs;
+
+	/* limit transient windows to be inside their parent's head */
+	rect.pos.x = transientOwner->frame_x;
+	rect.pos.y = transientOwner->frame_y;
+	rect.size.width = transientOwner->frame->core->width;
+	rect.size.height = transientOwner->frame->core->height;
+
+	head = wGetHeadForRect(vscr, rect);
+	wwindow_set_position(vscr, head, x, y, width, height);
+}
+
+static void wwindow_set_placement_xine(virtual_screen *vscr, int *x, int *y,
+				       unsigned int *width, unsigned int *height)
+{
+	int head, flags;
+	WMRect rect;
+
+	/* Make spash screens come out in the center of a head
+	 * trouble is that most splashies never get here
+	 * they are managed trough atoms but god knows where.
+	 * Dan, do you know ? -peter
+	 *
+	 * Most of them are not managed, they have set
+	 * OverrideRedirect, which means we can't do anything about
+	 * them. -alfredo */
+
+	/* xinerama checks for: across head and dead space */
+	rect.pos.x = *x;
+	rect.pos.y = *y;
+	rect.size.width = *width;
+	rect.size.height = *height;
+
+	head = wGetRectPlacementInfo(vscr, rect, &flags);
+
+	if (flags & XFLAG_DEAD) {
+		head = wGetHeadForPointerLocation(vscr);
+		rect = wGetRectForHead(vscr->screen_ptr, head);
+
+		*x = rect.pos.x + (*x * rect.size.width) / vscr->screen_ptr->scr_width;
+		*y = rect.pos.y + (*y * rect.size.height) / vscr->screen_ptr->scr_height;
+
+		return;
+	}
+
+	if (flags & XFLAG_MULTIPLE)
+		wwindow_set_position(vscr, head, x, y, width, height);
+}
+
+static void wwindow_set_placement(virtual_screen *vscr,
+				  WWindow *wwin, WWindow *transientOwner,
+				  int *x, int *y,
+				  unsigned int *width, unsigned int *height,
+				  WWindowState *win_state)
+{
+	/*
+	 * Do not ask for window placement if the window is
+	 * transient, during startup, or if the window wants
+	 * to start iconic.  If geometry was saved, restore it.
+	 */
+	if (win_state && win_state->state->w > 0) {
+		*x = win_state->state->x;
+		*y = win_state->state->y;
+		return;
+	}
+
+	if ((wwin->transient_for == None || wPreferences.window_placement != WPM_MANUAL) &&
+	    !w_global.startup.phase1 &&
+	    !wwin->flags.miniaturized &&
+	    !wwin->flags.maximized &&
+	    !(wwin->normal_hints->flags & (USPosition | PPosition))) {
+		wwindow_set_placement_auto(vscr, wwin, transientOwner,
+					   x, y, width, height);
+
+		if ((wPreferences.window_placement == WPM_MANUAL) &&
+		    (WFLAGP(wwin, dont_move_off)))
+			wScreenBringInside(vscr, x, y, *width, *height);
+
+		return;
+	}
+
+	if (vscr->screen_ptr->xine_info.count && (wwin->normal_hints->flags & PPosition))
+		wwindow_set_placement_xine(vscr, x, y, width, height);
+}
+
+static int wwindow_set_mainwindow(WWindow *wwin, int workspace)
+{
+	WApplication *app;
+	WWindow *leader;
+	Bool raise = False;
+
+	/* Leader windows do not necessary set themselves as leaders.
+	 * If this is the case, point the leader of this window to
+	 * itself */
+	leader = wWindowFor(wwin->main_window);
+	if (leader && leader->main_window == None)
+		leader->main_window = leader->client_win;
+
+	app = wApplicationCreate(wwin);
+	if (!app)
+		return raise;
+
+	app->last_workspace = workspace;
+
+	/* Do application specific stuff, like setting application
+	 * wide attributes. */
+	if (wwin->flags.hidden) {
+		/* If the window was set to hidden because it was hidden
+		 * in a previous incarnation and that state was restored */
+		app->flags.hidden = 1;
+	} else if (app->flags.hidden) {
+		if (WFLAGP(app->main_window_desc, start_hidden)) {
+			wwin->flags.hidden = 1;
+		} else {
+			wUnhideApplication(app, False, False);
+			raise = True;
+		}
+	}
+
+	wAppBounce(app);
+
+	return raise;
+}
+
+static void wwindow_map(virtual_screen *vscr, WWindow *wwin, int workspace, Bool withdraw)
+{
+	if (!wwin->flags.miniaturized &&
+	    (workspace == vscr->workspace.current || IS_OMNIPRESENT(wwin)) &&
+	    !wwin->flags.hidden &&
+	    !withdraw) {
+
+		/* The following "if" is to avoid crashing of clients that expect
+		 * WM_STATE set before they get mapped. Else WM_STATE is set later,
+		 * after the return from this function. */
+		if (wwin->wm_hints && (wwin->wm_hints->flags & StateHint))
+			wClientSetState(wwin, wwin->wm_hints->initial_state, None);
+		else
+			wClientSetState(wwin, NormalState, None);
+
+		if (wPreferences.superfluous && !wPreferences.no_animations && !w_global.startup.phase1 &&
+		    (wwin->transient_for == None || wwin->transient_for == vscr->screen_ptr->root_win) &&
+		    /*
+		     * The brain damaged idiotic non-click to focus modes will
+		     * have trouble with this because:
+		     *
+		     * 1. window is created and mapped by the client
+		     * 2. window is mapped by wmaker in small size
+		     * 3. window is animated to grow to normal size
+		     * 4. this function returns to normal event loop
+		     * 5. eventually, the EnterNotify event that would trigger
+		     * the window focusing (if the mouse is over that window)
+		     * will be processed by wmaker.
+		     * But since this event will be rather delayed
+		     * (step 3 has a large delay) the time when the event occurred
+		     * and when it is processed, the client that owns that window
+		     * will reject the XSetInputFocus() for it.
+		     */
+		    (wPreferences.focus_mode == WKF_CLICK || wPreferences.auto_focus))
+			DoWindowBirth(wwin);
+
+		wWindowMap(wwin);
+	}
+}
+
+static void wwindow_add_to_windowfocuslist(virtual_screen *vscr, WWindow *wwin)
+{
+	WWindow *tmp;
+
+	if (!vscr->window.focused) {
+		/* first window on the list */
+		wwin->next = NULL;
+		wwin->prev = NULL;
+		vscr->window.focused = wwin;
+	} else {
+		/* add window at beginning of focus window list */
+		tmp = vscr->window.focused;
+		while (tmp->prev)
+			tmp = tmp->prev;
+
+		tmp->prev = wwin;
+		wwin->next = tmp;
+		wwin->prev = NULL;
+	}
+}
+
+static void wwindow_setfocus_tomouse(virtual_screen *vscr, WWindow *wwin,
+				     WWindow *transientOwner, int workspace)
+{
+	short same_screen, same_head;
+	int foo;
+	unsigned int bar;
+	Window dummy;
+
+	if (wwin->flags.miniaturized || wwin->flags.hidden)
+		return;
+
+	/*
+	 * Only auto_focus if on same screen as mouse
+	 * (and same head for xinerama mode)
+	 * TODO: make it an option
+	 */
+	if (workspace != vscr->workspace.current)
+		return;
+
+	if (!transientOwner || !transientOwner->flags.focused)
+		return;
+
+	if (!wPreferences.auto_focus)
+		return;
+
+	if (WFLAGP(wwin, no_focusable))
+		return;
+
+	/*TODO Add checking the head of the window, is it available? */
+	same_screen = 0;
+	same_head = 1;
+
+	if (XQueryPointer(dpy, vscr->screen_ptr->root_win, &dummy, &dummy,
+			  &foo, &foo, &foo, &foo, &bar) != False)
+		same_screen = 1;
+
+	if (same_screen == 1 && same_head == 1)
+		wSetFocusTo(vscr, wwin);
+}
+
+static void wwindow_set_frame_descriptor(WWindow *wwin)
+{
+	wwin->frame->core->descriptor.handle_mousedown = frameMouseDown;
+	wwin->frame->core->descriptor.parent = wwin;
+	wwin->frame->core->descriptor.parent_type = WCLASS_WINDOW;
+}
+
+static void wwindow_update_title(Display *dpy, Window window, WWindow *wwin)
+{
+	char *title;
+
+	title = wNETWMGetWindowName(window);
+	if (title)
+		wwin->flags.net_has_title = 1;
+	else if (!wFetchName(dpy, window, &title))
+		title = NULL;
+
+	wWindowUpdateName(wwin, title);
+
+	if (title)
+		XFree(title);
+}
+
 /*
  *----------------------------------------------------------------
  * wManageWindow--
@@ -612,7 +1133,7 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 	int wm_state;
 	int flags = 0;
 	int workspace = -1;
-	char *title;
+	int gx, gy;
 	Bool withdraw = False;
 	Bool raise = False;
 
@@ -642,25 +1163,10 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 
 	wwin = wWindowCreate();
 
-	title = wNETWMGetWindowName(window);
-	if (title)
-		wwin->flags.net_has_title = 1;
-	else if (!wFetchName(dpy, window, &title))
-		title = NULL;
-
 	XSaveContext(dpy, window, w_global.context.client_win, (XPointer) & wwin->client_descriptor);
 
-#ifdef USE_XSHAPE
-	if (w_global.xext.shape.supported) {
-		int junk;
-		unsigned int ujunk;
-		int b_shaped;
-
-		XShapeSelectInput(dpy, window, ShapeNotifyMask);
-		XShapeQueryExtents(dpy, window, &b_shaped, &junk, &junk, &ujunk,
-				   &ujunk, &junk, &junk, &junk, &ujunk, &ujunk);
-		wwin->flags.shaped = b_shaped;
-	}
+#ifndef USE_XSHAPE
+	wwindow_set_xshape(dpy, window, wwin);
 #endif
 
 	/* Get hints and other information in properties */
@@ -695,32 +1201,7 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 		wwin->main_window = wwin->client_leader;
 
 	wwin->wm_hints = XGetWMHints(dpy, window);
-
-	if (wwin->wm_hints) {
-		if (wwin->wm_hints->flags & StateHint) {
-			if (wwin->wm_hints->initial_state == IconicState) {
-				wwin->flags.miniaturized = 1;
-			} else if (wwin->wm_hints->initial_state == WithdrawnState) {
-				wwin->flags.is_dockapp = 1;
-				withdraw = True;
-			}
-		}
-
-		if (wwin->wm_hints->flags & WindowGroupHint) {
-			wwin->group_id = wwin->wm_hints->window_group;
-			/* window_group has priority over CLIENT_LEADER */
-			wwin->main_window = wwin->group_id;
-		} else {
-			wwin->group_id = None;
-		}
-
-		if (wwin->wm_hints->flags & UrgencyHint) {
-			wwin->flags.urgent = 1;
-			wAppBounceWhileUrgent(wApplicationOf(wwin->main_window));
-		}
-	} else {
-		wwin->group_id = None;
-	}
+	withdraw = wwindow_set_wmhints(wwin, withdraw);
 
 	PropGetProtocols(window, &wwin->protocols);
 
@@ -778,65 +1259,10 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 		wwin->client_flags.shared_appicon = 0;
         }
 
-	if (!withdraw && wwin->main_window && WFLAGP(wwin, shared_appicon)) {
-		char *buffer, *instance, *class;
-		WFakeGroupLeader *fPtr;
-		int index;
+	if (!withdraw && wwin->main_window && WFLAGP(wwin, shared_appicon))
+		wwindow_set_fakegroupleader(vscr, wwin);
 
-#define ADEQUATE(x) ((x)!=None && (x)!=wwin->client_win && (x)!=fPtr->leader)
-
-		/* // only enter here if PropGetWMClass() succeeds */
-		PropGetWMClass(wwin->main_window, &class, &instance);
-		buffer = StrConcatDot(instance, class);
-
-		index = WMFindInArray(vscr->screen_ptr->fakeGroupLeaders, matchIdentifier, (void *)buffer);
-		if (index != WANotFound) {
-			fPtr = WMGetFromArray(vscr->screen_ptr->fakeGroupLeaders, index);
-			if (fPtr->retainCount == 0)
-				fPtr->leader = createFakeWindowGroupLeader(vscr, wwin->main_window,
-									   instance, class);
-
-			fPtr->retainCount++;
-			if (fPtr->origLeader == None) {
-				if (ADEQUATE(wwin->main_window)) {
-					fPtr->retainCount++;
-					fPtr->origLeader = wwin->main_window;
-				}
-			}
-
-			wwin->fake_group = fPtr;
-			wwin->main_window = fPtr->leader;
-			wfree(buffer);
-		} else {
-			fPtr = (WFakeGroupLeader *) wmalloc(sizeof(WFakeGroupLeader));
-
-			fPtr->identifier = buffer;
-			fPtr->leader = createFakeWindowGroupLeader(vscr, wwin->main_window, instance, class);
-			fPtr->origLeader = None;
-			fPtr->retainCount = 1;
-
-			WMAddToArray(vscr->screen_ptr->fakeGroupLeaders, fPtr);
-
-			if (ADEQUATE(wwin->main_window)) {
-				fPtr->retainCount++;
-				fPtr->origLeader = wwin->main_window;
-			}
-
-			wwin->fake_group = fPtr;
-			wwin->main_window = fPtr->leader;
-		}
-
-		if (instance)
-			free(instance);
-
-		if (class)
-			free(class);
-#undef ADEQUATE
-	}
-
-	/*
-	 * Setup the initial state of the window
-	 */
+	/* Setup the initial state of the window */
 	if (WFLAGP(wwin, start_miniaturized) && !WFLAGP(wwin, no_miniaturizable))
 		wwin->flags.miniaturized = 1;
 
@@ -870,6 +1296,7 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 		if (win_state->state->miniaturized > 0 && !WFLAGP(wwin, no_miniaturizable))
 			wwin->flags.miniaturized = win_state->state->miniaturized;
 
+		/* kix - this block is the same than other in wwindow_set_workspace? */
 		if (!IS_OMNIPRESENT(wwin)) {
 			int w = wDefaultGetStartWorkspace(vscr, wwin->wm_instance, wwin->wm_class);
 			if (w < 0 || w >= vscr->workspace.count) {
@@ -886,53 +1313,7 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 
 	/* if we're restarting, restore saved state (from hints).
 	 * This will overwrite previous */
-	{
-		WSavedState *wstate;
-
-		if (getSavedState(window, &wstate)) {
-			wwin->flags.shaded = wstate->shaded;
-			wwin->flags.hidden = wstate->hidden;
-			wwin->flags.miniaturized = wstate->miniaturized;
-			wwin->flags.maximized = wstate->maximized;
-			if (wwin->flags.maximized) {
-				wwin->old_geometry.x = wstate->x;
-				wwin->old_geometry.y = wstate->y;
-				wwin->old_geometry.width = wstate->w;
-				wwin->old_geometry.height = wstate->h;
-			}
-
-			workspace = wstate->workspace;
-		} else {
-			wstate = NULL;
-		}
-
-		/* restore window shortcut */
-		if (wstate != NULL || win_state != NULL) {
-			unsigned mask = 0;
-
-			if (win_state != NULL)
-				mask = win_state->state->window_shortcuts;
-
-			if (wstate != NULL && mask == 0)
-				mask = wstate->window_shortcuts;
-
-			if (mask > 0) {
-				int i;
-
-				for (i = 0; i < MAX_WINDOW_SHORTCUTS; i++) {
-					if (mask & (1 << i)) {
-						if (!w_global.shortcut.windows[i])
-							w_global.shortcut.windows[i] = WMCreateArray(4);
-
-						WMAddToArray(w_global.shortcut.windows[i], wwin);
-					}
-				}
-			}
-		}
-
-		if (wstate != NULL)
-			wfree(wstate);
-	}
+	workspace = window_restarting_restore(window, wwin, win_state, workspace);
 
 	/* don't let transients start miniaturized if their owners are not */
 	if (transientOwner && !transientOwner->flags.miniaturized && wwin->flags.miniaturized && !withdraw) {
@@ -942,23 +1323,7 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 	}
 
 	/* set workspace on which the window starts */
-	if (workspace >= 0) {
-		if (workspace > vscr->workspace.count - 1)
-			workspace = workspace % vscr->workspace.count;
-	} else {
-		int w;
-
-		w = wDefaultGetStartWorkspace(vscr, wwin->wm_instance, wwin->wm_class);
-
-		if (w >= 0 && w < vscr->workspace.count && !(IS_OMNIPRESENT(wwin))) {
-			workspace = w;
-		} else {
-			if (wPreferences.open_transients_with_parent && transientOwner)
-				workspace = transientOwner->frame->workspace;
-			else
-				workspace = vscr->workspace.current;
-		}
-	}
+	wwindow_set_workspace(vscr, wwin, transientOwner, &workspace);
 
 	/* setup window geometry */
 	if (win_state && win_state->state->w > 0) {
@@ -968,117 +1333,9 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 
 	wWindowConstrainSize(wwin, &width, &height);
 
-	/* do not ask for window placement if the window is
-	 * transient, during startup, or if the window wants
-	 * to start iconic.  If geometry was saved, restore it. */
-	{
-		Bool dontBring = False;
-
-		if (win_state && win_state->state->w > 0) {
-			x = win_state->state->x;
-			y = win_state->state->y;
-		} else if ((wwin->transient_for == None || wPreferences.window_placement != WPM_MANUAL)
-			   && !w_global.startup.phase1
-			   && !wwin->flags.miniaturized
-			   && !wwin->flags.maximized && !(wwin->normal_hints->flags & (USPosition | PPosition))) {
-
-			if (transientOwner && transientOwner->flags.mapped) {
-				int offs = WMAX(20, 2 * transientOwner->frame->top_width);
-				WMRect rect;
-				int head;
-
-				x = transientOwner->frame_x +
-				    abs((transientOwner->frame->core->width - width) / 2) + offs;
-				y = transientOwner->frame_y +
-				    abs((transientOwner->frame->core->height - height) / 3) + offs;
-
-				/* limit transient windows to be inside their parent's head */
-				rect.pos.x = transientOwner->frame_x;
-				rect.pos.y = transientOwner->frame_y;
-				rect.size.width = transientOwner->frame->core->width;
-				rect.size.height = transientOwner->frame->core->height;
-
-				head = wGetHeadForRect(vscr, rect);
-				rect = wGetRectForHead(vscr->screen_ptr, head);
-
-				if (x < rect.pos.x)
-					x = rect.pos.x;
-				else if (x + width > rect.pos.x + rect.size.width)
-					x = rect.pos.x + rect.size.width - width;
-
-				if (y < rect.pos.y)
-					y = rect.pos.y;
-				else if (y + height > rect.pos.y + rect.size.height)
-					y = rect.pos.y + rect.size.height - height;
-
-			} else {
-				PlaceWindow(wwin, &x, &y, width, height);
-			}
-
-			if (wPreferences.window_placement == WPM_MANUAL)
-				dontBring = True;
-
-		} else if (vscr->screen_ptr->xine_info.count && (wwin->normal_hints->flags & PPosition)) {
-			int head, flags;
-			WMRect rect;
-			int reposition = 0;
-
-			/* Make spash screens come out in the center of a head
-			 * trouble is that most splashies never get here
-			 * they are managed trough atoms but god knows where.
-			 * Dan, do you know ? -peter
-			 *
-			 * Most of them are not managed, they have set
-			 * OverrideRedirect, which means we can't do anything about
-			 * them. -alfredo */
-			{
-				/* xinerama checks for: across head and dead space */
-				rect.pos.x = x;
-				rect.pos.y = y;
-				rect.size.width = width;
-				rect.size.height = height;
-
-				head = wGetRectPlacementInfo(vscr, rect, &flags);
-
-				if (flags & XFLAG_DEAD)
-					reposition = 1;
-
-				if (flags & XFLAG_MULTIPLE)
-					reposition = 2;
-			}
-
-			switch (reposition) {
-			case 1:
-				head = wGetHeadForPointerLocation(vscr);
-				rect = wGetRectForHead(vscr->screen_ptr, head);
-
-				x = rect.pos.x + (x * rect.size.width) / vscr->screen_ptr->scr_width;
-				y = rect.pos.y + (y * rect.size.height) / vscr->screen_ptr->scr_height;
-				break;
-
-			case 2:
-				rect = wGetRectForHead(vscr->screen_ptr, head);
-
-				if (x < rect.pos.x)
-					x = rect.pos.x;
-				else if (x + width > rect.pos.x + rect.size.width)
-					x = rect.pos.x + rect.size.width - width;
-
-				if (y < rect.pos.y)
-					y = rect.pos.y;
-				else if (y + height > rect.pos.y + rect.size.height)
-					y = rect.pos.y + rect.size.height - height;
-
-				break;
-
-			default:
-				break;
-			}
-		}
-
-		if (WFLAGP(wwin, dont_move_off) && dontBring)
-			wScreenBringInside(vscr, &x, &y, width, height);
-	}
+	/* Setup window placement */
+	wwindow_set_placement(vscr, wwin, transientOwner,
+				&x, &y, &width, &height, win_state);
 
 	wNETWMPositionSplash(wwin, &x, &y, width, height);
 
@@ -1146,15 +1403,12 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 	XReparentWindow(dpy, wwin->client_win, wwin->frame->core->window, 0, wwin->frame->top_width);
 	XSelectInput(dpy, wwin->client_win, wwin->event_mask);
 
-	{
-		int gx, gy;
+	/* Window Gravity */
+	wClientGetGravityOffsets(wwin, &gx, &gy);
 
-		wClientGetGravityOffsets(wwin, &gx, &gy);
-
-		/* if gravity is to the south, account for the border sizes */
-		if (gy > 0)
-			y -= wwin->frame->top_width + wwin->frame->bottom_width;
-	}
+	/* if gravity is to the south, account for the border sizes */
+	if (gy > 0)
+		y -= wwin->frame->top_width + wwin->frame->bottom_width;
 
 	/*
 	 * wWindowConfigure() will init the client window's size
@@ -1166,44 +1420,10 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 	wWindowSynthConfigureNotify(wwin);
 
 	/* Setup descriptors and save window to internal lists */
-	if (wwin->main_window != None) {
-		WApplication *app;
-		WWindow *leader;
+	if (wwin->main_window != None)
+		raise = wwindow_set_mainwindow(wwin, workspace);
 
-		/* Leader windows do not necessary set themselves as leaders.
-		 * If this is the case, point the leader of this window to
-		 * itself */
-		leader = wWindowFor(wwin->main_window);
-		if (leader && leader->main_window == None)
-			leader->main_window = leader->client_win;
-
-		app = wApplicationCreate(wwin);
-		if (app) {
-			app->last_workspace = workspace;
-
-			/* Do application specific stuff, like setting application
-			 * wide attributes. */
-
-			if (wwin->flags.hidden) {
-				/* if the window was set to hidden because it was hidden
-				 * in a previous incarnation and that state was restored */
-				app->flags.hidden = 1;
-			} else if (app->flags.hidden) {
-				if (WFLAGP(app->main_window_desc, start_hidden)) {
-					wwin->flags.hidden = 1;
-				} else {
-					wUnhideApplication(app, False, False);
-					raise = True;
-				}
-			}
-			wAppBounce(app);
-		}
-	}
-
-	/* setup the frame descriptor */
-	wwin->frame->core->descriptor.handle_mousedown = frameMouseDown;
-	wwin->frame->core->descriptor.parent = wwin;
-	wwin->frame->core->descriptor.parent_type = WCLASS_WINDOW;
+	wwindow_set_frame_descriptor(wwin);
 
 	/* don't let windows go away if we die */
 	XAddToSaveSet(dpy, window);
@@ -1211,40 +1431,7 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 	XLowerWindow(dpy, window);
 
 	/* if window is in this workspace and should be mapped, then  map it */
-	if (!wwin->flags.miniaturized && (workspace == vscr->workspace.current || IS_OMNIPRESENT(wwin))
-	    && !wwin->flags.hidden && !withdraw) {
-
-		/* The following "if" is to avoid crashing of clients that expect
-		 * WM_STATE set before they get mapped. Else WM_STATE is set later,
-		 * after the return from this function. */
-		if (wwin->wm_hints && (wwin->wm_hints->flags & StateHint))
-			wClientSetState(wwin, wwin->wm_hints->initial_state, None);
-		else
-			wClientSetState(wwin, NormalState, None);
-
-		if (wPreferences.superfluous && !wPreferences.no_animations && !w_global.startup.phase1 &&
-		    (wwin->transient_for == None || wwin->transient_for == vscr->screen_ptr->root_win) &&
-		    /*
-		     * The brain damaged idiotic non-click to focus modes will
-		     * have trouble with this because:
-		     *
-		     * 1. window is created and mapped by the client
-		     * 2. window is mapped by wmaker in small size
-		     * 3. window is animated to grow to normal size
-		     * 4. this function returns to normal event loop
-		     * 5. eventually, the EnterNotify event that would trigger
-		     * the window focusing (if the mouse is over that window)
-		     * will be processed by wmaker.
-		     * But since this event will be rather delayed
-		     * (step 3 has a large delay) the time when the event occurred
-		     * and when it is processed, the client that owns that window
-		     * will reject the XSetInputFocus() for it.
-		     */
-		    (wPreferences.focus_mode == WKF_CLICK || wPreferences.auto_focus))
-			DoWindowBirth(wwin);
-
-		wWindowMap(wwin);
-	}
+	wwindow_map(vscr, wwin, workspace, withdraw);
 
 	/* setup stacking descriptor */
 	if (transientOwner)
@@ -1252,62 +1439,22 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 	else
 		wwin->frame->core->stacking->child_of = NULL;
 
-	if (!vscr->window.focused) {
-		/* first window on the list */
-		wwin->next = NULL;
-		wwin->prev = NULL;
-		vscr->window.focused = wwin;
-	} else {
-		WWindow *tmp;
-
-		/* add window at beginning of focus window list */
-		tmp = vscr->window.focused;
-		while (tmp->prev)
-			tmp = tmp->prev;
-
-		tmp->prev = wwin;
-		wwin->next = tmp;
-		wwin->prev = NULL;
-	}
+	wwindow_add_to_windowfocuslist(vscr, wwin);
 
 	/* raise is set to true if we un-hid the app when this window was born.
 	 * we raise, else old windows of this app will be above this new one. */
 	if (raise)
 		wRaiseFrame(wwin->frame->core);
 
-	/* Update name must come after WApplication stuff is done */
-	wWindowUpdateName(wwin, title);
-	if (title)
-		XFree(title);
+	wwindow_update_title(dpy, window, wwin);
 
 	XUngrabServer(dpy);
 
 	/* Final preparations before window is ready to go */
 	wFrameWindowChangeState(wwin->frame, WS_UNFOCUSED);
 
-	if (!wwin->flags.miniaturized && workspace == vscr->workspace.current && !wwin->flags.hidden) {
-		if (((transientOwner && transientOwner->flags.focused)
-		     || wPreferences.auto_focus) && !WFLAGP(wwin, no_focusable)) {
+	wwindow_setfocus_tomouse(vscr, wwin, transientOwner, workspace);
 
-			/* only auto_focus if on same screen as mouse
-			 * (and same head for xinerama mode)
-			 * TODO: make it an option */
-
-			/*TODO add checking the head of the window, is it available? */
-			short same_screen = 0, same_head = 1;
-
-			int foo;
-			unsigned int bar;
-			Window dummy;
-
-			if (XQueryPointer(dpy, vscr->screen_ptr->root_win, &dummy, &dummy,
-					  &foo, &foo, &foo, &foo, &bar) != False)
-				same_screen = 1;
-
-			if (same_screen == 1 && same_head == 1)
-				wSetFocusTo(vscr, wwin);
-		}
-	}
 	wWindowResetMouseGrabs(wwin);
 
 	if (!WFLAGP(wwin, no_bind_keys))
@@ -1410,10 +1557,7 @@ WWindow *wManageInternalWindow(virtual_screen *vscr, Window window, Window owner
 	XReparentWindow(dpy, wwin->client_win, wwin->frame->core->window, 0, wwin->frame->top_width);
 	wWindowConfigure(wwin, wwin->frame_x, wwin->frame_y, wwin->client.width, wwin->client.height);
 
-	/* setup the frame descriptor */
-	wwin->frame->core->descriptor.handle_mousedown = frameMouseDown;
-	wwin->frame->core->descriptor.parent = wwin;
-	wwin->frame->core->descriptor.parent_type = WCLASS_WINDOW;
+	wwindow_set_frame_descriptor(wwin);
 
 	XLowerWindow(dpy, window);
 	XMapSubwindows(dpy, wwin->frame->core->window);
@@ -1428,23 +1572,7 @@ WWindow *wManageInternalWindow(virtual_screen *vscr, Window window, Window owner
 		wwin->frame->core->stacking->child_of = NULL;
 	}
 
-	if (!vscr->window.focused) {
-		/* first window on the list */
-		wwin->next = NULL;
-		wwin->prev = NULL;
-		vscr->window.focused = wwin;
-	} else {
-		WWindow *tmp;
-
-		/* add window at beginning of focus window list */
-		tmp = vscr->window.focused;
-		while (tmp->prev)
-			tmp = tmp->prev;
-
-		tmp->prev = wwin;
-		wwin->next = tmp;
-		wwin->prev = NULL;
-	}
+	wwindow_add_to_windowfocuslist(vscr, wwin);
 
 	if (wwin->flags.is_gnustep == 0)
 		wFrameWindowChangeState(wwin->frame, WS_UNFOCUSED);
@@ -1454,6 +1582,39 @@ WWindow *wManageInternalWindow(virtual_screen *vscr, Window window, Window owner
 	wWindowSetKeyGrabs(wwin);
 
 	return wwin;
+}
+
+/*
+ *---------------------------------------------------------------------
+ * RelaunchWindow--
+ *      Launch a new instance of the active window
+ *
+ *----------------------------------------------------------------------
+ */
+Bool RelaunchWindow(WWindow *wwin)
+{
+	char **argv;
+	int argc, ret;
+
+	if (!wwin || !wwin->client_win) {
+		werror("no window to relaunch");
+		return False;
+	}
+
+	if (!XGetCommand(dpy, wwin->client_win, &argv, &argc) || argc == 0 || argv == NULL) {
+		werror("cannot relaunch the application because no WM_COMMAND property is set");
+		return False;
+	}
+
+	ret = execute_command(wwin->vscr, argv, argc);
+	if (ret < 0) {
+		XFreeStringList(argv);
+		return False;
+	} else if (ret > 0) {
+		XFreeStringList(argv);
+	}
+
+	return True;
 }
 
 /*
@@ -1752,13 +1913,22 @@ void wWindowUpdateName(WWindow *wwin, const char *newTitle)
 {
 	const char *title;
 
-	if (!wwin->frame)
-		return;
-
 	if (!newTitle)
 		title = DEF_WINDOW_TITLE; /* the hint was removed */
 	else
 		title = newTitle;
+
+	/* check if the title is the same as before */
+	if ((wwin->title) && (!strcmp(wwin->title, title)))
+		return;
+
+	if (wwin->title)
+		wfree(wwin->title);
+
+	wwin->title = wstrdup(title);
+
+	if (!wwin->frame)
+		return;
 
 	if (wFrameWindowChangeTitle(wwin->frame, title))
 		WMPostNotificationName(WMNChangedName, wwin, NULL);
@@ -2328,7 +2498,7 @@ void wWindowSaveState(WWindow *wwin)
 			w_global.atom.wmaker.state, 32, PropModeReplace, (unsigned char *)data, 10);
 }
 
-static int getSavedState(Window window, WSavedState ** state)
+static int getSavedState(Window window, WSavedState **state)
 {
 	Atom type_ret;
 	int fmt_ret;
@@ -2453,7 +2623,7 @@ void wWindowSetShape(WWindow * wwin)
 
 /* ====================================================================== */
 
-static FocusMode getFocusMode(WWindow * wwin)
+static FocusMode getFocusMode(WWindow *wwin)
 {
 	FocusMode mode;
 
@@ -2488,12 +2658,13 @@ void wWindowSetKeyGrabs(WWindow * wwin)
 		if (key->modifier != AnyModifier) {
 			XGrabKey(dpy, key->keycode, key->modifier | LockMask,
 				 wwin->frame->core->window, True, GrabModeAsync, GrabModeAsync);
+
 #ifdef NUMLOCK_HACK
 			/* Also grab all modifier combinations possible that include,
 			 * LockMask, ScrollLockMask and NumLockMask, so that keygrabs
 			 * work even if the NumLock/ScrollLock key is on.
 			 */
-			wHackedGrabKey(key->keycode, key->modifier,
+			wHackedGrabKey(dpy, key->keycode, key->modifier,
 				       wwin->frame->core->window, True, GrabModeAsync, GrabModeAsync);
 #endif
 		}
@@ -2518,7 +2689,7 @@ void wWindowResetMouseGrabs(WWindow * wwin)
 
 	if (!WFLAGP(wwin, no_bind_mouse)) {
 		/* grabs for Meta+drag */
-		wHackedGrabButton(AnyButton, MOD_MASK, wwin->client_win,
+		wHackedGrabButton(dpy, AnyButton, MOD_MASK, wwin->client_win,
 				  True, ButtonPressMask | ButtonReleaseMask,
 				  GrabModeSync, GrabModeAsync, None, None);
 
@@ -2527,17 +2698,17 @@ void wWindowResetMouseGrabs(WWindow * wwin)
 		 * use CTRL+Button1-3 for app related functionality
 		 */
 		if (wPreferences.resize_increment > 0) {
-			wHackedGrabButton(Button4, ControlMask, wwin->client_win,
+			wHackedGrabButton(dpy, Button4, ControlMask, wwin->client_win,
 							  True, ButtonPressMask | ButtonReleaseMask,
 							  GrabModeSync, GrabModeAsync, None, None);
-			wHackedGrabButton(Button5, ControlMask, wwin->client_win,
+			wHackedGrabButton(dpy, Button5, ControlMask, wwin->client_win,
 							  True, ButtonPressMask | ButtonReleaseMask,
 							  GrabModeSync, GrabModeAsync, None, None);
 
-			wHackedGrabButton(Button4, MOD_MASK | ControlMask, wwin->client_win,
+			wHackedGrabButton(dpy, Button4, MOD_MASK | ControlMask, wwin->client_win,
 							  True, ButtonPressMask | ButtonReleaseMask,
 							  GrabModeSync, GrabModeAsync, None, None);
-			wHackedGrabButton(Button5, MOD_MASK | ControlMask, wwin->client_win,
+			wHackedGrabButton(dpy, Button5, MOD_MASK | ControlMask, wwin->client_win,
 							  True, ButtonPressMask | ButtonReleaseMask,
 							  GrabModeSync, GrabModeAsync, None, None);
 		}
@@ -2563,14 +2734,14 @@ void wWindowUpdateGNUstepAttr(WWindow * wwin, GNUstepWMAttributes * attr)
 	}
 }
 
-WMagicNumber wWindowAddSavedState(const char *instance, const char *class,
-											 const char *command, pid_t pid, WSavedState * state)
+void wWindowAddSavedState(const char *instance, const char *class,
+			  const char *command, pid_t pid, WSavedState * state)
 {
 	WWindowState *wstate;
 
 	wstate = malloc(sizeof(WWindowState));
 	if (!wstate)
-		return NULL;
+		return;
 
 	memset(wstate, 0, sizeof(WWindowState));
 	wstate->pid = pid;
@@ -2580,12 +2751,10 @@ WMagicNumber wWindowAddSavedState(const char *instance, const char *class,
 		wstate->class = wstrdup(class);
 	if (command)
 		wstate->command = wstrdup(command);
-	wstate->state = state;
 
+	wstate->state = state;
 	wstate->next = windowState;
 	windowState = wstate;
-
-	return wstate;
 }
 
 static inline int is_same(const char *x, const char *y)
@@ -3034,7 +3203,8 @@ static void windowIconifyClick(WCoreWindow *sender, void *data, XEvent *event)
 	}
 }
 
-static WWindow *window_focus_sloppy(WScreen *scr, WWindow *wwin) {
+static WWindow *window_focus_sloppy(WScreen *scr, WWindow *wwin)
+{
 	WWindow *tmp = NULL;
 	unsigned int mask;
 	int foo;
@@ -3053,7 +3223,8 @@ static WWindow *window_focus_sloppy(WScreen *scr, WWindow *wwin) {
 	return tmp;
 }
 
-static WWindow *window_focus_click(virtual_screen *vscr, WWindow *wwin) {
+static WWindow *window_focus_click(virtual_screen *vscr, WWindow *wwin)
+{
 	WWindow *tmp = NULL;
 
 	/* if in click to focus mode and the window

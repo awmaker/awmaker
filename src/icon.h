@@ -79,7 +79,6 @@ char *get_name_for_instance_class(const char *wm_instance, const char *wm_class)
 
 void wIconSetHighlited(WIcon *icon, Bool flag);
 void set_icon_image_from_image(WIcon *icon, RImage *image);
-void set_icon_minipreview(WIcon *icon, RImage *image);
 void map_icon_image(WIcon *icon);
 void unmap_icon_image(WIcon *icon);
 
@@ -87,4 +86,6 @@ void icon_appearanceObserver(void *self, WMNotification *notif);
 void icon_tileObserver(void *self, WMNotification *notif);
 
 void remove_cache_icon(char *filename);
+
+int create_icon_minipreview(WWindow *wwin);
 #endif /* WMICON_H_ */

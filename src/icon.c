@@ -44,9 +44,10 @@
 #include "appicon.h"
 #include "wmspec.h"
 #include "misc.h"
-#include "startup.h"
 #include "event.h"
 #include "winmenu.h"
+#include "input.h"
+#include "framewin.h"
 
 /**** Global varianebles ****/
 
@@ -66,6 +67,8 @@ static void get_rimage_icon_from_x11(WIcon *icon);
 
 static void icon_update_pixmap(WIcon *icon, RImage *image);
 static void unset_icon_image(WIcon *icon);
+
+static void create_minipreview_showerror(WWindow *wwin);
 
 /****** Notification Observers ******/
 
@@ -217,8 +220,9 @@ void wIconDestroy(WIcon *icon)
 		XUnmapWindow(dpy, icon->icon_win);
 		XReparentWindow(dpy, icon->icon_win, scr->root_win, x, y);
 	}
+
 	if (icon->icon_name)
-		XFree(icon->icon_name);
+		wfree(icon->icon_name);
 
 	if (icon->pixmap)
 		XFreePixmap(dpy, icon->pixmap);
@@ -321,16 +325,10 @@ void wIconChangeTitle(WIcon *icon, WWindow *wwin)
 	if (!icon || !wwin)
 		return;
 
-	/* Remove the previous icon title */
-	if (icon->icon_name != NULL)
-		XFree(icon->icon_name);
+	if (icon->icon_name)
+		wfree(icon->icon_name);
 
-	/* Set the new one, using two methods to identify
-	the icon name or switch back to window name */
-	icon->icon_name = wNETWMGetIconName(wwin->client_win);
-	if (!icon->icon_name)
-		if (!wGetIconName(dpy, wwin->client_win, &icon->icon_name))
-			icon->icon_name = wNETWMGetWindowName(wwin->client_win);
+	icon->icon_name = wstrdup(wwin->title);
 }
 
 RImage *wIconValidateIconSize(RImage *icon, int max_size)
@@ -617,25 +615,6 @@ void set_icon_image_from_image(WIcon *icon, RImage *image)
 	icon->file_image = image;
 }
 
-void set_icon_minipreview(WIcon *icon, RImage *image)
-{
-	Pixmap tmp;
-	RImage *scaled_mini_preview;
-	WScreen *scr = icon->core->vscr->screen_ptr;
-
-	scaled_mini_preview = RSmoothScaleImage(image, wPreferences.minipreview_size - 2 * MINIPREVIEW_BORDER,
-					  wPreferences.minipreview_size - 2 * MINIPREVIEW_BORDER);
-
-	if (RConvertImage(scr->rcontext, scaled_mini_preview, &tmp)) {
-		if (icon->mini_preview != None)
-			XFreePixmap(dpy, icon->mini_preview);
-
-		icon->mini_preview = tmp;
-	}
-
-	RReleaseImage(scaled_mini_preview);
-}
-
 void wIconUpdate(WIcon *icon)
 {
 	WWindow *wwin = NULL;
@@ -771,7 +750,7 @@ static void set_dockapp_in_icon(WIcon *icon)
 	/* Needed to move the icon clicking on the application part */
 	if ((XGetWindowAttributes(dpy, icon->icon_win, &attr)) &&
 	    (attr.all_event_masks & ButtonPressMask))
-		wHackedGrabButton(Button1, MOD_MASK, icon->core->window, True,
+		wHackedGrabButton(dpy, Button1, MOD_MASK, icon->core->window, True,
 				  ButtonPressMask, GrabModeSync, GrabModeAsync,
 				  None, wPreferences.cursor[WCUR_ARROW]);
 }
@@ -991,4 +970,38 @@ void unmap_icon_image(WIcon *icon)
 		XFreePixmap(dpy, icon->pixmap);
 
 	unset_icon_file_image(icon);
+}
+
+int create_icon_minipreview(WWindow *wwin)
+{
+	Pixmap pixmap;
+	int ret;
+
+	ret = create_minipixmap_for_wwindow(wwin->vscr, wwin, &pixmap);
+	if (!ret) {
+		create_minipreview_showerror(wwin);
+		return -1;
+	}
+
+	if (wwin->icon->mini_preview != None)
+		XFreePixmap(dpy, wwin->icon->mini_preview);
+
+	wwin->icon->mini_preview = pixmap;
+
+	return 0;
+}
+
+static void create_minipreview_showerror(WWindow *wwin)
+{
+	const char *title;
+	char title_buf[32];
+
+	if (wwin->frame->title) {
+		title = wwin->frame->title;
+	} else {
+		snprintf(title_buf, sizeof(title_buf), "(id=0x%lx)", wwin->client_win);
+		title = title_buf;
+	}
+
+	wwarning(_("creation of mini-preview failed for window \"%s\""), title);
 }

@@ -56,6 +56,7 @@
 #include "dialog.h"
 #include "main.h"
 #include "monitor.h"
+#include "shell.h"
 
 #include <WINGs/WUtil.h>
 
@@ -125,9 +126,9 @@ static void setWVisualID(int screen, int val)
 		 * and init with default value */
 		wVisualID_len = screen + 1;
 		wVisualID = (int *)malloc(wVisualID_len * sizeof(int));
-		for (i = 0; i < wVisualID_len; i++) {
+		for (i = 0; i < wVisualID_len; i++)
 			wVisualID[i] = -1;
-		}
+
 	} else if (screen >= wVisualID_len) {
 		/* larger screen number than previously allocated
 		 so enlarge array */
@@ -135,9 +136,8 @@ static void setWVisualID(int screen, int val)
 
 		wVisualID_len = screen + 1;
 		wVisualID = (int *)wrealloc(wVisualID, wVisualID_len * sizeof(int));
-		for (i = oldlen; i < wVisualID_len; i++) {
+		for (i = oldlen; i < wVisualID_len; i++)
 			wVisualID[i] = -1;
-		}
 	}
 
 	wVisualID[screen] = val;
@@ -178,9 +178,9 @@ static int initWVisualID(const char *user_str)
 			break;
 
                 /* if the current char is no delimiter put it into mystr */
-		if (user_str[cur_in_pos] != ',') {
+		if (user_str[cur_in_pos] != ',')
 			mystr[cur_out_pos++] = user_str[cur_in_pos];
-		}
+
 		cur_in_pos++;
 	}
 
@@ -213,9 +213,8 @@ void Restart(char *manager, Bool abortOnFailure)
 		prog = argv[0] = strtok(manager, " ");
 		for (i = 1; i < MAX_RESTART_ARGS; i++) {
 			argv[i] = strtok(NULL, " ");
-			if (argv[i] == NULL) {
+			if (argv[i] == NULL)
 				break;
-			}
 		}
 	}
 	if (dpy) {
@@ -266,134 +265,6 @@ void SetupEnvironment(virtual_screen *vscr)
 	snprintf(tmp, 60, "WRASTER_COLOR_RESOLUTION%i=%i", vscr->screen_ptr->screen,
 		 vscr->screen_ptr->rcontext->attribs->colors_per_channel);
 	putenv(tmp);
-}
-
-typedef struct {
-	virtual_screen *vscr;
-	char *command;
-} _tuple;
-
-static void shellCommandHandler(pid_t pid, unsigned int status, void *client_data)
-{
-	_tuple *data = (_tuple *) client_data;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) pid;
-
-	if (status == 127) {
-		char *buffer;
-
-		buffer = wstrconcat(_("Could not execute command: "), data->command);
-
-		wMessageDialog(data->vscr, _("Error"), buffer, _("OK"), NULL, NULL);
-		wfree(buffer);
-	}
-
-	wfree(data->command);
-	wfree(data);
-}
-
-void ExecuteShellCommand(virtual_screen *vscr, const char *command)
-{
-	static char *shell = NULL;
-	pid_t pid;
-
-	/*
-	 * This have a problem: if the shell is tcsh (not sure about others)
-	 * and ~/.tcshrc have /bin/stty erase ^H somewhere on it, the shell
-	 * will block and the command will not be executed.
-	 if (!shell) {
-	 shell = getenv("SHELL");
-	 if (!shell)
-	 shell = "/bin/sh";
-	 }
-	 */
-	shell = "/bin/sh";
-
-	pid = fork();
-
-	if (pid == 0) {
-
-		SetupEnvironment(vscr);
-
-#ifdef HAVE_SETSID
-		setsid();
-#endif
-		execl(shell, shell, "-c", command, NULL);
-		werror("could not execute %s -c %s", shell, command);
-		Exit(-1);
-	} else if (pid < 0) {
-		werror("cannot fork a new process");
-	} else {
-		_tuple *data = wmalloc(sizeof(_tuple));
-
-		data->vscr = vscr;
-		data->command = wstrdup(command);
-
-		wAddDeathHandler(pid, shellCommandHandler, data);
-	}
-}
-
-/*
- *---------------------------------------------------------------------
- * RelaunchWindow--
- * 	Launch a new instance of the active window
- *
- *----------------------------------------------------------------------
- */
-Bool RelaunchWindow(WWindow *wwin)
-{
-	char **argv;
-	int argc;
-
-	if (!wwin || !wwin->client_win) {
-		werror("no window to relaunch");
-		return False;
-	}
-
-	if (!XGetCommand(dpy, wwin->client_win, &argv, &argc) || argc == 0 || argv == NULL) {
-		werror("cannot relaunch the application because no WM_COMMAND property is set");
-		return False;
-	}
-
-	pid_t pid = fork();
-	if (pid == 0) {
-		SetupEnvironment(wwin->vscr);
-#ifdef HAVE_SETSID
-		setsid();
-#endif
-		/* argv is not null-terminated */
-		char **a = (char **) malloc(argc + 1);
-		if (!a) {
-			werror("out of memory trying to relaunch the application");
-			Exit(-1);
-		}
-
-		int i;
-		for (i = 0; i < argc; i++)
-			a[i] = argv[i];
-
-		a[i] = NULL;
-
-		execvp(a[0], a);
-		Exit(-1);
-	} else if (pid < 0) {
-		werror("cannot fork a new process");
-
-		XFreeStringList(argv);
-		return False;
-	} else {
-		_tuple *data = wmalloc(sizeof(_tuple));
-
-		data->vscr = wwin->vscr;
-		data->command = wtokenjoin(argv, argc);
-
-		/* not actually a shell command */
-		wAddDeathHandler(pid, shellCommandHandler, data);
-		XFreeStringList(argv);
-	}
-
-	return True;
 }
 
 /*
@@ -598,9 +469,8 @@ int main(int argc, char **argv)
 
 static int real_main(int argc, char **argv)
 {
-	int i;
-	char *pos;
-	int d, s;
+	int i, d, s;
+	char *pos = NULL;
 
 	setlocale(LC_ALL, "");
 	wsetabort(wAbort);
@@ -698,24 +568,23 @@ static int real_main(int argc, char **argv)
 		}
 	}
 
-	if (!wPreferences.flags.noupdates) {
-		/* check existence of Defaults DB directory */
+	/* check existence of Defaults DB directory */
+	if (!wPreferences.flags.noupdates)
 		check_defaults();
-	}
 
 	if (w_global.locale) {
 		setenv("LANG", w_global.locale, 1);
 	} else {
 		w_global.locale = getenv("LC_ALL");
-		if (!w_global.locale) {
+		if (!w_global.locale)
 			w_global.locale = getenv("LANG");
-		}
 	}
 
 	setlocale(LC_ALL, "");
 
 	if (!w_global.locale || strcmp(w_global.locale, "C") == 0 || strcmp(w_global.locale, "POSIX") == 0)
 		w_global.locale = NULL;
+
 #ifdef I18N
 	if (getenv("NLSPATH")) {
 		bindtextdomain("WindowMaker", getenv("NLSPATH"));
@@ -728,19 +597,18 @@ static int real_main(int argc, char **argv)
 		bindtextdomain(MENU_TEXTDOMAIN, LOCALEDIR);
 #endif
 	}
+
 	bind_textdomain_codeset("WindowMaker", "UTF-8");
 #if defined(MENU_TEXTDOMAIN)
 	bind_textdomain_codeset(MENU_TEXTDOMAIN, "UTF-8");
 #endif
 	textdomain("WindowMaker");
 
-	if (!XSupportsLocale()) {
+	if (!XSupportsLocale())
 		wwarning(_("X server does not support locale"));
-	}
 
-	if (XSetLocaleModifiers("") == NULL) {
+	if (XSetLocaleModifiers("") == NULL)
 		wwarning(_("cannot set locale modifiers"));
-	}
 #endif
 
 	if (w_global.locale) {
@@ -765,23 +633,20 @@ static int real_main(int argc, char **argv)
 	}
 
 
-	if (getWVisualID(0) < 0) {
-		/*
-		 *   If unspecified, use default visual instead of waiting
-		 * for wrlib/context.c:bestContext() that may end up choosing
-		 * the "fake" 24 bits added by the Composite extension.
-		 *   This is required to avoid all sort of corruptions when
-		 * composite is enabled, and at a depth other than 24.
-		 */
+	/*
+	 * If unspecified, use default visual instead of waiting
+	 * for wrlib/context.c:bestContext() that may end up choosing
+	 * the "fake" 24 bits added by the Composite extension.
+	 * This is required to avoid all sort of corruptions when
+	 * composite is enabled, and at a depth other than 24.
+	 */
+	if (getWVisualID(0) < 0)
 		setWVisualID(0, (int)DefaultVisual(dpy, DefaultScreen(dpy))->visualid);
-        }
 
-	/* check if the user specified a complete display name (with screen).
+	/* Check if the user specified a complete display name (with screen).
 	 * If so, only manage the specified screen */
 	if (DisplayName)
 		pos = strchr(DisplayName, ':');
-	else
-		pos = NULL;
 
 	if (pos && sscanf(pos, ":%i.%i", &d, &s) == 2)
 		multiHead = False;
@@ -790,6 +655,8 @@ static int real_main(int argc, char **argv)
 	setenv("DISPLAY", DisplayName, 1);
 
 	wXModifierInitialize();
+
+	startup_virtual();
 	StartUp(!multiHead);
 
 	if (w_global.screen_count == 1)
