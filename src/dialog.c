@@ -514,15 +514,15 @@ int wAdvancedInputDialog(virtual_screen *vscr, const char *title,
 	wfree(p);
 	wfree(filename);
 	XDestroyWindow(dpy, parent);
-	if (result == NULL) {
+	if (result == NULL)
 		return False;
-	} else {
-		if (*text)
-			wfree(*text);
 
-		*text = result;
-		return True;
-	}
+	if (*text)
+		wfree(*text);
+
+	*text = result;
+
+	return True;
 }
 
 int wInputDialog(virtual_screen *vscr, const char *title, const char *message, char **text)
@@ -554,15 +554,15 @@ int wInputDialog(virtual_screen *vscr, const char *title, const char *message, c
 	wUnmanageWindow(wwin, False, False);
 	WMDestroyInputPanel(panel);
 	XDestroyWindow(dpy, parent);
-	if (result == NULL) {
+	if (result == NULL)
 		return False;
-	} else {
-		if (*text)
-			wfree(*text);
 
-		*text = result;
-		return True;
-	}
+	if (*text)
+		wfree(*text);
+
+	*text = result;
+
+	return True;
 }
 
 /*
