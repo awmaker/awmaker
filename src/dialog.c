@@ -82,11 +82,8 @@
 	"Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA"\
 	"02110-1301 USA."
 
-#define MESSAGE_WIDTH 400
-#define MESSAGE_HEIGHT 180
-
-#define EXIT_WIDTH 400
-#define EXIT_HEIGHT 180
+#define ALERT_WIDTH 400
+#define ALERT_HEIGHT 180
 
 #define ADVANCED_WIDTH 320
 #define ADVANCED_HEIGHT 160
@@ -138,6 +135,8 @@ static void destroy_panel(int type);
 static void create_legal_widgets(virtual_screen *vscr, Panel *panel, int win_width, int win_height);
 static void create_info_widgets(virtual_screen *vscr, Panel *panel, int win_width, int win_height);
 
+static int alert_panel(WMAlertPanel *panel, virtual_screen *vscr);
+
 static Panel *legalPanel = NULL;
 static Panel *infoPanel = NULL;
 
@@ -146,18 +145,16 @@ static WMPoint getCenter(virtual_screen *vscr, int width, int height)
 	return wGetPointToCenterRectInHead(vscr, wGetHeadForPointerLocation(vscr), width, height);
 }
 
-int wMessageDialog(virtual_screen *vscr, const char *title, const char *message, const char *defBtn, const char *altBtn, const char *othBtn)
+static int alert_panel(WMAlertPanel *panel, virtual_screen *vscr)
 {
 	WScreen *scr = vscr->screen_ptr;
-	const int win_width = MESSAGE_WIDTH;
-	const int win_height = MESSAGE_HEIGHT;
-	WMAlertPanel *panel;
 	Window parent;
 	WWindow *wwin;
+	const int win_width = ALERT_WIDTH;
+	const int win_height = ALERT_HEIGHT;
 	int result;
 	WMPoint center;
 
-	panel = WMCreateAlertPanel(scr->wmscreen, NULL, title, message, defBtn, altBtn, othBtn);
 	parent = XCreateSimpleWindow(dpy, scr->root_win, 0, 0, win_width, win_height, 0, 0, 0);
 	XReparentWindow(dpy, WMWidgetXID(panel->win), parent, 0, 0);
 	center = getCenter(vscr, win_width, win_height);
@@ -173,6 +170,14 @@ int wMessageDialog(virtual_screen *vscr, const char *title, const char *message,
 	XDestroyWindow(dpy, parent);
 
 	return result;
+}
+
+int wMessageDialog(virtual_screen *vscr, const char *title, const char *message, const char *defBtn, const char *altBtn, const char *othBtn)
+{
+	WMAlertPanel *panel;
+
+	panel = WMCreateAlertPanel(vscr->screen_ptr->wmscreen, NULL, title, message, defBtn, altBtn, othBtn);
+	return alert_panel(panel, vscr);
 }
 
 static void toggleSaveSession(WMWidget *w, void *data)
@@ -185,17 +190,10 @@ static void toggleSaveSession(WMWidget *w, void *data)
 
 int wExitDialog(virtual_screen *vscr, const char *title, const char *message, const char *defBtn, const char *altBtn, const char *othBtn)
 {
-	WScreen *scr = vscr->screen_ptr;
-	const int win_width = EXIT_WIDTH;
-	const int win_height = EXIT_HEIGHT;
 	WMAlertPanel *panel;
 	WMButton *saveSessionBtn;
-	Window parent;
-	WWindow *wwin;
-	WMPoint center;
-	int result;
 
-	panel = WMCreateAlertPanel(scr->wmscreen, NULL, title, message, defBtn, altBtn, othBtn);
+	panel = WMCreateAlertPanel(vscr->screen_ptr->wmscreen, NULL, title, message, defBtn, altBtn, othBtn);
 
 	/* add save session button */
 	saveSessionBtn = WMCreateSwitchButton(panel->hbox);
@@ -205,21 +203,9 @@ int wExitDialog(virtual_screen *vscr, const char *title, const char *message, co
 	WMSetButtonSelected(saveSessionBtn, wPreferences.save_session_on_exit);
 	WMRealizeWidget(saveSessionBtn);
 	WMMapWidget(saveSessionBtn);
-	parent = XCreateSimpleWindow(dpy, scr->root_win, 0, 0, win_width, win_height, 0, 0, 0);
-	XReparentWindow(dpy, WMWidgetXID(panel->win), parent, 0, 0);
-	center = getCenter(vscr, win_width, win_height);
-	wwin = wManageInternalWindow(vscr, parent, None, NULL, center.x, center.y, win_width, win_height);
-	wwin->client_leader = WMWidgetXID(panel->win);
-	WMMapWidget(panel->win);
-	wWindowMap(wwin);
-	WMRunModalLoop(WMWidgetScreen(panel->win), WMWidgetView(panel->win));
-	result = panel->result;
-	WMUnmapWidget(panel->win);
-	wUnmanageWindow(wwin, False, False);
-	WMDestroyAlertPanel(panel);
-	XDestroyWindow(dpy, parent);
 
-	return result;
+	/* Alert panel show */
+	return alert_panel(panel, vscr);
 }
 
 static char *HistoryFileName(const char *name)
