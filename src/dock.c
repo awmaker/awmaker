@@ -5296,7 +5296,7 @@ static void iconDblClick(WObjDescriptor *desc, XEvent *event)
 						if (!btn->launching && (!btn->running || (event->xbutton.state & ControlMask)))
 							launchDockedApplication(btn, False);
 					} else {
-						wShowInfoPanel(dock->vscr);
+						panel_show(dock->vscr, PANEL_INFO);
 					}
 				} else {
 					toggleCollapsed(dock);
@@ -5307,7 +5307,7 @@ static void iconDblClick(WObjDescriptor *desc, XEvent *event)
 				if (!btn->launching && (!btn->running || (event->xbutton.state & ControlMask)))
 					launchDockedApplication(btn, False);
 			} else if (btn->xindex == 0 && btn->yindex == 0 && btn->dock->type == WM_DOCK) {
-				wShowInfoPanel(dock->vscr);
+				panel_show(dock->vscr, PANEL_INFO);
 			}
 		}
 	}

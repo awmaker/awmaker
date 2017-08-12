@@ -316,7 +316,7 @@ static void infoPanelCommand(WMenu *menu, WMenuEntry *entry)
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 
-	wShowInfoPanel(menu->frame->vscr);
+	panel_show(menu->frame->vscr, PANEL_INFO);
 }
 
 static void legalPanelCommand(WMenu *menu, WMenuEntry *entry)

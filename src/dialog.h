@@ -37,6 +37,7 @@ enum {
 };
 
 #define PANEL_LEGAL 1
+#define PANEL_INFO  2
 
 struct IconPanel {
 	virtual_screen *vscr;
@@ -73,19 +74,15 @@ struct Panel {
 
 	/* Legal Panel */
 	WMLabel *lbl_license;
-};
 
-struct InfoPanel {
-	virtual_screen *vscr;
-	WWindow *wwin;
-	WMWindow *win;
-	WMLabel *logoL;
-	WMLabel *name1L;
-	WMFrame *lineF;
-	WMLabel *name2L;
-	WMLabel *versionL;
-	WMLabel *infoL;
-	WMLabel *copyrL;
+	/* Info Panel */
+	WMLabel *lbl_logo;
+	WMLabel *lbl_name1;
+	WMFrame *frm_line;
+	WMLabel *lbl_name2;
+	WMLabel *lbl_version;
+	WMLabel *lbl_info;
+	WMLabel *lbl_copyr;
 };
 
 typedef struct CrashPanel {
@@ -124,7 +121,6 @@ int wExitDialog(virtual_screen *vscr, const char *title, const char *message, co
 
 Bool wIconChooserDialog(AppSettingsPanel *app_panel, InspectorPanel *ins_panel, WAppIcon *icon, char **file);
 
-void wShowInfoPanel(virtual_screen *vscr);
 void panel_show(virtual_screen *vscr, int type);
 int wShowCrashingDialogPanel(int whatSig);
 #endif
