@@ -23,7 +23,7 @@
 #define WMDIALOG_H_
 
 typedef struct IconPanel IconPanel;
-typedef struct LegalPanel LegalPanel;
+typedef struct Panel Panel;
 typedef struct InfoPanel InfoPanel;
 
 #include "appicon.h"
@@ -35,6 +35,8 @@ enum {
 	WMRestart,
 	WMStartAlternate
 };
+
+#define PANEL_LEGAL 1
 
 struct IconPanel {
 	virtual_screen *vscr;
@@ -63,11 +65,14 @@ struct IconPanel {
 	short preview;
 };
 
-struct LegalPanel {
+struct Panel {
 	virtual_screen *vscr;
 	WWindow *wwin;
 	WMWindow *win;
-	WMLabel *licenseL;
+	int type;
+
+	/* Legal Panel */
+	WMLabel *lbl_license;
 };
 
 struct InfoPanel {
@@ -120,6 +125,6 @@ int wExitDialog(virtual_screen *vscr, const char *title, const char *message, co
 Bool wIconChooserDialog(AppSettingsPanel *app_panel, InspectorPanel *ins_panel, WAppIcon *icon, char **file);
 
 void wShowInfoPanel(virtual_screen *vscr);
-void wShowLegalPanel(virtual_screen *vscr);
+void panel_show(virtual_screen *vscr, int type);
 int wShowCrashingDialogPanel(int whatSig);
 #endif

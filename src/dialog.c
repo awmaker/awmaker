@@ -126,15 +126,16 @@ static void toggleSaveSession(WMWidget *w, void *data);
 static void create_dialog_iconchooser_widgets(IconPanel *panel, const int win_width, const int win_height);
 static void destroy_dialog_iconchooser(IconPanel *panel, Window parent);
 static void destroyInfoPanel(WCoreWindow *foo, void *data, XEvent *event);
-static void destroyLegalPanel(WCoreWindow *foo, void *data, XEvent *event);
+static void destroyPanel(WCoreWindow *foo, void *data, XEvent *event);
 static char *HistoryFileName(const char *name);
 static char *create_dialog_iconchooser_title(const char *instance, const char *class);
 static WMArray *GenerateVariants(const char *complete);
 static WMArray *LoadHistory(const char *filename, int max);
 static WMPixmap *getWindowMakerIconImage(WMScreen *scr);
 static WMPoint getCenter(virtual_screen *vscr, int width, int height);
+static void destroy_panel(int type);
 
-static LegalPanel *legalPanel = NULL;
+static Panel *legalPanel = NULL;
 static InfoPanel *infoPanel = NULL;
 
 static WMPoint getCenter(virtual_screen *vscr, int width, int height)
@@ -1375,75 +1376,91 @@ void wShowInfoPanel(virtual_screen *vscr)
  ***********************************************************************
  */
 
-static void destroyLegalPanel(WCoreWindow *foo, void *data, XEvent *event)
+static void destroy_panel(int type)
+{
+	switch (type) {
+	case PANEL_LEGAL:
+		WMUnmapWidget(legalPanel->win);
+		WMDestroyWidget(legalPanel->win);
+		wUnmanageWindow(legalPanel->wwin, False, False);
+		wfree(legalPanel);
+		legalPanel = NULL;
+		break;
+	}
+}
+
+static void destroyPanel(WCoreWindow *foo, void *data, XEvent *event)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) foo;
 	(void) data;
 	(void) event;
 
-	WMUnmapWidget(legalPanel->win);
-	WMDestroyWidget(legalPanel->win);
-	wUnmanageWindow(legalPanel->wwin, False, False);
-	wfree(legalPanel);
-	legalPanel = NULL;
+	destroy_panel(PANEL_LEGAL);
 }
 
-void wShowLegalPanel(virtual_screen *vscr)
+void panel_show(virtual_screen *vscr, int type)
 {
-	const int win_width = LEGALPANEL_WIDTH;
-	const int win_height = LEGALPANEL_HEIGHT;
-	const int margin = LEGALPANEL_MARGIN;
-	LegalPanel *panel;
+	Panel *panel;
 	Window parent;
 	WWindow *wwin;
-	WMPoint center;
+	int win_width, win_height, margin;
 
-	if (legalPanel) {
-		if (legalPanel->vscr->screen_ptr == vscr->screen_ptr) {
-			wRaiseFrame(legalPanel->wwin->frame->core);
-			wSetFocusTo(vscr, legalPanel->wwin);
+	switch (type) {
+	case PANEL_LEGAL:
+		win_width = LEGALPANEL_WIDTH;
+		win_height = LEGALPANEL_HEIGHT;
+		margin = LEGALPANEL_MARGIN;
+		WMPoint center;
+
+		if (legalPanel) {
+			if (legalPanel->vscr->screen_ptr == vscr->screen_ptr) {
+				wRaiseFrame(legalPanel->wwin->frame->core);
+				wSetFocusTo(vscr, legalPanel->wwin);
+			}
+
+			return;
 		}
 
-		return;
-	}
+		panel = wmalloc(sizeof(Panel));
+		panel->vscr = vscr;
+		panel->type = PANEL_LEGAL;
 
-	panel = wmalloc(sizeof(LegalPanel));
-	panel->vscr = vscr;
+		panel->win = WMCreateWindow(vscr->screen_ptr->wmscreen, "legal");
+		WMResizeWidget(panel->win, win_width, win_height);
 
-	panel->win = WMCreateWindow(vscr->screen_ptr->wmscreen, "legal");
-	WMResizeWidget(panel->win, win_width, win_height);
+		panel->lbl_license = WMCreateLabel(panel->win);
+		WMSetLabelWraps(panel->lbl_license, True);
+		WMResizeWidget(panel->lbl_license, win_width - (2 * margin), win_height - (2 * margin));
+		WMMoveWidget(panel->lbl_license, margin, margin);
+		WMSetLabelTextAlignment(panel->lbl_license, WALeft);
+		WMSetLabelText(panel->lbl_license, LEGAL_TEXT);
+		WMSetLabelRelief(panel->lbl_license, WRGroove);
 
-	panel->licenseL = WMCreateLabel(panel->win);
-	WMSetLabelWraps(panel->licenseL, True);
-	WMResizeWidget(panel->licenseL, win_width - (2 * margin), win_height - (2 * margin));
-	WMMoveWidget(panel->licenseL, margin, margin);
-	WMSetLabelTextAlignment(panel->licenseL, WALeft);
-	WMSetLabelText(panel->licenseL, LEGAL_TEXT);
-	WMSetLabelRelief(panel->licenseL, WRGroove);
+		WMRealizeWidget(panel->win);
+		WMMapSubwidgets(panel->win);
 
-	WMRealizeWidget(panel->win);
-	WMMapSubwidgets(panel->win);
+		parent = XCreateSimpleWindow(dpy, vscr->screen_ptr->root_win, 0, 0, win_width, win_height, 0, 0, 0);
+		XReparentWindow(dpy, WMWidgetXID(panel->win), parent, 0, 0);
+		center = getCenter(vscr, win_width, win_height);
+		wwin = wManageInternalWindow(vscr, parent, None, _("Legal"), center.x, center.y, win_width, win_height);
 
-	parent = XCreateSimpleWindow(dpy, vscr->screen_ptr->root_win, 0, 0, win_width, win_height, 0, 0, 0);
-	XReparentWindow(dpy, WMWidgetXID(panel->win), parent, 0, 0);
-	center = getCenter(vscr, win_width, win_height);
-	wwin = wManageInternalWindow(vscr, parent, None, _("Legal"), center.x, center.y, win_width, win_height);
-
-	WSETUFLAG(wwin, no_closable, 0);
-	WSETUFLAG(wwin, no_close_button, 0);
-	wWindowUpdateButtonImages(wwin);
-	wframewindow_show_rightbutton(wwin->frame);
+		WSETUFLAG(wwin, no_closable, 0);
+		WSETUFLAG(wwin, no_close_button, 0);
+		wWindowUpdateButtonImages(wwin);
+		wframewindow_show_rightbutton(wwin->frame);
 #ifdef XKB_BUTTON_HINT
-	wframewindow_hide_languagebutton(wwin->frame);
+		wframewindow_hide_languagebutton(wwin->frame);
 #endif
-	wframewindow_refresh_titlebar(wwin->frame);
-	wwin->frame->on_click_right = destroyLegalPanel;
-	panel->wwin = wwin;
+		wframewindow_refresh_titlebar(wwin->frame);
+		wwin->frame->on_click_right = destroyPanel;
+		panel->wwin = wwin;
 
-	WMMapWidget(panel->win);
-	wWindowMap(wwin);
-	legalPanel = panel;
+		WMMapWidget(panel->win);
+		wWindowMap(wwin);
+		legalPanel = panel;
+		break;
+	}
 }
 
 /*

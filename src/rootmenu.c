@@ -324,7 +324,7 @@ static void legalPanelCommand(WMenu *menu, WMenuEntry *entry)
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 
-	wShowLegalPanel(menu->frame->vscr);
+	panel_show(menu->frame->vscr, PANEL_LEGAL);
 }
 
 /********************************************************************/
