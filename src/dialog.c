@@ -85,9 +85,6 @@
 #define ALERT_WIDTH 400
 #define ALERT_HEIGHT 180
 
-#define ADVANCED_WIDTH 320
-#define ADVANCED_HEIGHT 160
-
 #define INPUT_WIDTH 320
 #define INPUT_HEIGHT 160
 
@@ -467,16 +464,41 @@ static void handleHistoryKeyPress(XEvent *event, void *clientData)
 	}
 }
 
+static char *create_input_panel(virtual_screen *vscr, WMInputPanel *panel)
+{
+	WScreen *scr = vscr->screen_ptr;
+	WWindow *wwin;
+	const int win_width = INPUT_WIDTH;
+	const int win_height = INPUT_HEIGHT;
+	char *result = NULL;
+	Window parent;
+	WMPoint center;
+
+	parent = XCreateSimpleWindow(dpy, scr->root_win, 0, 0, win_width, win_height, 0, 0, 0);
+	XSelectInput(dpy, parent, KeyPressMask | KeyReleaseMask);
+	XReparentWindow(dpy, WMWidgetXID(panel->win), parent, 0, 0);
+	center = getCenter(vscr, win_width, win_height);
+	wwin = wManageInternalWindow(vscr, parent, None, NULL, center.x, center.y, win_width, win_height);
+	wwin->client_leader = WMWidgetXID(panel->win);
+	WMMapWidget(panel->win);
+	wWindowMap(wwin);
+	WMRunModalLoop(WMWidgetScreen(panel->win), WMWidgetView(panel->win));
+
+	if (panel->result == WAPRDefault)
+		result = WMGetTextFieldText(panel->text);
+
+	wUnmanageWindow(wwin, False, False);
+	WMDestroyInputPanel(panel);
+	XDestroyWindow(dpy, parent);
+
+	return result;
+}
+
 int wAdvancedInputDialog(virtual_screen *vscr, const char *title,
 			 const char *message, const char *name, char **text)
 {
 	WScreen *scr = vscr->screen_ptr;
-	const int win_width = ADVANCED_WIDTH;
-	const int win_height = ADVANCED_HEIGHT;
-	WWindow *wwin;
-	Window parent;
 	char *result;
-	WMPoint center;
 	WMInputPanelWithHistory *p;
 	char *filename;
 
@@ -490,31 +512,19 @@ int wAdvancedInputDialog(virtual_screen *vscr, const char *title,
 	p->rest = NULL;
 	p->variants = NULL;
 	p->varpos = 0;
+
 	WMCreateEventHandler(WMWidgetView(p->panel->text), KeyPressMask, handleHistoryKeyPress, p);
-	parent = XCreateSimpleWindow(dpy, scr->root_win, 0, 0, win_width, win_height, 0, 0, 0);
-	XSelectInput(dpy, parent, KeyPressMask | KeyReleaseMask);
-	XReparentWindow(dpy, WMWidgetXID(p->panel->win), parent, 0, 0);
-	center = getCenter(vscr, win_width, win_height);
-	wwin = wManageInternalWindow(vscr, parent, None, NULL, center.x, center.y, win_width, win_height);
-	wwin->client_leader = WMWidgetXID(p->panel->win);
-	WMMapWidget(p->panel->win);
-	wWindowMap(wwin);
-	WMRunModalLoop(WMWidgetScreen(p->panel->win), WMWidgetView(p->panel->win));
-	if (p->panel->result == WAPRDefault) {
-		result = WMGetTextFieldText(p->panel->text);
+
+	result = create_input_panel(vscr, p->panel);
+	if (result) {
 		wfree(WMReplaceInArray(p->history, 0, wstrdup(result)));
 		SaveHistory(p->history, filename);
-	} else {
-		result = NULL;
 	}
 
-	wUnmanageWindow(wwin, False, False);
-	WMDestroyInputPanel(p->panel);
 	WMFreeArray(p->history);
 	wfree(p);
 	wfree(filename);
-	XDestroyWindow(dpy, parent);
-	if (result == NULL)
+	if (!result)
 		return False;
 
 	if (*text)
@@ -528,33 +538,13 @@ int wAdvancedInputDialog(virtual_screen *vscr, const char *title,
 int wInputDialog(virtual_screen *vscr, const char *title, const char *message, char **text)
 {
 	WScreen *scr = vscr->screen_ptr;
-	const int win_width = INPUT_WIDTH;
-	const int win_height = INPUT_HEIGHT;
-	WWindow *wwin;
-	Window parent;
 	WMInputPanel *panel;
 	char *result;
-	WMPoint center;
 
 	panel = WMCreateInputPanel(scr->wmscreen, NULL, title, message, *text, _("OK"), _("Cancel"));
-	parent = XCreateSimpleWindow(dpy, scr->root_win, 0, 0, win_width, win_height, 0, 0, 0);
-	XSelectInput(dpy, parent, KeyPressMask | KeyReleaseMask);
-	XReparentWindow(dpy, WMWidgetXID(panel->win), parent, 0, 0);
-	center = getCenter(vscr, win_width, win_height);
-	wwin = wManageInternalWindow(vscr, parent, None, NULL, center.x, center.y, win_width, win_height);
-	wwin->client_leader = WMWidgetXID(panel->win);
-	WMMapWidget(panel->win);
-	wWindowMap(wwin);
-	WMRunModalLoop(WMWidgetScreen(panel->win), WMWidgetView(panel->win));
-	if (panel->result == WAPRDefault)
-		result = WMGetTextFieldText(panel->text);
-	else
-		result = NULL;
+	result = create_input_panel(vscr, panel);
 
-	wUnmanageWindow(wwin, False, False);
-	WMDestroyInputPanel(panel);
-	XDestroyWindow(dpy, parent);
-	if (result == NULL)
+	if (!result)
 		return False;
 
 	if (*text)
