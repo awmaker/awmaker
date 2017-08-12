@@ -126,7 +126,7 @@ static void toggleSaveSession(WMWidget *w, void *data);
 static void create_dialog_iconchooser_widgets(IconPanel *panel, const int win_width, const int win_height);
 static void destroy_dialog_iconchooser(IconPanel *panel, Window parent);
 static void destroyInfoPanel(WCoreWindow *foo, void *data, XEvent *event);
-static void destroyPanel(WCoreWindow *foo, void *data, XEvent *event);
+static void destroy_legal_panel(WCoreWindow *foo, void *data, XEvent *event);
 static char *HistoryFileName(const char *name);
 static char *create_dialog_iconchooser_title(const char *instance, const char *class);
 static WMArray *GenerateVariants(const char *complete);
@@ -1389,7 +1389,7 @@ static void destroy_panel(int type)
 	}
 }
 
-static void destroyPanel(WCoreWindow *foo, void *data, XEvent *event)
+static void destroy_legal_panel(WCoreWindow *foo, void *data, XEvent *event)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) foo;
@@ -1453,7 +1453,7 @@ void panel_show(virtual_screen *vscr, int type)
 		wframewindow_hide_languagebutton(wwin->frame);
 #endif
 		wframewindow_refresh_titlebar(wwin->frame);
-		wwin->frame->on_click_right = destroyPanel;
+		wwin->frame->on_click_right = destroy_legal_panel;
 		panel->wwin = wwin;
 
 		WMMapWidget(panel->win);
