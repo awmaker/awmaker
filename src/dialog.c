@@ -1412,6 +1412,7 @@ void panel_show(virtual_screen *vscr, int type)
 		panel->vscr = vscr;
 		panel->type = PANEL_LEGAL;
 		create_legal_widgets(vscr, panel, win_width, win_height);
+		legalPanel = panel;
 
 		WMRealizeWidget(panel->win);
 		WMMapSubwidgets(panel->win);
@@ -1435,7 +1436,6 @@ void panel_show(virtual_screen *vscr, int type)
 
 		WMMapWidget(panel->win);
 		wWindowMap(wwin);
-		legalPanel = panel;
 
 		break;
 	case PANEL_INFO:
@@ -1455,6 +1455,7 @@ void panel_show(virtual_screen *vscr, int type)
 		panel->vscr = vscr;
 		panel->type = PANEL_INFO;
 		create_info_widgets(vscr, panel, win_width, win_height);
+		infoPanel = panel;
 
 		WMRealizeWidget(panel->win);
 		WMMapSubwidgets(panel->win);
@@ -1478,7 +1479,6 @@ void panel_show(virtual_screen *vscr, int type)
 
 		WMMapWidget(panel->win);
 		wWindowMap(wwin);
-		infoPanel = panel;
 
 		break;
 	}
