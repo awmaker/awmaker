@@ -135,6 +135,8 @@ static WMPixmap *getWindowMakerIconImage(WMScreen *scr);
 static WMPoint getCenter(virtual_screen *vscr, int width, int height);
 static void destroy_panel(int type);
 
+static void create_legal_widgets(virtual_screen *vscr, Panel *panel, int win_width, int win_height);
+
 static Panel *legalPanel = NULL;
 static Panel *infoPanel = NULL;
 
@@ -1163,6 +1165,22 @@ static void destroy_legal_panel(WCoreWindow *foo, void *data, XEvent *event)
 	destroy_panel(PANEL_LEGAL);
 }
 
+static void create_legal_widgets(virtual_screen *vscr, Panel *panel, int win_width, int win_height)
+{
+	int margin = LEGALPANEL_MARGIN;
+
+	panel->win = WMCreateWindow(vscr->screen_ptr->wmscreen, "legal");
+	WMResizeWidget(panel->win, win_width, win_height);
+
+	panel->lbl_license = WMCreateLabel(panel->win);
+	WMSetLabelWraps(panel->lbl_license, True);
+	WMResizeWidget(panel->lbl_license, win_width - (2 * margin), win_height - (2 * margin));
+	WMMoveWidget(panel->lbl_license, margin, margin);
+	WMSetLabelTextAlignment(panel->lbl_license, WALeft);
+	WMSetLabelText(panel->lbl_license, LEGAL_TEXT);
+	WMSetLabelRelief(panel->lbl_license, WRGroove);
+}
+
 void panel_show(virtual_screen *vscr, int type)
 {
 	/* Common */
@@ -1170,7 +1188,7 @@ void panel_show(virtual_screen *vscr, int type)
 	Window parent;
 	WWindow *wwin;
 	WMPoint center;
-	int win_width, win_height, margin;
+	int win_width, win_height;
 	/* Info Panel */
 	WMPixmap *logo;
 	WMFont *font;
@@ -1198,7 +1216,6 @@ void panel_show(virtual_screen *vscr, int type)
 	case PANEL_LEGAL:
 		win_width = LEGALPANEL_WIDTH;
 		win_height = LEGALPANEL_HEIGHT;
-		margin = LEGALPANEL_MARGIN;
 
 		if (legalPanel) {
 			if (legalPanel->vscr->screen_ptr == vscr->screen_ptr) {
@@ -1212,17 +1229,7 @@ void panel_show(virtual_screen *vscr, int type)
 		panel = wmalloc(sizeof(Panel));
 		panel->vscr = vscr;
 		panel->type = PANEL_LEGAL;
-
-		panel->win = WMCreateWindow(vscr->screen_ptr->wmscreen, "legal");
-		WMResizeWidget(panel->win, win_width, win_height);
-
-		panel->lbl_license = WMCreateLabel(panel->win);
-		WMSetLabelWraps(panel->lbl_license, True);
-		WMResizeWidget(panel->lbl_license, win_width - (2 * margin), win_height - (2 * margin));
-		WMMoveWidget(panel->lbl_license, margin, margin);
-		WMSetLabelTextAlignment(panel->lbl_license, WALeft);
-		WMSetLabelText(panel->lbl_license, LEGAL_TEXT);
-		WMSetLabelRelief(panel->lbl_license, WRGroove);
+		create_legal_widgets(vscr, panel, win_width, win_height);
 
 		WMRealizeWidget(panel->win);
 		WMMapSubwidgets(panel->win);
