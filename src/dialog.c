@@ -1177,6 +1177,12 @@ void panel_show(virtual_screen *vscr, int type)
 	char *name, *strbuf = NULL;
 	const char *separator;
 	char buffer[256];
+#ifdef USE_XINERAMA
+	char heads[128];
+#endif
+#if defined(HAVE_MALLOC_H) && defined(HAVE_MALLINFO)
+	struct mallinfo ma = mallinfo();
+#endif
 	char **strl;
 	int i, width = 50, sepHeight;
 	char *visuals[] = {
@@ -1357,28 +1363,25 @@ void panel_show(virtual_screen *vscr, int type)
 		}
 
 #if defined(HAVE_MALLOC_H) && defined(HAVE_MALLINFO)
-		{
-			struct mallinfo ma = mallinfo();
-			snprintf(buffer, sizeof(buffer),
+		snprintf(buffer, sizeof(buffer),
 #ifdef DEBUG
-						_("Total memory allocated: %i kB (in use: %i kB, %d free chunks).\n"),
+			_("Total memory allocated: %i kB (in use: %i kB, %d free chunks).\n"),
 #else
-						_("Total memory allocated: %i kB (in use: %i kB).\n"),
+			_("Total memory allocated: %i kB (in use: %i kB).\n"),
 #endif
-						(ma.arena + ma.hblkhd) / 1024,
-						(ma.uordblks + ma.hblkhd) / 1024
+			(ma.arena + ma.hblkhd) / 1024,
+			(ma.uordblks + ma.hblkhd) / 1024
 #ifdef DEBUG
-						/*
-						 * This information is representative of the memory
-						 * fragmentation. In ideal case it should be 1, but
-						 * that is never possible
-						 */
-						, ma.ordblks
+			/*
+			 * This information is representative of the memory
+			 * fragmentation. In ideal case it should be 1, but
+			 * that is never possible
+			 */
+			, ma.ordblks
 #endif
-						);
+			);
 
-			strbuf = wstrappend(strbuf, buffer);
-		}
+		strbuf = wstrappend(strbuf, buffer);
 #endif
 
 		strbuf = wstrappend(strbuf, _("Image formats: "));
@@ -1412,11 +1415,9 @@ void panel_show(virtual_screen *vscr, int type)
 		strbuf = wstrappend(strbuf, _("Solaris "));
 #endif
 		strbuf = wstrappend(strbuf, _("Xinerama: "));
-		{
-			char tmp[128];
-			snprintf(tmp, sizeof(tmp) - 1, _("%d head(s) found."), vscr->screen_ptr->xine_info.count);
-			strbuf = wstrappend(strbuf, tmp);
-		}
+
+		snprintf(heads, sizeof(heads) - 1, _("%d head(s) found."), vscr->screen_ptr->xine_info.count);
+		strbuf = wstrappend(strbuf, heads);
 #endif
 
 #ifdef USE_RANDR
