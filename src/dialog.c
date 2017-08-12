@@ -1393,11 +1393,13 @@ void panel_show(virtual_screen *vscr, int type)
 	WWindow *wwin;
 	WMPoint center;
 	int win_width, win_height;
+	char title[256];
 
 	switch (type) {
 	case PANEL_LEGAL:
 		win_width = LEGALPANEL_WIDTH;
 		win_height = LEGALPANEL_HEIGHT;
+		sprintf(title, "Legal");
 
 		if (legalPanel) {
 			if (legalPanel->vscr->screen_ptr == vscr->screen_ptr) {
@@ -1420,7 +1422,7 @@ void panel_show(virtual_screen *vscr, int type)
 		parent = XCreateSimpleWindow(dpy, vscr->screen_ptr->root_win, 0, 0, win_width, win_height, 0, 0, 0);
 		XReparentWindow(dpy, WMWidgetXID(panel->win), parent, 0, 0);
 		center = getCenter(vscr, win_width, win_height);
-		wwin = wManageInternalWindow(vscr, parent, None, _("Legal"), center.x, center.y, win_width, win_height);
+		wwin = wManageInternalWindow(vscr, parent, None, title, center.x, center.y, win_width, win_height);
 
 		WSETUFLAG(wwin, no_closable, 0);
 		WSETUFLAG(wwin, no_close_button, 0);
@@ -1441,6 +1443,7 @@ void panel_show(virtual_screen *vscr, int type)
 	case PANEL_INFO:
 		win_width = INFOPANEL_WIDTH;
 		win_height = INFOPANEL_HEIGHT;
+		sprintf(title, "Info");
 
 		if (infoPanel) {
 			if (infoPanel->vscr->screen_ptr == vscr->screen_ptr) {
@@ -1463,7 +1466,7 @@ void panel_show(virtual_screen *vscr, int type)
 		parent = XCreateSimpleWindow(dpy, vscr->screen_ptr->root_win, 0, 0, win_width, win_height, 0, 0, 0);
 		XReparentWindow(dpy, WMWidgetXID(panel->win), parent, 0, 0);
 		center = getCenter(vscr, win_width, win_height);
-		wwin = wManageInternalWindow(vscr, parent, None, _("Info"), center.x, center.y, win_width, win_height);
+		wwin = wManageInternalWindow(vscr, parent, None, title, center.x, center.y, win_width, win_height);
 
 		WSETUFLAG(wwin, no_closable, 0);
 		WSETUFLAG(wwin, no_close_button, 0);
