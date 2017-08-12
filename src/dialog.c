@@ -1134,22 +1134,23 @@ static void destroy_info_panel(WCoreWindow *foo, void *data, XEvent *event)
 
 static void destroy_panel(int type)
 {
+	Panel *panel;
+
 	switch (type) {
 	case PANEL_LEGAL:
-		WMUnmapWidget(legalPanel->win);
-		WMDestroyWidget(legalPanel->win);
-		wUnmanageWindow(legalPanel->wwin, False, False);
-		wfree(legalPanel);
+		panel = legalPanel;
 		legalPanel = NULL;
 		break;
 	case PANEL_INFO:
-		WMUnmapWidget(infoPanel->win);
-		WMDestroyWidget(infoPanel->win);
-		wUnmanageWindow(infoPanel->wwin, False, False);
-		wfree(infoPanel);
+		panel = infoPanel;
 		infoPanel = NULL;
 		break;
 	}
+
+	WMUnmapWidget(panel->win);
+	WMDestroyWidget(panel->win);
+	wUnmanageWindow(panel->wwin, False, False);
+	wfree(panel);
 }
 
 static void destroy_legal_panel(WCoreWindow *foo, void *data, XEvent *event)
