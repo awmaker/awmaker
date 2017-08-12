@@ -1388,11 +1388,11 @@ static void create_info_widgets(virtual_screen *vscr, Panel *panel, int win_widt
 void panel_show(virtual_screen *vscr, int type)
 {
 	/* Common */
-	Panel *panel;
+	Panel *panel = NULL;
 	Window parent;
 	WWindow *wwin;
 	WMPoint center;
-	int win_width, win_height;
+	int win_width = 0, win_height = 0;
 	char title[256];
 
 	switch (type) {
@@ -1415,30 +1415,6 @@ void panel_show(virtual_screen *vscr, int type)
 		panel->type = PANEL_LEGAL;
 		create_legal_widgets(vscr, panel, win_width, win_height);
 		legalPanel = panel;
-
-		WMRealizeWidget(panel->win);
-		WMMapSubwidgets(panel->win);
-
-		parent = XCreateSimpleWindow(dpy, vscr->screen_ptr->root_win, 0, 0, win_width, win_height, 0, 0, 0);
-		XReparentWindow(dpy, WMWidgetXID(panel->win), parent, 0, 0);
-		center = getCenter(vscr, win_width, win_height);
-		wwin = wManageInternalWindow(vscr, parent, None, title, center.x, center.y, win_width, win_height);
-
-		WSETUFLAG(wwin, no_closable, 0);
-		WSETUFLAG(wwin, no_close_button, 0);
-
-		wWindowUpdateButtonImages(wwin);
-		wframewindow_show_rightbutton(wwin->frame);
-#ifdef XKB_BUTTON_HINT
-		wframewindow_hide_languagebutton(wwin->frame);
-#endif
-		wframewindow_refresh_titlebar(wwin->frame);
-		wwin->frame->on_click_right = destroy_legal_panel;
-		panel->wwin = wwin;
-
-		WMMapWidget(panel->win);
-		wWindowMap(wwin);
-
 		break;
 	case PANEL_INFO:
 		win_width = INFOPANEL_WIDTH;
@@ -1459,32 +1435,39 @@ void panel_show(virtual_screen *vscr, int type)
 		panel->type = PANEL_INFO;
 		create_info_widgets(vscr, panel, win_width, win_height);
 		infoPanel = panel;
-
-		WMRealizeWidget(panel->win);
-		WMMapSubwidgets(panel->win);
-
-		parent = XCreateSimpleWindow(dpy, vscr->screen_ptr->root_win, 0, 0, win_width, win_height, 0, 0, 0);
-		XReparentWindow(dpy, WMWidgetXID(panel->win), parent, 0, 0);
-		center = getCenter(vscr, win_width, win_height);
-		wwin = wManageInternalWindow(vscr, parent, None, title, center.x, center.y, win_width, win_height);
-
-		WSETUFLAG(wwin, no_closable, 0);
-		WSETUFLAG(wwin, no_close_button, 0);
-
-		wWindowUpdateButtonImages(wwin);
-		wframewindow_show_rightbutton(wwin->frame);
-#ifdef XKB_BUTTON_HINT
-		wframewindow_hide_languagebutton(wwin->frame);
-#endif
-		wframewindow_refresh_titlebar(wwin->frame);
-		wwin->frame->on_click_right = destroy_info_panel;
-		panel->wwin = wwin;
-
-		WMMapWidget(panel->win);
-		wWindowMap(wwin);
-
 		break;
 	}
+
+	WMRealizeWidget(panel->win);
+	WMMapSubwidgets(panel->win);
+
+	parent = XCreateSimpleWindow(dpy, vscr->screen_ptr->root_win, 0, 0, win_width, win_height, 0, 0, 0);
+	XReparentWindow(dpy, WMWidgetXID(panel->win), parent, 0, 0);
+	center = getCenter(vscr, win_width, win_height);
+	wwin = wManageInternalWindow(vscr, parent, None, title, center.x, center.y, win_width, win_height);
+
+	WSETUFLAG(wwin, no_closable, 0);
+	WSETUFLAG(wwin, no_close_button, 0);
+
+	wWindowUpdateButtonImages(wwin);
+	wframewindow_show_rightbutton(wwin->frame);
+#ifdef XKB_BUTTON_HINT
+	wframewindow_hide_languagebutton(wwin->frame);
+#endif
+	wframewindow_refresh_titlebar(wwin->frame);
+
+	switch (type) {
+	case PANEL_LEGAL:
+		wwin->frame->on_click_right = destroy_legal_panel;
+		break;
+	case PANEL_INFO:
+		wwin->frame->on_click_right = destroy_info_panel;
+		break;
+	}
+
+	panel->wwin = wwin;
+	WMMapWidget(panel->win);
+	wWindowMap(wwin);
 }
 
 /*
