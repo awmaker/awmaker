@@ -135,7 +135,7 @@ static void destroy_panel(int type);
 static void create_legal_widgets(virtual_screen *vscr, Panel *panel, int win_width, int win_height);
 static void create_info_widgets(virtual_screen *vscr, Panel *panel, int win_width, int win_height);
 
-static int alert_panel(WMAlertPanel *panel, virtual_screen *vscr);
+static int alert_panel(WMAlertPanel *panel, virtual_screen *vscr, const char *title);
 
 static Panel *legalPanel = NULL;
 static Panel *infoPanel = NULL;
@@ -145,7 +145,7 @@ static WMPoint getCenter(virtual_screen *vscr, int width, int height)
 	return wGetPointToCenterRectInHead(vscr, wGetHeadForPointerLocation(vscr), width, height);
 }
 
-static int alert_panel(WMAlertPanel *panel, virtual_screen *vscr)
+static int alert_panel(WMAlertPanel *panel, virtual_screen *vscr, const char *title)
 {
 	WScreen *scr = vscr->screen_ptr;
 	Window parent;
@@ -158,7 +158,7 @@ static int alert_panel(WMAlertPanel *panel, virtual_screen *vscr)
 	parent = XCreateSimpleWindow(dpy, scr->root_win, 0, 0, win_width, win_height, 0, 0, 0);
 	XReparentWindow(dpy, WMWidgetXID(panel->win), parent, 0, 0);
 	center = getCenter(vscr, win_width, win_height);
-	wwin = wManageInternalWindow(vscr, parent, None, NULL, center.x, center.y, win_width, win_height);
+	wwin = wManageInternalWindow(vscr, parent, None, title, center.x, center.y, win_width, win_height);
 
 	WSETUFLAG(wwin, no_closable, 0);
 	WSETUFLAG(wwin, no_close_button, 0);
@@ -188,7 +188,7 @@ int wMessageDialog(virtual_screen *vscr, const char *title, const char *message,
 	WMAlertPanel *panel;
 
 	panel = WMCreateAlertPanel(vscr->screen_ptr->wmscreen, NULL, title, message, defBtn, altBtn, othBtn);
-	return alert_panel(panel, vscr);
+	return alert_panel(panel, vscr, title);
 }
 
 static void toggleSaveSession(WMWidget *w, void *data)
@@ -216,7 +216,7 @@ int wExitDialog(virtual_screen *vscr, const char *title, const char *message, co
 	WMMapWidget(saveSessionBtn);
 
 	/* Alert panel show */
-	return alert_panel(panel, vscr);
+	return alert_panel(panel, vscr, title);
 }
 
 static char *HistoryFileName(const char *name)
