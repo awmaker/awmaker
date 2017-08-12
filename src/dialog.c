@@ -218,17 +218,6 @@ int wExitDialog(virtual_screen *vscr, const char *title, const char *message, co
 	return result;
 }
 
-typedef struct _WMInputPanelWithHistory {
-	WMInputPanel *panel;
-	WMArray *history;
-	int histpos;
-	char *prefix;
-	char *suffix;
-	char *rest;
-	WMArray *variants;
-	int varpos;
-} WMInputPanelWithHistory;
-
 static char *HistoryFileName(const char *name)
 {
 	char *filename = NULL;
@@ -1462,21 +1451,6 @@ void wShowLegalPanel(virtual_screen *vscr)
  * Crashing Dialog Panel
  ***********************************************************************
  */
-
-typedef struct _CrashPanel {
-	WMWindow *win;		/* main window */
-	WMLabel *iconL;		/* application icon */
-	WMLabel *nameL;		/* title of panel */
-	WMFrame *sepF;		/* separator frame */
-	WMLabel *noteL;		/* Title of note */
-	WMLabel *note2L;	/* body of note with what happened */
-	WMFrame *whatF;		/* "what to do next" frame */
-	WMPopUpButton *whatP;	/* action selection popup button */
-	WMButton *okB;		/* ok button */
-	Bool done;		/* if finished with this dialog */
-	int action;		/* what to do after */
-	KeyCode retKey;
-} CrashPanel;
 
 static void handleKeyPress(XEvent *event, void *clientData)
 {
