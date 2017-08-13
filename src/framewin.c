@@ -57,6 +57,7 @@ static void paintButton(WCoreWindow * button, WTexture * texture,
 static void updateTitlebar(WFrameWindow *fwin);
 
 static void allocFrameBorderPixel(Colormap colormap, const char *color_name, unsigned long **pixel);
+static char *get_title(WFrameWindow *fwin);
 
 static void allocFrameBorderPixel(Colormap colormap, const char *color_name, unsigned long **pixel) {
 	XColor xcol;
@@ -726,9 +727,6 @@ void wFrameWindowDestroy(WFrameWindow *fwin)
 	wcore_unmap(fwin->core);
 	wframewindow_destroy_wcorewindow(fwin->core);
 
-	if (fwin->title)
-		wfree(fwin->title);
-
 	destroy_framewin_buttons(fwin);
 
 	wfree(fwin);
@@ -1167,16 +1165,32 @@ static void remakeTexture_resizebar(WFrameWindow *fwin, int state)
 	}
 }
 
+static char *get_title(WFrameWindow *fwin)
+{
+	if (fwin && fwin->parent_wwin && fwin->parent_wwin->title)
+		return fwin->parent_wwin->title;
+
+	if (fwin && fwin->parent_wmenu && fwin->parent_wmenu->title)
+		return fwin->parent_wmenu->title;
+
+	return NULL;
+}
+
 static void paint_title(WFrameWindow *fwin, int lofs, int rofs, int state)
 {
 	Drawable buf;
 	virtual_screen *vscr = fwin->vscr;
 	WScreen *scr = vscr->screen_ptr;
-	char *title;
+	char *title, *orig_title;
 	int w, h, x, y;
 	int titlelen;
 
-	title = ShrinkString(*fwin->font, fwin->title, fwin->titlebar->width - lofs - rofs);
+	orig_title = get_title(fwin);
+
+	if (!orig_title)
+		return;
+
+	title = ShrinkString(*fwin->font, orig_title, fwin->titlebar->width - lofs - rofs);
 	titlelen = strlen(title);
 	w = WMWidthOfString(*fwin->font, title, titlelen);
 
@@ -1307,8 +1321,7 @@ void wFrameWindowPaint(WFrameWindow *fwin)
 		fwin->languagebutton_image = fwin->vscr->screen_ptr->b_pixmaps[WBUT_XKBGROUP1 + fwin->languagemode];
 #endif
 
-		if (fwin->title)
-			paint_title(fwin, lofs, rofs, state);
+		paint_title(fwin, lofs, rofs, state);
 
 		if (fwin->left_button && fwin->flags.map_left_button)
 			handleButtonExpose(&fwin->left_button->descriptor, NULL);
@@ -1427,16 +1440,6 @@ int wFrameWindowChangeTitle(WFrameWindow *fwin, const char *new_title)
 	if (new_title == NULL)
 		return 0;
 
-	/* check if the title is the same as before */
-	if (fwin->title) {
-		if (strcmp(fwin->title, new_title) == 0)
-			return 0;
-	}
-
-	if (fwin->title)
-		wfree(fwin->title);
-
-	fwin->title = wstrdup(new_title);
 	if (fwin->titlebar && fwin->flags.titlebar) {
 		XClearWindow(dpy, fwin->titlebar->window);
 		wFrameWindowPaint(fwin);
@@ -1475,8 +1478,11 @@ static void handleExpose(WObjDescriptor * desc, XEvent * event)
 static void checkTitleSize(WFrameWindow *fwin)
 {
 	int width;
+	char *title;
 
-	if (!fwin->title) {
+	title = get_title(fwin);
+
+	if (!title) {
 		fwin->flags.incomplete_title = 0;
 		return;
 	}
@@ -1504,7 +1510,7 @@ static void checkTitleSize(WFrameWindow *fwin)
 			width -= fwin->right_button->width + 3;
 	}
 
-	if (WMWidthOfString(*fwin->font, fwin->title, strlen(fwin->title)) > width)
+	if (WMWidthOfString(*fwin->font, title, strlen(title)) > width)
 		fwin->flags.incomplete_title = 1;
 	else
 		fwin->flags.incomplete_title = 0;

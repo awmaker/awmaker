@@ -94,8 +94,6 @@ typedef struct WFrameWindow {
     WMColor **title_color;
     WMFont **font;
 
-    char *title;		       /* window name (title) */
-
 #ifdef KEEP_XKB_LOCK_STATUS
     int languagemode;
     int last_languagemode;

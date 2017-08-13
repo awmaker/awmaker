@@ -147,7 +147,6 @@ WMenu *menu_create(const char *title)
 	menu->menu = wcore_create(width, 10);
 
 	if (title) {
-		menu->frame->title = wstrdup(title);
 		menu->title = wstrdup(title);
 		menu->flags.titled = 1;
 	}
