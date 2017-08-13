@@ -221,8 +221,8 @@ void wIconDestroy(WIcon *icon)
 		XReparentWindow(dpy, icon->icon_win, scr->root_win, x, y);
 	}
 
-	if (icon->icon_name)
-		wfree(icon->icon_name);
+	if (icon->title)
+		wfree(icon->title);
 
 	if (icon->pixmap)
 		XFreePixmap(dpy, icon->pixmap);
@@ -325,10 +325,10 @@ void wIconChangeTitle(WIcon *icon, WWindow *wwin)
 	if (!icon || !wwin)
 		return;
 
-	if (icon->icon_name)
-		wfree(icon->icon_name);
+	if (icon->title)
+		wfree(icon->title);
 
-	icon->icon_name = wstrdup(wwin->title);
+	icon->title = wstrdup(wwin->title);
 }
 
 RImage *wIconValidateIconSize(RImage *icon, int max_size)
@@ -790,8 +790,8 @@ static void update_icon_title(WIcon *icon)
 	char *tmp;
 
 	/* draw the icon title */
-	if (icon->show_title && icon->icon_name != NULL) {
-		tmp = ShrinkString(scr->icon_title_font, icon->icon_name, wPreferences.icon_size - 4);
+	if (icon->show_title && icon->title != NULL) {
+		tmp = ShrinkString(scr->icon_title_font, icon->title, wPreferences.icon_size - 4);
 		w = WMWidthOfString(scr->icon_title_font, tmp, l = strlen(tmp));
 
 		if (w > icon->core->width - 4)
@@ -978,7 +978,7 @@ int create_icon_minipreview(WWindow *wwin)
 	int ret;
 
 	ret = create_minipixmap_for_wwindow(wwin->vscr, wwin, &pixmap);
-	if (!ret) {
+	if (ret) {
 		create_minipreview_showerror(wwin);
 		return -1;
 	}
@@ -996,8 +996,8 @@ static void create_minipreview_showerror(WWindow *wwin)
 	const char *title;
 	char title_buf[32];
 
-	if (wwin->frame->title) {
-		title = wwin->frame->title;
+	if (wwin->title) {
+		title = wwin->title;
 	} else {
 		snprintf(title_buf, sizeof(title_buf), "(id=0x%lx)", wwin->client_win);
 		title = title_buf;

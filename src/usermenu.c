@@ -264,7 +264,7 @@ static WMenu *configureUserMenu(virtual_screen *vscr, WMPropList *plum)
 
 			submenu = configureUserMenu(vscr, elem);
 			if (submenu)
-				mentry = wMenuAddCallback(menu, submenu->frame->title, NULL, NULL);
+				mentry = wMenuAddCallback(menu, submenu->title, NULL, NULL);
 
 			wMenuEntrySetCascade_create(menu, mentry, submenu);
 		} else {

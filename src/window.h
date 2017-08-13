@@ -177,6 +177,9 @@ typedef struct WWindow {
 	struct WWindow *prev;			/* window focus list */
 	struct WWindow *next;
 
+	unsigned int width;			/* current width */
+	unsigned int height;			/* current heiht */
+
 	virtual_screen *vscr; 			/* pointer to the screen structure */
 	WWindowAttributes user_flags;		/* window attribute flags set by user */
 	WWindowAttributes defined_user_flags;	/* mask for user_flags */
@@ -208,7 +211,6 @@ typedef struct WWindow {
 	struct {
 		int x, y;			/* position of *client* relative
 						 * to root */
-		unsigned int width, height;	/* size of the client window */
 	} client;
 
 	XSizeHints *normal_hints;		/* WM_NORMAL_HINTS */

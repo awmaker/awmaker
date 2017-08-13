@@ -145,7 +145,7 @@ static void appearanceObserver(void *self, WMNotification *notif)
 		wWindowConfigureBorders(wwin);
 		if (wwin->flags.shaded) {
 			wFrameWindowResize(wwin->frame, wwin->frame->core->width, wwin->frame->top_width - 1);
-			wwin->client.y = wwin->frame_y - wwin->client.height + wwin->frame->top_width;
+			wwin->client.y = wwin->frame_y - wwin->height + wwin->frame->top_width;
 			wWindowSynthConfigureNotify(wwin);
 		}
 	}
@@ -1095,6 +1095,31 @@ static void wwindow_update_title(Display *dpy, Window window, WWindow *wwin)
 		XFree(title);
 }
 
+void wWindowUpdateName(WWindow *wwin, const char *newTitle)
+{
+	const char *title;
+
+	if (!newTitle)
+		title = DEF_WINDOW_TITLE; /* the hint was removed */
+	else
+		title = newTitle;
+
+	/* check if the title is the same as before */
+	if ((wwin->title) && (!strcmp(wwin->title, title)))
+		return;
+
+	if (wwin->title)
+		wfree(wwin->title);
+
+	wwin->title = wstrdup(title);
+
+	if (!wwin->frame)
+		return;
+
+	if (wFrameWindowChangeTitle(wwin->frame, title))
+		WMPostNotificationName(WMNChangedName, wwin, NULL);
+}
+
 /*
  *----------------------------------------------------------------
  * wManageWindow--
@@ -1365,7 +1390,7 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 	if (HAS_BORDER(wwin))
 		flags |= WFF_BORDER;
 
-	wwin->frame = wframewindow_create(width, height, flags);
+	wwin->frame = wframewindow_create(wwin, NULL, width, height, flags);
 	wframewindow_map(wwin->frame, vscr, window_level, x, y,
 		      &wPreferences.window_title_clearance,
 		      &wPreferences.window_title_min_height,
@@ -1505,8 +1530,8 @@ WWindow *wManageInternalWindow(virtual_screen *vscr, Window window, Window owner
 	wwin->transient_for = owner;
 	wwin->client.x = x;
 	wwin->client.y = y;
-	wwin->client.width = width;
-	wwin->client.height = height;
+	wwin->width = width;
+	wwin->height = height;
 	wwin->frame_x = wwin->client.x;
 	wwin->frame_y = wwin->client.y;
 
@@ -1516,7 +1541,7 @@ WWindow *wManageInternalWindow(virtual_screen *vscr, Window window, Window owner
 	foo |= WFF_LANGUAGE_BUTTON;
 #endif
 
-	wwin->frame = wframewindow_create(width, height, foo);
+	wwin->frame = wframewindow_create(wwin, NULL, width, height, foo);
 	wframewindow_map(wwin->frame, vscr, WMFloatingLevel,
 			 wwin->frame_x, wwin->frame_y,
 			 &wPreferences.window_title_clearance,
@@ -1555,7 +1580,7 @@ WWindow *wManageInternalWindow(virtual_screen *vscr, Window window, Window owner
 	wwin->client.y += wwin->frame->top_width;
 
 	XReparentWindow(dpy, wwin->client_win, wwin->frame->core->window, 0, wwin->frame->top_width);
-	wWindowConfigure(wwin, wwin->frame_x, wwin->frame_y, wwin->client.width, wwin->client.height);
+	wWindowConfigure(wwin, wwin->frame_x, wwin->frame_y, wwin->width, wwin->height);
 
 	wwindow_set_frame_descriptor(wwin);
 
@@ -1788,7 +1813,7 @@ void wWindowSingleFocus(WWindow *wwin)
 	move = wScreenBringInside(wwin->vscr, &x, &y, wwin->frame->core->width, wwin->frame->core->height);
 
 	if (move)
-		wWindowConfigure(wwin, x, y, wwin->client.width, wwin->client.height);
+		wWindowConfigure(wwin, x, y, wwin->width, wwin->height);
 }
 
 void wWindowFocusPrev(WWindow *wwin, Bool inSameWorkspace)
@@ -1907,31 +1932,6 @@ void wWindowUnfocus(WWindow *wwin)
 	wwin->flags.focused = 0;
 	wWindowResetMouseGrabs(wwin);
 	WMPostNotificationName(WMNChangedFocus, wwin, (void *)False);
-}
-
-void wWindowUpdateName(WWindow *wwin, const char *newTitle)
-{
-	const char *title;
-
-	if (!newTitle)
-		title = DEF_WINDOW_TITLE; /* the hint was removed */
-	else
-		title = newTitle;
-
-	/* check if the title is the same as before */
-	if ((wwin->title) && (!strcmp(wwin->title, title)))
-		return;
-
-	if (wwin->title)
-		wfree(wwin->title);
-
-	wwin->title = wstrdup(title);
-
-	if (!wwin->frame)
-		return;
-
-	if (wFrameWindowChangeTitle(wwin->frame, title))
-		WMPostNotificationName(WMNChangedName, wwin, NULL);
 }
 
 /*
@@ -2165,8 +2165,8 @@ void wWindowSynthConfigureNotify(WWindow *wwin)
 
 	sevent.xconfigure.x = wwin->client.x;
 	sevent.xconfigure.y = wwin->client.y;
-	sevent.xconfigure.width = wwin->client.width;
-	sevent.xconfigure.height = wwin->client.height;
+	sevent.xconfigure.width = wwin->width;
+	sevent.xconfigure.height = wwin->height;
 
 	sevent.xconfigure.border_width = wwin->old_border_width;
 	if (HAS_TITLEBAR(wwin) && wwin->frame->titlebar)
@@ -2207,7 +2207,7 @@ void wWindowConfigure(WWindow *wwin, int req_x, int req_y, int req_width, int re
 	int synth_notify = False;
 	int resize;
 
-	resize = (req_width != wwin->client.width || req_height != wwin->client.height);
+	resize = (req_width != wwin->width || req_height != wwin->height);
 	/*
 	 * if the window is being moved but not resized then
 	 * send a synthetic ConfigureNotify
@@ -2247,8 +2247,8 @@ void wWindowConfigure(WWindow *wwin, int req_x, int req_y, int req_width, int re
 
 		wwin->client.x = req_x;
 		wwin->client.y = req_y + wwin->frame->top_width;
-		wwin->client.width = req_width;
-		wwin->client.height = req_height;
+		wwin->width = req_width;
+		wwin->height = req_height;
 	} else {
 		wwin->client.x = req_x;
 		wwin->client.y = req_y + wwin->frame->top_width;
@@ -2456,7 +2456,7 @@ void wWindowConfigureBorders(WWindow *wwin)
 		newy = wwin->frame_y + oldh - wwin->frame->top_width;
 
 		XMoveWindow(dpy, wwin->client_win, 0, wwin->frame->top_width);
-		wWindowConfigure(wwin, wwin->frame_x, newy, wwin->client.width, wwin->client.height);
+		wWindowConfigure(wwin, wwin->frame_x, newy, wwin->width, wwin->height);
 	}
 
 #ifdef USE_XSHAPE
@@ -3002,15 +3002,15 @@ static void frameMouseDown(WObjDescriptor *desc, XEvent *event)
 
 	if (event->xbutton.state & ControlMask) {
 		if (event->xbutton.button == Button4) {
-			new_width = wwin->client.width - resize_width_increment;
-			wWindowConstrainSize(wwin, &new_width, &wwin->client.height);
-			wWindowConfigure(wwin, wwin->frame_x, wwin->frame_y, new_width, wwin->client.height);
+			new_width = wwin->width - resize_width_increment;
+			wWindowConstrainSize(wwin, &new_width, &wwin->height);
+			wWindowConfigure(wwin, wwin->frame_x, wwin->frame_y, new_width, wwin->height);
 		}
 
 		if (event->xbutton.button == Button5) {
-			new_width = wwin->client.width + resize_width_increment;
-			wWindowConstrainSize(wwin, &new_width, &wwin->client.height);
-			wWindowConfigure(wwin, wwin->frame_x, wwin->frame_y, new_width, wwin->client.height);
+			new_width = wwin->width + resize_width_increment;
+			wWindowConstrainSize(wwin, &new_width, &wwin->height);
+			wWindowConfigure(wwin, wwin->frame_x, wwin->frame_y, new_width, wwin->height);
 		}
 	}
 
@@ -3024,13 +3024,13 @@ static void frameMouseDown(WObjDescriptor *desc, XEvent *event)
 		if (event->xbutton.button == Button3) {
 			wMouseResizeWindow(wwin, event);
 		} else if (event->xbutton.button == Button4) {
-			new_height = wwin->client.height - resize_height_increment;
-			wWindowConstrainSize(wwin, &wwin->client.width, &new_height);
-			wWindowConfigure(wwin, wwin->frame_x, wwin->frame_y, wwin->client.width, new_height);
+			new_height = wwin->height - resize_height_increment;
+			wWindowConstrainSize(wwin, &wwin->width, &new_height);
+			wWindowConfigure(wwin, wwin->frame_x, wwin->frame_y, wwin->width, new_height);
 		} else if (event->xbutton.button == Button5) {
-			new_height = wwin->client.height + resize_height_increment;
-			wWindowConstrainSize(wwin, &wwin->client.width, &new_height);
-			wWindowConfigure(wwin, wwin->frame_x, wwin->frame_y, wwin->client.width, new_height);
+			new_height = wwin->height + resize_height_increment;
+			wWindowConstrainSize(wwin, &wwin->width, &new_height);
+			wWindowConfigure(wwin, wwin->frame_x, wwin->frame_y, wwin->width, new_height);
 		} else if (event->xbutton.button == Button1 || event->xbutton.button == Button2) {
 			wMouseMoveWindow(wwin, event);
 		}

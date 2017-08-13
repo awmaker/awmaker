@@ -143,11 +143,11 @@ WMenu *menu_create(const char *title)
 		flags |= WFF_TITLEBAR | WFF_RIGHT_BUTTON;
 
 	menu = wmalloc(sizeof(WMenu));
-	menu->frame = wframewindow_create(width, 1, flags);
+	menu->frame = wframewindow_create(NULL, menu, width, 1, flags);
 	menu->menu = wcore_create(width, 10);
 
 	if (title) {
-		menu->frame->title = wstrdup(title);
+		menu->title = wstrdup(title);
 		menu->flags.titled = 1;
 	}
 
@@ -191,6 +191,9 @@ void menu_destroy(WMenu *menu)
 
         if (menu->menu->stacking)
                 wfree(menu->menu->stacking);
+
+        if (menu->title)
+                wfree(menu->title);
 
         wcore_destroy(menu->menu);
 	wFrameWindowDestroy(menu->frame);
@@ -451,7 +454,7 @@ void wMenuRealize(WMenu *menu)
 	wframewin_set_borders(menu->frame, flags);
 
 	if (menu->flags.titled) {
-		twidth = WMWidthOfString(scr->menu_title_font, menu->frame->title, strlen(menu->frame->title));
+		twidth = WMWidthOfString(scr->menu_title_font, menu->title, strlen(menu->title));
 		theight = menu->frame->top_width;
 		twidth += theight + (wPreferences.new_style == TS_NEW ? 16 : 8);
 	}
@@ -2127,10 +2130,10 @@ static Bool getMenuPath(WMenu *menu, char *buffer, int bufSize)
 	Bool ok = True;
 	int len = 0;
 
-	if (!menu->flags.titled || !menu->frame->title[0])
+	if (!menu->flags.titled || !menu->title[0])
 		return False;
 
-	len = strlen(menu->frame->title);
+	len = strlen(menu->title);
 	if (len >= bufSize)
 		return False;
 
@@ -2141,7 +2144,7 @@ static Bool getMenuPath(WMenu *menu, char *buffer, int bufSize)
 	}
 
 	strcat(buffer, "\\");
-	strcat(buffer, menu->frame->title);
+	strcat(buffer, menu->title);
 
 	return True;
 }
@@ -2254,10 +2257,10 @@ static int restoreMenuRecurs(virtual_screen *vscr, WMPropList *menus, WMenu *men
 	int i, x, y, res, width, height;
 	Bool lowered;
 
-	if (strlen(path) + strlen(menu->frame->title) > 510)
+	if (strlen(path) + strlen(menu->title) > 510)
 		return False;
 
-	snprintf(buffer, sizeof(buffer), "%s\\%s", path, menu->frame->title);
+	snprintf(buffer, sizeof(buffer), "%s\\%s", path, menu->title);
 	key = WMCreatePLString(buffer);
 	entry = WMGetFromPLDictionary(menus, key);
 	res = False;

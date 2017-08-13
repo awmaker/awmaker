@@ -74,8 +74,8 @@ static Atom net_wm_moveresize;	/* TODO */
 /* Application Window Properties */
 static Atom net_wm_name;
 static Atom net_wm_visible_name;	/* TODO (unnecessary?) */
-static Atom net_wm_icon_name;
-static Atom net_wm_visible_icon_name;	/* TODO (unnecessary?) */
+static Atom net_wm_title;
+static Atom net_wm_visible_title;	/* TODO (unnecessary?) */
 static Atom net_wm_desktop;
 static Atom net_wm_window_type;
 static Atom net_wm_window_type_desktop;
@@ -157,8 +157,8 @@ static atomitem_t atomNames[] = {
 
 	{"_NET_WM_NAME", &net_wm_name},
 	{"_NET_WM_VISIBLE_NAME", &net_wm_visible_name},
-	{"_NET_WM_ICON_NAME", &net_wm_icon_name},
-	{"_NET_WM_VISIBLE_ICON_NAME", &net_wm_visible_icon_name},
+	{"_NET_WM_ICON_NAME", &net_wm_title},
+	{"_NET_WM_VISIBLE_ICON_NAME", &net_wm_visible_title},
 	{"_NET_WM_DESKTOP", &net_wm_desktop},
 	{"_NET_WM_WINDOW_TYPE", &net_wm_window_type},
 	{"_NET_WM_WINDOW_TYPE_DESKTOP", &net_wm_window_type_desktop},
@@ -335,7 +335,7 @@ static void setSupportedHints(WScreen *scr)
 	atom[i++] = net_frame_extents;
 
 	atom[i++] = net_wm_name;
-	atom[i++] = net_wm_icon_name;
+	atom[i++] = net_wm_title;
 
 	XChangeProperty(dpy, scr->root_win, net_supported, XA_ATOM, 32, PropModeReplace, (unsigned char *)atom, i);
 
@@ -1695,7 +1695,7 @@ void wNETWMCheckClientHintChange(WWindow *wwin, XPropertyEvent *event)
 		wWindowUpdateName(wwin, name);
 		if (name)
 			wfree(name);
-	} else if (event->atom == net_wm_icon_name) {
+	} else if (event->atom == net_wm_title) {
 		if (wwin->icon) {
 			wIconChangeTitle(wwin->icon, wwin);
 			wIconPaint(wwin->icon);
@@ -1750,7 +1750,7 @@ char *wNETWMGetIconName(Window window)
 	char *ret;
 	int size;
 
-	name = (char *)PropGetCheckProperty(window, net_wm_icon_name, utf8_string, 0, 0, &size);
+	name = (char *)PropGetCheckProperty(window, net_wm_title, utf8_string, 0, 0, &size);
 	if (name) {
 		ret = wstrndup(name, size);
 		XFree(name);

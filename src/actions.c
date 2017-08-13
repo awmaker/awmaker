@@ -256,7 +256,7 @@ void wShadeWindow(WWindow *wwin)
 	/* for the client it's just like iconification */
 	wFrameWindowResize(wwin->frame, wwin->frame->core->width, wwin->frame->top_width - 1);
 
-	wwin->client.y = wwin->frame_y - wwin->client.height + wwin->frame->top_width;
+	wwin->client.y = wwin->frame_y - wwin->height + wwin->frame->top_width;
 	wWindowSynthConfigureNotify(wwin);
 
 	/*
@@ -286,7 +286,7 @@ void wUnshadeWindow(WWindow *wwin)
 
 	wwin->flags.skip_next_animation = 0;
 	wFrameWindowResize(wwin->frame, wwin->frame->core->width,
-			   wwin->frame->top_width + wwin->client.height + wwin->frame->bottom_width);
+			   wwin->frame->top_width + wwin->height + wwin->frame->bottom_width);
 
 	wwin->client.y = wwin->frame_y + wwin->frame->top_width;
 	wWindowSynthConfigureNotify(wwin);
@@ -313,9 +313,9 @@ static void save_old_geometry(WWindow *wwin, int directions)
 	if (directions & SAVE_GEOMETRY_Y)
 		wwin->old_geometry.y = wwin->frame_y;
 	if (directions & SAVE_GEOMETRY_WIDTH)
-		wwin->old_geometry.width = wwin->client.width;
+		wwin->old_geometry.width = wwin->width;
 	if (directions & SAVE_GEOMETRY_HEIGHT)
-		wwin->old_geometry.height = wwin->client.height;
+		wwin->old_geometry.height = wwin->height;
 }
 
 static void remember_geometry(WWindow *wwin, int *x, int *y, int *w, int *h)
@@ -329,8 +329,8 @@ static void remember_geometry(WWindow *wwin, int *x, int *y, int *w, int *h)
 	same_head = (wGetHeadForWindow(wwin) == old_head);
 	*x = ((wwin->old_geometry.x || wwin->old_geometry.width) && same_head) ? wwin->old_geometry.x : wwin->frame_x;
 	*y = ((wwin->old_geometry.y || wwin->old_geometry.height) && same_head) ? wwin->old_geometry.y : wwin->frame_y;
-	*w = wwin->old_geometry.width ? wwin->old_geometry.width : wwin->client.width;
-	*h = wwin->old_geometry.height ? wwin->old_geometry.height : wwin->client.height;
+	*w = wwin->old_geometry.width ? wwin->old_geometry.width : wwin->width;
+	*h = wwin->old_geometry.height ? wwin->old_geometry.height : wwin->height;
 }
 
 /* Remember geometry for unmaximizing */
@@ -1169,7 +1169,7 @@ static WWindow *recursiveTransientFor(WWindow *wwin)
 
 	if (i == 0 && wwin) {
 		wwarning(_("window \"%s\" has a severely broken WM_TRANSIENT_FOR hint"),
-			 wwin->frame->title);
+			 wwin->title);
 		return NULL;
 	}
 
@@ -2041,8 +2041,8 @@ void movePionterToWindowCenter(WWindow *wwin)
 
 	XSelectInput(dpy, wwin->client_win, wwin->event_mask);
 	XWarpPointer(dpy, None, wwin->vscr->screen_ptr->root_win, 0, 0, 0, 0,
-			wwin->frame_x + wwin->client.width / 2,
-			wwin->frame_y + wwin->client.height / 2);
+			wwin->frame_x + wwin->width / 2,
+			wwin->frame_y + wwin->height / 2);
 	XFlush(dpy);
 }
 
@@ -2093,7 +2093,7 @@ static void shade_animate(WWindow *wwin, Bool what)
 
 	case UNSHADE:
 		h = wwin->frame->top_width + wwin->frame->bottom_width;
-		y = wwin->frame->top_width - wwin->client.height;
+		y = wwin->frame->top_width - wwin->height;
 		s = abs(y) / SHADE_STEPS;
 		if (s < 1)
 			s = 1;
@@ -2101,7 +2101,7 @@ static void shade_animate(WWindow *wwin, Bool what)
 		w = wwin->frame->core->width;
 		XMoveWindow(dpy, wwin->client_win, 0, y);
 		if (s > 0) {
-			while (h < wwin->client.height + wwin->frame->top_width + wwin->frame->bottom_width) {
+			while (h < wwin->height + wwin->frame->top_width + wwin->frame->bottom_width) {
 				XResizeWindow(dpy, wwin->frame->core->window, w, h);
 				XMoveWindow(dpy, wwin->client_win, 0, y);
 				XFlush(dpy);
