@@ -167,8 +167,8 @@ void switchmenu_additem(WMenu *menu, virtual_screen *vscr, WWindow *wwin)
 	    IS_GNUSTEP_MENU(wwin))
 		return;
 
-	if (wwin->frame->title)
-		snprintf(title, len, "%s", wwin->frame->title);
+	if (wwin->title)
+		snprintf(title, len, "%s", wwin->title);
 	else
 		snprintf(title, len, "%s", DEF_WINDOW_TITLE);
 
@@ -236,8 +236,8 @@ static void switchmenu_changeitem(virtual_screen *vscr, WWindow *wwin)
 			if (entry->text)
 				wfree(entry->text);
 
-			if (wwin->frame->title)
-				snprintf(title, MAX_MENU_TEXT_LENGTH, "%s", wwin->frame->title);
+			if (wwin->title)
+				snprintf(title, MAX_MENU_TEXT_LENGTH, "%s", wwin->title);
 			else
 				snprintf(title, MAX_MENU_TEXT_LENGTH, "%s", DEF_WINDOW_TITLE);
 

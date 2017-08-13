@@ -633,7 +633,7 @@ WWindow *wSwitchPanelSelectNext(WSwitchPanel *panel, int back, int ignore_minimi
 		scrollIcons(panel, panel->current - panel->firstVisible - panel->visibleCount + 1);
 
 	if (panel->win) {
-		drawTitle(panel, panel->current, wwin->frame->title);
+		drawTitle(panel, panel->current, wwin->title);
 		if (panel->current != orig)
 			changeImage(panel, orig, 0, dim, False);
 		changeImage(panel, panel->current, 1, False, False);
@@ -661,7 +661,7 @@ WWindow *wSwitchPanelSelectFirst(WSwitchPanel *panel, int back)
 	}
 
 	wwin = WMGetFromArray(panel->windows, panel->current);
-	title = wwin->frame->title;
+	title = wwin->title;
 
 	if (panel->win) {
 		for (WMArrayFirst(panel->windows, &(i)); (i) != WANotFound; WMArrayNext(panel->windows, &(i)))
@@ -701,7 +701,7 @@ WWindow *wSwitchPanelHandleEvent(WSwitchPanel *panel, XEvent *event)
 
 		wwin = WMGetFromArray(panel->windows, focus);
 
-		drawTitle(panel, panel->current, wwin->frame->title);
+		drawTitle(panel, panel->current, wwin->title);
 
 		return wwin;
 	}

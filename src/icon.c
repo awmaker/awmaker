@@ -996,8 +996,8 @@ static void create_minipreview_showerror(WWindow *wwin)
 	const char *title;
 	char title_buf[32];
 
-	if (wwin->frame->title) {
-		title = wwin->frame->title;
+	if (wwin->title) {
+		title = wwin->title;
 	} else {
 		snprintf(title_buf, sizeof(title_buf), "(id=0x%lx)", wwin->client_win);
 		title = title_buf;

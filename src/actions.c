@@ -1169,7 +1169,7 @@ static WWindow *recursiveTransientFor(WWindow *wwin)
 
 	if (i == 0 && wwin) {
 		wwarning(_("window \"%s\" has a severely broken WM_TRANSIENT_FOR hint"),
-			 wwin->frame->title);
+			 wwin->title);
 		return NULL;
 	}
 
