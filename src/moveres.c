@@ -1993,20 +1993,20 @@ static int getResizeDirection(WWindow * wwin, int x, int y, int dy, int flags)
 	/* if not resizing through the resizebar */
 	if (!(flags & RESIZEBAR)) {
 
-		int xdir = (abs(x) < (wwin->client.width / 2)) ? LEFT : RIGHT;
-		int ydir = (abs(y) < (wwin->client.height / 2)) ? UP : DOWN;
+		int xdir = (abs(x) < (wwin->width / 2)) ? LEFT : RIGHT;
+		int ydir = (abs(y) < (wwin->height / 2)) ? UP : DOWN;
 
 		/* How much resize space is allowed */
-		int spacew = abs(wwin->client.width / 3);
-		int spaceh = abs(wwin->client.height / 3);
+		int spacew = abs(wwin->width / 3);
+		int spaceh = abs(wwin->height / 3);
 
 		/* Determine where x fits */
-		if ((abs(x) > wwin->client.width/2 - spacew/2) &&
-		    (abs(x) < wwin->client.width/2 + spacew/2)) {
+		if ((abs(x) > wwin->width/2 - spacew/2) &&
+		    (abs(x) < wwin->width/2 + spacew/2)) {
 			/* Resize vertically */
 			xdir = 0;
-		} else if ((abs(y) > wwin->client.height/2 - spaceh/2) &&
-		           (abs(y) < wwin->client.height/2 + spaceh/2)) {
+		} else if ((abs(y) > wwin->height/2 - spaceh/2) &&
+		           (abs(y) < wwin->height/2 + spaceh/2)) {
 			/* Resize horizontally */
 			ydir = 0;
 		}

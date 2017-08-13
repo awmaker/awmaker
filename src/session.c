@@ -204,7 +204,7 @@ static WMPropList *makeWindowState(WWindow *wwin, WApplication *wapp)
 		miniaturized = wwin->flags.miniaturized ? sYes : sNo;
 		hidden = wwin->flags.hidden ? sYes : sNo;
 		snprintf(buffer, sizeof(buffer), "%ix%i+%i+%i",
-			 wwin->client.width, wwin->client.height, wwin->frame_x, wwin->frame_y);
+			 wwin->width, wwin->height, wwin->frame_x, wwin->frame_y);
 
 		geometry = WMCreatePLString(buffer);
 		for (mask = 0, i = 0; i < MAX_WINDOW_SHORTCUTS; i++) {
