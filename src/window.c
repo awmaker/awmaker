@@ -1095,6 +1095,31 @@ static void wwindow_update_title(Display *dpy, Window window, WWindow *wwin)
 		XFree(title);
 }
 
+void wWindowUpdateName(WWindow *wwin, const char *newTitle)
+{
+	const char *title;
+
+	if (!newTitle)
+		title = DEF_WINDOW_TITLE; /* the hint was removed */
+	else
+		title = newTitle;
+
+	/* check if the title is the same as before */
+	if ((wwin->title) && (!strcmp(wwin->title, title)))
+		return;
+
+	if (wwin->title)
+		wfree(wwin->title);
+
+	wwin->title = wstrdup(title);
+
+	if (!wwin->frame)
+		return;
+
+	if (wFrameWindowChangeTitle(wwin->frame, title))
+		WMPostNotificationName(WMNChangedName, wwin, NULL);
+}
+
 /*
  *----------------------------------------------------------------
  * wManageWindow--
@@ -1907,31 +1932,6 @@ void wWindowUnfocus(WWindow *wwin)
 	wwin->flags.focused = 0;
 	wWindowResetMouseGrabs(wwin);
 	WMPostNotificationName(WMNChangedFocus, wwin, (void *)False);
-}
-
-void wWindowUpdateName(WWindow *wwin, const char *newTitle)
-{
-	const char *title;
-
-	if (!newTitle)
-		title = DEF_WINDOW_TITLE; /* the hint was removed */
-	else
-		title = newTitle;
-
-	/* check if the title is the same as before */
-	if ((wwin->title) && (!strcmp(wwin->title, title)))
-		return;
-
-	if (wwin->title)
-		wfree(wwin->title);
-
-	wwin->title = wstrdup(title);
-
-	if (!wwin->frame)
-		return;
-
-	if (wFrameWindowChangeTitle(wwin->frame, title))
-		WMPostNotificationName(WMNChangedName, wwin, NULL);
 }
 
 /*
