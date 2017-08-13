@@ -143,7 +143,7 @@ WMenu *menu_create(const char *title)
 		flags |= WFF_TITLEBAR | WFF_RIGHT_BUTTON;
 
 	menu = wmalloc(sizeof(WMenu));
-	menu->frame = wframewindow_create(width, 1, flags);
+	menu->frame = wframewindow_create(NULL, menu, width, 1, flags);
 	menu->menu = wcore_create(width, 10);
 
 	if (title) {

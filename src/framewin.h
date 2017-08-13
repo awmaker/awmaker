@@ -24,6 +24,8 @@
 #include "wcore.h"
 #include "pixmap.h"
 #include "texture.h"
+#include "menu.h"
+#include "window.h"
 
 #define BORDER_TOP	1
 #define BORDER_BOTTOM	2
@@ -48,6 +50,9 @@
 
 typedef struct WFrameWindow {
     virtual_screen *vscr;	       /* pointer to the virtual screen structure */
+
+    WWindow *parent_wwin;               /* Parent WWindow */
+    WMenu *parent_wmenu;                /* Parent WMenu */
 
     WCoreWindow *core;
 
@@ -184,7 +189,8 @@ void wframewindow_refresh_titlebar(WFrameWindow *fwin);
 void wFrameWindowUpdateLanguageButton(WFrameWindow *fwin);
 #endif
 
-WFrameWindow *wframewindow_create(int width, int height, int flags);
+WFrameWindow *wframewindow_create(WWindow *parent_wwin, WMenu *parent_wmenu,
+				  int width, int height, int flags);
 void wframewindow_map(WFrameWindow *fwin, virtual_screen *vscr, int wlevel,
                       int x, int y, int *clearance,
                       int *title_min, int *title_max,

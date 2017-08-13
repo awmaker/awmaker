@@ -1390,7 +1390,7 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 	if (HAS_BORDER(wwin))
 		flags |= WFF_BORDER;
 
-	wwin->frame = wframewindow_create(width, height, flags);
+	wwin->frame = wframewindow_create(wwin, NULL, width, height, flags);
 	wframewindow_map(wwin->frame, vscr, window_level, x, y,
 		      &wPreferences.window_title_clearance,
 		      &wPreferences.window_title_min_height,
@@ -1541,7 +1541,7 @@ WWindow *wManageInternalWindow(virtual_screen *vscr, Window window, Window owner
 	foo |= WFF_LANGUAGE_BUTTON;
 #endif
 
-	wwin->frame = wframewindow_create(width, height, foo);
+	wwin->frame = wframewindow_create(wwin, NULL, width, height, foo);
 	wframewindow_map(wwin->frame, vscr, WMFloatingLevel,
 			 wwin->frame_x, wwin->frame_y,
 			 &wPreferences.window_title_clearance,

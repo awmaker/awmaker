@@ -71,12 +71,15 @@ static void allocFrameBorderPixel(Colormap colormap, const char *color_name, uns
 		**pixel = xcol.pixel;
 }
 
-WFrameWindow *wframewindow_create(int width, int height, int flags)
+WFrameWindow *wframewindow_create(WWindow *parent_wwin, WMenu *parent_wmenu,
+				  int width, int height, int flags)
 {
 	WFrameWindow *fwin;
 
 	fwin = wmalloc(sizeof(WFrameWindow));
 	fwin->core = wcore_create(width, height);
+	fwin->parent_wwin = parent_wwin;
+	fwin->parent_wmenu = parent_wmenu;
 
 	fwin->flags.map_titlebar = (flags & WFF_TITLEBAR) ? 1 : 0;
 	fwin->flags.map_resizebar = (flags & WFF_RESIZEBAR) ? 1 : 0;
