@@ -978,7 +978,7 @@ int create_icon_minipreview(WWindow *wwin)
 	int ret;
 
 	ret = create_minipixmap_for_wwindow(wwin->vscr, wwin, &pixmap);
-	if (!ret) {
+	if (ret) {
 		create_minipreview_showerror(wwin);
 		return -1;
 	}
