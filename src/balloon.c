@@ -483,13 +483,13 @@ static void miniwindowBalloon(WObjDescriptor *object)
 	virtual_screen *vscr = icon->core->vscr;
 	WScreen *scr = vscr->screen_ptr;
 
-	if (!icon->icon_name) {
+	if (!icon->title) {
 		wBalloonHide(vscr);
 		return;
 	}
 
 	scr->balloon->h = icon->core->height;
-	scr->balloon->text = wstrdup(icon->icon_name);
+	scr->balloon->text = wstrdup(icon->title);
 	scr->balloon->mini_preview = icon->mini_preview;
 	scr->balloon->objectWindow = icon->core->window;
 
