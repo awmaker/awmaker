@@ -1553,7 +1553,7 @@ static void configure_menu_entries(virtual_screen *vscr, WMPropList *definition,
 			/* submenu */
 			submenu = configureMenu(vscr, elem);
 			if (submenu) {
-				mentry = wMenuAddCallback(menu, submenu->frame->title, NULL, NULL);
+				mentry = wMenuAddCallback(menu, submenu->title, NULL, NULL);
 				wMenuEntrySetCascade_create(menu, mentry, submenu);
 			}
 		} else {

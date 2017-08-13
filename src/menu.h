@@ -50,6 +50,7 @@ typedef struct WMenuEntry {
 } WMenuEntry;
 
 typedef struct WMenu {
+	char *title;				/* Menu title */
 	struct WMenu *parent;
 
 	time_t timestamp;			/* for the root menu. Last time
