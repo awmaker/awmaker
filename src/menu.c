@@ -437,15 +437,14 @@ static void get_menu_width(WMenu *menu)
 	WScreen *scr;
 	int i;
 	int width, rwidth, mrwidth = 0, mwidth = 0;
-	int theight = 0, twidth = 0;
+	int twidth = 0;
 	char *text;
 
 	scr = menu->frame->vscr->screen_ptr;
 
 	if (menu->flags.titled) {
 		twidth = WMWidthOfString(scr->menu_title_font, menu->title, strlen(menu->title));
-		theight = menu->frame->top_width;
-		twidth += theight + (wPreferences.new_style == TS_NEW ? 16 : 8);
+		twidth += wPreferences.new_style == TS_NEW ? 16 : 8;
 	}
 
 	for (i = 0; i < menu->entry_no; i++) {
@@ -716,7 +715,6 @@ static void paintEntry(WMenu *menu, int index, int selected)
 	/* draw right text */
 	if (entry->rtext && entry->cascade < 0) {
 		tw = WMWidthOfString(scr->menu_entry_font, entry->rtext, strlen(entry->rtext));
-
 		WMDrawString(scr->wmscreen, win, color, scr->menu_entry_font, w - 6 - tw,
 			     y + 3 + wPreferences.menu_text_clearance, entry->rtext, strlen(entry->rtext));
 	}
