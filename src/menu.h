@@ -71,7 +71,8 @@ typedef struct WMenu {
 	short entry_no;				/* number of entries */
 	short selected_entry;
 
-	short entry_height;			/* height of each entry */
+	int entry_height;			/* height of each entry */
+	int width;				/* menu width */
 
 	WMHandlerID timer;			/* timer for the autoscroll */
 

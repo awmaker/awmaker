@@ -93,9 +93,9 @@ static void menuCloseClick(WCoreWindow *sender, void *data, XEvent *event);
 static void updateTexture(WMenu *menu);
 static void selectEntry(WMenu *menu, int entry_no);
 static void closeCascade(WMenu *menu);
+static void get_menu_width(WMenu *menu);
 static Bool saveMenuRecurs(WMPropList *menus, WMenu *menu, virtual_screen *vscr);
 static int restoreMenuRecurs(virtual_screen *vscr, WMPropList *menus, WMenu *menu, const char *path);
-
 /****** Notification Observers ******/
 
 static void appearanceObserver(void *self, WMNotification *notif)
@@ -433,34 +433,21 @@ static void updateTexture(WMenu *menu)
 	}
 }
 
-void wMenuRealize(WMenu *menu)
+static void get_menu_width(WMenu *menu)
 {
 	WScreen *scr;
-	int i, flags;
+	int i;
 	int width, rwidth, mrwidth = 0, mwidth = 0;
-	int theight = 0, twidth = 0, eheight;
+	int theight = 0, twidth = 0;
 	char *text;
 
-	/* If not mapped on the screen, return */
-	if (!menu || !menu->frame || !menu->frame->vscr || !menu->frame->vscr->screen_ptr)
-		return;
-
 	scr = menu->frame->vscr->screen_ptr;
-
-	flags = WFF_BORDER;
-	if (menu->flags.titled)
-		flags |= WFF_TITLEBAR | WFF_RIGHT_BUTTON;
-
-	wframewin_set_borders(menu->frame, flags);
 
 	if (menu->flags.titled) {
 		twidth = WMWidthOfString(scr->menu_title_font, menu->title, strlen(menu->title));
 		theight = menu->frame->top_width;
 		twidth += theight + (wPreferences.new_style == TS_NEW ? 16 : 8);
 	}
-
-	eheight = WMFontHeight(scr->menu_entry_font) + 6 + wPreferences.menu_text_clearance * 2;
-	menu->entry_height = eheight;
 
 	for (i = 0; i < menu->entry_no; i++) {
 		/* search widest text */
@@ -490,9 +477,38 @@ void wMenuRealize(WMenu *menu)
 	if (mwidth < twidth)
 		mwidth = twidth;
 
-	wCoreConfigure(menu->menu, 0, theight, mwidth, menu->entry_no * eheight - 1);
+	menu->width = mwidth;
+}
 
-	wFrameWindowResize(menu->frame, mwidth, menu->entry_no * eheight - 1
+void wMenuRealize(WMenu *menu)
+{
+	WScreen *scr;
+	int flags;
+	int theight = 0, eheight;
+
+	/* If not mapped on the screen, return */
+	if (!menu || !menu->frame || !menu->frame->vscr || !menu->frame->vscr->screen_ptr)
+		return;
+
+	scr = menu->frame->vscr->screen_ptr;
+
+	flags = WFF_BORDER;
+	if (menu->flags.titled)
+		flags |= WFF_TITLEBAR | WFF_RIGHT_BUTTON;
+
+	wframewin_set_borders(menu->frame, flags);
+
+	if (menu->flags.titled)
+		theight = menu->frame->top_width;
+
+	eheight = WMFontHeight(scr->menu_entry_font) + 6 + wPreferences.menu_text_clearance * 2;
+	menu->entry_height = eheight;
+
+	get_menu_width(menu);
+
+	wCoreConfigure(menu->menu, 0, theight, menu->width, menu->entry_no * eheight - 1);
+
+	wFrameWindowResize(menu->frame, menu->width, menu->entry_no * eheight - 1
 			   + menu->frame->top_width + menu->frame->bottom_width);
 
 	updateTexture(menu);
