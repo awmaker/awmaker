@@ -100,7 +100,7 @@ static WMenu *parseMenuCommand(virtual_screen *vscr, Window win, char **slist, i
 		return NULL;
 	}
 
-	menu = menu_create(title);
+	menu = menu_create(vscr, title);
 	if (!menu)
 		return NULL;
 

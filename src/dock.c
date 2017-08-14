@@ -1078,7 +1078,7 @@ static WMenu *makeWorkspaceMenu(virtual_screen *vscr)
 {
 	WMenu *menu;
 
-	menu = menu_create(NULL);
+	menu = menu_create(vscr, NULL);
 	if (!menu)
 		wwarning(_("could not create workspace submenu for Clip menu"));
 
@@ -1128,12 +1128,12 @@ static void updateOptionsMenu(WDock *dock, WMenu *menu)
 	menu->flags.realized = 0;
 }
 
-static WMenu *clip_make_options_menu(void)
+static WMenu *clip_make_options_menu(virtual_screen *vscr)
 {
 	WMenu *menu;
 	WMenuEntry *entry;
 
-	menu = menu_create(NULL);
+	menu = menu_create(vscr, NULL);
 	if (!menu) {
 		wwarning(_("could not create options submenu for Clip menu"));
 		return NULL;
@@ -1169,12 +1169,12 @@ static WMenu *clip_make_options_menu(void)
 	return menu;
 }
 
-static WMenu *drawer_make_options_menu(void)
+static WMenu *drawer_make_options_menu(virtual_screen *vscr)
 {
 	WMenu *menu;
 	WMenuEntry *entry;
 
-	menu = menu_create(NULL);
+	menu = menu_create(vscr, NULL);
 	if (!menu) {
 		wwarning(_("could not create options submenu for Drawer menu"));
 		return NULL;
@@ -1316,7 +1316,7 @@ static void updateDockPositionMenu(virtual_screen *vscr, WDock *dock)
 	dock->menu->flags.realized = 0;
 }
 
-static WMenu *makeDockPositionMenu(void)
+static WMenu *makeDockPositionMenu(virtual_screen *vscr)
 {
 	/* When calling this, the dock is being created, so scr->dock is still not set
 	 * Therefore the callbacks' clientdata and the indicators can't be set,
@@ -1324,7 +1324,7 @@ static WMenu *makeDockPositionMenu(void)
 	WMenu *menu;
 	WMenuEntry *entry;
 
-	menu = menu_create(NULL);
+	menu = menu_create(vscr, NULL);
 	if (!menu) {
 		wwarning(_("could not create options submenu for dock position menu"));
 		return NULL;
@@ -1353,10 +1353,10 @@ void clip_menu_create(virtual_screen *vscr)
 	WMenuEntry *entry;
 
 	/* Create menus */
-	menu = menu_create(NULL);
+	menu = menu_create(vscr, NULL);
 	vscr->clip.submenu = makeWorkspaceMenu(vscr);
 	if (!vscr->clip.opt_menu)
-		vscr->clip.opt_menu = clip_make_options_menu();
+		vscr->clip.opt_menu = clip_make_options_menu(vscr);
 
 	entry = wMenuAddCallback(menu, _("Clip Options"), NULL, NULL);
 
@@ -1438,11 +1438,11 @@ static void drawer_menu_create(virtual_screen *vscr)
 	WMenu *menu;
 	WMenuEntry *entry;
 
-	menu = menu_create(NULL);
+	menu = menu_create(vscr, NULL);
 
 	entry = wMenuAddCallback(menu, _("Drawer options"), NULL, NULL);
 
-	vscr->dock.drawer_opt_menu = drawer_make_options_menu();
+	vscr->dock.drawer_opt_menu = drawer_make_options_menu(vscr);
 
 	wMenuEntrySetCascade_create(menu, entry, vscr->dock.drawer_opt_menu);
 
@@ -1502,11 +1502,11 @@ static WMenu *dock_menu_create(virtual_screen *vscr)
 	WMenu *menu;
 	WMenuEntry *entry;
 
-	menu = menu_create(NULL);
+	menu = menu_create(vscr, NULL);
 
 	entry = wMenuAddCallback(menu, _("Dock position"), NULL, NULL);
 	if (!vscr->dock.pos_menu)
-		vscr->dock.pos_menu = makeDockPositionMenu();
+		vscr->dock.pos_menu = makeDockPositionMenu(vscr);
 
 	wMenuEntrySetCascade_create(menu, entry, vscr->dock.pos_menu);
 

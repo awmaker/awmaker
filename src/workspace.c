@@ -869,9 +869,9 @@ WMenu *wWorkspaceMenuMake(virtual_screen *vscr, Bool titled)
 	WMenuEntry *entry;
 
 	if (titled)
-		wsmenu = menu_create(_("Workspaces"));
+		wsmenu = menu_create(vscr, _("Workspaces"));
 	else
-		wsmenu = menu_create(NULL);
+		wsmenu = menu_create(vscr, NULL);
 
 	if (!wsmenu) {
 		wwarning(_("could not create Workspace menu"));

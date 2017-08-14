@@ -50,6 +50,7 @@ typedef struct WMenuEntry {
 } WMenuEntry;
 
 typedef struct WMenu {
+	virtual_screen *vscr;			/* Where is the menu */
 	char *title;				/* Menu title */
 	struct WMenu *parent;
 
@@ -126,7 +127,7 @@ WMenu *wMenuUnderPointer(virtual_screen *vscr);
 void wMenuSaveState(virtual_screen *vscr);
 void wMenuRestoreState(virtual_screen *vscr);
 
-WMenu *menu_create(const char *title);
+WMenu *menu_create(virtual_screen *vscr, const char *title);
 void menu_map(WMenu *menu, virtual_screen *screen);
 void menu_unmap(WMenu *menu);
 

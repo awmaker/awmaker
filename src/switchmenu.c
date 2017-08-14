@@ -94,7 +94,7 @@ WMenu *switchmenu_create(virtual_screen *vscr)
 	WWindow *wwin;
 	WMenu *switch_menu;
 
-	switch_menu = menu_create(_("Windows"));
+	switch_menu = menu_create(vscr, _("Windows"));
 	menu_map(switch_menu, vscr);
 	wwin = vscr->window.focused;
 	while (wwin) {

@@ -133,7 +133,7 @@ static void appearanceObserver(void *self, WMNotification *notif)
 }
 
 /************************************/
-WMenu *menu_create(const char *title)
+WMenu *menu_create(virtual_screen *vscr, const char *title)
 {
 	WMenu *menu;
 	int flags, width = 1;
@@ -145,6 +145,7 @@ WMenu *menu_create(const char *title)
 	menu = wmalloc(sizeof(WMenu));
 	menu->frame = wframewindow_create(NULL, menu, width, 1, flags);
 	menu->menu = wcore_create(width, 10);
+	menu->vscr = vscr;
 
 	if (title) {
 		menu->title = wstrdup(title);
