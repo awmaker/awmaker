@@ -89,17 +89,20 @@ void InitializeSwitchMenu(void)
 	WMAddNotificationObserver(wsobserver, NULL, WMNWorkspaceNameChanged, NULL);
 }
 
-void switchmenu_create(virtual_screen *vscr)
+WMenu *switchmenu_create(virtual_screen *vscr)
 {
 	WWindow *wwin;
+	WMenu *switch_menu;
 
-	vscr->menu.switch_menu = menu_create(_("Windows"));
-	menu_map(vscr->menu.switch_menu, vscr);
+	switch_menu = menu_create(_("Windows"));
+	menu_map(switch_menu, vscr);
 	wwin = vscr->window.focused;
 	while (wwin) {
-		switchmenu_additem(vscr->menu.switch_menu, vscr, wwin);
+		switchmenu_additem(switch_menu, vscr, wwin);
 		wwin = wwin->prev;
 	}
+
+	return switch_menu;
 }
 
 /* Open switch menu */

@@ -25,7 +25,7 @@
 void switchmenu_additem(WMenu *menu, virtual_screen *vscr, WWindow *wwin);
 void switchmenu_delitem(virtual_screen *vscr, WWindow *wwin);
 
-void switchmenu_create(virtual_screen *vscr);
+WMenu *switchmenu_create(virtual_screen *vscr);
 void OpenSwitchMenu(virtual_screen *vscr, int x, int y, int keyboard);
 void InitializeSwitchMenu(void);
 
