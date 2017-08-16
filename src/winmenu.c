@@ -769,9 +769,13 @@ void window_menu_create(virtual_screen *vscr)
 
 	/* hack to save some memory allocation/deallocation */
 	wfree(vscr->menu.window_menu->entries[MC_MINIATURIZE]->text);
+	vscr->menu.window_menu->entries[MC_MINIATURIZE]->text = NULL;
 	wfree(vscr->menu.window_menu->entries[MC_MAXIMIZE]->text);
+	vscr->menu.window_menu->entries[MC_MAXIMIZE]->text = NULL;
 	wfree(vscr->menu.window_menu->entries[MC_SHADE]->text);
+	vscr->menu.window_menu->entries[MC_SHADE]->text = NULL;
 	wfree(vscr->menu.window_menu->entries[MC_SELECT]->text);
+	vscr->menu.window_menu->entries[MC_SELECT]->text = NULL;
 }
 
 static WMenu *open_window_menu_core(WWindow *wwin)
@@ -878,12 +882,13 @@ void OpenMiniwindowMenu(WWindow *wwin, int x, int y)
 
 void DestroyWindowMenu(virtual_screen *vscr)
 {
-	if (vscr->menu.window_menu) {
-		vscr->menu.window_menu->entries[MC_MINIATURIZE]->text = NULL;
-		vscr->menu.window_menu->entries[MC_MAXIMIZE]->text = NULL;
-		vscr->menu.window_menu->entries[MC_SHADE]->text = NULL;
-		vscr->menu.window_menu->entries[MC_SELECT]->text = NULL;
-		wMenuDestroy(vscr->menu.window_menu, True);
-		vscr->menu.window_menu = NULL;
-	}
+	if (!vscr->menu.window_menu)
+		return;
+
+	vscr->menu.window_menu->entries[MC_MINIATURIZE]->text = NULL;
+	vscr->menu.window_menu->entries[MC_MAXIMIZE]->text = NULL;
+	vscr->menu.window_menu->entries[MC_SHADE]->text = NULL;
+	vscr->menu.window_menu->entries[MC_SELECT]->text = NULL;
+	wMenuDestroy(vscr->menu.window_menu, True);
+	vscr->menu.window_menu = NULL;
 }
