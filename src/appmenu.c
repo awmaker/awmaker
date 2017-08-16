@@ -155,7 +155,7 @@ static WMenu *parseMenuCommand(virtual_screen *vscr, Window win, char **slist, i
 			if (!entry) {
 				wMenuDestroy(menu, True);
 				wwarning(_("appmenu: out of memory creating menu for window %lx"), win);
-				free(data);
+				wfree(data);
 				return NULL;
 			}
 			if (rtext[0] != 0)

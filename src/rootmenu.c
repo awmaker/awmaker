@@ -1349,7 +1349,7 @@ static WMenu *readMenuDirectory(virtual_screen *vscr, const char *title, char **
 					}
 				}
 			}
-			free(buffer);
+			wfree(buffer);
 		}
 
 		closedir(dir);

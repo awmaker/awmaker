@@ -184,7 +184,7 @@ static int initWVisualID(const char *user_str)
 		cur_in_pos++;
 	}
 
-	free(mystr);
+	wfree(mystr);
 
 	if (cur_screen == 0||error_found != 0)
 		return 1;

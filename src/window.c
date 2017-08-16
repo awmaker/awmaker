@@ -723,10 +723,10 @@ static void wwindow_set_fakegroupleader(virtual_screen *vscr, WWindow *wwin)
 	}
 
 	if (instance)
-		free(instance);
+		wfree(instance);
 
 	if (class)
-		free(class);
+		wfree(class);
 #undef ADEQUATE
 }
 
@@ -2799,9 +2799,9 @@ WMagicNumber wWindowGetSavedState(Window win)
 	if (command)
 		wfree(command);
 	if (instance)
-		free(instance);
+		wfree(instance);
 	if (class)
-		free(class);
+		wfree(class);
 
 	return wstate;
 }

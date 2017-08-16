@@ -354,7 +354,7 @@ static void drawTitle(WSwitchPanel *panel, int idecks, const char *title)
 	}
 
 	if (ntitle)
-		free(ntitle);
+		wfree(ntitle);
 }
 
 static WMArray *makeWindowListArray(virtual_screen *vscr, int include_unmapped, Bool class_only)

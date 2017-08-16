@@ -4687,8 +4687,8 @@ void wDockTrackWindowLaunch(WDock *dock, Window window)
 	Bool found = False;
 
 	if (!PropGetWMClass(window, &wm_class, &wm_instance)) {
-		free(wm_class);
-		free(wm_instance);
+		wfree(wm_class);
+		wfree(wm_instance);
 		return;
 	}
 
@@ -4702,10 +4702,10 @@ void wDockTrackWindowLaunch(WDock *dock, Window window)
 		wfree(command);
 
 	if (wm_class)
-		free(wm_class);
+		wfree(wm_class);
 
 	if (wm_instance)
-		free(wm_instance);
+		wfree(wm_instance);
 }
 
 void wClipUpdateForWorkspaceChange(virtual_screen *vscr, int workspace)
