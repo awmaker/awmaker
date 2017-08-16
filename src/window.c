@@ -255,6 +255,7 @@ void wWindowDestroy(WWindow *wwin)
 	if (wwin->frame) {
 		framewindow_unmap(wwin->frame);
 		wFrameWindowDestroy(wwin->frame);
+		wwin->frame = NULL;
 	}
 
 	if (wwin->icon) {

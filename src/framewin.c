@@ -721,8 +721,10 @@ void wFrameWindowDestroy(WFrameWindow *fwin)
 	titlebar_destroy(fwin);
 	resizebar_destroy(fwin);
 
-	if (fwin->core && fwin->core->stacking)
+	if (fwin->core && fwin->core->stacking) {
 		wfree(fwin->core->stacking);
+		fwin->core->stacking = NULL;
+	}
 
 	wcore_unmap(fwin->core);
 	wframewindow_destroy_wcorewindow(fwin->core);
