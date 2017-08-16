@@ -323,8 +323,10 @@ void winspector_destroy(InspectorPanel *panel)
 	WMDestroyWidget(panel->win);
 	XDestroyWindow(dpy, panel->parent);
 
-	if (panel->title)
+	if (panel->title) {
 		wfree(panel->title);
+		panel->title = NULL;
+	}
 
 	wfree(panel);
 }
@@ -342,6 +344,7 @@ static void destroyInspector(WCoreWindow *foo, void *data, XEvent *event)
 		panel = panel->nextPtr;
 
 	winspector_destroy(panel);
+	panel->nextPtr = NULL;
 }
 
 void wDestroyInspectorPanels(void)
