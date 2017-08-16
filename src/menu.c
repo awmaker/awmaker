@@ -197,6 +197,7 @@ void menu_destroy(WMenu *menu)
                 wfree(menu->title);
 
         wcore_destroy(menu->menu);
+	menu->menu = NULL;
 	wFrameWindowDestroy(menu->frame);
 	menu->frame = NULL;
 
