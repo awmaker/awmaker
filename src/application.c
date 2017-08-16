@@ -173,6 +173,7 @@ void wApplicationDestroy(WApplication *wapp)
 
 	XDeleteContext(dpy, wapp->main_window, w_global.context.app_win);
 	wAppMenuDestroy(wapp->menu);
+	wapp->menu = NULL;
 
 	/* Remove application icon */
 	removeAppIconFor(wapp);

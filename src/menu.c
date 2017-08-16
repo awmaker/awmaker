@@ -187,14 +187,20 @@ void menu_destroy(WMenu *menu)
 {
 	menu_unmap(menu);
 
-	if (menu->cascades)
+	if (menu->cascades) {
 		wfree(menu->cascades);
+		menu->cascades = NULL;
+	}
 
-        if (menu->menu->stacking)
+        if (menu->menu->stacking) {
                 wfree(menu->menu->stacking);
+		menu->menu->stacking = NULL;
+	}
 
-        if (menu->title)
+        if (menu->title) {
                 wfree(menu->title);
+		menu->title = NULL;
+	}
 
         wcore_destroy(menu->menu);
 	menu->menu = NULL;
@@ -349,17 +355,21 @@ void wMenuRemoveItem(WMenu *menu, int index)
 	wMenuEntryRemoveCascade(menu, menu->entries[index]);
 
 	/* destroy unshared data */
-
-	if (menu->entries[index]->text)
+	if (menu->entries[index]->text) {
 		wfree(menu->entries[index]->text);
+		menu->entries[index]->text = NULL;
+	}
 
-	if (menu->entries[index]->rtext)
+	if (menu->entries[index]->rtext) {
 		wfree(menu->entries[index]->rtext);
+		menu->entries[index]->text = NULL;
+	}
 
 	if (menu->entries[index]->free_cdata && menu->entries[index]->clientdata)
 		(*menu->entries[index]->free_cdata) (menu->entries[index]->clientdata);
 
 	wfree(menu->entries[index]);
+	menu->entries[index] = NULL;
 
 	for (i = index; i < menu->entry_no - 1; i++) {
 		menu->entries[i + 1]->order--;
@@ -540,27 +550,37 @@ void wMenuDestroy(WMenu *menu, int recurse)
 	/* Destroy items if this menu own them. */
 	for (i = 0; i < menu->entry_no; i++) {
 		wfree(menu->entries[i]->text);
-		if (menu->entries[i]->rtext)
+		menu->entries[i]->text = NULL;
+		if (menu->entries[i]->rtext) {
 			wfree(menu->entries[i]->rtext);
+			menu->entries[i]->rtext = NULL;
+		}
 #ifdef USER_MENU
-		if (menu->entries[i]->instances)
+		if (menu->entries[i]->instances) {
 			WMReleasePropList(menu->entries[i]->instances);
+			menu->entries[i]->instances = NULL;
+		}
 #endif
 		if (menu->entries[i]->free_cdata && menu->entries[i]->clientdata)
 			(*menu->entries[i]->free_cdata) (menu->entries[i]->clientdata);
 
 		wfree(menu->entries[i]);
+		menu->entries[i] = NULL;
 	}
 
 	if (recurse) {
 		for (i = 0; i < menu->cascade_no; i++) {
-			if (menu->cascades[i])
+			if (menu->cascades[i]) {
 				wMenuDestroy(menu->cascades[i], recurse);
+				menu->cascades[i] = NULL;
+			}
 		}
 	}
 
-	if (menu->entries)
+	if (menu->entries) {
 		wfree(menu->entries);
+		menu->entries = NULL;
+	}
 
 	menu_destroy(menu);
 }

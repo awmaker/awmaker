@@ -525,6 +525,7 @@ void wClientCheckProperty(WWindow *wwin, XPropertyEvent *event)
 					/* update menu */
 					/* TODO: remake appmenu update */
 					wAppMenuDestroy(wapp->menu);
+					wapp->menu = NULL;
 				}
 
 				if (wwin->fake_group) {

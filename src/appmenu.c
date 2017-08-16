@@ -237,8 +237,10 @@ WMenu *wAppMenuGet(virtual_screen *vscr, Window window)
 
 void wAppMenuDestroy(WMenu *menu)
 {
-	if (menu)
-		wMenuDestroy(menu, True);
+	if (!menu)
+		return;
+
+	wMenuDestroy(menu, True);
 }
 
 void wAppMenuMap(WMenu *menu, WWindow *wwin)
