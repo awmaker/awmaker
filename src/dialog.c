@@ -1040,7 +1040,7 @@ Bool wIconChooserDialog(AppSettingsPanel *app_panel, InspectorPanel *ins_panel, 
 		ins_panel->iconchooserdlg = panel;
 		instance = ins_panel->inspected->wm_instance;
 		class = ins_panel->inspected->wm_class;
-		vscr = ins_panel->frame->vscr;
+		vscr = ins_panel->wwin->vscr;
 	} else {
 		/* Set values if parent is Icon */
 		instance = icon->wm_instance;

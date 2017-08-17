@@ -31,7 +31,7 @@ typedef struct InspectorPanel InspectorPanel;
 struct InspectorPanel {
 	struct InspectorPanel *nextPtr;
 
-	WWindow *frame;
+	WWindow *wwin;
 	WWindow *inspected;	/* the window that's being inspected */
 	WMWindow *win;
 	Window parent;

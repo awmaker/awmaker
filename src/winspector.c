@@ -315,8 +315,8 @@ void winspector_destroy(InspectorPanel *panel)
 
 	WMRemoveNotificationObserver(panel);
 
-	wWindowUnmap(panel->frame);
-	wUnmanageWindow(panel->frame, True, False);
+	wWindowUnmap(panel->wwin);
+	wUnmanageWindow(panel->wwin, True, False);
 
 	panel->destroyed = 1;
 
@@ -338,7 +338,7 @@ static void destroyInspector(WCoreWindow *foo, void *data, XEvent *event)
 	(void) event;
 
 	panel = panelList;
-	while (panel->frame != data)
+	while (panel->wwin != data)
 		panel = panel->nextPtr;
 
 	winspector_destroy(panel);
@@ -351,7 +351,7 @@ void wDestroyInspectorPanels(void)
 	while (panelList != NULL) {
 		panel = panelList;
 		panelList = panelList->nextPtr;
-		wUnmanageWindow(panel->frame, False, False);
+		wUnmanageWindow(panel->wwin, False, False);
 		WMDestroyWidget(panel->win);
 
 		panel->inspected->flags.inspector_open = 0;
@@ -432,7 +432,7 @@ static int showIconFor(WMScreen *scrPtr, InspectorPanel *panel, const char *wm_i
 
 			buf = wmalloc(len);
 			snprintf(buf, len, _("Could not find icon \"%s\" specified for this window"), file);
-			wMessageDialog(panel->frame->vscr, _("Error"), buf, _("OK"), NULL, NULL);
+			wMessageDialog(panel->wwin->vscr, _("Error"), buf, _("OK"), NULL, NULL);
 			wfree(buf);
 			wfree(file);
 			return -1;
@@ -448,7 +448,7 @@ static int showIconFor(WMScreen *scrPtr, InspectorPanel *panel, const char *wm_i
 			buf = wmalloc(len);
 			snprintf(buf, len, _("Could not open specified icon \"%s\":%s"),
 				 file, RMessageForError(RErrorCode));
-			wMessageDialog(panel->frame->vscr, _("Error"), buf, _("OK"), NULL, NULL);
+			wMessageDialog(panel->wwin->vscr, _("Error"), buf, _("OK"), NULL, NULL);
 			wfree(buf);
 			wfree(file);
 			return -1;
@@ -595,8 +595,8 @@ static void saveSettings(WMWidget *button, void *client_data)
 	}
 
 	i = WMGetPopUpButtonSelectedItem(panel->wsP) - 1;
-	if (i >= 0 && i < panel->frame->vscr->workspace.count) {
-		value = WMCreatePLString(panel->frame->vscr->workspace.array[i]->name);
+	if (i >= 0 && i < panel->wwin->vscr->workspace.count) {
+		value = WMCreatePLString(panel->wwin->vscr->workspace.array[i]->name);
 		different |= insertAttribute(dict, winDic, AStartWorkspace, value, flags);
 		WMReleasePropList(value);
 	}
@@ -802,7 +802,7 @@ static void applySettings(WMWidget *button, void *client_data)
 
 			buf = wmalloc(len);
 			snprintf(buf, len, _("Ignore client supplied icon is set, but icon filename textbox is empty. Using client supplied icon"));
-			wMessageDialog(panel->frame->vscr, _("Warning"), buf, _("OK"), NULL, NULL);
+			wMessageDialog(panel->wwin->vscr, _("Warning"), buf, _("OK"), NULL, NULL);
 			wfree(buf);
 			wfree(file);
 
@@ -1008,7 +1008,7 @@ static void selectSpecification(WMWidget *bPtr, void *data)
 
 	panel->title = title;
 
-	wFrameWindowChangeTitle(panel->frame->frame, panel->title);
+	wFrameWindowChangeTitle(panel->wwin->frame, panel->title);
 }
 
 static void selectWindow(WMWidget *bPtr, void *data)
@@ -1037,7 +1037,7 @@ static void selectWindow(WMWidget *bPtr, void *data)
 	if (iwin && !iwin->flags.internal_window && iwin != wwin_inspected && !iwin->flags.inspector_open) {
 		iwin->flags.inspector_open = 1;
 		iwin->inspector = createInspectorForWindow(iwin,
-							   panel->frame->frame_x, panel->frame->frame_y, True);
+							   panel->wwin->frame_x, panel->wwin->frame_y, True);
 		wCloseInspectorForWindow(wwin_inspected);
 	} else {
 		WMSetLabelText(panel->specLbl, spec_text);
@@ -1233,7 +1233,7 @@ static InspectorPanel *createInspectorForWindow(WWindow *wwin_inspected, int xpo
 		y = ypos;
 	}
 
-	panel->frame = wManageInternalWindow(vscr, parent, wwin_inspected->client_win, "Inspector", x, y, PWIDTH, PHEIGHT);
+	panel->wwin = wManageInternalWindow(vscr, parent, wwin_inspected->client_win, "Inspector", x, y, PWIDTH, PHEIGHT);
 
 	if (!selectedBtn)
 		selectedBtn = panel->defaultRb;
@@ -1242,19 +1242,19 @@ static InspectorPanel *createInspectorForWindow(WWindow *wwin_inspected, int xpo
 	selectSpecification(selectedBtn, panel);
 
 	/* kluge to know who should get the key events */
-	panel->frame->client_leader = WMWidgetXID(panel->win);
+	panel->wwin->client_leader = WMWidgetXID(panel->win);
 
-	panel->frame->client_flags.no_closable = 0;
-	panel->frame->client_flags.no_close_button = 0;
-	wWindowUpdateButtonImages(panel->frame);
-	wframewindow_show_rightbutton(panel->frame->frame);
+	panel->wwin->client_flags.no_closable = 0;
+	panel->wwin->client_flags.no_close_button = 0;
+	wWindowUpdateButtonImages(panel->wwin);
+	wframewindow_show_rightbutton(panel->wwin->frame);
 #ifdef XKB_BUTTON_HINT
-	wframewindow_hide_languagebutton(panel->frame->frame);
+	wframewindow_hide_languagebutton(panel->wwin->frame);
 #endif
-	wframewindow_refresh_titlebar(panel->frame->frame);
-	panel->frame->frame->on_click_right = destroyInspector;
+	wframewindow_refresh_titlebar(panel->wwin->frame);
+	panel->wwin->frame->on_click_right = destroyInspector;
 
-	wWindowMap(panel->frame);
+	wWindowMap(panel->wwin);
 
 	showIconFor(WMWidgetScreen(panel->alwChk), panel, wwin_inspected->wm_instance, wwin_inspected->wm_class, UPDATE_TEXT_FIELD);
 
@@ -1275,23 +1275,23 @@ void wShowInspectorForWindow(WWindow *wwin_inspected)
 
 void wHideInspectorForWindow(WWindow *wwin_inspected)
 {
-	WWindow *pwin = wwin_inspected->inspector->frame;
+	WWindow *wwin = wwin_inspected->inspector->wwin;
 
-	wWindowUnmap(pwin);
-	pwin->flags.hidden = 1;
+	wWindowUnmap(wwin);
+	wwin->flags.hidden = 1;
 
-	wClientSetState(pwin, IconicState, None);
+	wClientSetState(wwin, IconicState, None);
 }
 
 void wUnhideInspectorForWindow(WWindow *wwin_inspected)
 {
-	WWindow *pwin = wwin_inspected->inspector->frame;
+	WWindow *wwin = wwin_inspected->inspector->wwin;
 
-	pwin->flags.hidden = 0;
-	pwin->flags.mapped = 1;
-	XMapWindow(dpy, pwin->client_win);
-	XMapWindow(dpy, pwin->frame->core->window);
-	wClientSetState(pwin, NormalState, None);
+	wwin->flags.hidden = 0;
+	wwin->flags.mapped = 1;
+	XMapWindow(dpy, wwin->client_win);
+	XMapWindow(dpy, wwin->frame->core->window);
+	wClientSetState(wwin, NormalState, None);
 }
 
 WWindow *wGetWindowOfInspectorForWindow(WWindow *wwin_inspected)
@@ -1300,14 +1300,14 @@ WWindow *wGetWindowOfInspectorForWindow(WWindow *wwin_inspected)
 		return NULL;
 
 	assert(wwin_inspected->flags.inspector_open != 0);
-	return wwin_inspected->inspector->frame;
+	return wwin_inspected->inspector->wwin;
 }
 
 void wCloseInspectorForWindow(WWindow *wwin_inspected)
 {
-	WWindow *pwin = wwin_inspected->inspector->frame;	/* the inspector window */
+	WWindow *wwin = wwin_inspected->inspector->wwin;	/* the inspector window */
 
-	(*pwin->frame->on_click_right) (NULL, pwin, NULL);
+	(*wwin->frame->on_click_right) (NULL, wwin, NULL);
 }
 
 static void create_tab_window_attributes(WWindow *wwin_inspected, InspectorPanel *panel, int frame_width)
