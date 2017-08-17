@@ -1560,7 +1560,7 @@ WWindow *wManageInternalWindow(virtual_screen *vscr, Window window, Window owner
 	wwin->frame->flags.is_client_window_frame = 1;
 	wwin->frame->flags.justification = wPreferences.title_justification;
 
-	wFrameWindowChangeTitle(wwin->frame, title);
+	wWindowUpdateName(wwin, title);
 
 	/* setup button images */
 	wWindowUpdateButtonImages(wwin);

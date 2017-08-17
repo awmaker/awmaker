@@ -1008,7 +1008,7 @@ static void selectSpecification(WMWidget *bPtr, void *data)
 
 	panel->title = title;
 
-	wFrameWindowChangeTitle(panel->wwin->frame, panel->title);
+	wWindowUpdateName(panel->wwin, panel->title);
 }
 
 static void selectWindow(WMWidget *bPtr, void *data)
