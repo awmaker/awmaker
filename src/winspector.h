@@ -33,7 +33,7 @@ struct InspectorPanel {
 
 	WWindow *frame;
 	WWindow *inspected;	/* the window that's being inspected */
-	WMWindow *wwin;
+	WMWindow *win;
 	Window parent;
 	char *title;		/* InspectorPanel title */
 	IconPanel *iconchooserdlg;
