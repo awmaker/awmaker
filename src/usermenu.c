@@ -320,27 +320,11 @@ void wUserMenuRefreshInstances(WMenu *menu, WWindow *wwin)
 		wMenuPaint(menu);
 }
 
-static WMenu *readUserMenuFile(virtual_screen *vscr, const char *file_name)
-{
-	WMenu *menu = NULL;
-	WMPropList *plum;
-
-	plum = WMReadPropListFromFile(file_name);
-	if (!plum)
-		return NULL;
-
-	menu = configureUserMenu(vscr, plum);
-	WMReleasePropList(plum);
-
-	wMenuRealize(menu);
-
-	return menu;
-}
-
 WMenu *wUserMenuGet(virtual_screen *vscr, WWindow *wwin)
 {
 	WMenu *menu = NULL;
-	char *tmp, *path = NULL;
+	WMPropList *plum;
+	char *tmp, *file_name = NULL;
 	int len;
 
 	if (!wwin || !wwin->wm_instance || !wwin->wm_class)
@@ -349,14 +333,22 @@ WMenu *wUserMenuGet(virtual_screen *vscr, WWindow *wwin)
 	len = strlen(wwin->wm_instance) + strlen(wwin->wm_class) + 7;
 	tmp = wmalloc(len);
 	snprintf(tmp, len, "%s.%s.menu", wwin->wm_instance, wwin->wm_class);
-	path = wfindfile(DEF_USER_MENU_PATHS, tmp);
+	file_name = wfindfile(DEF_USER_MENU_PATHS, tmp);
 	wfree(tmp);
-
-	if (!path)
+	if (!file_name)
 		return NULL;
 
-	menu = readUserMenuFile(vscr, path);
-	wfree(path);
+	plum = WMReadPropListFromFile(file_name);
+	if (!plum) {
+		wfree(file_name);
+		return NULL;
+	}
+
+	wfree(file_name);
+
+	menu = configureUserMenu(vscr, plum);
+	WMReleasePropList(plum);
+	wMenuRealize(menu);
 
 	return menu;
 }
