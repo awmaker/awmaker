@@ -1049,6 +1049,9 @@ void wMenuUnmap(WMenu *menu)
 {
 	int i;
 
+	if (!menu)
+		return;
+
 	XUnmapWindow(dpy, menu->frame->core->window);
 	if (menu->flags.titled && menu->flags.buttoned) {
 		wframewindow_hide_rightbutton(menu->frame);
