@@ -75,8 +75,7 @@
 #include "keybind.h"
 #include "xmodifier.h"
 #include "misc.h"
-
-#include "framewin.h"
+#include "appmenu.h"
 
 #define MAX_SHORTCUT_LENGTH 32
 
@@ -320,15 +319,28 @@ void wUserMenuRefreshInstances(WMenu *menu, WWindow *wwin)
 		wMenuPaint(menu);
 }
 
-WMenu *wUserMenuGet(virtual_screen *vscr, WWindow *wwin)
+void create_user_menu(virtual_screen *vscr, WApplication *wapp)
 {
+	WWindow *wwin = NULL;
 	WMenu *menu = NULL;
 	WMPropList *plum;
 	char *tmp, *file_name = NULL;
 	int len;
 
+	/*
+	 * TODO: kix
+	 * There is a bug in wmaker about the windows in the WApplication
+	 * The original Window includes an WWindow valid with all the info
+	 * but WApplication creates a new WWindow and some info is lost, like
+	 * the position of the window on the screen.
+	 * instance and class are set, we can use it here.
+	 * We need avoid create the WWindow in the WApplication and select the
+	 * previosly WWindow. With one-window applications is easy, but with
+	 * applications with multiple windows, is more difficult.
+	 */
+	wwin = wapp->main_window_desc;
 	if (!wwin || !wwin->wm_instance || !wwin->wm_class)
-		return NULL;
+		return;
 
 	len = strlen(wwin->wm_instance) + strlen(wwin->wm_class) + 7;
 	tmp = wmalloc(len);
@@ -336,12 +348,12 @@ WMenu *wUserMenuGet(virtual_screen *vscr, WWindow *wwin)
 	file_name = wfindfile(DEF_USER_MENU_PATHS, tmp);
 	wfree(tmp);
 	if (!file_name)
-		return NULL;
+		return;
 
 	plum = WMReadPropListFromFile(file_name);
 	if (!plum) {
 		wfree(file_name);
-		return NULL;
+		return;
 	}
 
 	wfree(file_name);
@@ -350,7 +362,18 @@ WMenu *wUserMenuGet(virtual_screen *vscr, WWindow *wwin)
 	WMReleasePropList(plum);
 	wMenuRealize(menu);
 
-	return menu;
+	/*
+	 * TODO: kix
+	 * Because the preovious comment, the info in wwin about possition is wrong
+	 * and contains values (x = 0, y = 0). If we move the window, values do not
+	 * change too. We need solve the WApplication problem to solve this problem.
+	 * Now, the menu window is painted in 0,0
+	 */
+
+	/* Using the same function that app_menu */
+	wAppMenuMap(menu, wwin);
+
+	wapp->user_menu = menu;
 }
 
 #endif				/* USER_MENU */

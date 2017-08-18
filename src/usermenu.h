@@ -25,7 +25,7 @@
 #ifndef _WUSERMENU_H_
 #define _WUSERMENU_H_
 
-WMenu *wUserMenuGet(virtual_screen *vscr, WWindow *wwin);
+void create_user_menu(virtual_screen *vscr, WApplication *wapp);
 void wUserMenuRefreshInstances(WMenu *menu, WWindow *wwin);
 
 #endif
