@@ -144,8 +144,8 @@ void wSetFocusTo(virtual_screen *vscr, WWindow *wwin)
 			wWindowUnfocus(old_focused);
 
 		if (oapp) {
-			wAppMenuUnmap(oapp->app_menu);
-			wAppMenuUnmap(oapp->user_menu);
+			wMenuUnmap(oapp->app_menu);
+			wMenuUnmap(oapp->user_menu);
 			if (wPreferences.highlight_active_app)
 				wApplicationDeactivate(oapp);
 		}
@@ -209,8 +209,8 @@ void wSetFocusTo(virtual_screen *vscr, WWindow *wwin)
 		vscr->window.focused = wwin;
 
 		if (oapp && oapp != napp) {
-			wAppMenuUnmap(oapp->app_menu);
-			wAppMenuUnmap(oapp->user_menu);
+			wMenuUnmap(oapp->app_menu);
+			wMenuUnmap(oapp->user_menu);
 			if (wPreferences.highlight_active_app)
 				wApplicationDeactivate(oapp);
 		}

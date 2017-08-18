@@ -253,9 +253,3 @@ void wAppMenuMap(WMenu *menu, WWindow *wwin)
 	if (!menu->flags.mapped)
 		wMenuMapAt(wwin->vscr, menu, x, wwin->frame_y, False);
 }
-
-void wAppMenuUnmap(WMenu *menu)
-{
-	if (menu)
-		wMenuUnmap(menu);
-}

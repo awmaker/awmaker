@@ -25,5 +25,4 @@
 WMenu *wAppMenuGet(virtual_screen *vscr, Window window);
 void wAppMenuDestroy(WMenu *menu);
 void wAppMenuMap(WMenu *menu, WWindow *wwin);
-void wAppMenuUnmap(WMenu *menu);
 #endif
