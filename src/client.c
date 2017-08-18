@@ -521,11 +521,18 @@ void wClientCheckProperty(WWindow *wwin, XPropertyEvent *event)
 
 			wapp = wApplicationOf(wwin->main_window);
 			if (wapp) {
-				if (wapp->menu) {
+				if (wapp->app_menu) {
 					/* update menu */
 					/* TODO: remake appmenu update */
-					wAppMenuDestroy(wapp->menu);
-					wapp->menu = NULL;
+					wAppMenuDestroy(wapp->app_menu);
+					wapp->app_menu = NULL;
+				}
+
+				if (wapp->user_menu) {
+					/* update menu */
+					/* TODO: remake appmenu update */
+					wAppMenuDestroy(wapp->user_menu);
+					wapp->user_menu = NULL;
 				}
 
 				if (wwin->fake_group) {
@@ -563,12 +570,12 @@ void wClientCheckProperty(WWindow *wwin, XPropertyEvent *event)
 
 					wapp = wApplicationOf(wwin->main_window);
 					if (wapp)
-						wapp->menu = wAppMenuGet(vscr, wwin->main_window);
+						wapp->app_menu = wAppMenuGet(vscr, wwin->main_window);
 
 					if (wPreferences.auto_arrange_icons)
 						wArrangeIcons(wwin->vscr, True);
 				} else {
-					wapp->menu = wAppMenuGet(wwin->vscr, wwin->main_window);
+					wapp->app_menu = wAppMenuGet(wwin->vscr, wwin->main_window);
 				}
 
 				/* make the appmenu be mapped */

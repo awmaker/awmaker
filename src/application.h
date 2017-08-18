@@ -29,7 +29,8 @@ typedef struct WApplication {
 
     Window main_window;		       /* ID of the group leader */
     struct WWindow *main_window_desc;  /* main (leader) window descriptor */
-    WMenu *menu;		       /* application menu */
+    WMenu *app_menu;		       /* application menu */
+    WMenu *user_menu;		       /* user menu */
     struct WAppIcon *app_icon;
     int refcount;
     struct WWindow *last_focused;      /* focused window before hide */

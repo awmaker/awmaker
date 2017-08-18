@@ -126,10 +126,10 @@ WApplication *wApplicationCreate(WWindow *wwin)
 	if (leader)
 		leader->main_window = main_window;
 
-	wapp->menu = wAppMenuGet(vscr, main_window);
+	wapp->app_menu = wAppMenuGet(vscr, main_window);
 #ifdef USER_MENU
-	if (!wapp->menu)
-		wapp->menu = wUserMenuGet(vscr, wapp->main_window_desc);
+	if (!wapp->app_menu)
+		wapp->user_menu = wUserMenuGet(vscr, wapp->main_window_desc);
 #endif
 
 	/* Set application wide attributes from the leader */
@@ -172,8 +172,10 @@ void wApplicationDestroy(WApplication *wapp)
 		wapp->prev->next = wapp->next;
 
 	XDeleteContext(dpy, wapp->main_window, w_global.context.app_win);
-	wAppMenuDestroy(wapp->menu);
-	wapp->menu = NULL;
+	wAppMenuDestroy(wapp->app_menu);
+	wapp->app_menu = NULL;
+	wAppMenuDestroy(wapp->user_menu);
+	wapp->user_menu = NULL;
 
 	/* Remove application icon */
 	removeAppIconFor(wapp);
