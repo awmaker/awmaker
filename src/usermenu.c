@@ -376,4 +376,14 @@ void create_user_menu(virtual_screen *vscr, WApplication *wapp)
 	wapp->user_menu = menu;
 }
 
+void destroy_user_menu(WApplication *wapp)
+{
+	if (!wapp || !wapp->user_menu)
+		return;
+
+	wMenuUnmap(wapp->user_menu);
+	wMenuDestroy(wapp->user_menu, True);
+	wapp->user_menu = NULL;
+}
+
 #endif				/* USER_MENU */

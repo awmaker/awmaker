@@ -65,6 +65,10 @@
 #include "input.h"
 #include "shell.h"
 
+#ifdef USER_MENU
+#include "usermenu.h"
+#endif
+
 #ifdef USE_MWM_HINTS
 # include "motif.h"
 #endif
@@ -1763,7 +1767,9 @@ void wUnmanageWindow(WWindow *wwin, Bool restore, Bool destroyed)
 	WApplication *napp = vscr->window.focused ? wApplicationOf(vscr->window.focused->main_window) : NULL;
 	if (oapp && oapp != napp) {
 		wMenuUnmap(oapp->app_menu);
-		wMenuUnmap(oapp->user_menu);
+#ifdef USER_MENU
+		destroy_user_menu(oapp);
+#endif
 		if (wPreferences.highlight_active_app)
 			wApplicationDeactivate(oapp);
 	}
