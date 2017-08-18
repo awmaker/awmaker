@@ -51,35 +51,25 @@ enum {
 	wmSubmenuItem = 12
 };
 
-enum {
-	wmSelectItem = 1
-};
-
-static void sendMessage(Window window, int what, int tag)
+static void notifyClient(WMenu *menu, WMenuEntry *entry)
 {
+	WAppMenuData *data = entry->clientdata;
 	XEvent event;
+
+	/* Parameter not used, but tell the compiler that it is ok */
+	(void) menu;
 
 	event.xclient.type = ClientMessage;
 	event.xclient.message_type = w_global.atom.wmaker.menu;
 	event.xclient.format = 32;
 	event.xclient.display = dpy;
-	event.xclient.window = window;
+	event.xclient.window = data->window;
 	event.xclient.data.l[0] = w_global.timestamp.last_event;
-	event.xclient.data.l[1] = what;
-	event.xclient.data.l[2] = tag;
+	event.xclient.data.l[1] = 1;
+	event.xclient.data.l[2] = data->tag;
 	event.xclient.data.l[3] = 0;
-	XSendEvent(dpy, window, False, NoEventMask, &event);
+	XSendEvent(dpy, data->window, False, NoEventMask, &event);
 	XFlush(dpy);
-}
-
-static void notifyClient(WMenu * menu, WMenuEntry * entry)
-{
-	WAppMenuData *data = entry->clientdata;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) menu;
-
-	sendMessage(data->window, wmSelectItem, data->tag);
 }
 
 static WMenu *parseMenuCommand(virtual_screen *vscr, Window win, char **slist, int count, int *index)
