@@ -341,20 +341,22 @@ WMenu *wUserMenuGet(virtual_screen *vscr, WWindow *wwin)
 {
 	WMenu *menu = NULL;
 	char *tmp, *path = NULL;
+	int len;
 
-	if (wwin && wwin->wm_instance && wwin->wm_class) {
-		int len = strlen(wwin->wm_instance) + strlen(wwin->wm_class) + 7;
-		tmp = wmalloc(len);
-		snprintf(tmp, len, "%s.%s.menu", wwin->wm_instance, wwin->wm_class);
-		path = wfindfile(DEF_USER_MENU_PATHS, tmp);
-		wfree(tmp);
+	if (!wwin || !wwin->wm_instance || !wwin->wm_class)
+		return NULL;
 
-		if (!path)
-			return NULL;
+	len = strlen(wwin->wm_instance) + strlen(wwin->wm_class) + 7;
+	tmp = wmalloc(len);
+	snprintf(tmp, len, "%s.%s.menu", wwin->wm_instance, wwin->wm_class);
+	path = wfindfile(DEF_USER_MENU_PATHS, tmp);
+	wfree(tmp);
 
-		menu = readUserMenuFile(vscr, path);
-		wfree(path);
-	}
+	if (!path)
+		return NULL;
+
+	menu = readUserMenuFile(vscr, path);
+	wfree(path);
 
 	return menu;
 }
