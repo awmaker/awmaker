@@ -43,6 +43,9 @@
 #include "appmenu.h"
 #include "wmspec.h"
 #include "misc.h"
+#ifdef USER_MENU
+#include "usermenu.h"
+#endif
 
 
 /*
@@ -528,12 +531,10 @@ void wClientCheckProperty(WWindow *wwin, XPropertyEvent *event)
 					wapp->app_menu = NULL;
 				}
 
-				if (wapp->user_menu) {
-					/* update menu */
-					/* TODO: remake appmenu update */
-					wAppMenuDestroy(wapp->user_menu);
-					wapp->user_menu = NULL;
-				}
+#ifdef USER_MENU
+				if (wapp->user_menu)
+					destroy_user_menu(wapp);
+#endif
 
 				if (wwin->fake_group) {
 					virtual_screen *vscr = wwin->vscr;
