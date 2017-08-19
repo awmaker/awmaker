@@ -675,6 +675,11 @@ static void constructMenu(WMenu *menu, WMenuEntry *entry)
 				}
 
 				tmp = wexpandpath(path[i]);
+
+				if (strstr(tmp, "#usergnusteppath#") == tmp)
+					tmp = wstrconcat(wusergnusteppath(),
+							  tmp + 17);
+
 				wfree(path[i]);
 				lpath = getLocalizedMenuFile(tmp);
 				if (lpath) {
