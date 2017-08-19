@@ -27,7 +27,6 @@
 
 void create_user_menu(virtual_screen *vscr, WApplication *wapp);
 void destroy_user_menu(WApplication *wapp);
-void wUserMenuRefreshInstances(WMenu *menu, WWindow *wwin);
 
 #endif
 #endif /* USER_MENU */

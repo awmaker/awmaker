@@ -283,42 +283,6 @@ static WMenu *configureUserMenu(virtual_screen *vscr, WMPropList *plum)
 	return menu;
 }
 
-void wUserMenuRefreshInstances(WMenu *menu, WWindow *wwin)
-{
-	int i, j, count, paintflag;
-
-	paintflag = 0;
-
-	if (!menu)
-		return;
-
-	for (i = 0; i < menu->entry_no; i++) {
-		if (menu->entries[i]->instances) {
-			WMPropList *ins;
-			int oldflag;
-			count = WMGetPropListItemCount(menu->entries[i]->instances);
-
-			oldflag = menu->entries[i]->flags.enabled;
-			menu->entries[i]->flags.enabled = 0;
-			for (j = 0; j < count; j++) {
-				ins = WMGetFromPLArray(menu->entries[i]->instances, j);
-				if (!strcmp(wwin->wm_instance, WMGetFromPLString(ins))) {
-					menu->entries[i]->flags.enabled = 1;
-					break;
-				}
-			}
-
-			if (oldflag != menu->entries[i]->flags.enabled)
-				paintflag = 1;
-		}
-	}
-	for (i = 0; i < menu->cascade_no; i++)
-			wUserMenuRefreshInstances(menu->cascades[i], wwin);
-
-	if (paintflag)
-		wMenuPaint(menu);
-}
-
 void create_user_menu(virtual_screen *vscr, WApplication *wapp)
 {
 	WWindow *wwin = NULL;
