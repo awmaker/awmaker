@@ -873,11 +873,6 @@ WMenu *wWorkspaceMenuMake(virtual_screen *vscr, Bool titled)
 	else
 		wsmenu = menu_create(vscr, NULL);
 
-	if (!wsmenu) {
-		wwarning(_("could not create Workspace menu"));
-		return NULL;
-	}
-
 	menu_map(wsmenu, vscr);
 
 	/* callback to be called when an entry is edited */

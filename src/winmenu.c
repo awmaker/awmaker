@@ -542,11 +542,6 @@ static WMenu *makeOptionsMenu(virtual_screen *vscr)
 	int i;
 
 	menu = menu_create(vscr, NULL);
-	if (!menu) {
-		wwarning(_("could not create submenu for window menu"));
-		return NULL;
-	}
-
 	menu_map(menu, vscr);
 
 	for (i = 0; i < wlengthof(menu_options_entries); i++) {
@@ -569,11 +564,6 @@ static WMenu *makeMaximizeMenu(virtual_screen *vscr)
 	int i;
 
 	menu = menu_create(vscr, NULL);
-	if (!menu) {
-		wwarning(_("could not create submenu for window menu"));
-		return NULL;
-	}
-
 	menu_map(menu, vscr);
 
 	for (i = 0; i < wlengthof(menu_maximize_entries); i++)

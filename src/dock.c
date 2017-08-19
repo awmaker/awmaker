@@ -1079,8 +1079,6 @@ static WMenu *makeWorkspaceMenu(virtual_screen *vscr)
 	WMenu *menu;
 
 	menu = menu_create(vscr, NULL);
-	if (!menu)
-		wwarning(_("could not create workspace submenu for Clip menu"));
 
 	wMenuAddCallback(menu, "", switchWSCommand, (void *) vscr->clip.icon);
 
@@ -1134,10 +1132,6 @@ static WMenu *clip_make_options_menu(virtual_screen *vscr)
 	WMenuEntry *entry;
 
 	menu = menu_create(vscr, NULL);
-	if (!menu) {
-		wwarning(_("could not create options submenu for Clip menu"));
-		return NULL;
-	}
 
 	entry = wMenuAddCallback(menu, _("Keep on Top"), toggleLoweredCallback, NULL);
 	entry->flags.indicator = 1;
@@ -1175,10 +1169,6 @@ static WMenu *drawer_make_options_menu(virtual_screen *vscr)
 	WMenuEntry *entry;
 
 	menu = menu_create(vscr, NULL);
-	if (!menu) {
-		wwarning(_("could not create options submenu for Drawer menu"));
-		return NULL;
-	}
 
 	entry = wMenuAddCallback(menu, _("Keep on Top"), toggleLoweredCallback, NULL);
 	entry->flags.indicator = 1;
@@ -1325,10 +1315,6 @@ static WMenu *makeDockPositionMenu(virtual_screen *vscr)
 	WMenuEntry *entry;
 
 	menu = menu_create(vscr, NULL);
-	if (!menu) {
-		wwarning(_("could not create options submenu for dock position menu"));
-		return NULL;
-	}
 
 	entry = wMenuAddCallback(menu, _("Normal"), setDockPositionNormalCallback, NULL);
 	entry->flags.indicator = 1;
