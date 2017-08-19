@@ -177,8 +177,8 @@ void menu_unmap(WMenu *menu)
 {
 	destroy_pixmap(menu->menu_texture_data);
 
-        XDeleteContext(dpy, menu->menu->window, w_global.context.client_win);
-        XDestroyWindow(dpy, menu->menu->window);
+	XDeleteContext(dpy, menu->menu->window, w_global.context.client_win);
+	XDestroyWindow(dpy, menu->menu->window);
 
 	framewindow_unmap(menu->frame);
 }
@@ -192,17 +192,17 @@ void menu_destroy(WMenu *menu)
 		menu->cascades = NULL;
 	}
 
-        if (menu->menu->stacking) {
-                wfree(menu->menu->stacking);
+	if (menu->menu->stacking) {
+		wfree(menu->menu->stacking);
 		menu->menu->stacking = NULL;
 	}
 
-        if (menu->title) {
-                wfree(menu->title);
+	if (menu->title) {
+		wfree(menu->title);
 		menu->title = NULL;
 	}
 
-        wcore_destroy(menu->menu);
+	wcore_destroy(menu->menu);
 	menu->menu = NULL;
 	wFrameWindowDestroy(menu->frame);
 	menu->frame = NULL;
