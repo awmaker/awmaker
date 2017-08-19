@@ -126,7 +126,7 @@ WApplication *wApplicationCreate(WWindow *wwin)
 	if (leader)
 		leader->main_window = main_window;
 
-	wapp->app_menu = wAppMenuGet(vscr, main_window);
+	create_app_menu(vscr, wapp);
 
 	/* Set application wide attributes from the leader */
 	wapp->flags.hidden = WFLAGP(wapp->main_window_desc, start_hidden);

@@ -192,26 +192,27 @@ static WMenu *parseMenuCommand(virtual_screen *vscr, Window win, char **slist, i
 	return menu;
 }
 
-WMenu *wAppMenuGet(virtual_screen *vscr, Window window)
+void create_app_menu(virtual_screen *vscr, WApplication *wapp)
 {
+	Window window = wapp->main_window;
 	XTextProperty text_prop;
 	int count, i;
 	char **slist;
 	WMenu *menu;
 
 	if (!XGetTextProperty(dpy, window, &text_prop, w_global.atom.wmaker.menu))
-		return NULL;
+		return;
 
 	if (!XTextPropertyToStringList(&text_prop, &slist, &count) || count < 1) {
 		XFree(text_prop.value);
-		return NULL;
+		return;
 	}
 
 	XFree(text_prop.value);
 	if (strcmp(slist[0], "WMMenu 0") != 0) {
 		wwarning(_("appmenu: unknown version of WMMenu in window %lx: %s"), window, slist[0]);
 		XFreeStringList(slist);
-		return NULL;
+		return;
 	}
 
 	i = 1;
@@ -222,7 +223,7 @@ WMenu *wAppMenuGet(virtual_screen *vscr, Window window)
 	XFreeStringList(slist);
 
 	wMenuRealize(menu);
-	return menu;
+	wapp->app_menu = menu;
 }
 
 void wAppMenuDestroy(WMenu *menu)

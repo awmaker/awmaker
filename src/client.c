@@ -571,12 +571,12 @@ void wClientCheckProperty(WWindow *wwin, XPropertyEvent *event)
 
 					wapp = wApplicationOf(wwin->main_window);
 					if (wapp)
-						wapp->app_menu = wAppMenuGet(vscr, wwin->main_window);
+						create_app_menu(wwin->vscr, wapp);
 
 					if (wPreferences.auto_arrange_icons)
 						wArrangeIcons(wwin->vscr, True);
 				} else {
-					wapp->app_menu = wAppMenuGet(wwin->vscr, wwin->main_window);
+					create_app_menu(wwin->vscr, wapp);
 				}
 
 				/* make the appmenu be mapped */
