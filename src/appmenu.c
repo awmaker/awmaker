@@ -254,3 +254,12 @@ void wAppMenuMap(WMenu *menu, WWindow *wwin)
 	if (!menu->flags.mapped)
 		wMenuMapAt(wwin->vscr, menu, x, wwin->frame_y, False);
 }
+
+void destroy_app_menu(WApplication *wapp)
+{
+	if (!wapp || !wapp->app_menu)
+		return;
+
+	wMenuDestroy(wapp->app_menu, True);
+	wapp->app_menu = NULL;
+}

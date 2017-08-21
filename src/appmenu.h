@@ -23,6 +23,7 @@
 #define _WAPPMENU_H_
 
 void create_app_menu(virtual_screen *vscr, WApplication *wapp);
+void destroy_app_menu(WApplication *wapp);
 void wAppMenuDestroy(WMenu *menu);
 void wAppMenuMap(WMenu *menu, WWindow *wwin);
 #endif
