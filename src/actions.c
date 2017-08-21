@@ -144,7 +144,7 @@ void wSetFocusTo(virtual_screen *vscr, WWindow *wwin)
 			wWindowUnfocus(old_focused);
 
 		if (oapp) {
-			wMenuUnmap(oapp->app_menu);
+			destroy_app_menu(oapp);
 #ifdef USER_MENU
 			destroy_user_menu(oapp);
 #endif
@@ -211,7 +211,7 @@ void wSetFocusTo(virtual_screen *vscr, WWindow *wwin)
 		vscr->window.focused = wwin;
 
 		if (oapp && oapp != napp) {
-			wMenuUnmap(oapp->app_menu);
+			destroy_app_menu(napp);
 #ifdef USER_MENU
 			destroy_user_menu(oapp);
 #endif
@@ -231,8 +231,8 @@ void wSetFocusTo(virtual_screen *vscr, WWindow *wwin)
 		create_user_menu(vscr, napp);
 #endif	/* USER_MENU */
 
-		if (wwin->flags.mapped)
-			wAppMenuMap(napp->app_menu, wwin);
+		create_app_menu(vscr, napp);
+		wAppMenuMap(napp->app_menu, wwin);
 	}
 
 	if (napp && wPreferences.highlight_active_app)

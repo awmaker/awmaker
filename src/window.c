@@ -1766,7 +1766,7 @@ void wUnmanageWindow(WWindow *wwin, Bool restore, Bool destroyed)
 	WApplication *oapp = wApplicationOf(wwin->main_window);
 	WApplication *napp = vscr->window.focused ? wApplicationOf(vscr->window.focused->main_window) : NULL;
 	if (oapp && oapp != napp) {
-		wMenuUnmap(oapp->app_menu);
+		destroy_app_menu(oapp);
 #ifdef USER_MENU
 		destroy_user_menu(oapp);
 #endif

@@ -126,8 +126,6 @@ WApplication *wApplicationCreate(WWindow *wwin)
 	if (leader)
 		leader->main_window = main_window;
 
-	create_app_menu(vscr, wapp);
-
 	/* Set application wide attributes from the leader */
 	wapp->flags.hidden = WFLAGP(wapp->main_window_desc, start_hidden);
 	wapp->flags.emulated = WFLAGP(wapp->main_window_desc, emulate_appicon);
@@ -168,8 +166,7 @@ void wApplicationDestroy(WApplication *wapp)
 		wapp->prev->next = wapp->next;
 
 	XDeleteContext(dpy, wapp->main_window, w_global.context.app_win);
-	wAppMenuDestroy(wapp->app_menu);
-	wapp->app_menu = NULL;
+	destroy_app_menu(wapp);
 #ifdef USER_MENU
 	destroy_user_menu(wapp);
 #endif
