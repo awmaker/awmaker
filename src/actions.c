@@ -138,19 +138,20 @@ void wSetFocusTo(virtual_screen *vscr, WWindow *wwin)
 	if (old_focused)
 		oapp = wApplicationOf(old_focused->main_window);
 
+	if (oapp) {
+		destroy_app_menu(oapp);
+#ifdef USER_MENU
+		destroy_user_menu(oapp);
+#endif
+	}
+
 	if (wwin == NULL) {
 		XSetInputFocus(dpy, vscr->screen_ptr->no_focus_win, RevertToParent, CurrentTime);
 		if (old_focused)
 			wWindowUnfocus(old_focused);
 
-		if (oapp) {
-			destroy_app_menu(oapp);
-#ifdef USER_MENU
-			destroy_user_menu(oapp);
-#endif
-			if (wPreferences.highlight_active_app)
-				wApplicationDeactivate(oapp);
-		}
+		if ((oapp) && wPreferences.highlight_active_app)
+			wApplicationDeactivate(oapp);
 
 		WMPostNotificationName(WMNChangedFocus, NULL, (void *)True);
 		return;
