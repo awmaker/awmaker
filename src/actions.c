@@ -227,11 +227,11 @@ void wSetFocusTo(virtual_screen *vscr, WWindow *wwin)
 	wWindowFocus(wwin, focused);
 
 	if (napp && !wasfocused) {
-#ifdef USER_MENU
-		create_user_menu(vscr, napp);
-#endif	/* USER_MENU */
-
 		create_app_menu(vscr, napp);
+#ifdef USER_MENU
+		if (!napp->app_menu)
+			create_user_menu(vscr, napp);
+#endif
 	}
 
 	if (napp && wPreferences.highlight_active_app)
