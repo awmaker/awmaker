@@ -194,11 +194,16 @@ static WMenu *parseMenuCommand(virtual_screen *vscr, Window win, char **slist, i
 
 void create_app_menu(virtual_screen *vscr, WApplication *wapp)
 {
+	WWindow *wwin = NULL;
 	Window window = wapp->main_window;
 	XTextProperty text_prop;
 	int count, i;
 	char **slist;
 	WMenu *menu;
+
+	wwin = wapp->main_window_desc;
+	if (!wwin)
+		return;
 
 	if (!XGetTextProperty(dpy, window, &text_prop, w_global.atom.wmaker.menu))
 		return;
@@ -223,6 +228,7 @@ void create_app_menu(virtual_screen *vscr, WApplication *wapp)
 	XFreeStringList(slist);
 
 	wMenuRealize(menu);
+	wAppMenuMap(menu, wwin);
 	wapp->app_menu = menu;
 }
 
