@@ -226,14 +226,6 @@ void create_app_menu(virtual_screen *vscr, WApplication *wapp)
 	wapp->app_menu = menu;
 }
 
-void wAppMenuDestroy(WMenu *menu)
-{
-	if (!menu)
-		return;
-
-	wMenuDestroy(menu, True);
-}
-
 void wAppMenuMap(WMenu *menu, WWindow *wwin)
 {
 	int x, min;
