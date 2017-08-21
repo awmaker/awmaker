@@ -426,7 +426,7 @@ void wWindowSetupInitialAttributes(WWindow *wwin, int *level, int *workspace)
 	WScreen *scr = vscr->screen_ptr;
 
 	/* sets global default stuff */
-	wDefaultFillAttributes(wwin->wm_instance, wwin->wm_class, &wwin->user_flags, NULL, True);
+	wDefaultFillAttributes(wwin->wm_instance, wwin->wm_class, &wwin->client_flags, NULL, True);
 	wwin->defined_user_flags = wwin->user_flags;
 
 	/*
@@ -465,7 +465,7 @@ void wWindowSetupInitialAttributes(WWindow *wwin, int *level, int *workspace)
 	 * Set attributes specified only for that window/class.
 	 * This might do duplicate work with the 1st wDefaultFillAttributes().
 	 */
-	wDefaultFillAttributes(wwin->wm_instance, wwin->wm_class, &wwin->user_flags,
+	wDefaultFillAttributes(wwin->wm_instance, wwin->wm_class, &wwin->client_flags,
 			       &wwin->defined_user_flags, False);
 
 	/* Sanity checks for attributes that depend on other attributes */
