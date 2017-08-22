@@ -730,29 +730,20 @@ static void applySettings(WMWidget *button, void *client_data)
 	wwin_inspected->flags.omnipresent = 0;
 
 	if (WFLAGP(wwin_inspected, skip_window_list) != old_skip_window_list) {
-		if (WFLAGP(wwin_inspected, skip_window_list)) {
-			switchmenu_delitem(wwin_inspected->vscr, wwin_inspected);
+		virtual_screen *vscr = wwin_inspected->vscr;
 
-			wMenuRealize(wwin_inspected->vscr->menu.switch_menu);
-			tmp = wwin_inspected->vscr->menu.switch_menu->frame->top_width + 5;
-			/* if menu got unreachable, bring it to a visible place */
-			if (wwin_inspected->vscr->menu.switch_menu->frame_x < tmp - (int) wwin_inspected->vscr->menu.switch_menu->frame->core->width)
-				wMenuMove(wwin_inspected->vscr->menu.switch_menu, tmp - (int) wwin_inspected->vscr->menu.switch_menu->frame->core->width,
-					  wwin_inspected->vscr->menu.switch_menu->frame_y, False);
+		if (WFLAGP(wwin_inspected, skip_window_list))
+			switchmenu_delitem(vscr, wwin_inspected);
+		else
+			switchmenu_additem(vscr->menu.switch_menu, vscr, wwin_inspected);
 
-			wMenuPaint(wwin_inspected->vscr->menu.switch_menu);
-		} else {
-			switchmenu_additem(wwin_inspected->vscr->menu.switch_menu, wwin_inspected->vscr, wwin_inspected);
-			wMenuRealize(wwin_inspected->vscr->menu.switch_menu);
-
-			tmp = wwin_inspected->vscr->menu.switch_menu->frame->top_width + 5;
-			/* if menu got unreachable, bring it to a visible place */
-			if (wwin_inspected->vscr->menu.switch_menu->frame_x < tmp - (int) wwin_inspected->vscr->menu.switch_menu->frame->core->width)
-			wMenuMove(wwin_inspected->vscr->menu.switch_menu, tmp - (int) wwin_inspected->vscr->menu.switch_menu->frame->core->width,
-				  wwin_inspected->vscr->menu.switch_menu->frame_y, False);
-
-			wMenuPaint(wwin_inspected->vscr->menu.switch_menu);
-		}
+		wMenuRealize(vscr->menu.switch_menu);
+		tmp = vscr->menu.switch_menu->frame->top_width + 5;
+		/* if menu got unreachable, bring it to a visible place */
+		if (vscr->menu.switch_menu->frame_x < tmp - (int) vscr->menu.switch_menu->frame->core->width)
+			wMenuMove(vscr->menu.switch_menu, tmp - (int) vscr->menu.switch_menu->frame->core->width,
+				  vscr->menu.switch_menu->frame_y, False);
+		wMenuPaint(vscr->menu.switch_menu);
 	} else {
 		if (WFLAGP(wwin_inspected, omnipresent) != old_omnipresent)
 			WMPostNotificationName(WMNChangedState, wwin_inspected, "omnipresent");
