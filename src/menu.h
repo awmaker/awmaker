@@ -136,4 +136,5 @@ void wMenuEntrySetCascade_create(WMenu *menu, WMenuEntry *entry, WMenu *cascade)
 void menu_entry_set_enabled(WMenu *menu, int index, int enable);
 void menu_entry_set_enabled_paint(WMenu *menu, int index);
 
+void menu_move_visible(WMenu *menu);
 #endif

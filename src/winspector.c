@@ -675,19 +675,6 @@ static void saveSettings(WMWidget *button, void *client_data)
 	WMPLSetCaseSensitive(False);
 }
 
-void menu_move_visible(WMenu *menu)
-{
-	int new_x;
-
-	wMenuRealize(menu);
-	new_x = menu->frame->top_width - (int) menu->frame->core->width + 5;
-	/* if menu got unreachable, bring it to a visible place */
-	if (menu->frame_x < new_x)
-		wMenuMove(menu, new_x, menu->frame_y, False);
-
-	wMenuPaint(menu);
-}
-
 static void applySettings(WMWidget *button, void *client_data)
 {
 	InspectorPanel *panel = (InspectorPanel *) client_data;
