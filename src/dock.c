@@ -1602,8 +1602,9 @@ void dock_map(WDock *dock, virtual_screen *vscr, WMPropList *state)
 	if (!scr)
 		return;
 
-	wcore_map_toplevel(wcore, vscr, 0, 0, 0, scr->w_depth,
-			   scr->w_visual, scr->w_colormap, scr->white_pixel);
+	wcore_map_toplevel(wcore, vscr, 0, 0, wcore->width, wcore->height, 0,
+			   scr->w_depth, scr->w_visual, scr->w_colormap,
+			   scr->white_pixel);
 
 	if (wPreferences.flags.clip_merged_in_dock)
 		wcore->descriptor.handle_expose = clip_icon_expose;
@@ -1686,7 +1687,7 @@ void clip_icon_map(virtual_screen *vscr)
 	WCoreWindow *wcore = vscr->clip.icon->icon->core;
 	WScreen *scr = vscr->screen_ptr;
 
-	wcore_map_toplevel(wcore, vscr, 0, 0, 0,
+	wcore_map_toplevel(wcore, vscr, 0, 0, wcore->width, wcore->height, 0,
 			   scr->w_depth, scr->w_visual,
 			   scr->w_colormap, scr->white_pixel);
 
@@ -1831,7 +1832,8 @@ void drawer_map(WDock *dock, virtual_screen *vscr)
 	btn->x_pos = dock->x_pos;
 	btn->y_pos = dock->y_pos;
 
-	wcore_map_toplevel(wcore, vscr, btn->x_pos, btn->y_pos, 0,
+	wcore_map_toplevel(wcore, vscr, btn->x_pos, btn->y_pos,
+			   wcore->width, wcore->height, 0,
 			   scr->w_depth, scr->w_visual,
 			   scr->w_colormap, scr->white_pixel);
 

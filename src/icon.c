@@ -119,7 +119,8 @@ void icon_for_wwindow_map(WIcon *icon)
 	virtual_screen *vscr = wwin->vscr;
 	WScreen *scr = vscr->screen_ptr;
 
-	wcore_map_toplevel(icon->core, vscr, wwin->icon_x, wwin->icon_y, 0, scr->w_depth,
+	wcore_map_toplevel(icon->core, vscr, wwin->icon_x, wwin->icon_y,
+			   icon->core->width, icon->core->height, 0, scr->w_depth,
 			   scr->w_visual, scr->w_colormap, scr->white_pixel);
 
 	if (wwin->wm_hints && (wwin->wm_hints->flags & IconWindowHint)) {
@@ -148,8 +149,10 @@ void icon_for_wwindow_miniwindow_map(WIcon *icon)
 	virtual_screen *vscr = wwin->vscr;
 	WScreen *scr = vscr->screen_ptr;
 
-	wcore_map_toplevel(icon->core, vscr, wwin->icon_x, wwin->icon_y, 0, scr->w_depth,
-			   scr->w_visual, scr->w_colormap, scr->white_pixel);
+	wcore_map_toplevel(icon->core, vscr, wwin->icon_x, wwin->icon_y,
+			   icon->core->width, icon->core->height, 0,
+			   scr->w_depth, scr->w_visual, scr->w_colormap,
+			   scr->white_pixel);
 
 	if (wwin->wm_hints && (wwin->wm_hints->flags & IconWindowHint))
 		icon->icon_win = wwin->wm_hints->icon_window;

@@ -243,7 +243,8 @@ void menu_map(WMenu *menu, virtual_screen *screen)
 	menu->frame_y = 0;
 
 	wcore_map(menu->menu, menu->frame->core,
-		  menu->frame->core->vscr, 0, 0, 0,
+		  menu->frame->core->vscr, 0, 0,
+		  menu->menu->width, menu->menu->height, 0,
 		  menu->frame->core->vscr->screen_ptr->w_depth,
 		  menu->frame->core->vscr->screen_ptr->w_visual,
 		  menu->frame->core->vscr->screen_ptr->w_colormap);

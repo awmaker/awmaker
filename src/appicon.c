@@ -632,7 +632,7 @@ void appicon_map(WAppIcon *aicon, virtual_screen *vscr)
 	WCoreWindow *wcore = aicon->icon->core;
 	WScreen *scr = vscr->screen_ptr;
 
-	wcore_map_toplevel(wcore, vscr, 0, 0, 0,
+	wcore_map_toplevel(wcore, vscr, 0, 0, wcore->width, wcore->height, 0,
 			   scr->w_depth, scr->w_visual,
 			   scr->w_colormap, scr->white_pixel);
 

@@ -130,7 +130,7 @@ void wframewindow_map(WFrameWindow *fwin, virtual_screen *vscr, int wlevel,
 	fwin->visual = visual;
 	fwin->colormap = colormap;
 
-	wcore_map_toplevel(wcore, vscr, x, y,
+	wcore_map_toplevel(wcore, vscr, x, y, wcore->width, wcore->height,
 			   (fwin->flags.border) ? scr->frame_border_width : 0,
 			   fwin->depth, fwin->visual,
 			   fwin->colormap, scr->frame_border_pixel);
@@ -221,8 +221,9 @@ static void left_button_map(WFrameWindow *fwin, int theight, int bsize)
 		left_button_pos_height = 0;
 		wcore_map(fwin->left_button, fwin->core,
 			  fwin->core->vscr,
-			  left_button_pos_width, left_button_pos_height, 0,
-			  fwin->core->vscr->screen_ptr->w_depth,
+			  left_button_pos_width, left_button_pos_height,
+			  fwin->left_button->width, fwin->left_button->height,
+			  0, fwin->core->vscr->screen_ptr->w_depth,
 			  fwin->core->vscr->screen_ptr->w_visual,
 			  fwin->core->vscr->screen_ptr->w_colormap);
 
@@ -236,8 +237,9 @@ static void left_button_map(WFrameWindow *fwin, int theight, int bsize)
 
 		wcore_map(fwin->left_button, fwin->titlebar,
 			  fwin->titlebar->vscr,
-			  left_button_pos_width, left_button_pos_height, 0,
-			  fwin->titlebar->vscr->screen_ptr->w_depth,
+			  left_button_pos_width, left_button_pos_height,
+			  fwin->left_button->width, fwin->left_button->height,
+			  0, fwin->titlebar->vscr->screen_ptr->w_depth,
 			  fwin->titlebar->vscr->screen_ptr->w_visual,
 			  fwin->titlebar->vscr->screen_ptr->w_colormap);
 
@@ -284,8 +286,9 @@ static void language_button_map(WFrameWindow *fwin, int theight, int bsize)
 		language_button_pos_height = 0;
 		wcore_map(fwin->language_button, fwin->core,
 			  fwin->core->vscr,
-			  language_button_pos_width, language_button_pos_height, 0,
-			  fwin->core->vscr->screen_ptr->w_depth,
+			  language_button_pos_width, language_button_pos_height,
+			  fwin->language_button->width, fwin->language_button->height,
+			  0, fwin->core->vscr->screen_ptr->w_depth,
 			  fwin->core->vscr->screen_ptr->w_visual,
 			  fwin->core->vscr->screen_ptr->w_colormap);
 
@@ -298,8 +301,9 @@ static void language_button_map(WFrameWindow *fwin, int theight, int bsize)
 		language_button_pos_height = (theight - bsize) / 2;
 		wcore_map(fwin->language_button, fwin->titlebar,
 			  fwin->titlebar->vscr,
-			  language_button_pos_width, language_button_pos_height, 0,
-			  fwin->titlebar->vscr->screen_ptr->w_depth,
+			  language_button_pos_width, language_button_pos_height,
+			  fwin->language_button->width, fwin->language_button->height,
+			  0, fwin->titlebar->vscr->screen_ptr->w_depth,
 			  fwin->titlebar->vscr->screen_ptr->w_visual,
 			  fwin->titlebar->vscr->screen_ptr->w_colormap);
 
@@ -346,7 +350,8 @@ static void right_button_map(WFrameWindow *fwin, int theight, int bsize)
 		right_button_pos_height = 0;
 		wcore_map(fwin->right_button, fwin->core,
 			  fwin->core->vscr,
-			  right_button_pos_width, right_button_pos_height, 0,
+			  right_button_pos_width, right_button_pos_height,
+			  fwin->right_button->width, fwin->right_button->height, 0,
 			  fwin->core->vscr->screen_ptr->w_depth,
 			  fwin->core->vscr->screen_ptr->w_visual,
 			  fwin->core->vscr->screen_ptr->w_colormap);
@@ -355,7 +360,8 @@ static void right_button_map(WFrameWindow *fwin, int theight, int bsize)
 		right_button_pos_height = (theight - bsize) / 2;
 		wcore_map(fwin->right_button, fwin->titlebar,
 			  fwin->titlebar->vscr,
-			  right_button_pos_width, right_button_pos_height, 0,
+			  right_button_pos_width, right_button_pos_height,
+			  fwin->right_button->width, fwin->right_button->height, 0,
 			  fwin->titlebar->vscr->screen_ptr->w_depth,
 			  fwin->titlebar->vscr->screen_ptr->w_visual,
 			  fwin->titlebar->vscr->screen_ptr->w_colormap);
@@ -420,9 +426,8 @@ static void titlebar_map(WFrameWindow *fwin, int theight, int bsize)
 	fwin->flags.titlebar = 1;
 	fwin->top_width = theight;
 
-	wcore_map(fwin->titlebar, fwin->core,
-		  fwin->core->vscr,
-		  0, 0, 0,
+	wcore_map(fwin->titlebar, fwin->core, fwin->core->vscr,
+		  0, 0, fwin->titlebar->width, fwin->titlebar->height, 0,
 		  fwin->core->vscr->screen_ptr->w_depth,
 		  fwin->core->vscr->screen_ptr->w_visual,
 		  fwin->core->vscr->screen_ptr->w_colormap);
@@ -543,7 +548,8 @@ static void resizebar_map(WFrameWindow *fwin, int width, int height)
 {
 	fwin->bottom_width = RESIZEBAR_HEIGHT;
 	wcore_map(fwin->resizebar, fwin->core, fwin->core->vscr,
-		  0, height + fwin->top_width, 0,
+		  0, height + fwin->top_width,
+		  fwin->resizebar->width, fwin->resizebar->height, 0,
 		  fwin->core->vscr->screen_ptr->w_depth,
 		  fwin->core->vscr->screen_ptr->w_visual,
 		  fwin->core->vscr->screen_ptr->w_colormap);
