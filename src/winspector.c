@@ -675,12 +675,26 @@ static void saveSettings(WMWidget *button, void *client_data)
 	WMPLSetCaseSensitive(False);
 }
 
+void menu_move_visible(WMenu *menu)
+{
+	int tmp;
+
+	wMenuRealize(menu);
+	tmp = menu->frame->top_width + 5;
+	/* if menu got unreachable, bring it to a visible place */
+	if (menu->frame_x < tmp - (int) menu->frame->core->width)
+		wMenuMove(menu, tmp - (int) menu->frame->core->width,
+			  menu->frame_y, False);
+
+	wMenuPaint(menu);
+}
+
 static void applySettings(WMWidget *button, void *client_data)
 {
 	InspectorPanel *panel = (InspectorPanel *) client_data;
 	WWindow *wwin_inspected = panel->inspected;
 	WApplication *wapp = wApplicationOf(wwin_inspected->main_window);
-	int tmp, i, old_skip_window_list, old_omnipresent, old_no_bind_keys, old_no_bind_mouse;
+	int i, old_skip_window_list, old_omnipresent, old_no_bind_keys, old_no_bind_mouse;
 
 	old_skip_window_list = WFLAGP(wwin_inspected, skip_window_list);
 	old_omnipresent = WFLAGP(wwin_inspected, omnipresent);
@@ -737,13 +751,7 @@ static void applySettings(WMWidget *button, void *client_data)
 		else
 			switchmenu_additem(vscr->menu.switch_menu, wwin_inspected);
 
-		wMenuRealize(vscr->menu.switch_menu);
-		tmp = vscr->menu.switch_menu->frame->top_width + 5;
-		/* if menu got unreachable, bring it to a visible place */
-		if (vscr->menu.switch_menu->frame_x < tmp - (int) vscr->menu.switch_menu->frame->core->width)
-			wMenuMove(vscr->menu.switch_menu, tmp - (int) vscr->menu.switch_menu->frame->core->width,
-				  vscr->menu.switch_menu->frame_y, False);
-		wMenuPaint(vscr->menu.switch_menu);
+		menu_move_visible(vscr->menu.switch_menu);
 	} else {
 		if (WFLAGP(wwin_inspected, omnipresent) != old_omnipresent)
 			WMPostNotificationName(WMNChangedState, wwin_inspected, "omnipresent");
