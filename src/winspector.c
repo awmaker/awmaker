@@ -677,14 +677,13 @@ static void saveSettings(WMWidget *button, void *client_data)
 
 void menu_move_visible(WMenu *menu)
 {
-	int tmp;
+	int new_x;
 
 	wMenuRealize(menu);
-	tmp = menu->frame->top_width + 5;
+	new_x = menu->frame->top_width - (int) menu->frame->core->width + 5;
 	/* if menu got unreachable, bring it to a visible place */
-	if (menu->frame_x < tmp - (int) menu->frame->core->width)
-		wMenuMove(menu, tmp - (int) menu->frame->core->width,
-			  menu->frame_y, False);
+	if (menu->frame_x < new_x)
+		wMenuMove(menu, new_x, menu->frame_y, False);
 
 	wMenuPaint(menu);
 }
