@@ -363,7 +363,6 @@ static void observer(void *self, WMNotification * notif)
 	WWindow *wwin = (WWindow *) WMGetNotificationObject(notif);
 	const char *name = WMGetNotificationName(notif);
 	void *data = WMGetNotificationClientData(notif);
-	int tmp;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) self;
@@ -393,15 +392,7 @@ static void observer(void *self, WMNotification * notif)
 	    !wwin->vscr->menu.switch_menu->frame->vscr)
 		return;
 
-	wMenuRealize(wwin->vscr->menu.switch_menu);
-
-	tmp = wwin->vscr->menu.switch_menu->frame->top_width + 5;
-	/* if menu got unreachable, bring it to a visible place */
-	if (wwin->vscr->menu.switch_menu->frame_x < tmp - (int) wwin->vscr->menu.switch_menu->frame->core->width)
-		wMenuMove(wwin->vscr->menu.switch_menu, tmp - (int) wwin->vscr->menu.switch_menu->frame->core->width,
-			  wwin->vscr->menu.switch_menu->frame_y, False);
-
-	wMenuPaint(wwin->vscr->menu.switch_menu);
+	menu_move_visible(wwin->vscr->menu.switch_menu);
 }
 
 static void wsobserver(void *self, WMNotification *notif)

@@ -838,7 +838,6 @@ static WMenuEntry *addWindowsMenu(virtual_screen *vscr, WMenu *menu, const char 
 	WMenu *wwmenu;
 	WWindow *wwin;
 	WMenuEntry *entry;
-	int tmp;
 
 	if (vscr->menu.flags.added_window_menu) {
 		wwarning(_
@@ -856,16 +855,7 @@ static WMenuEntry *addWindowsMenu(virtual_screen *vscr, WMenu *menu, const char 
 	wwin = vscr->window.focused;
 	while (wwin) {
 		switchmenu_additem(vscr->menu.switch_menu, wwin);
-		wMenuRealize(vscr->menu.switch_menu);
-
-		tmp = vscr->menu.switch_menu->frame->top_width + 5;
-		/* if menu got unreachable, bring it to a visible place */
-		if (vscr->menu.switch_menu->frame_x < tmp - (int) vscr->menu.switch_menu->frame->core->width)
-			wMenuMove(vscr->menu.switch_menu, tmp - (int) vscr->menu.switch_menu->frame->core->width,
-				  vscr->menu.switch_menu->frame_y, False);
-
-		wMenuPaint(vscr->menu.switch_menu);
-
+		menu_move_visible(vscr->menu.switch_menu);
 		wwin = wwin->prev;
 	}
 
