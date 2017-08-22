@@ -98,7 +98,7 @@ WMenu *switchmenu_create(virtual_screen *vscr)
 	menu_map(switch_menu, vscr);
 	wwin = vscr->window.focused;
 	while (wwin) {
-		switchmenu_additem(switch_menu, vscr, wwin);
+		switchmenu_additem(switch_menu, wwin);
 		wwin = wwin->prev;
 	}
 
@@ -156,14 +156,17 @@ static int menuIndexForWindow(WMenu * menu, WWindow * wwin, int old_pos)
 	return idx;
 }
 
-void switchmenu_additem(WMenu *menu, virtual_screen *vscr, WWindow *wwin)
+void switchmenu_additem(WMenu *menu, WWindow *wwin)
 {
+	virtual_screen *vscr;
 	WMenuEntry *entry;
 	char *t, title[MAX_MENU_TEXT_LENGTH + 6];
 	int idx = -1, len = sizeof(title);
 
 	if (!menu)
 		return;
+
+	vscr = menu->vscr;
 
 	if (wwin->flags.internal_window ||
 	    WFLAGP(wwin, skip_window_list) ||
@@ -205,19 +208,19 @@ void switchmenu_additem(WMenu *menu, virtual_screen *vscr, WWindow *wwin)
 	}
 }
 
-void switchmenu_delitem(virtual_screen *vscr, WWindow *wwin)
+void switchmenu_delitem(WMenu *menu, WWindow *wwin)
 {
 	WMenuEntry *entry;
 	int i;
 
-	if (!vscr->menu.switch_menu)
+	if (!menu)
 		return;
 
-	for (i = 0; i < vscr->menu.switch_menu->entry_no; i++) {
-		entry = vscr->menu.switch_menu->entries[i];
+	for (i = 0; i < menu->entry_no; i++) {
+		entry = menu->entries[i];
 		/* this is the entry that was changed */
 		if (entry->clientdata == wwin) {
-			wMenuRemoveItem(vscr->menu.switch_menu, i);
+			wMenuRemoveItem(menu, i);
 			break;
 		}
 	}
@@ -369,9 +372,9 @@ static void observer(void *self, WMNotification * notif)
 		return;
 
 	if (strcmp(name, WMNManaged) == 0) {
-		switchmenu_additem(wwin->vscr->menu.switch_menu, wwin->vscr, wwin);
+		switchmenu_additem(wwin->vscr->menu.switch_menu, wwin);
 	} else if (strcmp(name, WMNUnmanaged) == 0) {
-		switchmenu_delitem(wwin->vscr, wwin);
+		switchmenu_delitem(wwin->vscr->menu.switch_menu, wwin);
 	} else if (strcmp(name, WMNChangedWorkspace) == 0) {
 		switchmenu_changeworkspaceitem(wwin->vscr, wwin);
 	} else if (strcmp(name, WMNChangedFocus) == 0) {

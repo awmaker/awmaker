@@ -733,9 +733,9 @@ static void applySettings(WMWidget *button, void *client_data)
 		virtual_screen *vscr = wwin_inspected->vscr;
 
 		if (WFLAGP(wwin_inspected, skip_window_list))
-			switchmenu_delitem(vscr, wwin_inspected);
+			switchmenu_delitem(vscr->menu.switch_menu, wwin_inspected);
 		else
-			switchmenu_additem(vscr->menu.switch_menu, vscr, wwin_inspected);
+			switchmenu_additem(vscr->menu.switch_menu, wwin_inspected);
 
 		wMenuRealize(vscr->menu.switch_menu);
 		tmp = vscr->menu.switch_menu->frame->top_width + 5;
