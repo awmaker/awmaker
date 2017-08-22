@@ -108,8 +108,11 @@ void wframewindow_map(WFrameWindow *fwin, virtual_screen *vscr, int wlevel,
 		      WMColor **color, WMFont **font, int depth,
 		      Visual *visual, Colormap colormap)
 {
-	fwin->vscr = vscr;
+	WCoreWindow *wcore = fwin->core;
+	WScreen *scr = vscr->screen_ptr;
 	int flags = 0;
+
+	fwin->vscr = vscr;
 
 	fwin->title_texture = title_texture;
 	fwin->resizebar_texture = resize_texture;
@@ -127,19 +130,19 @@ void wframewindow_map(WFrameWindow *fwin, virtual_screen *vscr, int wlevel,
 	fwin->visual = visual;
 	fwin->colormap = colormap;
 
-	wcore_map_toplevel(fwin->core, vscr, x, y,
-			   (fwin->flags.border) ? vscr->screen_ptr->frame_border_width : 0,
+	wcore_map_toplevel(wcore, vscr, x, y,
+			   (fwin->flags.border) ? scr->frame_border_width : 0,
 			   fwin->depth, fwin->visual,
-			   fwin->colormap, vscr->screen_ptr->frame_border_pixel);
+			   fwin->colormap, scr->frame_border_pixel);
 
 	/* setup stacking information */
-	fwin->core->stacking = wmalloc(sizeof(WStacking));
-	fwin->core->stacking->above = NULL;
-	fwin->core->stacking->under = NULL;
-	fwin->core->stacking->child_of = NULL;
-	fwin->core->stacking->window_level = wlevel;
+	wcore->stacking = wmalloc(sizeof(WStacking));
+	wcore->stacking->above = NULL;
+	wcore->stacking->under = NULL;
+	wcore->stacking->child_of = NULL;
+	wcore->stacking->window_level = wlevel;
 
-	AddToStackList(fwin->core);
+	AddToStackList(wcore);
 
 	/* wFrameWindowUpdateBorders uses flags argument to
 	 * udpate the flags and update the framewindow

@@ -1595,21 +1595,20 @@ WDock *dock_create(virtual_screen *vscr)
 void dock_map(WDock *dock, virtual_screen *vscr, WMPropList *state)
 {
 	WAppIcon *btn = dock->icon_array[0];
-	WScreen *scr;
-
-	scr = dock->vscr->screen_ptr;
+	WCoreWindow *wcore = btn->icon->core;
+	WScreen *scr = dock->vscr->screen_ptr;
 
 	/* Return if virtual screen is not mapped */
 	if (!scr)
 		return;
 
-	wcore_map_toplevel(btn->icon->core, vscr, 0, 0, 0, scr->w_depth,
+	wcore_map_toplevel(wcore, vscr, 0, 0, 0, scr->w_depth,
 			   scr->w_visual, scr->w_colormap, scr->white_pixel);
 
 	if (wPreferences.flags.clip_merged_in_dock)
-		btn->icon->core->descriptor.handle_expose = clip_icon_expose;
+		wcore->descriptor.handle_expose = clip_icon_expose;
 	else
-		btn->icon->core->descriptor.handle_expose = dock_icon_expose;
+		wcore->descriptor.handle_expose = dock_icon_expose;
 
 	map_icon_image(btn->icon);
 
@@ -1617,22 +1616,22 @@ void dock_map(WDock *dock, virtual_screen *vscr, WMPropList *state)
 	WMAddNotificationObserver(icon_tileObserver, btn->icon, WNIconTileSettingsChanged, btn->icon);
 
 #ifdef USE_DOCK_XDND
-	wXDNDMakeAwareness(btn->icon->core->window);
+	wXDNDMakeAwareness(wcore->window);
 #endif
 
-	AddToStackList(btn->icon->core);
+	AddToStackList(wcore);
 
-	btn->icon->core->descriptor.handle_mousedown = dock_icon_mouse_down;
-	btn->icon->core->descriptor.handle_enternotify = dock_enter_notify;
-	btn->icon->core->descriptor.handle_leavenotify = dock_leave_notify;
+	wcore->descriptor.handle_mousedown = dock_icon_mouse_down;
+	wcore->descriptor.handle_enternotify = dock_enter_notify;
+	wcore->descriptor.handle_leavenotify = dock_leave_notify;
 	btn->x_pos = scr->scr_width - ICON_SIZE - DOCK_EXTRA_SPACE;
 	btn->y_pos = 0;
 
 	dock->x_pos = btn->x_pos;
 	dock->y_pos = btn->y_pos;
-	XMapWindow(dpy, btn->icon->core->window);
+	XMapWindow(dpy, wcore->window);
 
-	wRaiseFrame(btn->icon->core);
+	wRaiseFrame(wcore);
 
 	if (!state)
 		return;
@@ -1684,9 +1683,12 @@ WAppIcon *clip_icon_create(virtual_screen *vscr)
 
 void clip_icon_map(virtual_screen *vscr)
 {
-	wcore_map_toplevel(vscr->clip.icon->icon->core, vscr, 0, 0, 0,
-			   vscr->screen_ptr->w_depth, vscr->screen_ptr->w_visual,
-			   vscr->screen_ptr->w_colormap, vscr->screen_ptr->white_pixel);
+	WCoreWindow *wcore = vscr->clip.icon->icon->core;
+	WScreen *scr = vscr->screen_ptr;
+
+	wcore_map_toplevel(wcore, vscr, 0, 0, 0,
+			   scr->w_depth, scr->w_visual,
+			   scr->w_colormap, scr->white_pixel);
 
 	map_icon_image(vscr->clip.icon->icon);
 
@@ -1696,20 +1698,20 @@ void clip_icon_map(virtual_screen *vscr)
 				  WNIconTileSettingsChanged, vscr->clip.icon->icon);
 
 #ifdef USE_DOCK_XDND
-	wXDNDMakeAwareness(vscr->clip.icon->icon->core->window);
+	wXDNDMakeAwareness(wcore->window);
 #endif
 
-	AddToStackList(vscr->clip.icon->icon->core);
+	AddToStackList(wcore);
 
-	vscr->clip.icon->icon->core->descriptor.handle_expose = clip_icon_expose;
-	vscr->clip.icon->icon->core->descriptor.handle_mousedown = clip_icon_mouse_down;
-	vscr->clip.icon->icon->core->descriptor.handle_enternotify = clip_enter_notify;
-	vscr->clip.icon->icon->core->descriptor.handle_leavenotify = clip_leave_notify;
-	vscr->clip.icon->icon->core->descriptor.parent_type = WCLASS_DOCK_ICON;
-	vscr->clip.icon->icon->core->descriptor.parent = vscr->clip.icon;
+	wcore->descriptor.handle_expose = clip_icon_expose;
+	wcore->descriptor.handle_mousedown = clip_icon_mouse_down;
+	wcore->descriptor.handle_enternotify = clip_enter_notify;
+	wcore->descriptor.handle_leavenotify = clip_leave_notify;
+	wcore->descriptor.parent_type = WCLASS_DOCK_ICON;
+	wcore->descriptor.parent = vscr->clip.icon;
 	vscr->clip.mapped = 1;
 
-	XMapWindow(dpy, vscr->clip.icon->icon->core->window);
+	XMapWindow(dpy, wcore->window);
 }
 
 void clip_icon_unmap(virtual_screen *vscr)
@@ -1821,15 +1823,17 @@ WDock *drawer_create(virtual_screen *vscr, const char *name)
 void drawer_map(WDock *dock, virtual_screen *vscr)
 {
 	WAppIcon *btn = dock->icon_array[0];
+	WCoreWindow *wcore = btn->icon->core;
+	WScreen *scr = vscr->screen_ptr;
 
-	dock->x_pos = vscr->screen_ptr->scr_width - ICON_SIZE - DOCK_EXTRA_SPACE;
+	dock->x_pos = scr->scr_width - ICON_SIZE - DOCK_EXTRA_SPACE;
 
 	btn->x_pos = dock->x_pos;
 	btn->y_pos = dock->y_pos;
 
-	wcore_map_toplevel(btn->icon->core, vscr, btn->x_pos, btn->y_pos, 0,
-			   vscr->screen_ptr->w_depth, vscr->screen_ptr->w_visual,
-			   vscr->screen_ptr->w_colormap, vscr->screen_ptr->white_pixel);
+	wcore_map_toplevel(wcore, vscr, btn->x_pos, btn->y_pos, 0,
+			   scr->w_depth, scr->w_visual,
+			   scr->w_colormap, scr->white_pixel);
 
 	map_icon_image(btn->icon);
 
@@ -1837,18 +1841,18 @@ void drawer_map(WDock *dock, virtual_screen *vscr)
 	WMAddNotificationObserver(icon_tileObserver, btn->icon, WNIconTileSettingsChanged, btn->icon);
 
 #ifdef USE_DOCK_XDND
-	wXDNDMakeAwareness(btn->icon->core->window);
+	wXDNDMakeAwareness(wcore->window);
 #endif
 
-	AddToStackList(btn->icon->core);
+	AddToStackList(wcore);
 
-	btn->icon->core->descriptor.handle_expose = drawerIconExpose;
-	btn->icon->core->descriptor.handle_mousedown = drawer_icon_mouse_down;
-	btn->icon->core->descriptor.handle_enternotify = drawer_enter_notify;
-	btn->icon->core->descriptor.handle_leavenotify = drawer_leave_notify;
+	wcore->descriptor.handle_expose = drawerIconExpose;
+	wcore->descriptor.handle_mousedown = drawer_icon_mouse_down;
+	wcore->descriptor.handle_enternotify = drawer_enter_notify;
+	wcore->descriptor.handle_leavenotify = drawer_leave_notify;
 
-	XMapWindow(dpy, btn->icon->core->window);
-	wRaiseFrame(btn->icon->core);
+	XMapWindow(dpy, wcore->window);
+	wRaiseFrame(wcore);
 }
 
 void drawer_unmap(WDock *dock)

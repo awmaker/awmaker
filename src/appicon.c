@@ -629,9 +629,12 @@ static WMenu *createApplicationMenu(virtual_screen *vscr)
 
 void appicon_map(WAppIcon *aicon, virtual_screen *vscr)
 {
-	wcore_map_toplevel(aicon->icon->core, vscr, 0, 0, 0,
-			   vscr->screen_ptr->w_depth, vscr->screen_ptr->w_visual,
-			   vscr->screen_ptr->w_colormap, vscr->screen_ptr->white_pixel);
+	WCoreWindow *wcore = aicon->icon->core;
+	WScreen *scr = vscr->screen_ptr;
+
+	wcore_map_toplevel(wcore, vscr, 0, 0, 0,
+			   scr->w_depth, scr->w_visual,
+			   scr->w_colormap, scr->white_pixel);
 
 	map_icon_image(aicon->icon);
 
@@ -639,10 +642,10 @@ void appicon_map(WAppIcon *aicon, virtual_screen *vscr)
 	WMAddNotificationObserver(icon_tileObserver, aicon->icon, WNIconTileSettingsChanged, aicon->icon);
 
 #ifdef USE_DOCK_XDND
-	wXDNDMakeAwareness(aicon->icon->core->window);
+	wXDNDMakeAwareness(wcore->window);
 #endif
 
-	AddToStackList(aicon->icon->core);
+	AddToStackList(wcore);
 }
 
 void appicon_unmap(WAppIcon *aicon)
