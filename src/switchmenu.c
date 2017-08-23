@@ -345,14 +345,16 @@ static void switchmenu_changestate(WMenu *menu, WWindow *wwin)
 	}
 }
 
-static void UpdateSwitchMenuWorkspace(virtual_screen *vscr, int workspace)
+static void update_menu_workspacerename(WMenu *menu, int workspace)
 {
-	WMenu *menu = vscr->menu.switch_menu;
-	int i;
+	virtual_screen *vscr;
 	WWindow *wwin;
+	int i;
 
 	if (!menu)
 		return;
+
+	vscr = menu->vscr;
 
 	for (i = 0; i < menu->entry_no; i++) {
 		wwin = (WWindow *) menu->entries[i]->clientdata;
@@ -413,10 +415,11 @@ static void wsobserver(void *self, WMNotification *notif)
 	virtual_screen *vscr = (virtual_screen *) WMGetNotificationObject(notif);
 	const char *name = WMGetNotificationName(notif);
 	void *data = WMGetNotificationClientData(notif);
+	int workspace = (uintptr_t) data;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) self;
 
 	if (strcmp(name, WMNWorkspaceNameChanged) == 0)
-		UpdateSwitchMenuWorkspace(vscr, (uintptr_t) data);
+		update_menu_workspacerename(vscr->menu.switch_menu, workspace);
 }
