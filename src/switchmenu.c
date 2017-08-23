@@ -254,51 +254,58 @@ static void switchmenu_changeitem(virtual_screen *vscr, WWindow *wwin)
 	}
 }
 
-static void switchmenu_changeworkspaceitem(WMenu *menu, WWindow *wwin)
+static void switchmenu_changeentry_workspaceitem(WMenu *menu, WWindow *wwin,
+						 WMenuEntry *entry, int i)
 {
 	virtual_screen *vscr;
+	char *t, *rt;
+	int it, ion, idx = -1;
+
+	if (!entry->rtext)
+		return;
+
+	vscr = menu->vscr;
+
+	if (IS_OMNIPRESENT(wwin))
+		snprintf(entry->rtext, MAX_WORKSPACENAME_WIDTH, "[*]");
+	else
+		snprintf(entry->rtext, MAX_WORKSPACENAME_WIDTH, "[%s]",
+			 vscr->workspace.array[wwin->frame->workspace]->name);
+
+	rt = entry->rtext;
+	entry->rtext = NULL;
+	t = entry->text;
+	entry->text = NULL;
+
+	it = entry->flags.indicator_type;
+	ion = entry->flags.indicator_on;
+
+	if (!IS_OMNIPRESENT(wwin) && idx < 0)
+		idx = menuIndexForWindow(menu, wwin, i);
+
+	wMenuRemoveItem(menu, i);
+
+	entry = wMenuInsertCallback(menu, idx, t, focusWindow, wwin);
+	wfree(t);
+	entry->rtext = rt;
+	entry->flags.indicator = 1;
+	entry->flags.indicator_type = it;
+	entry->flags.indicator_on = ion;
+}
+
+static void switchmenu_changeworkspaceitem(WMenu *menu, WWindow *wwin)
+{
 	WMenuEntry *entry;
 	int i;
 
 	if (!menu)
 		return;
 
-	vscr = menu->vscr;
-
 	for (i = 0; i < menu->entry_no; i++) {
 		entry = menu->entries[i];
 		/* this is the entry that was changed */
 		if (entry->clientdata == wwin) {
-			if (entry->rtext) {
-				char *t, *rt;
-				int it, ion, idx = -1;
-
-				if (IS_OMNIPRESENT(wwin))
-					snprintf(entry->rtext, MAX_WORKSPACENAME_WIDTH, "[*]");
-				else
-					snprintf(entry->rtext, MAX_WORKSPACENAME_WIDTH, "[%s]",
-						 vscr->workspace.array[wwin->frame->workspace]->name);
-
-				rt = entry->rtext;
-				entry->rtext = NULL;
-				t = entry->text;
-				entry->text = NULL;
-
-				it = entry->flags.indicator_type;
-				ion = entry->flags.indicator_on;
-
-				if (!IS_OMNIPRESENT(wwin) && idx < 0)
-					idx = menuIndexForWindow(menu, wwin, i);
-
-				wMenuRemoveItem(menu, i);
-
-				entry = wMenuInsertCallback(menu, idx, t, focusWindow, wwin);
-				wfree(t);
-				entry->rtext = rt;
-				entry->flags.indicator = 1;
-				entry->flags.indicator_type = it;
-				entry->flags.indicator_on = ion;
-			}
+			switchmenu_changeentry_workspaceitem(menu, wwin, entry, i);
 			break;
 		}
 	}
