@@ -254,13 +254,16 @@ static void switchmenu_changeitem(virtual_screen *vscr, WWindow *wwin)
 	}
 }
 
-static void switchmenu_changeworkspaceitem(WMenu *menu, virtual_screen *vscr, WWindow *wwin)
+static void switchmenu_changeworkspaceitem(WMenu *menu, WWindow *wwin)
 {
+	virtual_screen *vscr;
 	WMenuEntry *entry;
 	int i;
 
 	if (!menu)
 		return;
+
+	vscr = menu->vscr;
 
 	for (i = 0; i < menu->entry_no; i++) {
 		entry = menu->entries[i];
@@ -375,14 +378,14 @@ static void observer(void *self, WMNotification * notif)
 	} else if (strcmp(name, WMNUnmanaged) == 0) {
 		switchmenu_delitem(wwin->vscr->menu.switch_menu, wwin);
 	} else if (strcmp(name, WMNChangedWorkspace) == 0) {
-		switchmenu_changeworkspaceitem(wwin->vscr->menu.switch_menu, wwin->vscr, wwin);
+		switchmenu_changeworkspaceitem(wwin->vscr->menu.switch_menu, wwin);
 	} else if (strcmp(name, WMNChangedFocus) == 0) {
 		switchmenu_changestate(wwin->vscr, wwin);
 	} else if (strcmp(name, WMNChangedName) == 0) {
 		switchmenu_changeitem(wwin->vscr, wwin);
 	} else if (strcmp(name, WMNChangedState) == 0) {
 		if (strcmp((char *)data, "omnipresent") == 0)
-			switchmenu_changeworkspaceitem(wwin->vscr->menu.switch_menu, wwin->vscr, wwin);
+			switchmenu_changeworkspaceitem(wwin->vscr->menu.switch_menu, wwin);
 		else
 			switchmenu_changestate(wwin->vscr, wwin);
 	}
