@@ -254,16 +254,16 @@ static void switchmenu_changeitem(virtual_screen *vscr, WWindow *wwin)
 	}
 }
 
-static void switchmenu_changeworkspaceitem(virtual_screen *vscr, WWindow *wwin)
+static void switchmenu_changeworkspaceitem(WMenu *menu, virtual_screen *vscr, WWindow *wwin)
 {
 	WMenuEntry *entry;
 	int i;
 
-	if (!vscr->menu.switch_menu)
+	if (!menu)
 		return;
 
-	for (i = 0; i < vscr->menu.switch_menu->entry_no; i++) {
-		entry = vscr->menu.switch_menu->entries[i];
+	for (i = 0; i < menu->entry_no; i++) {
+		entry = menu->entries[i];
 		/* this is the entry that was changed */
 		if (entry->clientdata == wwin) {
 			if (entry->rtext) {
@@ -285,11 +285,11 @@ static void switchmenu_changeworkspaceitem(virtual_screen *vscr, WWindow *wwin)
 				ion = entry->flags.indicator_on;
 
 				if (!IS_OMNIPRESENT(wwin) && idx < 0)
-					idx = menuIndexForWindow(vscr->menu.switch_menu, wwin, i);
+					idx = menuIndexForWindow(menu, wwin, i);
 
-				wMenuRemoveItem(vscr->menu.switch_menu, i);
+				wMenuRemoveItem(menu, i);
 
-				entry = wMenuInsertCallback(vscr->menu.switch_menu, idx, t, focusWindow, wwin);
+				entry = wMenuInsertCallback(menu, idx, t, focusWindow, wwin);
 				wfree(t);
 				entry->rtext = rt;
 				entry->flags.indicator = 1;
@@ -375,14 +375,14 @@ static void observer(void *self, WMNotification * notif)
 	} else if (strcmp(name, WMNUnmanaged) == 0) {
 		switchmenu_delitem(wwin->vscr->menu.switch_menu, wwin);
 	} else if (strcmp(name, WMNChangedWorkspace) == 0) {
-		switchmenu_changeworkspaceitem(wwin->vscr, wwin);
+		switchmenu_changeworkspaceitem(wwin->vscr->menu.switch_menu, wwin->vscr, wwin);
 	} else if (strcmp(name, WMNChangedFocus) == 0) {
 		switchmenu_changestate(wwin->vscr, wwin);
 	} else if (strcmp(name, WMNChangedName) == 0) {
 		switchmenu_changeitem(wwin->vscr, wwin);
 	} else if (strcmp(name, WMNChangedState) == 0) {
 		if (strcmp((char *)data, "omnipresent") == 0)
-			switchmenu_changeworkspaceitem(wwin->vscr, wwin);
+			switchmenu_changeworkspaceitem(wwin->vscr->menu.switch_menu, wwin->vscr, wwin);
 		else
 			switchmenu_changestate(wwin->vscr, wwin);
 	}
