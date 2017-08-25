@@ -1486,34 +1486,21 @@ static void hideWindow(WIcon *icon, int icon_x, int icon_y, WWindow *wwin, int a
 
 void wHideAll(virtual_screen *vscr)
 {
-	WWindow *wwin;
-	WWindow **windows;
-	WMenu *menu;
+	WWindow **windows, *wwin;
 	unsigned int wcount = 0;
 	int i;
 
 	if (!vscr->screen_ptr)
 		return;
 
-	menu = vscr->menu.switch_menu;
-
 	windows = wmalloc(sizeof(WWindow *));
 
-	if (menu != NULL) {
-		for (i = 0; i < menu->entry_no; i++) {
-			windows[wcount] = (WWindow *) menu->entries[i]->clientdata;
-			wcount++;
-			windows = wrealloc(windows, sizeof(WWindow *) * (wcount + 1));
-		}
-	} else {
-		wwin = vscr->window.focused;
-		while (wwin) {
-			windows[wcount] = wwin;
-			wcount++;
-			windows = wrealloc(windows, sizeof(WWindow *) * (wcount + 1));
-			wwin = wwin->prev;
-
-		}
+	wwin = vscr->window.focused;
+	while (wwin) {
+		windows[wcount] = wwin;
+		wcount++;
+		windows = wrealloc(windows, sizeof(WWindow *) * (wcount + 1));
+		wwin = wwin->prev;
 	}
 
 	for (i = 0; i < wcount; i++) {
