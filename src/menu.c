@@ -2290,7 +2290,8 @@ static int restoreMenu(virtual_screen *vscr, WMPropList *menu)
 	return False;
 }
 
-static int restoreMenuRecurs(virtual_screen *vscr, WMPropList *menus, WMenu *menu, const char *path)
+static int restoreMenuRecurs(virtual_screen *vscr, WMPropList *menus,
+			     WMenu *menu, const char *path)
 {
 	WMPropList *key, *entry;
 	char buffer[512];
@@ -2305,35 +2306,34 @@ static int restoreMenuRecurs(virtual_screen *vscr, WMPropList *menus, WMenu *men
 	entry = WMGetFromPLDictionary(menus, key);
 	res = False;
 
-	if (entry && getMenuInfo(entry, &x, &y, &lowered)) {
-		if (!menu->flags.mapped) {
-			width = MENUW(menu);
-			height = MENUH(menu);
-			WMRect rect = wGetRectForHead(vscr->screen_ptr, wGetHeadForPointerLocation(vscr));
+	if (entry && getMenuInfo(entry, &x, &y, &lowered) &&
+	    !menu->flags.mapped) {
+		width = MENUW(menu);
+		height = MENUH(menu);
+		WMRect rect = wGetRectForHead(vscr->screen_ptr,
+					      wGetHeadForPointerLocation(vscr));
 
-			wMenuMapAt(vscr, menu, x, y, False);
+		wMenuMapAt(vscr, menu, x, y, False);
+		if (lowered)
+			changeMenuLevels(menu, True);
 
-			if (lowered)
-				changeMenuLevels(menu, True);
+		if (x < rect.pos.x - width)
+			x = rect.pos.x;
 
-			if (x < rect.pos.x - width)
-				x = rect.pos.x;
+		if (x > rect.pos.x + rect.size.width)
+			x = rect.pos.x + rect.size.width - width;
 
-			if (x > rect.pos.x + rect.size.width)
-				x = rect.pos.x + rect.size.width - width;
+		if (y < rect.pos.y)
+			y = rect.pos.y;
 
-			if (y < rect.pos.y)
-				y = rect.pos.y;
+		if (y > rect.pos.y + rect.size.height)
+			y = rect.pos.y + rect.size.height - height;
 
-			if (y > rect.pos.y + rect.size.height)
-				y = rect.pos.y + rect.size.height - height;
-
-			wMenuMove(menu, x, y, True);
-			menu->flags.buttoned = 1;
-			wframewindow_show_rightbutton(menu->frame);
-			wframewindow_refresh_titlebar(menu->frame);
-			res = True;
-		}
+		wMenuMove(menu, x, y, True);
+		menu->flags.buttoned = 1;
+		wframewindow_show_rightbutton(menu->frame);
+		wframewindow_refresh_titlebar(menu->frame);
+		res = True;
 	}
 
 	WMReleasePropList(key);
