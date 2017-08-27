@@ -1618,6 +1618,29 @@ static WMenu *configureMenu(virtual_screen *vscr, WMPropList *definition)
 	return menu;
 }
 
+static WMenu *create_menu_from_dictionary(virtual_screen *vscr)
+{
+	WMenu *menu = NULL;
+	WMPropList *definition;
+
+	definition = w_global.domain.root_menu->dictionary;
+	if (!definition)
+		return NULL;
+
+	if (WMIsPLArray(definition)) {
+		if (!vscr->menu.root_menu ||
+		    w_global.domain.root_menu->timestamp > vscr->menu.root_menu->timestamp) {
+			menu = configureMenu(vscr, definition);
+			if (menu)
+				menu->timestamp = w_global.domain.root_menu->timestamp;
+		}
+	} else {
+		menu = configureMenu(vscr, definition);
+	}
+
+	return menu;
+}
+
 /*
  *----------------------------------------------------------------------
  * OpenRootMenu--
@@ -1637,7 +1660,6 @@ static WMenu *configureMenu(virtual_screen *vscr, WMPropList *definition)
 void OpenRootMenu(virtual_screen *vscr, int x, int y, int keyboard)
 {
 	WMenu *menu = NULL;
-	WMPropList *definition;
 
 	vscr->menu.flags.root_menu_changed_shortcuts = 0;
 	vscr->menu.flags.added_workspace_menu = 0;
@@ -1656,20 +1678,7 @@ void OpenRootMenu(virtual_screen *vscr, int x, int y, int keyboard)
 		return;
 	}
 
-	definition = w_global.domain.root_menu->dictionary;
-
-	if (definition) {
-		if (WMIsPLArray(definition)) {
-			if (!vscr->menu.root_menu ||
-			    w_global.domain.root_menu->timestamp > vscr->menu.root_menu->timestamp) {
-				menu = configureMenu(vscr, definition);
-				if (menu)
-					menu->timestamp = w_global.domain.root_menu->timestamp;
-			}
-		} else {
-			menu = configureMenu(vscr, definition);
-		}
-	}
+	menu = create_menu_from_dictionary(vscr);
 
 	if (!menu) {
 		/* menu hasn't changed or could not be read */
