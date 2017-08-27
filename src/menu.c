@@ -2119,6 +2119,12 @@ static void menuCloseClick(WCoreWindow *sender, void *data, XEvent *event)
 		return;
 	}
 
+	/* If we click on the rootmenu close button, we destroy it */
+	if (menu == menu->vscr->menu.root_menu) {
+		rootmenu_destroy(menu->vscr);
+		return;
+	}
+
 	wMenuUnmap(menu);
 }
 
