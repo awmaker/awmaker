@@ -1469,6 +1469,8 @@ static WMenu *makeDefaultMenu(virtual_screen *vscr)
 	wMenuAddCallback(menu, _("Restart"), restartCommand, NULL);
 	wMenuAddCallback(menu, _("Exit..."), exitCommand, NULL);
 
+	menu_map(menu, vscr);
+
 	return menu;
 }
 
@@ -1689,7 +1691,6 @@ void OpenRootMenu(virtual_screen *vscr, int x, int y, int keyboard)
 		/* menu hasn't changed or could not be read */
 		if (!vscr->menu.root_menu) {
 			menu = makeDefaultMenu(vscr);
-			menu_map(menu, vscr);
 			vscr->menu.root_menu = menu;
 		}
 		menu = vscr->menu.root_menu;
