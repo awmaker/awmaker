@@ -129,7 +129,7 @@ void OpenSwitchMenu(virtual_screen *vscr, int x, int y, int keyboard)
 	/* Mapped, so unmap or raise */
 	if (switchmenu->flags.mapped) {
 		if (!switchmenu->flags.buttoned) {
-			wMenuUnmap(switchmenu);
+			switchmenu_destroy(vscr);
 		} else {
 			wRaiseFrame(switchmenu->frame->core);
 
