@@ -2113,6 +2113,12 @@ static void menuCloseClick(WCoreWindow *sender, void *data, XEvent *event)
 	(void) sender;
 	(void) event;
 
+	/* If we click on the switchmenu close button, we destroy it */
+	if (menu == menu->vscr->menu.switch_menu) {
+		switchmenu_destroy(menu->vscr);
+		return;
+	}
+
 	wMenuUnmap(menu);
 }
 
