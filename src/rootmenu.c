@@ -1648,6 +1648,18 @@ static WMenu *create_rootmenu(virtual_screen *vscr)
 	return menu;
 }
 
+void rootmenu_destroy(virtual_screen *vscr)
+{
+	if (!vscr->menu.root_menu)
+		return;
+
+	wMenuDestroy(vscr->menu.root_menu, True);
+	vscr->menu.root_menu = NULL;
+	vscr->menu.flags.root_menu_changed_shortcuts = 0;
+	vscr->menu.flags.added_workspace_menu = 0;
+	vscr->menu.flags.added_window_menu = 0;
+}
+
 /*
  *----------------------------------------------------------------------
  * OpenRootMenu--

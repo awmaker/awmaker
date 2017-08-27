@@ -25,5 +25,6 @@
 Bool wRootMenuPerformShortcut(XEvent *event);
 void wRootMenuBindShortcuts(Window window);
 void OpenRootMenu(virtual_screen *vscr, int x, int y, int keyboard);
+void rootmenu_destroy(virtual_screen *vscr);
 
 #endif /* WMROOTMENU_H */
