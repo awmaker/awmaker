@@ -1625,10 +1625,14 @@ static WMenu *configureMenu(virtual_screen *vscr, WMPropList *definition)
 	return menu;
 }
 
-static WMenu *create_menu_from_dictionary(virtual_screen *vscr)
+static WMenu *create_rootmenu(virtual_screen *vscr)
 {
 	WMenu *menu = NULL;
 	WMPropList *definition;
+
+	vscr->menu.flags.root_menu_changed_shortcuts = 0;
+	vscr->menu.flags.added_workspace_menu = 0;
+	vscr->menu.flags.added_window_menu = 0;
 
 	definition = w_global.domain.root_menu->dictionary;
 	if (!definition)
@@ -1638,6 +1642,8 @@ static WMenu *create_menu_from_dictionary(virtual_screen *vscr)
 		return NULL;
 
 	menu = configureMenu(vscr, definition);
+	if (!menu)
+		menu = makeDefaultMenu(vscr);
 
 	return menu;
 }
@@ -1662,10 +1668,6 @@ void OpenRootMenu(virtual_screen *vscr, int x, int y, int keyboard)
 {
 	WMenu *menu = NULL;
 
-	vscr->menu.flags.root_menu_changed_shortcuts = 0;
-	vscr->menu.flags.added_workspace_menu = 0;
-	vscr->menu.flags.added_window_menu = 0;
-
 	if (vscr->menu.root_menu && vscr->menu.root_menu->flags.mapped) {
 		menu = vscr->menu.root_menu;
 		if (!menu->flags.buttoned) {
@@ -1679,12 +1681,8 @@ void OpenRootMenu(virtual_screen *vscr, int x, int y, int keyboard)
 		return;
 	}
 
-	menu = create_menu_from_dictionary(vscr);
-	if (!menu)
-		menu = makeDefaultMenu(vscr);
-
-	vscr->menu.root_menu = menu;
-	rootmenu_map(menu, x, y, keyboard);
+	vscr->menu.root_menu = create_rootmenu(vscr);
+	rootmenu_map(vscr->menu.root_menu, x, y, keyboard);
 
 	if (vscr->menu.flags.root_menu_changed_shortcuts)
 		rebindKeygrabs(vscr);
