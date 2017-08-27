@@ -414,7 +414,8 @@ static void observer(void *self, WMNotification * notif)
 	}
 
 	/* If menu is not mapped, exit */
-	if (!wwin->vscr->menu.switch_menu->frame ||
+	if (!wwin->vscr->menu.switch_menu ||
+	    !wwin->vscr->menu.switch_menu->frame ||
 	    !wwin->vscr->menu.switch_menu->frame->vscr)
 		return;
 
