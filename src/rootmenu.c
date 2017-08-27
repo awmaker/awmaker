@@ -1666,22 +1666,25 @@ static WMenu *create_rootmenu(virtual_screen *vscr)
  */
 void OpenRootMenu(virtual_screen *vscr, int x, int y, int keyboard)
 {
-	WMenu *menu = NULL;
+	WMenu *rootmenu = NULL;
 
-	if (vscr->menu.root_menu && vscr->menu.root_menu->flags.mapped) {
-		menu = vscr->menu.root_menu;
-		if (!menu->flags.buttoned) {
-			wMenuUnmap(menu);
+	if (!vscr->menu.root_menu)
+		vscr->menu.root_menu = create_rootmenu(vscr);
+
+	rootmenu = vscr->menu.root_menu;
+
+	if (rootmenu->flags.mapped) {
+		if (!rootmenu->flags.buttoned) {
+			wMenuUnmap(rootmenu);
 		} else {
-			wRaiseFrame(menu->frame->core);
+			wRaiseFrame(rootmenu->frame->core);
 
 			if (keyboard)
-				wMenuMapAt(vscr, menu, 0, 0, True);
+				wMenuMapAt(vscr, rootmenu, 0, 0, True);
 		}
 		return;
 	}
 
-	vscr->menu.root_menu = create_rootmenu(vscr);
 	rootmenu_map(vscr->menu.root_menu, x, y, keyboard);
 
 	if (vscr->menu.flags.root_menu_changed_shortcuts)
