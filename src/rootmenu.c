@@ -70,6 +70,7 @@ static WMenu *readMenuFile(virtual_screen *vscr, const char *file_name);
 static WMenu *readMenuDirectory(virtual_screen *vscr, const char *title, char **file_name, const char *command);
 static WMenu *configureMenu(virtual_screen *vscr, WMPropList *definition);
 static void menu_parser_register_macros(WMenuParser parser);
+static void rootmenu_map(WMenu *menu, int x, int y, int keyboard);
 
 typedef struct Shortcut {
 	struct Shortcut *next;
@@ -1691,22 +1692,33 @@ void OpenRootMenu(virtual_screen *vscr, int x, int y, int keyboard)
 		vscr->menu.root_menu = menu;
 	}
 
-	if (menu) {
-		int newx, newy;
-
-		if (keyboard && x == 0 && y == 0) {
-			newx = newy = 0;
-		} else if (keyboard && x == vscr->screen_ptr->scr_width / 2 && y == vscr->screen_ptr->scr_height / 2) {
-			newx = x - menu->frame->core->width / 2;
-			newy = y - menu->frame->core->height / 2;
-		} else {
-			newx = x - menu->frame->core->width / 2;
-			newy = y;
-		}
-
-		wMenuMapAt(vscr, menu, newx, newy, keyboard);
-	}
+	rootmenu_map(menu, x, y, keyboard);
 
 	if (vscr->menu.flags.root_menu_changed_shortcuts)
 		rebindKeygrabs(vscr);
+}
+
+static void rootmenu_map(WMenu *menu, int x, int y, int keyboard)
+{
+	virtual_screen *vscr;
+	int newx, newy;
+
+	if (!menu)
+		return;
+
+	vscr = menu->vscr;
+
+	if (keyboard && x == 0 && y == 0) {
+		newx = newy = 0;
+	} else if (keyboard &&
+		   x == vscr->screen_ptr->scr_width / 2 &&
+		   y == vscr->screen_ptr->scr_height / 2) {
+		newx = x - menu->frame->core->width / 2;
+		newy = y - menu->frame->core->height / 2;
+	} else {
+		newx = x - menu->frame->core->width / 2;
+		newy = y;
+	}
+
+	wMenuMapAt(vscr, menu, newx, newy, keyboard);
 }
