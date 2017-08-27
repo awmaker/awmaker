@@ -1634,16 +1634,10 @@ static WMenu *create_menu_from_dictionary(virtual_screen *vscr)
 	if (!definition)
 		return NULL;
 
-	if (WMIsPLArray(definition)) {
-		if (!vscr->menu.root_menu ||
-		    w_global.domain.root_menu->timestamp > vscr->menu.root_menu->timestamp) {
-			menu = configureMenu(vscr, definition);
-			if (menu)
-				menu->timestamp = w_global.domain.root_menu->timestamp;
-		}
-	} else {
-		menu = configureMenu(vscr, definition);
-	}
+	if (!WMIsPLArray(definition))
+		return NULL;
+
+	menu = configureMenu(vscr, definition);
 
 	return menu;
 }
@@ -1686,22 +1680,10 @@ void OpenRootMenu(virtual_screen *vscr, int x, int y, int keyboard)
 	}
 
 	menu = create_menu_from_dictionary(vscr);
+	if (!menu)
+		menu = makeDefaultMenu(vscr);
 
-	if (!menu) {
-		/* menu hasn't changed or could not be read */
-		if (!vscr->menu.root_menu) {
-			menu = makeDefaultMenu(vscr);
-			vscr->menu.root_menu = menu;
-		}
-		menu = vscr->menu.root_menu;
-	} else {
-		/* new root menu */
-		if (vscr->menu.root_menu)
-			wMenuDestroy(vscr->menu.root_menu, True);
-
-		vscr->menu.root_menu = menu;
-	}
-
+	vscr->menu.root_menu = menu;
 	rootmenu_map(menu, x, y, keyboard);
 
 	if (vscr->menu.flags.root_menu_changed_shortcuts)
