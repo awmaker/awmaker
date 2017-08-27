@@ -106,6 +106,16 @@ WMenu *switchmenu_create(virtual_screen *vscr)
 	return switch_menu;
 }
 
+void switchmenu_destroy(virtual_screen *vscr)
+{
+	if (!vscr->menu.switch_menu)
+		return;
+
+	wMenuDestroy(vscr->menu.switch_menu, True);
+	vscr->menu.switch_menu = NULL;
+	vscr->menu.flags.added_window_menu = 0;
+}
+
 /* Open switch menu */
 void OpenSwitchMenu(virtual_screen *vscr, int x, int y, int keyboard)
 {
