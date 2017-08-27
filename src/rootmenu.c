@@ -1457,6 +1457,11 @@ static WMenu *makeDefaultMenu(virtual_screen *vscr)
 {
 	WMenu *menu = NULL;
 
+	wMessageDialog(vscr, _("Error"),
+		       _("The applications menu could not be loaded. "
+			 "Look at the console output for a detailed "
+			 "description of the errors."), _("OK"), NULL, NULL);
+
 	menu = menu_create(vscr, _("Commands"));
 
 	wMenuAddCallback(menu, M_("XTerm"), execCommand, "xterm");
@@ -1683,11 +1688,6 @@ void OpenRootMenu(virtual_screen *vscr, int x, int y, int keyboard)
 	if (!menu) {
 		/* menu hasn't changed or could not be read */
 		if (!vscr->menu.root_menu) {
-			wMessageDialog(vscr, _("Error"),
-				       _("The applications menu could not be loaded. "
-					 "Look at the console output for a detailed "
-					 "description of the errors."), _("OK"), NULL, NULL);
-
 			menu = makeDefaultMenu(vscr);
 			menu_map(menu, vscr);
 			vscr->menu.root_menu = menu;
