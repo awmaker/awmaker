@@ -119,7 +119,12 @@ void switchmenu_destroy(virtual_screen *vscr)
 /* Open switch menu */
 void OpenSwitchMenu(virtual_screen *vscr, int x, int y, int keyboard)
 {
-	WMenu *switchmenu = vscr->menu.switch_menu;
+	WMenu *switchmenu;
+
+	if (!vscr->menu.switch_menu)
+		vscr->menu.switch_menu = switchmenu_create(vscr);
+
+	switchmenu = vscr->menu.switch_menu;
 
 	/* Mapped, so unmap or raise */
 	if (switchmenu->flags.mapped) {
