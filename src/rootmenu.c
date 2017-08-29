@@ -829,8 +829,8 @@ static WMenuEntry *addWorkspaceMenu(virtual_screen *vscr, WMenu *menu, const cha
 
 static void cleanupWindowsMenu(WMenu *menu)
 {
-	if (menu->frame->vscr->menu.switch_menu == menu)
-		menu->frame->vscr->menu.switch_menu = NULL;
+	if (menu->frame->vscr->menu.root_switch == menu)
+		menu->frame->vscr->menu.root_switch = NULL;
 }
 
 static WMenuEntry *addWindowsMenu(virtual_screen *vscr, WMenu *menu, const char *title)
@@ -851,11 +851,11 @@ static WMenuEntry *addWindowsMenu(virtual_screen *vscr, WMenu *menu, const char 
 	menu_map(wwmenu, vscr);
 
 	wwmenu->on_destroy = cleanupWindowsMenu;
-	vscr->menu.switch_menu = wwmenu;
+	vscr->menu.root_switch = wwmenu;
 	wwin = vscr->window.focused;
 	while (wwin) {
-		switchmenu_additem(vscr->menu.switch_menu, wwin);
-		menu_move_visible(vscr->menu.switch_menu);
+		switchmenu_additem(vscr->menu.root_switch, wwin);
+		menu_move_visible(vscr->menu.root_switch);
 		wwin = wwin->prev;
 	}
 

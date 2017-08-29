@@ -732,12 +732,16 @@ static void applySettings(WMWidget *button, void *client_data)
 	if (WFLAGP(wwin_inspected, skip_window_list) != old_skip_window_list) {
 		virtual_screen *vscr = wwin_inspected->vscr;
 
-		if (WFLAGP(wwin_inspected, skip_window_list))
+		if (WFLAGP(wwin_inspected, skip_window_list)) {
 			switchmenu_delitem(vscr->menu.switch_menu, wwin_inspected);
-		else
+			switchmenu_delitem(vscr->menu.root_switch, wwin_inspected);
+		} else {
 			switchmenu_additem(vscr->menu.switch_menu, wwin_inspected);
+			switchmenu_additem(vscr->menu.root_switch, wwin_inspected);
+		}
 
 		menu_move_visible(vscr->menu.switch_menu);
+		menu_move_visible(vscr->menu.root_switch);
 	} else {
 		if (WFLAGP(wwin_inspected, omnipresent) != old_omnipresent)
 			WMPostNotificationName(WMNChangedState, wwin_inspected, "omnipresent");
