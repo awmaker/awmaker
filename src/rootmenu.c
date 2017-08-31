@@ -25,6 +25,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
@@ -71,6 +72,9 @@ static WMenu *readMenuDirectory(virtual_screen *vscr, const char *title, char **
 static WMenu *configureMenu(virtual_screen *vscr, WMPropList *definition);
 static void menu_parser_register_macros(WMenuParser parser);
 static void rootmenu_map(WMenu *menu, int x, int y, int keyboard);
+static void observer(void *self, WMNotification *notif);
+static void wsobserver(void *self, WMNotification *notif);
+static void rootmenu_setup_switchmenu_notif(void);
 
 typedef struct Shortcut {
 	struct Shortcut *next;
@@ -82,6 +86,7 @@ typedef struct Shortcut {
 } Shortcut;
 
 static Shortcut *shortcutList = NULL;
+static int initialized = 0;
 
 /*
  * Syntax:
@@ -1726,4 +1731,60 @@ static void rootmenu_map(WMenu *menu, int x, int y, int keyboard)
 	}
 
 	wMenuMapAt(vscr, menu, newx, newy, keyboard);
+}
+
+static void rootmenu_setup_switchmenu_notif(void)
+{
+	if (initialized)
+		return;
+
+	initialized = 1;
+
+	WMAddNotificationObserver(observer, NULL, WMNManaged, NULL);
+	WMAddNotificationObserver(observer, NULL, WMNUnmanaged, NULL);
+	WMAddNotificationObserver(observer, NULL, WMNChangedWorkspace, NULL);
+	WMAddNotificationObserver(observer, NULL, WMNChangedState, NULL);
+	WMAddNotificationObserver(observer, NULL, WMNChangedFocus, NULL);
+	WMAddNotificationObserver(observer, NULL, WMNChangedStacking, NULL);
+	WMAddNotificationObserver(observer, NULL, WMNChangedName, NULL);
+
+	WMAddNotificationObserver(wsobserver, NULL, WMNWorkspaceChanged, NULL);
+	WMAddNotificationObserver(wsobserver, NULL, WMNWorkspaceNameChanged, NULL);
+}
+
+static void observer(void *self, WMNotification *notif)
+{
+	WWindow *wwin = (WWindow *) WMGetNotificationObject(notif);
+	const char *name = WMGetNotificationName(notif);
+	void *data = WMGetNotificationClientData(notif);
+
+	/* Parameter not used, but tell the compiler that it is ok */
+	(void) self;
+
+	if (!wwin)
+		return;
+
+	switchmenu_handle_notification_wwin(wwin->vscr->menu.root_switch,
+					    wwin, name, (char *) data);
+
+	/* If menu is not mapped, exit */
+	if (!wwin->vscr->menu.root_switch ||
+	    !wwin->vscr->menu.root_switch->frame ||
+	    !wwin->vscr->menu.root_switch->frame->vscr)
+		return;
+
+	menu_move_visible(wwin->vscr->menu.root_switch);
+}
+
+static void wsobserver(void *self, WMNotification *notif)
+{
+	virtual_screen *vscr = (virtual_screen *) WMGetNotificationObject(notif);
+	const char *name = WMGetNotificationName(notif);
+	void *data = WMGetNotificationClientData(notif);
+	int workspace = (uintptr_t) data;
+
+	/* Parameter not used, but tell the compiler that it is ok */
+	(void) self;
+
+	switchmenu_handle_notification(vscr->menu.root_switch, name, workspace);
 }
