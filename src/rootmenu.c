@@ -70,6 +70,7 @@ static WMenu *readMenuFile(virtual_screen *vscr, const char *file_name);
 static WMenu *readMenuDirectory(virtual_screen *vscr, const char *title, char **file_name, const char *command);
 static WMenu *configureMenu(virtual_screen *vscr, WMPropList *definition);
 static void menu_parser_register_macros(WMenuParser parser);
+static void rootmenu_map(WMenu *menu, int x, int y, int keyboard);
 
 typedef struct Shortcut {
 	struct Shortcut *next;
@@ -829,8 +830,8 @@ static WMenuEntry *addWorkspaceMenu(virtual_screen *vscr, WMenu *menu, const cha
 
 static void cleanupWindowsMenu(WMenu *menu)
 {
-	if (menu->frame->vscr->menu.switch_menu == menu)
-		menu->frame->vscr->menu.switch_menu = NULL;
+	if (menu->frame->vscr->menu.root_switch == menu)
+		menu->frame->vscr->menu.root_switch = NULL;
 }
 
 static WMenuEntry *addWindowsMenu(virtual_screen *vscr, WMenu *menu, const char *title)
@@ -851,11 +852,11 @@ static WMenuEntry *addWindowsMenu(virtual_screen *vscr, WMenu *menu, const char 
 	menu_map(wwmenu, vscr);
 
 	wwmenu->on_destroy = cleanupWindowsMenu;
-	vscr->menu.switch_menu = wwmenu;
+	vscr->menu.root_switch = wwmenu;
 	wwin = vscr->window.focused;
 	while (wwin) {
-		switchmenu_additem(vscr->menu.switch_menu, wwin);
-		menu_move_visible(vscr->menu.switch_menu);
+		switchmenu_additem(vscr->menu.root_switch, wwin);
+		menu_move_visible(vscr->menu.root_switch);
 		wwin = wwin->prev;
 	}
 
@@ -1456,12 +1457,19 @@ static WMenu *makeDefaultMenu(virtual_screen *vscr)
 {
 	WMenu *menu = NULL;
 
+	wMessageDialog(vscr, _("Error"),
+		       _("The applications menu could not be loaded. "
+			 "Look at the console output for a detailed "
+			 "description of the errors."), _("OK"), NULL, NULL);
+
 	menu = menu_create(vscr, _("Commands"));
 
 	wMenuAddCallback(menu, M_("XTerm"), execCommand, "xterm");
 	wMenuAddCallback(menu, M_("rxvt"), execCommand, "rxvt");
 	wMenuAddCallback(menu, _("Restart"), restartCommand, NULL);
 	wMenuAddCallback(menu, _("Exit..."), exitCommand, NULL);
+
+	menu_map(menu, vscr);
 
 	return menu;
 }
@@ -1617,6 +1625,41 @@ static WMenu *configureMenu(virtual_screen *vscr, WMPropList *definition)
 	return menu;
 }
 
+static WMenu *create_rootmenu(virtual_screen *vscr)
+{
+	WMenu *menu = NULL;
+	WMPropList *definition;
+
+	vscr->menu.flags.root_menu_changed_shortcuts = 0;
+	vscr->menu.flags.added_workspace_menu = 0;
+	vscr->menu.flags.added_window_menu = 0;
+
+	definition = w_global.domain.root_menu->dictionary;
+	if (!definition)
+		return NULL;
+
+	if (!WMIsPLArray(definition))
+		return NULL;
+
+	menu = configureMenu(vscr, definition);
+	if (!menu)
+		menu = makeDefaultMenu(vscr);
+
+	return menu;
+}
+
+void rootmenu_destroy(virtual_screen *vscr)
+{
+	if (!vscr->menu.root_menu)
+		return;
+
+	wMenuDestroy(vscr->menu.root_menu, True);
+	vscr->menu.root_menu = NULL;
+	vscr->menu.flags.root_menu_changed_shortcuts = 0;
+	vscr->menu.flags.added_workspace_menu = 0;
+	vscr->menu.flags.added_window_menu = 0;
+}
+
 /*
  *----------------------------------------------------------------------
  * OpenRootMenu--
@@ -1635,78 +1678,52 @@ static WMenu *configureMenu(virtual_screen *vscr, WMPropList *definition)
  */
 void OpenRootMenu(virtual_screen *vscr, int x, int y, int keyboard)
 {
-	WMenu *menu = NULL;
-	WMPropList *definition;
+	WMenu *rootmenu = NULL;
 
-	vscr->menu.flags.root_menu_changed_shortcuts = 0;
-	vscr->menu.flags.added_workspace_menu = 0;
-	vscr->menu.flags.added_window_menu = 0;
+	if (!vscr->menu.root_menu)
+		vscr->menu.root_menu = create_rootmenu(vscr);
 
-	if (vscr->menu.root_menu && vscr->menu.root_menu->flags.mapped) {
-		menu = vscr->menu.root_menu;
-		if (!menu->flags.buttoned) {
-			wMenuUnmap(menu);
+	rootmenu = vscr->menu.root_menu;
+
+	if (rootmenu->flags.mapped) {
+		if (!rootmenu->flags.buttoned) {
+			switchmenu_destroy(vscr);
 		} else {
-			wRaiseFrame(menu->frame->core);
+			wRaiseFrame(rootmenu->frame->core);
 
 			if (keyboard)
-				wMenuMapAt(vscr, menu, 0, 0, True);
+				wMenuMapAt(vscr, rootmenu, 0, 0, True);
 		}
 		return;
 	}
 
-	definition = w_global.domain.root_menu->dictionary;
-
-	if (definition) {
-		if (WMIsPLArray(definition)) {
-			if (!vscr->menu.root_menu ||
-			    w_global.domain.root_menu->timestamp > vscr->menu.root_menu->timestamp) {
-				menu = configureMenu(vscr, definition);
-				if (menu)
-					menu->timestamp = w_global.domain.root_menu->timestamp;
-			}
-		} else {
-			menu = configureMenu(vscr, definition);
-		}
-	}
-
-	if (!menu) {
-		/* menu hasn't changed or could not be read */
-		if (!vscr->menu.root_menu) {
-			wMessageDialog(vscr, _("Error"),
-				       _("The applications menu could not be loaded. "
-					 "Look at the console output for a detailed "
-					 "description of the errors."), _("OK"), NULL, NULL);
-
-			menu = makeDefaultMenu(vscr);
-			menu_map(menu, vscr);
-			vscr->menu.root_menu = menu;
-		}
-		menu = vscr->menu.root_menu;
-	} else {
-		/* new root menu */
-		if (vscr->menu.root_menu)
-			wMenuDestroy(vscr->menu.root_menu, True);
-
-		vscr->menu.root_menu = menu;
-	}
-
-	if (menu) {
-		int newx, newy;
-
-		if (keyboard && x == 0 && y == 0) {
-			newx = newy = 0;
-		} else if (keyboard && x == vscr->screen_ptr->scr_width / 2 && y == vscr->screen_ptr->scr_height / 2) {
-			newx = x - menu->frame->core->width / 2;
-			newy = y - menu->frame->core->height / 2;
-		} else {
-			newx = x - menu->frame->core->width / 2;
-			newy = y;
-		}
-
-		wMenuMapAt(vscr, menu, newx, newy, keyboard);
-	}
+	rootmenu_map(vscr->menu.root_menu, x, y, keyboard);
 
 	if (vscr->menu.flags.root_menu_changed_shortcuts)
 		rebindKeygrabs(vscr);
+}
+
+static void rootmenu_map(WMenu *menu, int x, int y, int keyboard)
+{
+	virtual_screen *vscr;
+	int newx, newy;
+
+	if (!menu)
+		return;
+
+	vscr = menu->vscr;
+
+	if (keyboard && x == 0 && y == 0) {
+		newx = newy = 0;
+	} else if (keyboard &&
+		   x == vscr->screen_ptr->scr_width / 2 &&
+		   y == vscr->screen_ptr->scr_height / 2) {
+		newx = x - menu->frame->core->width / 2;
+		newy = y - menu->frame->core->height / 2;
+	} else {
+		newx = x - menu->frame->core->width / 2;
+		newy = y;
+	}
+
+	wMenuMapAt(vscr, menu, newx, newy, keyboard);
 }

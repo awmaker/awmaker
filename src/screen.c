@@ -892,7 +892,6 @@ void virtual_screen_restore_map(virtual_screen *vscr)
 {
 	WMPropList *state, *dDock;
 
-	vscr->menu.switch_menu = switchmenu_create(vscr);
 	window_menu_create(vscr);
 
 	if (!wPreferences.flags.nodock) {
