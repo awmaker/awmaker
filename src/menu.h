@@ -50,6 +50,7 @@ typedef struct WMenuEntry {
 } WMenuEntry;
 
 typedef struct WMenu {
+	virtual_screen *vscr;			/* Where is the menu */
 	char *title;				/* Menu title */
 	struct WMenu *parent;
 
@@ -71,7 +72,8 @@ typedef struct WMenu {
 	short entry_no;				/* number of entries */
 	short selected_entry;
 
-	short entry_height;			/* height of each entry */
+	int entry_height;			/* height of each entry */
+	int width;				/* menu width */
 
 	WMHandlerID timer;			/* timer for the autoscroll */
 
@@ -125,7 +127,7 @@ WMenu *wMenuUnderPointer(virtual_screen *vscr);
 void wMenuSaveState(virtual_screen *vscr);
 void wMenuRestoreState(virtual_screen *vscr);
 
-WMenu *menu_create(const char *title);
+WMenu *menu_create(virtual_screen *vscr, const char *title);
 void menu_map(WMenu *menu, virtual_screen *screen);
 void menu_unmap(WMenu *menu);
 
@@ -134,4 +136,5 @@ void wMenuEntrySetCascade_create(WMenu *menu, WMenuEntry *entry, WMenu *cascade)
 void menu_entry_set_enabled(WMenu *menu, int index, int enable);
 void menu_entry_set_enabled_paint(WMenu *menu, int index);
 
+void menu_move_visible(WMenu *menu);
 #endif

@@ -268,7 +268,7 @@ static void wXDNDGetTypeList(Display *dpy, Window window)
 	}
 	typelist[count] = 0;
 	XFree(data);
-	free(typelist);
+	wfree(typelist);
 }
 
 Bool wXDNDProcessClientMessage(XClientMessageEvent *event)

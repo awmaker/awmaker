@@ -22,8 +22,7 @@
 #ifndef _WAPPMENU_H_
 #define _WAPPMENU_H_
 
-WMenu *wAppMenuGet(virtual_screen *vscr, Window window);
-void wAppMenuDestroy(WMenu *menu);
+void create_app_menu(virtual_screen *vscr, WApplication *wapp);
+void destroy_app_menu(WApplication *wapp);
 void wAppMenuMap(WMenu *menu, WWindow *wwin);
-void wAppMenuUnmap(WMenu *menu);
 #endif

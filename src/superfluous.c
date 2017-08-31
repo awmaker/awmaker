@@ -232,7 +232,7 @@ reinit:
 	data->wapp->flags.bouncing = 0;
 	WMDeleteTimerHandler(data->timer);
 	wApplicationDestroy(data->wapp);
-	free(data);
+	wfree(data);
 }
 
 static int bounceDirection(WAppIcon *aicon)

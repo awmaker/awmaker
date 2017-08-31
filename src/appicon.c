@@ -612,11 +612,11 @@ static void killCallback(WMenu *menu, WMenuEntry *entry)
 	WCHANGE_STATE(WSTATE_NORMAL);
 }
 
-static WMenu *createApplicationMenu(void)
+static WMenu *createApplicationMenu(virtual_screen *vscr)
 {
 	WMenu *menu;
 
-	menu = menu_create(NULL);
+	menu = menu_create(vscr, NULL);
 
 	wMenuAddCallback(menu, _("Unhide Here"), unhideHereCallback, NULL);
 	wMenuAddCallback(menu, _("Hide"), hideCallback, NULL);
@@ -660,7 +660,7 @@ static void openApplicationMenu(WApplication *wapp, int x, int y)
 	int i;
 
 	if (!vscr->menu.icon_menu) {
-		vscr->menu.icon_menu = createApplicationMenu();
+		vscr->menu.icon_menu = createApplicationMenu(vscr);
 		menu_map(vscr->menu.icon_menu, vscr);
 		wfree(vscr->menu.icon_menu->entries[1]->text);
 	}

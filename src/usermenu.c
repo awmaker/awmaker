@@ -75,8 +75,7 @@
 #include "keybind.h"
 #include "xmodifier.h"
 #include "misc.h"
-
-#include "framewin.h"
+#include "appmenu.h"
 
 #define MAX_SHORTCUT_LENGTH 32
 
@@ -250,11 +249,9 @@ static WMenu *configureUserMenu(virtual_screen *vscr, WMPropList *plum)
 		return NULL;
 
 	mtitle = WMGetFromPLString(elem);
-	menu = menu_create(mtitle);
-	if (menu) {
-		menu->flags.app_menu = 1;
-		menu_map(menu, vscr);
-	}
+	menu = menu_create(vscr, mtitle);
+	menu->flags.app_menu = 1;
+	menu_map(menu, vscr);
 
 	for (i = 1; i < count; i++) {
 		elem = WMGetFromPLArray(plum, i);
@@ -286,79 +283,71 @@ static WMenu *configureUserMenu(virtual_screen *vscr, WMPropList *plum)
 	return menu;
 }
 
-void wUserMenuRefreshInstances(WMenu *menu, WWindow *wwin)
+void create_user_menu(virtual_screen *vscr, WApplication *wapp)
 {
-	int i, j, count, paintflag;
-
-	paintflag = 0;
-
-	if (!menu)
-		return;
-
-	for (i = 0; i < menu->entry_no; i++) {
-		if (menu->entries[i]->instances) {
-			WMPropList *ins;
-			int oldflag;
-			count = WMGetPropListItemCount(menu->entries[i]->instances);
-
-			oldflag = menu->entries[i]->flags.enabled;
-			menu->entries[i]->flags.enabled = 0;
-			for (j = 0; j < count; j++) {
-				ins = WMGetFromPLArray(menu->entries[i]->instances, j);
-				if (!strcmp(wwin->wm_instance, WMGetFromPLString(ins))) {
-					menu->entries[i]->flags.enabled = 1;
-					break;
-				}
-			}
-
-			if (oldflag != menu->entries[i]->flags.enabled)
-				paintflag = 1;
-		}
-	}
-	for (i = 0; i < menu->cascade_no; i++)
-			wUserMenuRefreshInstances(menu->cascades[i], wwin);
-
-	if (paintflag)
-		wMenuPaint(menu);
-}
-
-static WMenu *readUserMenuFile(virtual_screen *vscr, const char *file_name)
-{
+	WWindow *wwin = NULL;
 	WMenu *menu = NULL;
 	WMPropList *plum;
+	char *tmp, *file_name = NULL;
+	int len;
+
+	/*
+	 * TODO: kix
+	 * There is a bug in wmaker about the windows in the WApplication
+	 * The original Window includes an WWindow valid with all the info
+	 * but WApplication creates a new WWindow and some info is lost, like
+	 * the position of the window on the screen.
+	 * instance and class are set, we can use it here.
+	 * We need avoid create the WWindow in the WApplication and select the
+	 * previosly WWindow. With one-window applications is easy, but with
+	 * applications with multiple windows, is more difficult.
+	 */
+	wwin = wapp->main_window_desc;
+	if (!wwin || !wwin->wm_instance || !wwin->wm_class)
+		return;
+
+	len = strlen(wwin->wm_instance) + strlen(wwin->wm_class) + 7;
+	tmp = wmalloc(len);
+	snprintf(tmp, len, "%s.%s.menu", wwin->wm_instance, wwin->wm_class);
+	file_name = wfindfile(DEF_USER_MENU_PATHS, tmp);
+	wfree(tmp);
+	if (!file_name)
+		return;
 
 	plum = WMReadPropListFromFile(file_name);
-	if (!plum)
-		return NULL;
+	if (!plum) {
+		wfree(file_name);
+		return;
+	}
+
+	wfree(file_name);
 
 	menu = configureUserMenu(vscr, plum);
 	WMReleasePropList(plum);
-
 	wMenuRealize(menu);
 
-	return menu;
+	/*
+	 * TODO: kix
+	 * Because the preovious comment, the info in wwin about possition is wrong
+	 * and contains values (x = 0, y = 0). If we move the window, values do not
+	 * change too. We need solve the WApplication problem to solve this problem.
+	 * Now, the menu window is painted in 0,0
+	 */
+
+	/* Using the same function that app_menu */
+	wAppMenuMap(menu, wwin);
+
+	wapp->user_menu = menu;
 }
 
-WMenu *wUserMenuGet(virtual_screen *vscr, WWindow *wwin)
+void destroy_user_menu(WApplication *wapp)
 {
-	WMenu *menu = NULL;
-	char *tmp, *path = NULL;
+	if (!wapp || !wapp->user_menu)
+		return;
 
-	if (wwin && wwin->wm_instance && wwin->wm_class) {
-		int len = strlen(wwin->wm_instance) + strlen(wwin->wm_class) + 7;
-		tmp = wmalloc(len);
-		snprintf(tmp, len, "%s.%s.menu", wwin->wm_instance, wwin->wm_class);
-		path = wfindfile(DEF_USER_MENU_PATHS, tmp);
-		wfree(tmp);
-
-		if (!path)
-			return NULL;
-
-		menu = readUserMenuFile(vscr, path);
-		wfree(path);
-	}
-
-	return menu;
+	wMenuUnmap(wapp->user_menu);
+	wMenuDestroy(wapp->user_menu, True);
+	wapp->user_menu = NULL;
 }
 
 #endif				/* USER_MENU */

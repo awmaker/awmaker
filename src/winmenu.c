@@ -511,7 +511,7 @@ static WMenu *makeWorkspaceMenu(virtual_screen *vscr)
 {
 	WMenu *menu;
 
-	menu = menu_create(NULL);
+	menu = menu_create(vscr, NULL);
 	menu_map(menu, vscr);
 
 	if (!menu) {
@@ -541,12 +541,7 @@ static WMenu *makeOptionsMenu(virtual_screen *vscr)
 	WMenuEntry *entry;
 	int i;
 
-	menu = menu_create(NULL);
-	if (!menu) {
-		wwarning(_("could not create submenu for window menu"));
-		return NULL;
-	}
-
+	menu = menu_create(vscr, NULL);
 	menu_map(menu, vscr);
 
 	for (i = 0; i < wlengthof(menu_options_entries); i++) {
@@ -568,12 +563,7 @@ static WMenu *makeMaximizeMenu(virtual_screen *vscr)
 	WMenu *menu;
 	int i;
 
-	menu = menu_create(NULL);
-	if (!menu) {
-		wwarning(_("could not create submenu for window menu"));
-		return NULL;
-	}
-
+	menu = menu_create(vscr, NULL);
 	menu_map(menu, vscr);
 
 	for (i = 0; i < wlengthof(menu_maximize_entries); i++)
@@ -587,7 +577,7 @@ static WMenu *createWindowMenu(virtual_screen *vscr)
 	WMenu *menu;
 	int i;
 
-	menu = menu_create(NULL);
+	menu = menu_create(vscr, NULL);
 	menu_map(menu, vscr);
 
 	for (i = 0; i < wlengthof(window_menu_entries); i++) {
@@ -779,9 +769,13 @@ void window_menu_create(virtual_screen *vscr)
 
 	/* hack to save some memory allocation/deallocation */
 	wfree(vscr->menu.window_menu->entries[MC_MINIATURIZE]->text);
+	vscr->menu.window_menu->entries[MC_MINIATURIZE]->text = NULL;
 	wfree(vscr->menu.window_menu->entries[MC_MAXIMIZE]->text);
+	vscr->menu.window_menu->entries[MC_MAXIMIZE]->text = NULL;
 	wfree(vscr->menu.window_menu->entries[MC_SHADE]->text);
+	vscr->menu.window_menu->entries[MC_SHADE]->text = NULL;
 	wfree(vscr->menu.window_menu->entries[MC_SELECT]->text);
+	vscr->menu.window_menu->entries[MC_SELECT]->text = NULL;
 }
 
 static WMenu *open_window_menu_core(WWindow *wwin)
@@ -888,12 +882,13 @@ void OpenMiniwindowMenu(WWindow *wwin, int x, int y)
 
 void DestroyWindowMenu(virtual_screen *vscr)
 {
-	if (vscr->menu.window_menu) {
-		vscr->menu.window_menu->entries[MC_MINIATURIZE]->text = NULL;
-		vscr->menu.window_menu->entries[MC_MAXIMIZE]->text = NULL;
-		vscr->menu.window_menu->entries[MC_SHADE]->text = NULL;
-		vscr->menu.window_menu->entries[MC_SELECT]->text = NULL;
-		wMenuDestroy(vscr->menu.window_menu, True);
-		vscr->menu.window_menu = NULL;
-	}
+	if (!vscr->menu.window_menu)
+		return;
+
+	vscr->menu.window_menu->entries[MC_MINIATURIZE]->text = NULL;
+	vscr->menu.window_menu->entries[MC_MAXIMIZE]->text = NULL;
+	vscr->menu.window_menu->entries[MC_SHADE]->text = NULL;
+	vscr->menu.window_menu->entries[MC_SELECT]->text = NULL;
+	wMenuDestroy(vscr->menu.window_menu, True);
+	vscr->menu.window_menu = NULL;
 }

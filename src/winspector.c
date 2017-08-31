@@ -315,16 +315,18 @@ void winspector_destroy(InspectorPanel *panel)
 
 	WMRemoveNotificationObserver(panel);
 
-	wWindowUnmap(panel->frame);
-	wUnmanageWindow(panel->frame, True, False);
+	wWindowUnmap(panel->wwin);
+	wUnmanageWindow(panel->wwin, True, False);
 
 	panel->destroyed = 1;
 
-	WMDestroyWidget(panel->wwin);
+	WMDestroyWidget(panel->win);
 	XDestroyWindow(dpy, panel->parent);
 
-	if (panel->title)
+	if (panel->title) {
 		wfree(panel->title);
+		panel->title = NULL;
+	}
 
 	wfree(panel);
 }
@@ -338,10 +340,11 @@ static void destroyInspector(WCoreWindow *foo, void *data, XEvent *event)
 	(void) event;
 
 	panel = panelList;
-	while (panel->frame != data)
+	while (panel->wwin != data)
 		panel = panel->nextPtr;
 
 	winspector_destroy(panel);
+	panel->nextPtr = NULL;
 }
 
 void wDestroyInspectorPanels(void)
@@ -351,8 +354,8 @@ void wDestroyInspectorPanels(void)
 	while (panelList != NULL) {
 		panel = panelList;
 		panelList = panelList->nextPtr;
-		wUnmanageWindow(panel->frame, False, False);
-		WMDestroyWidget(panel->wwin);
+		wUnmanageWindow(panel->wwin, False, False);
+		WMDestroyWidget(panel->win);
 
 		panel->inspected->flags.inspector_open = 0;
 		panel->inspected->inspector = NULL;
@@ -432,7 +435,7 @@ static int showIconFor(WMScreen *scrPtr, InspectorPanel *panel, const char *wm_i
 
 			buf = wmalloc(len);
 			snprintf(buf, len, _("Could not find icon \"%s\" specified for this window"), file);
-			wMessageDialog(panel->frame->vscr, _("Error"), buf, _("OK"), NULL, NULL);
+			wMessageDialog(panel->wwin->vscr, _("Error"), buf, _("OK"), NULL, NULL);
 			wfree(buf);
 			wfree(file);
 			return -1;
@@ -448,7 +451,7 @@ static int showIconFor(WMScreen *scrPtr, InspectorPanel *panel, const char *wm_i
 			buf = wmalloc(len);
 			snprintf(buf, len, _("Could not open specified icon \"%s\":%s"),
 				 file, RMessageForError(RErrorCode));
-			wMessageDialog(panel->frame->vscr, _("Error"), buf, _("OK"), NULL, NULL);
+			wMessageDialog(panel->wwin->vscr, _("Error"), buf, _("OK"), NULL, NULL);
 			wfree(buf);
 			wfree(file);
 			return -1;
@@ -528,7 +531,7 @@ insertAttribute(WMPropList *dict, WMPropList *window, WMPropList *attr, WMPropLi
 static void saveSettings(WMWidget *button, void *client_data)
 {
 	InspectorPanel *panel = (InspectorPanel *) client_data;
-	WWindow *wwin = panel->inspected;
+	WWindow *wwin_inspected = panel->inspected;
 	WDDomain *db = w_global.domain.window_attr;
 	WMPropList *dict = NULL;
 	WMPropList *winDic, *appDic, *value, *value1, *key = NULL, *key2;
@@ -539,11 +542,11 @@ static void saveSettings(WMWidget *button, void *client_data)
 	applySettings(panel->applyBtn, panel);
 
 	if (WMGetButtonSelected(panel->instRb) != 0) {
-		key = WMCreatePLString(wwin->wm_instance);
+		key = WMCreatePLString(wwin_inspected->wm_instance);
 	} else if (WMGetButtonSelected(panel->clsRb) != 0) {
-		key = WMCreatePLString(wwin->wm_class);
+		key = WMCreatePLString(wwin_inspected->wm_class);
 	} else if (WMGetButtonSelected(panel->bothRb) != 0) {
-		buf1 = StrConcatDot(wwin->wm_instance, wwin->wm_class);
+		buf1 = StrConcatDot(wwin_inspected->wm_instance, wwin_inspected->wm_class);
 		key = WMCreatePLString(buf1);
 		wfree(buf1);
 	} else if (WMGetButtonSelected(panel->defaultRb) != 0) {
@@ -595,8 +598,8 @@ static void saveSettings(WMWidget *button, void *client_data)
 	}
 
 	i = WMGetPopUpButtonSelectedItem(panel->wsP) - 1;
-	if (i >= 0 && i < panel->frame->vscr->workspace.count) {
-		value = WMCreatePLString(panel->frame->vscr->workspace.array[i]->name);
+	if (i >= 0 && i < panel->wwin->vscr->workspace.count) {
+		value = WMCreatePLString(panel->wwin->vscr->workspace.array[i]->name);
 		different |= insertAttribute(dict, winDic, AStartWorkspace, value, flags);
 		WMReleasePropList(value);
 	}
@@ -616,15 +619,15 @@ static void saveSettings(WMWidget *button, void *client_data)
 	}
 
 	/* Attributes... --> Application Specific */
-	if (wwin->main_window != None && wApplicationOf(wwin->main_window) != NULL) {
+	if (wwin_inspected->main_window != None && wApplicationOf(wwin_inspected->main_window) != NULL) {
 		for (i = 0; i < wlengthof(application_attr); i++) {
 			value = (WMGetButtonSelected(panel->appChk[i]) != 0) ? Yes : No;
 			different2 |= insertAttribute(dict, appDic, pl_appattrib[i], value, flags);
 		}
 	}
 
-	if (wwin->fake_group) {
-		key2 = WMCreatePLString(wwin->fake_group->identifier);
+	if (wwin_inspected->fake_group) {
+		key2 = WMCreatePLString(wwin_inspected->fake_group->identifier);
 		if (WMIsPropListEqualTo(key, key2)) {
 			WMMergePLDictionaries(winDic, appDic, True);
 			different |= different2;
@@ -634,8 +637,8 @@ static void saveSettings(WMWidget *button, void *client_data)
 				WMPutInPLDictionary(dict, key2, appDic);
 		}
 		WMReleasePropList(key2);
-	} else if (wwin->main_window != wwin->client_win) {
-		WApplication *wapp = wApplicationOf(wwin->main_window);
+	} else if (wwin_inspected->main_window != wwin_inspected->client_win) {
+		WApplication *wapp = wApplicationOf(wwin_inspected->main_window);
 
 		if (wapp) {
 			buf2 = StrConcatDot(wapp->main_window_desc->wm_instance,
@@ -675,100 +678,85 @@ static void saveSettings(WMWidget *button, void *client_data)
 static void applySettings(WMWidget *button, void *client_data)
 {
 	InspectorPanel *panel = (InspectorPanel *) client_data;
-	WWindow *wwin = panel->inspected;
-	WApplication *wapp = wApplicationOf(wwin->main_window);
-	int tmp, i, old_skip_window_list, old_omnipresent, old_no_bind_keys, old_no_bind_mouse;
+	WWindow *wwin_inspected = panel->inspected;
+	WApplication *wapp = wApplicationOf(wwin_inspected->main_window);
+	int i, old_skip_window_list, old_omnipresent, old_no_bind_keys, old_no_bind_mouse;
 
-	old_skip_window_list = WFLAGP(wwin, skip_window_list);
-	old_omnipresent = WFLAGP(wwin, omnipresent);
-	old_no_bind_keys = WFLAGP(wwin, no_bind_keys);
-	old_no_bind_mouse = WFLAGP(wwin, no_bind_mouse);
+	old_skip_window_list = WFLAGP(wwin_inspected, skip_window_list);
+	old_omnipresent = WFLAGP(wwin_inspected, omnipresent);
+	old_no_bind_keys = WFLAGP(wwin_inspected, no_bind_keys);
+	old_no_bind_mouse = WFLAGP(wwin_inspected, no_bind_mouse);
 
 	showIconFor(WMWidgetScreen(button), panel, NULL, NULL, USE_TEXT_FIELD);
 
 	/* Attributes... --> Window Attributes */
 	for (i = 0; i < wlengthof(window_attribute); i++) {
 		if (WMGetButtonSelected(panel->attrChk[i]))
-			set_attr_flag(&wwin->user_flags, &window_attribute[i].flag);
+			set_attr_flag(&wwin_inspected->user_flags, &window_attribute[i].flag);
 		else
-			clear_attr_flag(&wwin->user_flags, &window_attribute[i].flag);
+			clear_attr_flag(&wwin_inspected->user_flags, &window_attribute[i].flag);
 
-		set_attr_flag(&wwin->defined_user_flags, &window_attribute[i].flag);
+		set_attr_flag(&wwin_inspected->defined_user_flags, &window_attribute[i].flag);
 	}
 
 	/* Attributes... --> Advanced Options */
 	for (i = 0; i < wlengthof(advanced_option); i++) {
 		if (WMGetButtonSelected(panel->moreChk[i]))
-			set_attr_flag(&wwin->user_flags, &advanced_option[i].flag);
+			set_attr_flag(&wwin_inspected->user_flags, &advanced_option[i].flag);
 		else
-			clear_attr_flag(&wwin->user_flags, &advanced_option[i].flag);
+			clear_attr_flag(&wwin_inspected->user_flags, &advanced_option[i].flag);
 
-		set_attr_flag(&wwin->defined_user_flags, &advanced_option[i].flag);
+		set_attr_flag(&wwin_inspected->defined_user_flags, &advanced_option[i].flag);
 	}
 
-	WSETUFLAG(wwin, always_user_icon, WMGetButtonSelected(panel->alwChk));
+	WSETUFLAG(wwin_inspected, always_user_icon, WMGetButtonSelected(panel->alwChk));
 
-	if (WFLAGP(wwin, no_titlebar) && wwin->flags.shaded)
-		wUnshadeWindow(wwin);
+	if (WFLAGP(wwin_inspected, no_titlebar) && wwin_inspected->flags.shaded)
+		wUnshadeWindow(wwin_inspected);
 
-	WSETUFLAG(wwin, no_shadeable, WFLAGP(wwin, no_titlebar));
+	WSETUFLAG(wwin_inspected, no_shadeable, WFLAGP(wwin_inspected, no_titlebar));
 
 	/*
 	 * Update the window level according to AlwaysOnTop/AlwaysOnBotton
 	 * if the level did not change, ChangeStackingLevel will do nothing anyway
 	 */
-	if (WFLAGP(wwin, floating))
-		ChangeStackingLevel(wwin->frame->core, WMFloatingLevel);
-	else if (WFLAGP(wwin, sunken))
-		ChangeStackingLevel(wwin->frame->core, WMSunkenLevel);
+	if (WFLAGP(wwin_inspected, floating))
+		ChangeStackingLevel(wwin_inspected->frame->core, WMFloatingLevel);
+	else if (WFLAGP(wwin_inspected, sunken))
+		ChangeStackingLevel(wwin_inspected->frame->core, WMSunkenLevel);
 	else
-		ChangeStackingLevel(wwin->frame->core, WMNormalLevel);
+		ChangeStackingLevel(wwin_inspected->frame->core, WMNormalLevel);
 
-	wwin->flags.omnipresent = 0;
+	wwin_inspected->flags.omnipresent = 0;
 
-	if (WFLAGP(wwin, skip_window_list) != old_skip_window_list) {
-		if (WFLAGP(wwin, skip_window_list)) {
-			switchmenu_delitem(wwin->vscr, wwin);
+	if (WFLAGP(wwin_inspected, skip_window_list) != old_skip_window_list) {
+		virtual_screen *vscr = wwin_inspected->vscr;
 
-			wMenuRealize(wwin->vscr->menu.switch_menu);
-			tmp = wwin->vscr->menu.switch_menu->frame->top_width + 5;
-			/* if menu got unreachable, bring it to a visible place */
-			if (wwin->vscr->menu.switch_menu->frame_x < tmp - (int) wwin->vscr->menu.switch_menu->frame->core->width)
-				wMenuMove(wwin->vscr->menu.switch_menu, tmp - (int) wwin->vscr->menu.switch_menu->frame->core->width,
-					  wwin->vscr->menu.switch_menu->frame_y, False);
-
-			wMenuPaint(wwin->vscr->menu.switch_menu);
-		} else {
-			switchmenu_additem(wwin->vscr->menu.switch_menu, wwin->vscr, wwin);
-			wMenuRealize(wwin->vscr->menu.switch_menu);
-
-			tmp = wwin->vscr->menu.switch_menu->frame->top_width + 5;
-			/* if menu got unreachable, bring it to a visible place */
-			if (wwin->vscr->menu.switch_menu->frame_x < tmp - (int) wwin->vscr->menu.switch_menu->frame->core->width)
-			wMenuMove(wwin->vscr->menu.switch_menu, tmp - (int) wwin->vscr->menu.switch_menu->frame->core->width,
-				  wwin->vscr->menu.switch_menu->frame_y, False);
-
-			wMenuPaint(wwin->vscr->menu.switch_menu);
-		}
-	} else {
-		if (WFLAGP(wwin, omnipresent) != old_omnipresent)
-			WMPostNotificationName(WMNChangedState, wwin, "omnipresent");
-	}
-
-	if (WFLAGP(wwin, no_bind_keys) != old_no_bind_keys) {
-		if (WFLAGP(wwin, no_bind_keys))
-			XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (WFLAGP(wwin_inspected, skip_window_list))
+			switchmenu_delitem(vscr->menu.switch_menu, wwin_inspected);
 		else
-			wWindowSetKeyGrabs(wwin);
+			switchmenu_additem(vscr->menu.switch_menu, wwin_inspected);
+
+		menu_move_visible(vscr->menu.switch_menu);
+	} else {
+		if (WFLAGP(wwin_inspected, omnipresent) != old_omnipresent)
+			WMPostNotificationName(WMNChangedState, wwin_inspected, "omnipresent");
 	}
 
-	if (WFLAGP(wwin, no_bind_mouse) != old_no_bind_mouse)
-		wWindowResetMouseGrabs(wwin);
+	if (WFLAGP(wwin_inspected, no_bind_keys) != old_no_bind_keys) {
+		if (WFLAGP(wwin_inspected, no_bind_keys))
+			XUngrabKey(dpy, AnyKey, AnyModifier, wwin_inspected->frame->core->window);
+		else
+			wWindowSetKeyGrabs(wwin_inspected);
+	}
 
-	wwin->frame->flags.need_texture_change = 1;
-	wWindowConfigureBorders(wwin);
-	wFrameWindowPaint(wwin->frame);
-	wNETWMUpdateActions(wwin, False);
+	if (WFLAGP(wwin_inspected, no_bind_mouse) != old_no_bind_mouse)
+		wWindowResetMouseGrabs(wwin_inspected);
+
+	wwin_inspected->frame->flags.need_texture_change = 1;
+	wWindowConfigureBorders(wwin_inspected);
+	wFrameWindowPaint(wwin_inspected->frame);
+	wNETWMUpdateActions(wwin_inspected, False);
 
 	/* Can't apply emulate_appicon because it will probably cause problems. */
 	if (wapp) {
@@ -795,26 +783,26 @@ static void applySettings(WMWidget *button, void *client_data)
 
 		/* If always_user_icon flag is set, but the user icon is not set
 		 * we use client supplied icon and we unset the flag */
-		if ((WFLAGP(wwin, always_user_icon) && (!file))) {
+		if ((WFLAGP(wwin_inspected, always_user_icon) && (!file))) {
 			/* Show the warning */
 			char *buf;
 			int len = 100;
 
 			buf = wmalloc(len);
 			snprintf(buf, len, _("Ignore client supplied icon is set, but icon filename textbox is empty. Using client supplied icon"));
-			wMessageDialog(panel->frame->vscr, _("Warning"), buf, _("OK"), NULL, NULL);
+			wMessageDialog(panel->wwin->vscr, _("Warning"), buf, _("OK"), NULL, NULL);
 			wfree(buf);
 			wfree(file);
 
 			/* Change the flags */
-			WSETUFLAG(wwin, always_user_icon, 0);
+			WSETUFLAG(wwin_inspected, always_user_icon, 0);
 			WMSetButtonSelected(panel->alwChk, 0);
 		}
 
 		/* After test the always_user_icon flag value before,
 		 * the "else" block is used only if the flag is set and
 		 * the icon text box has an icon path */
-		if (!WFLAGP(wwin, always_user_icon)) {
+		if (!WFLAGP(wwin_inspected, always_user_icon)) {
 			/* Change App Icon image, using the icon provided by the client */
 			if (wapp->app_icon) {
 				RImage *image = get_rimage_icon_from_wm_hints(wapp->app_icon->icon);
@@ -828,13 +816,13 @@ static void applySettings(WMWidget *button, void *client_data)
 
 			/* Change icon image if the app is minimized,
 			 * using the icon provided by the client */
-			if (wwin->icon) {
-				RImage *image = get_rimage_icon_from_wm_hints(wwin->icon);
+			if (wwin_inspected->icon) {
+				RImage *image = get_rimage_icon_from_wm_hints(wwin_inspected->icon);
 				if (image) {
-					set_icon_image_from_image(wwin->icon, image);
-					update_icon_pixmap(wwin->icon);
+					set_icon_image_from_image(wwin_inspected->icon, image);
+					update_icon_pixmap(wwin_inspected->icon);
 				} else {
-					wIconUpdate(wwin->icon);
+					wIconUpdate(wwin_inspected->icon);
 				}
 			}
 		} else {
@@ -843,22 +831,22 @@ static void applySettings(WMWidget *button, void *client_data)
 				wIconChangeImageFile(wapp->app_icon->icon, file);
 
 			/* Change icon image if the app is minimized */
-			if (wwin->icon)
-				wIconChangeImageFile(wwin->icon, file);
+			if (wwin_inspected->icon)
+				wIconChangeImageFile(wwin_inspected->icon, file);
 		}
 
 		if (file)
 			wfree(file);
 	}
 
-	wNETFrameExtents(wwin);
+	wNETFrameExtents(wwin_inspected);
 }
 
 static void revertSettings(WMWidget *button, void *client_data)
 {
 	InspectorPanel *panel = (InspectorPanel *) client_data;
-	WWindow *wwin = panel->inspected;
-	WApplication *wapp = wApplicationOf(wwin->main_window);
+	WWindow *wwin_inspected = panel->inspected;
+	WApplication *wapp = wApplicationOf(wwin_inspected->main_window);
 	int i, n, workspace, level;
 	char *wm_instance = NULL, *wm_class = NULL;
 
@@ -866,29 +854,29 @@ static void revertSettings(WMWidget *button, void *client_data)
 	(void) button;
 
 	if (panel->instRb && WMGetButtonSelected(panel->instRb) != 0)
-		wm_instance = wwin->wm_instance;
+		wm_instance = wwin_inspected->wm_instance;
 	else if (panel->clsRb && WMGetButtonSelected(panel->clsRb) != 0)
-		wm_class = wwin->wm_class;
+		wm_class = wwin_inspected->wm_class;
 	else if (panel->bothRb && WMGetButtonSelected(panel->bothRb) != 0) {
-		wm_instance = wwin->wm_instance;
-		wm_class = wwin->wm_class;
+		wm_instance = wwin_inspected->wm_instance;
+		wm_class = wwin_inspected->wm_class;
 	}
 
-	memset(&wwin->defined_user_flags, 0, sizeof(WWindowAttributes));
-	memset(&wwin->user_flags, 0, sizeof(WWindowAttributes));
-	memset(&wwin->client_flags, 0, sizeof(WWindowAttributes));
+	memset(&wwin_inspected->defined_user_flags, 0, sizeof(WWindowAttributes));
+	memset(&wwin_inspected->user_flags, 0, sizeof(WWindowAttributes));
+	memset(&wwin_inspected->client_flags, 0, sizeof(WWindowAttributes));
 
-	wWindowSetupInitialAttributes(wwin, &level, &workspace);
+	wWindowSetupInitialAttributes(wwin_inspected, &level, &workspace);
 
 	/* Attributes... --> Window Attributes */
 	for (i = 0; i < wlengthof(window_attribute); i++) {
 		int is_userdef, flag;
 
-		is_userdef = get_attr_flag(&wwin->defined_user_flags, &window_attribute[i].flag);
+		is_userdef = get_attr_flag(&wwin_inspected->defined_user_flags, &window_attribute[i].flag);
 		if (is_userdef)
-			flag = get_attr_flag(&wwin->user_flags, &window_attribute[i].flag);
+			flag = get_attr_flag(&wwin_inspected->user_flags, &window_attribute[i].flag);
 		else
-			flag = get_attr_flag(&wwin->client_flags, &window_attribute[i].flag);
+			flag = get_attr_flag(&wwin_inspected->client_flags, &window_attribute[i].flag);
 
 		WMSetButtonSelected(panel->attrChk[i], flag);
 	}
@@ -897,11 +885,11 @@ static void revertSettings(WMWidget *button, void *client_data)
 	for (i = 0; i < wlengthof(advanced_option); i++) {
 		int is_userdef, flag;
 
-		is_userdef = get_attr_flag(&wwin->defined_user_flags, &advanced_option[i].flag);
+		is_userdef = get_attr_flag(&wwin_inspected->defined_user_flags, &advanced_option[i].flag);
 		if (is_userdef)
-			flag = get_attr_flag(&wwin->user_flags, &advanced_option[i].flag);
+			flag = get_attr_flag(&wwin_inspected->user_flags, &advanced_option[i].flag);
 		else
-			flag = get_attr_flag(&wwin->client_flags, &advanced_option[i].flag);
+			flag = get_attr_flag(&wwin_inspected->client_flags, &advanced_option[i].flag);
 
 		WMSetButtonSelected(panel->moreChk[i], flag);
 	}
@@ -926,13 +914,13 @@ static void revertSettings(WMWidget *button, void *client_data)
 			WMSetButtonSelected(panel->appChk[i], flag);
 		}
 	}
-	WMSetButtonSelected(panel->alwChk, WFLAGP(wwin, always_user_icon));
+	WMSetButtonSelected(panel->alwChk, WFLAGP(wwin_inspected, always_user_icon));
 
 	showIconFor(WMWidgetScreen(panel->alwChk), panel, wm_instance, wm_class, REVERT_TO_DEFAULT);
 
-	n = wDefaultGetStartWorkspace(wwin->vscr, wm_instance, wm_class);
+	n = wDefaultGetStartWorkspace(wwin_inspected->vscr, wm_instance, wm_class);
 
-	if (n >= 0 && n < wwin->vscr->workspace.count)
+	if (n >= 0 && n < wwin_inspected->vscr->workspace.count)
 		WMSetPopUpButtonSelectedItem(panel->wsP, n + 1);
 	else
 		WMSetPopUpButtonSelectedItem(panel->wsP, 0);
@@ -972,7 +960,7 @@ static void textEditedObserver(void *observerData, WMNotification *notification)
 	if ((long)WMGetNotificationClientData(notification) != WMReturnTextMovement)
 		return;
 
-	showIconFor(WMWidgetScreen(panel->wwin), panel, NULL, NULL, USE_TEXT_FIELD);
+	showIconFor(WMWidgetScreen(panel->win), panel, NULL, NULL, USE_TEXT_FIELD);
 }
 
 static void selectSpecification(WMWidget *bPtr, void *data)
@@ -980,42 +968,42 @@ static void selectSpecification(WMWidget *bPtr, void *data)
 	InspectorPanel *panel = (InspectorPanel *) data;
 	int len;
 	char *title;
-	WWindow *wwin = panel->inspected;
+	WWindow *wwin_inspected = panel->inspected;
 
-	if (bPtr == panel->defaultRb && (wwin->wm_instance || wwin->wm_class))
+	if (bPtr == panel->defaultRb && (wwin_inspected->wm_instance || wwin_inspected->wm_class))
 		WMSetButtonEnabled(panel->applyBtn, False);
 	else
 		WMSetButtonEnabled(panel->applyBtn, True);
 
 	len = 16;
-	if (wwin->wm_instance)
-		len += strlen(wwin->wm_instance);
+	if (wwin_inspected->wm_instance)
+		len += strlen(wwin_inspected->wm_instance);
 	else
 		len += 1;
 
-	if (wwin->wm_class)
-		len += strlen(wwin->wm_class);
+	if (wwin_inspected->wm_class)
+		len += strlen(wwin_inspected->wm_class);
 	else
 		len += 1;
 
 	title = wmalloc(len);
 	sprintf(title, "Inspecting %s.%s",
-		wwin->wm_instance ? wwin->wm_instance : "?",
-		wwin->wm_class ? wwin->wm_class : "?");
+		wwin_inspected->wm_instance ? wwin_inspected->wm_instance : "?",
+		wwin_inspected->wm_class ? wwin_inspected->wm_class : "?");
 
 	if (panel->title)
 		wfree(panel->title);
 
 	panel->title = title;
 
-	wFrameWindowChangeTitle(panel->frame->frame, panel->title);
+	wWindowUpdateName(panel->wwin, panel->title);
 }
 
 static void selectWindow(WMWidget *bPtr, void *data)
 {
 	InspectorPanel *panel = (InspectorPanel *) data;
-	WWindow *wwin = panel->inspected;
-	WScreen *scr = wwin->vscr->screen_ptr;
+	WWindow *wwin_inspected = panel->inspected;
+	WScreen *scr = wwin_inspected->vscr->screen_ptr;
 	XEvent event;
 	WWindow *iwin;
 
@@ -1034,19 +1022,19 @@ static void selectWindow(WMWidget *bPtr, void *data)
 	XUngrabPointer(dpy, CurrentTime);
 
 	iwin = wWindowFor(event.xbutton.subwindow);
-	if (iwin && !iwin->flags.internal_window && iwin != wwin && !iwin->flags.inspector_open) {
+	if (iwin && !iwin->flags.internal_window && iwin != wwin_inspected && !iwin->flags.inspector_open) {
 		iwin->flags.inspector_open = 1;
 		iwin->inspector = createInspectorForWindow(iwin,
-							   panel->frame->frame_x, panel->frame->frame_y, True);
-		wCloseInspectorForWindow(wwin);
+							   panel->wwin->frame_x, panel->wwin->frame_y, True);
+		wCloseInspectorForWindow(wwin_inspected);
 	} else {
 		WMSetLabelText(panel->specLbl, spec_text);
 	}
 }
 
-static InspectorPanel *createInspectorForWindow(WWindow *wwin, int xpos, int ypos, Bool showSelectPanel)
+static InspectorPanel *createInspectorForWindow(WWindow *wwin_inspected, int xpos, int ypos, Bool showSelectPanel)
 {
-	virtual_screen *vscr = wwin->vscr;
+	virtual_screen *vscr = wwin_inspected->vscr;
 	WScreen *scr = vscr->screen_ptr;
 	InspectorPanel *panel;
 	Window parent;
@@ -1064,37 +1052,37 @@ static InspectorPanel *createInspectorForWindow(WWindow *wwin, int xpos, int ypo
 
 	panel->title = NULL;
 	panel->destroyed = 0;
-	panel->inspected = wwin;
+	panel->inspected = wwin_inspected;
 	panel->nextPtr = panelList;
 	panelList = panel;
-	panel->wwin = WMCreateWindow(scr->wmscreen, "windowInspector");
-	WMResizeWidget(panel->wwin, PWIDTH, PHEIGHT);
+	panel->win = WMCreateWindow(scr->wmscreen, "windowInspector");
+	WMResizeWidget(panel->win, PWIDTH, PHEIGHT);
 
 	/**** create common stuff ****/
 	/* command buttons */
 	btn_width = (PWIDTH - (2 * 15) - (2 * 10)) / 3;
-	panel->saveBtn = WMCreateCommandButton(panel->wwin);
+	panel->saveBtn = WMCreateCommandButton(panel->win);
 	WMSetButtonAction(panel->saveBtn, saveSettings, panel);
 	WMMoveWidget(panel->saveBtn, (2 * (btn_width + 10)) + 15, PHEIGHT - 40);
 	WMSetButtonText(panel->saveBtn, _("Save"));
 	WMResizeWidget(panel->saveBtn, btn_width, 28);
-	if (wPreferences.flags.noupdates || !(wwin->wm_class || wwin->wm_instance))
+	if (wPreferences.flags.noupdates || !(wwin_inspected->wm_class || wwin_inspected->wm_instance))
 		WMSetButtonEnabled(panel->saveBtn, False);
 
-	panel->applyBtn = WMCreateCommandButton(panel->wwin);
+	panel->applyBtn = WMCreateCommandButton(panel->win);
 	WMSetButtonAction(panel->applyBtn, applySettings, panel);
 	WMMoveWidget(panel->applyBtn, btn_width + 10 + 15, PHEIGHT - 40);
 	WMSetButtonText(panel->applyBtn, _("Apply"));
 	WMResizeWidget(panel->applyBtn, btn_width, 28);
 
-	panel->revertBtn = WMCreateCommandButton(panel->wwin);
+	panel->revertBtn = WMCreateCommandButton(panel->win);
 	WMSetButtonAction(panel->revertBtn, revertSettings, panel);
 	WMMoveWidget(panel->revertBtn, 15, PHEIGHT - 40);
 	WMSetButtonText(panel->revertBtn, _("Reload"));
 	WMResizeWidget(panel->revertBtn, btn_width, 28);
 
 	/* page selection popup button */
-	panel->pagePopUp = WMCreatePopUpButton(panel->wwin);
+	panel->pagePopUp = WMCreatePopUpButton(panel->win);
 	WMSetPopUpButtonAction(panel->pagePopUp, changePage, panel);
 	WMMoveWidget(panel->pagePopUp, 25, 15);
 	WMResizeWidget(panel->pagePopUp, PWIDTH - 50, 20);
@@ -1108,7 +1096,7 @@ static InspectorPanel *createInspectorForWindow(WWindow *wwin, int xpos, int ypo
 	/**** window spec ****/
 	frame_width = PWIDTH - (2 * 15);
 
-	panel->specFrm = WMCreateFrame(panel->wwin);
+	panel->specFrm = WMCreateFrame(panel->win);
 	WMSetFrameTitle(panel->specFrm, _("Window Specification"));
 	WMMoveWidget(panel->specFrm, 15, 65);
 	WMResizeWidget(panel->specFrm, frame_width, 145);
@@ -1120,9 +1108,9 @@ static InspectorPanel *createInspectorForWindow(WWindow *wwin, int xpos, int ypo
 	WMSetButtonSelected(panel->defaultRb, False);
 	WMSetButtonAction(panel->defaultRb, selectSpecification, panel);
 
-	if (wwin->wm_class && wwin->wm_instance) {
-		tmp = wstrconcat(wwin->wm_instance, ".");
-		str = wstrconcat(tmp, wwin->wm_class);
+	if (wwin_inspected->wm_class && wwin_inspected->wm_instance) {
+		tmp = wstrconcat(wwin_inspected->wm_instance, ".");
+		str = wstrconcat(tmp, wwin_inspected->wm_class);
 
 		panel->bothRb = WMCreateRadioButton(panel->specFrm);
 		WMMoveWidget(panel->bothRb, 10, 18);
@@ -1138,11 +1126,11 @@ static InspectorPanel *createInspectorForWindow(WWindow *wwin, int xpos, int ypo
 		WMSetButtonAction(panel->bothRb, selectSpecification, panel);
 	}
 
-	if (wwin->wm_instance) {
+	if (wwin_inspected->wm_instance) {
 		panel->instRb = WMCreateRadioButton(panel->specFrm);
 		WMMoveWidget(panel->instRb, 10, 38);
 		WMResizeWidget(panel->instRb, frame_width - (2 * 10), 20);
-		WMSetButtonText(panel->instRb, wwin->wm_instance);
+		WMSetButtonText(panel->instRb, wwin_inspected->wm_instance);
 		WMGroupButtons(panel->defaultRb, panel->instRb);
 
 		if (!selectedBtn)
@@ -1151,11 +1139,11 @@ static InspectorPanel *createInspectorForWindow(WWindow *wwin, int xpos, int ypo
 		WMSetButtonAction(panel->instRb, selectSpecification, panel);
 	}
 
-	if (wwin->wm_class) {
+	if (wwin_inspected->wm_class) {
 		panel->clsRb = WMCreateRadioButton(panel->specFrm);
 		WMMoveWidget(panel->clsRb, 10, 58);
 		WMResizeWidget(panel->clsRb, frame_width - (2 * 10), 20);
-		WMSetButtonText(panel->clsRb, wwin->wm_class);
+		WMSetButtonText(panel->clsRb, wwin_inspected->wm_class);
 		WMGroupButtons(panel->defaultRb, panel->clsRb);
 
 		if (!selectedBtn)
@@ -1170,7 +1158,7 @@ static InspectorPanel *createInspectorForWindow(WWindow *wwin, int xpos, int ypo
 	WMSetButtonText(panel->selWinB, _("Select window"));
 	WMSetButtonAction(panel->selWinB, selectWindow, panel);
 
-	panel->specLbl = WMCreateLabel(panel->wwin);
+	panel->specLbl = WMCreateLabel(panel->win);
 	WMMoveWidget(panel->specLbl, 15, 210);
 	WMResizeWidget(panel->specLbl, frame_width, 100);
 	WMSetLabelText(panel->specLbl, spec_text);
@@ -1179,23 +1167,23 @@ static InspectorPanel *createInspectorForWindow(WWindow *wwin, int xpos, int ypo
 	WMSetLabelTextAlignment(panel->specLbl, WALeft);
 
 	/**** attributes ****/
-	create_tab_window_attributes(wwin, panel, frame_width);
-	create_tab_window_advanced(wwin, panel, frame_width);
-	create_tab_icon_workspace(wwin, panel);
-	create_tab_app_specific(wwin, panel, frame_width);
+	create_tab_window_attributes(wwin_inspected, panel, frame_width);
+	create_tab_window_advanced(wwin_inspected, panel, frame_width);
+	create_tab_icon_workspace(wwin_inspected, panel);
+	create_tab_app_specific(wwin_inspected, panel, frame_width);
 
 	/* if the window is a transient, don't let it have a miniaturize button */
-	if (wwin->transient_for != None && wwin->transient_for != scr->root_win)
+	if (wwin_inspected->transient_for != None && wwin_inspected->transient_for != scr->root_win)
 		WMSetButtonEnabled(panel->attrChk[3], False);
 	else
 		WMSetButtonEnabled(panel->attrChk[3], True);
 
-	if (!wwin->wm_class && !wwin->wm_instance)
+	if (!wwin_inspected->wm_class && !wwin_inspected->wm_instance)
 		WMSetPopUpButtonItemEnabled(panel->pagePopUp, 0, False);
 
-	WMRealizeWidget(panel->wwin);
+	WMRealizeWidget(panel->win);
 
-	WMMapSubwidgets(panel->wwin);
+	WMMapSubwidgets(panel->win);
 	WMMapSubwidgets(panel->specFrm);
 	WMMapSubwidgets(panel->attrFrm);
 	WMMapSubwidgets(panel->moreFrm);
@@ -1215,15 +1203,15 @@ static InspectorPanel *createInspectorForWindow(WWindow *wwin, int xpos, int ypo
 	parent = XCreateSimpleWindow(dpy, scr->root_win, 0, 0, PWIDTH, PHEIGHT, 0, 0, 0);
 	XSelectInput(dpy, parent, KeyPressMask | KeyReleaseMask);
 	panel->parent = parent;
-	XReparentWindow(dpy, WMWidgetXID(panel->wwin), parent, 0, 0);
+	XReparentWindow(dpy, WMWidgetXID(panel->win), parent, 0, 0);
 
-	WMMapWidget(panel->wwin);
+	WMMapWidget(panel->win);
 
-	XSetTransientForHint(dpy, parent, wwin->client_win);
+	XSetTransientForHint(dpy, parent, wwin_inspected->client_win);
 
 	if (xpos == UNDEFINED_POS) {
-		x = wwin->frame_x + wwin->frame->core->width / 2;
-		y = wwin->frame_y + wwin->frame->top_width * 2;
+		x = wwin_inspected->frame_x + wwin_inspected->frame->core->width / 2;
+		y = wwin_inspected->frame_y + wwin_inspected->frame->top_width * 2;
 		if (y + PHEIGHT > scr->scr_height)
 			y = scr->scr_height - PHEIGHT - 30;
 		if (x + PWIDTH > scr->scr_width)
@@ -1233,7 +1221,7 @@ static InspectorPanel *createInspectorForWindow(WWindow *wwin, int xpos, int ypo
 		y = ypos;
 	}
 
-	panel->frame = wManageInternalWindow(vscr, parent, wwin->client_win, "Inspector", x, y, PWIDTH, PHEIGHT);
+	panel->wwin = wManageInternalWindow(vscr, parent, wwin_inspected->client_win, "Inspector", x, y, PWIDTH, PHEIGHT);
 
 	if (!selectedBtn)
 		selectedBtn = panel->defaultRb;
@@ -1242,76 +1230,79 @@ static InspectorPanel *createInspectorForWindow(WWindow *wwin, int xpos, int ypo
 	selectSpecification(selectedBtn, panel);
 
 	/* kluge to know who should get the key events */
-	panel->frame->client_leader = WMWidgetXID(panel->wwin);
+	panel->wwin->client_leader = WMWidgetXID(panel->win);
 
-	panel->frame->client_flags.no_closable = 0;
-	panel->frame->client_flags.no_close_button = 0;
-	wWindowUpdateButtonImages(panel->frame);
-	wframewindow_show_rightbutton(panel->frame->frame);
-	wframewindow_refresh_titlebar(panel->frame->frame);
-	panel->frame->frame->on_click_right = destroyInspector;
+	panel->wwin->client_flags.no_closable = 0;
+	panel->wwin->client_flags.no_close_button = 0;
+	wWindowUpdateButtonImages(panel->wwin);
+	wframewindow_show_rightbutton(panel->wwin->frame);
+#ifdef XKB_BUTTON_HINT
+	wframewindow_hide_languagebutton(panel->wwin->frame);
+#endif
+	wframewindow_refresh_titlebar(panel->wwin->frame);
+	panel->wwin->frame->on_click_right = destroyInspector;
 
-	wWindowMap(panel->frame);
+	wWindowMap(panel->wwin);
 
-	showIconFor(WMWidgetScreen(panel->alwChk), panel, wwin->wm_instance, wwin->wm_class, UPDATE_TEXT_FIELD);
+	showIconFor(WMWidgetScreen(panel->alwChk), panel, wwin_inspected->wm_instance, wwin_inspected->wm_class, UPDATE_TEXT_FIELD);
 
 	return panel;
 }
 
-void wShowInspectorForWindow(WWindow *wwin)
+void wShowInspectorForWindow(WWindow *wwin_inspected)
 {
-	if (wwin->flags.inspector_open)
+	if (wwin_inspected->flags.inspector_open)
 		return;
 
-	WMSetBalloonEnabled(wwin->vscr->screen_ptr->wmscreen, wPreferences.help_balloon);
+	WMSetBalloonEnabled(wwin_inspected->vscr->screen_ptr->wmscreen, wPreferences.help_balloon);
 
 	make_keys();
-	wwin->flags.inspector_open = 1;
-	wwin->inspector = createInspectorForWindow(wwin, UNDEFINED_POS, UNDEFINED_POS, False);
+	wwin_inspected->flags.inspector_open = 1;
+	wwin_inspected->inspector = createInspectorForWindow(wwin_inspected, UNDEFINED_POS, UNDEFINED_POS, False);
 }
 
-void wHideInspectorForWindow(WWindow *wwin)
+void wHideInspectorForWindow(WWindow *wwin_inspected)
 {
-	WWindow *pwin = wwin->inspector->frame;
+	WWindow *wwin = wwin_inspected->inspector->wwin;
 
-	wWindowUnmap(pwin);
-	pwin->flags.hidden = 1;
+	wWindowUnmap(wwin);
+	wwin->flags.hidden = 1;
 
-	wClientSetState(pwin, IconicState, None);
+	wClientSetState(wwin, IconicState, None);
 }
 
-void wUnhideInspectorForWindow(WWindow *wwin)
+void wUnhideInspectorForWindow(WWindow *wwin_inspected)
 {
-	WWindow *pwin = wwin->inspector->frame;
+	WWindow *wwin = wwin_inspected->inspector->wwin;
 
-	pwin->flags.hidden = 0;
-	pwin->flags.mapped = 1;
-	XMapWindow(dpy, pwin->client_win);
-	XMapWindow(dpy, pwin->frame->core->window);
-	wClientSetState(pwin, NormalState, None);
+	wwin->flags.hidden = 0;
+	wwin->flags.mapped = 1;
+	XMapWindow(dpy, wwin->client_win);
+	XMapWindow(dpy, wwin->frame->core->window);
+	wClientSetState(wwin, NormalState, None);
 }
 
-WWindow *wGetWindowOfInspectorForWindow(WWindow *wwin)
+WWindow *wGetWindowOfInspectorForWindow(WWindow *wwin_inspected)
 {
-	if (!wwin->inspector)
+	if (!wwin_inspected->inspector)
 		return NULL;
 
-	assert(wwin->flags.inspector_open != 0);
-	return wwin->inspector->frame;
+	assert(wwin_inspected->flags.inspector_open != 0);
+	return wwin_inspected->inspector->wwin;
 }
 
-void wCloseInspectorForWindow(WWindow *wwin)
+void wCloseInspectorForWindow(WWindow *wwin_inspected)
 {
-	WWindow *pwin = wwin->inspector->frame;	/* the inspector window */
+	WWindow *wwin = wwin_inspected->inspector->wwin;	/* the inspector window */
 
-	(*pwin->frame->on_click_right) (NULL, pwin, NULL);
+	(*wwin->frame->on_click_right) (NULL, wwin, NULL);
 }
 
-static void create_tab_window_attributes(WWindow *wwin, InspectorPanel *panel, int frame_width)
+static void create_tab_window_attributes(WWindow *wwin_inspected, InspectorPanel *panel, int frame_width)
 {
 	int i = 0;
 
-	panel->attrFrm = WMCreateFrame(panel->wwin);
+	panel->attrFrm = WMCreateFrame(panel->win);
 	WMSetFrameTitle(panel->attrFrm, _("Attributes"));
 	WMMoveWidget(panel->attrFrm, 15, 45);
 	WMResizeWidget(panel->attrFrm, frame_width, 250);
@@ -1319,11 +1310,11 @@ static void create_tab_window_attributes(WWindow *wwin, InspectorPanel *panel, i
 	for (i = 0; i < wlengthof(window_attribute); i++) {
 		int is_userdef, flag;
 
-		is_userdef = get_attr_flag(&wwin->defined_user_flags, &window_attribute[i].flag);
+		is_userdef = get_attr_flag(&wwin_inspected->defined_user_flags, &window_attribute[i].flag);
 		if (is_userdef)
-			flag = get_attr_flag(&wwin->user_flags, &window_attribute[i].flag);
+			flag = get_attr_flag(&wwin_inspected->user_flags, &window_attribute[i].flag);
 		else
-			flag = get_attr_flag(&wwin->client_flags, &window_attribute[i].flag);
+			flag = get_attr_flag(&wwin_inspected->client_flags, &window_attribute[i].flag);
 
 		panel->attrChk[i] = WMCreateSwitchButton(panel->attrFrm);
 		WMMoveWidget(panel->attrChk[i], 10, 20 * (i + 1));
@@ -1335,11 +1326,11 @@ static void create_tab_window_attributes(WWindow *wwin, InspectorPanel *panel, i
 	}
 }
 
-static void create_tab_window_advanced(WWindow *wwin, InspectorPanel *panel, int frame_width)
+static void create_tab_window_advanced(WWindow *wwin_inspected, InspectorPanel *panel, int frame_width)
 {
 	int i = 0;
 
-	panel->moreFrm = WMCreateFrame(panel->wwin);
+	panel->moreFrm = WMCreateFrame(panel->win);
 	WMSetFrameTitle(panel->moreFrm, _("Advanced"));
 	WMMoveWidget(panel->moreFrm, 15, 45);
 	WMResizeWidget(panel->moreFrm, frame_width, 265);
@@ -1347,11 +1338,11 @@ static void create_tab_window_advanced(WWindow *wwin, InspectorPanel *panel, int
 	for (i = 0; i < wlengthof(advanced_option); i++) {
 		int is_userdef, flag;
 
-		is_userdef = get_attr_flag(&wwin->defined_user_flags, &advanced_option[i].flag);
+		is_userdef = get_attr_flag(&wwin_inspected->defined_user_flags, &advanced_option[i].flag);
 		if (is_userdef)
-			flag = get_attr_flag(&wwin->user_flags, &advanced_option[i].flag);
+			flag = get_attr_flag(&wwin_inspected->user_flags, &advanced_option[i].flag);
 		else
-			flag = get_attr_flag(&wwin->client_flags, &advanced_option[i].flag);
+			flag = get_attr_flag(&wwin_inspected->client_flags, &advanced_option[i].flag);
 
 		panel->moreChk[i] = WMCreateSwitchButton(panel->moreFrm);
 		WMMoveWidget(panel->moreChk[i], 10, 20 * (i + 1) - 4);
@@ -1363,12 +1354,12 @@ static void create_tab_window_advanced(WWindow *wwin, InspectorPanel *panel, int
 	}
 }
 
-static void create_tab_icon_workspace(WWindow *wwin, InspectorPanel *panel)
+static void create_tab_icon_workspace(WWindow *wwin_inspected, InspectorPanel *panel)
 {
 	int i = 0;
 
 	/* miniwindow/workspace */
-	panel->iconFrm = WMCreateFrame(panel->wwin);
+	panel->iconFrm = WMCreateFrame(panel->win);
 	WMMoveWidget(panel->iconFrm, 15, 50);
 	WMResizeWidget(panel->iconFrm, PWIDTH - (2 * 15), 170);
 	WMSetFrameTitle(panel->iconFrm, _("Miniwindow Image"));
@@ -1400,9 +1391,9 @@ static void create_tab_icon_workspace(WWindow *wwin, InspectorPanel *panel)
 	WMMoveWidget(panel->alwChk, 20, 130);
 	WMResizeWidget(panel->alwChk, PWIDTH - (2 * 15) - (2 * 15), 30);
 	WMSetButtonText(panel->alwChk, _("Ignore client supplied icon"));
-	WMSetButtonSelected(panel->alwChk, WFLAGP(wwin, always_user_icon));
+	WMSetButtonSelected(panel->alwChk, WFLAGP(wwin_inspected, always_user_icon));
 
-	panel->wsFrm = WMCreateFrame(panel->wwin);
+	panel->wsFrm = WMCreateFrame(panel->win);
 	WMMoveWidget(panel->wsFrm, 15, 225);
 	WMResizeWidget(panel->wsFrm, PWIDTH - (2 * 15), 70);
 	WMSetFrameTitle(panel->wsFrm, _("Initial Workspace"));
@@ -1415,25 +1406,25 @@ static void create_tab_icon_workspace(WWindow *wwin, InspectorPanel *panel)
 	WMResizeWidget(panel->wsP, PWIDTH - (2 * 15) - (2 * 20), 20);
 	WMAddPopUpButtonItem(panel->wsP, _("Nowhere in particular"));
 
-	for (i = 0; i < wwin->vscr->workspace.count; i++)
-		WMAddPopUpButtonItem(panel->wsP, wwin->vscr->workspace.array[i]->name);
+	for (i = 0; i < wwin_inspected->vscr->workspace.count; i++)
+		WMAddPopUpButtonItem(panel->wsP, wwin_inspected->vscr->workspace.array[i]->name);
 
-	i = wDefaultGetStartWorkspace(wwin->vscr, wwin->wm_instance, wwin->wm_class);
-	if (i >= 0 && i <= wwin->vscr->workspace.count)
+	i = wDefaultGetStartWorkspace(wwin_inspected->vscr, wwin_inspected->wm_instance, wwin_inspected->wm_class);
+	if (i >= 0 && i <= wwin_inspected->vscr->workspace.count)
 		WMSetPopUpButtonSelectedItem(panel->wsP, i + 1);
 	else
 		WMSetPopUpButtonSelectedItem(panel->wsP, 0);
 }
 
-static void create_tab_app_specific(WWindow *wwin, InspectorPanel *panel, int frame_width)
+static void create_tab_app_specific(WWindow *wwin_inspected, InspectorPanel *panel, int frame_width)
 {
-	WScreen *scr = wwin->vscr->screen_ptr;
+	WScreen *scr = wwin_inspected->vscr->screen_ptr;
 	int i = 0, tmp;
 
-	if (wwin->main_window != None) {
-		WApplication *wapp = wApplicationOf(wwin->main_window);
+	if (wwin_inspected->main_window != None) {
+		WApplication *wapp = wApplicationOf(wwin_inspected->main_window);
 
-		panel->appFrm = WMCreateFrame(panel->wwin);
+		panel->appFrm = WMCreateFrame(panel->win);
 		WMSetFrameTitle(panel->appFrm, _("Application Attributes"));
 		WMMoveWidget(panel->appFrm, 15, 50);
 		WMResizeWidget(panel->appFrm, frame_width, 240);
@@ -1456,7 +1447,7 @@ static void create_tab_app_specific(WWindow *wwin, InspectorPanel *panel, int fr
 						WMWidgetView(panel->appChk[i]));
 		}
 
-		if (WFLAGP(wwin, emulate_appicon)) {
+		if (WFLAGP(wwin_inspected, emulate_appicon)) {
 			WMSetButtonEnabled(panel->appChk[1], False);
 			WMSetButtonEnabled(panel->moreChk[7], True);
 		} else {
@@ -1464,8 +1455,8 @@ static void create_tab_app_specific(WWindow *wwin, InspectorPanel *panel, int fr
 			WMSetButtonEnabled(panel->moreChk[7], False);
 		}
 	} else {
-		if ((wwin->transient_for != None && wwin->transient_for != scr->root_win)
-		    || !wwin->wm_class || !wwin->wm_instance)
+		if ((wwin_inspected->transient_for != None && wwin_inspected->transient_for != scr->root_win)
+		    || !wwin_inspected->wm_class || !wwin_inspected->wm_instance)
 			tmp = False;
 		else
 			tmp = True;

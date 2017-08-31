@@ -1078,9 +1078,7 @@ static WMenu *makeWorkspaceMenu(virtual_screen *vscr)
 {
 	WMenu *menu;
 
-	menu = menu_create(NULL);
-	if (!menu)
-		wwarning(_("could not create workspace submenu for Clip menu"));
+	menu = menu_create(vscr, NULL);
 
 	wMenuAddCallback(menu, "", switchWSCommand, (void *) vscr->clip.icon);
 
@@ -1128,16 +1126,12 @@ static void updateOptionsMenu(WDock *dock, WMenu *menu)
 	menu->flags.realized = 0;
 }
 
-static WMenu *clip_make_options_menu(void)
+static WMenu *clip_make_options_menu(virtual_screen *vscr)
 {
 	WMenu *menu;
 	WMenuEntry *entry;
 
-	menu = menu_create(NULL);
-	if (!menu) {
-		wwarning(_("could not create options submenu for Clip menu"));
-		return NULL;
-	}
+	menu = menu_create(vscr, NULL);
 
 	entry = wMenuAddCallback(menu, _("Keep on Top"), toggleLoweredCallback, NULL);
 	entry->flags.indicator = 1;
@@ -1169,16 +1163,12 @@ static WMenu *clip_make_options_menu(void)
 	return menu;
 }
 
-static WMenu *drawer_make_options_menu(void)
+static WMenu *drawer_make_options_menu(virtual_screen *vscr)
 {
 	WMenu *menu;
 	WMenuEntry *entry;
 
-	menu = menu_create(NULL);
-	if (!menu) {
-		wwarning(_("could not create options submenu for Drawer menu"));
-		return NULL;
-	}
+	menu = menu_create(vscr, NULL);
 
 	entry = wMenuAddCallback(menu, _("Keep on Top"), toggleLoweredCallback, NULL);
 	entry->flags.indicator = 1;
@@ -1316,7 +1306,7 @@ static void updateDockPositionMenu(virtual_screen *vscr, WDock *dock)
 	dock->menu->flags.realized = 0;
 }
 
-static WMenu *makeDockPositionMenu(void)
+static WMenu *makeDockPositionMenu(virtual_screen *vscr)
 {
 	/* When calling this, the dock is being created, so scr->dock is still not set
 	 * Therefore the callbacks' clientdata and the indicators can't be set,
@@ -1324,11 +1314,7 @@ static WMenu *makeDockPositionMenu(void)
 	WMenu *menu;
 	WMenuEntry *entry;
 
-	menu = menu_create(NULL);
-	if (!menu) {
-		wwarning(_("could not create options submenu for dock position menu"));
-		return NULL;
-	}
+	menu = menu_create(vscr, NULL);
 
 	entry = wMenuAddCallback(menu, _("Normal"), setDockPositionNormalCallback, NULL);
 	entry->flags.indicator = 1;
@@ -1353,10 +1339,10 @@ void clip_menu_create(virtual_screen *vscr)
 	WMenuEntry *entry;
 
 	/* Create menus */
-	menu = menu_create(NULL);
+	menu = menu_create(vscr, NULL);
 	vscr->clip.submenu = makeWorkspaceMenu(vscr);
 	if (!vscr->clip.opt_menu)
-		vscr->clip.opt_menu = clip_make_options_menu();
+		vscr->clip.opt_menu = clip_make_options_menu(vscr);
 
 	entry = wMenuAddCallback(menu, _("Clip Options"), NULL, NULL);
 
@@ -1438,11 +1424,11 @@ static void drawer_menu_create(virtual_screen *vscr)
 	WMenu *menu;
 	WMenuEntry *entry;
 
-	menu = menu_create(NULL);
+	menu = menu_create(vscr, NULL);
 
 	entry = wMenuAddCallback(menu, _("Drawer options"), NULL, NULL);
 
-	vscr->dock.drawer_opt_menu = drawer_make_options_menu();
+	vscr->dock.drawer_opt_menu = drawer_make_options_menu(vscr);
 
 	wMenuEntrySetCascade_create(menu, entry, vscr->dock.drawer_opt_menu);
 
@@ -1502,11 +1488,11 @@ static WMenu *dock_menu_create(virtual_screen *vscr)
 	WMenu *menu;
 	WMenuEntry *entry;
 
-	menu = menu_create(NULL);
+	menu = menu_create(vscr, NULL);
 
 	entry = wMenuAddCallback(menu, _("Dock position"), NULL, NULL);
 	if (!vscr->dock.pos_menu)
-		vscr->dock.pos_menu = makeDockPositionMenu();
+		vscr->dock.pos_menu = makeDockPositionMenu(vscr);
 
 	wMenuEntrySetCascade_create(menu, entry, vscr->dock.pos_menu);
 
@@ -4701,8 +4687,8 @@ void wDockTrackWindowLaunch(WDock *dock, Window window)
 	Bool found = False;
 
 	if (!PropGetWMClass(window, &wm_class, &wm_instance)) {
-		free(wm_class);
-		free(wm_instance);
+		wfree(wm_class);
+		wfree(wm_instance);
 		return;
 	}
 
@@ -4716,10 +4702,10 @@ void wDockTrackWindowLaunch(WDock *dock, Window window)
 		wfree(command);
 
 	if (wm_class)
-		free(wm_class);
+		wfree(wm_class);
 
 	if (wm_instance)
-		free(wm_instance);
+		wfree(wm_instance);
 }
 
 void wClipUpdateForWorkspaceChange(virtual_screen *vscr, int workspace)

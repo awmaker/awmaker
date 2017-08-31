@@ -513,11 +513,15 @@ static void titlebar_unmap(WFrameWindow *fwin)
 static void titlebar_destroy(WFrameWindow *fwin)
 {
 	wframewindow_destroy_wcorewindow(fwin->left_button);
+	fwin->left_button = NULL;
 #ifdef XKB_BUTTON_HINT
 	wframewindow_destroy_wcorewindow(fwin->language_button);
+	fwin->language_button = NULL;
 #endif
 	wframewindow_destroy_wcorewindow(fwin->right_button);
+	fwin->right_button = NULL;
 	wframewindow_destroy_wcorewindow(fwin->titlebar);
+	fwin->titlebar = NULL;
 }
 
 static void resizebar_create(WFrameWindow *fwin, int width)
@@ -529,6 +533,7 @@ static void resizebar_create(WFrameWindow *fwin, int width)
 static void resizebar_destroy(WFrameWindow *fwin)
 {
 	wframewindow_destroy_wcorewindow(fwin->resizebar);
+	fwin->resizebar = NULL;
 }
 
 static void resizebar_map(WFrameWindow *fwin, int width, int height)
@@ -721,11 +726,14 @@ void wFrameWindowDestroy(WFrameWindow *fwin)
 	titlebar_destroy(fwin);
 	resizebar_destroy(fwin);
 
-	if (fwin->core && fwin->core->stacking)
+	if (fwin->core && fwin->core->stacking) {
 		wfree(fwin->core->stacking);
+		fwin->core->stacking = NULL;
+	}
 
 	wcore_unmap(fwin->core);
 	wframewindow_destroy_wcorewindow(fwin->core);
+	fwin->core = NULL;
 
 	destroy_framewin_buttons(fwin);
 

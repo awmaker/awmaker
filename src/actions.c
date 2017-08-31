@@ -138,16 +138,20 @@ void wSetFocusTo(virtual_screen *vscr, WWindow *wwin)
 	if (old_focused)
 		oapp = wApplicationOf(old_focused->main_window);
 
+	if (oapp) {
+		destroy_app_menu(oapp);
+#ifdef USER_MENU
+		destroy_user_menu(oapp);
+#endif
+	}
+
 	if (wwin == NULL) {
 		XSetInputFocus(dpy, vscr->screen_ptr->no_focus_win, RevertToParent, CurrentTime);
 		if (old_focused)
 			wWindowUnfocus(old_focused);
 
-		if (oapp) {
-			wAppMenuUnmap(oapp->menu);
-			if (wPreferences.highlight_active_app)
-				wApplicationDeactivate(oapp);
-		}
+		if ((oapp) && wPreferences.highlight_active_app)
+			wApplicationDeactivate(oapp);
 
 		WMPostNotificationName(WMNChangedFocus, NULL, (void *)True);
 		return;
@@ -208,7 +212,10 @@ void wSetFocusTo(virtual_screen *vscr, WWindow *wwin)
 		vscr->window.focused = wwin;
 
 		if (oapp && oapp != napp) {
-			wAppMenuUnmap(oapp->menu);
+			destroy_app_menu(napp);
+#ifdef USER_MENU
+			destroy_user_menu(oapp);
+#endif
 			if (wPreferences.highlight_active_app)
 				wApplicationDeactivate(oapp);
 		}
@@ -221,12 +228,11 @@ void wSetFocusTo(virtual_screen *vscr, WWindow *wwin)
 	wWindowFocus(wwin, focused);
 
 	if (napp && !wasfocused) {
+		create_app_menu(vscr, napp);
 #ifdef USER_MENU
-		wUserMenuRefreshInstances(napp->menu, wwin);
-#endif	/* USER_MENU */
-
-		if (wwin->flags.mapped)
-			wAppMenuMap(napp->menu, wwin);
+		if (!napp->app_menu)
+			create_user_menu(vscr, napp);
+#endif
 	}
 
 	if (napp && wPreferences.highlight_active_app)
@@ -1486,34 +1492,21 @@ static void hideWindow(WIcon *icon, int icon_x, int icon_y, WWindow *wwin, int a
 
 void wHideAll(virtual_screen *vscr)
 {
-	WWindow *wwin;
-	WWindow **windows;
-	WMenu *menu;
+	WWindow **windows, *wwin;
 	unsigned int wcount = 0;
 	int i;
 
 	if (!vscr->screen_ptr)
 		return;
 
-	menu = vscr->menu.switch_menu;
-
 	windows = wmalloc(sizeof(WWindow *));
 
-	if (menu != NULL) {
-		for (i = 0; i < menu->entry_no; i++) {
-			windows[wcount] = (WWindow *) menu->entries[i]->clientdata;
-			wcount++;
-			windows = wrealloc(windows, sizeof(WWindow *) * (wcount + 1));
-		}
-	} else {
-		wwin = vscr->window.focused;
-		while (wwin) {
-			windows[wcount] = wwin;
-			wcount++;
-			windows = wrealloc(windows, sizeof(WWindow *) * (wcount + 1));
-			wwin = wwin->prev;
-
-		}
+	wwin = vscr->window.focused;
+	while (wwin) {
+		windows[wcount] = wwin;
+		wcount++;
+		windows = wrealloc(windows, sizeof(WWindow *) * (wcount + 1));
+		wwin = wwin->prev;
 	}
 
 	for (i = 0; i < wcount; i++) {

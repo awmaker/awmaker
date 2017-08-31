@@ -93,9 +93,9 @@ static void menuCloseClick(WCoreWindow *sender, void *data, XEvent *event);
 static void updateTexture(WMenu *menu);
 static void selectEntry(WMenu *menu, int entry_no);
 static void closeCascade(WMenu *menu);
+static void get_menu_width(WMenu *menu);
 static Bool saveMenuRecurs(WMPropList *menus, WMenu *menu, virtual_screen *vscr);
 static int restoreMenuRecurs(virtual_screen *vscr, WMPropList *menus, WMenu *menu, const char *path);
-
 /****** Notification Observers ******/
 
 static void appearanceObserver(void *self, WMNotification *notif)
@@ -133,7 +133,7 @@ static void appearanceObserver(void *self, WMNotification *notif)
 }
 
 /************************************/
-WMenu *menu_create(const char *title)
+WMenu *menu_create(virtual_screen *vscr, const char *title)
 {
 	WMenu *menu;
 	int flags, width = 1;
@@ -145,6 +145,7 @@ WMenu *menu_create(const char *title)
 	menu = wmalloc(sizeof(WMenu));
 	menu->frame = wframewindow_create(NULL, menu, width, 1, flags);
 	menu->menu = wcore_create(width, 10);
+	menu->vscr = vscr;
 
 	if (title) {
 		menu->title = wstrdup(title);
@@ -176,8 +177,8 @@ void menu_unmap(WMenu *menu)
 {
 	destroy_pixmap(menu->menu_texture_data);
 
-        XDeleteContext(dpy, menu->menu->window, w_global.context.client_win);
-        XDestroyWindow(dpy, menu->menu->window);
+	XDeleteContext(dpy, menu->menu->window, w_global.context.client_win);
+	XDestroyWindow(dpy, menu->menu->window);
 
 	framewindow_unmap(menu->frame);
 }
@@ -186,17 +187,26 @@ void menu_destroy(WMenu *menu)
 {
 	menu_unmap(menu);
 
-	if (menu->cascades)
+	if (menu->cascades) {
 		wfree(menu->cascades);
+		menu->cascades = NULL;
+	}
 
-        if (menu->menu->stacking)
-                wfree(menu->menu->stacking);
+	if (menu->menu->stacking) {
+		wfree(menu->menu->stacking);
+		menu->menu->stacking = NULL;
+	}
 
-        if (menu->title)
-                wfree(menu->title);
+	if (menu->title) {
+		wfree(menu->title);
+		menu->title = NULL;
+	}
 
-        wcore_destroy(menu->menu);
+	wcore_destroy(menu->menu);
+	menu->menu = NULL;
 	wFrameWindowDestroy(menu->frame);
+	menu->frame = NULL;
+
 	wfree(menu);
 }
 
@@ -231,8 +241,7 @@ void menu_map(WMenu *menu, virtual_screen *screen)
 	menu->frame_y = 0;
 
 	wcore_map(menu->menu, menu->frame->core,
-		  menu->frame->core->vscr, 0,
-		  menu->frame->top_width, 0,
+		  menu->frame->core->vscr, 0, 0, 0,
 		  menu->frame->core->vscr->screen_ptr->w_depth,
 		  menu->frame->core->vscr->screen_ptr->w_visual,
 		  menu->frame->core->vscr->screen_ptr->w_colormap);
@@ -346,17 +355,21 @@ void wMenuRemoveItem(WMenu *menu, int index)
 	wMenuEntryRemoveCascade(menu, menu->entries[index]);
 
 	/* destroy unshared data */
-
-	if (menu->entries[index]->text)
+	if (menu->entries[index]->text) {
 		wfree(menu->entries[index]->text);
+		menu->entries[index]->text = NULL;
+	}
 
-	if (menu->entries[index]->rtext)
+	if (menu->entries[index]->rtext) {
 		wfree(menu->entries[index]->rtext);
+		menu->entries[index]->text = NULL;
+	}
 
 	if (menu->entries[index]->free_cdata && menu->entries[index]->clientdata)
 		(*menu->entries[index]->free_cdata) (menu->entries[index]->clientdata);
 
 	wfree(menu->entries[index]);
+	menu->entries[index] = NULL;
 
 	for (i = index; i < menu->entry_no - 1; i++) {
 		menu->entries[i + 1]->order--;
@@ -433,34 +446,20 @@ static void updateTexture(WMenu *menu)
 	}
 }
 
-void wMenuRealize(WMenu *menu)
+static void get_menu_width(WMenu *menu)
 {
 	WScreen *scr;
-	int i, flags;
+	int i;
 	int width, rwidth, mrwidth = 0, mwidth = 0;
-	int theight = 0, twidth = 0, eheight;
+	int twidth = 0;
 	char *text;
-
-	/* If not mapped on the screen, return */
-	if (!menu || !menu->frame || !menu->frame->vscr || !menu->frame->vscr->screen_ptr)
-		return;
 
 	scr = menu->frame->vscr->screen_ptr;
 
-	flags = WFF_BORDER;
-	if (menu->flags.titled)
-		flags |= WFF_TITLEBAR | WFF_RIGHT_BUTTON;
-
-	wframewin_set_borders(menu->frame, flags);
-
 	if (menu->flags.titled) {
 		twidth = WMWidthOfString(scr->menu_title_font, menu->title, strlen(menu->title));
-		theight = menu->frame->top_width;
-		twidth += theight + (wPreferences.new_style == TS_NEW ? 16 : 8);
+		twidth += wPreferences.new_style == TS_NEW ? 16 : 8;
 	}
-
-	eheight = WMFontHeight(scr->menu_entry_font) + 6 + wPreferences.menu_text_clearance * 2;
-	menu->entry_height = eheight;
 
 	for (i = 0; i < menu->entry_no; i++) {
 		/* search widest text */
@@ -490,9 +489,38 @@ void wMenuRealize(WMenu *menu)
 	if (mwidth < twidth)
 		mwidth = twidth;
 
-	wCoreConfigure(menu->menu, 0, theight, mwidth, menu->entry_no * eheight - 1);
+	menu->width = mwidth;
+}
 
-	wFrameWindowResize(menu->frame, mwidth, menu->entry_no * eheight - 1
+void wMenuRealize(WMenu *menu)
+{
+	WScreen *scr;
+	int flags;
+	int theight = 0, eheight;
+
+	/* If not mapped on the screen, return */
+	if (!menu || !menu->frame || !menu->frame->vscr || !menu->frame->vscr->screen_ptr)
+		return;
+
+	scr = menu->frame->vscr->screen_ptr;
+
+	flags = WFF_BORDER;
+	if (menu->flags.titled)
+		flags |= WFF_TITLEBAR | WFF_RIGHT_BUTTON;
+
+	wframewin_set_borders(menu->frame, flags);
+
+	if (menu->flags.titled)
+		theight = menu->frame->top_width;
+
+	eheight = WMFontHeight(scr->menu_entry_font) + 6 + wPreferences.menu_text_clearance * 2;
+	menu->entry_height = eheight;
+
+	get_menu_width(menu);
+
+	wCoreConfigure(menu->menu, 0, theight, menu->width, menu->entry_no * eheight - 1);
+
+	wFrameWindowResize(menu->frame, menu->width, menu->entry_no * eheight - 1
 			   + menu->frame->top_width + menu->frame->bottom_width);
 
 	updateTexture(menu);
@@ -522,27 +550,37 @@ void wMenuDestroy(WMenu *menu, int recurse)
 	/* Destroy items if this menu own them. */
 	for (i = 0; i < menu->entry_no; i++) {
 		wfree(menu->entries[i]->text);
-		if (menu->entries[i]->rtext)
+		menu->entries[i]->text = NULL;
+		if (menu->entries[i]->rtext) {
 			wfree(menu->entries[i]->rtext);
+			menu->entries[i]->rtext = NULL;
+		}
 #ifdef USER_MENU
-		if (menu->entries[i]->instances)
+		if (menu->entries[i]->instances) {
 			WMReleasePropList(menu->entries[i]->instances);
+			menu->entries[i]->instances = NULL;
+		}
 #endif
 		if (menu->entries[i]->free_cdata && menu->entries[i]->clientdata)
 			(*menu->entries[i]->free_cdata) (menu->entries[i]->clientdata);
 
 		wfree(menu->entries[i]);
+		menu->entries[i] = NULL;
 	}
 
 	if (recurse) {
 		for (i = 0; i < menu->cascade_no; i++) {
-			if (menu->cascades[i])
+			if (menu->cascades[i]) {
 				wMenuDestroy(menu->cascades[i], recurse);
+				menu->cascades[i] = NULL;
+			}
 		}
 	}
 
-	if (menu->entries)
+	if (menu->entries) {
 		wfree(menu->entries);
+		menu->entries = NULL;
+	}
 
 	menu_destroy(menu);
 }
@@ -701,7 +739,6 @@ static void paintEntry(WMenu *menu, int index, int selected)
 	/* draw right text */
 	if (entry->rtext && entry->cascade < 0) {
 		tw = WMWidthOfString(scr->menu_entry_font, entry->rtext, strlen(entry->rtext));
-
 		WMDrawString(scr->wmscreen, win, color, scr->menu_entry_font, w - 6 - tw,
 			     y + 3 + wPreferences.menu_text_clearance, entry->rtext, strlen(entry->rtext));
 	}
@@ -1011,6 +1048,9 @@ void wMenuMapAt(virtual_screen *vscr, WMenu *menu, int x, int y, int keyboard)
 void wMenuUnmap(WMenu *menu)
 {
 	int i;
+
+	if (!menu)
+		return;
 
 	XUnmapWindow(dpy, menu->frame->core->window);
 	if (menu->flags.titled && menu->flags.buttoned) {
@@ -2250,7 +2290,8 @@ static int restoreMenu(virtual_screen *vscr, WMPropList *menu)
 	return False;
 }
 
-static int restoreMenuRecurs(virtual_screen *vscr, WMPropList *menus, WMenu *menu, const char *path)
+static int restoreMenuRecurs(virtual_screen *vscr, WMPropList *menus,
+			     WMenu *menu, const char *path)
 {
 	WMPropList *key, *entry;
 	char buffer[512];
@@ -2265,35 +2306,34 @@ static int restoreMenuRecurs(virtual_screen *vscr, WMPropList *menus, WMenu *men
 	entry = WMGetFromPLDictionary(menus, key);
 	res = False;
 
-	if (entry && getMenuInfo(entry, &x, &y, &lowered)) {
-		if (!menu->flags.mapped) {
-			width = MENUW(menu);
-			height = MENUH(menu);
-			WMRect rect = wGetRectForHead(vscr->screen_ptr, wGetHeadForPointerLocation(vscr));
+	if (entry && getMenuInfo(entry, &x, &y, &lowered) &&
+	    !menu->flags.mapped) {
+		width = MENUW(menu);
+		height = MENUH(menu);
+		WMRect rect = wGetRectForHead(vscr->screen_ptr,
+					      wGetHeadForPointerLocation(vscr));
 
-			wMenuMapAt(vscr, menu, x, y, False);
+		wMenuMapAt(vscr, menu, x, y, False);
+		if (lowered)
+			changeMenuLevels(menu, True);
 
-			if (lowered)
-				changeMenuLevels(menu, True);
+		if (x < rect.pos.x - width)
+			x = rect.pos.x;
 
-			if (x < rect.pos.x - width)
-				x = rect.pos.x;
+		if (x > rect.pos.x + rect.size.width)
+			x = rect.pos.x + rect.size.width - width;
 
-			if (x > rect.pos.x + rect.size.width)
-				x = rect.pos.x + rect.size.width - width;
+		if (y < rect.pos.y)
+			y = rect.pos.y;
 
-			if (y < rect.pos.y)
-				y = rect.pos.y;
+		if (y > rect.pos.y + rect.size.height)
+			y = rect.pos.y + rect.size.height - height;
 
-			if (y > rect.pos.y + rect.size.height)
-				y = rect.pos.y + rect.size.height - height;
-
-			wMenuMove(menu, x, y, True);
-			menu->flags.buttoned = 1;
-			wframewindow_show_rightbutton(menu->frame);
-			wframewindow_refresh_titlebar(menu->frame);
-			res = True;
-		}
+		wMenuMove(menu, x, y, True);
+		menu->flags.buttoned = 1;
+		wframewindow_show_rightbutton(menu->frame);
+		wframewindow_refresh_titlebar(menu->frame);
+		res = True;
 	}
 
 	WMReleasePropList(key);
@@ -2331,4 +2371,17 @@ void wMenuRestoreState(virtual_screen *vscr)
 	}
 
 	restoreMenuRecurs(vscr, menus, vscr->menu.root_menu, "");
+}
+
+void menu_move_visible(WMenu *menu)
+{
+	int new_x;
+
+	wMenuRealize(menu);
+	new_x = menu->frame->top_width - (int) menu->frame->core->width + 5;
+	/* if menu got unreachable, bring it to a visible place */
+	if (menu->frame_x < new_x)
+		wMenuMove(menu, new_x, menu->frame_y, False);
+
+	wMenuPaint(menu);
 }

@@ -838,7 +838,6 @@ static WMenuEntry *addWindowsMenu(virtual_screen *vscr, WMenu *menu, const char 
 	WMenu *wwmenu;
 	WWindow *wwin;
 	WMenuEntry *entry;
-	int tmp;
 
 	if (vscr->menu.flags.added_window_menu) {
 		wwarning(_
@@ -848,24 +847,15 @@ static WMenuEntry *addWindowsMenu(virtual_screen *vscr, WMenu *menu, const char 
 
 	vscr->menu.flags.added_window_menu = 1;
 
-	wwmenu = menu_create(_("Window List"));
+	wwmenu = menu_create(vscr, _("Window List"));
 	menu_map(wwmenu, vscr);
 
 	wwmenu->on_destroy = cleanupWindowsMenu;
 	vscr->menu.switch_menu = wwmenu;
 	wwin = vscr->window.focused;
 	while (wwin) {
-		switchmenu_additem(vscr->menu.switch_menu, vscr, wwin);
-		wMenuRealize(vscr->menu.switch_menu);
-
-		tmp = vscr->menu.switch_menu->frame->top_width + 5;
-		/* if menu got unreachable, bring it to a visible place */
-		if (vscr->menu.switch_menu->frame_x < tmp - (int) vscr->menu.switch_menu->frame->core->width)
-			wMenuMove(vscr->menu.switch_menu, tmp - (int) vscr->menu.switch_menu->frame->core->width,
-				  vscr->menu.switch_menu->frame_y, False);
-
-		wMenuPaint(vscr->menu.switch_menu);
-
+		switchmenu_additem(vscr->menu.switch_menu, wwin);
+		menu_move_visible(vscr->menu.switch_menu);
 		wwin = wwin->prev;
 	}
 
@@ -897,7 +887,7 @@ static WMenuEntry *addMenuEntry(WMenu *menu, const char *title, const char *shor
 			if (!path)
 				path = wstrdup(params);
 
-			dummy = menu_create(title);
+			dummy = menu_create(vscr, title);
 			menu_map(dummy, vscr);
 			dummy->on_destroy = removeShortcutsForMenu;
 			entry = wMenuAddCallback(menu, title, constructMenu, path);
@@ -915,7 +905,7 @@ static WMenuEntry *addMenuEntry(WMenu *menu, const char *title, const char *shor
 			if (!path)
 				path = wstrdup(params);
 
-			dummy = menu_create(title);
+			dummy = menu_create(vscr, title);
 			menu_map(dummy, vscr);
 			dummy->on_destroy = removeShortcutsForMenu;
 			entry = wMenuAddCallback(menu, title, constructPLMenuFromPipe, path);
@@ -1038,7 +1028,7 @@ static WMenu *parseCascade(virtual_screen *vscr, WMenu *menu, WMenuParser parser
 			WMenu *cascade;
 
 			/* start submenu */
-			cascade = menu_create(M_(title));
+			cascade = menu_create(vscr, M_(title));
 			menu_map(cascade, vscr);
 			cascade->on_destroy = removeShortcutsForMenu;
 			if (!parseCascade(vscr, cascade, parser))
@@ -1081,7 +1071,7 @@ static WMenu *readMenu(virtual_screen *vscr, const char *flat_file, FILE *file)
 		}
 
 		if (strcasecmp(command, "MENU") == 0) {
-			menu = menu_create(M_(title));
+			menu = menu_create(vscr, M_(title));
 			menu_map(menu, vscr);
 			menu->on_destroy = removeShortcutsForMenu;
 			if (!parseCascade(vscr, menu, parser)) {
@@ -1349,7 +1339,7 @@ static WMenu *readMenuDirectory(virtual_screen *vscr, const char *title, char **
 					}
 				}
 			}
-			free(buffer);
+			wfree(buffer);
 		}
 
 		closedir(dir);
@@ -1365,7 +1355,7 @@ static WMenu *readMenuDirectory(virtual_screen *vscr, const char *title, char **
 	WMSortArray(dirs, myCompare);
 	WMSortArray(files, myCompare);
 
-	menu = menu_create(M_(title));
+	menu = menu_create(vscr, M_(title));
 	menu_map(menu, vscr);
 	menu->on_destroy = removeShortcutsForMenu;
 
@@ -1462,11 +1452,11 @@ static WMenu *readMenuDirectory(virtual_screen *vscr, const char *title, char **
 
 /************  Menu Configuration From WMRootMenu   *************/
 
-static WMenu *makeDefaultMenu(void)
+static WMenu *makeDefaultMenu(virtual_screen *vscr)
 {
 	WMenu *menu = NULL;
 
-	menu = menu_create(_("Commands"));
+	menu = menu_create(vscr, _("Commands"));
 
 	wMenuAddCallback(menu, M_("XTerm"), execCommand, "xterm");
 	wMenuAddCallback(menu, M_("rxvt"), execCommand, "rxvt");
@@ -1617,7 +1607,7 @@ static WMenu *configureMenu(virtual_screen *vscr, WMPropList *definition)
 	}
 
 	mtitle = WMGetFromPLString(elem);
-	menu = menu_create(M_(mtitle));
+	menu = menu_create(vscr, M_(mtitle));
 	menu_map(menu, vscr);
 	menu->on_destroy = removeShortcutsForMenu;
 
@@ -1688,7 +1678,7 @@ void OpenRootMenu(virtual_screen *vscr, int x, int y, int keyboard)
 					 "Look at the console output for a detailed "
 					 "description of the errors."), _("OK"), NULL, NULL);
 
-			menu = makeDefaultMenu();
+			menu = makeDefaultMenu(vscr);
 			menu_map(menu, vscr);
 			vscr->menu.root_menu = menu;
 		}

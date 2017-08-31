@@ -196,6 +196,7 @@ static void icon_destroy_core(WIcon *icon)
 	XDestroyWindow(dpy, icon->core->window);
 
 	wcore_destroy(icon->core);
+	icon->core = NULL;
 	wfree(icon);
 }
 

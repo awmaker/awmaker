@@ -43,6 +43,9 @@
 #include "appmenu.h"
 #include "wmspec.h"
 #include "misc.h"
+#ifdef USER_MENU
+#include "usermenu.h"
+#endif
 
 
 /*
@@ -521,11 +524,12 @@ void wClientCheckProperty(WWindow *wwin, XPropertyEvent *event)
 
 			wapp = wApplicationOf(wwin->main_window);
 			if (wapp) {
-				if (wapp->menu) {
-					/* update menu */
-					/* TODO: remake appmenu update */
-					wAppMenuDestroy(wapp->menu);
-				}
+				if (wapp->app_menu)
+					destroy_app_menu(wapp);
+#ifdef USER_MENU
+				if (wapp->user_menu)
+					destroy_user_menu(wapp);
+#endif
 
 				if (wwin->fake_group) {
 					virtual_screen *vscr = wwin->vscr;
@@ -560,14 +564,8 @@ void wClientCheckProperty(WWindow *wwin, XPropertyEvent *event)
 					fPtr->leader = None;
 					fPtr->origLeader = None;
 
-					wapp = wApplicationOf(wwin->main_window);
-					if (wapp)
-						wapp->menu = wAppMenuGet(vscr, wwin->main_window);
-
 					if (wPreferences.auto_arrange_icons)
 						wArrangeIcons(wwin->vscr, True);
-				} else {
-					wapp->menu = wAppMenuGet(wwin->vscr, wwin->main_window);
 				}
 
 				/* make the appmenu be mapped */

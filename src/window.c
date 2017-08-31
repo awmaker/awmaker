@@ -65,6 +65,10 @@
 #include "input.h"
 #include "shell.h"
 
+#ifdef USER_MENU
+#include "usermenu.h"
+#endif
+
 #ifdef USE_MWM_HINTS
 # include "motif.h"
 #endif
@@ -255,6 +259,7 @@ void wWindowDestroy(WWindow *wwin)
 	if (wwin->frame) {
 		framewindow_unmap(wwin->frame);
 		wFrameWindowDestroy(wwin->frame);
+		wwin->frame = NULL;
 	}
 
 	if (wwin->icon) {
@@ -426,7 +431,7 @@ void wWindowSetupInitialAttributes(WWindow *wwin, int *level, int *workspace)
 	WScreen *scr = vscr->screen_ptr;
 
 	/* sets global default stuff */
-	wDefaultFillAttributes(wwin->wm_instance, wwin->wm_class, &wwin->user_flags, NULL, True);
+	wDefaultFillAttributes(wwin->wm_instance, wwin->wm_class, &wwin->client_flags, NULL, True);
 	wwin->defined_user_flags = wwin->user_flags;
 
 	/*
@@ -465,7 +470,7 @@ void wWindowSetupInitialAttributes(WWindow *wwin, int *level, int *workspace)
 	 * Set attributes specified only for that window/class.
 	 * This might do duplicate work with the 1st wDefaultFillAttributes().
 	 */
-	wDefaultFillAttributes(wwin->wm_instance, wwin->wm_class, &wwin->user_flags,
+	wDefaultFillAttributes(wwin->wm_instance, wwin->wm_class, &wwin->client_flags,
 			       &wwin->defined_user_flags, False);
 
 	/* Sanity checks for attributes that depend on other attributes */
@@ -723,10 +728,10 @@ static void wwindow_set_fakegroupleader(virtual_screen *vscr, WWindow *wwin)
 	}
 
 	if (instance)
-		free(instance);
+		wfree(instance);
 
 	if (class)
-		free(class);
+		wfree(class);
 #undef ADEQUATE
 }
 
@@ -1560,7 +1565,7 @@ WWindow *wManageInternalWindow(virtual_screen *vscr, Window window, Window owner
 	wwin->frame->flags.is_client_window_frame = 1;
 	wwin->frame->flags.justification = wPreferences.title_justification;
 
-	wFrameWindowChangeTitle(wwin->frame, title);
+	wWindowUpdateName(wwin, title);
 
 	/* setup button images */
 	wWindowUpdateButtonImages(wwin);
@@ -1761,7 +1766,10 @@ void wUnmanageWindow(WWindow *wwin, Bool restore, Bool destroyed)
 	WApplication *oapp = wApplicationOf(wwin->main_window);
 	WApplication *napp = vscr->window.focused ? wApplicationOf(vscr->window.focused->main_window) : NULL;
 	if (oapp && oapp != napp) {
-		wAppMenuUnmap(oapp->menu);
+		destroy_app_menu(oapp);
+#ifdef USER_MENU
+		destroy_user_menu(oapp);
+#endif
 		if (wPreferences.highlight_active_app)
 			wApplicationDeactivate(oapp);
 	}
@@ -2799,9 +2807,9 @@ WMagicNumber wWindowGetSavedState(Window win)
 	if (command)
 		wfree(command);
 	if (instance)
-		free(instance);
+		wfree(instance);
 	if (class)
-		free(class);
+		wfree(class);
 
 	return wstate;
 }

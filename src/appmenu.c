@@ -51,35 +51,25 @@ enum {
 	wmSubmenuItem = 12
 };
 
-enum {
-	wmSelectItem = 1
-};
-
-static void sendMessage(Window window, int what, int tag)
+static void notifyClient(WMenu *menu, WMenuEntry *entry)
 {
+	WAppMenuData *data = entry->clientdata;
 	XEvent event;
+
+	/* Parameter not used, but tell the compiler that it is ok */
+	(void) menu;
 
 	event.xclient.type = ClientMessage;
 	event.xclient.message_type = w_global.atom.wmaker.menu;
 	event.xclient.format = 32;
 	event.xclient.display = dpy;
-	event.xclient.window = window;
+	event.xclient.window = data->window;
 	event.xclient.data.l[0] = w_global.timestamp.last_event;
-	event.xclient.data.l[1] = what;
-	event.xclient.data.l[2] = tag;
+	event.xclient.data.l[1] = 1;
+	event.xclient.data.l[2] = data->tag;
 	event.xclient.data.l[3] = 0;
-	XSendEvent(dpy, window, False, NoEventMask, &event);
+	XSendEvent(dpy, data->window, False, NoEventMask, &event);
 	XFlush(dpy);
-}
-
-static void notifyClient(WMenu * menu, WMenuEntry * entry)
-{
-	WAppMenuData *data = entry->clientdata;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) menu;
-
-	sendMessage(data->window, wmSelectItem, data->tag);
 }
 
 static WMenu *parseMenuCommand(virtual_screen *vscr, Window win, char **slist, int count, int *index)
@@ -100,10 +90,7 @@ static WMenu *parseMenuCommand(virtual_screen *vscr, Window win, char **slist, i
 		return NULL;
 	}
 
-	menu = menu_create(title);
-	if (!menu)
-		return NULL;
-
+	menu = menu_create(vscr, title);
 	menu->flags.app_menu = 1;
 	menu_map(menu, vscr);
 
@@ -158,7 +145,7 @@ static WMenu *parseMenuCommand(virtual_screen *vscr, Window win, char **slist, i
 			if (!entry) {
 				wMenuDestroy(menu, True);
 				wwarning(_("appmenu: out of memory creating menu for window %lx"), win);
-				free(data);
+				wfree(data);
 				return NULL;
 			}
 			if (rtext[0] != 0)
@@ -205,26 +192,32 @@ static WMenu *parseMenuCommand(virtual_screen *vscr, Window win, char **slist, i
 	return menu;
 }
 
-WMenu *wAppMenuGet(virtual_screen *vscr, Window window)
+void create_app_menu(virtual_screen *vscr, WApplication *wapp)
 {
+	WWindow *wwin = NULL;
+	Window window = wapp->main_window;
 	XTextProperty text_prop;
 	int count, i;
 	char **slist;
 	WMenu *menu;
 
+	wwin = wapp->main_window_desc;
+	if (!wwin)
+		return;
+
 	if (!XGetTextProperty(dpy, window, &text_prop, w_global.atom.wmaker.menu))
-		return NULL;
+		return;
 
 	if (!XTextPropertyToStringList(&text_prop, &slist, &count) || count < 1) {
 		XFree(text_prop.value);
-		return NULL;
+		return;
 	}
 
 	XFree(text_prop.value);
 	if (strcmp(slist[0], "WMMenu 0") != 0) {
 		wwarning(_("appmenu: unknown version of WMMenu in window %lx: %s"), window, slist[0]);
 		XFreeStringList(slist);
-		return NULL;
+		return;
 	}
 
 	i = 1;
@@ -235,13 +228,8 @@ WMenu *wAppMenuGet(virtual_screen *vscr, Window window)
 	XFreeStringList(slist);
 
 	wMenuRealize(menu);
-	return menu;
-}
-
-void wAppMenuDestroy(WMenu *menu)
-{
-	if (menu)
-		wMenuDestroy(menu, True);
+	wAppMenuMap(menu, wwin);
+	wapp->app_menu = menu;
 }
 
 void wAppMenuMap(WMenu *menu, WWindow *wwin)
@@ -265,8 +253,11 @@ void wAppMenuMap(WMenu *menu, WWindow *wwin)
 		wMenuMapAt(wwin->vscr, menu, x, wwin->frame_y, False);
 }
 
-void wAppMenuUnmap(WMenu *menu)
+void destroy_app_menu(WApplication *wapp)
 {
-	if (menu)
-		wMenuUnmap(menu);
+	if (!wapp || !wapp->app_menu)
+		return;
+
+	wMenuDestroy(wapp->app_menu, True);
+	wapp->app_menu = NULL;
 }
