@@ -24,6 +24,7 @@
 
 void switchmenu_additem(WMenu *menu, WWindow *wwin);
 void switchmenu_delitem(WMenu *menu, WWindow *wwin);
+void switchmenu_handle_notification(WMenu *menu, const char *name, int workspace);
 void switchmenu_handle_notification_wwin(WMenu *menu, WWindow *wwin,
 					 const char *name, char *data);
 

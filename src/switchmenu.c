@@ -389,6 +389,12 @@ static void update_menu_workspacerename(WMenu *menu, int workspace)
 		wMenuRealize(menu);
 }
 
+void switchmenu_handle_notification(WMenu *menu, const char *name, int workspace)
+{
+	if (strcmp(name, WMNWorkspaceNameChanged) == 0)
+		update_menu_workspacerename(menu, workspace);
+}
+
 void switchmenu_handle_notification_wwin(WMenu *menu, WWindow *wwin, const char *name, char *data)
 {
 	if (strcmp(name, WMNManaged) == 0) {
@@ -443,8 +449,5 @@ static void wsobserver(void *self, WMNotification *notif)
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) self;
 
-	if (strcmp(name, WMNWorkspaceNameChanged) == 0) {
-		update_menu_workspacerename(vscr->menu.switch_menu, workspace);
-		update_menu_workspacerename(vscr->menu.root_switch, workspace);
-	}
+	switchmenu_handle_notification(vscr->menu.switch_menu, name, workspace);
 }
