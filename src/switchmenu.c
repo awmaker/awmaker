@@ -45,7 +45,7 @@
 	 (w)->wm_gnustep_attr->window_level == WMSubmenuWindowLevel))
 
 static int initialized = 0;
-static void InitializeSwitchMenu(void);
+static void switchmenu_setup_switchmenu_notif(void);
 static void observer(void *self, WMNotification *notif);
 static void wsobserver(void *self, WMNotification *notif);
 
@@ -71,7 +71,7 @@ static void focusWindow(WMenu * menu, WMenuEntry * entry)
 	wWindowSingleFocus(wwin);
 }
 
-void InitializeSwitchMenu(void)
+static void switchmenu_setup_switchmenu_notif(void)
 {
 	if (initialized)
 		return;
@@ -96,7 +96,7 @@ WMenu *switchmenu_create(virtual_screen *vscr)
 	WMenu *switch_menu;
 
 	switch_menu = menu_create(vscr, _("Windows"));
-	InitializeSwitchMenu();
+	switchmenu_setup_switchmenu_notif();
 	menu_map(switch_menu, vscr);
 	wwin = vscr->window.focused;
 	while (wwin) {
