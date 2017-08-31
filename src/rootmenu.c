@@ -1639,6 +1639,8 @@ static WMenu *create_rootmenu(virtual_screen *vscr)
 	vscr->menu.flags.added_workspace_menu = 0;
 	vscr->menu.flags.added_window_menu = 0;
 
+	rootmenu_setup_switchmenu_notif();
+
 	definition = w_global.domain.root_menu->dictionary;
 	if (!definition)
 		return NULL;
