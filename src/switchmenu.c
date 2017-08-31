@@ -389,6 +389,26 @@ static void update_menu_workspacerename(WMenu *menu, int workspace)
 		wMenuRealize(menu);
 }
 
+void switchmenu_handle_notification_wwin(WMenu *menu, WWindow *wwin, const char *name, char *data)
+{
+	if (strcmp(name, WMNManaged) == 0) {
+		switchmenu_additem(menu, wwin);
+	} else if (strcmp(name, WMNUnmanaged) == 0) {
+		switchmenu_delitem(menu, wwin);
+	} else if (strcmp(name, WMNChangedWorkspace) == 0) {
+		switchmenu_changeworkspaceitem(menu, wwin);
+	} else if (strcmp(name, WMNChangedFocus) == 0) {
+		switchmenu_changestate(menu, wwin);
+	} else if (strcmp(name, WMNChangedName) == 0) {
+		switchmenu_changeitem(menu, wwin);
+	} else if (strcmp(name, WMNChangedState) == 0) {
+		if (strcmp(data, "omnipresent"))
+			switchmenu_changeworkspaceitem(menu, wwin);
+		else
+			switchmenu_changestate(menu, wwin);
+	}
+}
+
 static void observer(void *self, WMNotification *notif)
 {
 	WWindow *wwin = (WWindow *) WMGetNotificationObject(notif);
@@ -401,30 +421,8 @@ static void observer(void *self, WMNotification *notif)
 	if (!wwin)
 		return;
 
-	if (strcmp(name, WMNManaged) == 0) {
-		switchmenu_additem(wwin->vscr->menu.switch_menu, wwin);
-		switchmenu_additem(wwin->vscr->menu.root_switch, wwin);
-	} else if (strcmp(name, WMNUnmanaged) == 0) {
-		switchmenu_delitem(wwin->vscr->menu.switch_menu, wwin);
-		switchmenu_delitem(wwin->vscr->menu.root_switch, wwin);
-	} else if (strcmp(name, WMNChangedWorkspace) == 0) {
-		switchmenu_changeworkspaceitem(wwin->vscr->menu.switch_menu, wwin);
-		switchmenu_changeworkspaceitem(wwin->vscr->menu.root_switch, wwin);
-	} else if (strcmp(name, WMNChangedFocus) == 0) {
-		switchmenu_changestate(wwin->vscr->menu.switch_menu, wwin);
-		switchmenu_changestate(wwin->vscr->menu.root_switch, wwin);
-	} else if (strcmp(name, WMNChangedName) == 0) {
-		switchmenu_changeitem(wwin->vscr->menu.switch_menu, wwin);
-		switchmenu_changeitem(wwin->vscr->menu.root_switch, wwin);
-	} else if (strcmp(name, WMNChangedState) == 0) {
-		if (strcmp((char *)data, "omnipresent") == 0) {
-			switchmenu_changeworkspaceitem(wwin->vscr->menu.switch_menu, wwin);
-			switchmenu_changeworkspaceitem(wwin->vscr->menu.root_switch, wwin);
-		} else {
-			switchmenu_changestate(wwin->vscr->menu.switch_menu, wwin);
-			switchmenu_changestate(wwin->vscr->menu.root_switch, wwin);
-		}
-	}
+	switchmenu_handle_notification_wwin(wwin->vscr->menu.switch_menu,
+					    wwin, name, (char *) data);
 
 	/* If menu is not mapped, exit */
 	if (!wwin->vscr->menu.switch_menu ||
@@ -433,7 +431,6 @@ static void observer(void *self, WMNotification *notif)
 		return;
 
 	menu_move_visible(wwin->vscr->menu.switch_menu);
-	menu_move_visible(wwin->vscr->menu.root_switch);
 }
 
 static void wsobserver(void *self, WMNotification *notif)

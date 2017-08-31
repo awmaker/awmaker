@@ -24,6 +24,8 @@
 
 void switchmenu_additem(WMenu *menu, WWindow *wwin);
 void switchmenu_delitem(WMenu *menu, WWindow *wwin);
+void switchmenu_handle_notification_wwin(WMenu *menu, WWindow *wwin,
+					 const char *name, char *data);
 
 WMenu *switchmenu_create(virtual_screen *vscr);
 void switchmenu_destroy(virtual_screen *vscr);
