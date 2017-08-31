@@ -1660,6 +1660,7 @@ void rootmenu_destroy(virtual_screen *vscr)
 	if (!vscr->menu.root_menu)
 		return;
 
+	WMRemoveNotificationObserver(vscr->menu.root_menu);
 	wMenuDestroy(vscr->menu.root_menu, True);
 	vscr->menu.root_menu = NULL;
 	vscr->menu.flags.root_menu_changed_shortcuts = 0;

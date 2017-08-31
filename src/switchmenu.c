@@ -113,6 +113,7 @@ void switchmenu_destroy(virtual_screen *vscr)
 	if (!vscr->menu.switch_menu)
 		return;
 
+	WMRemoveNotificationObserver(vscr->menu.switch_menu);
 	wMenuDestroy(vscr->menu.switch_menu, True);
 	vscr->menu.switch_menu = NULL;
 	vscr->menu.flags.added_window_menu = 0;
