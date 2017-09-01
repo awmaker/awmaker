@@ -473,9 +473,6 @@ static void startup_set_defaults(void)
 			}
 		}
 	}
-
-	/* Init the system menus */
-	InitializeSwitchMenu();
 }
 
 static void set_session_state(virtual_screen *vscr)

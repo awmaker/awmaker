@@ -45,6 +45,7 @@
 	 (w)->wm_gnustep_attr->window_level == WMSubmenuWindowLevel))
 
 static int initialized = 0;
+static void switchmenu_setup_switchmenu_notif(void);
 static void observer(void *self, WMNotification *notif);
 static void wsobserver(void *self, WMNotification *notif);
 
@@ -70,7 +71,7 @@ static void focusWindow(WMenu * menu, WMenuEntry * entry)
 	wWindowSingleFocus(wwin);
 }
 
-void InitializeSwitchMenu(void)
+static void switchmenu_setup_switchmenu_notif(void)
 {
 	if (initialized)
 		return;
@@ -95,6 +96,7 @@ WMenu *switchmenu_create(virtual_screen *vscr)
 	WMenu *switch_menu;
 
 	switch_menu = menu_create(vscr, _("Windows"));
+	switchmenu_setup_switchmenu_notif();
 	menu_map(switch_menu, vscr);
 	wwin = vscr->window.focused;
 	while (wwin) {
@@ -111,6 +113,7 @@ void switchmenu_destroy(virtual_screen *vscr)
 	if (!vscr->menu.switch_menu)
 		return;
 
+	WMRemoveNotificationObserver(vscr->menu.switch_menu);
 	wMenuDestroy(vscr->menu.switch_menu, True);
 	vscr->menu.switch_menu = NULL;
 	vscr->menu.flags.added_window_menu = 0;
@@ -389,6 +392,32 @@ static void update_menu_workspacerename(WMenu *menu, int workspace)
 		wMenuRealize(menu);
 }
 
+void switchmenu_handle_notification(WMenu *menu, const char *name, int workspace)
+{
+	if (strcmp(name, WMNWorkspaceNameChanged) == 0)
+		update_menu_workspacerename(menu, workspace);
+}
+
+void switchmenu_handle_notification_wwin(WMenu *menu, WWindow *wwin, const char *name, char *data)
+{
+	if (strcmp(name, WMNManaged) == 0) {
+		switchmenu_additem(menu, wwin);
+	} else if (strcmp(name, WMNUnmanaged) == 0) {
+		switchmenu_delitem(menu, wwin);
+	} else if (strcmp(name, WMNChangedWorkspace) == 0) {
+		switchmenu_changeworkspaceitem(menu, wwin);
+	} else if (strcmp(name, WMNChangedFocus) == 0) {
+		switchmenu_changestate(menu, wwin);
+	} else if (strcmp(name, WMNChangedName) == 0) {
+		switchmenu_changeitem(menu, wwin);
+	} else if (strcmp(name, WMNChangedState) == 0) {
+		if (strcmp(data, "omnipresent"))
+			switchmenu_changeworkspaceitem(menu, wwin);
+		else
+			switchmenu_changestate(menu, wwin);
+	}
+}
+
 static void observer(void *self, WMNotification *notif)
 {
 	WWindow *wwin = (WWindow *) WMGetNotificationObject(notif);
@@ -401,30 +430,8 @@ static void observer(void *self, WMNotification *notif)
 	if (!wwin)
 		return;
 
-	if (strcmp(name, WMNManaged) == 0) {
-		switchmenu_additem(wwin->vscr->menu.switch_menu, wwin);
-		switchmenu_additem(wwin->vscr->menu.root_switch, wwin);
-	} else if (strcmp(name, WMNUnmanaged) == 0) {
-		switchmenu_delitem(wwin->vscr->menu.switch_menu, wwin);
-		switchmenu_delitem(wwin->vscr->menu.root_switch, wwin);
-	} else if (strcmp(name, WMNChangedWorkspace) == 0) {
-		switchmenu_changeworkspaceitem(wwin->vscr->menu.switch_menu, wwin);
-		switchmenu_changeworkspaceitem(wwin->vscr->menu.root_switch, wwin);
-	} else if (strcmp(name, WMNChangedFocus) == 0) {
-		switchmenu_changestate(wwin->vscr->menu.switch_menu, wwin);
-		switchmenu_changestate(wwin->vscr->menu.root_switch, wwin);
-	} else if (strcmp(name, WMNChangedName) == 0) {
-		switchmenu_changeitem(wwin->vscr->menu.switch_menu, wwin);
-		switchmenu_changeitem(wwin->vscr->menu.root_switch, wwin);
-	} else if (strcmp(name, WMNChangedState) == 0) {
-		if (strcmp((char *)data, "omnipresent") == 0) {
-			switchmenu_changeworkspaceitem(wwin->vscr->menu.switch_menu, wwin);
-			switchmenu_changeworkspaceitem(wwin->vscr->menu.root_switch, wwin);
-		} else {
-			switchmenu_changestate(wwin->vscr->menu.switch_menu, wwin);
-			switchmenu_changestate(wwin->vscr->menu.root_switch, wwin);
-		}
-	}
+	switchmenu_handle_notification_wwin(wwin->vscr->menu.switch_menu,
+					    wwin, name, (char *) data);
 
 	/* If menu is not mapped, exit */
 	if (!wwin->vscr->menu.switch_menu ||
@@ -433,7 +440,6 @@ static void observer(void *self, WMNotification *notif)
 		return;
 
 	menu_move_visible(wwin->vscr->menu.switch_menu);
-	menu_move_visible(wwin->vscr->menu.root_switch);
 }
 
 static void wsobserver(void *self, WMNotification *notif)
@@ -446,8 +452,5 @@ static void wsobserver(void *self, WMNotification *notif)
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) self;
 
-	if (strcmp(name, WMNWorkspaceNameChanged) == 0) {
-		update_menu_workspacerename(vscr->menu.switch_menu, workspace);
-		update_menu_workspacerename(vscr->menu.root_switch, workspace);
-	}
+	switchmenu_handle_notification(vscr->menu.switch_menu, name, workspace);
 }
