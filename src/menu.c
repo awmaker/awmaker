@@ -1492,6 +1492,7 @@ void wMenuScroll(WMenu *menu)
 		switch (ev.type) {
 		case EnterNotify:
 			WMHandleEvent(&ev);
+			/* Falls through */
 		case MotionNotify:
 			x = (ev.type == MotionNotify) ? ev.xmotion.x_root : ev.xcrossing.x_root;
 			y = (ev.type == MotionNotify) ? ev.xmotion.y_root : ev.xcrossing.y_root;
@@ -1544,6 +1545,7 @@ void wMenuScroll(WMenu *menu)
 			break;
 		case KeyPress:
 			done = 1;
+			/* Falls through */
 		default:
 			WMHandleEvent(&ev);
 			break;
