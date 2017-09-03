@@ -724,7 +724,7 @@ static void updateMenuForWindow(WMenu *menu, WWindow *wwin)
 
 static void updateMenuForWindow_map(WMenu *menu)
 {
-	virtual_screen *vscr = menu->frame->vscr;
+	virtual_screen *vscr = menu->vscr;
 	int i;
 	WMenu *omenu, *mmenu, *smenu;
 
