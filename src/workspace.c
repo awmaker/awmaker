@@ -223,6 +223,22 @@ void workspace_map(virtual_screen *vscr, WWorkspace *wspace, int wksno, WMPropLi
 	XFlush(dpy);
 }
 
+static void update_workspace_submenu(virtual_screen *vscr)
+{
+	WMenu *menu;
+	int i;
+
+	if (!vscr->workspace.submenu)
+		return;
+
+	menu = vscr->workspace.submenu;
+
+	i = menu->entry_no;
+	while (i > vscr->workspace.count)
+		wMenuRemoveItem(menu, --i);
+}
+
+
 Bool wWorkspaceDelete(virtual_screen *vscr, int workspace)
 {
 	WWindow *tmp;
@@ -280,15 +296,7 @@ Bool wWorkspaceDelete(virtual_screen *vscr, int workspace)
 	menu_workspace_shortcut_labels(vscr, vscr->clip.ws_menu);
 	wWorkspaceMenuUpdate_map(vscr, vscr->clip.ws_menu);
 
-	/* update also window menu */
-	if (vscr->workspace.submenu) {
-		WMenu *menu = vscr->workspace.submenu;
-
-		i = menu->entry_no;
-		while (i > vscr->workspace.count)
-			wMenuRemoveItem(menu, --i);
-	}
-
+	update_workspace_submenu(vscr);
 	/* and clip menu */
 	if (vscr->clip.submenu) {
 		WMenu *menu = vscr->clip.submenu;
