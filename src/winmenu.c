@@ -785,6 +785,8 @@ static WMenu *open_window_menu_core(WWindow *wwin)
 
 	wwin->flags.menu_open_for_me = 1;
 
+	window_menu_create(vscr);
+
 	updateWorkspaceMenu(vscr, vscr->workspace.submenu);
 
 	if (vscr->workspace.submenu->flags.realized)
