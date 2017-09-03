@@ -867,19 +867,6 @@ void windowmenu_at_switchmenu_open(WWindow *wwin, int x, int y)
 		wMenuMapAt(vscr, menu, x, y, False);
 }
 
-void OpenMiniwindowMenu(WWindow *wwin, int x, int y)
-{
-	WMenu *menu;
-
-	menu = open_window_menu_core(wwin);
-	if (!menu)
-		return;
-
-	x -= menu->frame->core->width / 2;
-
-	wMenuMapAt(wwin->vscr, menu, x, y, False);
-}
-
 void DestroyWindowMenu(virtual_screen *vscr)
 {
 	if (!vscr->menu.window_menu)
