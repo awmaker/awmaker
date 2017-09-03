@@ -53,9 +53,6 @@
 #include "balloon.h"
 #include "geomview.h"
 #include "wmspec.h"
-#include "rootmenu.h"
-#include "switchmenu.h"
-#include "winmenu.h"
 
 #include "xinerama.h"
 
