@@ -1688,8 +1688,8 @@ static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
 			}
 
 		} else if (!delayed_select) {
+			selectEntry(menu, entry_no);
 			if (menu == vscr->menu.switch_menu && event->xbutton.button == Button3) {
-				selectEntry(menu, entry_no);
 				windowmenu_at_switchmenu_open((WWindow *)entry->clientdata,
 								event->xbutton.x_root,
 								event->xbutton.y_root);
@@ -1701,8 +1701,6 @@ static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
 				XUngrabPointer(dpy, CurrentTime);
 				selectEntry(menu, -1);
 				return;
-			} else {
-				selectEntry(menu, entry_no);
 			}
 		}
 
