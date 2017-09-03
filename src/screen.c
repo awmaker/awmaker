@@ -892,8 +892,6 @@ void virtual_screen_restore_map(virtual_screen *vscr)
 {
 	WMPropList *state, *dDock;
 
-	window_menu_create(vscr);
-
 	if (!wPreferences.flags.nodock) {
 		dDock = WMCreatePLString("Dock");
 		state = WMGetFromPLDictionary(w_global.session_state, dDock);
