@@ -599,17 +599,18 @@ void CloseWindowMenu(virtual_screen *vscr)
 {
 	WWindow *wwin;
 
-	if (vscr->menu.window_menu) {
-		if (vscr->menu.window_menu->flags.mapped)
-			wMenuUnmap(vscr->menu.window_menu);
+	if (!vscr->menu.window_menu)
+		return;
 
-		if (vscr->menu.window_menu->entries[0]->clientdata) {
-			wwin = (WWindow *) vscr->menu.window_menu->entries[0]->clientdata;
-			wwin->flags.menu_open_for_me = 0;
-		}
+	if (vscr->menu.window_menu->flags.mapped)
+		wMenuUnmap(vscr->menu.window_menu);
 
-		vscr->menu.window_menu->entries[0]->clientdata = NULL;
+	if (vscr->menu.window_menu->entries[0]->clientdata) {
+		wwin = (WWindow *) vscr->menu.window_menu->entries[0]->clientdata;
+		wwin->flags.menu_open_for_me = 0;
 	}
+
+	vscr->menu.window_menu->entries[0]->clientdata = NULL;
 }
 
 static void updateMenuForWindow(WMenu *menu, WWindow *wwin)
