@@ -1633,9 +1633,26 @@ static void submenu_unmap_cascade(WMenu *menu, WMenuEntry *entry,
 		selectEntry(menu, -1);
 }
 
-static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
+
+static void menu_handle_switchmenu(WMenu *menu, WObjDescriptor *desc,
+				   WMenuEntry *entry, XEvent *event)
 {
 	WWindow *wwin;
+
+	windowmenu_at_switchmenu_open((WWindow *)entry->clientdata,
+					event->xbutton.x_root,
+					event->xbutton.y_root);
+	wwin = (WWindow *)entry->clientdata;
+	desc = &wwin->vscr->menu.window_menu->menu->descriptor;
+	event->xany.send_event = True;
+	(*desc->handle_mousedown)(desc, event);
+
+	XUngrabPointer(dpy, CurrentTime);
+	selectEntry(menu, -1);
+}
+
+static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
+{
 	XButtonEvent *bev = &event->xbutton;
 	WMenu *smenu, *menu = desc->parent;
 	virtual_screen *vscr = menu->frame->vscr;
@@ -1703,16 +1720,7 @@ static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
 		} else if (!delayed_select) {
 			selectEntry(menu, entry_no);
 			if (menu == vscr->menu.switch_menu && event->xbutton.button == Button3) {
-				windowmenu_at_switchmenu_open((WWindow *)entry->clientdata,
-								event->xbutton.x_root,
-								event->xbutton.y_root);
-				wwin = (WWindow *)entry->clientdata;
-				desc = &wwin->vscr->menu.window_menu->menu->descriptor;
-				event->xany.send_event = True;
-				(*desc->handle_mousedown)(desc, event);
-
-				XUngrabPointer(dpy, CurrentTime);
-				selectEntry(menu, -1);
+				menu_handle_switchmenu(menu, desc, entry, event);
 				return;
 			}
 		}
