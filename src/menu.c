@@ -1725,9 +1725,9 @@ static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
 			}
 		}
 
-		if (!wPreferences.wrap_menus && !wPreferences.scrollable_menus)
-			if (!menu->timer)
-				dragScrollMenuCallback(menu);
+		if (!wPreferences.wrap_menus && !wPreferences.scrollable_menus &&
+		    !menu->timer)
+			dragScrollMenuCallback(menu);
 	}
 
 	prevx = bev->x_root;
