@@ -1715,33 +1715,37 @@ static void menu_moved_toitem(WMenu *menu, WMenu *smenu, XEvent *ev,
 {
 	Bool moved_to_submenu;
 
+	if (!menu)
+		return;
+
+	if (delayed_select)
+		return;
+
 	/* hysteresis for item selection */
 	/* check if the motion was to the side, indicating that
 	 * the user may want to cross to a submenu */
-	if (!delayed_select && menu) {
-		moved_to_submenu = check_moved_to_submenu(menu, *ev, *prevx, *prevy);
-		if (menu != smenu) {
-			if (d_data->magic) {
-				WMDeleteTimerHandler(d_data->magic);
-				d_data->magic = NULL;
-			}
-		} else if (moved_to_submenu) {
-			/* while we are moving, postpone the selection */
-			if (d_data->magic)
-				WMDeleteTimerHandler(d_data->magic);
+	moved_to_submenu = check_moved_to_submenu(menu, *ev, *prevx, *prevy);
+	if (menu != smenu) {
+		if (d_data->magic) {
+			WMDeleteTimerHandler(d_data->magic);
+			d_data->magic = NULL;
+		}
+	} else if (moved_to_submenu) {
+		/* while we are moving, postpone the selection */
+		if (d_data->magic)
+			WMDeleteTimerHandler(d_data->magic);
 
-			d_data->delayed_select = NULL;
-			d_data->menu = menu;
-			d_data->magic = WMAddTimerHandler(MENU_SELECT_DELAY,
-							  delaySelection, &d_data);
-			*prevx = ev->xmotion.x_root;
-			*prevy = ev->xmotion.y_root;
-			return;
-		} else {
-			if (d_data->magic) {
-				WMDeleteTimerHandler(d_data->magic);
-				d_data->magic = NULL;
-			}
+		d_data->delayed_select = NULL;
+		d_data->menu = menu;
+		d_data->magic = WMAddTimerHandler(MENU_SELECT_DELAY,
+						  delaySelection, &d_data);
+		*prevx = ev->xmotion.x_root;
+		*prevy = ev->xmotion.y_root;
+		return;
+	} else {
+		if (d_data->magic) {
+			WMDeleteTimerHandler(d_data->magic);
+			d_data->magic = NULL;
 		}
 	}
 }
