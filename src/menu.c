@@ -1675,6 +1675,33 @@ static void menu_motion_handle_moveout(WMenu *menu, XEvent *ev,
 	*prevy = ev->xmotion.y_root;
 }
 
+static Bool check_moved_to_submenu(WMenu *menu, XEvent ev, int prevx, int prevy)
+{
+	int index, dx;
+	Bool moved_to_submenu = False;
+
+	dx = abs(prevx - ev.xmotion.x_root);
+
+	if (dx > 0 &&	/* if moved enough to the side */
+			/* maybe a open submenu */
+	    menu->selected_entry >= 0 &&
+			/* moving to the right direction */
+	    (wPreferences.align_menus || ev.xmotion.y_root >= prevy)) {
+		index = menu->entries[menu->selected_entry]->cascade;
+		if (index >= 0) {
+			if (menu->cascades[index]->frame_x > menu->frame_x) {
+				if (prevx < ev.xmotion.x_root)
+					moved_to_submenu = True;
+			} else {
+				if (prevx > ev.xmotion.x_root)
+					moved_to_submenu = True;
+			}
+		}
+	}
+
+	return moved_to_submenu;
+}
+
 static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
 {
 	XButtonEvent *bev = &event->xbutton;
@@ -1689,6 +1716,7 @@ static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
 	int x, y, prevx, prevy;
 	int old_frame_x = 0, old_frame_y = 0;
 	delay_data d_data = { NULL, NULL, NULL };
+	Bool moved_to_submenu;
 
 	menu->flags.inside_handler = 1;
 
@@ -1785,31 +1813,7 @@ static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
 				/* check if the motion was to the side, indicating that
 				 * the user may want to cross to a submenu */
 				if (!delayed_select && menu) {
-					int dx;
-					Bool moved_to_submenu;	/* moved to direction of submenu */
-
-					dx = abs(prevx - ev.xmotion.x_root);
-
-					moved_to_submenu = False;
-					if (dx > 0	/* if moved enough to the side */
-					    /* maybe a open submenu */
-					    && menu->selected_entry >= 0
-					    /* moving to the right direction */
-					    && (wPreferences.align_menus || ev.xmotion.y_root >= prevy)) {
-						int index;
-
-						index = menu->entries[menu->selected_entry]->cascade;
-						if (index >= 0) {
-							if (menu->cascades[index]->frame_x > menu->frame_x) {
-								if (prevx < ev.xmotion.x_root)
-									moved_to_submenu = True;
-							} else {
-								if (prevx > ev.xmotion.x_root)
-									moved_to_submenu = True;
-							}
-						}
-					}
-
+					moved_to_submenu = check_moved_to_submenu(menu, ev, prevx, prevy);
 					if (menu != smenu) {
 						if (d_data.magic) {
 							WMDeleteTimerHandler(d_data.magic);
