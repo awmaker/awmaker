@@ -1750,6 +1750,30 @@ static void menu_moved_toitem(WMenu *menu, WMenu *smenu, XEvent *ev,
 	}
 }
 
+static void menu_motion_select_entry(WMenu *menu, WMenuEntry *entry,
+				     int *entry_no, int y,
+				     int delayed_select)
+{
+	WMenu *submenu;
+
+	if (delayed_select)
+		return;
+
+	*entry_no = getEntryAt(menu, x, y);
+	if (*entry_no >= 0) {
+		entry = menu->entries[*entry_no];
+		if (entry->flags.enabled && entry->cascade >= 0 && menu->cascades) {
+			submenu = menu->cascades[entry->cascade];
+			if (submenu->flags.mapped &&
+			    !submenu->flags.buttoned &&
+			    menu->selected_entry != *entry_no)
+				wMenuUnmap(submenu);
+		}
+	}
+
+	selectEntry(menu, *entry_no);
+}
+
 static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
 {
 	XButtonEvent *bev = &event->xbutton;
@@ -1867,27 +1891,16 @@ static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
 					WMDeleteTimerHandler(menu->timer);
 					menu->timer = NULL;
 				}
+
 				if (smenu)
 					dragScrollMenuCallback(smenu);
 			}
+
 			menu = smenu;
 			if (!menu->timer)
 				dragScrollMenuCallback(menu);
 
-			if (!delayed_select) {
-				entry_no = getEntryAt(menu, x, y);
-				if (entry_no >= 0) {
-					entry = menu->entries[entry_no];
-					if (entry->flags.enabled && entry->cascade >= 0 && menu->cascades) {
-						WMenu *submenu = menu->cascades[entry->cascade];
-						if (submenu->flags.mapped && !submenu->flags.buttoned
-						    && menu->selected_entry != entry_no) {
-							wMenuUnmap(submenu);
-						}
-					}
-				}
-				selectEntry(menu, entry_no);
-			}
+			menu_motion_select_entry(menu, entry, &entry_no, y, delayed_select);
 			break;
 
 		case ButtonPress:
