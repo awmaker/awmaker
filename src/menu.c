@@ -1709,6 +1709,43 @@ static Bool check_moved_to_submenu(WMenu *menu, XEvent ev, int prevx, int prevy)
 	return moved_to_submenu;
 }
 
+static void menu_moved_toitem(WMenu *menu, WMenu *smenu, XEvent *ev,
+			      delay_data *d_data, int delayed_select,
+			      int *prevx, int *prevy)
+{
+	Bool moved_to_submenu;
+
+	/* hysteresis for item selection */
+	/* check if the motion was to the side, indicating that
+	 * the user may want to cross to a submenu */
+	if (!delayed_select && menu) {
+		moved_to_submenu = check_moved_to_submenu(menu, *ev, *prevx, *prevy);
+		if (menu != smenu) {
+			if (d_data->magic) {
+				WMDeleteTimerHandler(d_data->magic);
+				d_data->magic = NULL;
+			}
+		} else if (moved_to_submenu) {
+			/* while we are moving, postpone the selection */
+			if (d_data->magic)
+				WMDeleteTimerHandler(d_data->magic);
+
+			d_data->delayed_select = NULL;
+			d_data->menu = menu;
+			d_data->magic = WMAddTimerHandler(MENU_SELECT_DELAY,
+							  delaySelection, &d_data);
+			*prevx = ev->xmotion.x_root;
+			*prevy = ev->xmotion.y_root;
+			return;
+		} else {
+			if (d_data->magic) {
+				WMDeleteTimerHandler(d_data->magic);
+				d_data->magic = NULL;
+			}
+		}
+	}
+}
+
 static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
 {
 	XButtonEvent *bev = &event->xbutton;
@@ -1723,7 +1760,6 @@ static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
 	int x, y, prevx, prevy;
 	int old_frame_x = 0, old_frame_y = 0;
 	delay_data d_data = { NULL, NULL, NULL };
-	Bool moved_to_submenu;
 
 	menu->flags.inside_handler = 1;
 
@@ -1816,36 +1852,9 @@ static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
 					d_data.magic = NULL;
 				}
 			} else {
-				/* hysteresis for item selection */
-				/* check if the motion was to the side, indicating that
-				 * the user may want to cross to a submenu */
-				if (!delayed_select && menu) {
-					moved_to_submenu = check_moved_to_submenu(menu, ev, prevx, prevy);
-					if (menu != smenu) {
-						if (d_data.magic) {
-							WMDeleteTimerHandler(d_data.magic);
-							d_data.magic = NULL;
-						}
-					} else if (moved_to_submenu) {
-						/* while we are moving, postpone the selection */
-						if (d_data.magic) {
-							WMDeleteTimerHandler(d_data.magic);
-						}
-						d_data.delayed_select = NULL;
-						d_data.menu = menu;
-						d_data.magic = WMAddTimerHandler(MENU_SELECT_DELAY,
-										 delaySelection, &d_data);
-						prevx = ev.xmotion.x_root;
-						prevy = ev.xmotion.y_root;
-						break;
-					} else {
-						if (d_data.magic) {
-							WMDeleteTimerHandler(d_data.magic);
-							d_data.magic = NULL;
-						}
-					}
-				}
+				menu_moved_toitem(menu, smenu, &ev, &d_data, delayed_select, &prevx, &prevy);
 			}
+
 			prevx = ev.xmotion.x_root;
 			prevy = ev.xmotion.y_root;
 			if (menu != smenu) {
