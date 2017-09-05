@@ -1651,6 +1651,30 @@ static void menu_handle_switchmenu(WMenu *menu, WObjDescriptor *desc,
 	selectEntry(menu, -1);
 }
 
+static void menu_motion_handle_moveout(WMenu *menu, XEvent *ev,
+				       delay_data *d_data,
+				       int delayed_select,
+				       int *prevx, int *prevy)
+{
+	/* Moved mouse out of menu */
+	if (!delayed_select && d_data->magic) {
+		WMDeleteTimerHandler(d_data->magic);
+		d_data->magic = NULL;
+	}
+
+	if (menu == NULL || (menu->selected_entry >= 0 &&
+	    menu->entries[menu->selected_entry]->cascade >= 0)) {
+		*prevx = ev->xmotion.x_root;
+		*prevy = ev->xmotion.y_root;
+		return;
+	}
+
+	selectEntry(menu, -1);
+	menu = NULL;
+	*prevx = ev->xmotion.x_root;
+	*prevy = ev->xmotion.y_root;
+}
+
 static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
 {
 	XButtonEvent *bev = &event->xbutton;
@@ -1743,25 +1767,9 @@ static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
 			smenu = findMenu(vscr, &x, &y);
 
 			if (smenu == NULL) {
-				/* moved mouse out of menu */
-				if (!delayed_select && d_data.magic) {
-					WMDeleteTimerHandler(d_data.magic);
-					d_data.magic = NULL;
-				}
-
-				if (menu == NULL
-				    || (menu->selected_entry >= 0
-					&& menu->entries[menu->selected_entry]->cascade >= 0)) {
-					prevx = ev.xmotion.x_root;
-					prevy = ev.xmotion.y_root;
-
-					break;
-				}
-
-				selectEntry(menu, -1);
-				menu = smenu;
-				prevx = ev.xmotion.x_root;
-				prevy = ev.xmotion.y_root;
+				menu_motion_handle_moveout(menu, &ev, &d_data,
+							   delayed_select,
+							   &prevx, &prevy);
 				break;
 			} else if (menu && menu != smenu
 				   && (menu->selected_entry < 0
