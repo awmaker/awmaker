@@ -58,7 +58,7 @@
 #define MENUW(m)	((m)->frame->core->width+2*(m)->frame->vscr->screen_ptr->frame_border_width)
 #define MENUH(m)	((m)->frame->core->height+2*(m)->frame->vscr->screen_ptr->frame_border_width)
 
-#define getEntryAt(menu, x, y)   ((y)<0 ? -1 : (y)/(menu->entry_height))
+#define getEntryAt(menu, y)   ((y)<0 ? -1 : (y)/(menu->entry_height))
 
 #define COMPLAIN(key) wwarning(_("bad value in menus state info: %s"), key)
 
@@ -1385,7 +1385,7 @@ static void dragScrollMenuCallback(void *data)
 	if (hamount != 0 || vamount != 0) {
 		wMenuMove(parent, parent->frame_x + hamount, parent->frame_y + vamount, True);
 		if (findMenu(vscr, &x, &y)) {
-			newSelectedEntry = getEntryAt(menu, x, y);
+			newSelectedEntry = getEntryAt(menu, y);
 			selectEntry(menu, newSelectedEntry);
 		} else {
 			/* Pointer fell outside of menu. If the selected entry is
@@ -1404,7 +1404,7 @@ static void dragScrollMenuCallback(void *data)
 		/* don't need to scroll anymore */
 		menu->timer = NULL;
 		if (findMenu(vscr, &x, &y)) {
-			newSelectedEntry = getEntryAt(menu, x, y);
+			newSelectedEntry = getEntryAt(menu, y);
 			selectEntry(menu, newSelectedEntry);
 		}
 	}
@@ -1592,7 +1592,7 @@ static void delaySelection(void *data)
 
 	menu = findMenu(d->menu->menu->vscr, &x, &y);
 	if (menu && (d->menu == menu || d->delayed_select)) {
-		entry_no = getEntryAt(menu, x, y);
+		entry_no = getEntryAt(menu, y);
 		selectEntry(menu, entry_no);
 	}
 
@@ -1759,7 +1759,7 @@ static void menu_motion_select_entry(WMenu *menu, WMenuEntry *entry,
 	if (delayed_select)
 		return;
 
-	*entry_no = getEntryAt(menu, x, y);
+	*entry_no = getEntryAt(menu, y);
 	if (*entry_no >= 0) {
 		entry = menu->entries[*entry_no];
 		if (entry->flags.enabled && entry->cascade >= 0 && menu->cascades) {
@@ -1823,7 +1823,7 @@ static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
 		return;
 	}
 
-	entry_no = getEntryAt(menu, x, y);
+	entry_no = getEntryAt(menu, y);
 	if (entry_no >= 0) {
 		entry = menu->entries[entry_no];
 
