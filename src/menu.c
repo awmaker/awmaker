@@ -1682,21 +1682,28 @@ static Bool check_moved_to_submenu(WMenu *menu, XEvent ev, int prevx, int prevy)
 
 	dx = abs(prevx - ev.xmotion.x_root);
 
-	if (dx > 0 &&	/* if moved enough to the side */
-			/* maybe a open submenu */
-	    menu->selected_entry >= 0 &&
-			/* moving to the right direction */
-	    (wPreferences.align_menus || ev.xmotion.y_root >= prevy)) {
-		index = menu->entries[menu->selected_entry]->cascade;
-		if (index >= 0) {
-			if (menu->cascades[index]->frame_x > menu->frame_x) {
-				if (prevx < ev.xmotion.x_root)
-					moved_to_submenu = True;
-			} else {
-				if (prevx > ev.xmotion.x_root)
-					moved_to_submenu = True;
-			}
-		}
+	/* if not moved enough to the side */
+	if (dx <= 0)
+		return False;
+
+	/* maybe a open submenu */
+	if (menu->selected_entry < 0)
+		return False;
+
+	/* moving to the right direction */
+	if (!wPreferences.align_menus && ev.xmotion.y_root < prevy)
+		return False;
+
+	index = menu->entries[menu->selected_entry]->cascade;
+	if (index < 0)
+		return False;
+
+	if (menu->cascades[index]->frame_x > menu->frame_x) {
+		if (prevx < ev.xmotion.x_root)
+			moved_to_submenu = True;
+	} else {
+		if (prevx > ev.xmotion.x_root)
+			moved_to_submenu = True;
 	}
 
 	return moved_to_submenu;
