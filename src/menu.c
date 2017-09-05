@@ -1859,14 +1859,7 @@ static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
 		}
 	}
 
-	if (menu && menu->timer) {
-		WMDeleteTimerHandler(menu->timer);
-		menu->timer = NULL;
-	}
-	if (d_data.magic != NULL) {
-		WMDeleteTimerHandler(d_data.magic);
-		d_data.magic = NULL;
-	}
+	menu_delete_handlers(menu, &d_data);
 
 	if (menu && menu->selected_entry >= 0) {
 		entry = menu->entries[menu->selected_entry];
