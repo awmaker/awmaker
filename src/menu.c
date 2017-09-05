@@ -96,6 +96,7 @@ static void closeCascade(WMenu *menu);
 static void get_menu_width(WMenu *menu);
 static Bool saveMenuRecurs(WMPropList *menus, WMenu *menu, virtual_screen *vscr);
 static int restoreMenuRecurs(virtual_screen *vscr, WMPropList *menus, WMenu *menu, const char *path);
+static void menu_delete_handlers(WMenu *menu, delay_data *d_data);
 /****** Notification Observers ******/
 
 static void appearanceObserver(void *self, WMNotification *notif)
@@ -1661,8 +1662,11 @@ static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
 		menu = smenu;
 	}
 
-	if (menu->flags.editing)
-		goto byebye;
+	if (menu->flags.editing) {
+		menu_delete_handlers(menu, &d_data);
+		((WMenu *) desc->parent)->flags.inside_handler = 0;
+		return;
+	}
 
 	entry_no = getEntryAt(menu, x, y);
 	if (entry_no >= 0) {
@@ -1670,9 +1674,13 @@ static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
 
 		if (!close_on_exit && (bev->state & ControlMask) && smenu && entry->flags.editable) {
 			menu_rename_workspace(vscr, entry_no);
-			goto byebye;
+			menu_delete_handlers(menu, &d_data);
+			((WMenu *) desc->parent)->flags.inside_handler = 0;
+			return;
 		} else if (bev->state & ControlMask) {
-			goto byebye;
+			menu_delete_handlers(menu, &d_data);
+			((WMenu *) desc->parent)->flags.inside_handler = 0;
+			return;
 		}
 
 		if (entry->flags.enabled && entry->cascade >= 0 && menu->cascades) {
@@ -1904,18 +1912,22 @@ static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
 	if (!wPreferences.wrap_menus)
 		wMenuMove(parentMenu(desc->parent), old_frame_x, old_frame_y, True);
 
- byebye:
+	menu_delete_handlers(menu, &d_data);
+	((WMenu *) desc->parent)->flags.inside_handler = 0;
+}
+
+static void menu_delete_handlers(WMenu *menu, delay_data *d_data)
+{
 	/* Just to be sure in case we skip the 2 above because of a goto byebye */
 	if (menu && menu->timer) {
 		WMDeleteTimerHandler(menu->timer);
 		menu->timer = NULL;
 	}
-	if (d_data.magic != NULL) {
-		WMDeleteTimerHandler(d_data.magic);
-		d_data.magic = NULL;
-	}
 
-	((WMenu *) desc->parent)->flags.inside_handler = 0;
+	if (d_data->magic != NULL) {
+		WMDeleteTimerHandler(d_data->magic);
+		d_data->magic = NULL;
+	}
 }
 
 void wMenuMove(WMenu *menu, int x, int y, int submenus)
