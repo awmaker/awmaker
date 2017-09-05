@@ -1618,6 +1618,21 @@ static void menu_rename_workspace(virtual_screen *vscr, int entry_no)
 		wfree(name);
 }
 
+static void submenu_unmap_cascade(WMenu *menu, WMenuEntry *entry,
+				  int entry_no, int delayed_select)
+{
+	WMenu *submenu = menu->cascades[entry->cascade];
+
+	if (submenu->flags.mapped && !submenu->flags.buttoned &&
+	    menu->selected_entry != entry_no)
+		wMenuUnmap(submenu);
+
+	if (!submenu->flags.mapped && !delayed_select)
+		selectEntry(menu, entry_no);
+	else if (!submenu->flags.buttoned)
+		selectEntry(menu, -1);
+}
+
 static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
 {
 	WWindow *wwin;
@@ -1684,17 +1699,7 @@ static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
 		}
 
 		if (entry->flags.enabled && entry->cascade >= 0 && menu->cascades) {
-			WMenu *submenu = menu->cascades[entry->cascade];
-			/* map cascade */
-			if (submenu->flags.mapped && !submenu->flags.buttoned && menu->selected_entry != entry_no)
-				wMenuUnmap(submenu);
-
-			if (!submenu->flags.mapped && !delayed_select) {
-				selectEntry(menu, entry_no);
-			} else if (!submenu->flags.buttoned) {
-				selectEntry(menu, -1);
-			}
-
+			submenu_unmap_cascade(menu, entry, entry_no, delayed_select);
 		} else if (!delayed_select) {
 			selectEntry(menu, entry_no);
 			if (menu == vscr->menu.switch_menu && event->xbutton.button == Button3) {
