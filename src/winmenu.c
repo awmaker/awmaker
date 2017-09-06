@@ -239,7 +239,7 @@ static void execMenuCommand(WMenu *menu, WMenuEntry *entry)
 	WWindow *wwin = (WWindow *) entry->clientdata;
 	WApplication *wapp;
 
-	CloseWindowMenu(menu->frame->vscr);
+	DestroyWindowMenu(menu->frame->vscr);
 
 	switch (entry->order) {
 	case MC_CLOSE:
@@ -593,24 +593,6 @@ static WMenu *createWindowMenu(virtual_screen *vscr)
 	}
 
 	return menu;
-}
-
-void CloseWindowMenu(virtual_screen *vscr)
-{
-	WWindow *wwin;
-
-	if (!vscr->menu.window_menu)
-		return;
-
-	if (vscr->menu.window_menu->flags.mapped)
-		wMenuUnmap(vscr->menu.window_menu);
-
-	if (vscr->menu.window_menu->entries[0]->clientdata) {
-		wwin = (WWindow *) vscr->menu.window_menu->entries[0]->clientdata;
-		wwin->flags.menu_open_for_me = 0;
-	}
-
-	vscr->menu.window_menu->entries[0]->clientdata = NULL;
 }
 
 static void updateMenuForWindow(WMenu *menu, WWindow *wwin)

@@ -1670,7 +1670,7 @@ void wUnmanageWindow(WWindow *wwin, Bool restore, Bool destroyed)
 
 	/* Close window menu if it's open for this window */
 	if (wwin->flags.menu_open_for_me)
-		CloseWindowMenu(wwin->vscr);
+		DestroyWindowMenu(wwin->vscr);
 
 	/* Don't restore focus to this window after a window exits
 	 * fullscreen mode */
@@ -1916,7 +1916,7 @@ void wWindowFocus(WWindow *wwin, WWindow *owin)
 
 void wWindowUnfocus(WWindow *wwin)
 {
-	CloseWindowMenu(wwin->vscr);
+	DestroyWindowMenu(wwin->vscr);
 
 	if (wwin->flags.is_gnustep == 0)
 		wFrameWindowChangeState(wwin->frame, wwin->flags.semi_focused ? WS_PFOCUSED : WS_UNFOCUSED);
@@ -2898,7 +2898,7 @@ static void resizebarMouseDown(WCoreWindow *sender, void *data, XEvent *event)
 
 	event->xbutton.state &= w_global.shortcut.modifiers_mask;
 
-	CloseWindowMenu(wwin->vscr);
+	DestroyWindowMenu(wwin->vscr);
 
 	if (wPreferences.focus_mode == WKF_CLICK && !(event->xbutton.state & ControlMask)
 	    && !WFLAGP(wwin, no_focusable))
@@ -2995,7 +2995,7 @@ static void frameMouseDown(WObjDescriptor *desc, XEvent *event)
 
 	event->xbutton.state &= w_global.shortcut.modifiers_mask;
 
-	CloseWindowMenu(wwin->vscr);
+	DestroyWindowMenu(wwin->vscr);
 
 	if (!(event->xbutton.state & ControlMask) && !WFLAGP(wwin, no_focusable))
 		wSetFocusTo(wwin->vscr, wwin);
@@ -3055,7 +3055,7 @@ static void titlebarMouseDown(WCoreWindow *sender, void *data, XEvent *event)
 #endif
 	event->xbutton.state &= w_global.shortcut.modifiers_mask;
 
-	CloseWindowMenu(wwin->vscr);
+	DestroyWindowMenu(wwin->vscr);
 
 	if (wPreferences.focus_mode == WKF_CLICK && !(event->xbutton.state & ControlMask)
 	    && !WFLAGP(wwin, no_focusable))
@@ -3115,7 +3115,7 @@ static void windowCloseClick(WCoreWindow *sender, void *data, XEvent *event)
 
 	event->xbutton.state &= w_global.shortcut.modifiers_mask;
 
-	CloseWindowMenu(wwin->vscr);
+	DestroyWindowMenu(wwin->vscr);
 
 	if (event->xbutton.button < Button1 || event->xbutton.button > Button3)
 		return;
@@ -3138,7 +3138,7 @@ static void windowCloseDblClick(WCoreWindow *sender, void *data, XEvent *event)
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) sender;
 
-	CloseWindowMenu(wwin->vscr);
+	DestroyWindowMenu(wwin->vscr);
 
 	if (event->xbutton.button < Button1 || event->xbutton.button > Button3)
 		return;
@@ -3185,7 +3185,7 @@ static void windowIconifyClick(WCoreWindow *sender, void *data, XEvent *event)
 
 	event->xbutton.state &= w_global.shortcut.modifiers_mask;
 
-	CloseWindowMenu(wwin->vscr);
+	DestroyWindowMenu(wwin->vscr);
 
 	if (event->xbutton.button < Button1 || event->xbutton.button > Button3)
 		return;
