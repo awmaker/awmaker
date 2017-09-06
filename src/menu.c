@@ -55,8 +55,8 @@
 #define MENU_SCROLL_STEP  menuScrollParameters[(int)wPreferences.menu_scroll_speed].steps
 #define MENU_SCROLL_DELAY menuScrollParameters[(int)wPreferences.menu_scroll_speed].delay
 
-#define MENUW(m)	((m)->frame->core->width+2*(m)->frame->vscr->screen_ptr->frame_border_width)
-#define MENUH(m)	((m)->frame->core->height+2*(m)->frame->vscr->screen_ptr->frame_border_width)
+#define MENUW(m)	((m)->frame->core->width+2*(m)->vscr->screen_ptr->frame_border_width)
+#define MENUH(m)	((m)->frame->core->height+2*(m)->vscr->screen_ptr->frame_border_width)
 
 #define getEntryAt(menu, y)   ((y)<0 ? -1 : (y)/(menu->entry_height))
 
@@ -456,7 +456,7 @@ static void get_menu_width(WMenu *menu)
 	int twidth = 0;
 	char *text;
 
-	scr = menu->frame->vscr->screen_ptr;
+	scr = menu->vscr->screen_ptr;
 
 	if (menu->flags.titled) {
 		twidth = WMWidthOfString(scr->menu_title_font, menu->title, strlen(menu->title));
@@ -501,10 +501,10 @@ void wMenuRealize(WMenu *menu)
 	int theight = 0, eheight;
 
 	/* If not mapped on the screen, return */
-	if (!menu || !menu->frame || !menu->frame->vscr || !menu->frame->vscr->screen_ptr)
+	if (!menu || !menu->frame || !menu->vscr || !menu->vscr->screen_ptr)
 		return;
 
-	scr = menu->frame->vscr->screen_ptr;
+	scr = menu->vscr->screen_ptr;
 
 	flags = WFF_BORDER;
 	if (menu->flags.titled)
@@ -626,7 +626,7 @@ static void drawFrame(virtual_screen *vscr, Drawable win, int y, int w, int h, i
 
 static void paintEntry(WMenu *menu, int index, int selected)
 {
-	virtual_screen *vscr = menu->frame->vscr;
+	virtual_screen *vscr = menu->vscr;
 	WScreen *scr = vscr->screen_ptr;
 	Window win = menu->menu->window;
 	WMenuEntry *entry = menu->entries[index];
@@ -760,7 +760,7 @@ static void move_menus(WMenu *menu, int x, int y)
 
 static void makeVisible(WMenu *menu)
 {
-	virtual_screen *vscr = menu->frame->vscr;
+	virtual_screen *vscr = menu->vscr;
 	int x1, y1, x2, y2, new_x, new_y;
 	WMRect rect = wGetRectForHead(vscr->screen_ptr, wGetHeadForPointerLocation(vscr));
 
@@ -822,8 +822,8 @@ static int keyboardMenu(WMenu *menu)
 	int old_pos_x = menu->frame_x;
 	int old_pos_y = menu->frame_y;
 	int new_x = old_pos_x, new_y = old_pos_y;
-	WMRect rect = wGetRectForHead(menu->frame->vscr->screen_ptr,
-				      wGetHeadForPointerLocation(menu->frame->vscr));
+	WMRect rect = wGetRectForHead(menu->vscr->screen_ptr,
+				      wGetHeadForPointerLocation(menu->vscr));
 
 	if (menu->flags.editing)
 		return False;
@@ -1160,7 +1160,7 @@ static void selectEntry(WMenu *menu, int entry_no)
 					}
 				} else {
 					x = menu->frame_x + MENUW(menu);
-					if (x + MENUW(submenu) >= menu->frame->vscr->screen_ptr->scr_width) {
+					if (x + MENUW(submenu) >= menu->vscr->screen_ptr->scr_width) {
 						x = menu->frame_x - MENUW(submenu);
 						submenu->flags.open_to_left = 1;
 					}
@@ -1180,8 +1180,7 @@ static void selectEntry(WMenu *menu, int entry_no)
 					y -= menu->cascades[entry->cascade]->frame->top_width;
 			}
 
-				/* kix: FIXME check if the menu->frame->vscr is valid */
-			wMenuMapAt(menu->frame->vscr, menu->cascades[entry->cascade], x, y, False);
+			wMenuMapAt(menu->vscr, menu->cascades[entry->cascade], x, y, False);
 			menu->cascades[entry->cascade]->parent = menu;
 		}
 		paintEntry(menu, entry_no, True);
@@ -1426,8 +1425,8 @@ static int isPointNearBoder(WMenu *menu, int x, int y)
 	int menuX2 = menu->frame_x + MENUW(menu);
 	int menuY2 = menu->frame_y + MENUH(menu);
 	int flag = 0;
-	int head = wGetHeadForPoint(menu->frame->vscr, wmkpoint(x, y));
-	WMRect rect = wGetRectForHead(menu->frame->vscr->screen_ptr, head);
+	int head = wGetHeadForPoint(menu->vscr, wmkpoint(x, y));
+	WMRect rect = wGetRectForHead(menu->vscr->screen_ptr, head);
 
 	/* XXX: handle screen joins properly !! */
 	if (x >= menuX1 && x <= menuX2 &&
@@ -1453,7 +1452,7 @@ static void callback_leaving(void *user_param)
 void wMenuScroll(WMenu *menu)
 {
 	WMenu *smenu, *omenu = parentMenu(menu);
-	virtual_screen *vscr = menu->frame->vscr;
+	virtual_screen *vscr = menu->vscr;
 	WScreen *scr = vscr->screen_ptr;
 	int done = 0, jump_back = 0;
 	int old_frame_x = omenu->frame_x;
@@ -1837,7 +1836,7 @@ static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
 {
 	XButtonEvent *bev = &event->xbutton;
 	WMenu *smenu, *menu = desc->parent;
-	virtual_screen *vscr = menu->frame->vscr;
+	virtual_screen *vscr = menu->vscr;
 	WMenuEntry *entry = NULL;
 	XEvent ev;
 	int close_on_exit = 0;
