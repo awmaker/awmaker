@@ -1782,13 +1782,22 @@ static void menu_blink_selected(WMenu *menu)
 #endif
 }
 
-static void menu_handle_selected_entry(WMenu *menu, WMenuEntry *entry, XEvent *ev, int entry_no)
+static int menu_handle_selected_entry(WMenu *menu, WMenuEntry *entry, XEvent *ev, int entry_no)
 {
+	Bool iswinmenu;
+
 	if (!menu)
-		return;
+		return 0;
 
 	if (menu->selected_entry < 0)
-		return;
+		return 0;
+
+	iswinmenu = False;
+	if (menu == menu->vscr->menu.window_menu)
+		iswinmenu = True;
+
+	if (!iswinmenu && (menu->parent == menu->vscr->menu.window_menu))
+		iswinmenu = True;
 
 	entry = menu->entries[menu->selected_entry];
 	if (entry->callback != NULL && entry->flags.enabled && entry->cascade < 0) {
@@ -1802,22 +1811,26 @@ static void menu_handle_selected_entry(WMenu *menu, WMenuEntry *entry, XEvent *e
 			selectEntry(menu, -1);
 
 		(*entry->callback) (menu, entry);
+		if (iswinmenu)
+			return 1;
 
 		/* If the user double clicks an entry, the entry will
 		 * be executed twice, which is not good for things like
 		 * the root menu. So, ignore any clicks that were generated
 		 * while the entry was being executed */
 		while (XCheckTypedWindowEvent(dpy, menu->menu->window, ButtonPress, ev));
-		return;
+		return 0;
 	}
 
 	if (entry->callback != NULL && entry->cascade < 0) {
 		selectEntry(menu, -1);
-		return;
+		return 0;
 	}
 
 	if (entry->cascade >= 0 && menu->cascades)
 		selectEntry(menu, entry_no);
+
+	return 0;
 }
 
 static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
@@ -1834,6 +1847,7 @@ static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
 	int x, y, prevx, prevy;
 	int old_frame_x = 0, old_frame_y = 0;
 	delay_data d_data = { NULL, NULL, NULL };
+	Bool iswinmenu;
 
 	menu->flags.inside_handler = 1;
 
@@ -1964,7 +1978,9 @@ static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
 	}
 
 	menu_delete_handlers(menu, &d_data);
-	menu_handle_selected_entry(menu, entry, &ev, entry_no);
+	iswinmenu = menu_handle_selected_entry(menu, entry, &ev, entry_no);
+	if (iswinmenu)
+		return;
 
 	if (close_on_exit || !smenu)
 		closeCascade(desc->parent);
