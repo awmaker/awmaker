@@ -1807,13 +1807,17 @@ static void menu_handle_selected_entry(WMenu *menu, WMenuEntry *entry, XEvent *e
 		 * be executed twice, which is not good for things like
 		 * the root menu. So, ignore any clicks that were generated
 		 * while the entry was being executed */
-		while (XCheckTypedWindowEvent(dpy, menu->menu->window, ButtonPress, ev)) ;
-	} else if (entry->callback != NULL && entry->cascade < 0) {
-		selectEntry(menu, -1);
-	} else {
-		if (entry->cascade >= 0 && menu->cascades)
-			selectEntry(menu, entry_no);
+		while (XCheckTypedWindowEvent(dpy, menu->menu->window, ButtonPress, ev));
+		return;
 	}
+
+	if (entry->callback != NULL && entry->cascade < 0) {
+		selectEntry(menu, -1);
+		return;
+	}
+
+	if (entry->cascade >= 0 && menu->cascades)
+		selectEntry(menu, entry_no);
 }
 
 static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
