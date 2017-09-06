@@ -769,7 +769,7 @@ void wWorkspaceForceChange(virtual_screen *vscr, int workspace)
 
 static void switchWSCommand(WMenu *menu, WMenuEntry *entry)
 {
-	wWorkspaceChange(menu->frame->vscr, (long)entry->clientdata);
+	wWorkspaceChange(menu->vscr, (long)entry->clientdata);
 }
 
 static void lastWSCommand(WMenu *menu, WMenuEntry *entry)
@@ -777,7 +777,7 @@ static void lastWSCommand(WMenu *menu, WMenuEntry *entry)
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 
-	wWorkspaceChange(menu->frame->vscr, menu->frame->vscr->workspace.last_used);
+	wWorkspaceChange(menu->vscr, menu->vscr->workspace.last_used);
 }
 
 static void deleteWSCommand(WMenu *menu, WMenuEntry *entry)
@@ -785,13 +785,13 @@ static void deleteWSCommand(WMenu *menu, WMenuEntry *entry)
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 
-	wWorkspaceDelete(menu->frame->vscr, menu->frame->vscr->workspace.count - 1);
+	wWorkspaceDelete(menu->vscr, menu->vscr->workspace.count - 1);
 }
 
 static void newWSCommand(WMenu *menu, WMenuEntry *foo)
 {
 	int s1, s2;
-	virtual_screen *vscr = menu->frame->vscr;
+	virtual_screen *vscr = menu->vscr;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) foo;
@@ -860,7 +860,7 @@ static void onMenuEntryEdited(WMenu *menu, WMenuEntry *entry)
 	char *tmp;
 
 	tmp = entry->text;
-	wWorkspaceRename(menu->frame->vscr, (long)entry->clientdata, tmp);
+	wWorkspaceRename(menu->vscr, (long)entry->clientdata, tmp);
 }
 
 WMenu *wWorkspaceMenuMake(virtual_screen *vscr, Bool titled)
