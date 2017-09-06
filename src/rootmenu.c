@@ -159,11 +159,11 @@ static void execCommand(WMenu *menu, WMenuEntry *entry)
 {
 	char *cmdline;
 
-	cmdline = ExpandOptions(menu->frame->vscr, (char *)entry->clientdata);
+	cmdline = ExpandOptions(menu->vscr, (char *)entry->clientdata);
 	if (!cmdline)
 		return;
 
-	ExecuteShellCommand(menu->frame->vscr, cmdline);
+	ExecuteShellCommand(menu->vscr, cmdline);
 	wfree(cmdline);
 }
 
@@ -189,7 +189,7 @@ static void exitCommand(WMenu *menu, WMenuEntry *entry)
 		int r, oldSaveSessionFlag;
 
 		oldSaveSessionFlag = wPreferences.save_session_on_exit;
-		r = wExitDialog(menu->frame->vscr, _("Exit"),
+		r = wExitDialog(menu->vscr, _("Exit"),
 				_("Exit window manager?"), _("Exit"), _("Cancel"), NULL);
 
 		if (r == WAPRDefault) {
@@ -232,7 +232,7 @@ static void shutdownCommand(WMenu *menu, WMenuEntry *entry)
 
 		oldSaveSessionFlag = wPreferences.save_session_on_exit;
 
-		r = wExitDialog(menu->frame->vscr,
+		r = wExitDialog(menu->vscr,
 				_("Kill X session"),
 				_("Kill Window System session?\n"
 				  "(all applications will be closed)"), _("Kill"), _("Cancel"), NULL);
@@ -270,7 +270,7 @@ static void refreshCommand(WMenu *menu, WMenuEntry *entry)
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 
-	wRefreshDesktop(menu->frame->vscr);
+	wRefreshDesktop(menu->vscr);
 }
 
 static void arrangeIconsCommand(WMenu *menu, WMenuEntry *entry)
@@ -278,7 +278,7 @@ static void arrangeIconsCommand(WMenu *menu, WMenuEntry *entry)
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 
-	wArrangeIcons(menu->frame->vscr, True);
+	wArrangeIcons(menu->vscr, True);
 }
 
 static void showAllCommand(WMenu *menu, WMenuEntry *entry)
@@ -286,7 +286,7 @@ static void showAllCommand(WMenu *menu, WMenuEntry *entry)
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 
-	wShowAllWindows(menu->frame->vscr);
+	wShowAllWindows(menu->vscr);
 }
 
 static void hideOthersCommand(WMenu *menu, WMenuEntry *entry)
@@ -294,7 +294,7 @@ static void hideOthersCommand(WMenu *menu, WMenuEntry *entry)
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 
-	wHideOtherApplications(menu->frame->vscr->window.focused);
+	wHideOtherApplications(menu->vscr->window.focused);
 }
 
 static void saveSessionCommand(WMenu *menu, WMenuEntry *entry)
@@ -303,9 +303,9 @@ static void saveSessionCommand(WMenu *menu, WMenuEntry *entry)
 	(void) entry;
 
 	if (!wPreferences.save_session_on_exit)
-		wSessionSaveState(menu->frame->vscr);
+		wSessionSaveState(menu->vscr);
 
-	wScreenSaveState(menu->frame->vscr);
+	wScreenSaveState(menu->vscr);
 }
 
 static void clearSessionCommand(WMenu *menu, WMenuEntry *entry)
@@ -314,7 +314,7 @@ static void clearSessionCommand(WMenu *menu, WMenuEntry *entry)
 	(void) entry;
 
 	wSessionClearState();
-	wScreenSaveState(menu->frame->vscr);
+	wScreenSaveState(menu->vscr);
 }
 
 static void infoPanelCommand(WMenu *menu, WMenuEntry *entry)
@@ -322,7 +322,7 @@ static void infoPanelCommand(WMenu *menu, WMenuEntry *entry)
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 
-	panel_show(menu->frame->vscr, PANEL_INFO);
+	panel_show(menu->vscr, PANEL_INFO);
 }
 
 static void legalPanelCommand(WMenu *menu, WMenuEntry *entry)
@@ -330,7 +330,7 @@ static void legalPanelCommand(WMenu *menu, WMenuEntry *entry)
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 
-	panel_show(menu->frame->vscr, PANEL_LEGAL);
+	panel_show(menu->vscr, PANEL_LEGAL);
 }
 
 /********************************************************************/
@@ -648,7 +648,7 @@ static void constructMenu(WMenu *menu, WMenuEntry *entry)
 		/* pipe menu */
 		if (!menu->cascades[entry->cascade] || menu->cascades[entry->cascade]->timestamp == 0) {
 			/* parse pipe */
-			submenu = readMenuPipe(menu->frame->vscr, path);
+			submenu = readMenuPipe(menu->vscr, path);
 
 			if (submenu != NULL) {
 				if (path[0][1] == '|')
@@ -661,7 +661,7 @@ static void constructMenu(WMenu *menu, WMenuEntry *entry)
 		}
 	} else {
 		/* try interpreting path as a proplist file */
-		submenu = constructPLMenu(menu->frame->vscr, path[0]);
+		submenu = constructPLMenu(menu->vscr, path[0]);
 
 		/* if unsuccessful, try it as an old-style file */
 		if (!submenu) {
@@ -715,7 +715,7 @@ static void constructMenu(WMenu *menu, WMenuEntry *entry)
 			    menu->cascades[entry->cascade]->timestamp < last) {
 				if (S_ISDIR(stat_buf.st_mode)) {
 					/* menu directory */
-					submenu = readMenuDirectory(menu->frame->vscr, entry->text, path, cmd);
+					submenu = readMenuDirectory(menu->vscr, entry->text, path, cmd);
 					if (submenu)
 						submenu->timestamp = last;
 				} else if (S_ISREG(stat_buf.st_mode)) {
@@ -725,7 +725,7 @@ static void constructMenu(WMenu *menu, WMenuEntry *entry)
 						wwarning(_("too many parameters in OPEN_MENU: %s"),
 								(char *)entry->clientdata);
 
-					submenu = readMenuFile(menu->frame->vscr, path[first]);
+					submenu = readMenuFile(menu->vscr, path[first]);
 					if (submenu)
 						submenu->timestamp = stat_buf.st_mtime;
 				} else {
@@ -778,7 +778,7 @@ static void constructPLMenuFromPipe(WMenu * menu, WMenuEntry * entry)
 		if (!menu->cascades[entry->cascade]
 		|| menu->cascades[entry->cascade]->timestamp == 0) {
 			/* parse pipe */
-			submenu = readPLMenuPipe(menu->frame->vscr, path);
+			submenu = readPLMenuPipe(menu->vscr, path);
 
 			if (submenu != NULL) {
 				if (path[0][1] == '|')
@@ -805,8 +805,8 @@ static void constructPLMenuFromPipe(WMenu * menu, WMenuEntry * entry)
 }
 static void cleanupWorkspaceMenu(WMenu *menu)
 {
-	if (menu->frame->vscr->workspace.menu == menu)
-		menu->frame->vscr->workspace.menu = NULL;
+	if (menu->vscr->workspace.menu == menu)
+		menu->vscr->workspace.menu = NULL;
 }
 
 static WMenuEntry *addWorkspaceMenu(virtual_screen *vscr, WMenu *menu, const char *title)
@@ -835,8 +835,8 @@ static WMenuEntry *addWorkspaceMenu(virtual_screen *vscr, WMenu *menu, const cha
 
 static void cleanupWindowsMenu(WMenu *menu)
 {
-	if (menu->frame->vscr->menu.root_switch == menu)
-		menu->frame->vscr->menu.root_switch = NULL;
+	if (menu->vscr->menu.root_switch == menu)
+		menu->vscr->menu.root_switch = NULL;
 }
 
 static WMenuEntry *addWindowsMenu(virtual_screen *vscr, WMenu *menu, const char *title)
@@ -881,7 +881,7 @@ static WMenuEntry *addMenuEntry(WMenu *menu, const char *title, const char *shor
 	if (!menu)
 		return NULL;
 
-	vscr = menu->frame->vscr;
+	vscr = menu->vscr;
 	if (strcmp(command, "OPEN_MENU") == 0) {
 		if (!params) {
 			wwarning(_("%s:missing parameter for menu command \"%s\""), file_name, command);
