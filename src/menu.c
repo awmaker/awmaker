@@ -1776,42 +1776,46 @@ static void menu_motion_select_entry(WMenu *menu, WMenuEntry *entry,
 
 static void menu_handle_selected_entry(WMenu *menu, WMenuEntry *entry, XEvent *ev, int entry_no)
 {
-	if (menu && menu->selected_entry >= 0) {
-		entry = menu->entries[menu->selected_entry];
-		if (entry->callback != NULL && entry->flags.enabled && entry->cascade < 0) {
-			/* blink and erase menu selection */
+	if (!menu)
+		return;
+
+	if (menu->selected_entry < 0)
+		return;
+
+	entry = menu->entries[menu->selected_entry];
+	if (entry->callback != NULL && entry->flags.enabled && entry->cascade < 0) {
+		/* blink and erase menu selection */
 #if (MENU_BLINK_DELAY > 0)
-			int sel = menu->selected_entry;
-			int i;
+		int sel = menu->selected_entry;
+		int i;
 
-			for (i = 0; i < MENU_BLINK_COUNT; i++) {
-				paintEntry(menu, sel, False);
-				XSync(dpy, 0);
-				wusleep(MENU_BLINK_DELAY);
-				paintEntry(menu, sel, True);
-				XSync(dpy, 0);
-				wusleep(MENU_BLINK_DELAY);
-			}
-#endif
-			/* unmap the menu, it's parents and call the callback */
-			if (!menu->flags.buttoned && (!menu->flags.app_menu || menu->parent != NULL))
-				closeCascade(menu);
-			else
-				selectEntry(menu, -1);
-
-			(*entry->callback) (menu, entry);
-
-			/* If the user double clicks an entry, the entry will
-			 * be executed twice, which is not good for things like
-			 * the root menu. So, ignore any clicks that were generated
-			 * while the entry was being executed */
-			while (XCheckTypedWindowEvent(dpy, menu->menu->window, ButtonPress, ev)) ;
-		} else if (entry->callback != NULL && entry->cascade < 0) {
-			selectEntry(menu, -1);
-		} else {
-			if (entry->cascade >= 0 && menu->cascades)
-				selectEntry(menu, entry_no);
+		for (i = 0; i < MENU_BLINK_COUNT; i++) {
+			paintEntry(menu, sel, False);
+			XSync(dpy, 0);
+			wusleep(MENU_BLINK_DELAY);
+			paintEntry(menu, sel, True);
+			XSync(dpy, 0);
+			wusleep(MENU_BLINK_DELAY);
 		}
+#endif
+		/* unmap the menu, it's parents and call the callback */
+		if (!menu->flags.buttoned && (!menu->flags.app_menu || menu->parent != NULL))
+			closeCascade(menu);
+		else
+			selectEntry(menu, -1);
+
+		(*entry->callback) (menu, entry);
+
+		/* If the user double clicks an entry, the entry will
+		 * be executed twice, which is not good for things like
+		 * the root menu. So, ignore any clicks that were generated
+		 * while the entry was being executed */
+		while (XCheckTypedWindowEvent(dpy, menu->menu->window, ButtonPress, ev)) ;
+	} else if (entry->callback != NULL && entry->cascade < 0) {
+		selectEntry(menu, -1);
+	} else {
+		if (entry->cascade >= 0 && menu->cascades)
+			selectEntry(menu, entry_no);
 	}
 }
 
