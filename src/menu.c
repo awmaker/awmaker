@@ -97,6 +97,7 @@ static void get_menu_width(WMenu *menu);
 static Bool saveMenuRecurs(WMPropList *menus, WMenu *menu, virtual_screen *vscr);
 static int restoreMenuRecurs(virtual_screen *vscr, WMPropList *menus, WMenu *menu, const char *path);
 static void menu_delete_handlers(WMenu *menu, delay_data *d_data);
+static void menu_blink_selected(WMenu *menu);
 /****** Notification Observers ******/
 
 static void appearanceObserver(void *self, WMNotification *notif)
@@ -1774,6 +1775,25 @@ static void menu_motion_select_entry(WMenu *menu, WMenuEntry *entry,
 	selectEntry(menu, *entry_no);
 }
 
+static void menu_blink_selected(WMenu *menu)
+{
+#if (MENU_BLINK_DELAY > 0)
+	int sel = menu->selected_entry;
+	int i;
+
+	for (i = 0; i < MENU_BLINK_COUNT; i++) {
+		paintEntry(menu, sel, False);
+		XSync(dpy, 0);
+		wusleep(MENU_BLINK_DELAY);
+		paintEntry(menu, sel, True);
+		XSync(dpy, 0);
+		wusleep(MENU_BLINK_DELAY);
+	}
+#else
+	(void *) menu;
+#endif
+}
+
 static void menu_handle_selected_entry(WMenu *menu, WMenuEntry *entry, XEvent *ev, int entry_no)
 {
 	if (!menu)
@@ -1785,19 +1805,8 @@ static void menu_handle_selected_entry(WMenu *menu, WMenuEntry *entry, XEvent *e
 	entry = menu->entries[menu->selected_entry];
 	if (entry->callback != NULL && entry->flags.enabled && entry->cascade < 0) {
 		/* blink and erase menu selection */
-#if (MENU_BLINK_DELAY > 0)
-		int sel = menu->selected_entry;
-		int i;
+		menu_blink_selected(menu);
 
-		for (i = 0; i < MENU_BLINK_COUNT; i++) {
-			paintEntry(menu, sel, False);
-			XSync(dpy, 0);
-			wusleep(MENU_BLINK_DELAY);
-			paintEntry(menu, sel, True);
-			XSync(dpy, 0);
-			wusleep(MENU_BLINK_DELAY);
-		}
-#endif
 		/* unmap the menu, it's parents and call the callback */
 		if (!menu->flags.buttoned && (!menu->flags.app_menu || menu->parent != NULL))
 			closeCascade(menu);
