@@ -239,8 +239,6 @@ static void execMenuCommand(WMenu *menu, WMenuEntry *entry)
 	WWindow *wwin = (WWindow *) entry->clientdata;
 	WApplication *wapp;
 
-	DestroyWindowMenu(menu->frame->vscr);
-
 	switch (entry->order) {
 	case MC_CLOSE:
 		/* send delete message */
