@@ -338,7 +338,7 @@ static void killCallback(WMenu *menu, WMenuEntry *entry)
 	}
 
 	if (wPreferences.dont_confirm_kill
-	    || wMessageDialog(menu->frame->vscr, _("Kill Application"),
+	    || wMessageDialog(menu->vscr, _("Kill Application"),
 			      buffer, _("Yes"), _("No"), NULL) == WAPRDefault) {
 		if (fPtr != NULL) {
 			WWindow *wwin, *twin;
@@ -1042,7 +1042,7 @@ static void launchDockedApplication(WAppIcon *btn, Bool withSelection)
 
 static void updateWorkspaceMenu(WMenu *menu, WAppIcon *icon)
 {
-	virtual_screen *vscr = menu->frame->vscr;
+	virtual_screen *vscr = menu->vscr;
 	int i;
 
 	if (!menu || !icon)
