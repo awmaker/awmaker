@@ -974,19 +974,7 @@ static int keyboardMenu(WMenu *menu)
 		entry = NULL;
 
 	if (entry && entry->callback != NULL && entry->flags.enabled && entry->cascade < 0) {
-#if (MENU_BLINK_COUNT > 0)
-		int sel = menu->selected_entry;
-		int i;
-
-		for (i = 0; i < MENU_BLINK_COUNT; i++) {
-			paintEntry(menu, sel, False);
-			XSync(dpy, 0);
-			wusleep(MENU_BLINK_DELAY);
-			paintEntry(menu, sel, True);
-			XSync(dpy, 0);
-			wusleep(MENU_BLINK_DELAY);
-		}
-#endif
+		menu_blink_selected(menu);
 		selectEntry(menu, -1);
 
 		if (!menu->flags.buttoned) {
