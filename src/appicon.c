@@ -591,7 +591,7 @@ static void killCallback(WMenu *menu, WMenuEntry *entry)
 
 	wretain(wapp->main_window_desc);
 	if (wPreferences.dont_confirm_kill
-	    || wMessageDialog(menu->frame->vscr, _("Kill Application"),
+	    || wMessageDialog(menu->vscr, _("Kill Application"),
 			      buffer, _("Yes"), _("No"), NULL) == WAPRDefault) {
 		if (fPtr != NULL) {
 			WWindow *wwin, *twin;
