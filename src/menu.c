@@ -55,8 +55,8 @@
 #define MENU_SCROLL_STEP  menuScrollParameters[(int)wPreferences.menu_scroll_speed].steps
 #define MENU_SCROLL_DELAY menuScrollParameters[(int)wPreferences.menu_scroll_speed].delay
 
-#define MENUW(m)	((m)->frame->core->width+2*(m)->vscr->screen_ptr->frame_border_width)
-#define MENUH(m)	((m)->frame->core->height+2*(m)->vscr->screen_ptr->frame_border_width)
+#define MENUW(m)	((m)->frame->width+2*(m)->vscr->screen_ptr->frame_border_width)
+#define MENUH(m)	((m)->frame->height+2*(m)->vscr->screen_ptr->frame_border_width)
 
 #define getEntryAt(menu, y)   ((y)<0 ? -1 : (y)/(menu->entry_height))
 
@@ -1054,7 +1054,7 @@ void wMenuUnmap(WMenu *menu)
 	menu->flags.open_to_left = 0;
 
 	if (menu->flags.shaded) {
-		wFrameWindowResize(menu->frame, menu->frame->core->width, menu->frame->top_width +
+		wFrameWindowResize(menu->frame, menu->frame->width, menu->frame->top_width +
 				   menu->entry_height*menu->entry_no + menu->frame->bottom_width - 1);
 		menu->flags.shaded = 0;
 	}
@@ -2081,11 +2081,11 @@ static void menuTitleDoubleClick(WCoreWindow *sender, void *data, XEvent *event)
 		changeMenuLevels(menu, lower);
 	} else {
 		if (menu->flags.shaded) {
-			wFrameWindowResize(menu->frame, menu->frame->core->width, menu->frame->top_width +
+			wFrameWindowResize(menu->frame, menu->frame->width, menu->frame->top_width +
 					   menu->entry_height*menu->entry_no + menu->frame->bottom_width - 1);
 			menu->flags.shaded = 0;
 		} else {
-			wFrameWindowResize(menu->frame, menu->frame->core->width, menu->frame->top_width - 1);
+			wFrameWindowResize(menu->frame, menu->frame->width, menu->frame->top_width - 1);
 			menu->flags.shaded = 1;
 		}
 	}
@@ -2478,7 +2478,7 @@ void menu_move_visible(WMenu *menu)
 	int new_x;
 
 	wMenuRealize(menu);
-	new_x = menu->frame->top_width - (int) menu->frame->core->width + 5;
+	new_x = menu->frame->top_width - (int) menu->frame->width + 5;
 	/* if menu got unreachable, bring it to a visible place */
 	if (menu->frame_x < new_x)
 		wMenuMove(menu, new_x, menu->frame_y, False);
