@@ -354,7 +354,7 @@ static void right_button_map(WFrameWindow *fwin, int theight)
 		wcore_map(fwin->right_button, fwin->core,
 			  fwin->core->vscr,
 			  right_button_pos_width, right_button_pos_height,
-			  fwin->right_button->width, fwin->right_button->height, 0,
+			  fwin->bordersize, fwin->bordersize, 0,
 			  fwin->core->vscr->screen_ptr->w_depth,
 			  fwin->core->vscr->screen_ptr->w_visual,
 			  fwin->core->vscr->screen_ptr->w_colormap);
@@ -364,7 +364,7 @@ static void right_button_map(WFrameWindow *fwin, int theight)
 		wcore_map(fwin->right_button, fwin->titlebar,
 			  fwin->titlebar->vscr,
 			  right_button_pos_width, right_button_pos_height,
-			  fwin->right_button->width, fwin->right_button->height, 0,
+			  fwin->bordersize, fwin->bordersize, 0,
 			  fwin->titlebar->vscr->screen_ptr->w_depth,
 			  fwin->titlebar->vscr->screen_ptr->w_visual,
 			  fwin->titlebar->vscr->screen_ptr->w_colormap);
@@ -828,7 +828,7 @@ static void updateTitlebar(WFrameWindow *fwin)
 
 		if (!fwin->flags.hide_right_button && fwin->right_button &&
 		    fwin->flags.map_right_button && !fwin->flags.rbutton_dont_fit)
-			w -= fwin->right_button->width;
+			w -= fwin->bordersize;
 
 		fwin->flags.need_texture_remake = 1;
 	} else {
@@ -1335,7 +1335,7 @@ void wFrameWindowPaint(WFrameWindow *fwin)
 
 			if (fwin->right_button && fwin->flags.map_right_button &&
 			    !fwin->flags.hide_right_button && !fwin->flags.rbutton_dont_fit)
-				rofs += fwin->right_button->width + 3;
+				rofs += fwin->bordersize + 3;
 		}
 #ifdef XKB_BUTTON_HINT
 		fwin->languagebutton_image = fwin->vscr->screen_ptr->b_pixmaps[WBUT_XKBGROUP1 + fwin->languagemode];
@@ -1425,12 +1425,12 @@ static void reconfigure(WFrameWindow * fwin, int x, int y, int width, int height
 		if (wPreferences.new_style == TS_NEW) {
 			if (fwin->right_button && fwin->flags.map_right_button)
 				XMoveWindow(dpy, fwin->right_button->window,
-					    width - fwin->right_button->width + 1, 0);
+					    width - fwin->bordersize + 1, 0);
 		} else {
 			if (fwin->right_button && fwin->flags.map_right_button)
 				XMoveWindow(dpy, fwin->right_button->window,
-					    width - fwin->right_button->width - 3,
-					    (fwin->titlebar->height - fwin->right_button->height) / 2);
+					    width - fwin->bordersize - 3,
+					    (fwin->titlebar->height - fwin->bordersize) / 2);
 		}
 		updateTitlebar(fwin);
 		checkTitleSize(fwin);
@@ -1529,7 +1529,7 @@ static void checkTitleSize(WFrameWindow *fwin)
 
 		if (fwin->right_button && fwin->flags.map_right_button &&
 		    !fwin->flags.hide_right_button && !fwin->flags.rbutton_dont_fit)
-			width -= fwin->right_button->width + 3;
+			width -= fwin->bordersize + 3;
 	}
 
 	if (WMWidthOfString(*fwin->font, title, strlen(title)) > width)
