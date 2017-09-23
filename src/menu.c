@@ -138,15 +138,15 @@ static void appearanceObserver(void *self, WMNotification *notif)
 WMenu *menu_create(virtual_screen *vscr, const char *title)
 {
 	WMenu *menu;
-	int flags, width = 1;
+	int flags;
 
 	flags = WFF_SINGLE_STATE | WFF_BORDER;
 	if (title)
 		flags |= WFF_TITLEBAR | WFF_RIGHT_BUTTON;
 
 	menu = wmalloc(sizeof(WMenu));
-	menu->frame = wframewindow_create(NULL, menu, width, 1, flags);
-	menu->menu = wcore_create(width, 10);
+	menu->frame = wframewindow_create(NULL, menu, 1, 1, flags);
+	menu->menu = wcore_create(1, 10);
 	menu->vscr = vscr;
 
 	if (title) {
