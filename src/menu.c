@@ -243,11 +243,11 @@ void menu_map(WMenu *menu, virtual_screen *screen)
 	menu->frame_y = 0;
 
 	wcore_map(menu->menu, menu->frame->core,
-		  menu->frame->core->vscr, 0, 0,
+		  menu->vscr, 0, 0,
 		  menu->menu->width, menu->menu->height, 0,
-		  menu->frame->core->vscr->screen_ptr->w_depth,
-		  menu->frame->core->vscr->screen_ptr->w_visual,
-		  menu->frame->core->vscr->screen_ptr->w_colormap);
+		  menu->vscr->screen_ptr->w_depth,
+		  menu->vscr->screen_ptr->w_visual,
+		  menu->vscr->screen_ptr->w_colormap);
 
 	menu->menu->descriptor.parent = menu;
 	menu->menu->descriptor.parent_type = WCLASS_MENU;
