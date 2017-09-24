@@ -500,7 +500,7 @@ void wMenuRealize(WMenu *menu)
 {
 	WScreen *scr;
 	int flags;
-	int theight = 0, eheight;
+	int theight = 0;
 
 	/* If not mapped on the screen, return */
 	if (!menu || !menu->frame || !menu->vscr || !menu->vscr->screen_ptr)
@@ -517,15 +517,14 @@ void wMenuRealize(WMenu *menu)
 	if (menu->flags.titled)
 		theight = menu->frame->top_width;
 
-	eheight = WMFontHeight(scr->menu_entry_font) + 6 +
-			       wPreferences.menu_text_clearance * 2;
-	menu->entry_height = eheight;
+	menu->entry_height = WMFontHeight(scr->menu_entry_font) + 6 +
+					  wPreferences.menu_text_clearance * 2;
 	get_menu_width(menu);
 
 	wCoreConfigure(menu->core, 0, theight,
-		       menu->width, menu->entry_no * eheight - 1);
+		       menu->width, menu->entry_no * menu->entry_height - 1);
 	wFrameWindowResize(menu->frame, menu->width,
-			   menu->entry_no * eheight - 1 +
+			   menu->entry_no * menu->entry_height - 1 +
 			   menu->frame->top_width +
 			   menu->frame->bottom_width);
 
