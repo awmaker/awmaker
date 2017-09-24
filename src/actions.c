@@ -260,7 +260,7 @@ void wShadeWindow(WWindow *wwin)
 	XSelectInput(dpy, wwin->client_win, wwin->event_mask);
 
 	/* for the client it's just like iconification */
-	wFrameWindowResize(wwin->frame, wwin->frame->core->width, wwin->frame->top_width - 1);
+	wFrameWindowResize(wwin->frame, wwin->frame->width, wwin->frame->top_width - 1);
 
 	wwin->client.y = wwin->frame_y - wwin->height + wwin->frame->top_width;
 	wWindowSynthConfigureNotify(wwin);
@@ -291,7 +291,7 @@ void wUnshadeWindow(WWindow *wwin)
 	shade_animate(wwin, UNSHADE);
 
 	wwin->flags.skip_next_animation = 0;
-	wFrameWindowResize(wwin->frame, wwin->frame->core->width,
+	wFrameWindowResize(wwin->frame, wwin->frame->width,
 			   wwin->frame->top_width + wwin->height + wwin->frame->bottom_width);
 
 	wwin->client.y = wwin->frame_y + wwin->frame->top_width;
@@ -434,11 +434,11 @@ void wMaximizeWindow(WWindow *wwin, int directions, int head)
 	} else {
 		/* set default values if no option set then */
 		if (!(directions & (MAX_HORIZONTAL | MAX_LEFTHALF | MAX_RIGHTHALF | MAX_MAXIMUS))) {
-			new_width = (wwin->old_geometry.width) ? wwin->old_geometry.width : wwin->frame->core->width;
+			new_width = (wwin->old_geometry.width) ? wwin->old_geometry.width : wwin->frame->width;
 			new_x = (wwin->old_geometry.x) ? wwin->old_geometry.x : wwin->frame_x;
 		}
 		if (!(directions & (MAX_VERTICAL | MAX_TOPHALF | MAX_BOTTOMHALF | MAX_MAXIMUS))) {
-			new_height = (wwin->old_geometry.height) ? wwin->old_geometry.height : wwin->frame->core->height;
+			new_height = (wwin->old_geometry.height) ? wwin->old_geometry.height : wwin->frame->height;
 			new_y = (wwin->old_geometry.y) ? wwin->old_geometry.y : wwin->frame_y;
 		}
 
@@ -682,8 +682,8 @@ static void set_window_coords(WWindow *wwin, win_coords *obs)
 {
 	obs->left = wwin->frame_x;
 	obs->top = wwin->frame_y;
-	obs->width = wwin->frame->core->width;
-	obs->height = wwin->frame->core->height;
+	obs->width = wwin->frame->width;
+	obs->height = wwin->frame->height;
 	obs->bottom = obs->top + obs->height;
 	obs->right = obs->left + obs->width;
 }
@@ -844,8 +844,8 @@ void wFullscreenWindow(WWindow *wwin)
 
 	wwin->bfs_geometry.x = wwin->frame_x;
 	wwin->bfs_geometry.y = wwin->frame_y;
-	wwin->bfs_geometry.width = wwin->frame->core->width;
-	wwin->bfs_geometry.height = wwin->frame->core->height;
+	wwin->bfs_geometry.width = wwin->frame->width;
+	wwin->bfs_geometry.height = wwin->frame->height;
 
 	head = wGetHeadForWindow(wwin);
 	rect = wGetRectForHead(wwin->vscr->screen_ptr, head);
@@ -1284,7 +1284,7 @@ void wIconifyWindow(WWindow *wwin)
 #ifdef USE_ANIMATIONS
 		if (getAnimationGeometry(wwin, &ix, &iy, &iw, &ih))
 			animateResize(wwin->vscr, wwin->frame_x, wwin->frame_y,
-				      wwin->frame->core->width, wwin->frame->core->height, ix, iy, iw, ih);
+				      wwin->frame->width, wwin->frame->height, ix, iy, iw, ih);
 #endif
 	}
 
@@ -1400,7 +1400,7 @@ void wDeiconifyWindow(WWindow *wwin)
 		if (getAnimationGeometry(wwin, &ix, &iy, &iw, &ih))
 			animateResize(wwin->vscr, ix, iy, iw, ih,
 				      wwin->frame_x, wwin->frame_y,
-				      wwin->frame->core->width, wwin->frame->core->height);
+				      wwin->frame->width, wwin->frame->height);
 #endif
 		wwin->flags.skip_next_animation = 0;
 		XGrabServer(dpy);
@@ -1482,7 +1482,7 @@ static void hideWindow(WIcon *icon, int icon_x, int icon_y, WWindow *wwin, int a
 	if (!w_global.startup.phase1 && !wPreferences.no_animations &&
 	    !wwin->flags.skip_next_animation && animate)
 		animateResize(wwin->vscr, wwin->frame_x, wwin->frame_y,
-			      wwin->frame->core->width, wwin->frame->core->height,
+			      wwin->frame->width, wwin->frame->height,
 			      icon_x, icon_y, icon->core->width, icon->core->height);
 #endif
 	wwin->flags.skip_next_animation = 0;
@@ -1645,7 +1645,7 @@ static void unhideWindow(WIcon *icon, int icon_x, int icon_y, WWindow *wwin, int
 		animateResize(wwin->vscr, icon_x, icon_y,
 			      icon->core->width, icon->core->height,
 			      wwin->frame_x, wwin->frame_y,
-			      wwin->frame->core->width, wwin->frame->core->height);
+			      wwin->frame->width, wwin->frame->height);
 #endif
 	wwin->flags.skip_next_animation = 0;
 	if (wwin->vscr->workspace.current == wwin->frame->workspace) {
@@ -2056,12 +2056,12 @@ static void shade_animate(WWindow *wwin, Bool what)
 	case SHADE:
 		if (!w_global.startup.phase1) {
 			/* do the shading animation */
-			h = wwin->frame->core->height;
+			h = wwin->frame->height;
 			s = h / SHADE_STEPS;
 			if (s < 1)
 				s = 1;
 
-			w = wwin->frame->core->width;
+			w = wwin->frame->width;
 			y = wwin->frame->top_width;
 			while (h > wwin->frame->top_width + 1) {
 				XMoveWindow(dpy, wwin->client_win, 0, y);
@@ -2091,7 +2091,7 @@ static void shade_animate(WWindow *wwin, Bool what)
 		if (s < 1)
 			s = 1;
 
-		w = wwin->frame->core->width;
+		w = wwin->frame->width;
 		XMoveWindow(dpy, wwin->client_win, 0, y);
 		if (s > 0) {
 			while (h < wwin->height + wwin->frame->top_width + wwin->frame->bottom_width) {
