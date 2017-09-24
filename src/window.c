@@ -3097,7 +3097,7 @@ static void titlebarMouseDown(WCoreWindow *sender, void *data, XEvent *event)
 		OpenWindowMenu(wwin, event->xbutton.x_root, wwin->frame_y + wwin->frame->top_width, False);
 
 		/* allow drag select */
-		desc = &wwin->vscr->menu.window_menu->menu->descriptor;
+		desc = &wwin->vscr->menu.window_menu->core->descriptor;
 		event->xany.send_event = True;
 		(*desc->handle_mousedown) (desc, event);
 

@@ -146,7 +146,7 @@ WMenu *menu_create(virtual_screen *vscr, const char *title)
 
 	menu = wmalloc(sizeof(WMenu));
 	menu->frame = wframewindow_create(NULL, menu, 1, 1, flags);
-	menu->menu = wcore_create(1, 10);
+	menu->core = wcore_create(1, 10);
 	menu->vscr = vscr;
 
 	if (title) {
@@ -179,8 +179,8 @@ void menu_unmap(WMenu *menu)
 {
 	destroy_pixmap(menu->menu_texture_data);
 
-	XDeleteContext(dpy, menu->menu->window, w_global.context.client_win);
-	XDestroyWindow(dpy, menu->menu->window);
+	XDeleteContext(dpy, menu->core->window, w_global.context.client_win);
+	XDestroyWindow(dpy, menu->core->window);
 
 	framewindow_unmap(menu->frame);
 }
@@ -194,9 +194,9 @@ void menu_destroy(WMenu *menu)
 		menu->cascades = NULL;
 	}
 
-	if (menu->menu->stacking) {
-		wfree(menu->menu->stacking);
-		menu->menu->stacking = NULL;
+	if (menu->core->stacking) {
+		wfree(menu->core->stacking);
+		menu->core->stacking = NULL;
 	}
 
 	if (menu->title) {
@@ -204,8 +204,8 @@ void menu_destroy(WMenu *menu)
 		menu->title = NULL;
 	}
 
-	wcore_destroy(menu->menu);
-	menu->menu = NULL;
+	wcore_destroy(menu->core);
+	menu->core = NULL;
 	wFrameWindowDestroy(menu->frame);
 	menu->frame = NULL;
 
@@ -242,21 +242,21 @@ void menu_map(WMenu *menu, virtual_screen *screen)
 	menu->frame_x = 0;
 	menu->frame_y = 0;
 
-	wcore_map(menu->menu, menu->frame->core,
+	wcore_map(menu->core, menu->frame->core,
 		  menu->vscr, 0, 0,
-		  menu->menu->width, menu->menu->height, 0,
+		  menu->core->width, menu->core->height, 0,
 		  menu->vscr->screen_ptr->w_depth,
 		  menu->vscr->screen_ptr->w_visual,
 		  menu->vscr->screen_ptr->w_colormap);
 
-	menu->menu->descriptor.parent = menu;
-	menu->menu->descriptor.parent_type = WCLASS_MENU;
-	menu->menu->descriptor.handle_expose = menuExpose;
-	menu->menu->descriptor.handle_mousedown = menuMouseDown;
+	menu->core->descriptor.parent = menu;
+	menu->core->descriptor.parent_type = WCLASS_MENU;
+	menu->core->descriptor.handle_expose = menuExpose;
+	menu->core->descriptor.handle_mousedown = menuMouseDown;
 
 	menu->menu_texture_data = None;
 
-	XMapWindow(dpy, menu->menu->window);
+	XMapWindow(dpy, menu->core->window);
 
 	XFlush(dpy);
 
@@ -388,13 +388,13 @@ static Pixmap renderTexture(WMenu *menu)
 	Pixmap pix;
 	int i;
 	RColor light, dark, mid;
-	WScreen *scr = menu->menu->vscr->screen_ptr;
+	WScreen *scr = menu->core->vscr->screen_ptr;
 	WTexture *texture = scr->menu_item_texture;
 
 	if (wPreferences.menu_style == MS_NORMAL)
-		img = wTextureRenderImage(texture, menu->menu->width, menu->entry_height, WREL_MENUENTRY);
+		img = wTextureRenderImage(texture, menu->core->width, menu->entry_height, WREL_MENUENTRY);
 	else
-		img = wTextureRenderImage(texture, menu->menu->width, menu->menu->height + 1, WREL_MENUENTRY);
+		img = wTextureRenderImage(texture, menu->core->width, menu->core->height + 1, WREL_MENUENTRY);
 
 	if (!img) {
 		wwarning(_("could not render texture: %s"), RMessageForError(RErrorCode));
@@ -413,13 +413,13 @@ static Pixmap renderTexture(WMenu *menu)
 
 		for (i = 1; i < menu->entry_no; i++) {
 			ROperateLine(img, RSubtractOperation, 0, i * menu->entry_height - 2,
-				     menu->menu->width - 1, i * menu->entry_height - 2, &mid);
+				     menu->core->width - 1, i * menu->entry_height - 2, &mid);
 
 			RDrawLine(img, 0, i * menu->entry_height - 1,
-				  menu->menu->width - 1, i * menu->entry_height - 1, &dark);
+				  menu->core->width - 1, i * menu->entry_height - 1, &dark);
 
 			ROperateLine(img, RAddOperation, 0, i * menu->entry_height,
-				     menu->menu->width - 1, i * menu->entry_height, &light);
+				     menu->core->width - 1, i * menu->entry_height, &light);
 		}
 	}
 
@@ -433,7 +433,7 @@ static Pixmap renderTexture(WMenu *menu)
 
 static void updateTexture(WMenu *menu)
 {
-	WScreen *scr = menu->menu->vscr->screen_ptr;
+	WScreen *scr = menu->core->vscr->screen_ptr;
 
 	/* setup background texture */
 	if (scr->menu_item_texture->any.type != WTEX_SOLID) {
@@ -441,11 +441,11 @@ static void updateTexture(WMenu *menu)
 
 		menu->menu_texture_data = renderTexture(menu);
 
-		XSetWindowBackgroundPixmap(dpy, menu->menu->window, menu->menu_texture_data);
-		XClearWindow(dpy, menu->menu->window);
+		XSetWindowBackgroundPixmap(dpy, menu->core->window, menu->menu_texture_data);
+		XClearWindow(dpy, menu->core->window);
 	} else {
-		XSetWindowBackground(dpy, menu->menu->window, scr->menu_item_texture->any.color.pixel);
-		XClearWindow(dpy, menu->menu->window);
+		XSetWindowBackground(dpy, menu->core->window, scr->menu_item_texture->any.color.pixel);
+		XClearWindow(dpy, menu->core->window);
 	}
 }
 
@@ -521,7 +521,7 @@ void wMenuRealize(WMenu *menu)
 
 	get_menu_width(menu);
 
-	wCoreConfigure(menu->menu, 0, theight, menu->width, menu->entry_no * eheight - 1);
+	wCoreConfigure(menu->core, 0, theight, menu->width, menu->entry_no * eheight - 1);
 
 	wFrameWindowResize(menu->frame, menu->width, menu->entry_no * eheight - 1
 			   + menu->frame->top_width + menu->frame->bottom_width);
@@ -629,7 +629,7 @@ static void paintEntry(WMenu *menu, int index, int selected)
 {
 	virtual_screen *vscr = menu->vscr;
 	WScreen *scr = vscr->screen_ptr;
-	Window win = menu->menu->window;
+	Window win = menu->core->window;
 	WMenuEntry *entry = menu->entries[index];
 	GC light, dim, dark;
 	WMColor *color;
@@ -641,7 +641,7 @@ static void paintEntry(WMenu *menu, int index, int selected)
 		return;
 
 	h = menu->entry_height;
-	w = menu->menu->width;
+	w = menu->core->width;
 	y = index * h;
 
 	light = scr->menu_item_auxtexture->light_gc;
@@ -1208,7 +1208,7 @@ static WMenu *findMenu(virtual_screen *vscr, int *x_ret, int *y_ret)
 		return NULL;
 
 	menu = (WMenu *) desc->parent;
-	XTranslateCoordinates(dpy, root_ret, menu->menu->window, wx, wy, x_ret, y_ret, &junk_win);
+	XTranslateCoordinates(dpy, root_ret, menu->core->window, wx, wy, x_ret, y_ret, &junk_win);
 	return menu;
 }
 
@@ -1326,7 +1326,7 @@ static void getPointerPosition(virtual_screen *vscr, int *x, int *y)
 
 static void getScrollAmount(WMenu *menu, int *hamount, int *vamount)
 {
-	virtual_screen *vscr = menu->menu->vscr;
+	virtual_screen *vscr = menu->core->vscr;
 	int menuX1 = menu->frame_x;
 	int menuY1 = menu->frame_y;
 	int menuX2 = menu->frame_x + MENUW(menu);
@@ -1365,7 +1365,7 @@ static void dragScrollMenuCallback(void *data)
 {
 	WMenu *menu = (WMenu *) data;
 	WMenu *parent = parentMenu(menu);
-	virtual_screen *vscr = menu->menu->vscr;
+	virtual_screen *vscr = menu->core->vscr;
 	int hamount, vamount;
 	int x, y, newSelectedEntry;
 
@@ -1446,7 +1446,7 @@ static void callback_leaving(void *user_param)
 
 	wMenuMove(dl->menu, dl->ox, dl->oy, True);
 	dl->menu->jump_back = NULL;
-	dl->menu->menu->vscr->screen_ptr->flags.jump_back_pending = 0;
+	dl->menu->core->vscr->screen_ptr->flags.jump_back_pending = 0;
 	wfree(dl);
 }
 
@@ -1579,7 +1579,7 @@ static void delaySelection(void *data)
 
 	d->magic = NULL;
 
-	menu = findMenu(d->menu->menu->vscr, &x, &y);
+	menu = findMenu(d->menu->core->vscr, &x, &y);
 	if (menu && (d->menu == menu || d->delayed_select)) {
 		entry_no = getEntryAt(menu, y);
 		selectEntry(menu, entry_no);
@@ -1632,7 +1632,7 @@ static void menu_handle_switchmenu(WMenu *menu, WObjDescriptor *desc,
 					event->xbutton.x_root,
 					event->xbutton.y_root);
 	wwin = (WWindow *)entry->clientdata;
-	desc = &wwin->vscr->menu.window_menu->menu->descriptor;
+	desc = &wwin->vscr->menu.window_menu->core->descriptor;
 	event->xany.send_event = True;
 	(*desc->handle_mousedown)(desc, event);
 
@@ -1818,7 +1818,7 @@ static int menu_handle_selected_entry(WMenu *menu, WMenuEntry *entry, XEvent *ev
 		 * be executed twice, which is not good for things like
 		 * the root menu. So, ignore any clicks that were generated
 		 * while the entry was being executed */
-		while (XCheckTypedWindowEvent(dpy, menu->menu->window, ButtonPress, ev));
+		while (XCheckTypedWindowEvent(dpy, menu->core->window, ButtonPress, ev));
 		return 0;
 	}
 

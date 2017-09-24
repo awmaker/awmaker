@@ -509,7 +509,7 @@ static void hideCallback(WMenu *menu, WMenuEntry *entry)
 	WApplication *wapp = (WApplication *) entry->clientdata;
 
 	if (wapp->flags.hidden) {
-		wWorkspaceChange(menu->menu->vscr, wapp->last_workspace);
+		wWorkspaceChange(menu->core->vscr, wapp->last_workspace);
 		wUnhideApplication(wapp, False, False);
 	} else {
 		wHideApplication(wapp);
@@ -772,7 +772,7 @@ void appIconMouseDown(WObjDescriptor *desc, XEvent *event)
 		openApplicationMenu(wapp, event->xbutton.x_root, event->xbutton.y_root);
 
 		/* allow drag select of menu */
-		desc = &vscr->menu.icon_menu->menu->descriptor;
+		desc = &vscr->menu.icon_menu->core->descriptor;
 		event->xbutton.send_event = True;
 		(*desc->handle_mousedown) (desc, event);
 		return;

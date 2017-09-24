@@ -296,7 +296,7 @@ static int matchWindow(const void *item, const void *cdata)
 
 static void killCallback(WMenu *menu, WMenuEntry *entry)
 {
-	virtual_screen *vscr = menu->menu->vscr;
+	virtual_screen *vscr = menu->core->vscr;
 	WScreen *scr = vscr->screen_ptr;
 	WAppIcon *icon;
 	WFakeGroupLeader *fPtr;
@@ -5200,7 +5200,7 @@ static void open_menu_dock(WDock *dock, WAppIcon *aicon, XEvent *event)
 
 	/* allow drag select */
 	event->xany.send_event = True;
-	desc = &dock->menu->menu->descriptor;
+	desc = &dock->menu->core->descriptor;
 	(*desc->handle_mousedown) (desc, event);
 }
 
@@ -5224,7 +5224,7 @@ static void open_menu_clip(WDock *dock, WAppIcon *aicon, XEvent *event)
 
 	/* allow drag select */
 	event->xany.send_event = True;
-	desc = &dock->menu->menu->descriptor;
+	desc = &dock->menu->core->descriptor;
 	(*desc->handle_mousedown) (desc, event);
 }
 
@@ -5248,7 +5248,7 @@ static void open_menu_drawer(WDock *dock, WAppIcon *aicon, XEvent *event)
 
 	/* allow drag select */
 	event->xany.send_event = True;
-	desc = &dock->menu->menu->descriptor;
+	desc = &dock->menu->core->descriptor;
 	(*desc->handle_mousedown) (desc, event);
 }
 
@@ -5764,7 +5764,7 @@ static void clip_icon_mouse_down(WObjDescriptor *desc, XEvent *event)
 
 				wMenuMapAt(vscr, wsMenu, xpos, event->xbutton.y_root + 2, False);
 
-				desc = &wsMenu->menu->descriptor;
+				desc = &wsMenu->core->descriptor;
 				event->xany.send_event = True;
 				(*desc->handle_mousedown) (desc, event);
 			}

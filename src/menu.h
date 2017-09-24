@@ -59,7 +59,7 @@ typedef struct WMenu {
 
 	/* decorations */
 	struct WFrameWindow *frame;
-	WCoreWindow *menu;			/* the window menu */
+	WCoreWindow *core;			/* the window menu */
 	Pixmap menu_texture_data;
 	int frame_x, frame_y;			/* position of the frame in root*/
 

@@ -887,7 +887,7 @@ static void miniwindowMouseDown(WObjDescriptor *desc, XEvent *event)
 		OpenWindowMenu(wwin, event->xbutton.x_root, event->xbutton.y_root, False);
 
 		/* allow drag select of menu */
-		desc = &wwin->vscr->menu.window_menu->menu->descriptor;
+		desc = &wwin->vscr->menu.window_menu->core->descriptor;
 		event->xbutton.send_event = True;
 		(*desc->handle_mousedown) (desc, event);
 
