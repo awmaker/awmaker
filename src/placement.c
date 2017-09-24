@@ -268,8 +268,8 @@ static int calcSumOfCoveredAreas(WWindow *wwin, int x, int y, int w, int h)
 		if (test_window->frame->core->stacking->window_level < WMNormalLevel)
 			continue;
 
-		tw = test_window->frame->core->width;
-		th = test_window->frame->core->height;
+		tw = test_window->frame->width;
+		th = test_window->frame->height;
 		tx = test_window->frame_x;
 		ty = test_window->frame_y;
 
@@ -308,8 +308,8 @@ window_overlaps(WWindow *win, int x, int y, int w, int h, Bool ignore_sunken)
 	    win->frame->core->stacking->window_level < WMNormalLevel)
 		return False;
 
-	tw = win->frame->core->width;
-	th = win->frame->core->height;
+	tw = win->frame->width;
+	th = win->frame->height;
 	tx = win->frame_x;
 	ty = win->frame_y;
 
