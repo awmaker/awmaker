@@ -1726,10 +1726,10 @@ static void rootmenu_map(WMenu *menu, int x, int y, int keyboard)
 	} else if (keyboard &&
 		   x == vscr->screen_ptr->scr_width / 2 &&
 		   y == vscr->screen_ptr->scr_height / 2) {
-		newx = x - menu->frame->core->width / 2;
-		newy = y - menu->frame->core->height / 2;
+		newx = x - menu->frame->width / 2;
+		newy = y - menu->frame->height / 2;
 	} else {
-		newx = x - menu->frame->core->width / 2;
+		newx = x - menu->frame->width / 2;
 		newy = y;
 	}
 
