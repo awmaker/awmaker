@@ -146,9 +146,9 @@ void OpenSwitchMenu(virtual_screen *vscr, int x, int y, int keyboard)
 	if (keyboard &&
 	    x == vscr->screen_ptr->scr_width / 2 &&
 	    y == vscr->screen_ptr->scr_height / 2)
-		y = y - switchmenu->frame->core->height / 2;
+		y = y - switchmenu->frame->height / 2;
 
-	wMenuMapAt(vscr, switchmenu, x - switchmenu->frame->core->width / 2, y, keyboard);
+	wMenuMapAt(vscr, switchmenu, x - switchmenu->frame->width / 2, y, keyboard);
 }
 
 static int menuIndexForWindow(WMenu * menu, WWindow * wwin, int old_pos)
