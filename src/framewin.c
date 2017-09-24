@@ -225,7 +225,7 @@ static void left_button_map(WFrameWindow *fwin, int theight)
 		wcore_map(fwin->left_button, fwin->core,
 			  fwin->core->vscr,
 			  left_button_pos_width, left_button_pos_height,
-			  fwin->left_button->width, fwin->left_button->height,
+			  fwin->bordersize, fwin->bordersize,
 			  0, fwin->core->vscr->screen_ptr->w_depth,
 			  fwin->core->vscr->screen_ptr->w_visual,
 			  fwin->core->vscr->screen_ptr->w_colormap);
@@ -241,7 +241,7 @@ static void left_button_map(WFrameWindow *fwin, int theight)
 		wcore_map(fwin->left_button, fwin->titlebar,
 			  fwin->titlebar->vscr,
 			  left_button_pos_width, left_button_pos_height,
-			  fwin->left_button->width, fwin->left_button->height,
+			  fwin->bordersize, fwin->bordersize,
 			  0, fwin->titlebar->vscr->screen_ptr->w_depth,
 			  fwin->titlebar->vscr->screen_ptr->w_visual,
 			  fwin->titlebar->vscr->screen_ptr->w_colormap);
@@ -790,10 +790,10 @@ static void updateTitlebar(WFrameWindow *fwin)
 	if (fwin->language_button && fwin->flags.map_language_button) {
 		if (!fwin->flags.hide_left_button && fwin->left_button && !fwin->flags.lbutton_dont_fit) {
 			if (wPreferences.new_style == TS_NEW) {
-				language_button_pos_width = fwin->left_button->width;
+				language_button_pos_width = fwin->bordersize;
 				language_button_pos_height = 0;
 			} else {
-				language_button_pos_width = fwin->left_button->width + 6;
+				language_button_pos_width = fwin->bordersize + 6;
 				language_button_pos_height = 4;
 			}
 		} else {
@@ -814,8 +814,8 @@ static void updateTitlebar(WFrameWindow *fwin)
 	if (wPreferences.new_style == TS_NEW) {
 		if (!fwin->flags.hide_left_button && fwin->left_button &&
 		    fwin->flags.map_left_button && !fwin->flags.lbutton_dont_fit) {
-			x = fwin->left_button->width;
-			w -= fwin->left_button->width;
+			x = fwin->bordersize;
+			w -= fwin->bordersize;
 		}
 
 #ifdef XKB_BUTTON_HINT
@@ -1325,7 +1325,7 @@ void wFrameWindowPaint(WFrameWindow *fwin)
 		if (!wPreferences.new_style == TS_NEW) {
 			if (fwin->left_button && fwin->flags.map_left_button &&
 			    !fwin->flags.hide_left_button && !fwin->flags.lbutton_dont_fit)
-				lofs += fwin->left_button->width + 3;
+				lofs += fwin->bordersize + 3;
 
 #ifdef XKB_BUTTON_HINT
 			if (fwin->language_button && fwin->flags.map_language_button &&
@@ -1519,7 +1519,7 @@ static void checkTitleSize(WFrameWindow *fwin)
 	if (!wPreferences.new_style == TS_NEW) {
 		if (fwin->left_button && fwin->flags.map_left_button &&
 		    !fwin->flags.hide_left_button && !fwin->flags.lbutton_dont_fit)
-			width -= fwin->left_button->width + 3;
+			width -= fwin->bordersize + 3;
 
 #ifdef XKB_BUTTON_HINT
 		if (fwin->language_button && fwin->flags.map_language_button &&
