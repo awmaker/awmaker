@@ -120,7 +120,7 @@ void icon_for_wwindow_map(WIcon *icon)
 	WScreen *scr = vscr->screen_ptr;
 
 	wcore_map_toplevel(icon->core, vscr, wwin->icon_x, wwin->icon_y,
-			   icon->core->width, icon->core->height, 0, scr->w_depth,
+			   icon->width, icon->height, 0, scr->w_depth,
 			   scr->w_visual, scr->w_colormap, scr->white_pixel);
 
 	if (wwin->wm_hints && (wwin->wm_hints->flags & IconWindowHint)) {
@@ -150,7 +150,7 @@ void icon_for_wwindow_miniwindow_map(WIcon *icon)
 	WScreen *scr = vscr->screen_ptr;
 
 	wcore_map_toplevel(icon->core, vscr, wwin->icon_x, wwin->icon_y,
-			   icon->core->width, icon->core->height, 0,
+			   icon->width, icon->height, 0,
 			   scr->w_depth, scr->w_visual, scr->w_colormap,
 			   scr->white_pixel);
 
