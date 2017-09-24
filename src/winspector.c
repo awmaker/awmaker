@@ -1214,7 +1214,7 @@ static InspectorPanel *createInspectorForWindow(WWindow *wwin_inspected, int xpo
 	XSetTransientForHint(dpy, parent, wwin_inspected->client_win);
 
 	if (xpos == UNDEFINED_POS) {
-		x = wwin_inspected->frame_x + wwin_inspected->frame->core->width / 2;
+		x = wwin_inspected->frame_x + wwin_inspected->frame->width / 2;
 		y = wwin_inspected->frame_y + wwin_inspected->frame->top_width * 2;
 		if (y + PHEIGHT > scr->scr_height)
 			y = scr->scr_height - PHEIGHT - 30;
