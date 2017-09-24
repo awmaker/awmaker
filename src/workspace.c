@@ -969,8 +969,8 @@ void wWorkspaceMenuUpdate_map(virtual_screen *vscr, WMenu *menu)
 
 	tmp = menu->frame->top_width + 5;
 	/* if menu got unreachable, bring it to a visible place */
-	if (menu->frame_x < tmp - (int)menu->frame->core->width)
-		wMenuMove(menu, tmp - (int)menu->frame->core->width, menu->frame_y, False);
+	if (menu->frame_x < tmp - (int) menu->frame->width)
+		wMenuMove(menu, tmp - (int) menu->frame->width, menu->frame_y, False);
 
 	wMenuPaint(menu);
 }
