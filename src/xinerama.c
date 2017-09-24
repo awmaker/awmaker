@@ -199,8 +199,7 @@ Bool wWindowTouchesHead(WWindow *wwin, int head)
 	vscr = wwin->vscr;
 	rect = wGetRectForHead(vscr->screen_ptr, head);
 	a = calcIntersectionArea(wwin->frame_x, wwin->frame_y,
-				 wwin->frame->core->width,
-				 wwin->frame->core->height,
+				 wwin->frame->width, wwin->frame->height,
 				 rect.pos.x, rect.pos.y, rect.size.width, rect.size.height);
 
 	return (a != 0);
@@ -218,8 +217,7 @@ Bool wAppIconTouchesHead(WAppIcon *aicon, int head)
 	vscr = aicon->icon->core->vscr;
 	rect = wGetRectForHead(vscr->screen_ptr, head);
 	a = calcIntersectionArea(aicon->x_pos, aicon->y_pos,
-				 aicon->icon->core->width,
-				 aicon->icon->core->height,
+				 aicon->icon->width, aicon->icon->height,
 				 rect.pos.x, rect.pos.y, rect.size.width, rect.size.height);
 
 	return (a != 0);
@@ -234,8 +232,8 @@ int wGetHeadForWindow(WWindow *wwin)
 
 	rect.pos.x = wwin->frame_x;
 	rect.pos.y = wwin->frame_y;
-	rect.size.width = wwin->frame->core->width;
-	rect.size.height = wwin->frame->core->height;
+	rect.size.width = wwin->frame->width;
+	rect.size.height = wwin->frame->height;
 
 	return wGetHeadForRect(wwin->vscr, rect);
 }
