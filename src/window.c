@@ -148,7 +148,7 @@ static void appearanceObserver(void *self, WMNotification *notif)
 	if (flags & WFontSettings) {
 		wWindowConfigureBorders(wwin);
 		if (wwin->flags.shaded) {
-			wFrameWindowResize(wwin->frame, wwin->frame->core->width, wwin->frame->top_width - 1);
+			wFrameWindowResize(wwin->frame, wwin->frame->width, wwin->frame->top_width - 1);
 			wwin->client.y = wwin->frame_y - wwin->height + wwin->frame->top_width;
 			wWindowSynthConfigureNotify(wwin);
 		}
@@ -503,10 +503,10 @@ Bool wWindowObscuresWindow(WWindow *wwin, WWindow *obscured)
 {
 	int w1, h1, w2, h2;
 
-	w1 = wwin->frame->core->width;
-	h1 = wwin->frame->core->height;
-	w2 = obscured->frame->core->width;
-	h2 = obscured->frame->core->height;
+	w1 = wwin->frame->width;
+	h1 = wwin->frame->height;
+	w2 = obscured->frame->width;
+	h2 = obscured->frame->height;
 
 	if (!IS_OMNIPRESENT(wwin) && !IS_OMNIPRESENT(obscured)
 	    && wwin->frame->workspace != obscured->frame->workspace)
@@ -849,15 +849,15 @@ void wwindow_set_placement_auto(virtual_screen *vscr,
 	offs = WMAX(20, 2 * transientOwner->frame->top_width);
 
 	*x = transientOwner->frame_x +
-	    abs((transientOwner->frame->core->width - *width) / 2) + offs;
+	    abs((transientOwner->frame->width - *width) / 2) + offs;
 	*y = transientOwner->frame_y +
-	    abs((transientOwner->frame->core->height - *height) / 3) + offs;
+	    abs((transientOwner->frame->height - *height) / 3) + offs;
 
 	/* limit transient windows to be inside their parent's head */
 	rect.pos.x = transientOwner->frame_x;
 	rect.pos.y = transientOwner->frame_y;
-	rect.size.width = transientOwner->frame->core->width;
-	rect.size.height = transientOwner->frame->core->height;
+	rect.size.width = transientOwner->frame->width;
+	rect.size.height = transientOwner->frame->height;
 
 	head = wGetHeadForRect(vscr, rect);
 	wwindow_set_position(vscr, head, x, y, width, height);
@@ -1812,7 +1812,7 @@ void wWindowSingleFocus(WWindow *wwin)
 	y = wwin->frame_y;
 
 	/* bring window back to visible area */
-	move = wScreenBringInside(wwin->vscr, &x, &y, wwin->frame->core->width, wwin->frame->core->height);
+	move = wScreenBringInside(wwin->vscr, &x, &y, wwin->frame->width, wwin->frame->height);
 
 	if (move)
 		wWindowConfigure(wwin, x, y, wwin->width, wwin->height);
@@ -2230,11 +2230,11 @@ void wWindowConfigure(WWindow *wwin, int req_x, int req_y, int req_width, int re
 		 * if shrinking, resize frame before.
 		 * This will prevent the frame (that can have a different color)
 		 * to be exposed, causing flicker */
-		if (req_height > wwin->frame->core->height || req_width > wwin->frame->core->width)
+		if (req_height > wwin->frame->height || req_width > wwin->frame->width)
 			XResizeWindow(dpy, wwin->client_win, req_width, req_height);
 
 		if (wwin->flags.shaded) {
-			wFrameWindowConfigure(wwin->frame, req_x, req_y, req_width, wwin->frame->core->height);
+			wFrameWindowConfigure(wwin->frame, req_x, req_y, req_width, wwin->frame->height);
 			wwin->old_geometry.height = req_height;
 		} else {
 			int h;
@@ -2244,7 +2244,7 @@ void wWindowConfigure(WWindow *wwin, int req_x, int req_y, int req_width, int re
 			wFrameWindowConfigure(wwin->frame, req_x, req_y, req_width, h);
 		}
 
-		if (!(req_height > wwin->frame->core->height || req_width > wwin->frame->core->width))
+		if (!(req_height > wwin->frame->height || req_width > wwin->frame->width))
 			XResizeWindow(dpy, wwin->client_win, req_width, req_height);
 
 		wwin->client.x = req_x;
@@ -2294,7 +2294,7 @@ void wWindowMove(WWindow *wwin, int req_x, int req_y)
 
 	if (WFLAGP(wwin, dont_move_off))
 		wScreenBringInside(wwin->vscr, &req_x, &req_y,
-				   wwin->frame->core->width, wwin->frame->core->height);
+				   wwin->frame->width, wwin->frame->height);
 
 	wwin->client.x = req_x;
 	wwin->client.y = req_y + wwin->frame->top_width;
@@ -2481,8 +2481,8 @@ void wWindowSaveState(WWindow *wwin)
 	if (wwin->flags.maximized == 0) {
 		data[5] = wwin->frame_x;
 		data[6] = wwin->frame_y;
-		data[7] = wwin->frame->core->width;
-		data[8] = wwin->frame->core->height;
+		data[7] = wwin->frame->width;
+		data[8] = wwin->frame->height;
 	} else {
 		data[5] = wwin->old_geometry.x;
 		data[6] = wwin->old_geometry.y;
@@ -2576,14 +2576,14 @@ void wWindowSetShape(WWindow * wwin)
 	if (HAS_TITLEBAR(wwin)) {
 		urec[count].x = -1;
 		urec[count].y = -1 - wwin->frame->top_width;
-		urec[count].width = wwin->frame->core->width + 2;
+		urec[count].width = wwin->frame->width + 2;
 		urec[count].height = wwin->frame->top_width + 1;
 		count++;
 	}
 	if (HAS_RESIZEBAR(wwin)) {
 		urec[count].x = -1;
-		urec[count].y = wwin->frame->core->height - wwin->frame->bottom_width - wwin->frame->top_width;
-		urec[count].width = wwin->frame->core->width + 2;
+		urec[count].y = wwin->frame->height - wwin->frame->bottom_width - wwin->frame->top_width;
+		urec[count].width = wwin->frame->width + 2;
 		urec[count].height = wwin->frame->bottom_width + 1;
 		count++;
 	}
@@ -2601,14 +2601,14 @@ void wWindowSetShape(WWindow * wwin)
 	if (HAS_TITLEBAR(wwin)) {
 		rect[count].x = -1;
 		rect[count].y = -1;
-		rect[count].width = wwin->frame->core->width + 2;
+		rect[count].width = wwin->frame->width + 2;
 		rect[count].height = wwin->frame->top_width + 1;
 		count++;
 	}
 	if (HAS_RESIZEBAR(wwin)) {
 		rect[count].x = -1;
-		rect[count].y = wwin->frame->core->height - wwin->frame->bottom_width;
-		rect[count].width = wwin->frame->core->width + 2;
+		rect[count].y = wwin->frame->height - wwin->frame->bottom_width;
+		rect[count].width = wwin->frame->width + 2;
 		rect[count].height = wwin->frame->bottom_width + 1;
 		count++;
 	}
