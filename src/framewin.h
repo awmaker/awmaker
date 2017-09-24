@@ -162,6 +162,7 @@ typedef struct WFrameWindow {
         unsigned int incomplete_title:1;
     } flags;
     int depth;
+    int bordersize;
     Visual *visual;
     Colormap colormap;
     unsigned long *border_pixel;

@@ -92,6 +92,7 @@ WFrameWindow *wframewindow_create(WWindow *parent_wwin, WMenu *parent_wmenu,
 
 	fwin->flags.single_texture = (flags & WFF_SINGLE_STATE) ? 1 : 0;
 	fwin->flags.border = (flags & WFF_BORDER) ? 1 : 0;
+	fwin->bordersize = 0;
 
 	return fwin;
 }
