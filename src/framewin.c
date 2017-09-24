@@ -133,7 +133,7 @@ void wframewindow_map(WFrameWindow *fwin, virtual_screen *vscr, int wlevel,
 	fwin->visual = visual;
 	fwin->colormap = colormap;
 
-	wcore_map_toplevel(wcore, vscr, x, y, wcore->width, wcore->height,
+	wcore_map_toplevel(wcore, vscr, x, y, fwin->width, fwin->height,
 			   (fwin->flags.border) ? scr->frame_border_width : 0,
 			   fwin->depth, fwin->visual,
 			   fwin->colormap, scr->frame_border_pixel);
@@ -215,7 +215,7 @@ static void left_button_create(WFrameWindow *fwin)
 static void left_button_map(WFrameWindow *fwin, int theight)
 {
 	int left_button_pos_width, left_button_pos_height;
-	int width = fwin->core->width;
+	int width = fwin->width;
 	virtual_screen *vscr = fwin->vscr;
 	WScreen *scr = vscr->screen_ptr;
 
@@ -280,7 +280,7 @@ static void language_button_create(WFrameWindow *fwin)
 static void language_button_map(WFrameWindow *fwin, int theight)
 {
 	int language_button_pos_width, language_button_pos_height;
-	int width = fwin->core->width;
+	int width = fwin->width;
 	virtual_screen *vscr = fwin->vscr;
 	WScreen *scr = vscr->screen_ptr;
 
@@ -344,7 +344,7 @@ static void right_button_create(WFrameWindow *fwin)
 static void right_button_map(WFrameWindow *fwin, int theight)
 {
 	int right_button_pos_width, right_button_pos_height;
-	int width = fwin->core->width;
+	int width = fwin->width;
 	virtual_screen *vscr = fwin->vscr;
 	WScreen *scr = vscr->screen_ptr;
 
@@ -394,7 +394,7 @@ static void right_button_unmap(WFrameWindow *fwin)
 static void titlebar_create(WFrameWindow *fwin, int theight, int flags)
 {
 	fwin->top_width = theight;
-	fwin->titlebar = wcore_create(fwin->core->width + 1, theight);
+	fwin->titlebar = wcore_create(fwin->width + 1, theight);
 
 	if (flags & WFF_LEFT_BUTTON) {
 		fwin->flags.left_button = 1;
@@ -461,7 +461,7 @@ static void titlebar_update(WFrameWindow *fwin, int theight)
 #ifdef XKB_BUTTON_HINT
 	int language_button_pos_width, language_button_pos_height;
 #endif
-	int width = fwin->core->width;
+	int width = fwin->width;
 
 	fwin->top_width = theight;
 	fwin->flags.need_texture_remake = 1;
@@ -573,7 +573,7 @@ static void resizebar_map(WFrameWindow *fwin, int width, int height)
 
 static void resizebar_update(WFrameWindow *fwin, int width, int height)
 {
-	if (height + fwin->top_width + fwin->bottom_width != fwin->core->height)
+	if (height + fwin->top_width + fwin->bottom_width != fwin->height)
 		wCoreConfigure(fwin->resizebar, 0, height + fwin->top_width,
 			       width, RESIZEBAR_HEIGHT);
 }
@@ -592,7 +592,7 @@ static int get_framewin_height(WFrameWindow *fwin, int flags)
 	if (flags & WFF_IS_SHADED)
 		return -1;
 	else
-		return fwin->core->height - fwin->top_width - fwin->bottom_width;
+		return fwin->height - fwin->top_width - fwin->bottom_width;
 }
 
 static int get_framewin_titleheight(WFrameWindow *fwin)
@@ -668,7 +668,7 @@ void wframewin_set_borders(WFrameWindow *fwin, int flags)
 		fwin->flags.map_language_button = 0;
 #endif
 
-	width = fwin->core->width;
+	width = fwin->width;
 	height = get_framewin_height(fwin, flags);
 	theight = get_framewin_titleheight(fwin);
 	fwin->bordersize = get_framewin_bordersize(theight);
@@ -697,7 +697,7 @@ void wframewin_set_borders(WFrameWindow *fwin, int flags)
 		resizebar_map(fwin, width, height);
 	}
 
-	if (height + fwin->top_width + fwin->bottom_width != fwin->core->height && !(flags & WFF_IS_SHADED))
+	if (height + fwin->top_width + fwin->bottom_width != fwin->height && !(flags & WFF_IS_SHADED))
 		wFrameWindowResize(fwin, width, height + fwin->top_width + fwin->bottom_width);
 
 	if (fwin->flags.border)
@@ -784,7 +784,7 @@ static void updateTitlebar(WFrameWindow *fwin)
 	if (theight < *fwin->title_min_height)
 		theight = *fwin->title_min_height;
 
-	w = fwin->core->width + 1;
+	w = fwin->width + 1;
 
 #ifdef XKB_BUTTON_HINT
 	if (fwin->language_button && fwin->flags.map_language_button) {
@@ -1143,7 +1143,7 @@ static void remakeTexture_titlebar(WFrameWindow *fwin, int state)
 			right = fwin->right_button && fwin->flags.map_right_button &&
 				!fwin->flags.hide_right_button && !fwin->flags.rbutton_dont_fit;
 
-			width = fwin->core->width + 1;
+			width = fwin->width + 1;
 
 			renderTexture(fwin->vscr->screen_ptr, fwin->title_texture[state],
 				      width, fwin->titlebar->height,
@@ -1365,12 +1365,14 @@ static void reconfigure(WFrameWindow * fwin, int x, int y, int width, int height
 	else
 		XMoveResizeWindow(dpy, fwin->core->window, x, y, width, height);
 
-	if (fwin->core->width != width) {
+	if (fwin->width != width) {
 		fwin->flags.need_texture_remake = 1;
 		resizedHorizontally = 1;
 	}
 
+	fwin->width = width;
 	fwin->core->width = width;
+	fwin->height = height;
 	fwin->core->height = height;
 
 	if (fwin->titlebar && fwin->flags.titlebar && resizedHorizontally) {
@@ -1436,12 +1438,12 @@ static void reconfigure(WFrameWindow * fwin, int x, int y, int width, int height
 
 	if (fwin->resizebar && fwin->flags.resizebar) {
 		wCoreConfigure(fwin->resizebar, 0,
-			       fwin->core->height - fwin->resizebar->height,
-			       fwin->core->width, fwin->resizebar->height);
+			       fwin->height - fwin->resizebar->height,
+			       fwin->width, fwin->resizebar->height);
 
 		fwin->resizebar_corner_width = RESIZEBAR_CORNER_WIDTH;
-		if (fwin->core->width < RESIZEBAR_CORNER_WIDTH * 2 + RESIZEBAR_MIN_WIDTH)
-			fwin->resizebar_corner_width = fwin->core->width / 2;
+		if (fwin->width < RESIZEBAR_CORNER_WIDTH * 2 + RESIZEBAR_MIN_WIDTH)
+			fwin->resizebar_corner_width = fwin->width / 2;
 	}
 }
 
