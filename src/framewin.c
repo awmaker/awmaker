@@ -627,7 +627,7 @@ static int get_framewin_bordersize(int titleheight)
 
 void wframewin_set_borders(WFrameWindow *fwin, int flags)
 {
-	int theight, bsize, width, height;
+	int theight, width, height;
 	virtual_screen *vscr = fwin->vscr;
 	WScreen *scr = vscr->screen_ptr;
 
@@ -669,17 +669,17 @@ void wframewin_set_borders(WFrameWindow *fwin, int flags)
 	width = fwin->core->width;
 	height = get_framewin_height(fwin, flags);
 	theight = get_framewin_titleheight(fwin);
-	bsize = get_framewin_bordersize(theight);
+	fwin->bordersize = get_framewin_bordersize(theight);
 
 	if (fwin->titlebar) {
 		titlebar_unmap(fwin);
 		if (fwin->flags.map_titlebar) {
-			titlebar_map(fwin, theight, bsize);
-			titlebar_update(fwin, theight, bsize);
+			titlebar_map(fwin, theight, fwin->bordersize);
+			titlebar_update(fwin, theight, fwin->bordersize);
 		}
 	} else {
-		titlebar_create(fwin, theight, bsize, flags);
-		titlebar_map(fwin, theight, bsize);
+		titlebar_create(fwin, theight, fwin->bordersize, flags);
+		titlebar_map(fwin, theight, fwin->bordersize);
 	}
 
 	checkTitleSize(fwin);
