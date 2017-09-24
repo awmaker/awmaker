@@ -5194,7 +5194,7 @@ static void open_menu_dock(WDock *dock, WAppIcon *aicon, XEvent *event)
 
 	set_dockmenu_dock_code(vscr, dock, entry, aicon);
 
-	x_pos = dock->on_right_side ? scr->scr_width - dock->menu->frame->core->width - 3 : 0;
+	x_pos = dock->on_right_side ? scr->scr_width - dock->menu->frame->width - 3 : 0;
 	wMenuMapAt(vscr, dock->menu, x_pos, event->xbutton.y_root + 2, False);
 
 	/* allow drag select */
@@ -5213,11 +5213,11 @@ static void open_menu_clip(WDock *dock, WAppIcon *aicon, XEvent *event)
 
 	set_dockmenu_clip_code(dock, entry, aicon);
 
-	x_pos = event->xbutton.x_root - dock->menu->frame->core->width / 2 - 1;
+	x_pos = event->xbutton.x_root - dock->menu->frame->width / 2 - 1;
 	if (x_pos < 0)
 		x_pos = 0;
-	else if (x_pos + dock->menu->frame->core->width > scr->scr_width - 2)
-		x_pos = scr->scr_width - dock->menu->frame->core->width - 4;
+	else if (x_pos + dock->menu->frame->width > scr->scr_width - 2)
+		x_pos = scr->scr_width - dock->menu->frame->width - 4;
 
 	wMenuMapAt(vscr, dock->menu, x_pos, event->xbutton.y_root + 2, False);
 
@@ -5237,11 +5237,11 @@ static void open_menu_drawer(WDock *dock, WAppIcon *aicon, XEvent *event)
 
 	set_dockmenu_drawer_code(vscr, dock, entry, aicon);
 
-	x_pos = event->xbutton.x_root - dock->menu->frame->core->width / 2 - 1;
+	x_pos = event->xbutton.x_root - dock->menu->frame->width / 2 - 1;
 	if (x_pos < 0)
 		x_pos = 0;
-	else if (x_pos + dock->menu->frame->core->width > scr->scr_width - 2)
-		x_pos = scr->scr_width - dock->menu->frame->core->width - 4;
+	else if (x_pos + dock->menu->frame->width > scr->scr_width - 2)
+		x_pos = scr->scr_width - dock->menu->frame->width - 4;
 
 	wMenuMapAt(vscr, dock->menu, x_pos, event->xbutton.y_root + 2, False);
 
@@ -5755,11 +5755,11 @@ static void clip_icon_mouse_down(WObjDescriptor *desc, XEvent *event)
 
 				wWorkspaceMenuUpdate(vscr, wsMenu);
 
-				xpos = event->xbutton.x_root - wsMenu->frame->core->width / 2 - 1;
+				xpos = event->xbutton.x_root - wsMenu->frame->width / 2 - 1;
 				if (xpos < 0)
 					xpos = 0;
-				else if (xpos + wsMenu->frame->core->width > scr->scr_width - 2)
-					xpos = scr->scr_width - wsMenu->frame->core->width - 4;
+				else if (xpos + wsMenu->frame->width > scr->scr_width - 2)
+					xpos = scr->scr_width - wsMenu->frame->width - 4;
 
 				wMenuMapAt(vscr, wsMenu, xpos, event->xbutton.y_root + 2, False);
 
