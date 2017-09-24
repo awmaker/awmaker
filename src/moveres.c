@@ -408,10 +408,31 @@ static void mapGeometryDisplay(WWindow *wwin, int x, int y, int w, int h)
 	showGeometry(wwin, x, y, x + w, y + h, 0);
 }
 
+static void set_inside_position(WWindow *tmpw, virtual_screen *vscr, int *x, int *y)
+{
+/* TODO: with xinerama patch was #if 0, check this */
+#if 1
+	WScreen *scr = vscr->screen_ptr;
+
+	/* don't let windows become unreachable */
+	if (*x + (int) tmpw->frame->width < 20)
+		*x = 20 - (int) tmpw->frame->width;
+	else if (*x + 20 > scr->scr_width)
+		*x = scr->scr_width - 20;
+
+	if (*y + (int) tmpw->frame->height < 20)
+		*y = 20 - (int) tmpw->frame->height;
+	else if (*y + 20 > scr->scr_height)
+		*y = scr->scr_height - 20;
+#else
+	wScreenBringInside(vscr, x, y,
+			   (int) tmpw->frame->width, (int) tmpw->frame->height);
+#endif
+}
+
 static void doWindowMove(WWindow *wwin, WMArray *array, int dx, int dy)
 {
 	WWindow *tmpw;
-	WScreen *scr = wwin->vscr->screen_ptr;
 	int x, y;
 
 	if (!array || !WMGetArrayItemCount(array)) {
@@ -422,24 +443,7 @@ static void doWindowMove(WWindow *wwin, WMArray *array, int dx, int dy)
 		WM_ITERATE_ARRAY(array, tmpw, iter) {
 			x = tmpw->frame_x + dx;
 			y = tmpw->frame_y + dy;
-
-#if 1				/* XXX: with xinerama patch was #if 0, check this */
-			/* don't let windows become unreachable */
-
-			if (x + (int)tmpw->frame->width < 20)
-				x = 20 - (int)tmpw->frame->width;
-			else if (x + 20 > scr->scr_width)
-				x = scr->scr_width - 20;
-
-			if (y + (int)tmpw->frame->height < 20)
-				y = 20 - (int)tmpw->frame->height;
-			else if (y + 20 > scr->scr_height)
-				y = scr->scr_height - 20;
-#else
-			wScreenBringInside(scr, &x, &y,
-					   (int)tmpw->frame->width, (int)tmpw->frame->height);
-#endif
-
+			set_inside_position(tmpw, wwin->vscr, &x, &y);
 			wWindowMove(tmpw, x, y);
 		}
 	}
@@ -485,8 +489,6 @@ static void drawTransparentFrame(WWindow *wwin, int x, int y, int width, int hei
 static void drawFrames(WWindow *wwin, WMArray *array, int dx, int dy)
 {
 	WWindow *tmpw;
-	int scr_width = wwin->vscr->screen_ptr->scr_width;
-	int scr_height = wwin->vscr->screen_ptr->scr_height;
 	int x, y;
 
 	if (!array) {
@@ -499,24 +501,7 @@ static void drawFrames(WWindow *wwin, WMArray *array, int dx, int dy)
 		WM_ITERATE_ARRAY(array, tmpw, iter) {
 			x = tmpw->frame_x + dx;
 			y = tmpw->frame_y + dy;
-
-			/* don't let windows become unreachable */
-#if 1				/* XXX: was 0 in XINERAMA patch, check */
-			if (x + (int)tmpw->frame->width < 20)
-				x = 20 - (int)tmpw->frame->width;
-			else if (x + 20 > scr_width)
-				x = scr_width - 20;
-
-			if (y + (int)tmpw->frame->height < 20)
-				y = 20 - (int)tmpw->frame->height;
-			else if (y + 20 > scr_height)
-				y = scr_height - 20;
-
-#else
-			wScreenBringInside(wwin->screen_ptr, &x, &y,
-					   (int)tmpw->frame->width, (int)tmpw->frame->height);
-#endif
-
+			set_inside_position(tmpw, wwin->vscr, &x, &y);
 			drawTransparentFrame(tmpw, x, y, tmpw->frame->width, tmpw->frame->height);
 		}
 	}
