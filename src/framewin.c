@@ -290,7 +290,7 @@ static void language_button_map(WFrameWindow *fwin, int theight)
 		wcore_map(fwin->language_button, fwin->core,
 			  fwin->core->vscr,
 			  language_button_pos_width, language_button_pos_height,
-			  fwin->language_button->width, fwin->language_button->height,
+			  fwin->bordersize, fwin->bordersize,
 			  0, fwin->core->vscr->screen_ptr->w_depth,
 			  fwin->core->vscr->screen_ptr->w_visual,
 			  fwin->core->vscr->screen_ptr->w_colormap);
@@ -305,7 +305,7 @@ static void language_button_map(WFrameWindow *fwin, int theight)
 		wcore_map(fwin->language_button, fwin->titlebar,
 			  fwin->titlebar->vscr,
 			  language_button_pos_width, language_button_pos_height,
-			  fwin->language_button->width, fwin->language_button->height,
+			  fwin->bordersize, fwin->bordersize,
 			  0, fwin->titlebar->vscr->screen_ptr->w_depth,
 			  fwin->titlebar->vscr->screen_ptr->w_visual,
 			  fwin->titlebar->vscr->screen_ptr->w_colormap);
@@ -807,7 +807,7 @@ static void updateTitlebar(WFrameWindow *fwin)
 		}
 
 		wCoreConfigure(fwin->language_button, language_button_pos_width, language_button_pos_height,
-			       fwin->language_button->width, fwin->language_button->width);
+			       fwin->bordersize, fwin->bordersize);
 	}
 #endif /* XKB_BUTTON_HINT */
 
@@ -821,8 +821,8 @@ static void updateTitlebar(WFrameWindow *fwin)
 #ifdef XKB_BUTTON_HINT
 		if (!fwin->flags.hide_language_button && fwin->language_button &&
 		    fwin->flags.map_language_button && !fwin->flags.languagebutton_dont_fit) {
-			x += fwin->language_button->width;
-			w -= fwin->language_button->width;
+			x += fwin->bordersize;
+			w -= fwin->bordersize;
 		}
 #endif /* XKB_BUTTON_HINT */
 
@@ -1330,7 +1330,7 @@ void wFrameWindowPaint(WFrameWindow *fwin)
 #ifdef XKB_BUTTON_HINT
 			if (fwin->language_button && fwin->flags.map_language_button &&
 			    !fwin->flags.hide_language_button && !fwin->flags.languagebutton_dont_fit)
-				lofs += fwin->language_button->width;
+				lofs += fwin->bordersize;
 #endif
 
 			if (fwin->right_button && fwin->flags.map_right_button &&
@@ -1524,7 +1524,7 @@ static void checkTitleSize(WFrameWindow *fwin)
 #ifdef XKB_BUTTON_HINT
 		if (fwin->language_button && fwin->flags.map_language_button &&
 		    !fwin->flags.hide_language_button && !fwin->flags.languagebutton_dont_fit)
-			width -= fwin->language_button->width + 3;
+			width -= fwin->bordersize + 3;
 #endif
 
 		if (fwin->right_button && fwin->flags.map_right_button &&
