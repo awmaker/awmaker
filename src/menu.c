@@ -145,8 +145,9 @@ WMenu *menu_create(virtual_screen *vscr, const char *title)
 		flags |= WFF_TITLEBAR | WFF_RIGHT_BUTTON;
 
 	menu = wmalloc(sizeof(WMenu));
+	menu->width = 1;
 	menu->frame = wframewindow_create(NULL, menu, 1, 1, flags);
-	menu->core = wcore_create(1, 10);
+	menu->core = wcore_create(menu->width, 10);
 	menu->vscr = vscr;
 
 	if (title) {
@@ -244,7 +245,7 @@ void menu_map(WMenu *menu, virtual_screen *screen)
 
 	wcore_map(menu->core, menu->frame->core,
 		  menu->vscr, 0, 0,
-		  menu->core->width, menu->core->height, 0,
+		  menu->width, menu->core->height, 0,
 		  menu->vscr->screen_ptr->w_depth,
 		  menu->vscr->screen_ptr->w_visual,
 		  menu->vscr->screen_ptr->w_colormap);
@@ -392,9 +393,9 @@ static Pixmap renderTexture(WMenu *menu)
 	WTexture *texture = scr->menu_item_texture;
 
 	if (wPreferences.menu_style == MS_NORMAL)
-		img = wTextureRenderImage(texture, menu->core->width, menu->entry_height, WREL_MENUENTRY);
+		img = wTextureRenderImage(texture, menu->width, menu->entry_height, WREL_MENUENTRY);
 	else
-		img = wTextureRenderImage(texture, menu->core->width, menu->core->height + 1, WREL_MENUENTRY);
+		img = wTextureRenderImage(texture, menu->width, menu->core->height + 1, WREL_MENUENTRY);
 
 	if (!img) {
 		wwarning(_("could not render texture: %s"), RMessageForError(RErrorCode));
@@ -413,13 +414,13 @@ static Pixmap renderTexture(WMenu *menu)
 
 		for (i = 1; i < menu->entry_no; i++) {
 			ROperateLine(img, RSubtractOperation, 0, i * menu->entry_height - 2,
-				     menu->core->width - 1, i * menu->entry_height - 2, &mid);
+				     menu->width - 1, i * menu->entry_height - 2, &mid);
 
 			RDrawLine(img, 0, i * menu->entry_height - 1,
-				  menu->core->width - 1, i * menu->entry_height - 1, &dark);
+				  menu->width - 1, i * menu->entry_height - 1, &dark);
 
 			ROperateLine(img, RAddOperation, 0, i * menu->entry_height,
-				     menu->core->width - 1, i * menu->entry_height, &light);
+				     menu->width - 1, i * menu->entry_height, &light);
 		}
 	}
 
@@ -641,7 +642,7 @@ static void paintEntry(WMenu *menu, int index, int selected)
 		return;
 
 	h = menu->entry_height;
-	w = menu->core->width;
+	w = menu->width;
 	y = index * h;
 
 	light = scr->menu_item_auxtexture->light_gc;
