@@ -79,30 +79,30 @@ void wApplicationExtractDirPackIcon(const char *path, const char *wm_instance, c
 	char *iconPath = NULL;
 	char *tmp = NULL;
 
-	if (strstr(path, ".app")) {
-		tmp = wmalloc(strlen(path) + 16);
+	if (!strstr(path, ".app"))
+		return;
 
-		if (wPreferences.supports_tiff) {
-			strcpy(tmp, path);
-			strcat(tmp, ".tiff");
-			if (access(tmp, R_OK) == 0)
-				iconPath = tmp;
-		}
+	tmp = wmalloc(strlen(path) + 16);
+	if (wPreferences.supports_tiff) {
+		strcpy(tmp, path);
+		strcat(tmp, ".tiff");
+		if (access(tmp, R_OK) == 0)
+			iconPath = tmp;
+	}
 
-		if (!iconPath) {
-			strcpy(tmp, path);
-			strcat(tmp, ".xpm");
-			if (access(tmp, R_OK) == 0)
-				iconPath = tmp;
-		}
+	if (!iconPath) {
+		strcpy(tmp, path);
+		strcat(tmp, ".xpm");
+		if (access(tmp, R_OK) == 0)
+			iconPath = tmp;
+	}
 
-		if (!iconPath)
-			wfree(tmp);
+	if (!iconPath)
+		wfree(tmp);
 
-		if (iconPath) {
-			wApplicationSaveIconPathFor(iconPath, wm_instance, wm_class);
-			wfree(iconPath);
-		}
+	if (iconPath) {
+		wApplicationSaveIconPathFor(iconPath, wm_instance, wm_class);
+		wfree(iconPath);
 	}
 }
 
