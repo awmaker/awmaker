@@ -198,12 +198,12 @@ void wClientConfigure(WWindow * wwin, XConfigureRequestEvent * xcre)
 		if (xcre->value_mask & CWWidth)
 			nwidth = xcre->width;
 		else
-			nwidth = wwin->frame->core->width;
+			nwidth = wwin->frame->width;
 
 		if (xcre->value_mask & CWHeight)
 			nheight = xcre->height;
 		else
-			nheight = wwin->frame->core->height - wwin->frame->top_width - wwin->frame->bottom_width;
+			nheight = wwin->frame->height - wwin->frame->top_width - wwin->frame->bottom_width;
 
 		/* Don't overwrite the saved geometry unnecessarily. */
 		if (!(xcre->value_mask & (CWX | CWY | CWWidth | CWHeight)))
