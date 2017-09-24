@@ -154,8 +154,8 @@ void DoWindowBirth(WWindow *wwin)
 {
 #ifdef WINDOW_BIRTH_ZOOM
 	int center_x, center_y;
-	int width = wwin->frame->core->width;
-	int height = wwin->frame->core->height;
+	int width = wwin->frame->width;
+	int height = wwin->frame->height;
 	int w = WMIN(width, 20);
 	int h = WMIN(height, 20);
 	WScreen *scr = wwin->screen_ptr;
