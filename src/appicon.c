@@ -677,9 +677,9 @@ static void openApplicationMenu(WApplication *wapp, int x, int y)
 
 	menu->flags.realized = 0;
 
-	x -= menu->frame->core->width / 2;
-	if (x + menu->frame->core->width > scr->scr_width)
-		x = scr->scr_width - menu->frame->core->width;
+	x -= menu->frame->width / 2;
+	if (x + menu->frame->width > scr->scr_width)
+		x = scr->scr_width - menu->frame->width;
 
 	if (x < 0)
 		x = 0;
