@@ -244,9 +244,9 @@ void wAppMenuMap(WMenu *menu, WWindow *wwin)
 
 	if (wPreferences.focus_mode != WKF_CLICK) {
 		if (wwin->frame_x > min)
-			x = wwin->frame_x - menu->frame->core->width;
+			x = wwin->frame_x - menu->frame->width;
 		else
-			x = min - menu->frame->core->width;
+			x = min - menu->frame->width;
 	}
 
 	if (!menu->flags.mapped)
