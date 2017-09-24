@@ -517,18 +517,19 @@ void wMenuRealize(WMenu *menu)
 	if (menu->flags.titled)
 		theight = menu->frame->top_width;
 
-	eheight = WMFontHeight(scr->menu_entry_font) + 6 + wPreferences.menu_text_clearance * 2;
+	eheight = WMFontHeight(scr->menu_entry_font) + 6 +
+			       wPreferences.menu_text_clearance * 2;
 	menu->entry_height = eheight;
-
 	get_menu_width(menu);
 
-	wCoreConfigure(menu->core, 0, theight, menu->width, menu->entry_no * eheight - 1);
-
-	wFrameWindowResize(menu->frame, menu->width, menu->entry_no * eheight - 1
-			   + menu->frame->top_width + menu->frame->bottom_width);
+	wCoreConfigure(menu->core, 0, theight,
+		       menu->width, menu->entry_no * eheight - 1);
+	wFrameWindowResize(menu->frame, menu->width,
+			   menu->entry_no * eheight - 1 +
+			   menu->frame->top_width +
+			   menu->frame->bottom_width);
 
 	updateTexture(menu);
-
 	menu->flags.realized = 1;
 
 	if (menu->flags.mapped)
