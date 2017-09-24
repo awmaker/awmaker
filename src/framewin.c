@@ -78,7 +78,9 @@ WFrameWindow *wframewindow_create(WWindow *parent_wwin, WMenu *parent_wmenu,
 	WFrameWindow *fwin;
 
 	fwin = wmalloc(sizeof(WFrameWindow));
-	fwin->core = wcore_create(width, height);
+	fwin->width = width;
+	fwin->height = height;
+	fwin->core = wcore_create(fwin->width, fwin->height);
 	fwin->parent_wwin = parent_wwin;
 	fwin->parent_wmenu = parent_wmenu;
 

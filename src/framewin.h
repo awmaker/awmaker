@@ -163,6 +163,8 @@ typedef struct WFrameWindow {
     } flags;
     int depth;
     int bordersize;
+    int width;		/* Framewin width */
+    int height;		/* Framewin height */
     Visual *visual;
     Colormap colormap;
     unsigned long *border_pixel;
