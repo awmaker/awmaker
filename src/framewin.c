@@ -51,8 +51,9 @@ static void resizebarMouseDown(WObjDescriptor * desc, XEvent * event);
 
 static void checkTitleSize(WFrameWindow * fwin);
 
-static void paintButton(WCoreWindow * button, WTexture * texture,
-			unsigned long color, WPixmap * image, int pushed);
+static void paintButton(WCoreWindow *button, WTexture *texture,
+			unsigned long color, WPixmap *image, int pushed,
+			int width, int height);
 
 static void updateTitlebar(WFrameWindow *fwin);
 
@@ -1476,7 +1477,8 @@ int wFrameWindowChangeTitle(WFrameWindow *fwin, const char *new_title)
 void wFrameWindowUpdateLanguageButton(WFrameWindow * fwin)
 {
 	paintButton(fwin->language_button, fwin->title_texture[fwin->flags.state],
-		    WMColorPixel(fwin->title_color[fwin->flags.state]), fwin->languagebutton_image, True);
+		    WMColorPixel(fwin->title_color[fwin->flags.state]), fwin->languagebutton_image, True,
+				 fwin->language_button->width, fwin->language_button->height);
 }
 #endif				/* XKB_BUTTON_HINT */
 
@@ -1538,7 +1540,7 @@ static void checkTitleSize(WFrameWindow *fwin)
 		fwin->flags.incomplete_title = 0;
 }
 
-static void paintButton(WCoreWindow *button, WTexture *texture, unsigned long color, WPixmap *image, int pushed)
+static void paintButton(WCoreWindow *button, WTexture *texture, unsigned long color, WPixmap *image, int pushed, int btn_width, int btn_height)
 {
 	WScreen *scr = button->vscr->screen_ptr;
 	GC copy_gc = scr->copy_gc;
@@ -1565,17 +1567,17 @@ static void paintButton(WCoreWindow *button, WTexture *texture, unsigned long co
 
 		d = 1;
 		if (wPreferences.new_style == TS_NEW) {
-			XFillRectangle(dpy, button->window, copy_gc, 0, 0, button->width - 1, button->height - 1);
+			XFillRectangle(dpy, button->window, copy_gc, 0, 0, btn_width - 1, btn_height - 1);
 			XSetForeground(dpy, copy_gc, scr->black_pixel);
-			XDrawRectangle(dpy, button->window, copy_gc, 0, 0, button->width - 1, button->height - 1);
+			XDrawRectangle(dpy, button->window, copy_gc, 0, 0, btn_width - 1, btn_height - 1);
 		} else if (wPreferences.new_style == TS_OLD) {
-			XFillRectangle(dpy, button->window, copy_gc, 0, 0, button->width, button->height);
+			XFillRectangle(dpy, button->window, copy_gc, 0, 0, btn_width, btn_height);
 			XSetForeground(dpy, copy_gc, scr->black_pixel);
-			XDrawRectangle(dpy, button->window, copy_gc, 0, 0, button->width, button->height);
+			XDrawRectangle(dpy, button->window, copy_gc, 0, 0, btn_width, btn_height);
 		} else {
-			XFillRectangle(dpy, button->window, copy_gc, 0, 0, button->width - 3, button->height - 3);
+			XFillRectangle(dpy, button->window, copy_gc, 0, 0, btn_width - 3, btn_height - 3);
 			XSetForeground(dpy, copy_gc, scr->black_pixel);
-			XDrawRectangle(dpy, button->window, copy_gc, 0, 0, button->width - 3, button->height - 3);
+			XDrawRectangle(dpy, button->window, copy_gc, 0, 0, btn_width - 3, btn_height - 3);
 		}
 	} else {
 		XClearWindow(dpy, button->window);
@@ -1590,10 +1592,10 @@ static void paintButton(WCoreWindow *button, WTexture *texture, unsigned long co
 
 		if (wPreferences.new_style == TS_NEW) {
 			if (texture->any.type == WTEX_SOLID || pushed)
-				wDrawBevel(button->window, button->width, button->height,
+				wDrawBevel(button->window, btn_width, btn_height,
 					   (WTexSolid *) texture, WREL_RAISED);
 		} else {
-			wDrawBevel(button->window, button->width, button->height,
+			wDrawBevel(button->window, btn_width, btn_height,
 				   scr->widget_texture, WREL_RAISED);
 		}
 	}
@@ -1601,8 +1603,8 @@ static void paintButton(WCoreWindow *button, WTexture *texture, unsigned long co
 	if (image) {
 		/* display image */
 		XSetClipMask(dpy, copy_gc, image->mask);
-		x = (button->width - width) / 2 + d;
-		y = (button->height - image->height) / 2 + d;
+		x = (btn_width - width) / 2 + d;
+		y = (btn_height - image->height) / 2 + d;
 		XSetClipOrigin(dpy, copy_gc, x - left, y);
 		if (!wPreferences.new_style == TS_NEW) {
 			XSetForeground(dpy, copy_gc, scr->black_pixel);
@@ -1617,7 +1619,7 @@ static void paintButton(WCoreWindow *button, WTexture *texture, unsigned long co
 				if (wPreferences.new_style == TS_OLD) {
 					XSetForeground(dpy, copy_gc, scr->dark_pixel);
 					XFillRectangle(dpy, button->window, copy_gc, 0, 0,
-						       button->width, button->height);
+						       btn_width, btn_height);
 				} else {
 					XSetForeground(dpy, copy_gc, scr->black_pixel);
 					XCopyArea(dpy, image->image, button->window, copy_gc,
@@ -1631,7 +1633,7 @@ static void paintButton(WCoreWindow *button, WTexture *texture, unsigned long co
 				XSetForeground(dpy, copy_gc, color);
 				XSetBackground(dpy, copy_gc, texture->any.color.pixel);
 			}
-			XFillRectangle(dpy, button->window, copy_gc, 0, 0, button->width, button->height);
+			XFillRectangle(dpy, button->window, copy_gc, 0, 0, btn_width, btn_height);
 		}
 	}
 }
@@ -1649,19 +1651,22 @@ static void handleButtonExpose(WObjDescriptor *desc, XEvent *event)
 		if (wPreferences.modelock)
 			paintButton(button, fwin->title_texture[fwin->flags.state],
 				    WMColorPixel(fwin->title_color[fwin->flags.state]),
-				    fwin->languagebutton_image, False);
+				    fwin->languagebutton_image, False,
+				    fwin->language_button->width, fwin->language_button->height);
 		return;
 	}
 #endif
 	if (button == fwin->left_button) {
 		paintButton(button, fwin->title_texture[fwin->flags.state],
-			    WMColorPixel(fwin->title_color[fwin->flags.state]), fwin->lbutton_image, False);
+			    WMColorPixel(fwin->title_color[fwin->flags.state]), fwin->lbutton_image, False,
+					 fwin->left_button->width, fwin->left_button->height);
 		return;
 	}
 
 	if (button == fwin->right_button)
 		paintButton(button, fwin->title_texture[fwin->flags.state],
-			    WMColorPixel(fwin->title_color[fwin->flags.state]), fwin->rbutton_image, False);
+			    WMColorPixel(fwin->title_color[fwin->flags.state]), fwin->rbutton_image, False,
+					 fwin->right_button->width, fwin->right_button->height);
 }
 
 static void titlebarMouseDown(WObjDescriptor *desc, XEvent *event)
@@ -1691,12 +1696,13 @@ static void buttonMouseDown(WObjDescriptor *desc, XEvent *event)
 {
 	WFrameWindow *fwin = desc->parent;
 	WCoreWindow *button = desc->self;
-	WPixmap *image;
+	WPixmap *image = fwin->rbutton_image; /* Avoid compiler warning */
 	XEvent ev;
 	int done = 0, execute = 1;
 	WTexture *texture;
 	unsigned long pixel;
 	int clickButton = event->xbutton.button;
+	int width = 0, height = 0;
 
 	if (IsDoubleClick(fwin->core->vscr, event)) {
 		if (button == fwin->right_button && fwin->on_dblclick_right)
@@ -1705,22 +1711,32 @@ static void buttonMouseDown(WObjDescriptor *desc, XEvent *event)
 		return;
 	}
 
-	if (button == fwin->left_button)
+	if (button == fwin->left_button) {
 		image = fwin->lbutton_image;
-	else
+		width = fwin->left_button->width;
+		height = fwin->left_button->height;
+	}
+
+	if (button == fwin->right_button) {
 		image = fwin->rbutton_image;
+		width = fwin->right_button->width;
+		height = fwin->right_button->height;
+	}
 
 #ifdef XKB_BUTTON_HINT
 	if (button == fwin->language_button) {
 		if (!wPreferences.modelock)
 			return;
+
 		image = fwin->languagebutton_image;
+		width = fwin->language_button->width;
+		height = fwin->language_button->height;
 	}
 #endif
 
 	pixel = WMColorPixel(fwin->title_color[fwin->flags.state]);
 	texture = fwin->title_texture[fwin->flags.state];
-	paintButton(button, texture, pixel, image, True);
+	paintButton(button, texture, pixel, image, True, width, height);
 
 	while (!done) {
 		WMMaskEvent(dpy, LeaveWindowMask | EnterWindowMask | ButtonReleaseMask
@@ -1728,12 +1744,12 @@ static void buttonMouseDown(WObjDescriptor *desc, XEvent *event)
 		switch (ev.type) {
 		case LeaveNotify:
 			execute = 0;
-			paintButton(button, texture, pixel, image, False);
+			paintButton(button, texture, pixel, image, False, width, height);
 			break;
 
 		case EnterNotify:
 			execute = 1;
-			paintButton(button, texture, pixel, image, True);
+			paintButton(button, texture, pixel, image, True, width, height);
 			break;
 
 		case ButtonPress:
@@ -1748,7 +1764,8 @@ static void buttonMouseDown(WObjDescriptor *desc, XEvent *event)
 			WMHandleEvent(&ev);
 		}
 	}
-	paintButton(button, texture, pixel, image, False);
+
+	paintButton(button, texture, pixel, image, False, width, height);
 
 	if (!execute)
 		return;
