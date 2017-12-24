@@ -55,8 +55,6 @@
 #define MENU_SCROLL_STEP  menuScrollParameters[(int)wPreferences.menu_scroll_speed].steps
 #define MENU_SCROLL_DELAY menuScrollParameters[(int)wPreferences.menu_scroll_speed].delay
 
-#define getEntryAt(menu, y)   ((y)<0 ? -1 : (y)/(menu->entry_height))
-
 #define COMPLAIN(key) wwarning(_("bad value in menus state info: %s"), key)
 
 /***** Local Stuff ******/
@@ -151,6 +149,17 @@ static int get_menu_width_full(WMenu *menu)
 	width = menu->frame->width;
 	width += 2 * menu->vscr->screen_ptr->frame_border_width;
 	return width;
+}
+
+static int getEntryAt(WMenu *menu, int y)
+{
+	int pos;
+
+	if (y < 0)
+		return -1;
+
+	pos = y / menu->entry_height;
+	return pos;
 }
 
 WMenu *menu_create(virtual_screen *vscr, const char *title)
