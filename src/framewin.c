@@ -565,13 +565,6 @@ static void resizebar_map(WFrameWindow *fwin, int width, int height)
 	fwin->flags.resizebar = 1;
 }
 
-static void resizebar_update(WFrameWindow *fwin, int width, int height)
-{
-	if (height + fwin->top_width + fwin->bottom_width != fwin->height)
-		wCoreConfigure(fwin->resizebar, 0, height + fwin->top_width,
-			       width, RESIZEBAR_HEIGHT);
-}
-
 static void resizebar_unmap(WFrameWindow *fwin)
 {
 	if (fwin->flags.resizebar) {
@@ -683,10 +676,8 @@ void wframewin_set_borders(WFrameWindow *fwin, int flags)
 
 	if (fwin->resizebar) {
 		resizebar_unmap(fwin);
-		if (fwin->flags.map_resizebar) {
+		if (fwin->flags.map_resizebar)
 			resizebar_map(fwin, width, height);
-			resizebar_update(fwin, width, height);
-		}
 	} else {
 		resizebar_create(fwin);
 		resizebar_map(fwin, width, height);
