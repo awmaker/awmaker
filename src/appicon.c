@@ -361,7 +361,7 @@ void wAppIconDestroy(WAppIcon *aicon)
 
 static void drawCorner(WIcon *icon)
 {
-	WScreen *scr = icon->core->vscr->screen_ptr;
+	WScreen *scr = icon->vscr->screen_ptr;
 	XPoint points[3];
 
 	points[0].x = 1;
@@ -409,7 +409,7 @@ static void updateDockNumbers(virtual_screen *vscr)
 void wAppIconPaint(WAppIcon *aicon)
 {
 	WApplication *wapp;
-	virtual_screen *vscr = aicon->icon->core->vscr;
+	virtual_screen *vscr = aicon->icon->vscr;
 	WScreen *scr = vscr->screen_ptr;
 
 	if (aicon->icon->owner)
@@ -542,7 +542,7 @@ static void setIconCallback(WMenu *menu, WMenuEntry *entry)
 		return;
 
 	icon->editing = 1;
-	vscr = icon->icon->core->vscr;
+	vscr = icon->icon->vscr;
 
 	wretain(icon);
 
@@ -706,7 +706,7 @@ static void iconDblClick(WObjDescriptor *desc, XEvent *event)
 {
 	WAppIcon *aicon = desc->parent;
 	WApplication *wapp;
-	virtual_screen *vscr = aicon->icon->core->vscr;
+	virtual_screen *vscr = aicon->icon->vscr;
 	int unhideHere;
 
 	assert(aicon->icon->owner != NULL);
@@ -732,7 +732,7 @@ static void iconDblClick(WObjDescriptor *desc, XEvent *event)
 void appIconMouseDown(WObjDescriptor *desc, XEvent *event)
 {
 	WAppIcon *aicon = desc->parent;
-	virtual_screen *vscr = aicon->icon->core->vscr;
+	virtual_screen *vscr = aicon->icon->vscr;
 	Bool hasMoved;
 
 	if (aicon->editing || WCHECK_STATE(WSTATE_MODAL))
@@ -786,7 +786,7 @@ void appIconMouseDown(WObjDescriptor *desc, XEvent *event)
 Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 {
 	WIcon *icon = aicon->icon;
-	virtual_screen *vscr = aicon->icon->core->vscr;
+	virtual_screen *vscr = aicon->icon->vscr;
 	WScreen *scr = vscr->screen_ptr;
 	WDock *originalDock = aicon->dock; /* can be NULL */
 	WDock *lastDock = originalDock;
