@@ -459,7 +459,7 @@ static void showBalloon(WScreen *scr)
 static void frameBalloon(WObjDescriptor *object)
 {
 	WFrameWindow *fwin = (WFrameWindow *) object->parent;
-	virtual_screen *vscr = fwin->core->vscr;
+	virtual_screen *vscr = fwin->vscr;
 	WScreen *scr = vscr->screen_ptr;
 	WWindow *wwin;
 
@@ -480,7 +480,7 @@ static void frameBalloon(WObjDescriptor *object)
 static void miniwindowBalloon(WObjDescriptor *object)
 {
 	WIcon *icon = (WIcon *) object->parent;
-	virtual_screen *vscr = icon->core->vscr;
+	virtual_screen *vscr = icon->vscr;
 	WScreen *scr = vscr->screen_ptr;
 
 	if (!icon->title) {
@@ -505,7 +505,7 @@ static void miniwindowBalloon(WObjDescriptor *object)
 static void appiconBalloon(WObjDescriptor *object)
 {
 	WAppIcon *aicon = (WAppIcon *) object->parent;
-	virtual_screen *vscr = aicon->icon->core->vscr;
+	virtual_screen *vscr = aicon->icon->vscr;
 	WScreen *scr = vscr->screen_ptr;
 	char *tmp;
 
