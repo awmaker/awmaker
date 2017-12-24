@@ -532,7 +532,8 @@ static void titlebar_destroy(WFrameWindow *fwin)
 
 static void resizebar_create(WFrameWindow *fwin)
 {
-	fwin->resizebar = wcore_create(fwin->width, RESIZEBAR_HEIGHT);
+	fwin->resizebar_height = RESIZEBAR_HEIGHT;
+	fwin->resizebar = wcore_create(fwin->width, fwin->resizebar_height);
 	set_framewin_descriptors(fwin->resizebar, handleExpose, fwin, WCLASS_FRAME, resizebarMouseDown);
 }
 
@@ -547,7 +548,7 @@ static void resizebar_map(WFrameWindow *fwin, int width, int height)
 	fwin->bottom_width = RESIZEBAR_HEIGHT;
 	wcore_map(fwin->resizebar, fwin->core, fwin->vscr,
 		  0, height + fwin->top_width,
-		  fwin->width, fwin->resizebar->height, 0,
+		  fwin->width, fwin->resizebar_height, 0,
 		  fwin->vscr->screen_ptr->w_depth,
 		  fwin->vscr->screen_ptr->w_visual,
 		  fwin->vscr->screen_ptr->w_colormap);
@@ -1161,7 +1162,7 @@ static void remakeTexture_resizebar(WFrameWindow *fwin, int state)
 			renderResizebarTexture(fwin->vscr->screen_ptr,
 					       fwin->resizebar_texture[0],
 					       fwin->width,
-					       fwin->resizebar->height, fwin->resizebar_corner_width, &pmap);
+					       fwin->resizebar_height, fwin->resizebar_corner_width, &pmap);
 
 			fwin->resizebar_back[0] = pmap;
 		}
@@ -1299,7 +1300,7 @@ void wFrameWindowPaint(WFrameWindow *fwin)
 	    !fwin->flags.repaint_only_titlebar &&
 	    fwin->resizebar_texture[0]->any.type == WTEX_SOLID)
 		wDrawBevel_resizebar(fwin->resizebar->window, fwin->width,
-				     fwin->resizebar->height, (WTexSolid *) fwin->resizebar_texture[0],
+				     fwin->resizebar_height, (WTexSolid *) fwin->resizebar_texture[0],
 				     fwin->resizebar_corner_width);
 
 	if (fwin->titlebar && fwin->flags.titlebar && !fwin->flags.repaint_only_resizebar) {
@@ -1421,8 +1422,8 @@ static void reconfigure(WFrameWindow * fwin, int x, int y, int width, int height
 
 	if (fwin->resizebar && fwin->flags.resizebar) {
 		wCoreConfigure(fwin->resizebar, 0,
-			       fwin->height - fwin->resizebar->height,
-			       fwin->width, fwin->resizebar->height);
+			       fwin->height - fwin->resizebar_height,
+			       fwin->width, fwin->resizebar_height);
 
 		fwin->resizebar_corner_width = RESIZEBAR_CORNER_WIDTH;
 		if (fwin->width < RESIZEBAR_CORNER_WIDTH * 2 + RESIZEBAR_MIN_WIDTH)
