@@ -35,7 +35,6 @@ typedef struct _WCoreWindow {
 	Window window;
 	int width;			/* size of the window */
 	int height;
-	virtual_screen *vscr;		/* ptr to screen of the window */
 
 	WObjDescriptor descriptor;
 	WStacking *stacking;		/* window stacking information */
