@@ -529,9 +529,9 @@ static void titlebar_destroy(WFrameWindow *fwin)
 	fwin->titlebar = NULL;
 }
 
-static void resizebar_create(WFrameWindow *fwin, int width)
+static void resizebar_create(WFrameWindow *fwin)
 {
-	fwin->resizebar = wcore_create(width, RESIZEBAR_HEIGHT);
+	fwin->resizebar = wcore_create(fwin->width, RESIZEBAR_HEIGHT);
 	set_framewin_descriptors(fwin->resizebar, handleExpose, fwin, WCLASS_FRAME, resizebarMouseDown);
 }
 
@@ -688,7 +688,7 @@ void wframewin_set_borders(WFrameWindow *fwin, int flags)
 			resizebar_update(fwin, width, height);
 		}
 	} else {
-		resizebar_create(fwin, width);
+		resizebar_create(fwin);
 		resizebar_map(fwin, width, height);
 	}
 
