@@ -39,7 +39,7 @@ void wcore_destroy(WCoreWindow *core)
 	wfree(core);
 }
 
-void wcore_map_toplevel(WCoreWindow *core, virtual_screen *screen, int x, int y,
+void wcore_map_toplevel(WCoreWindow *core, virtual_screen *vscr, int x, int y,
 			int width, int height, int bwidth, int depth,
 			Visual *visual, Colormap colormap, WMPixel border_pixel)
 {
@@ -50,7 +50,7 @@ void wcore_map_toplevel(WCoreWindow *core, virtual_screen *screen, int x, int y,
 	attribs.override_redirect = True;
 	attribs.cursor = wPreferences.cursor[WCUR_NORMAL];
 	attribs.background_pixmap = None;
-	attribs.background_pixel = screen->screen_ptr->black_pixel;
+	attribs.background_pixel = vscr->screen_ptr->black_pixel;
 	attribs.border_pixel = border_pixel;
 	attribs.event_mask = SubstructureRedirectMask | ButtonPressMask |
 			     ButtonReleaseMask | ButtonMotionMask |
@@ -63,7 +63,7 @@ void wcore_map_toplevel(WCoreWindow *core, virtual_screen *screen, int x, int y,
 		attribs.save_under = True;
 	}
 
-	core->window = XCreateWindow(dpy, screen->screen_ptr->root_win, x, y, width, height,
+	core->window = XCreateWindow(dpy, vscr->screen_ptr->root_win, x, y, width, height,
 				     bwidth, depth, CopyFromParent, visual, vmask, &attribs);
 	core->descriptor.self = core;
 
