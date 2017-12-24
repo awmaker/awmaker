@@ -181,6 +181,9 @@ typedef struct WFrameWindow {
 	/* Buttons */
 	int left_button_pos_width;
 	int left_button_pos_height;
+
+	int right_button_pos_width;
+	int right_button_pos_height;
 } WFrameWindow;
 
 void wframewin_set_borders(WFrameWindow *fwin, int flags);
