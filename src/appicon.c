@@ -629,10 +629,11 @@ static WMenu *createApplicationMenu(virtual_screen *vscr)
 
 void appicon_map(WAppIcon *aicon, virtual_screen *vscr)
 {
-	WCoreWindow *wcore = aicon->icon->core;
+	WIcon *icon = aicon->icon;
+	WCoreWindow *wcore = icon->core;
 	WScreen *scr = vscr->screen_ptr;
 
-	wcore_map_toplevel(wcore, vscr, 0, 0, wcore->width, wcore->height, 0,
+	wcore_map_toplevel(wcore, vscr, 0, 0, icon->width, icon->height, 0,
 			   scr->w_depth, scr->w_visual,
 			   scr->w_colormap, scr->white_pixel);
 
