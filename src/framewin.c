@@ -545,7 +545,7 @@ static void resizebar_map(WFrameWindow *fwin, int width, int height)
 	fwin->bottom_width = RESIZEBAR_HEIGHT;
 	wcore_map(fwin->resizebar, fwin->core, fwin->vscr,
 		  0, height + fwin->top_width,
-		  fwin->resizebar->width, fwin->resizebar->height, 0,
+		  fwin->width, fwin->resizebar->height, 0,
 		  fwin->vscr->screen_ptr->w_depth,
 		  fwin->vscr->screen_ptr->w_visual,
 		  fwin->vscr->screen_ptr->w_colormap);
@@ -1170,7 +1170,7 @@ static void remakeTexture_resizebar(WFrameWindow *fwin, int state)
 		if (fwin->resizebar_texture[0]->any.type != WTEX_SOLID) {
 			renderResizebarTexture(fwin->vscr->screen_ptr,
 					       fwin->resizebar_texture[0],
-					       fwin->resizebar->width,
+					       fwin->width,
 					       fwin->resizebar->height, fwin->resizebar_corner_width, &pmap);
 
 			fwin->resizebar_back[0] = pmap;
@@ -1308,7 +1308,7 @@ void wFrameWindowPaint(WFrameWindow *fwin)
 	if (fwin->resizebar && fwin->flags.resizebar &&
 	    !fwin->flags.repaint_only_titlebar &&
 	    fwin->resizebar_texture[0]->any.type == WTEX_SOLID)
-		wDrawBevel_resizebar(fwin->resizebar->window, fwin->resizebar->width,
+		wDrawBevel_resizebar(fwin->resizebar->window, fwin->width,
 				     fwin->resizebar->height, (WTexSolid *) fwin->resizebar_texture[0],
 				     fwin->resizebar_corner_width);
 
