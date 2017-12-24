@@ -1767,16 +1767,9 @@ static void observer(void *self, WMNotification *notif)
 	if (!wwin)
 		return;
 
+	/* TODO: kix: I am not sure about this, here en rootmenu */
 	switchmenu_handle_notification_wwin(wwin->vscr->menu.root_switch,
 					    wwin, name, (char *) data);
-
-	/* If menu is not mapped, exit */
-	if (!wwin->vscr->menu.root_switch ||
-	    !wwin->vscr->menu.root_switch->frame ||
-	    !wwin->vscr->menu.root_switch->frame->vscr)
-		return;
-
-	menu_move_visible(wwin->vscr->menu.root_switch);
 }
 
 static void wsobserver(void *self, WMNotification *notif)
