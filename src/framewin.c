@@ -528,6 +528,7 @@ static void titlebar_destroy(WFrameWindow *fwin)
 	fwin->right_button = NULL;
 	wframewindow_destroy_wcorewindow(fwin->titlebar);
 	fwin->titlebar = NULL;
+	fwin->titlebar_height = 0;
 }
 
 static void resizebar_create(WFrameWindow *fwin)
@@ -541,6 +542,7 @@ static void resizebar_destroy(WFrameWindow *fwin)
 {
 	wframewindow_destroy_wcorewindow(fwin->resizebar);
 	fwin->resizebar = NULL;
+	fwin->resizebar_height = 0;
 }
 
 static void resizebar_map(WFrameWindow *fwin, int width, int height)
