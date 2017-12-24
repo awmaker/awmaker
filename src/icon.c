@@ -170,7 +170,7 @@ WIcon *icon_create_core(virtual_screen *vscr)
 	icon = wmalloc(sizeof(WIcon));
 	icon->width = wPreferences.icon_size;
 	icon->height = wPreferences.icon_size;
-	icon->core = wcore_create(icon->width, icon->height);
+	icon->core = wcore_create();
 	icon->core->vscr = vscr;
 
 	/* will be overriden if this is a application icon */

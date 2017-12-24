@@ -29,15 +29,9 @@
 #include "WindowMaker.h"
 #include "wcore.h"
 
-WCoreWindow *wcore_create(int width, int height)
+WCoreWindow *wcore_create()
 {
-	WCoreWindow *core;
-
-	core = wmalloc(sizeof(WCoreWindow));
-	core->width = width;
-	core->height = height;
-
-	return core;
+	return wmalloc(sizeof(WCoreWindow));
 }
 
 void wcore_destroy(WCoreWindow *core)

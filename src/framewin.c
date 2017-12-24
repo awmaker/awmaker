@@ -79,7 +79,7 @@ WFrameWindow *wframewindow_create(WWindow *parent_wwin, WMenu *parent_wmenu,
 	fwin = wmalloc(sizeof(WFrameWindow));
 	fwin->width = width;
 	fwin->height = height;
-	fwin->core = wcore_create(fwin->width, fwin->height);
+	fwin->core = wcore_create();
 	fwin->parent_wwin = parent_wwin;
 	fwin->parent_wmenu = parent_wmenu;
 
@@ -205,7 +205,7 @@ static void set_framewin_descriptors(WCoreWindow *wcore, void *handle_expose,
 
 static void left_button_create(WFrameWindow *fwin)
 {
-	fwin->left_button = wcore_create(fwin->bordersize, fwin->bordersize);
+	fwin->left_button = wcore_create();
 
 	if (fwin->left_button)
 		set_framewin_descriptors(fwin->left_button, handleButtonExpose, fwin, WCLASS_FRAME, buttonMouseDown);
@@ -268,7 +268,7 @@ static void left_button_unmap(WFrameWindow *fwin)
 #ifdef XKB_BUTTON_HINT
 static void language_button_create(WFrameWindow *fwin)
 {
-	fwin->language_button = wcore_create(fwin->bordersize, fwin->bordersize);
+	fwin->language_button = wcore_create();
 
 	if (fwin->language_button)
 		set_framewin_descriptors(fwin->language_button, handleButtonExpose, fwin, WCLASS_FRAME, buttonMouseDown);
@@ -330,7 +330,7 @@ static void language_button_unmap(WFrameWindow *fwin)
 
 static void right_button_create(WFrameWindow *fwin)
 {
-	fwin->right_button = wcore_create(fwin->bordersize, fwin->bordersize);
+	fwin->right_button = wcore_create();
 
 	if (fwin->right_button)
 		set_framewin_descriptors(fwin->right_button, handleButtonExpose, fwin, WCLASS_FRAME, buttonMouseDown);
@@ -389,7 +389,7 @@ static void titlebar_create(WFrameWindow *fwin, int theight, int flags)
 	fwin->top_width = theight;
 	fwin->titlebar_height = theight;
 	fwin->titlebar_width = fwin->width;
-	fwin->titlebar = wcore_create(fwin->titlebar_width, theight);
+	fwin->titlebar = wcore_create();
 
 	if (flags & WFF_LEFT_BUTTON) {
 		fwin->flags.left_button = 1;
@@ -534,7 +534,7 @@ static void titlebar_destroy(WFrameWindow *fwin)
 static void resizebar_create(WFrameWindow *fwin)
 {
 	fwin->resizebar_height = RESIZEBAR_HEIGHT;
-	fwin->resizebar = wcore_create(fwin->width, fwin->resizebar_height);
+	fwin->resizebar = wcore_create();
 	set_framewin_descriptors(fwin->resizebar, handleExpose, fwin, WCLASS_FRAME, resizebarMouseDown);
 }
 

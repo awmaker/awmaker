@@ -148,7 +148,7 @@ WMenu *menu_create(virtual_screen *vscr, const char *title)
 	menu = wmalloc(sizeof(WMenu));
 	menu->width = 1;
 	menu->frame = wframewindow_create(NULL, menu, 1, 1, flags);
-	menu->core = wcore_create(menu->width, 10);
+	menu->core = wcore_create();
 	menu->vscr = vscr;
 
 	if (title) {
