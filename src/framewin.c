@@ -1547,6 +1547,25 @@ static void paintButton(WFrameWindow *fwin, WCoreWindow *button, WTexture *textu
 	int btn_width = fwin->bordersize;
 	int btn_height = fwin->bordersize;
 
+#ifdef XKB_BUTTON_HINT
+	if (button == fwin->language_button) {
+		texture = fwin->title_texture[fwin->flags.state];
+		color = WMColorPixel(fwin->title_color[fwin->flags.state]);
+		image = fwin->languagebutton_image;
+	}
+#endif
+	if (button == fwin->left_button) {
+		texture = fwin->title_texture[fwin->flags.state];
+		color = WMColorPixel(fwin->title_color[fwin->flags.state]);
+		image = fwin->lbutton_image;
+	}
+
+	if (button == fwin->right_button) {
+		texture = fwin->title_texture[fwin->flags.state];
+		color = WMColorPixel(fwin->title_color[fwin->flags.state]);
+		image = fwin->rbutton_image;
+	}
+
 	/* setup stuff according to the state */
 	if (pushed) {
 		if (image) {
