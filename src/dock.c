@@ -1592,11 +1592,12 @@ WDock *dock_create(virtual_screen *vscr)
 	return dock;
 }
 
-void dock_map(WDock *dock, virtual_screen *vscr, WMPropList *state)
+void dock_map(WDock *dock, WMPropList *state)
 {
 	WAppIcon *btn = dock->icon_array[0];
 	WIcon *icon = btn->icon;
 	WCoreWindow *wcore = icon->core;
+	virtual_screen *vscr = dock->vscr;
 	WScreen *scr = dock->vscr->screen_ptr;
 
 	/* Return if virtual screen is not mapped */
@@ -1641,7 +1642,7 @@ void dock_map(WDock *dock, virtual_screen *vscr, WMPropList *state)
 	WMRetainPropList(state);
 
 	/* restore position */
-	restore_dock_position(dock, dock->vscr, state);
+	restore_dock_position(dock, vscr, state);
 
 	restore_state_lowered(dock, state);
 	restore_state_collapsed(dock, state);
@@ -1650,7 +1651,7 @@ void dock_map(WDock *dock, virtual_screen *vscr, WMPropList *state)
 	(void) restore_state_autoattracticons(dock, state);
 
 	/* application list */
-	dock_set_attacheddocks(dock->vscr, dock, state);
+	dock_set_attacheddocks(vscr, dock, state);
 
 	WMReleasePropList(state);
 }
