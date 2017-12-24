@@ -1045,7 +1045,7 @@ Bool wIconChooserDialog(AppSettingsPanel *app_panel, InspectorPanel *ins_panel, 
 		/* Set values if parent is Icon */
 		instance = icon->wm_instance;
 		class = icon->wm_class;
-		vscr = icon->icon->core->vscr;
+		vscr = icon->icon->vscr;
 	}
 
 	scr = vscr->screen_ptr;
