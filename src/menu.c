@@ -1910,6 +1910,10 @@ static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
 		menu = smenu;
 	}
 
+	/* If menu is empty, return */
+	if (menu->entry_no == 0)
+		return;
+
 	if (menu->flags.editing) {
 		menu_delete_handlers(menu, &d_data);
 		((WMenu *) desc->parent)->flags.inside_handler = 0;
