@@ -55,9 +55,6 @@
 #define MENU_SCROLL_STEP  menuScrollParameters[(int)wPreferences.menu_scroll_speed].steps
 #define MENU_SCROLL_DELAY menuScrollParameters[(int)wPreferences.menu_scroll_speed].delay
 
-#define MENUW(m)	((m)->frame->width+2*(m)->vscr->screen_ptr->frame_border_width)
-#define MENUH(m)	((m)->frame->height+2*(m)->vscr->screen_ptr->frame_border_width)
-
 #define getEntryAt(menu, y)   ((y)<0 ? -1 : (y)/(menu->entry_height))
 
 #define COMPLAIN(key) wwarning(_("bad value in menus state info: %s"), key)
@@ -99,6 +96,8 @@ static int restoreMenuRecurs(virtual_screen *vscr, WMPropList *menus, WMenu *men
 static void menu_delete_handlers(WMenu *menu, delay_data *d_data);
 static void menu_blink_selected(WMenu *menu);
 static int get_menu_height(WMenu *menu);
+static int get_menu_height_full(WMenu *menu);
+static int get_menu_width_full(WMenu *menu);
 /****** Notification Observers ******/
 
 static void appearanceObserver(void *self, WMNotification *notif)
@@ -136,6 +135,24 @@ static void appearanceObserver(void *self, WMNotification *notif)
 }
 
 /************************************/
+static int get_menu_height_full(WMenu *menu)
+{
+	int height;
+
+	height = menu->frame->height;
+	height += 2 * menu->vscr->screen_ptr->frame_border_width;
+	return height;
+}
+
+static int get_menu_width_full(WMenu *menu)
+{
+	int width;
+
+	width = menu->frame->width;
+	width += 2 * menu->vscr->screen_ptr->frame_border_width;
+	return width;
+}
+
 WMenu *menu_create(virtual_screen *vscr, const char *title)
 {
 	WMenu *menu;
@@ -758,7 +775,7 @@ static void move_menus(WMenu *menu, int x, int y)
 {
 	while (menu->parent) {
 		menu = menu->parent;
-		x -= MENUW(menu);
+		x -= get_menu_width_full(menu);
 		if (!wPreferences.align_menus && menu->selected_entry >= 0)
 			y -= menu->selected_entry * menu->entry_height;
 	}
@@ -777,7 +794,7 @@ static void makeVisible(WMenu *menu)
 
 	x1 = menu->frame_x;
 	y1 = menu->frame_y + menu->frame->top_width + menu->selected_entry * menu->entry_height;
-	x2 = x1 + MENUW(menu);
+	x2 = x1 + get_menu_width_full(menu);
 	y2 = y1 + menu->entry_height;
 
 	new_x = x1;
@@ -786,7 +803,7 @@ static void makeVisible(WMenu *menu)
 	if (x1 < rect.pos.x)
 		new_x = rect.pos.x;
 	else if (x2 >= rect.pos.x + rect.size.width)
-		new_x = rect.pos.x + rect.size.width - MENUW(menu) - 1;
+		new_x = rect.pos.x + rect.size.width - get_menu_width_full(menu) - 1;
 
 	if (y1 < rect.pos.y)
 		new_y = rect.pos.y;
@@ -841,8 +858,8 @@ static int keyboardMenu(WMenu *menu)
 	if (menu->frame_y + menu->frame->top_width >= rect.pos.y + rect.size.height)
 		new_y = rect.pos.y + rect.size.height - menu->frame->top_width;
 
-	if (menu->frame_x + MENUW(menu) >= rect.pos.x + rect.size.width)
-		new_x = rect.pos.x + rect.size.width - MENUW(menu) - 1;
+	if (menu->frame_x + get_menu_width_full(menu) >= rect.pos.x + rect.size.width)
+		new_x = rect.pos.x + rect.size.width - get_menu_width_full(menu) - 1;
 
 	move_menus(menu, new_x, new_y);
 
@@ -1023,10 +1040,10 @@ void wMenuMapAt(virtual_screen *vscr, WMenu *menu, int x, int y, int keyboard)
 				x = rect.pos.x;
 			if (y < rect.pos.y)
 				y = rect.pos.y;
-			if (x + MENUW(menu) > rect.pos.x + rect.size.width)
-				x = rect.pos.x + rect.size.width - MENUW(menu);
-			if (y + MENUH(menu) > rect.pos.y + rect.size.height)
-				y = rect.pos.y + rect.size.height - MENUH(menu);
+			if (x + get_menu_width_full(menu) > rect.pos.x + rect.size.width)
+				x = rect.pos.x + rect.size.width - get_menu_width_full(menu);
+			if (y + get_menu_height_full(menu) > rect.pos.y + rect.size.height)
+				y = rect.pos.y + rect.size.height - get_menu_height_full(menu);
 		}
 
 		XMoveWindow(dpy, menu->frame->core->window, x, y);
@@ -1161,20 +1178,20 @@ static void selectEntry(WMenu *menu, int entry_no)
 					submenu->flags.open_to_left = 1;
 
 				if (submenu->flags.open_to_left) {
-					x = menu->frame_x - MENUW(submenu);
+					x = menu->frame_x - get_menu_width_full(submenu);
 					if (x < 0) {
 						x = 0;
 						submenu->flags.open_to_left = 0;
 					}
 				} else {
-					x = menu->frame_x + MENUW(menu);
-					if (x + MENUW(submenu) >= menu->vscr->screen_ptr->scr_width) {
-						x = menu->frame_x - MENUW(submenu);
+					x = menu->frame_x + get_menu_width_full(menu);
+					if (x + get_menu_width_full(submenu) >= menu->vscr->screen_ptr->scr_width) {
+						x = menu->frame_x - get_menu_width_full(submenu);
 						submenu->flags.open_to_left = 1;
 					}
 				}
 			} else {
-				x = menu->frame_x + MENUW(menu);
+				x = menu->frame_x + get_menu_width_full(menu);
 			}
 
 			if (wPreferences.align_menus) {
@@ -1336,8 +1353,8 @@ static void getScrollAmount(WMenu *menu, int *hamount, int *vamount)
 	virtual_screen *vscr = menu->vscr;
 	int menuX1 = menu->frame_x;
 	int menuY1 = menu->frame_y;
-	int menuX2 = menu->frame_x + MENUW(menu);
-	int menuY2 = menu->frame_y + MENUH(menu);
+	int menuX2 = menu->frame_x + get_menu_width_full(menu);
+	int menuY2 = menu->frame_y + get_menu_height_full(menu);
 	int xroot, yroot;
 	WMRect rect = wGetRectForHead(vscr->screen_ptr, wGetHeadForPointerLocation(vscr));
 
@@ -1430,8 +1447,8 @@ static int isPointNearBoder(WMenu *menu, int x, int y)
 {
 	int menuX1 = menu->frame_x;
 	int menuY1 = menu->frame_y;
-	int menuX2 = menu->frame_x + MENUW(menu);
-	int menuY2 = menu->frame_y + MENUH(menu);
+	int menuX2 = menu->frame_x + get_menu_width_full(menu);
+	int menuY2 = menu->frame_y + get_menu_height_full(menu);
 	int flag = 0;
 	int head = wGetHeadForPoint(menu->vscr, wmkpoint(x, y));
 	WMRect rect = wGetRectForHead(menu->vscr->screen_ptr, head);
@@ -1528,7 +1545,7 @@ void wMenuScroll(WMenu *menu)
 		case ButtonPress:
 			/* True if we push on title, or drag the omenu to other position */
 			on_title = ev.xbutton.x_root >= omenu->frame_x &&
-			    ev.xbutton.x_root <= omenu->frame_x + MENUW(omenu) &&
+			    ev.xbutton.x_root <= omenu->frame_x + get_menu_width_full(omenu) &&
 			    ev.xbutton.y_root >= omenu->frame_y &&
 			    ev.xbutton.y_root <= omenu->frame_y + omenu->frame->top_width;
 			WMHandleEvent(&ev);
@@ -2032,9 +2049,9 @@ void wMenuMove(WMenu *menu, int x, int y, int submenus)
 			submenu = menu->cascades[i];
 			if (submenu->flags.mapped && !submenu->flags.buttoned) {
 				if (wPreferences.align_menus)
-					wMenuMove(submenu, x + MENUW(menu), y, submenus);
+					wMenuMove(submenu, x + get_menu_width_full(menu), y, submenus);
 				else
-					wMenuMove(submenu, x + MENUW(menu),
+					wMenuMove(submenu, x + get_menu_width_full(menu),
 						  y + submenu->entry_height * menu->selected_entry, submenus);
 			}
 		}
@@ -2042,9 +2059,9 @@ void wMenuMove(WMenu *menu, int x, int y, int submenus)
 
 	if (submenus < 0 && menu->parent != NULL && menu->parent->flags.mapped && !menu->parent->flags.buttoned) {
 		if (wPreferences.align_menus)
-			wMenuMove(menu->parent, x - MENUW(menu->parent), y, submenus);
+			wMenuMove(menu->parent, x - get_menu_width_full(menu->parent), y, submenus);
 		else
-			wMenuMove(menu->parent, x - MENUW(menu->parent), menu->frame_y
+			wMenuMove(menu->parent, x - get_menu_width_full(menu->parent), menu->frame_y
 				  - menu->parent->entry_height * menu->parent->selected_entry, submenus);
 	}
 }
@@ -2368,8 +2385,8 @@ static int restoreMenu(virtual_screen *vscr, WMPropList *menu)
 
 	pmenu = vscr->menu.switch_menu;
 	if (pmenu) {
-		width = MENUW(pmenu);
-		height = MENUH(pmenu);
+		width = get_menu_width_full(pmenu);
+		height = get_menu_height_full(pmenu);
 		WMRect rect = wGetRectForHead(vscr->screen_ptr, wGetHeadForPointerLocation(vscr));
 
 		if (lowered)
@@ -2415,8 +2432,8 @@ static int restoreMenuRecurs(virtual_screen *vscr, WMPropList *menus,
 
 	if (entry && getMenuInfo(entry, &x, &y, &lowered) &&
 	    !menu->flags.mapped) {
-		width = MENUW(menu);
-		height = MENUH(menu);
+		width = get_menu_width_full(menu);
+		height = get_menu_height_full(menu);
 		WMRect rect = wGetRectForHead(vscr->screen_ptr,
 					      wGetHeadForPointerLocation(vscr));
 
