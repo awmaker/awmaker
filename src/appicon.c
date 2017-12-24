@@ -627,11 +627,12 @@ static WMenu *createApplicationMenu(virtual_screen *vscr)
 	return menu;
 }
 
-void appicon_map(WAppIcon *aicon, virtual_screen *vscr)
+void appicon_map(WAppIcon *aicon)
 {
 	WIcon *icon = aicon->icon;
 	WCoreWindow *wcore = icon->core;
-	WScreen *scr = vscr->screen_ptr;
+	virtual_screen *vscr = aicon->icon->vscr;
+	WScreen *scr = aicon->icon->vscr->screen_ptr;
 
 	wcore_map_toplevel(wcore, vscr, 0, 0, icon->width, icon->height, 0,
 			   scr->w_depth, scr->w_visual,
@@ -1287,7 +1288,7 @@ void move_appicon_to_dock(virtual_screen *vscr, WAppIcon *icon, char *wm_class, 
 	aicon = create_appicon(vscr, NULL, wm_class, wm_instance);
 	aicon->icon->core->descriptor.parent_type = WCLASS_APPICON;
 	aicon->icon->core->descriptor.parent = aicon;
-	appicon_map(aicon, vscr);
+	appicon_map(aicon);
 
 	/* Map it on the screen, in the right possition */
 	PlaceIcon(vscr, &x0, &y0, wGetHeadForWindow(aicon->icon->owner));

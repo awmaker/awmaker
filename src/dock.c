@@ -2670,7 +2670,7 @@ static void save_application_list(WMPropList *state, WMPropList *list, virtual_s
 	WMReleasePropList(key);
 }
 
-static void set_attacheddocks_map(virtual_screen *vscr, WDock *dock)
+static void set_attacheddocks_map(WDock *dock)
 {
 	WAppIcon *aicon;
 	int i = 0;
@@ -2684,7 +2684,7 @@ static void set_attacheddocks_map(virtual_screen *vscr, WDock *dock)
 	for (; i < dock->max_icons; i++) {
 		aicon = dock->icon_array[i];
 		if (aicon) {
-			appicon_map(aicon, vscr);
+			appicon_map(aicon);
 
 			if (dock->lowered)
 				ChangeStackingLevel(aicon->icon->vscr, aicon->icon->core, WMNormalLevel);
@@ -2835,7 +2835,7 @@ static void dock_set_attacheddocks(virtual_screen *vscr, WDock *dock, WMPropList
 	if (dock_set_attacheddocks_do(vscr, dock, apps))
 		return;
 
-	set_attacheddocks_map(vscr, dock);
+	set_attacheddocks_map(dock);
 
 	/* if the first icon is not defined, use the default */
 	if (dock->icon_array[0] == NULL) {
@@ -2876,7 +2876,7 @@ static void clip_set_attacheddocks(virtual_screen *vscr, WDock *dock, WMPropList
 	if (clip_set_attacheddocks_do(vscr, dock, apps))
 		return;
 
-	set_attacheddocks_map(vscr, dock);
+	set_attacheddocks_map(dock);
 
 	/* if the first icon is not defined, use the default */
 	if (dock->icon_array[0] == NULL) {
@@ -6902,7 +6902,7 @@ static void drawerRestoreState_map(virtual_screen *vscr, WDock *drawer)
 
 	wRaiseFrame(drawer->icon_array[0]->icon->vscr, drawer->icon_array[0]->icon->core);
 
-	set_attacheddocks_map(vscr, drawer);
+	set_attacheddocks_map(drawer);
 }
 
 /* Same kind of comment than for previous function: this function is
