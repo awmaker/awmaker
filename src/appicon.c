@@ -637,10 +637,10 @@ void appicon_map(WAppIcon *aicon, virtual_screen *vscr)
 			   scr->w_depth, scr->w_visual,
 			   scr->w_colormap, scr->white_pixel);
 
-	map_icon_image(aicon->icon);
+	map_icon_image(icon);
 
-	WMAddNotificationObserver(icon_appearanceObserver, aicon->icon, WNIconAppearanceSettingsChanged, aicon->icon);
-	WMAddNotificationObserver(icon_tileObserver, aicon->icon, WNIconTileSettingsChanged, aicon->icon);
+	WMAddNotificationObserver(icon_appearanceObserver, aicon->icon, WNIconAppearanceSettingsChanged, icon);
+	WMAddNotificationObserver(icon_tileObserver, aicon->icon, WNIconTileSettingsChanged, icon);
 
 #ifdef USE_DOCK_XDND
 	wXDNDMakeAwareness(wcore->window);
