@@ -1595,14 +1595,15 @@ WDock *dock_create(virtual_screen *vscr)
 void dock_map(WDock *dock, virtual_screen *vscr, WMPropList *state)
 {
 	WAppIcon *btn = dock->icon_array[0];
-	WCoreWindow *wcore = btn->icon->core;
+	WIcon *icon = btn->icon;
+	WCoreWindow *wcore = icon->core;
 	WScreen *scr = dock->vscr->screen_ptr;
 
 	/* Return if virtual screen is not mapped */
 	if (!scr)
 		return;
 
-	wcore_map_toplevel(wcore, vscr, 0, 0, wcore->width, wcore->height, 0,
+	wcore_map_toplevel(wcore, vscr, 0, 0, icon->width, icon->height, 0,
 			   scr->w_depth, scr->w_visual, scr->w_colormap,
 			   scr->white_pixel);
 
@@ -1684,10 +1685,11 @@ WAppIcon *clip_icon_create(virtual_screen *vscr)
 
 void clip_icon_map(virtual_screen *vscr)
 {
-	WCoreWindow *wcore = vscr->clip.icon->icon->core;
+	WIcon *icon = vscr->clip.icon->icon;
+	WCoreWindow *wcore = icon->core;
 	WScreen *scr = vscr->screen_ptr;
 
-	wcore_map_toplevel(wcore, vscr, 0, 0, wcore->width, wcore->height, 0,
+	wcore_map_toplevel(wcore, vscr, 0, 0, icon->width, icon->height, 0,
 			   scr->w_depth, scr->w_visual,
 			   scr->w_colormap, scr->white_pixel);
 
@@ -1824,7 +1826,8 @@ WDock *drawer_create(virtual_screen *vscr, const char *name)
 void drawer_map(WDock *dock, virtual_screen *vscr)
 {
 	WAppIcon *btn = dock->icon_array[0];
-	WCoreWindow *wcore = btn->icon->core;
+	WIcon *icon = btn->icon;
+	WCoreWindow *wcore = icon->core;
 	WScreen *scr = vscr->screen_ptr;
 
 	dock->x_pos = scr->scr_width - ICON_SIZE - DOCK_EXTRA_SPACE;
@@ -1833,7 +1836,7 @@ void drawer_map(WDock *dock, virtual_screen *vscr)
 	btn->y_pos = dock->y_pos;
 
 	wcore_map_toplevel(wcore, vscr, btn->x_pos, btn->y_pos,
-			   wcore->width, wcore->height, 0,
+			   icon->width, icon->height, 0,
 			   scr->w_depth, scr->w_visual,
 			   scr->w_colormap, scr->white_pixel);
 
