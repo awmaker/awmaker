@@ -1191,8 +1191,8 @@ static int getAnimationGeometry(WWindow *wwin, int *ix, int *iy, int *iw, int *i
 	if (!wPreferences.disable_miniwindows && !wwin->flags.net_handle_icon) {
 		*ix = wwin->icon_x;
 		*iy = wwin->icon_y;
-		*iw = wwin->icon->core->width;
-		*ih = wwin->icon->core->height;
+		*iw = wwin->icon->width;
+		*ih = wwin->icon->height;
 	} else {
 		if (wwin->flags.net_handle_icon) {
 			*ix = wwin->icon_x;
@@ -1483,7 +1483,7 @@ static void hideWindow(WIcon *icon, int icon_x, int icon_y, WWindow *wwin, int a
 	    !wwin->flags.skip_next_animation && animate)
 		animateResize(wwin->vscr, wwin->frame_x, wwin->frame_y,
 			      wwin->frame->width, wwin->frame->height,
-			      icon_x, icon_y, icon->core->width, icon->core->height);
+			      icon_x, icon_y, icon->width, icon->height);
 #endif
 	wwin->flags.skip_next_animation = 0;
 
@@ -1643,7 +1643,7 @@ static void unhideWindow(WIcon *icon, int icon_x, int icon_y, WWindow *wwin, int
 #ifdef USE_ANIMATIONS
 	if (!w_global.startup.phase1 && !wPreferences.no_animations && animate)
 		animateResize(wwin->vscr, icon_x, icon_y,
-			      icon->core->width, icon->core->height,
+			      icon->width, icon->height,
 			      wwin->frame_x, wwin->frame_y,
 			      wwin->frame->width, wwin->frame->height);
 #endif
