@@ -1355,9 +1355,7 @@ static void reconfigure(WFrameWindow * fwin, int x, int y, int width, int height
 	}
 
 	fwin->width = width;
-	fwin->core->width = width;
 	fwin->height = height;
-	fwin->core->height = height;
 
 	if (fwin->titlebar && fwin->flags.titlebar && resizedHorizontally) {
 		/* Check if the titlebar is wide enough to hold the buttons.
