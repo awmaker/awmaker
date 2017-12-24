@@ -553,8 +553,11 @@ void wMenuRealize(WMenu *menu)
 					  wPreferences.menu_text_clearance * 2;
 	set_menu_width(menu);
 
-	wCoreConfigure(menu->core, 0, theight,
-		       menu->width, get_menu_height(menu));
+	/* Update only if it has entries, else we got an XConfigure error */
+	if (menu->entry_no > 0)
+		wCoreConfigure(menu->core, 0, theight,
+			       menu->width, get_menu_height(menu));
+
 	wFrameWindowResize(menu->frame, menu->width,
 			   get_menu_height(menu) +
 			   menu->frame->top_width +
