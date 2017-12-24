@@ -240,8 +240,9 @@ void menu_destroy(WMenu *menu)
 	wfree(menu);
 }
 
-void menu_map(WMenu *menu, virtual_screen *screen)
+void menu_map(WMenu *menu)
 {
+	virtual_screen *vscr = menu->vscr;
 	int tmp;
 
 #ifdef SINGLE_MENULEVEL
@@ -250,13 +251,13 @@ void menu_map(WMenu *menu, virtual_screen *screen)
 	tmp = (main_menu ? WMMainMenuLevel : WMSubmenuLevel);
 #endif
 
-	wframewindow_map(menu->frame, screen, tmp, 8, 2,
+	wframewindow_map(menu->frame, vscr, tmp, 8, 2,
 			 &wPreferences.menu_title_clearance,
 			 &wPreferences.menu_title_min_height,
 			 &wPreferences.menu_title_max_height,
-			 screen->screen_ptr->menu_title_texture, NULL,
-			 screen->screen_ptr->menu_title_color, &screen->screen_ptr->menu_title_font,
-			 screen->screen_ptr->w_depth, screen->screen_ptr->w_visual, screen->screen_ptr->w_colormap);
+			 vscr->screen_ptr->menu_title_texture, NULL,
+			 vscr->screen_ptr->menu_title_color, &vscr->screen_ptr->menu_title_font,
+			 vscr->screen_ptr->w_depth, vscr->screen_ptr->w_visual, vscr->screen_ptr->w_colormap);
 
 	menu->frame->core->descriptor.parent = menu;
 	menu->frame->core->descriptor.parent_type = WCLASS_MENU;
@@ -265,7 +266,7 @@ void menu_map(WMenu *menu, virtual_screen *screen)
 	wframewindow_hide_rightbutton(menu->frame);
 	wframewindow_refresh_titlebar(menu->frame);
 
-	menu->frame->rbutton_image = screen->screen_ptr->b_pixmaps[WBUT_CLOSE];
+	menu->frame->rbutton_image = vscr->screen_ptr->b_pixmaps[WBUT_CLOSE];
 
 	menu->frame_x = 0;
 	menu->frame_y = 0;

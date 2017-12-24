@@ -873,7 +873,7 @@ WMenu *wWorkspaceMenuMake(virtual_screen *vscr, Bool titled)
 	else
 		wsmenu = menu_create(vscr, NULL);
 
-	menu_map(wsmenu, vscr);
+	menu_map(wsmenu);
 
 	/* callback to be called when an entry is edited */
 	wsmenu->on_edit = onMenuEntryEdited;

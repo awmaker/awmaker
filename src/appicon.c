@@ -666,7 +666,7 @@ static void openApplicationMenu(WApplication *wapp, int x, int y)
 
 	if (!vscr->menu.icon_menu) {
 		vscr->menu.icon_menu = createApplicationMenu(vscr);
-		menu_map(vscr->menu.icon_menu, vscr);
+		menu_map(vscr->menu.icon_menu);
 		wfree(vscr->menu.icon_menu->entries[1]->text);
 	}
 

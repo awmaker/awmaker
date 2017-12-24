@@ -510,7 +510,7 @@ static WMenu *makeWorkspaceMenu(virtual_screen *vscr)
 	WMenu *menu;
 
 	menu = menu_create(vscr, NULL);
-	menu_map(menu, vscr);
+	menu_map(menu);
 
 	if (!menu) {
 		wwarning(_("could not create submenu for window menu"));
@@ -540,7 +540,7 @@ static WMenu *makeOptionsMenu(virtual_screen *vscr)
 	int i;
 
 	menu = menu_create(vscr, NULL);
-	menu_map(menu, vscr);
+	menu_map(menu);
 
 	for (i = 0; i < wlengthof(menu_options_entries); i++) {
 		entry = wMenuAddCallback(menu, _(menu_options_entries[i]), execWindowOptionCommand, NULL);
@@ -562,7 +562,7 @@ static WMenu *makeMaximizeMenu(virtual_screen *vscr)
 	int i;
 
 	menu = menu_create(vscr, NULL);
-	menu_map(menu, vscr);
+	menu_map(menu);
 
 	for (i = 0; i < wlengthof(menu_maximize_entries); i++)
 		wMenuAddCallback(menu, _(menu_maximize_entries[i].label), execMaximizeCommand, NULL);
@@ -576,7 +576,7 @@ static WMenu *createWindowMenu(virtual_screen *vscr)
 	int i;
 
 	menu = menu_create(vscr, NULL);
-	menu_map(menu, vscr);
+	menu_map(menu);
 
 	for (i = 0; i < wlengthof(window_menu_entries); i++) {
 		WMenuEntry *entry;

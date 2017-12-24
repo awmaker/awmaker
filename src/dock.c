@@ -1399,13 +1399,13 @@ void clip_menu_create(virtual_screen *vscr)
 
 static void clip_menu_map(WMenu *menu, virtual_screen *vscr)
 {
-	menu_map(menu, vscr);
+	menu_map(menu);
 
 	if (vscr->clip.opt_menu)
-		menu_map(vscr->clip.opt_menu, vscr);
+		menu_map(vscr->clip.opt_menu);
 
 	if (vscr->clip.submenu)
-		menu_map(vscr->clip.submenu, vscr);
+		menu_map(vscr->clip.submenu);
 }
 
 static void clip_menu_unmap(virtual_screen *vscr, WMenu *menu)
@@ -1468,10 +1468,10 @@ static void drawer_menu_create(virtual_screen *vscr)
 
 static void drawer_menu_map(WMenu *menu, virtual_screen *vscr)
 {
-	menu_map(menu, vscr);
+	menu_map(menu);
 
 	if (vscr->dock.drawer_opt_menu)
-		menu_map(vscr->dock.drawer_opt_menu, vscr);
+		menu_map(vscr->dock.drawer_opt_menu);
 }
 
 static void drawer_menu_unmap(virtual_screen *vscr, WMenu *menu)
@@ -1517,10 +1517,10 @@ static WMenu *dock_menu_create(virtual_screen *vscr)
 
 static void dock_menu_map(WMenu *menu, virtual_screen *vscr)
 {
-	menu_map(menu, vscr);
+	menu_map(menu);
 
 	if (vscr->dock.pos_menu)
-		menu_map(vscr->dock.pos_menu, vscr);
+		menu_map(vscr->dock.pos_menu);
 }
 
 static void dock_menu_unmap(virtual_screen *vscr, WMenu *menu)

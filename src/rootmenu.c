@@ -854,7 +854,7 @@ static WMenuEntry *addWindowsMenu(virtual_screen *vscr, WMenu *menu, const char 
 	vscr->menu.flags.added_window_menu = 1;
 
 	wwmenu = menu_create(vscr, _("Window List"));
-	menu_map(wwmenu, vscr);
+	menu_map(wwmenu);
 
 	wwmenu->on_destroy = cleanupWindowsMenu;
 	vscr->menu.root_switch = wwmenu;
@@ -894,7 +894,7 @@ static WMenuEntry *addMenuEntry(WMenu *menu, const char *title, const char *shor
 				path = wstrdup(params);
 
 			dummy = menu_create(vscr, title);
-			menu_map(dummy, vscr);
+			menu_map(dummy);
 			dummy->on_destroy = removeShortcutsForMenu;
 			entry = wMenuAddCallback(menu, title, constructMenu, path);
 			entry->free_cdata = wfree;
@@ -912,7 +912,7 @@ static WMenuEntry *addMenuEntry(WMenu *menu, const char *title, const char *shor
 				path = wstrdup(params);
 
 			dummy = menu_create(vscr, title);
-			menu_map(dummy, vscr);
+			menu_map(dummy);
 			dummy->on_destroy = removeShortcutsForMenu;
 			entry = wMenuAddCallback(menu, title, constructPLMenuFromPipe, path);
 			entry->free_cdata = wfree;
@@ -1035,7 +1035,7 @@ static WMenu *parseCascade(virtual_screen *vscr, WMenu *menu, WMenuParser parser
 
 			/* start submenu */
 			cascade = menu_create(vscr, M_(title));
-			menu_map(cascade, vscr);
+			menu_map(cascade);
 			cascade->on_destroy = removeShortcutsForMenu;
 			if (!parseCascade(vscr, cascade, parser))
 				wMenuDestroy(cascade, True);
@@ -1078,7 +1078,7 @@ static WMenu *readMenu(virtual_screen *vscr, const char *flat_file, FILE *file)
 
 		if (strcasecmp(command, "MENU") == 0) {
 			menu = menu_create(vscr, M_(title));
-			menu_map(menu, vscr);
+			menu_map(menu);
 			menu->on_destroy = removeShortcutsForMenu;
 			if (!parseCascade(vscr, menu, parser)) {
 				wMenuDestroy(menu, True);
@@ -1362,7 +1362,7 @@ static WMenu *readMenuDirectory(virtual_screen *vscr, const char *title, char **
 	WMSortArray(files, myCompare);
 
 	menu = menu_create(vscr, M_(title));
-	menu_map(menu, vscr);
+	menu_map(menu);
 	menu->on_destroy = removeShortcutsForMenu;
 
 	WM_ITERATE_ARRAY(dirs, data, iter) {
@@ -1474,7 +1474,7 @@ static WMenu *makeDefaultMenu(virtual_screen *vscr)
 	wMenuAddCallback(menu, _("Restart"), restartCommand, NULL);
 	wMenuAddCallback(menu, _("Exit..."), exitCommand, NULL);
 
-	menu_map(menu, vscr);
+	menu_map(menu);
 
 	return menu;
 }
@@ -1621,7 +1621,7 @@ static WMenu *configureMenu(virtual_screen *vscr, WMPropList *definition)
 
 	mtitle = WMGetFromPLString(elem);
 	menu = menu_create(vscr, M_(mtitle));
-	menu_map(menu, vscr);
+	menu_map(menu);
 	menu->on_destroy = removeShortcutsForMenu;
 
 	configure_menu_entries(vscr, definition, menu, count);
