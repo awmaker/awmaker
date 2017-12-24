@@ -51,8 +51,7 @@ static void resizebarMouseDown(WObjDescriptor * desc, XEvent * event);
 
 static void checkTitleSize(WFrameWindow * fwin);
 
-static void paintButton(WFrameWindow *fwin, WCoreWindow *button,
-			WPixmap *image, int pushed);
+static void paintButton(WFrameWindow *fwin, WCoreWindow *button, int pushed);
 
 static void updateTitlebar(WFrameWindow *fwin);
 
@@ -1475,8 +1474,7 @@ int wFrameWindowChangeTitle(WFrameWindow *fwin, const char *new_title)
 #ifdef XKB_BUTTON_HINT
 void wFrameWindowUpdateLanguageButton(WFrameWindow *fwin)
 {
-	paintButton(fwin, fwin->language_button,
-		    fwin->languagebutton_image, True);
+	paintButton(fwin, fwin->language_button, True);
 }
 #endif				/* XKB_BUTTON_HINT */
 
@@ -1538,7 +1536,7 @@ static void checkTitleSize(WFrameWindow *fwin)
 		fwin->flags.incomplete_title = 0;
 }
 
-static void paintButton(WFrameWindow *fwin, WCoreWindow *button, WPixmap *image, int pushed)
+static void paintButton(WFrameWindow *fwin, WCoreWindow *button, int pushed)
 {
 	WScreen *scr = button->vscr->screen_ptr;
 	GC copy_gc = scr->copy_gc;
@@ -1547,6 +1545,7 @@ static void paintButton(WFrameWindow *fwin, WCoreWindow *button, WPixmap *image,
 	int btn_width = fwin->bordersize;
 	int btn_height = fwin->bordersize;
 	WTexture *texture = fwin->title_texture[fwin->flags.state];
+	WPixmap *image = fwin->rbutton_image; /* Avoid compiler warning */
 	unsigned long color = WMColorPixel(fwin->title_color[fwin->flags.state]);
 
 #ifdef XKB_BUTTON_HINT
@@ -1661,20 +1660,17 @@ static void handleButtonExpose(WObjDescriptor *desc, XEvent *event)
 #ifdef XKB_BUTTON_HINT
 	if (button == fwin->language_button) {
 		if (wPreferences.modelock)
-			paintButton(fwin, button,
-				    fwin->languagebutton_image, False);
+			paintButton(fwin, button, False);
 		return;
 	}
 #endif
 	if (button == fwin->left_button) {
-		paintButton(fwin, button,
-			    fwin->lbutton_image, False);
+		paintButton(fwin, button, False);
 		return;
 	}
 
 	if (button == fwin->right_button)
-		paintButton(fwin, button,
-			    fwin->rbutton_image, False);
+		paintButton(fwin, button, False);
 }
 
 static void titlebarMouseDown(WObjDescriptor *desc, XEvent *event)
@@ -1704,7 +1700,6 @@ static void buttonMouseDown(WObjDescriptor *desc, XEvent *event)
 {
 	WFrameWindow *fwin = desc->parent;
 	WCoreWindow *button = desc->self;
-	WPixmap *image = fwin->rbutton_image; /* Avoid compiler warning */
 	XEvent ev;
 	int done = 0, execute = 1;
 	int clickButton = event->xbutton.button;
@@ -1716,22 +1711,13 @@ static void buttonMouseDown(WObjDescriptor *desc, XEvent *event)
 		return;
 	}
 
-	if (button == fwin->left_button)
-		image = fwin->lbutton_image;
-
-	if (button == fwin->right_button)
-		image = fwin->rbutton_image;
-
 #ifdef XKB_BUTTON_HINT
-	if (button == fwin->language_button) {
+	if (button == fwin->language_button)
 		if (!wPreferences.modelock)
 			return;
-
-		image = fwin->languagebutton_image;
-	}
 #endif
 
-	paintButton(fwin, button, image, True);
+	paintButton(fwin, button, True);
 
 	while (!done) {
 		WMMaskEvent(dpy, LeaveWindowMask | EnterWindowMask | ButtonReleaseMask
@@ -1739,12 +1725,12 @@ static void buttonMouseDown(WObjDescriptor *desc, XEvent *event)
 		switch (ev.type) {
 		case LeaveNotify:
 			execute = 0;
-			paintButton(fwin, button, image, False);
+			paintButton(fwin, button, False);
 			break;
 
 		case EnterNotify:
 			execute = 1;
-			paintButton(fwin, button, image, True);
+			paintButton(fwin, button, True);
 			break;
 
 		case ButtonPress:
@@ -1760,7 +1746,7 @@ static void buttonMouseDown(WObjDescriptor *desc, XEvent *event)
 		}
 	}
 
-	paintButton(fwin, button, image, False);
+	paintButton(fwin, button, False);
 
 	if (!execute)
 		return;
