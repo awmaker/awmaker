@@ -1702,7 +1702,6 @@ static void buttonMouseDown(WObjDescriptor *desc, XEvent *event)
 	WTexture *texture;
 	unsigned long pixel;
 	int clickButton = event->xbutton.button;
-	int width = 0, height = 0;
 
 	if (IsDoubleClick(fwin->core->vscr, event)) {
 		if (button == fwin->right_button && fwin->on_dblclick_right)
@@ -1711,17 +1710,11 @@ static void buttonMouseDown(WObjDescriptor *desc, XEvent *event)
 		return;
 	}
 
-	if (button == fwin->left_button) {
+	if (button == fwin->left_button)
 		image = fwin->lbutton_image;
-		width = fwin->bordersize;
-		height = fwin->bordersize;
-	}
 
-	if (button == fwin->right_button) {
+	if (button == fwin->right_button)
 		image = fwin->rbutton_image;
-		width = fwin->bordersize;
-		height = fwin->bordersize;
-	}
 
 #ifdef XKB_BUTTON_HINT
 	if (button == fwin->language_button) {
@@ -1729,14 +1722,12 @@ static void buttonMouseDown(WObjDescriptor *desc, XEvent *event)
 			return;
 
 		image = fwin->languagebutton_image;
-		width = fwin->bordersize;
-		height = fwin->bordersize;
 	}
 #endif
 
 	pixel = WMColorPixel(fwin->title_color[fwin->flags.state]);
 	texture = fwin->title_texture[fwin->flags.state];
-	paintButton(button, texture, pixel, image, True, width, height);
+	paintButton(button, texture, pixel, image, True, fwin->bordersize, fwin->bordersize);
 
 	while (!done) {
 		WMMaskEvent(dpy, LeaveWindowMask | EnterWindowMask | ButtonReleaseMask
@@ -1744,12 +1735,12 @@ static void buttonMouseDown(WObjDescriptor *desc, XEvent *event)
 		switch (ev.type) {
 		case LeaveNotify:
 			execute = 0;
-			paintButton(button, texture, pixel, image, False, width, height);
+			paintButton(button, texture, pixel, image, False, fwin->bordersize, fwin->bordersize);
 			break;
 
 		case EnterNotify:
 			execute = 1;
-			paintButton(button, texture, pixel, image, True, width, height);
+			paintButton(button, texture, pixel, image, True, fwin->bordersize, fwin->bordersize);
 			break;
 
 		case ButtonPress:
@@ -1765,7 +1756,7 @@ static void buttonMouseDown(WObjDescriptor *desc, XEvent *event)
 		}
 	}
 
-	paintButton(button, texture, pixel, image, False, width, height);
+	paintButton(button, texture, pixel, image, False, fwin->bordersize, fwin->bordersize);
 
 	if (!execute)
 		return;
