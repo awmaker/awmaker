@@ -387,6 +387,7 @@ static void right_button_unmap(WFrameWindow *fwin)
 static void titlebar_create(WFrameWindow *fwin, int theight, int flags)
 {
 	fwin->top_width = theight;
+	fwin->titlebar_height = theight;
 	fwin->titlebar_width = fwin->width;
 	fwin->titlebar = wcore_create(fwin->titlebar_width, theight);
 
@@ -424,7 +425,7 @@ static void titlebar_map(WFrameWindow *fwin, int theight)
 	fwin->top_width = theight;
 
 	wcore_map(fwin->titlebar, fwin->core, fwin->vscr,
-		  0, 0, fwin->titlebar_width, fwin->titlebar->height, 0,
+		  0, 0, fwin->titlebar_width, fwin->titlebar_height, 0,
 		  fwin->vscr->screen_ptr->w_depth,
 		  fwin->vscr->screen_ptr->w_visual,
 		  fwin->vscr->screen_ptr->w_colormap);
@@ -817,6 +818,7 @@ static void updateTitlebar(WFrameWindow *fwin)
 	}
 
 	fwin->titlebar_width = w;
+	fwin->titlebar_height = theight;
 	wCoreConfigure(fwin->titlebar, x, 0, w, theight);
 }
 
@@ -1127,8 +1129,8 @@ static void remakeTexture_titlebar(WFrameWindow *fwin, int state)
 			width = fwin->width + 1;
 
 			renderTexture(fwin->vscr->screen_ptr, fwin->title_texture[state],
-				      width, fwin->titlebar->height,
-				      fwin->titlebar->height, fwin->titlebar->height,
+				      width, fwin->titlebar_height,
+				      fwin->titlebar_height, fwin->titlebar_height,
 				      &pmap,
 				      left, &lpmap,
 #ifdef XKB_BUTTON_HINT
@@ -1291,7 +1293,7 @@ void wFrameWindowPaint(WFrameWindow *fwin)
 	if (fwin->titlebar && fwin->flags.titlebar && !fwin->flags.repaint_only_resizebar
 	    && fwin->title_texture[state]->any.type == WTEX_SOLID)
 		wDrawBevel(fwin->titlebar->window, fwin->titlebar_width,
-			   fwin->titlebar->height, (WTexSolid *) fwin->title_texture[state], WREL_RAISED);
+			   fwin->titlebar_height, (WTexSolid *) fwin->title_texture[state], WREL_RAISED);
 
 	if (fwin->resizebar && fwin->flags.resizebar &&
 	    !fwin->flags.repaint_only_titlebar &&
@@ -1411,7 +1413,7 @@ static void reconfigure(WFrameWindow * fwin, int x, int y, int width, int height
 			if (fwin->right_button && fwin->flags.map_right_button)
 				XMoveWindow(dpy, fwin->right_button->window,
 					    width - fwin->bordersize - 3,
-					    (fwin->titlebar->height - fwin->bordersize) / 2);
+					    (fwin->titlebar_height - fwin->bordersize) / 2);
 		}
 		updateTitlebar(fwin);
 		checkTitleSize(fwin);

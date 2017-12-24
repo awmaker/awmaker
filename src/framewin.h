@@ -173,6 +173,7 @@ typedef struct WFrameWindow {
 
 	/* Titlebar */
 	int titlebar_width;
+	int titlebar_height;
 } WFrameWindow;
 
 void wframewin_set_borders(WFrameWindow *fwin, int flags);
