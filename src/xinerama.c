@@ -214,7 +214,7 @@ Bool wAppIconTouchesHead(WAppIcon *aicon, int head)
 	if (!aicon || !aicon->icon)
 		return False;
 
-	vscr = aicon->icon->core->vscr;
+	vscr = aicon->icon->vscr;
 	rect = wGetRectForHead(vscr->screen_ptr, head);
 	a = calcIntersectionArea(aicon->x_pos, aicon->y_pos,
 				 aicon->icon->width, aicon->icon->height,
