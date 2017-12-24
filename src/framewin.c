@@ -387,7 +387,7 @@ static void right_button_unmap(WFrameWindow *fwin)
 static void titlebar_create(WFrameWindow *fwin, int theight, int flags)
 {
 	fwin->top_width = theight;
-	fwin->titlebar_width = fwin->width + 1; /* TODO kix: Why "+ 1" ? */
+	fwin->titlebar_width = fwin->width;
 	fwin->titlebar = wcore_create(fwin->titlebar_width, theight);
 
 	if (flags & WFF_LEFT_BUTTON) {
@@ -778,7 +778,7 @@ static void updateTitlebar(WFrameWindow *fwin)
 	if (theight < *fwin->title_min_height)
 		theight = *fwin->title_min_height;
 
-	w = fwin->width + 1;
+	w = fwin->width;
 
 #ifdef XKB_BUTTON_HINT
 	if (fwin->language_button && fwin->flags.map_language_button) {
