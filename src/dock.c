@@ -398,7 +398,7 @@ static WMArray *getSelected(WDock *dock)
 static void paintClipButtons(WAppIcon *clipIcon, Bool lpushed, Bool rpushed)
 {
 	Window win = clipIcon->icon->core->window;
-	WScreen *scr = clipIcon->icon->core->vscr->screen_ptr;
+	WScreen *scr = clipIcon->icon->vscr->screen_ptr;
 	XPoint p[4];
 	int pt = CLIP_BUTTON_SIZE * ICON_SIZE / 64;
 	int tp = ICON_SIZE - pt;
@@ -933,7 +933,7 @@ static void hideCallback(WMenu *menu, WMenuEntry *entry)
 	wapp = wApplicationOf(btn->icon->owner->main_window);
 
 	if (wapp->flags.hidden) {
-		wWorkspaceChange(btn->icon->core->vscr, wapp->last_workspace);
+		wWorkspaceChange(btn->icon->vscr, wapp->last_workspace);
 		wUnhideApplication(wapp, False, False);
 	} else {
 		wHideApplication(wapp);
@@ -956,7 +956,7 @@ static void unhideHereCallback(WMenu *menu, WMenuEntry *entry)
 static void switchWSCommand(WMenu *menu, WMenuEntry *entry)
 {
 	WAppIcon *btn, *icon = (WAppIcon *) entry->clientdata;
-	virtual_screen *vscr = icon->icon->core->vscr;
+	virtual_screen *vscr = icon->icon->vscr;
 	WDock *src, *dest;
 	WMArray *selectedIcons;
 	int x, y;
@@ -993,7 +993,7 @@ static void switchWSCommand(WMenu *menu, WMenuEntry *entry)
 
 static void launchDockedApplication(WAppIcon *btn, Bool withSelection)
 {
-	virtual_screen *vscr = btn->icon->core->vscr;
+	virtual_screen *vscr = btn->icon->vscr;
 
 	if (btn->launching)
 		return;
@@ -1902,7 +1902,7 @@ void clip_destroy(WDock *dock)
 
 void wClipIconPaint(WAppIcon *aicon)
 {
-	virtual_screen *vscr = aicon->icon->core->vscr;
+	virtual_screen *vscr = aicon->icon->vscr;
 	WScreen *scr = vscr->screen_ptr;
 	WWorkspace *workspace = vscr->workspace.array[vscr->workspace.current];
 	WMColor *color;
@@ -1946,7 +1946,7 @@ void wClipIconPaint(WAppIcon *aicon)
 
 static void dockIconPaint(WAppIcon *btn)
 {
-	virtual_screen *vscr = btn->icon->core->vscr;
+	virtual_screen *vscr = btn->icon->vscr;
 
 	if (btn == vscr->clip.icon) {
 		wClipIconPaint(btn);
@@ -4476,7 +4476,7 @@ static void swapDock(WDock *dock)
 
 static pid_t execCommand(WAppIcon *btn, const char *command, WSavedState *state)
 {
-	virtual_screen *vscr = btn->icon->core->vscr;
+	virtual_screen *vscr = btn->icon->vscr;
 	WScreen *scr = vscr->screen_ptr;
 	pid_t pid;
 	char **argv;
@@ -5623,7 +5623,7 @@ static void dock_icon_mouse_down(WObjDescriptor *desc, XEvent *event)
 {
 	WAppIcon *aicon = desc->parent;
 	WDock *dock = aicon->dock;
-	virtual_screen *vscr = aicon->icon->core->vscr;
+	virtual_screen *vscr = aicon->icon->vscr;
 	WAppIcon *btn;
 
 	if (aicon->editing || WCHECK_STATE(WSTATE_MODAL))
@@ -5701,7 +5701,7 @@ static void clip_icon_mouse_down(WObjDescriptor *desc, XEvent *event)
 {
 	WAppIcon *aicon = desc->parent;
 	WDock *dock = aicon->dock;
-	virtual_screen *vscr = aicon->icon->core->vscr;
+	virtual_screen *vscr = aicon->icon->vscr;
 	WScreen *scr = vscr->screen_ptr;
 	int sts;
 
@@ -5815,7 +5815,7 @@ static void drawer_icon_mouse_down(WObjDescriptor *desc, XEvent *event)
 {
 	WAppIcon *aicon = desc->parent;
 	WDock *dock = aicon->dock;
-	virtual_screen *vscr = aicon->icon->core->vscr;
+	virtual_screen *vscr = aicon->icon->vscr;
 	WAppIcon *btn;
 
 	if (aicon->editing || WCHECK_STATE(WSTATE_MODAL))
@@ -5971,7 +5971,7 @@ static void drawer_enter_notify(WObjDescriptor *desc, XEvent *event)
 	if (desc->parent_type != WCLASS_DOCK_ICON)
 		return;
 
-	vscr = btn->icon->core->vscr;
+	vscr = btn->icon->vscr;
 	dock = btn->dock;
 
 	if (dock == NULL)
@@ -6225,7 +6225,7 @@ static void clipAutoRaise(void *cdata)
 
 static Bool iconCanBeOmnipresent(WAppIcon *aicon)
 {
-	virtual_screen *vscr = aicon->icon->core->vscr;
+	virtual_screen *vscr = aicon->icon->vscr;
 	WDock *clip;
 	WAppIcon *btn;
 	int i, j;
@@ -6251,7 +6251,7 @@ static Bool iconCanBeOmnipresent(WAppIcon *aicon)
 
 int wClipMakeIconOmnipresent(WAppIcon *aicon, int omnipresent)
 {
-	virtual_screen *vscr = aicon->icon->core->vscr;
+	virtual_screen *vscr = aicon->icon->vscr;
 	WAppIconChain *new_entry, *tmp, *tmp1;
 	int status = WO_SUCCESS;
 
@@ -6555,7 +6555,7 @@ static void removeDrawerCallback(WMenu *menu, WMenuEntry *entry)
 void wDrawerIconPaint(WAppIcon *dicon)
 {
 	Window win = dicon->icon->core->window;
-	virtual_screen *vscr = dicon->icon->core->vscr;
+	virtual_screen *vscr = dicon->icon->vscr;
 	WScreen *scr = vscr->screen_ptr;
 	XPoint p[4];
 	GC gc = scr->draw_gc;
