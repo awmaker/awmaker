@@ -149,16 +149,16 @@ static void execWindowOptionCommand(WMenu *menu, WMenuEntry *entry)
 	switch (entry->order) {
 	case WO_KEEP_ON_TOP:
 		if (wwin->frame->core->stacking->window_level != WMFloatingLevel)
-			ChangeStackingLevel(wwin->frame->core, WMFloatingLevel);
+			ChangeStackingLevel(wwin->frame->vscr, wwin->frame->core, WMFloatingLevel);
 		else
-			ChangeStackingLevel(wwin->frame->core, WMNormalLevel);
+			ChangeStackingLevel(wwin->frame->vscr, wwin->frame->core, WMNormalLevel);
 		break;
 
 	case WO_KEEP_AT_BOTTOM:
 		if (wwin->frame->core->stacking->window_level != WMSunkenLevel)
-			ChangeStackingLevel(wwin->frame->core, WMSunkenLevel);
+			ChangeStackingLevel(wwin->frame->vscr, wwin->frame->core, WMSunkenLevel);
 		else
-			ChangeStackingLevel(wwin->frame->core, WMNormalLevel);
+			ChangeStackingLevel(wwin->frame->vscr, wwin->frame->core, WMNormalLevel);
 		break;
 
 	case WO_OMNIPRESENT:

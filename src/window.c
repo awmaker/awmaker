@@ -263,7 +263,7 @@ void wWindowDestroy(WWindow *wwin)
 	}
 
 	if (wwin->icon) {
-		RemoveFromStackList(wwin->icon->core);
+		RemoveFromStackList(wwin->icon->vscr, wwin->icon->core);
 		wIconDestroy(wwin->icon);
 		if (wPreferences.auto_arrange_icons)
 			wArrangeIcons(wwin->vscr, True);
@@ -1468,7 +1468,7 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 	/* raise is set to true if we un-hid the app when this window was born.
 	 * we raise, else old windows of this app will be above this new one. */
 	if (raise)
-		wRaiseFrame(wwin->frame->core);
+		wRaiseFrame(wwin->frame->vscr, wwin->frame->core);
 
 	wwindow_update_title(dpy, window, wwin);
 
@@ -2904,7 +2904,7 @@ static void resizebarMouseDown(WCoreWindow *sender, void *data, XEvent *event)
 		wSetFocusTo(wwin->vscr, wwin);
 
 	if (event->xbutton.button == Button1)
-		wRaiseFrame(wwin->frame->core);
+		wRaiseFrame(wwin->frame->vscr, wwin->frame->core);
 
 	if (event->xbutton.window != wwin->frame->resizebar->window)
 		if (XGrabPointer(dpy, wwin->frame->resizebar->window, True,
@@ -3000,7 +3000,7 @@ static void frameMouseDown(WObjDescriptor *desc, XEvent *event)
 		wSetFocusTo(wwin->vscr, wwin);
 
 	if (event->xbutton.button == Button1)
-		wRaiseFrame(wwin->frame->core);
+		wRaiseFrame(wwin->frame->vscr, wwin->frame->core);
 
 	if (event->xbutton.state & ControlMask) {
 		if (event->xbutton.button == Button4) {
@@ -3063,9 +3063,9 @@ static void titlebarMouseDown(WCoreWindow *sender, void *data, XEvent *event)
 	if (event->xbutton.button == Button1 || event->xbutton.button == Button2) {
 		if (event->xbutton.button == Button1) {
 			if (event->xbutton.state & MOD_MASK)
-				wLowerFrame(wwin->frame->core);
+				wLowerFrame(wwin->frame->vscr, wwin->frame->core);
 			else
-				wRaiseFrame(wwin->frame->core);
+				wRaiseFrame(wwin->frame->vscr, wwin->frame->core);
 		}
 
 		if ((event->xbutton.state & ShiftMask)

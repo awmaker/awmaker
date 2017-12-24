@@ -164,10 +164,10 @@ static void moveFrameToUnder(WCoreWindow *under, WCoreWindow *frame)
  * 	Windows may be restacked.
  *----------------------------------------------------------------------
  */
-void CommitStackingForWindow(WCoreWindow *frame)
+void CommitStackingForWindow(virtual_screen *vscr, WCoreWindow *frame)
 {
 	int level = frame->stacking->window_level;
-	WScreen *scr = frame->vscr->screen_ptr;
+	WScreen *scr = vscr->screen_ptr;
 
 	if (frame->stacking->above == NULL) {
 		WMBagIterator iter;
@@ -207,11 +207,11 @@ void CommitStackingForWindow(WCoreWindow *frame)
  *
  *----------------------------------------------------------------------
  */
-void wRaiseFrame(WCoreWindow *frame)
+void wRaiseFrame(virtual_screen *vscr, WCoreWindow *frame)
 {
 	WCoreWindow *wlist = frame;
 	int level = frame->stacking->window_level;
-	WScreen *scr = frame->vscr->screen_ptr;
+	WScreen *scr = vscr->screen_ptr;
 
 	/* already on top */
 	if (frame->stacking->above == NULL)
@@ -239,7 +239,7 @@ void wRaiseFrame(WCoreWindow *frame)
 		wlist = wlist->stacking->under;
 	while (wlist && wlist != frame) {
 		if (wlist->stacking->child_of == frame) {
-			wRaiseFrame(wlist);
+			wRaiseFrame(vscr, wlist);
 			goto again;
 		}
 		wlist = wlist->stacking->above;
@@ -274,12 +274,12 @@ void wRaiseFrame(WCoreWindow *frame)
 	notifyStackChange(frame, "raise");
 }
 
-void wRaiseLowerFrame(WCoreWindow *frame)
+void wRaiseLowerFrame(virtual_screen *vscr, WCoreWindow *frame)
 {
 	if (!frame->stacking->above
 	    || (frame->stacking->window_level != frame->stacking->above->stacking->window_level)) {
 
-		wLowerFrame(frame);
+		wLowerFrame(vscr, frame);
 	} else {
 		WCoreWindow *scan = frame->stacking->above;
 		WWindow *frame_wwin = (WWindow *) frame->descriptor.parent;
@@ -298,16 +298,16 @@ void wRaiseLowerFrame(WCoreWindow *frame)
 		}
 
 		if (scan) {
-			wRaiseFrame(frame);
+			wRaiseFrame(vscr, frame);
 		} else {
-			wLowerFrame(frame);
+			wLowerFrame(vscr, frame);
 		}
 	}
 }
 
-void wLowerFrame(WCoreWindow *frame)
+void wLowerFrame(virtual_screen *vscr, WCoreWindow *frame)
 {
-	WScreen *scr = frame->vscr->screen_ptr;
+	WScreen *scr = vscr->screen_ptr;
 	WCoreWindow *wlist = frame;
 	int level = frame->stacking->window_level;
 
@@ -400,11 +400,10 @@ void wLowerFrame(WCoreWindow *frame)
  * 	The frame is added to it's screen's window list.
  *----------------------------------------------------------------------
  */
-void AddToStackList(WCoreWindow *frame)
+void AddToStackList(virtual_screen *vscr, WCoreWindow *frame)
 {
 	WCoreWindow *curtop, *wlist;
 	int index = frame->stacking->window_level;
-	virtual_screen *vscr = frame->vscr;
 	WScreen *scr = vscr->screen_ptr;
 	WCoreWindow *trans = NULL;
 
@@ -464,17 +463,17 @@ void AddToStackList(WCoreWindow *frame)
  *      Window level for frame may be changed.
  *----------------------------------------------------------------------
  */
-void MoveInStackListAbove(WCoreWindow *next, WCoreWindow *frame)
+void MoveInStackListAbove(virtual_screen *vscr, WCoreWindow *next, WCoreWindow *frame)
 {
 	WCoreWindow *tmpw;
-	WScreen *scr = frame->vscr->screen_ptr;
+	WScreen *scr = vscr->screen_ptr;
 	int index;
 
 	if (!next || frame->stacking->under == next)
 		return;
 
 	if (frame->stacking->window_level != next->stacking->window_level)
-		ChangeStackingLevel(frame, next->stacking->window_level);
+		ChangeStackingLevel(vscr, frame, next->stacking->window_level);
 
 	index = frame->stacking->window_level;
 
@@ -536,17 +535,17 @@ void MoveInStackListAbove(WCoreWindow *next, WCoreWindow *frame)
  *      Window level for frame may be changed.
  *----------------------------------------------------------------------
  */
-void MoveInStackListUnder(WCoreWindow *prev, WCoreWindow *frame)
+void MoveInStackListUnder(virtual_screen *vscr, WCoreWindow *prev, WCoreWindow *frame)
 {
 	WCoreWindow *tmpw;
 	int index;
-	WScreen *scr = frame->vscr->screen_ptr;
+	WScreen *scr = vscr->screen_ptr;
 
 	if (!prev || frame->stacking->above == prev)
 		return;
 
 	if (frame->stacking->window_level != prev->stacking->window_level)
-		ChangeStackingLevel(frame, prev->stacking->window_level);
+		ChangeStackingLevel(vscr, frame, prev->stacking->window_level);
 
 	index = frame->stacking->window_level;
 
@@ -571,7 +570,7 @@ void MoveInStackListUnder(WCoreWindow *prev, WCoreWindow *frame)
 	WMPostNotificationName(WMNResetStacking, scr, NULL);
 }
 
-void RemoveFromStackList(WCoreWindow *frame)
+void RemoveFromStackList(virtual_screen *vscr, WCoreWindow *frame)
 {
 	int index = frame->stacking->window_level;
 
@@ -587,14 +586,14 @@ void RemoveFromStackList(WCoreWindow *frame)
 	if (frame->stacking->above)
 		frame->stacking->above->stacking->under = frame->stacking->under;
 	else			/* this was the first window on the list */
-		WMSetInBag(frame->vscr->screen_ptr->stacking_list, index, frame->stacking->under);
+		WMSetInBag(vscr->screen_ptr->stacking_list, index, frame->stacking->under);
 
-	frame->vscr->window_count--;
+	vscr->window_count--;
 
-	WMPostNotificationName(WMNResetStacking, frame->vscr->screen_ptr, NULL);
+	WMPostNotificationName(WMNResetStacking, vscr->screen_ptr, NULL);
 }
 
-void ChangeStackingLevel(WCoreWindow *frame, int new_level)
+void ChangeStackingLevel(virtual_screen *vscr, WCoreWindow *frame, int new_level)
 {
 	int old_level;
 
@@ -603,12 +602,12 @@ void ChangeStackingLevel(WCoreWindow *frame, int new_level)
 
 	old_level = frame->stacking->window_level;
 
-	RemoveFromStackList(frame);
+	RemoveFromStackList(vscr, frame);
 	frame->stacking->window_level = new_level;
-	AddToStackList(frame);
+	AddToStackList(vscr, frame);
 
 	if (old_level > new_level)
-		wRaiseFrame(frame);
+		wRaiseFrame(vscr, frame);
 	else
-		wLowerFrame(frame);
+		wLowerFrame(vscr, frame);
 }

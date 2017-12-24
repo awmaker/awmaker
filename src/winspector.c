@@ -721,11 +721,11 @@ static void applySettings(WMWidget *button, void *client_data)
 	 * if the level did not change, ChangeStackingLevel will do nothing anyway
 	 */
 	if (WFLAGP(wwin_inspected, floating))
-		ChangeStackingLevel(wwin_inspected->frame->core, WMFloatingLevel);
+		ChangeStackingLevel(wwin_inspected->frame->vscr, wwin_inspected->frame->core, WMFloatingLevel);
 	else if (WFLAGP(wwin_inspected, sunken))
-		ChangeStackingLevel(wwin_inspected->frame->core, WMSunkenLevel);
+		ChangeStackingLevel(wwin_inspected->frame->vscr, wwin_inspected->frame->core, WMSunkenLevel);
 	else
-		ChangeStackingLevel(wwin_inspected->frame->core, WMNormalLevel);
+		ChangeStackingLevel(wwin_inspected->frame->vscr, wwin_inspected->frame->core, WMNormalLevel);
 
 	wwin_inspected->flags.omnipresent = 0;
 

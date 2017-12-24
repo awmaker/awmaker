@@ -874,9 +874,9 @@ static void miniwindowMouseDown(WObjDescriptor *desc, XEvent *event)
 
 	if (event->xbutton.button == Button1) {
 		if (event->xbutton.state & MOD_MASK)
-			wLowerFrame(icon->core);
+			wLowerFrame(icon->vscr, icon->core);
 		else
-			wRaiseFrame(icon->core);
+			wRaiseFrame(icon->vscr, icon->core);
 		if (event->xbutton.state & ShiftMask) {
 			wIconSelect(icon);
 			wSelectWindow(icon->owner, !wwin->flags.selected);

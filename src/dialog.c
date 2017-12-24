@@ -1398,7 +1398,7 @@ void panel_show(virtual_screen *vscr, int type)
 
 		if (legalPanel) {
 			if (legalPanel->vscr->screen_ptr == vscr->screen_ptr) {
-				wRaiseFrame(legalPanel->wwin->frame->core);
+				wRaiseFrame(legalPanel->wwin->frame->vscr, legalPanel->wwin->frame->core);
 				wSetFocusTo(vscr, legalPanel->wwin);
 			}
 
@@ -1418,7 +1418,7 @@ void panel_show(virtual_screen *vscr, int type)
 
 		if (infoPanel) {
 			if (infoPanel->vscr->screen_ptr == vscr->screen_ptr) {
-				wRaiseFrame(infoPanel->wwin->frame->core);
+				wRaiseFrame(infoPanel->wwin->frame->vscr, infoPanel->wwin->frame->core);
 				wSetFocusTo(vscr, infoPanel->wwin);
 			}
 

@@ -1177,7 +1177,7 @@ static void doStateAtom(WWindow *wwin, Atom state, int set, Bool init)
 			wwin->client_flags.floating = set;
 		} else {
 			wwin->client_flags.floating = set;
-			ChangeStackingLevel(wwin->frame->core, getWindowLayer(wwin));
+			ChangeStackingLevel(wwin->frame->vscr, wwin->frame->core, getWindowLayer(wwin));
 		}
 
 	} else if (state == net_wm_state_below) {
@@ -1188,7 +1188,7 @@ static void doStateAtom(WWindow *wwin, Atom state, int set, Bool init)
 			wwin->client_flags.sunken = set;
 		} else {
 			wwin->client_flags.sunken = set;
-			ChangeStackingLevel(wwin->frame->core, getWindowLayer(wwin));
+			ChangeStackingLevel(wwin->frame->vscr, wwin->frame->core, getWindowLayer(wwin));
 		}
 
 	} else {
@@ -1204,7 +1204,7 @@ static void removeIcon(WWindow *wwin)
 		return;
 	if (wwin->flags.miniaturized && wwin->icon->mapped) {
 		XUnmapWindow(dpy, wwin->icon->core->window);
-		RemoveFromStackList(wwin->icon->core);
+		RemoveFromStackList(wwin->icon->vscr, wwin->icon->core);
 		wIconDestroy(wwin->icon);
 		wwin->icon = NULL;
 	}
@@ -1372,7 +1372,7 @@ static void updateWindowType(WWindow *wwin)
 	}
 
 	if (wwin->frame != NULL) {
-		ChangeStackingLevel(wwin->frame->core, layer);
+		ChangeStackingLevel(wwin->frame->vscr, wwin->frame->core, layer);
 		wwin->frame->flags.need_texture_change = 1;
 		wWindowConfigureBorders(wwin);
 		wFrameWindowPaint(wwin->frame);

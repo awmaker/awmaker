@@ -193,7 +193,7 @@ void paint_app_icon(WApplication *wapp)
 		if (wapp->app_icon->next == NULL && wapp->app_icon->prev == NULL) {
 			PlaceIcon(vscr, &x, &y, wGetHeadForWindow(wapp->main_window_desc));
 			wAppIconMove(wapp->app_icon, x, y);
-			wLowerFrame(icon->core);
+			wLowerFrame(icon->vscr, icon->core);
 		}
 	}
 
@@ -308,7 +308,7 @@ static void wAppIcon_map(WAppIcon *aicon)
 	wXDNDMakeAwareness(aicon->icon->core->window);
 #endif
 
-	AddToStackList(aicon->icon->core);
+	AddToStackList(aicon->icon->vscr, aicon->icon->core);
 }
 
 WAppIcon *dock_icon_create(virtual_screen *vscr, char *command, char *wm_class, char *wm_instance)
@@ -339,7 +339,7 @@ WAppIcon *create_appicon(virtual_screen *vscr, char *command, char *wm_class, ch
 
 void wAppIconDestroy(WAppIcon *aicon)
 {
-	RemoveFromStackList(aicon->icon->core);
+	RemoveFromStackList(aicon->icon->vscr, aicon->icon->core);
 	wIconDestroy(aicon->icon);
 	if (aicon->command)
 		wfree(aicon->command);
@@ -646,12 +646,12 @@ void appicon_map(WAppIcon *aicon, virtual_screen *vscr)
 	wXDNDMakeAwareness(wcore->window);
 #endif
 
-	AddToStackList(wcore);
+	AddToStackList(vscr, wcore);
 }
 
 void appicon_unmap(WAppIcon *aicon)
 {
-	RemoveFromStackList(aicon->icon->core);
+	RemoveFromStackList(aicon->icon->vscr, aicon->icon->core);
 	unmap_icon_image(aicon->icon);
 	wcore_unmap(aicon->icon->core);
 }
@@ -817,12 +817,12 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 		return False;
 
 	if (!(event->xbutton.state & MOD_MASK)) {
-		wRaiseFrame(icon->core);
+		wRaiseFrame(icon->vscr, icon->core);
 	} else {
 		/* If Mod is pressed for an docked appicon, assume it is to undock it,
 		 * so don't lower it */
 		if (originalDock == NULL)
-			wLowerFrame(icon->core);
+			wLowerFrame(icon->vscr, icon->core);
 	}
 
 	if (XGrabPointer(dpy, icon->core->window, True, ButtonMotionMask
@@ -975,7 +975,7 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 					if (theNewDock->auto_raise_lower) {
 						wDockRaise(theNewDock);
 						/* And raise the moving tile above it */
-						wRaiseFrame(aicon->icon->core);
+						wRaiseFrame(aicon->icon->vscr, aicon->icon->core);
 					}
 					lastDock = theNewDock;
 				}

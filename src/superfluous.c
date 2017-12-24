@@ -228,7 +228,7 @@ reinit:
 
 	XMoveWindow(dpy, aicon->icon->core->window,
 			aicon->x_pos, aicon->y_pos);
-	CommitStackingForWindow(aicon->icon->core);
+	CommitStackingForWindow(aicon->icon->vscr, aicon->icon->core);
 	data->wapp->flags.bouncing = 0;
 	WMDeleteTimerHandler(data->timer);
 	wApplicationDestroy(data->wapp);

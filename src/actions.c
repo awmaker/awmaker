@@ -222,7 +222,7 @@ void wSetFocusTo(virtual_screen *vscr, WWindow *wwin)
 
 		/* reset fullscreen if temporarily removed due to lost focus*/
 		if (wwin->flags.fullscreen)
-			ChangeStackingLevel(wwin->frame->core, WMFullscreenLevel);
+			ChangeStackingLevel(wwin->frame->vscr, wwin->frame->core, WMFullscreenLevel);
 	}
 
 	wWindowFocus(wwin, focused);
@@ -840,7 +840,7 @@ void wFullscreenWindow(WWindow *wwin)
 
 	wWindowConfigureBorders(wwin);
 
-	ChangeStackingLevel(wwin->frame->core, WMFullscreenLevel);
+	ChangeStackingLevel(wwin->frame->vscr, wwin->frame->core, WMFullscreenLevel);
 
 	wwin->bfs_geometry.x = wwin->frame_x;
 	wwin->bfs_geometry.y = wwin->frame_y;
@@ -866,11 +866,11 @@ void wUnfullscreenWindow(WWindow *wwin)
 
 	if (wwin->frame->core->stacking->window_level == WMFullscreenLevel) {
 		if (WFLAGP(wwin, sunken)) {
-			ChangeStackingLevel(wwin->frame->core, WMSunkenLevel);
+			ChangeStackingLevel(wwin->frame->vscr, wwin->frame->core, WMSunkenLevel);
 		} else if (WFLAGP(wwin, floating)) {
-			ChangeStackingLevel(wwin->frame->core, WMFloatingLevel);
+			ChangeStackingLevel(wwin->frame->vscr, wwin->frame->core, WMFloatingLevel);
 		} else {
-			ChangeStackingLevel(wwin->frame->core, WMNormalLevel);
+			ChangeStackingLevel(wwin->frame->vscr, wwin->frame->core, WMNormalLevel);
 		}
 	}
 
@@ -1295,8 +1295,8 @@ void wIconifyWindow(WWindow *wwin)
 		    IS_OMNIPRESENT(wwin) || wPreferences.sticky_icons)
 			XMapWindow(dpy, wwin->icon->core->window);
 
-		AddToStackList(wwin->icon->core);
-		wLowerFrame(wwin->icon->core);
+		AddToStackList(wwin->icon->vscr, wwin->icon->core);
+		wLowerFrame(wwin->icon->vscr, wwin->icon->core);
 	}
 
 	if (present) {
@@ -1369,7 +1369,7 @@ void wDeiconifyWindow(WWindow *wwin)
 		if (owner && owner->flags.miniaturized) {
 			wDeiconifyWindow(owner);
 			wSetFocusTo(wwin->vscr, wwin);
-			wRaiseFrame(wwin->frame->core);
+			wRaiseFrame(wwin->frame->vscr, wwin->frame->core);
 			wwin->vscr->workspace.ignore_change = False;
 			return;
 		}
@@ -1408,7 +1408,7 @@ void wDeiconifyWindow(WWindow *wwin)
 			XMapWindow(dpy, wwin->client_win);
 
 		XMapWindow(dpy, wwin->frame->core->window);
-		wRaiseFrame(wwin->frame->core);
+		wRaiseFrame(wwin->frame->vscr, wwin->frame->core);
 		if (!wwin->flags.shaded)
 			wClientSetState(wwin, NormalState, None);
 
@@ -1417,7 +1417,7 @@ void wDeiconifyWindow(WWindow *wwin)
 
 	if (!wPreferences.disable_miniwindows && wwin->icon != NULL
 	    && !wwin->flags.net_handle_icon) {
-		RemoveFromStackList(wwin->icon->core);
+		RemoveFromStackList(wwin->icon->vscr, wwin->icon->core);
 		wSetFocusTo(wwin->vscr, wwin);
 		wIconDestroy(wwin->icon);
 		wwin->icon = NULL;
@@ -1653,7 +1653,7 @@ static void unhideWindow(WIcon *icon, int icon_x, int icon_y, WWindow *wwin, int
 		XMapWindow(dpy, wwin->frame->core->window);
 		wClientSetState(wwin, NormalState, None);
 		wwin->flags.mapped = 1;
-		wRaiseFrame(wwin->frame->core);
+		wRaiseFrame(wwin->frame->vscr, wwin->frame->core);
 	}
 
 	if (wwin->flags.inspector_open)
@@ -1708,7 +1708,7 @@ void wUnhideApplication(WApplication *wapp, Bool miniwindows, Bool bringToCurren
 						wlist->icon->mapped = 1;
 					}
 
-					wRaiseFrame(wlist->icon->core);
+					wRaiseFrame(wlist->icon->vscr, wlist->icon->core);
 				}
 
 				if (bringToCurrentWS)
@@ -1724,7 +1724,7 @@ void wUnhideApplication(WApplication *wapp, Bool miniwindows, Bool bringToCurren
 					wWindowChangeWorkspace(wlist, vscr->workspace.current);
 
 				wlist->flags.hidden = 0;
-				wRaiseFrame(wlist->frame->core);
+				wRaiseFrame(wlist->frame->vscr, wlist->frame->core);
 				if (wlist->frame->workspace == vscr->workspace.current) {
 					XMapWindow(dpy, wlist->frame->core->window);
 					if (miniwindows)
@@ -1740,7 +1740,7 @@ void wUnhideApplication(WApplication *wapp, Bool miniwindows, Bool bringToCurren
 				if (bringToCurrentWS && wlist->frame->workspace != vscr->workspace.current)
 					wWindowChangeWorkspace(wlist, vscr->workspace.current);
 
-				wRaiseFrame(wlist->frame->core);
+				wRaiseFrame(wlist->frame->vscr, wlist->frame->core);
 			}
 		}
 		wlist = next;
@@ -1750,7 +1750,7 @@ void wUnhideApplication(WApplication *wapp, Bool miniwindows, Bool bringToCurren
 	wapp->flags.hidden = 0;
 
 	if (wapp->last_focused && wapp->last_focused->flags.mapped) {
-		wRaiseFrame(wapp->last_focused->frame->core);
+		wRaiseFrame(wapp->last_focused->frame->vscr, wapp->last_focused->frame->core);
 		wSetFocusTo(vscr, wapp->last_focused);
 	} else if (focused) {
 		wSetFocusTo(vscr, focused);
@@ -2023,7 +2023,7 @@ void wMakeWindowVisible(WWindow *wwin)
 		if (!WFLAGP(wwin, no_focusable))
 			wSetFocusTo(wwin->vscr, wwin);
 
-		wRaiseFrame(wwin->frame->core);
+		wRaiseFrame(wwin->frame->vscr, wwin->frame->core);
 	}
 }
 

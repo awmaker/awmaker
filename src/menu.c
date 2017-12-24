@@ -1062,7 +1062,7 @@ void wMenuMapAt(virtual_screen *vscr, WMenu *menu, int x, int y, int keyboard)
 		menu->frame_x = x;
 		menu->frame_y = y;
 		XMapWindow(dpy, menu->frame->core->window);
-		wRaiseFrame(menu->frame->core);
+		wRaiseFrame(menu->frame->vscr, menu->frame->core);
 		menu->flags.mapped = 1;
 	} else {
 		selectEntry(menu, 0);
@@ -1315,7 +1315,7 @@ static void raiseMenus(WMenu *menu, int submenus)
 	if (!menu)
 		return;
 
-	wRaiseFrame(menu->frame->core);
+	wRaiseFrame(menu->frame->vscr, menu->frame->core);
 
 	if (submenus > 0 && menu->selected_entry >= 0) {
 		i = menu->entries[menu->selected_entry]->cascade;
@@ -1904,7 +1904,7 @@ static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
 		}
 	}
 
-	wRaiseFrame(menu->frame->core);
+	wRaiseFrame(menu->frame->vscr, menu->frame->core);
 
 	close_on_exit = (bev->send_event);
 
@@ -2090,12 +2090,12 @@ static void changeMenuLevels(WMenu *menu, int lower)
 	int i;
 
 	if (!lower) {
-		ChangeStackingLevel(menu->frame->core, (!menu->parent ? WMMainMenuLevel : WMSubmenuLevel));
-		wRaiseFrame(menu->frame->core);
+		ChangeStackingLevel(menu->frame->vscr, menu->frame->core, (!menu->parent ? WMMainMenuLevel : WMSubmenuLevel));
+		wRaiseFrame(menu->frame->vscr, menu->frame->core);
 		menu->flags.lowered = 0;
 	} else {
-		ChangeStackingLevel(menu->frame->core, WMNormalLevel);
-		wLowerFrame(menu->frame->core);
+		ChangeStackingLevel(menu->frame->vscr, menu->frame->core, WMNormalLevel);
+		wLowerFrame(menu->frame->vscr, menu->frame->core);
 		menu->flags.lowered = 1;
 	}
 
@@ -2150,10 +2150,10 @@ static void menuTitleMouseDown(WCoreWindow * sender, void *data, XEvent * event)
 		return;
 
 	if (event->xbutton.state & wPreferences.modifier_mask) {
-		wLowerFrame(menu->frame->core);
+		wLowerFrame(menu->frame->vscr, menu->frame->core);
 		lower = 1;
 	} else {
-		wRaiseFrame(menu->frame->core);
+		wRaiseFrame(menu->frame->vscr, menu->frame->core);
 		lower = 0;
 	}
 
@@ -2167,9 +2167,9 @@ static void menuTitleMouseDown(WCoreWindow * sender, void *data, XEvent * event)
 				break;
 
 			if (lower)
-				wLowerFrame(tmp->frame->core);
+				wLowerFrame(tmp->frame->vscr, tmp->frame->core);
 			else
-				wRaiseFrame(tmp->frame->core);
+				wRaiseFrame(tmp->frame->vscr, tmp->frame->core);
 		} else {
 			break;
 		}

@@ -134,7 +134,7 @@ void OpenSwitchMenu(virtual_screen *vscr, int x, int y, int keyboard)
 		if (!switchmenu->flags.buttoned) {
 			switchmenu_destroy(vscr);
 		} else {
-			wRaiseFrame(switchmenu->frame->core);
+			wRaiseFrame(switchmenu->frame->vscr, switchmenu->frame->core);
 
 			if (keyboard)
 				wMenuMapAt(vscr, switchmenu, 0, 0, True);

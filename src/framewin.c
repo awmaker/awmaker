@@ -144,7 +144,7 @@ void wframewindow_map(WFrameWindow *fwin, virtual_screen *vscr, int wlevel,
 	wcore->stacking->child_of = NULL;
 	wcore->stacking->window_level = wlevel;
 
-	AddToStackList(wcore);
+	AddToStackList(vscr, wcore);
 
 	/* wFrameWindowUpdateBorders uses flags argument to
 	 * udpate the flags and update the framewindow
@@ -695,7 +695,7 @@ void framewindow_unmap(WFrameWindow *fwin)
 	titlebar_unmap(fwin);
 	resizebar_unmap(fwin);
 
-	RemoveFromStackList(fwin->core);
+	RemoveFromStackList(fwin->vscr, fwin->core);
 }
 
 void wFrameWindowDestroy(WFrameWindow *fwin)

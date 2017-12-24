@@ -1042,7 +1042,7 @@ static void handleClientMessage(XEvent *event)
 				int level = (int)event->xclient.data.l[1];
 
 				if (WINDOW_LEVEL(wwin) != level)
-					ChangeStackingLevel(wwin->frame->core, level);
+					ChangeStackingLevel(wwin->frame->vscr, wwin->frame->core, level);
 			}
 			break;
 		}
@@ -1106,7 +1106,7 @@ static void raiseWindow(virtual_screen *vscr)
 		return;
 
 	if (!wwin->flags.destroyed && wwin->flags.focused) {
-		wRaiseFrame(wwin->frame->core);
+		wRaiseFrame(wwin->frame->vscr, wwin->frame->core);
 		/* this is needed or a race condition will occur */
 		XSync(dpy, False);
 	}
@@ -1536,9 +1536,9 @@ static void handleKeyPress(XEvent *event)
 			DestroyWindowMenu(vscr);
 
 			if (wwin->frame->core->stacking->window_level != WMFloatingLevel)
-				ChangeStackingLevel(wwin->frame->core, WMFloatingLevel);
+				ChangeStackingLevel(wwin->frame->vscr, wwin->frame->core, WMFloatingLevel);
 			else
-				ChangeStackingLevel(wwin->frame->core, WMNormalLevel);
+				ChangeStackingLevel(wwin->frame->vscr, wwin->frame->core, WMNormalLevel);
 		}
 		break;
 	case WKBD_KEEP_AT_BOTTOM:
@@ -1546,9 +1546,9 @@ static void handleKeyPress(XEvent *event)
 			DestroyWindowMenu(vscr);
 
 			if (wwin->frame->core->stacking->window_level != WMSunkenLevel)
-				ChangeStackingLevel(wwin->frame->core, WMSunkenLevel);
+				ChangeStackingLevel(wwin->frame->vscr, wwin->frame->core, WMSunkenLevel);
 			else
-				ChangeStackingLevel(wwin->frame->core, WMNormalLevel);
+				ChangeStackingLevel(wwin->frame->vscr, wwin->frame->core, WMNormalLevel);
 		}
 		break;
 	case WKBD_OMNIPRESENT:
@@ -1560,13 +1560,13 @@ static void handleKeyPress(XEvent *event)
 	case WKBD_RAISE:
 		if (ISMAPPED(wwin) && ISFOCUSED(wwin)) {
 			DestroyWindowMenu(vscr);
-			wRaiseFrame(wwin->frame->core);
+			wRaiseFrame(wwin->frame->vscr, wwin->frame->core);
 		}
 		break;
 	case WKBD_LOWER:
 		if (ISMAPPED(wwin) && ISFOCUSED(wwin)) {
 			DestroyWindowMenu(vscr);
-			wLowerFrame(wwin->frame->core);
+			wLowerFrame(wwin->frame->vscr, wwin->frame->core);
 		}
 		break;
 	case WKBD_RAISELOWER:
@@ -1575,7 +1575,7 @@ static void handleKeyPress(XEvent *event)
 		 */
 		wwin = windowUnderPointer(vscr);
 		if (wwin)
-			wRaiseLowerFrame(wwin->frame->core);
+			wRaiseLowerFrame(wwin->frame->vscr, wwin->frame->core);
 		break;
 	case WKBD_SHADE:
 		if (ISMAPPED(wwin) && ISFOCUSED(wwin) && !WFLAGP(wwin, no_shadeable)) {
