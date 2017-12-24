@@ -87,7 +87,7 @@ void icon_appearanceObserver(void *self, WMNotification *notif)
 
 	/* so that the appicon expose handlers will paint the appicon specific
 	 * stuff */
-	XClearArea(dpy, icon->core->window, 0, 0, icon->core->width, icon->core->height, True);
+	XClearArea(dpy, icon->core->window, 0, 0, icon->width, icon->height, True);
 }
 
 void icon_tileObserver(void *self, WMNotification *notif)
@@ -558,7 +558,7 @@ static void cycleColor(void *data)
 	XChangeGC(dpy, scr->icon_select_gc, GCDashOffset, &gcv);
 
 	XDrawRectangle(dpy, icon->core->window, scr->icon_select_gc, 0, 0,
-		       icon->core->width - 1, icon->core->height - 1);
+		       icon->width - 1, icon->height - 1);
 	icon->handlerID = WMAddTimerHandler(COLOR_CYCLE_DELAY, cycleColor, icon);
 }
 
@@ -582,13 +582,14 @@ void wIconSelect(WIcon *icon)
 			icon->handlerID = WMAddTimerHandler(10, cycleColor, icon);
 		else
 			XDrawRectangle(dpy, icon->core->window, scr->icon_select_gc, 0, 0,
-				       icon->core->width - 1, icon->core->height - 1);
+				       icon->width - 1, icon->height - 1);
 	} else {
 		if (icon->handlerID) {
 			WMDeleteTimerHandler(icon->handlerID);
 			icon->handlerID = NULL;
 		}
-		XClearArea(dpy, icon->core->window, 0, 0, icon->core->width, icon->core->height, True);
+
+		XClearArea(dpy, icon->core->window, 0, 0, icon->width, icon->height, True);
 	}
 }
 
@@ -800,10 +801,10 @@ static void update_icon_title(WIcon *icon)
 		tmp = ShrinkString(scr->icon_title_font, icon->title, wPreferences.icon_size - 4);
 		w = WMWidthOfString(scr->icon_title_font, tmp, l = strlen(tmp));
 
-		if (w > icon->core->width - 4)
-			x = (icon->core->width - 4) - w;
+		if (w > icon->width - 4)
+			x = (icon->width - 4) - w;
 		else
-			x = (icon->core->width - w) / 2;
+			x = (icon->width - w) / 2;
 
 		WMDrawString(scr->wmscreen, icon->core->window, scr->icon_title_color,
 			     scr->icon_title_font, x, 1, tmp, l);
@@ -827,7 +828,7 @@ void wIconPaint(WIcon *icon)
 
 	if (icon->selected)
 		XDrawRectangle(dpy, icon->core->window, scr->icon_select_gc, 0, 0,
-			       icon->core->width - 1, icon->core->height - 1);
+			       icon->width - 1, icon->height - 1);
 }
 
 /******************************************************************/
