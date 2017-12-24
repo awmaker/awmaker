@@ -208,8 +208,7 @@ static void icon_destroy_core(WIcon *icon)
 
 void wIconDestroy(WIcon *icon)
 {
-	WCoreWindow *core = icon->core;
-	WScreen *scr = core->vscr->screen_ptr;
+	WScreen *scr = icon->vscr->screen_ptr;
 
 	WMRemoveNotificationObserver(icon);
 
@@ -258,7 +257,7 @@ static void icon_update_pixmap(WIcon *icon, RImage *image)
 	int x, y, sx, sy;
 	unsigned w, h;
 	int theight = 0;
-	WScreen *scr = icon->core->vscr->screen_ptr;
+	WScreen *scr = icon->vscr->screen_ptr;
 
 	switch (icon->tile_type) {
 	case TILE_NORMAL:
@@ -375,7 +374,7 @@ int wIconChangeImageFile(WIcon *icon, const char *file)
 	if (!path)
 		return 0;
 
-	image = get_rimage_from_file(icon->core->vscr, path, wPreferences.icon_size);
+	image = get_rimage_from_file(icon->vscr, path, wPreferences.icon_size);
 	if (!image) {
 		wfree(path);
 		return 0;
@@ -452,7 +451,7 @@ static RImage *get_wwindow_image_from_wmhints(WWindow *wwin, WIcon *icon)
 	XWMHints *hints = wwin->wm_hints;
 
 	if (hints && (hints->flags & IconPixmapHint) && hints->icon_pixmap != None)
-		image = RCreateImageFromDrawable(icon->core->vscr->screen_ptr->rcontext,
+		image = RCreateImageFromDrawable(icon->vscr->screen_ptr->rcontext,
 						 hints->icon_pixmap,
 						 (hints->flags & IconMaskHint)
 						 ? hints->icon_mask : None);
@@ -551,7 +550,7 @@ void remove_cache_icon(char *filename)
 static void cycleColor(void *data)
 {
 	WIcon *icon = (WIcon *) data;
-	WScreen *scr = icon->core->vscr->screen_ptr;
+	WScreen *scr = icon->vscr->screen_ptr;
 	XGCValues gcv;
 
 	icon->step--;
@@ -574,7 +573,7 @@ void wIconSetHighlited(WIcon *icon, Bool flag)
 
 void wIconSelect(WIcon *icon)
 {
-	WScreen *scr = icon->core->vscr->screen_ptr;
+	WScreen *scr = icon->vscr->screen_ptr;
 	icon->selected = !icon->selected;
 
 	if (icon->selected) {
@@ -698,7 +697,7 @@ static void get_rimage_icon_from_user_icon(WIcon *icon)
 
 static void get_rimage_icon_from_default_icon(WIcon *icon)
 {
-	virtual_screen *vscr = icon->core->vscr;
+	virtual_screen *vscr = icon->vscr;
 	WScreen *scr = vscr->screen_ptr;
 
 	/* If the icon don't have image, we should use the default image. */
@@ -731,7 +730,7 @@ static void get_rimage_icon_from_icon_win(WIcon *icon)
 static void set_dockapp_in_icon(WIcon *icon)
 {
 	XWindowAttributes attr;
-	WScreen *scr = icon->core->vscr->screen_ptr;
+	WScreen *scr = icon->vscr->screen_ptr;
 	unsigned int w, h, d;
 
 	/* Reparent the dock application to the icon */
@@ -793,7 +792,7 @@ RImage *get_rimage_icon_from_wm_hints(WIcon *icon)
 /* This function updates in the screen the icon title */
 static void update_icon_title(WIcon *icon)
 {
-	WScreen *scr = icon->core->vscr->screen_ptr;
+	WScreen *scr = icon->vscr->screen_ptr;
 	int x, l, w;
 	char *tmp;
 
@@ -818,10 +817,10 @@ void wIconPaint(WIcon *icon)
 {
 	WScreen *scr;
 
-	if (!icon || !icon->core || !icon->core->vscr->screen_ptr)
+	if (!icon || !icon->vscr || !icon->vscr->screen_ptr)
 		return;
 
-	scr = icon->core->vscr->screen_ptr;
+	scr = icon->vscr->screen_ptr;
 
 	XClearWindow(dpy, icon->core->window);
 
@@ -868,7 +867,7 @@ static void miniwindowMouseDown(WObjDescriptor *desc, XEvent *event)
 	if (WCHECK_STATE(WSTATE_MODAL))
 		return;
 
-	if (IsDoubleClick(icon->core->vscr, event)) {
+	if (IsDoubleClick(icon->vscr, event)) {
 		miniwindowDblClick(desc, event);
 		return;
 	}
@@ -966,7 +965,7 @@ void set_icon_image_from_database(WIcon *icon, const char *wm_instance, const ch
 
 void map_icon_image(WIcon *icon)
 {
-	icon->file_image = get_rimage_from_file(icon->core->vscr, icon->file_name, wPreferences.icon_size);
+	icon->file_image = get_rimage_from_file(icon->vscr, icon->file_name, wPreferences.icon_size);
 
 	/* Update the icon, because icon could be NULL */
 	wIconUpdate(icon);
