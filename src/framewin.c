@@ -771,13 +771,7 @@ static void updateTitlebar(WFrameWindow *fwin)
 #ifdef XKB_BUTTON_HINT
 	int language_button_pos_width, language_button_pos_height;
 #endif
-	int theight = WMFontHeight(*fwin->font) + (*fwin->title_clearance + TITLEBAR_EXTEND_SPACE) * 2;
-
-	if (theight > *fwin->title_max_height)
-		theight = *fwin->title_max_height;
-
-	if (theight < *fwin->title_min_height)
-		theight = *fwin->title_min_height;
+	int theight = get_framewin_titleheight(fwin);
 
 	w = fwin->width;
 
