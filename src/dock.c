@@ -296,7 +296,7 @@ static int matchWindow(const void *item, const void *cdata)
 
 static void killCallback(WMenu *menu, WMenuEntry *entry)
 {
-	virtual_screen *vscr = menu->core->vscr;
+	virtual_screen *vscr = menu->vscr;
 	WScreen *scr = vscr->screen_ptr;
 	WAppIcon *icon;
 	WFakeGroupLeader *fPtr;
