@@ -170,6 +170,9 @@ typedef struct WFrameWindow {
     unsigned long *border_pixel;
     unsigned long *focused_border_pixel;
     unsigned long *selected_border_pixel;
+
+	/* Titlebar */
+	int titlebar_width;
 } WFrameWindow;
 
 void wframewin_set_borders(WFrameWindow *fwin, int flags);

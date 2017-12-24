@@ -387,7 +387,8 @@ static void right_button_unmap(WFrameWindow *fwin)
 static void titlebar_create(WFrameWindow *fwin, int theight, int flags)
 {
 	fwin->top_width = theight;
-	fwin->titlebar = wcore_create(fwin->width + 1, theight);
+	fwin->titlebar_width = fwin->width + 1; /* TODO kix: Why "+ 1" ? */
+	fwin->titlebar = wcore_create(fwin->titlebar_width, theight);
 
 	if (flags & WFF_LEFT_BUTTON) {
 		fwin->flags.left_button = 1;
@@ -423,7 +424,7 @@ static void titlebar_map(WFrameWindow *fwin, int theight)
 	fwin->top_width = theight;
 
 	wcore_map(fwin->titlebar, fwin->core, fwin->vscr,
-		  0, 0, fwin->titlebar->width, fwin->titlebar->height, 0,
+		  0, 0, fwin->titlebar_width, fwin->titlebar->height, 0,
 		  fwin->vscr->screen_ptr->w_depth,
 		  fwin->vscr->screen_ptr->w_visual,
 		  fwin->vscr->screen_ptr->w_colormap);
@@ -825,10 +826,11 @@ static void updateTitlebar(WFrameWindow *fwin)
 
 		fwin->flags.need_texture_remake = 1;
 	} else {
-		if (fwin->titlebar->width != w)
+		if (fwin->titlebar_width != w)
 			fwin->flags.need_texture_remake = 1;
 	}
 
+	fwin->titlebar_width = w;
 	wCoreConfigure(fwin->titlebar, x, 0, w, theight);
 }
 
@@ -1203,7 +1205,7 @@ static void paint_title(WFrameWindow *fwin, int lofs, int rofs, int state)
 	if (!orig_title)
 		return;
 
-	title = ShrinkString(*fwin->font, orig_title, fwin->titlebar->width - lofs - rofs);
+	title = ShrinkString(*fwin->font, orig_title, fwin->titlebar_width - lofs - rofs);
 	titlelen = strlen(title);
 	w = WMWidthOfString(*fwin->font, title, titlelen);
 
@@ -1213,11 +1215,11 @@ static void paint_title(WFrameWindow *fwin, int lofs, int rofs, int state)
 		break;
 
 	case WTJ_RIGHT:
-		x = fwin->titlebar->width - w - rofs;
+		x = fwin->titlebar_width - w - rofs;
 		break;
 
 	default:
-		x = lofs + (fwin->titlebar->width - w - lofs - rofs) / 2;
+		x = lofs + (fwin->titlebar_width - w - lofs - rofs) / 2;
 	}
 
 	y = *fwin->title_clearance + TITLEBAR_EXTEND_SPACE;
@@ -1302,7 +1304,7 @@ void wFrameWindowPaint(WFrameWindow *fwin)
 
 	if (fwin->titlebar && fwin->flags.titlebar && !fwin->flags.repaint_only_resizebar
 	    && fwin->title_texture[state]->any.type == WTEX_SOLID)
-		wDrawBevel(fwin->titlebar->window, fwin->titlebar->width,
+		wDrawBevel(fwin->titlebar->window, fwin->titlebar_width,
 			   fwin->titlebar->height, (WTexSolid *) fwin->title_texture[state], WREL_RAISED);
 
 	if (fwin->resizebar && fwin->flags.resizebar &&
@@ -1506,7 +1508,7 @@ static void checkTitleSize(WFrameWindow *fwin)
 		return;
 	}
 
-	width = fwin->titlebar->width - 6 - 6;
+	width = fwin->titlebar_width - 6 - 6;
 
 	if (!wPreferences.new_style == TS_NEW) {
 		if (fwin->left_button && fwin->flags.map_left_button &&
