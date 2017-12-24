@@ -98,6 +98,7 @@ static Bool saveMenuRecurs(WMPropList *menus, WMenu *menu, virtual_screen *vscr)
 static int restoreMenuRecurs(virtual_screen *vscr, WMPropList *menus, WMenu *menu, const char *path);
 static void menu_delete_handlers(WMenu *menu, delay_data *d_data);
 static void menu_blink_selected(WMenu *menu);
+static int get_menu_height(WMenu *menu);
 /****** Notification Observers ******/
 
 static void appearanceObserver(void *self, WMNotification *notif)
@@ -496,6 +497,11 @@ static void get_menu_width(WMenu *menu)
 	menu->width = mwidth;
 }
 
+static int get_menu_height(WMenu *menu)
+{
+	return menu->entry_no * menu->entry_height - 1;
+}
+
 void wMenuRealize(WMenu *menu)
 {
 	WScreen *scr;
@@ -522,9 +528,9 @@ void wMenuRealize(WMenu *menu)
 	get_menu_width(menu);
 
 	wCoreConfigure(menu->core, 0, theight,
-		       menu->width, menu->entry_no * menu->entry_height - 1);
+		       menu->width, get_menu_height(menu));
 	wFrameWindowResize(menu->frame, menu->width,
-			   menu->entry_no * menu->entry_height - 1 +
+			   get_menu_height(menu) +
 			   menu->frame->top_width +
 			   menu->frame->bottom_width);
 
@@ -1056,7 +1062,7 @@ void wMenuUnmap(WMenu *menu)
 
 	if (menu->flags.shaded) {
 		wFrameWindowResize(menu->frame, menu->frame->width, menu->frame->top_width +
-				   menu->entry_height*menu->entry_no + menu->frame->bottom_width - 1);
+				   get_menu_height(menu) + menu->frame->bottom_width);
 		menu->flags.shaded = 0;
 	}
 
@@ -2083,7 +2089,7 @@ static void menuTitleDoubleClick(WCoreWindow *sender, void *data, XEvent *event)
 	} else {
 		if (menu->flags.shaded) {
 			wFrameWindowResize(menu->frame, menu->frame->width, menu->frame->top_width +
-					   menu->entry_height*menu->entry_no + menu->frame->bottom_width - 1);
+					   get_menu_height(menu) + menu->frame->bottom_width);
 			menu->flags.shaded = 0;
 		} else {
 			wFrameWindowResize(menu->frame, menu->frame->width, menu->frame->top_width - 1);
