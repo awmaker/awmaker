@@ -213,16 +213,15 @@ static void left_button_create(WFrameWindow *fwin)
 
 static void left_button_map(WFrameWindow *fwin, int theight)
 {
-	int left_button_pos_width, left_button_pos_height;
 	int width = fwin->width;
 	virtual_screen *vscr = fwin->vscr;
 	WScreen *scr = vscr->screen_ptr;
 
 	if (wPreferences.new_style == TS_NEW) {
-		left_button_pos_width = 0;
-		left_button_pos_height = 0;
+		fwin->left_button_pos_width = 0;
+		fwin->left_button_pos_height = 0;
 		wcore_map(fwin->left_button, fwin->core, fwin->vscr,
-			  left_button_pos_width, left_button_pos_height,
+			  fwin->left_button_pos_width, fwin->left_button_pos_height,
 			  fwin->bordersize, fwin->bordersize, 0,
 			  fwin->vscr->screen_ptr->w_depth,
 			  fwin->vscr->screen_ptr->w_visual,
@@ -233,11 +232,11 @@ static void left_button_map(WFrameWindow *fwin, int theight)
 		else
 			XMapRaised(dpy, fwin->left_button->window);
 	} else {
-		left_button_pos_width = 3;
-		left_button_pos_height = (theight - fwin->bordersize) / 2;
+		fwin->left_button_pos_width = 3;
+		fwin->left_button_pos_height = (theight - fwin->bordersize) / 2;
 
 		wcore_map(fwin->left_button, fwin->titlebar, fwin->vscr,
-			  left_button_pos_width, left_button_pos_height,
+			  fwin->left_button_pos_width, fwin->left_button_pos_height,
 			  fwin->bordersize, fwin->bordersize, 0,
 			  fwin->vscr->screen_ptr->w_depth,
 			  fwin->vscr->screen_ptr->w_visual,
@@ -451,7 +450,6 @@ static void titlebar_map(WFrameWindow *fwin, int theight)
 
 static void titlebar_update(WFrameWindow *fwin, int theight)
 {
-	int left_button_pos_width, left_button_pos_height;
 	int right_button_pos_width, right_button_pos_height;
 	int width = fwin->width;
 
@@ -459,19 +457,19 @@ static void titlebar_update(WFrameWindow *fwin, int theight)
 	fwin->flags.need_texture_remake = 1;
 
 	if (wPreferences.new_style == TS_NEW) {
-		left_button_pos_width = 0;
-		left_button_pos_height = 0;
+		fwin->left_button_pos_width = 0;
+		fwin->left_button_pos_height = 0;
 		right_button_pos_width = width - fwin->bordersize + 1;
 		right_button_pos_height = 0;
 	} else {	/* !new_style */
-		left_button_pos_width = 3;
-		left_button_pos_height = (theight - fwin->bordersize) / 2;
+		fwin->left_button_pos_width = 3;
+		fwin->left_button_pos_height = (theight - fwin->bordersize) / 2;
 		right_button_pos_width = width - fwin->bordersize - 3;
 		right_button_pos_height = (theight - fwin->bordersize) / 2;
 	}
 
 	if (fwin->left_button && fwin->flags.map_left_button)
-		wCoreConfigure(fwin->left_button, left_button_pos_width, left_button_pos_height, fwin->bordersize, fwin->bordersize);
+		wCoreConfigure(fwin->left_button, fwin->left_button_pos_width, fwin->left_button_pos_height, fwin->bordersize, fwin->bordersize);
 	if (fwin->right_button && fwin->flags.map_right_button)
 		wCoreConfigure(fwin->right_button, right_button_pos_width, right_button_pos_height, fwin->bordersize, fwin->bordersize);
 

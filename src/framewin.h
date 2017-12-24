@@ -177,6 +177,10 @@ typedef struct WFrameWindow {
 
 	/* Resizebar */
 	int resizebar_height;
+
+	/* Buttons */
+	int left_button_pos_width;
+	int left_button_pos_height;
 } WFrameWindow;
 
 void wframewin_set_borders(WFrameWindow *fwin, int flags);
