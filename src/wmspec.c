@@ -1839,9 +1839,9 @@ void wNETFrameExtents(WWindow *wwin)
 	 *       3 = bottom
 	 */
 	if (wwin->frame->titlebar)
-		extents[2] = wwin->frame->titlebar->height;
+		extents[2] = wwin->frame->titlebar_height;
 	if (wwin->frame->resizebar)
-		extents[3] = wwin->frame->resizebar->height;
+		extents[3] = wwin->frame->resizebar_height;
 	if (HAS_BORDER(wwin)) {
 		extents[0] += wwin->vscr->screen_ptr->frame_border_width;
 		extents[1] += wwin->vscr->screen_ptr->frame_border_width;

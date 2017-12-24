@@ -747,7 +747,7 @@ static void manageAllWindows(virtual_screen *vscr, int crashRecovery)
 
 				wWindowMove(wwin, wwin->frame_x - border,
 					    wwin->frame_y - border -
-					    (wwin->frame->titlebar ? wwin->frame->titlebar->height : 0));
+					    (wwin->frame->titlebar ? wwin->frame->titlebar_height : 0));
 			}
 		}
 	}

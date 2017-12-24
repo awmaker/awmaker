@@ -470,7 +470,7 @@ static void frameBalloon(WObjDescriptor *object)
 
 	wwin = (WWindow *) fwin->child;
 	if (wwin->title && fwin->flags.incomplete_title) {
-		scr->balloon->h = (fwin->titlebar ? fwin->titlebar->height : 0);
+		scr->balloon->h = (fwin->titlebar ? fwin->titlebar_height : 0);
 		scr->balloon->text = wstrdup(wwin->title);
 		scr->balloon->objectWindow = fwin->core->window;
 		scr->balloon->timer = WMAddTimerHandler(BALLOON_DELAY, (WMCallback *) showBalloon, scr);
