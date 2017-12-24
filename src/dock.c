@@ -1612,10 +1612,10 @@ void dock_map(WDock *dock, virtual_screen *vscr, WMPropList *state)
 	else
 		wcore->descriptor.handle_expose = dock_icon_expose;
 
-	map_icon_image(btn->icon);
+	map_icon_image(icon);
 
-	WMAddNotificationObserver(icon_appearanceObserver, btn->icon, WNIconAppearanceSettingsChanged, btn->icon);
-	WMAddNotificationObserver(icon_tileObserver, btn->icon, WNIconTileSettingsChanged, btn->icon);
+	WMAddNotificationObserver(icon_appearanceObserver, icon, WNIconAppearanceSettingsChanged, icon);
+	WMAddNotificationObserver(icon_tileObserver, icon, WNIconTileSettingsChanged, icon);
 
 #ifdef USE_DOCK_XDND
 	wXDNDMakeAwareness(wcore->window);
@@ -1693,12 +1693,10 @@ void clip_icon_map(virtual_screen *vscr)
 			   scr->w_depth, scr->w_visual,
 			   scr->w_colormap, scr->white_pixel);
 
-	map_icon_image(vscr->clip.icon->icon);
+	map_icon_image(icon);
 
-	WMAddNotificationObserver(icon_appearanceObserver, vscr->clip.icon->icon,
-				  WNIconAppearanceSettingsChanged, vscr->clip.icon->icon);
-	WMAddNotificationObserver(icon_tileObserver, vscr->clip.icon->icon,
-				  WNIconTileSettingsChanged, vscr->clip.icon->icon);
+	WMAddNotificationObserver(icon_appearanceObserver, icon, WNIconAppearanceSettingsChanged, icon);
+	WMAddNotificationObserver(icon_tileObserver, icon, WNIconTileSettingsChanged, icon);
 
 #ifdef USE_DOCK_XDND
 	wXDNDMakeAwareness(wcore->window);
@@ -1840,10 +1838,10 @@ void drawer_map(WDock *dock, virtual_screen *vscr)
 			   scr->w_depth, scr->w_visual,
 			   scr->w_colormap, scr->white_pixel);
 
-	map_icon_image(btn->icon);
+	map_icon_image(icon);
 
-	WMAddNotificationObserver(icon_appearanceObserver, btn->icon, WNIconAppearanceSettingsChanged, btn->icon);
-	WMAddNotificationObserver(icon_tileObserver, btn->icon, WNIconTileSettingsChanged, btn->icon);
+	WMAddNotificationObserver(icon_appearanceObserver, icon, WNIconAppearanceSettingsChanged, icon);
+	WMAddNotificationObserver(icon_tileObserver, icon, WNIconTileSettingsChanged, icon);
 
 #ifdef USE_DOCK_XDND
 	wXDNDMakeAwareness(wcore->window);
