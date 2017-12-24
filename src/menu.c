@@ -246,7 +246,7 @@ void menu_map(WMenu *menu, virtual_screen *screen)
 
 	wcore_map(menu->core, menu->frame->core,
 		  menu->vscr, 0, 0,
-		  menu->width, menu->core->height, 0,
+		  menu->width, get_menu_height(menu), 0,
 		  menu->vscr->screen_ptr->w_depth,
 		  menu->vscr->screen_ptr->w_visual,
 		  menu->vscr->screen_ptr->w_colormap);
@@ -396,7 +396,7 @@ static Pixmap renderTexture(WMenu *menu)
 	if (wPreferences.menu_style == MS_NORMAL)
 		img = wTextureRenderImage(texture, menu->width, menu->entry_height, WREL_MENUENTRY);
 	else
-		img = wTextureRenderImage(texture, menu->width, menu->core->height + 1, WREL_MENUENTRY);
+		img = wTextureRenderImage(texture, menu->width, get_menu_height(menu) + 1, WREL_MENUENTRY);
 
 	if (!img) {
 		wwarning(_("could not render texture: %s"), RMessageForError(RErrorCode));
