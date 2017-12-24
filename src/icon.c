@@ -172,6 +172,7 @@ WIcon *icon_create_core(virtual_screen *vscr)
 	icon->height = wPreferences.icon_size;
 	icon->core = wcore_create();
 	icon->core->vscr = vscr;
+	icon->vscr = vscr;
 
 	/* will be overriden if this is a application icon */
 	icon->core->descriptor.handle_mousedown = miniwindowMouseDown;

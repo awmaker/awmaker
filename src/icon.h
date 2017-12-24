@@ -33,6 +33,7 @@
 #define MINIPREVIEW_BORDER 1
 
 typedef struct WIcon {
+	virtual_screen	*vscr;		/* virtual screen used */
 	WCoreWindow 	*core;
 	WWindow 	*owner;		/* owner window */
 	char 		*title;		/* the icon name hint */
