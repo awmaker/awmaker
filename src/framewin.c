@@ -1478,7 +1478,7 @@ void wFrameWindowUpdateLanguageButton(WFrameWindow * fwin)
 {
 	paintButton(fwin->language_button, fwin->title_texture[fwin->flags.state],
 		    WMColorPixel(fwin->title_color[fwin->flags.state]), fwin->languagebutton_image, True,
-				 fwin->language_button->width, fwin->language_button->height);
+				 fwin->bordersize, fwin->bordersize);
 }
 #endif				/* XKB_BUTTON_HINT */
 
@@ -1652,21 +1652,21 @@ static void handleButtonExpose(WObjDescriptor *desc, XEvent *event)
 			paintButton(button, fwin->title_texture[fwin->flags.state],
 				    WMColorPixel(fwin->title_color[fwin->flags.state]),
 				    fwin->languagebutton_image, False,
-				    fwin->language_button->width, fwin->language_button->height);
+				    fwin->bordersize, fwin->bordersize);
 		return;
 	}
 #endif
 	if (button == fwin->left_button) {
 		paintButton(button, fwin->title_texture[fwin->flags.state],
 			    WMColorPixel(fwin->title_color[fwin->flags.state]), fwin->lbutton_image, False,
-					 fwin->left_button->width, fwin->left_button->height);
+					 fwin->bordersize, fwin->bordersize);
 		return;
 	}
 
 	if (button == fwin->right_button)
 		paintButton(button, fwin->title_texture[fwin->flags.state],
 			    WMColorPixel(fwin->title_color[fwin->flags.state]), fwin->rbutton_image, False,
-					 fwin->right_button->width, fwin->right_button->height);
+					 fwin->bordersize, fwin->bordersize);
 }
 
 static void titlebarMouseDown(WObjDescriptor *desc, XEvent *event)
@@ -1713,14 +1713,14 @@ static void buttonMouseDown(WObjDescriptor *desc, XEvent *event)
 
 	if (button == fwin->left_button) {
 		image = fwin->lbutton_image;
-		width = fwin->left_button->width;
-		height = fwin->left_button->height;
+		width = fwin->bordersize;
+		height = fwin->bordersize;
 	}
 
 	if (button == fwin->right_button) {
 		image = fwin->rbutton_image;
-		width = fwin->right_button->width;
-		height = fwin->right_button->height;
+		width = fwin->bordersize;
+		height = fwin->bordersize;
 	}
 
 #ifdef XKB_BUTTON_HINT
@@ -1729,8 +1729,8 @@ static void buttonMouseDown(WObjDescriptor *desc, XEvent *event)
 			return;
 
 		image = fwin->languagebutton_image;
-		width = fwin->language_button->width;
-		height = fwin->language_button->height;
+		width = fwin->bordersize;
+		height = fwin->bordersize;
 	}
 #endif
 
