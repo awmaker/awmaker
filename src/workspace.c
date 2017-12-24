@@ -143,7 +143,7 @@ static void set_clip_in_workspace_map(virtual_screen *vscr, WWorkspace *wspace, 
 		return;
 
 	clip_state = WMGetFromPLDictionary(tmp_state, dClip);
-	clip_map(wspace->clip, vscr, clip_state);
+	clip_map(wspace->clip, clip_state);
 
 	if (wksno >= 0) {
 		if (wksno > 0)

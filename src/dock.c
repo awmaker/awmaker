@@ -1756,8 +1756,9 @@ WDock *clip_create(virtual_screen *vscr, WMPropList *state)
 	return dock;
 }
 
-void clip_map(WDock *dock, virtual_screen *vscr, WMPropList *state)
+void clip_map(WDock *dock, WMPropList *state)
 {
+	virtual_screen *vscr = dock->vscr;
 	WAppIcon *btn = vscr->clip.icon;
 
 	wRaiseFrame(btn->icon->vscr, btn->icon->core);
@@ -1772,7 +1773,7 @@ void clip_map(WDock *dock, virtual_screen *vscr, WMPropList *state)
 	restore_clip_position_map(dock);
 
 	/* application list */
-	clip_set_attacheddocks(dock->vscr, dock, state);
+	clip_set_attacheddocks(vscr, dock, state);
 
 	WMReleasePropList(state);
 }
