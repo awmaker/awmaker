@@ -93,7 +93,7 @@ static void menuCloseClick(WCoreWindow *sender, void *data, XEvent *event);
 static void updateTexture(WMenu *menu);
 static void selectEntry(WMenu *menu, int entry_no);
 static void closeCascade(WMenu *menu);
-static void get_menu_width(WMenu *menu);
+static void set_menu_width(WMenu *menu);
 static Bool saveMenuRecurs(WMPropList *menus, WMenu *menu, virtual_screen *vscr);
 static int restoreMenuRecurs(virtual_screen *vscr, WMPropList *menus, WMenu *menu, const char *path);
 static void menu_delete_handlers(WMenu *menu, delay_data *d_data);
@@ -451,7 +451,7 @@ static void updateTexture(WMenu *menu)
 	}
 }
 
-static void get_menu_width(WMenu *menu)
+static void set_menu_width(WMenu *menu)
 {
 	WScreen *scr;
 	int i;
@@ -525,7 +525,7 @@ void wMenuRealize(WMenu *menu)
 
 	menu->entry_height = WMFontHeight(scr->menu_entry_font) + 6 +
 					  wPreferences.menu_text_clearance * 2;
-	get_menu_width(menu);
+	set_menu_width(menu);
 
 	wCoreConfigure(menu->core, 0, theight,
 		       menu->width, get_menu_height(menu));
