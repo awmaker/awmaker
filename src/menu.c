@@ -1784,6 +1784,9 @@ static void menu_motion_select_entry(WMenu *menu, WMenuEntry *entry,
 	if (delayed_select)
 		return;
 
+	if (!menu->entries)
+		return;
+
 	*entry_no = getEntryAt(menu, y);
 	if (*entry_no >= 0) {
 		entry = menu->entries[*entry_no];
