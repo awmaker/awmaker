@@ -113,11 +113,11 @@ void wCoreConfigure(WCoreWindow * core, int req_x, int req_y, int req_w, int req
 	xwc.x = req_x;
 	xwc.y = req_y;
 
-	if (req_w <= 0)
-		req_w = core->width;
+	if (req_w < 0)
+		req_w = 0;
 
-	if (req_h <= 0)
-		req_h = core->height;
+	if (req_h < 0)
+		req_h = 0;
 
 	if (req_w != core->width || req_h != core->height) {
 		mask |= CWWidth | CWHeight;
