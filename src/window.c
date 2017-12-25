@@ -792,22 +792,23 @@ static int window_restarting_restore(Window window, WWindow *wwin, WWindowState 
 
 static void wwindow_set_workspace(virtual_screen *vscr, WWindow *wwin, WWindow *transientOwner, int *workspace)
 {
+	int w;
+
 	if (*workspace >= 0) {
 		if (*workspace > vscr->workspace.count - 1)
 			*workspace = *workspace % vscr->workspace.count;
+		return;
+	}
+
+	/* kix - This block is similar a block in ManageWindow function? */
+	w = wDefaultGetStartWorkspace(vscr, wwin->wm_instance, wwin->wm_class);
+	if (w >= 0 && w < vscr->workspace.count && !(IS_OMNIPRESENT(wwin))) {
+		*workspace = w;
 	} else {
-		int w;
-
-		w = wDefaultGetStartWorkspace(vscr, wwin->wm_instance, wwin->wm_class);
-
-		if (w >= 0 && w < vscr->workspace.count && !(IS_OMNIPRESENT(wwin))) {
-			*workspace = w;
-		} else {
-			if (wPreferences.open_transients_with_parent && transientOwner)
-				*workspace = transientOwner->frame->workspace;
-			else
-				*workspace = vscr->workspace.current;
-		}
+		if (wPreferences.open_transients_with_parent && transientOwner)
+			*workspace = transientOwner->frame->workspace;
+		else
+			*workspace = vscr->workspace.current;
 	}
 }
 
