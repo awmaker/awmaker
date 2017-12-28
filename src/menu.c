@@ -1616,10 +1616,12 @@ static void delaySelection(void *data)
 
 	d->magic = NULL;
 
-	menu = findMenu(d->menu->vscr, &x, &y);
-	if (menu && (d->menu == menu || d->delayed_select)) {
-		entry_no = getEntryAt(menu, y);
-		selectEntry(menu, entry_no);
+	if (!d->menu) {
+		menu = findMenu(d->menu->vscr, &x, &y);
+		if (menu && (d->menu == menu || d->delayed_select)) {
+			entry_no = getEntryAt(menu, y);
+			selectEntry(menu, entry_no);
+		}
 	}
 
 	if (d->delayed_select)
