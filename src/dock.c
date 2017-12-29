@@ -5679,16 +5679,6 @@ static void dock_icon_mouse_down(WObjDescriptor *desc, XEvent *event)
 			return;
 		}
 
-		/* kix: FIXME
-		 * There is a BUG here. When the menu entry callback is used
-		 * the function menuMouseDown (menu.c) is used. If the user
-		 * doesn't select any entry, no windows are openned and then
-		 * we are unable to set the focus to the new window.
-		 * This problem shows an catchXError call.
-		 * The error was created in the commit:
-		 * "DA: Dock menu always unmapped (warning)"
-		 * This error only happends here, not in rootmenu, appicon, etc.
-		 */
 		dock_menu_map(dock->menu, vscr);
 		open_menu_dock(dock, aicon, event);
 		dock_menu_unmap(vscr, dock->menu);
@@ -5792,16 +5782,6 @@ static void clip_icon_mouse_down(WObjDescriptor *desc, XEvent *event)
 			return;
 		}
 
-		/* kix: FIXME
-		 * There is a BUG here. When the menu entry callback is used
-		 * the function menuMouseDown (menu.c) is used. If the user
-		 * doesn't select any entry, no windows are openned and then
-		 * we are unable to set the focus to the new window.
-		 * This problem shows an catchXError call.
-		 * The error was created in the commit:
-		 * "DA: Dock menu always unmapped (warning)"
-		 * This error only happends here, not in rootmenu, appicon, etc.
-		 */
 		clip_menu_map(dock->menu, vscr);
 		open_menu_clip(dock, aicon, event);
 		clip_menu_unmap(vscr, dock->menu);
@@ -5872,16 +5852,6 @@ static void drawer_icon_mouse_down(WObjDescriptor *desc, XEvent *event)
 			return;
 		}
 
-		/* kix: FIXME
-		 * There is a BUG here. When the menu entry callback is used
-		 * the function menuMouseDown (menu.c) is used. If the user
-		 * doesn't select any entry, no windows are openned and then
-		 * we are unable to set the focus to the new window.
-		 * This problem shows an catchXError call.
-		 * The error was created in the commit:
-		 * "DA: Dock menu always unmapped (warning)"
-		 * This error only happends here, not in rootmenu, appicon, etc.
-		 */
 		drawer_menu_map(dock->menu, vscr);
 		open_menu_drawer(dock, aicon, event);
 		drawer_menu_unmap(vscr, dock->menu);
