@@ -4858,8 +4858,9 @@ static void toggleCollapsed(WDock *dock)
 	}
 }
 
-static void set_dockmenu_dock_code(virtual_screen *vscr, WDock *dock, WMenuEntry *entry, WAppIcon *aicon)
+static void set_dockmenu_dock_code(WDock *dock, WMenuEntry *entry, WAppIcon *aicon)
 {
+	virtual_screen *vscr = dock->vscr;
 	WApplication *wapp = NULL;
 	int appIsRunning;
 
@@ -5197,7 +5198,7 @@ static void open_menu_dock(WDock *dock, WAppIcon *aicon, XEvent *event)
 	WMenuEntry *entry = NULL;
 	int x_pos;
 
-	set_dockmenu_dock_code(vscr, dock, entry, aicon);
+	set_dockmenu_dock_code(dock, entry, aicon);
 
 	x_pos = dock->on_right_side ? scr->scr_width - dock->menu->frame->width - 3 : 0;
 	wMenuMapAt(vscr, dock->menu, x_pos, event->xbutton.y_root + 2, False);
