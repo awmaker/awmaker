@@ -210,6 +210,7 @@ static void restore_state_collapsed(WDock *dock, WMPropList *state);
 static void restore_state_autoraise(WDock *dock, WMPropList *state);
 static void dock_set_attacheddocks(WDock *dock, WMPropList *state);
 static int dock_set_attacheddocks_do(WDock *dock, WMPropList *apps);
+static int drawer_set_attacheddocks_do(WDock *dock, WMPropList *apps);
 static void clip_set_attacheddocks(WDock *dock, WMPropList *state);
 static void dock_unset_attacheddocks(WDock *dock);
 static int restore_state_autocollapsed(WDock *dock, WMPropList *state);
@@ -2795,8 +2796,9 @@ static int clip_set_attacheddocks_do(WDock *dock, WMPropList *apps)
 	return 0;
 }
 
-static int drawer_set_attacheddocks_do(virtual_screen *vscr, WDock *dock, WMPropList *apps)
+static int drawer_set_attacheddocks_do(WDock *dock, WMPropList *apps)
 {
+	virtual_screen *vscr = dock->vscr;
 	int count, i;
 	WMPropList *value;
 	WAppIcon *aicon;
@@ -6859,7 +6861,7 @@ static WDock *drawerRestoreState(virtual_screen *vscr, WMPropList *drawer_state)
 	/* application list */
 	apps = WMGetFromPLDictionary(dock_state, dApplications);
 	if (apps)
-		drawer_set_attacheddocks_do(vscr, drawer, apps);
+		drawer_set_attacheddocks_do(drawer, apps);
 
 	WMReleasePropList(drawer_state);
 
