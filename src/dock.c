@@ -186,7 +186,7 @@ static void clipAutoRaise(void *cdata);
 
 static void drawerIconExpose(WObjDescriptor *desc, XEvent *event);
 static void removeDrawerCallback(WMenu *menu, WMenuEntry *entry);
-static void drawerAppendToChain(virtual_screen *vscr, WDock *drawer);
+static void drawerAppendToChain(WDock *drawer);
 static char *findUniqueName(virtual_screen *vscr, const char *instance_basename);
 static void addADrawerCallback(WMenu *menu, WMenuEntry *entry);
 static void swapDrawers(virtual_screen *vscr, int new_x);
@@ -1822,7 +1822,7 @@ WDock *drawer_create(virtual_screen *vscr, const char *name)
 		drawer_menu_create(vscr);
 
 	dock->menu = vscr->dock.drawer_menu;
-	drawerAppendToChain(vscr, dock);
+	drawerAppendToChain(dock);
 
 	return dock;
 }
@@ -6286,8 +6286,9 @@ int wClipMakeIconOmnipresent(WAppIcon *aicon, int omnipresent)
 	return status;
 }
 
-static void drawerAppendToChain(virtual_screen *vscr, WDock *drawer)
+static void drawerAppendToChain(WDock *drawer)
 {
+	virtual_screen *vscr = drawer->vscr;
 	WDrawerChain **where_to_add;
 
 	where_to_add = &vscr->drawer.drawers;
@@ -6301,8 +6302,9 @@ static void drawerAppendToChain(virtual_screen *vscr, WDock *drawer)
 }
 
 
-static void drawerRemoveFromChain(virtual_screen *vscr, WDock *drawer)
+static void drawerRemoveFromChain(WDock *drawer)
 {
+	virtual_screen *vscr = drawer->vscr;
 	WDrawerChain *next, **to_remove;
 
 	to_remove = &vscr->drawer.drawers;
@@ -6509,7 +6511,7 @@ static void drawerDestroy(WDock *drawer)
 	wfree(drawer->icon_array);
 	drawer->icon_array = NULL;
 
-	drawerRemoveFromChain(vscr, drawer);
+	drawerRemoveFromChain(drawer);
 	if (vscr->last_dock == drawer)
 		vscr->last_dock = NULL;
 
