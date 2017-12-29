@@ -1280,8 +1280,9 @@ static void setDockPositionKeepOnTopCallback(WMenu *menu, WMenuEntry *entry)
 	entry->flags.indicator_on = 1;
 }
 
-static void updateDockPositionMenu(virtual_screen *vscr, WDock *dock)
+static void updateDockPositionMenu(WDock *dock)
 {
+	virtual_screen *vscr = dock->vscr;
 	WMenuEntry *entry;
 	int index = 0;
 
@@ -4860,12 +4861,11 @@ static void toggleCollapsed(WDock *dock)
 
 static void set_dockmenu_dock_code(WDock *dock, WMenuEntry *entry, WAppIcon *aicon)
 {
-	virtual_screen *vscr = dock->vscr;
 	WApplication *wapp = NULL;
 	int appIsRunning;
 
 	/* Dock position menu */
-	updateDockPositionMenu(vscr, dock);
+	updateDockPositionMenu(dock);
 
 	if (wPreferences.flags.nodrawer)
 		return;
