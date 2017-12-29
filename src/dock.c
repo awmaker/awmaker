@@ -208,7 +208,8 @@ static void restore_clip_position_map(WDock *dock);
 static void restore_state_lowered(WDock *dock, WMPropList *state);
 static void restore_state_collapsed(WDock *dock, WMPropList *state);
 static void restore_state_autoraise(WDock *dock, WMPropList *state);
-static void dock_set_attacheddocks(virtual_screen *vscr, WDock *dock, WMPropList *state);
+static void dock_set_attacheddocks(WDock *dock, WMPropList *state);
+static int dock_set_attacheddocks_do(WDock *dock, WMPropList *apps);
 static void clip_set_attacheddocks(WDock *dock, WMPropList *state);
 static void dock_unset_attacheddocks(WDock *dock);
 static int restore_state_autocollapsed(WDock *dock, WMPropList *state);
@@ -1653,7 +1654,7 @@ void dock_map(WDock *dock, WMPropList *state)
 	(void) restore_state_autoattracticons(dock, state);
 
 	/* application list */
-	dock_set_attacheddocks(vscr, dock, state);
+	dock_set_attacheddocks(dock, state);
 
 	WMReleasePropList(state);
 }
@@ -2722,8 +2723,9 @@ static void set_attacheddocks_unmap(WDock *dock)
 	}
 }
 
-static int dock_set_attacheddocks_do(virtual_screen *vscr, WDock *dock, WMPropList *apps)
+static int dock_set_attacheddocks_do(WDock *dock, WMPropList *apps)
 {
+	virtual_screen *vscr = dock->vscr;
 	int count, i;
 	WMPropList *value;
 	WAppIcon *aicon;
@@ -2824,8 +2826,9 @@ static int drawer_set_attacheddocks_do(virtual_screen *vscr, WDock *dock, WMProp
 	return 0;
 }
 
-static void dock_set_attacheddocks(virtual_screen *vscr, WDock *dock, WMPropList *state)
+static void dock_set_attacheddocks(WDock *dock, WMPropList *state)
 {
+	virtual_screen *vscr = dock->vscr;
 	char screen_id[64];
 	WMPropList *apps;
 	WAppIcon *old_top;
@@ -2837,7 +2840,7 @@ static void dock_set_attacheddocks(virtual_screen *vscr, WDock *dock, WMPropList
 	if (!apps)
 		return;
 
-	if (dock_set_attacheddocks_do(vscr, dock, apps))
+	if (dock_set_attacheddocks_do(dock, apps))
 		return;
 
 	set_attacheddocks_map(dock);
