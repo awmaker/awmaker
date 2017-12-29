@@ -5078,8 +5078,9 @@ static void set_dockmenu_clip_code(WDock *dock, WMenuEntry *entry, WAppIcon *aic
 	menu_entry_set_enabled_paint(dock->menu, CM_KILL);
 }
 
-static void set_dockmenu_drawer_code(virtual_screen *vscr, WDock *dock, WMenuEntry *entry, WAppIcon *aicon)
+static void set_dockmenu_drawer_code(WDock *dock, WMenuEntry *entry, WAppIcon *aicon)
 {
+	virtual_screen *vscr = dock->vscr;
 	int n_selected, appIsRunning;
 	WApplication *wapp = NULL;
 
@@ -5241,7 +5242,7 @@ static void open_menu_drawer(WDock *dock, WAppIcon *aicon, XEvent *event)
 	WMenuEntry *entry = NULL;
 	int x_pos;
 
-	set_dockmenu_drawer_code(vscr, dock, entry, aicon);
+	set_dockmenu_drawer_code(dock, entry, aicon);
 
 	x_pos = event->xbutton.x_root - dock->menu->frame->width / 2 - 1;
 	if (x_pos < 0)
