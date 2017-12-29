@@ -3174,7 +3174,7 @@ static void windowLanguageClick(WCoreWindow *sender, void *data, XEvent *event)
 	wFrameWindowUpdateLanguageButton(wwin->frame);
 	if (event->xbutton.button == Button3)
 		return;
-	wRaiseFrame(fwin->core);
+	wRaiseFrame(wwin->frame->vscr, fwin->core);
 }
 #endif
 
