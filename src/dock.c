@@ -1964,8 +1964,9 @@ static void dockIconPaint(WAppIcon *btn)
 	}
 }
 
-static WMPropList *make_icon_state(virtual_screen *vscr, WAppIcon *btn)
+static WMPropList *make_icon_state(WAppIcon *btn)
 {
+	virtual_screen *vscr = btn->icon->vscr;
 	WMPropList *node = NULL;
 	WMPropList *command, *autolaunch, *lock, *name, *forced;
 	WMPropList *position, *buggy, *omnipresent;
@@ -2029,8 +2030,9 @@ static WMPropList *make_icon_state(virtual_screen *vscr, WAppIcon *btn)
 	return node;
 }
 
-static WMPropList *dock_save_state(virtual_screen *vscr, WDock *dock)
+static WMPropList *dock_save_state(WDock *dock)
 {
+	virtual_screen *vscr = dock->vscr;
 	int i;
 	WMPropList *icon_info;
 	WMPropList *list = NULL, *dock_state = NULL;
@@ -2045,7 +2047,7 @@ static WMPropList *dock_save_state(virtual_screen *vscr, WDock *dock)
 		if (!btn || btn->attracted)
 			continue;
 
-		icon_info = make_icon_state(vscr, dock->icon_array[i]);
+		icon_info = make_icon_state(dock->icon_array[i]);
 		if (icon_info != NULL) {
 			WMAddToPLArray(list, icon_info);
 			WMReleasePropList(icon_info);
@@ -2072,8 +2074,9 @@ static WMPropList *dock_save_state(virtual_screen *vscr, WDock *dock)
 	return dock_state;
 }
 
-static WMPropList *clip_save_state(virtual_screen *vscr, WDock *dock)
+static WMPropList *clip_save_state(WDock *dock)
 {
+	virtual_screen *vscr = dock->vscr;
 	int i;
 	WMPropList *icon_info;
 	WMPropList *list = NULL, *dock_state = NULL;
@@ -2088,7 +2091,7 @@ static WMPropList *clip_save_state(virtual_screen *vscr, WDock *dock)
 		if (!btn || btn->attracted)
 			continue;
 
-		icon_info = make_icon_state(vscr, dock->icon_array[i]);
+		icon_info = make_icon_state(dock->icon_array[i]);
 		if (icon_info != NULL) {
 			WMAddToPLArray(list, icon_info);
 			WMReleasePropList(icon_info);
@@ -2126,7 +2129,7 @@ static WMPropList *clip_save_state(virtual_screen *vscr, WDock *dock)
 	return dock_state;
 }
 
-static WMPropList *drawer_save_state(virtual_screen *vscr, WDock *dock)
+static WMPropList *drawer_save_state(WDock *dock)
 {
 	int i;
 	WMPropList *icon_info;
@@ -2141,7 +2144,7 @@ static WMPropList *drawer_save_state(virtual_screen *vscr, WDock *dock)
 		if (!btn || btn->attracted)
 			continue;
 
-		icon_info = make_icon_state(vscr, dock->icon_array[i]);
+		icon_info = make_icon_state(dock->icon_array[i]);
 		if (icon_info != NULL) {
 			WMAddToPLArray(list, icon_info);
 			WMReleasePropList(icon_info);
@@ -2168,7 +2171,7 @@ void wDockSaveState(virtual_screen *vscr, WMPropList *old_state)
 	WMPropList *dock_state;
 	WMPropList *keys;
 
-	dock_state = dock_save_state(vscr, vscr->dock.dock);
+	dock_state = dock_save_state(vscr->dock.dock);
 
 	/* Copy saved states of docks with different sizes. */
 	if (old_state) {
@@ -2192,7 +2195,7 @@ void wDockSaveState(virtual_screen *vscr, WMPropList *old_state)
 
 WMPropList *wClipSaveWorkspaceState(virtual_screen *vscr, int workspace)
 {
-	return clip_save_state(vscr, vscr->workspace.array[workspace]->clip);
+	return clip_save_state(vscr->workspace.array[workspace]->clip);
 }
 
 static Bool getBooleanDockValue(WMPropList *value, WMPropList *key)
@@ -6895,7 +6898,7 @@ static void drawerRestoreState_map(WDock *drawer)
 /* Same kind of comment than for previous function: this function is
  * very similar to make_icon_state, but has substential differences as
  * well. */
-static WMPropList *drawerSaveState(virtual_screen *vscr, WDock *drawer)
+static WMPropList *drawerSaveState(WDock *drawer)
 {
 	WMPropList *pstr, *drawer_state;
 	WAppIcon *ai;
@@ -6930,7 +6933,7 @@ static WMPropList *drawerSaveState(virtual_screen *vscr, WDock *drawer)
 	}
 
 	/* Store applications list and other properties */
-	pstr = drawer_save_state(vscr, drawer);
+	pstr = drawer_save_state(drawer);
 	WMPutInPLDictionary(drawer_state, dDock, pstr);
 	WMReleasePropList(pstr);
 
@@ -6950,7 +6953,7 @@ void wDrawersSaveState(virtual_screen *vscr)
 	for (i=0, dc = vscr->drawer.drawers;
 	     i < vscr->drawer.drawer_count;
 	     i++, dc = dc->next) {
-		drawer_state = drawerSaveState(vscr, dc->adrawer);
+		drawer_state = drawerSaveState(dc->adrawer);
 		WMAddToPLArray(all_drawers, drawer_state);
 		WMReleasePropList(drawer_state);
 	}
