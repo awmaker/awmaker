@@ -201,8 +201,9 @@ static void moveDock(WDock *dock, int new_x, int new_y);
 
 static void save_application_list(WMPropList *state, WMPropList *list, virtual_screen *vscr);
 
-static void restore_dock_position(WDock *dock, virtual_screen *vscr, WMPropList *state);
-static void restore_clip_position(WDock *dock, virtual_screen *vscr, WMPropList *state);
+static void restore_dock_position(WDock *dock, WMPropList *state);
+static void restore_clip_position(WDock *dock, WMPropList *state);
+static void restore_drawer_position(WDock *drawer, WMPropList *state);
 static void restore_clip_position_map(WDock *dock);
 static void restore_state_lowered(WDock *dock, WMPropList *state);
 static void restore_state_collapsed(WDock *dock, WMPropList *state);
@@ -1599,7 +1600,7 @@ void dock_map(WDock *dock, WMPropList *state)
 	WIcon *icon = btn->icon;
 	WCoreWindow *wcore = icon->core;
 	virtual_screen *vscr = dock->vscr;
-	WScreen *scr = dock->vscr->screen_ptr;
+	WScreen *scr = vscr->screen_ptr;
 
 	/* Return if virtual screen is not mapped */
 	if (!scr)
@@ -1643,7 +1644,7 @@ void dock_map(WDock *dock, WMPropList *state)
 	WMRetainPropList(state);
 
 	/* restore position */
-	restore_dock_position(dock, vscr, state);
+	restore_dock_position(dock, state);
 
 	restore_state_lowered(dock, state);
 	restore_state_collapsed(dock, state);
@@ -1733,7 +1734,7 @@ WDock *clip_create(virtual_screen *vscr, WMPropList *state)
 	WAppIcon *btn;
 
 	dock = dock_create_core(vscr);
-	restore_clip_position(dock, vscr, state);
+	restore_clip_position(dock, state);
 
 	btn = vscr->clip.icon;
 	btn->dock = dock;
@@ -2911,9 +2912,10 @@ static void dock_unset_attacheddocks(WDock *dock)
 	set_attacheddocks_unmap(dock);
 }
 
-static void restore_dock_position(WDock *dock, virtual_screen *vscr, WMPropList *state)
+static void restore_dock_position(WDock *dock, WMPropList *state)
 {
 	WMPropList *value;
+	virtual_screen *vscr = dock->vscr;
 	WScreen *scr = vscr->screen_ptr;
 
 	value = WMGetFromPLDictionary(state, dPosition);
@@ -2942,8 +2944,9 @@ static void restore_dock_position(WDock *dock, virtual_screen *vscr, WMPropList 
 	}
 }
 
-static void restore_clip_position(WDock *dock, virtual_screen *vscr, WMPropList *state)
+static void restore_clip_position(WDock *dock, WMPropList *state)
 {
+	virtual_screen *vscr = dock->vscr;
 	WMPropList *value;
 
 	if (!state) {
@@ -2997,8 +3000,9 @@ static void restore_clip_position_map(WDock *dock)
 	dock->vscr->clip.icon->y_pos = dock->y_pos;
 }
 
-void restore_drawer_position(virtual_screen *vscr, WDock *drawer, WMPropList *state)
+void restore_drawer_position(WDock *drawer, WMPropList *state)
 {
+	virtual_screen *vscr = drawer->vscr;
 	WMPropList *value;
 	int y_index;
 
@@ -6828,7 +6832,7 @@ static WDock *drawerRestoreState(virtual_screen *vscr, WMPropList *drawer_state)
 		drawer->icon_array[0]->paste_command = wstrdup(WMGetFromPLString(value));
 
 	/* restore position */
-	restore_drawer_position(vscr, drawer, drawer_state);
+	restore_drawer_position(drawer, drawer_state);
 
 	/* restore dock properties (applist and others) */
 	dock_state = WMGetFromPLDictionary(drawer_state, dDock);
