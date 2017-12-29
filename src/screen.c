@@ -53,9 +53,6 @@
 #include "balloon.h"
 #include "geomview.h"
 #include "wmspec.h"
-#include "rootmenu.h"
-#include "switchmenu.h"
-#include "winmenu.h"
 
 #include "xinerama.h"
 
@@ -892,12 +889,10 @@ void virtual_screen_restore_map(virtual_screen *vscr)
 {
 	WMPropList *state, *dDock;
 
-	window_menu_create(vscr);
-
 	if (!wPreferences.flags.nodock) {
 		dDock = WMCreatePLString("Dock");
 		state = WMGetFromPLDictionary(w_global.session_state, dDock);
-		dock_map(vscr->dock.dock, vscr, state);
+		dock_map(vscr->dock.dock, state);
 	}
 
 	if (!wPreferences.flags.nodrawer)

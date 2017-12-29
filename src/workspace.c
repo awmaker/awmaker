@@ -143,7 +143,7 @@ static void set_clip_in_workspace_map(virtual_screen *vscr, WWorkspace *wspace, 
 		return;
 
 	clip_state = WMGetFromPLDictionary(tmp_state, dClip);
-	clip_map(wspace->clip, vscr, clip_state);
+	clip_map(wspace->clip, clip_state);
 
 	if (wksno >= 0) {
 		if (wksno > 0)
@@ -223,6 +223,21 @@ void workspace_map(virtual_screen *vscr, WWorkspace *wspace, int wksno, WMPropLi
 	XFlush(dpy);
 }
 
+static void update_submenu(WMenu *menu)
+{
+	virtual_screen *vscr;
+	int i;
+
+	vscr = menu->vscr;
+	if (!menu)
+		return;
+
+	i = menu->entry_no;
+	while (i > vscr->workspace.count)
+		wMenuRemoveItem(menu, --i);
+}
+
+
 Bool wWorkspaceDelete(virtual_screen *vscr, int workspace)
 {
 	WWindow *tmp;
@@ -280,23 +295,8 @@ Bool wWorkspaceDelete(virtual_screen *vscr, int workspace)
 	menu_workspace_shortcut_labels(vscr, vscr->clip.ws_menu);
 	wWorkspaceMenuUpdate_map(vscr, vscr->clip.ws_menu);
 
-	/* update also window menu */
-	if (vscr->workspace.submenu) {
-		WMenu *menu = vscr->workspace.submenu;
-
-		i = menu->entry_no;
-		while (i > vscr->workspace.count)
-			wMenuRemoveItem(menu, --i);
-	}
-
-	/* and clip menu */
-	if (vscr->clip.submenu) {
-		WMenu *menu = vscr->clip.submenu;
-
-		i = menu->entry_no;
-		while (i > vscr->workspace.count)
-			wMenuRemoveItem(menu, --i);
-	}
+	update_submenu(vscr->workspace.submenu);
+	update_submenu(vscr->clip.submenu);
 
 	wNETWMUpdateDesktop(vscr);
 	WMPostNotificationName(WMNWorkspaceDestroyed, vscr, (void *)(uintptr_t) (vscr->workspace.count - 1));
@@ -769,7 +769,7 @@ void wWorkspaceForceChange(virtual_screen *vscr, int workspace)
 
 static void switchWSCommand(WMenu *menu, WMenuEntry *entry)
 {
-	wWorkspaceChange(menu->frame->vscr, (long)entry->clientdata);
+	wWorkspaceChange(menu->vscr, (long)entry->clientdata);
 }
 
 static void lastWSCommand(WMenu *menu, WMenuEntry *entry)
@@ -777,7 +777,7 @@ static void lastWSCommand(WMenu *menu, WMenuEntry *entry)
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 
-	wWorkspaceChange(menu->frame->vscr, menu->frame->vscr->workspace.last_used);
+	wWorkspaceChange(menu->vscr, menu->vscr->workspace.last_used);
 }
 
 static void deleteWSCommand(WMenu *menu, WMenuEntry *entry)
@@ -785,13 +785,13 @@ static void deleteWSCommand(WMenu *menu, WMenuEntry *entry)
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 
-	wWorkspaceDelete(menu->frame->vscr, menu->frame->vscr->workspace.count - 1);
+	wWorkspaceDelete(menu->vscr, menu->vscr->workspace.count - 1);
 }
 
 static void newWSCommand(WMenu *menu, WMenuEntry *foo)
 {
 	int s1, s2;
-	virtual_screen *vscr = menu->frame->vscr;
+	virtual_screen *vscr = menu->vscr;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) foo;
@@ -860,7 +860,7 @@ static void onMenuEntryEdited(WMenu *menu, WMenuEntry *entry)
 	char *tmp;
 
 	tmp = entry->text;
-	wWorkspaceRename(menu->frame->vscr, (long)entry->clientdata, tmp);
+	wWorkspaceRename(menu->vscr, (long)entry->clientdata, tmp);
 }
 
 WMenu *wWorkspaceMenuMake(virtual_screen *vscr, Bool titled)
@@ -873,7 +873,7 @@ WMenu *wWorkspaceMenuMake(virtual_screen *vscr, Bool titled)
 	else
 		wsmenu = menu_create(vscr, NULL);
 
-	menu_map(wsmenu, vscr);
+	menu_map(wsmenu);
 
 	/* callback to be called when an entry is edited */
 	wsmenu->on_edit = onMenuEntryEdited;
@@ -969,8 +969,8 @@ void wWorkspaceMenuUpdate_map(virtual_screen *vscr, WMenu *menu)
 
 	tmp = menu->frame->top_width + 5;
 	/* if menu got unreachable, bring it to a visible place */
-	if (menu->frame_x < tmp - (int)menu->frame->core->width)
-		wMenuMove(menu, tmp - (int)menu->frame->core->width, menu->frame_y, False);
+	if (menu->frame_x < tmp - (int) menu->frame->width)
+		wMenuMove(menu, tmp - (int) menu->frame->width, menu->frame_y, False);
 
 	wMenuPaint(menu);
 }

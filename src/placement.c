@@ -268,8 +268,8 @@ static int calcSumOfCoveredAreas(WWindow *wwin, int x, int y, int w, int h)
 		if (test_window->frame->core->stacking->window_level < WMNormalLevel)
 			continue;
 
-		tw = test_window->frame->core->width;
-		th = test_window->frame->core->height;
+		tw = test_window->frame->width;
+		th = test_window->frame->height;
 		tx = test_window->frame_x;
 		ty = test_window->frame_y;
 
@@ -308,8 +308,8 @@ window_overlaps(WWindow *win, int x, int y, int w, int h, Bool ignore_sunken)
 	    win->frame->core->stacking->window_level < WMNormalLevel)
 		return False;
 
-	tw = win->frame->core->width;
-	th = win->frame->core->height;
+	tw = win->frame->width;
+	th = win->frame->height;
 	tx = win->frame_x;
 	ty = win->frame_y;
 
@@ -517,17 +517,19 @@ void PlaceWindow(WWindow *wwin, int *x_ret, int *y_ret, unsigned width, unsigned
 	case WPM_CENTER:
 		if (center_place_window(wwin, x_ret, y_ret, width, height, usableArea))
 			break;
-
+		/* Falls through */
 	case WPM_AUTO:
-		if (autoPlaceWindow(wwin, x_ret, y_ret, width, height, False, usableArea)) {
+		if (autoPlaceWindow(wwin, x_ret, y_ret, width, height, False, usableArea))
 			break;
-		} else if (autoPlaceWindow(wwin, x_ret, y_ret, width, height, True, usableArea)) {
+		else if (autoPlaceWindow(wwin, x_ret, y_ret, width, height, True, usableArea))
 			break;
-		}
-		/* there isn't a break here, because if we fail, it should fall
-		   through to cascade placement, as people who want tiling want
-		   automagicness aren't going to want to place their window */
 
+		/*
+		 * There isn't a break here, because if we fail, it should fall
+		 * through to cascade placement, as people who want tiling want
+		 * automagicness aren't going to want to place their window
+		 */
+		/* Falls through */
 	case WPM_CASCADE:
 		if (wPreferences.window_placement == WPM_AUTO || wPreferences.window_placement == WPM_CENTER)
 			scr->cascade_index++;

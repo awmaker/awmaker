@@ -64,7 +64,7 @@ static WWindow *change_focus_and_raise(WWindow *newFocused, WWindow *oldFocused,
 
 	/* allow the focused window to float on top of a fullscreen window */
 	if (oldFocused->flags.fullscreen)
-		ChangeStackingLevel(oldFocused->frame->core, WMNormalLevel);
+		ChangeStackingLevel(oldFocused->frame->vscr, oldFocused->frame->core, WMNormalLevel);
 
 	wWindowFocus(newFocused, oldFocused);
 	oldFocused = newFocused;
@@ -247,7 +247,7 @@ void StartWindozeCycle(WWindow *wwin, XEvent *event, Bool next, Bool class_only)
 		wSwitchPanelDestroy(swpanel);
 
 	if (newFocused && !esc_cancel) {
-		wRaiseFrame(newFocused->frame->core);
+		wRaiseFrame(newFocused->frame->vscr, newFocused->frame->core);
 		CommitStacking(vscr);
 		if (!newFocused->flags.mapped)
 			wMakeWindowVisible(newFocused);

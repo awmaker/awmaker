@@ -408,10 +408,31 @@ static void mapGeometryDisplay(WWindow *wwin, int x, int y, int w, int h)
 	showGeometry(wwin, x, y, x + w, y + h, 0);
 }
 
+static void set_inside_position(WWindow *tmpw, virtual_screen *vscr, int *x, int *y)
+{
+/* TODO: with xinerama patch was #if 0, check this */
+#if 1
+	WScreen *scr = vscr->screen_ptr;
+
+	/* don't let windows become unreachable */
+	if (*x + (int) tmpw->frame->width < 20)
+		*x = 20 - (int) tmpw->frame->width;
+	else if (*x + 20 > scr->scr_width)
+		*x = scr->scr_width - 20;
+
+	if (*y + (int) tmpw->frame->height < 20)
+		*y = 20 - (int) tmpw->frame->height;
+	else if (*y + 20 > scr->scr_height)
+		*y = scr->scr_height - 20;
+#else
+	wScreenBringInside(vscr, x, y,
+			   (int) tmpw->frame->width, (int) tmpw->frame->height);
+#endif
+}
+
 static void doWindowMove(WWindow *wwin, WMArray *array, int dx, int dy)
 {
 	WWindow *tmpw;
-	WScreen *scr = wwin->vscr->screen_ptr;
 	int x, y;
 
 	if (!array || !WMGetArrayItemCount(array)) {
@@ -422,24 +443,7 @@ static void doWindowMove(WWindow *wwin, WMArray *array, int dx, int dy)
 		WM_ITERATE_ARRAY(array, tmpw, iter) {
 			x = tmpw->frame_x + dx;
 			y = tmpw->frame_y + dy;
-
-#if 1				/* XXX: with xinerama patch was #if 0, check this */
-			/* don't let windows become unreachable */
-
-			if (x + (int)tmpw->frame->core->width < 20)
-				x = 20 - (int)tmpw->frame->core->width;
-			else if (x + 20 > scr->scr_width)
-				x = scr->scr_width - 20;
-
-			if (y + (int)tmpw->frame->core->height < 20)
-				y = 20 - (int)tmpw->frame->core->height;
-			else if (y + 20 > scr->scr_height)
-				y = scr->scr_height - 20;
-#else
-			wScreenBringInside(scr, &x, &y,
-					   (int)tmpw->frame->core->width, (int)tmpw->frame->core->height);
-#endif
-
+			set_inside_position(tmpw, wwin->vscr, &x, &y);
 			wWindowMove(tmpw, x, y);
 		}
 	}
@@ -485,39 +489,20 @@ static void drawTransparentFrame(WWindow *wwin, int x, int y, int width, int hei
 static void drawFrames(WWindow *wwin, WMArray *array, int dx, int dy)
 {
 	WWindow *tmpw;
-	int scr_width = wwin->vscr->screen_ptr->scr_width;
-	int scr_height = wwin->vscr->screen_ptr->scr_height;
 	int x, y;
 
 	if (!array) {
 		x = wwin->frame_x + dx;
 		y = wwin->frame_y + dy;
-		drawTransparentFrame(wwin, x, y, wwin->frame->core->width, wwin->frame->core->height);
+		drawTransparentFrame(wwin, x, y, wwin->frame->width, wwin->frame->height);
 	} else {
 		WMArrayIterator iter;
 
 		WM_ITERATE_ARRAY(array, tmpw, iter) {
 			x = tmpw->frame_x + dx;
 			y = tmpw->frame_y + dy;
-
-			/* don't let windows become unreachable */
-#if 1				/* XXX: was 0 in XINERAMA patch, check */
-			if (x + (int)tmpw->frame->core->width < 20)
-				x = 20 - (int)tmpw->frame->core->width;
-			else if (x + 20 > scr_width)
-				x = scr_width - 20;
-
-			if (y + (int)tmpw->frame->core->height < 20)
-				y = 20 - (int)tmpw->frame->core->height;
-			else if (y + 20 > scr_height)
-				y = scr_height - 20;
-
-#else
-			wScreenBringInside(wwin->screen_ptr, &x, &y,
-					   (int)tmpw->frame->core->width, (int)tmpw->frame->core->height);
-#endif
-
-			drawTransparentFrame(tmpw, x, y, tmpw->frame->core->width, tmpw->frame->core->height);
+			set_inside_position(tmpw, wwin->vscr, &x, &y);
+			drawTransparentFrame(tmpw, x, y, tmpw->frame->width, tmpw->frame->height);
 		}
 	}
 }
@@ -596,9 +581,9 @@ typedef struct {
 
 #define WTOP(w) (w)->frame_y
 #define WLEFT(w) (w)->frame_x
-#define WRIGHT(w) ((w)->frame_x + (int)(w)->frame->core->width - 1 + \
+#define WRIGHT(w) ((w)->frame_x + (int)(w)->frame->width - 1 + \
     (HAS_BORDER_WITH_SELECT(w) ? 2*(w)->vscr->screen_ptr->frame_border_width : 0))
-#define WBOTTOM(w) ((w)->frame_y + (int)(w)->frame->core->height - 1 + \
+#define WBOTTOM(w) ((w)->frame_y + (int)(w)->frame->height - 1 + \
     (HAS_BORDER_WITH_SELECT(w) ? 2*(w)->vscr->screen_ptr->frame_border_width : 0))
 
 static int compareWTop(const void *a, const void *b)
@@ -830,8 +815,8 @@ static void initMoveData(WWindow *wwin, MoveData *data)
 	data->calcX = wwin->frame_x;
 	data->calcY = wwin->frame_y;
 
-	data->winWidth = wwin->frame->core->width + (HAS_BORDER_WITH_SELECT(wwin) ? 2 * wwin->vscr->screen_ptr->frame_border_width : 0);
-	data->winHeight = wwin->frame->core->height + (HAS_BORDER_WITH_SELECT(wwin) ? 2 * wwin->vscr->screen_ptr->frame_border_width : 0);
+	data->winWidth = wwin->frame->width + (HAS_BORDER_WITH_SELECT(wwin) ? 2 * wwin->vscr->screen_ptr->frame_border_width : 0);
+	data->winHeight = wwin->frame->height + (HAS_BORDER_WITH_SELECT(wwin) ? 2 * wwin->vscr->screen_ptr->frame_border_width : 0);
 
 	data->snap = SNAP_NONE;
 }
@@ -1321,8 +1306,8 @@ int wKeyboardMoveResizeWindow(WWindow *wwin)
 	WScreen *scr = vscr->screen_ptr;
 	Window root = scr->root_win;
 	XEvent event;
-	int w = wwin->frame->core->width;
-	int h = wwin->frame->core->height;
+	int w = wwin->frame->width;
+	int h = wwin->frame->height;
 	int scr_width = wwin->vscr->screen_ptr->scr_width;
 	int scr_height = wwin->vscr->screen_ptr->scr_height;
 	int vert_border = wwin->frame->top_width + wwin->frame->bottom_width;
@@ -1849,10 +1834,10 @@ int wMouseMoveWindow(WWindow *wwin, XEvent *ev)
 						int new_x, new_y;
 
 						titlebar_ratio = (moveData.mouseX - wwin->frame_x) /
-							(float)wwin->frame->core->width;
+							(float)wwin->frame->width;
 						new_y = wwin->frame_y;
 						wUnmaximizeWindow(wwin);
-						new_x = moveData.mouseX - titlebar_ratio * wwin->frame->core->width;
+						new_x = moveData.mouseX - titlebar_ratio * wwin->frame->width;
 						wWindowMove(wwin, new_x, new_y);
 						moveData.realX = moveData.calcX = wwin->frame_x;
 						moveData.realY = moveData.calcY = wwin->frame_y;
@@ -1986,7 +1971,7 @@ int wMouseMoveWindow(WWindow *wwin, XEvent *ev)
 
 static int getResizeDirection(WWindow * wwin, int x, int y, int dy, int flags)
 {
-	int w = wwin->frame->core->width - 1;
+	int w = wwin->frame->width - 1;
 	int cw = wwin->frame->resizebar_corner_width;
 	int dir;
 
@@ -2048,8 +2033,8 @@ void wMouseResizeWindow(WWindow *wwin, XEvent *ev)
 	WScreen *scr = vscr->screen_ptr;
 	Window root = scr->root_win;
 	int vert_border = wwin->frame->top_width + wwin->frame->bottom_width;
-	int fw = wwin->frame->core->width;
-	int fh = wwin->frame->core->height;
+	int fw = wwin->frame->width;
+	int fh = wwin->frame->height;
 	int fx = wwin->frame_x;
 	int fy = wwin->frame_y;
 	int is_resizebar = (wwin->frame->resizebar && ev->xany.window == wwin->frame->resizebar->window);
@@ -2316,8 +2301,8 @@ static void selectWindowsInside(virtual_screen *vscr, int x1, int y1, int x2, in
 		if (!(tmpw->flags.miniaturized || tmpw->flags.hidden)) {
 			if ((tmpw->frame->workspace == vscr->workspace.current || IS_OMNIPRESENT(tmpw))
 			    && (tmpw->frame_x >= x1) && (tmpw->frame_y >= y1)
-			    && (tmpw->frame->core->width + tmpw->frame_x <= x2)
-			    && (tmpw->frame->core->height + tmpw->frame_y <= y2)) {
+			    && (tmpw->frame->width + tmpw->frame_x <= x2)
+			    && (tmpw->frame->height + tmpw->frame_y <= y2)) {
 				wSelectWindow(tmpw, True);
 			}
 		}

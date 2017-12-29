@@ -3485,7 +3485,7 @@ static int setSwPOptions(virtual_screen *vscr, WDefaultEntry *entry, void *tdata
 				RReleaseImage(bgimage);
 			}
 		}
-
+		/* Falls through */
 	case 1:
 		if (!WMIsPLString(WMGetFromPLArray(array, 0))) {
 			wwarning(_("Invalid arguments for option \"%s\""), entry->key);

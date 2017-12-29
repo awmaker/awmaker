@@ -154,8 +154,8 @@ void DoWindowBirth(WWindow *wwin)
 {
 #ifdef WINDOW_BIRTH_ZOOM
 	int center_x, center_y;
-	int width = wwin->frame->core->width;
-	int height = wwin->frame->core->height;
+	int width = wwin->frame->width;
+	int height = wwin->frame->height;
 	int w = WMIN(width, 20);
 	int h = WMIN(height, 20);
 	WScreen *scr = wwin->screen_ptr;
@@ -228,7 +228,7 @@ reinit:
 
 	XMoveWindow(dpy, aicon->icon->core->window,
 			aicon->x_pos, aicon->y_pos);
-	CommitStackingForWindow(aicon->icon->core);
+	CommitStackingForWindow(aicon->icon->vscr, aicon->icon->core);
 	data->wapp->flags.bouncing = 0;
 	WMDeleteTimerHandler(data->timer);
 	wApplicationDestroy(data->wapp);
@@ -239,7 +239,7 @@ static int bounceDirection(WAppIcon *aicon)
 {
 	enum { left_e = 1, right_e = 2, top_e = 4, bottom_e = 8 };
 
-	virtual_screen *vscr = aicon->icon->core->vscr;
+	virtual_screen *vscr = aicon->icon->vscr;
 	WMRect rr, sr;
 	int l, r, t, b, h, v;
 	int dir = 0;

@@ -459,7 +459,7 @@ static void showBalloon(WScreen *scr)
 static void frameBalloon(WObjDescriptor *object)
 {
 	WFrameWindow *fwin = (WFrameWindow *) object->parent;
-	virtual_screen *vscr = fwin->core->vscr;
+	virtual_screen *vscr = fwin->vscr;
 	WScreen *scr = vscr->screen_ptr;
 	WWindow *wwin;
 
@@ -470,7 +470,7 @@ static void frameBalloon(WObjDescriptor *object)
 
 	wwin = (WWindow *) fwin->child;
 	if (wwin->title && fwin->flags.incomplete_title) {
-		scr->balloon->h = (fwin->titlebar ? fwin->titlebar->height : 0);
+		scr->balloon->h = (fwin->titlebar ? fwin->titlebar_height : 0);
 		scr->balloon->text = wstrdup(wwin->title);
 		scr->balloon->objectWindow = fwin->core->window;
 		scr->balloon->timer = WMAddTimerHandler(BALLOON_DELAY, (WMCallback *) showBalloon, scr);
@@ -480,7 +480,7 @@ static void frameBalloon(WObjDescriptor *object)
 static void miniwindowBalloon(WObjDescriptor *object)
 {
 	WIcon *icon = (WIcon *) object->parent;
-	virtual_screen *vscr = icon->core->vscr;
+	virtual_screen *vscr = icon->vscr;
 	WScreen *scr = vscr->screen_ptr;
 
 	if (!icon->title) {
@@ -488,7 +488,7 @@ static void miniwindowBalloon(WObjDescriptor *object)
 		return;
 	}
 
-	scr->balloon->h = icon->core->height;
+	scr->balloon->h = icon->height;
 	scr->balloon->text = wstrdup(icon->title);
 	scr->balloon->mini_preview = icon->mini_preview;
 	scr->balloon->objectWindow = icon->core->window;
@@ -505,7 +505,7 @@ static void miniwindowBalloon(WObjDescriptor *object)
 static void appiconBalloon(WObjDescriptor *object)
 {
 	WAppIcon *aicon = (WAppIcon *) object->parent;
-	virtual_screen *vscr = aicon->icon->core->vscr;
+	virtual_screen *vscr = aicon->icon->vscr;
 	WScreen *scr = vscr->screen_ptr;
 	char *tmp;
 
@@ -566,7 +566,7 @@ static void appiconBalloon(WObjDescriptor *object)
 		return;
 	}
 
-	scr->balloon->h = aicon->icon->core->height - 2;
+	scr->balloon->h = aicon->icon->height - 2;
 	scr->balloon->objectWindow = aicon->icon->core->window;
 	if ((scr->balloon->prevType == object->parent_type || scr->balloon->prevType == WCLASS_MINIWINDOW)
 	    && scr->balloon->ignoreTimer) {

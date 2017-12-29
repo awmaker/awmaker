@@ -92,7 +92,7 @@ static WMenu *parseMenuCommand(virtual_screen *vscr, Window win, char **slist, i
 
 	menu = menu_create(vscr, title);
 	menu->flags.app_menu = 1;
-	menu_map(menu, vscr);
+	menu_map(menu);
 
 	*index += 1;
 	while (*index < count) {
@@ -244,9 +244,9 @@ void wAppMenuMap(WMenu *menu, WWindow *wwin)
 
 	if (wPreferences.focus_mode != WKF_CLICK) {
 		if (wwin->frame_x > min)
-			x = wwin->frame_x - menu->frame->core->width;
+			x = wwin->frame_x - menu->frame->width;
 		else
-			x = min - menu->frame->core->width;
+			x = min - menu->frame->width;
 	}
 
 	if (!menu->flags.mapped)

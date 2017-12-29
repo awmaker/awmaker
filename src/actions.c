@@ -222,7 +222,7 @@ void wSetFocusTo(virtual_screen *vscr, WWindow *wwin)
 
 		/* reset fullscreen if temporarily removed due to lost focus*/
 		if (wwin->flags.fullscreen)
-			ChangeStackingLevel(wwin->frame->core, WMFullscreenLevel);
+			ChangeStackingLevel(wwin->frame->vscr, wwin->frame->core, WMFullscreenLevel);
 	}
 
 	wWindowFocus(wwin, focused);
@@ -260,7 +260,7 @@ void wShadeWindow(WWindow *wwin)
 	XSelectInput(dpy, wwin->client_win, wwin->event_mask);
 
 	/* for the client it's just like iconification */
-	wFrameWindowResize(wwin->frame, wwin->frame->core->width, wwin->frame->top_width - 1);
+	wFrameWindowResize(wwin->frame, wwin->frame->width, wwin->frame->top_width - 1);
 
 	wwin->client.y = wwin->frame_y - wwin->height + wwin->frame->top_width;
 	wWindowSynthConfigureNotify(wwin);
@@ -291,7 +291,7 @@ void wUnshadeWindow(WWindow *wwin)
 	shade_animate(wwin, UNSHADE);
 
 	wwin->flags.skip_next_animation = 0;
-	wFrameWindowResize(wwin->frame, wwin->frame->core->width,
+	wFrameWindowResize(wwin->frame, wwin->frame->width,
 			   wwin->frame->top_width + wwin->height + wwin->frame->bottom_width);
 
 	wwin->client.y = wwin->frame_y + wwin->frame->top_width;
@@ -434,11 +434,11 @@ void wMaximizeWindow(WWindow *wwin, int directions, int head)
 	} else {
 		/* set default values if no option set then */
 		if (!(directions & (MAX_HORIZONTAL | MAX_LEFTHALF | MAX_RIGHTHALF | MAX_MAXIMUS))) {
-			new_width = (wwin->old_geometry.width) ? wwin->old_geometry.width : wwin->frame->core->width;
+			new_width = (wwin->old_geometry.width) ? wwin->old_geometry.width : wwin->frame->width;
 			new_x = (wwin->old_geometry.x) ? wwin->old_geometry.x : wwin->frame_x;
 		}
 		if (!(directions & (MAX_VERTICAL | MAX_TOPHALF | MAX_BOTTOMHALF | MAX_MAXIMUS))) {
-			new_height = (wwin->old_geometry.height) ? wwin->old_geometry.height : wwin->frame->core->height;
+			new_height = (wwin->old_geometry.height) ? wwin->old_geometry.height : wwin->frame->height;
 			new_y = (wwin->old_geometry.y) ? wwin->old_geometry.y : wwin->frame_y;
 		}
 
@@ -682,8 +682,8 @@ static void set_window_coords(WWindow *wwin, win_coords *obs)
 {
 	obs->left = wwin->frame_x;
 	obs->top = wwin->frame_y;
-	obs->width = wwin->frame->core->width;
-	obs->height = wwin->frame->core->height;
+	obs->width = wwin->frame->width;
+	obs->height = wwin->frame->height;
 	obs->bottom = obs->top + obs->height;
 	obs->right = obs->left + obs->width;
 }
@@ -840,12 +840,12 @@ void wFullscreenWindow(WWindow *wwin)
 
 	wWindowConfigureBorders(wwin);
 
-	ChangeStackingLevel(wwin->frame->core, WMFullscreenLevel);
+	ChangeStackingLevel(wwin->frame->vscr, wwin->frame->core, WMFullscreenLevel);
 
 	wwin->bfs_geometry.x = wwin->frame_x;
 	wwin->bfs_geometry.y = wwin->frame_y;
-	wwin->bfs_geometry.width = wwin->frame->core->width;
-	wwin->bfs_geometry.height = wwin->frame->core->height;
+	wwin->bfs_geometry.width = wwin->frame->width;
+	wwin->bfs_geometry.height = wwin->frame->height;
 
 	head = wGetHeadForWindow(wwin);
 	rect = wGetRectForHead(wwin->vscr->screen_ptr, head);
@@ -866,11 +866,11 @@ void wUnfullscreenWindow(WWindow *wwin)
 
 	if (wwin->frame->core->stacking->window_level == WMFullscreenLevel) {
 		if (WFLAGP(wwin, sunken)) {
-			ChangeStackingLevel(wwin->frame->core, WMSunkenLevel);
+			ChangeStackingLevel(wwin->frame->vscr, wwin->frame->core, WMSunkenLevel);
 		} else if (WFLAGP(wwin, floating)) {
-			ChangeStackingLevel(wwin->frame->core, WMFloatingLevel);
+			ChangeStackingLevel(wwin->frame->vscr, wwin->frame->core, WMFloatingLevel);
 		} else {
-			ChangeStackingLevel(wwin->frame->core, WMNormalLevel);
+			ChangeStackingLevel(wwin->frame->vscr, wwin->frame->core, WMNormalLevel);
 		}
 	}
 
@@ -1191,8 +1191,8 @@ static int getAnimationGeometry(WWindow *wwin, int *ix, int *iy, int *iw, int *i
 	if (!wPreferences.disable_miniwindows && !wwin->flags.net_handle_icon) {
 		*ix = wwin->icon_x;
 		*iy = wwin->icon_y;
-		*iw = wwin->icon->core->width;
-		*ih = wwin->icon->core->height;
+		*iw = wwin->icon->width;
+		*ih = wwin->icon->height;
 	} else {
 		if (wwin->flags.net_handle_icon) {
 			*ix = wwin->icon_x;
@@ -1284,7 +1284,7 @@ void wIconifyWindow(WWindow *wwin)
 #ifdef USE_ANIMATIONS
 		if (getAnimationGeometry(wwin, &ix, &iy, &iw, &ih))
 			animateResize(wwin->vscr, wwin->frame_x, wwin->frame_y,
-				      wwin->frame->core->width, wwin->frame->core->height, ix, iy, iw, ih);
+				      wwin->frame->width, wwin->frame->height, ix, iy, iw, ih);
 #endif
 	}
 
@@ -1295,8 +1295,8 @@ void wIconifyWindow(WWindow *wwin)
 		    IS_OMNIPRESENT(wwin) || wPreferences.sticky_icons)
 			XMapWindow(dpy, wwin->icon->core->window);
 
-		AddToStackList(wwin->icon->core);
-		wLowerFrame(wwin->icon->core);
+		AddToStackList(wwin->icon->vscr, wwin->icon->core);
+		wLowerFrame(wwin->icon->vscr, wwin->icon->core);
 	}
 
 	if (present) {
@@ -1369,7 +1369,7 @@ void wDeiconifyWindow(WWindow *wwin)
 		if (owner && owner->flags.miniaturized) {
 			wDeiconifyWindow(owner);
 			wSetFocusTo(wwin->vscr, wwin);
-			wRaiseFrame(wwin->frame->core);
+			wRaiseFrame(wwin->frame->vscr, wwin->frame->core);
 			wwin->vscr->workspace.ignore_change = False;
 			return;
 		}
@@ -1400,7 +1400,7 @@ void wDeiconifyWindow(WWindow *wwin)
 		if (getAnimationGeometry(wwin, &ix, &iy, &iw, &ih))
 			animateResize(wwin->vscr, ix, iy, iw, ih,
 				      wwin->frame_x, wwin->frame_y,
-				      wwin->frame->core->width, wwin->frame->core->height);
+				      wwin->frame->width, wwin->frame->height);
 #endif
 		wwin->flags.skip_next_animation = 0;
 		XGrabServer(dpy);
@@ -1408,7 +1408,7 @@ void wDeiconifyWindow(WWindow *wwin)
 			XMapWindow(dpy, wwin->client_win);
 
 		XMapWindow(dpy, wwin->frame->core->window);
-		wRaiseFrame(wwin->frame->core);
+		wRaiseFrame(wwin->frame->vscr, wwin->frame->core);
 		if (!wwin->flags.shaded)
 			wClientSetState(wwin, NormalState, None);
 
@@ -1417,7 +1417,7 @@ void wDeiconifyWindow(WWindow *wwin)
 
 	if (!wPreferences.disable_miniwindows && wwin->icon != NULL
 	    && !wwin->flags.net_handle_icon) {
-		RemoveFromStackList(wwin->icon->core);
+		RemoveFromStackList(wwin->icon->vscr, wwin->icon->core);
 		wSetFocusTo(wwin->vscr, wwin);
 		wIconDestroy(wwin->icon);
 		wwin->icon = NULL;
@@ -1482,8 +1482,8 @@ static void hideWindow(WIcon *icon, int icon_x, int icon_y, WWindow *wwin, int a
 	if (!w_global.startup.phase1 && !wPreferences.no_animations &&
 	    !wwin->flags.skip_next_animation && animate)
 		animateResize(wwin->vscr, wwin->frame_x, wwin->frame_y,
-			      wwin->frame->core->width, wwin->frame->core->height,
-			      icon_x, icon_y, icon->core->width, icon->core->height);
+			      wwin->frame->width, wwin->frame->height,
+			      icon_x, icon_y, icon->width, icon->height);
 #endif
 	wwin->flags.skip_next_animation = 0;
 
@@ -1643,9 +1643,9 @@ static void unhideWindow(WIcon *icon, int icon_x, int icon_y, WWindow *wwin, int
 #ifdef USE_ANIMATIONS
 	if (!w_global.startup.phase1 && !wPreferences.no_animations && animate)
 		animateResize(wwin->vscr, icon_x, icon_y,
-			      icon->core->width, icon->core->height,
+			      icon->width, icon->height,
 			      wwin->frame_x, wwin->frame_y,
-			      wwin->frame->core->width, wwin->frame->core->height);
+			      wwin->frame->width, wwin->frame->height);
 #endif
 	wwin->flags.skip_next_animation = 0;
 	if (wwin->vscr->workspace.current == wwin->frame->workspace) {
@@ -1653,7 +1653,7 @@ static void unhideWindow(WIcon *icon, int icon_x, int icon_y, WWindow *wwin, int
 		XMapWindow(dpy, wwin->frame->core->window);
 		wClientSetState(wwin, NormalState, None);
 		wwin->flags.mapped = 1;
-		wRaiseFrame(wwin->frame->core);
+		wRaiseFrame(wwin->frame->vscr, wwin->frame->core);
 	}
 
 	if (wwin->flags.inspector_open)
@@ -1708,7 +1708,7 @@ void wUnhideApplication(WApplication *wapp, Bool miniwindows, Bool bringToCurren
 						wlist->icon->mapped = 1;
 					}
 
-					wRaiseFrame(wlist->icon->core);
+					wRaiseFrame(wlist->icon->vscr, wlist->icon->core);
 				}
 
 				if (bringToCurrentWS)
@@ -1724,7 +1724,7 @@ void wUnhideApplication(WApplication *wapp, Bool miniwindows, Bool bringToCurren
 					wWindowChangeWorkspace(wlist, vscr->workspace.current);
 
 				wlist->flags.hidden = 0;
-				wRaiseFrame(wlist->frame->core);
+				wRaiseFrame(wlist->frame->vscr, wlist->frame->core);
 				if (wlist->frame->workspace == vscr->workspace.current) {
 					XMapWindow(dpy, wlist->frame->core->window);
 					if (miniwindows)
@@ -1740,7 +1740,7 @@ void wUnhideApplication(WApplication *wapp, Bool miniwindows, Bool bringToCurren
 				if (bringToCurrentWS && wlist->frame->workspace != vscr->workspace.current)
 					wWindowChangeWorkspace(wlist, vscr->workspace.current);
 
-				wRaiseFrame(wlist->frame->core);
+				wRaiseFrame(wlist->frame->vscr, wlist->frame->core);
 			}
 		}
 		wlist = next;
@@ -1750,7 +1750,7 @@ void wUnhideApplication(WApplication *wapp, Bool miniwindows, Bool bringToCurren
 	wapp->flags.hidden = 0;
 
 	if (wapp->last_focused && wapp->last_focused->flags.mapped) {
-		wRaiseFrame(wapp->last_focused->frame->core);
+		wRaiseFrame(wapp->last_focused->frame->vscr, wapp->last_focused->frame->core);
 		wSetFocusTo(vscr, wapp->last_focused);
 	} else if (focused) {
 		wSetFocusTo(vscr, focused);
@@ -2023,7 +2023,7 @@ void wMakeWindowVisible(WWindow *wwin)
 		if (!WFLAGP(wwin, no_focusable))
 			wSetFocusTo(wwin->vscr, wwin);
 
-		wRaiseFrame(wwin->frame->core);
+		wRaiseFrame(wwin->frame->vscr, wwin->frame->core);
 	}
 }
 
@@ -2056,12 +2056,12 @@ static void shade_animate(WWindow *wwin, Bool what)
 	case SHADE:
 		if (!w_global.startup.phase1) {
 			/* do the shading animation */
-			h = wwin->frame->core->height;
+			h = wwin->frame->height;
 			s = h / SHADE_STEPS;
 			if (s < 1)
 				s = 1;
 
-			w = wwin->frame->core->width;
+			w = wwin->frame->width;
 			y = wwin->frame->top_width;
 			while (h > wwin->frame->top_width + 1) {
 				XMoveWindow(dpy, wwin->client_win, 0, y);
@@ -2091,7 +2091,7 @@ static void shade_animate(WWindow *wwin, Bool what)
 		if (s < 1)
 			s = 1;
 
-		w = wwin->frame->core->width;
+		w = wwin->frame->width;
 		XMoveWindow(dpy, wwin->client_win, 0, y);
 		if (s > 0) {
 			while (h < wwin->height + wwin->frame->top_width + wwin->frame->bottom_width) {

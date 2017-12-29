@@ -29,15 +29,9 @@
 #include "WindowMaker.h"
 #include "wcore.h"
 
-WCoreWindow *wcore_create(int width, int height)
+WCoreWindow *wcore_create()
 {
-	WCoreWindow *core;
-
-	core = wmalloc(sizeof(WCoreWindow));
-	core->width = width;
-	core->height = height;
-
-	return core;
+	return wmalloc(sizeof(WCoreWindow));
 }
 
 void wcore_destroy(WCoreWindow *core)
@@ -45,7 +39,9 @@ void wcore_destroy(WCoreWindow *core)
 	wfree(core);
 }
 
-void wcore_map_toplevel(WCoreWindow *core, virtual_screen *screen, int x, int y, int bwidth, int depth, Visual *visual, Colormap colormap, WMPixel border_pixel)
+void wcore_map_toplevel(WCoreWindow *core, virtual_screen *vscr, int x, int y,
+			int width, int height, int bwidth, int depth,
+			Visual *visual, Colormap colormap, WMPixel border_pixel)
 {
 	int vmask;
 	XSetWindowAttributes attribs;
@@ -54,7 +50,7 @@ void wcore_map_toplevel(WCoreWindow *core, virtual_screen *screen, int x, int y,
 	attribs.override_redirect = True;
 	attribs.cursor = wPreferences.cursor[WCUR_NORMAL];
 	attribs.background_pixmap = None;
-	attribs.background_pixel = screen->screen_ptr->black_pixel;
+	attribs.background_pixel = vscr->screen_ptr->black_pixel;
 	attribs.border_pixel = border_pixel;
 	attribs.event_mask = SubstructureRedirectMask | ButtonPressMask |
 			     ButtonReleaseMask | ButtonMotionMask |
@@ -67,16 +63,17 @@ void wcore_map_toplevel(WCoreWindow *core, virtual_screen *screen, int x, int y,
 		attribs.save_under = True;
 	}
 
-	core->window = XCreateWindow(dpy, screen->screen_ptr->root_win, x, y, core->width, core->height,
+	core->window = XCreateWindow(dpy, vscr->screen_ptr->root_win, x, y, width, height,
 				     bwidth, depth, CopyFromParent, visual, vmask, &attribs);
-	core->vscr = screen;
 	core->descriptor.self = core;
 
 	XClearWindow(dpy, core->window);
 	XSaveContext(dpy, core->window, w_global.context.client_win, (XPointer) & core->descriptor);
 }
 
-void wcore_map(WCoreWindow *core, WCoreWindow *parent, virtual_screen *screen, int x, int y, int bwidth, int depth, Visual *visual, Colormap colormap)
+void wcore_map(WCoreWindow *core, WCoreWindow *parent, virtual_screen *vscr,
+	       int x, int y, int width, int height, int bwidth, int depth,
+	       Visual *visual, Colormap colormap)
 {
 	int vmask;
 	XSetWindowAttributes attribs;
@@ -84,15 +81,14 @@ void wcore_map(WCoreWindow *core, WCoreWindow *parent, virtual_screen *screen, i
 	vmask = CWBorderPixel | CWCursor | CWEventMask | CWColormap;
 	attribs.cursor = wPreferences.cursor[WCUR_NORMAL];
 	attribs.background_pixmap = None;
-	attribs.background_pixel = parent->vscr->screen_ptr->black_pixel;
+	attribs.background_pixel = vscr->screen_ptr->black_pixel;
 	attribs.event_mask = KeyPressMask | KeyReleaseMask | ButtonPressMask |
 			     ButtonReleaseMask | ButtonMotionMask |
 			     ExposureMask | EnterWindowMask | LeaveWindowMask;
 	attribs.colormap = colormap;
-	core->window = XCreateWindow(dpy, parent->window, x, y, core->width, core->height, bwidth,
+	core->window = XCreateWindow(dpy, parent->window, x, y, width, height, bwidth,
 				     depth, CopyFromParent, visual, vmask, &attribs);
 
-	core->vscr = screen;
 	core->descriptor.self = core;
 
 	XSaveContext(dpy, core->window, w_global.context.client_win, (XPointer) & core->descriptor);
@@ -115,11 +111,11 @@ void wCoreConfigure(WCoreWindow * core, int req_x, int req_y, int req_w, int req
 	xwc.x = req_x;
 	xwc.y = req_y;
 
-	if (req_w <= 0)
-		req_w = core->width;
+	if (req_w < 0)
+		req_w = 0;
 
-	if (req_h <= 0)
-		req_h = core->height;
+	if (req_h < 0)
+		req_h = 0;
 
 	if (req_w != core->width || req_h != core->height) {
 		mask |= CWWidth | CWHeight;

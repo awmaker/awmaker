@@ -97,7 +97,7 @@ WMenu *switchmenu_create(virtual_screen *vscr)
 
 	switch_menu = menu_create(vscr, _("Windows"));
 	switchmenu_setup_switchmenu_notif();
-	menu_map(switch_menu, vscr);
+	menu_map(switch_menu);
 	wwin = vscr->window.focused;
 	while (wwin) {
 		switchmenu_additem(switch_menu, wwin);
@@ -134,7 +134,7 @@ void OpenSwitchMenu(virtual_screen *vscr, int x, int y, int keyboard)
 		if (!switchmenu->flags.buttoned) {
 			switchmenu_destroy(vscr);
 		} else {
-			wRaiseFrame(switchmenu->frame->core);
+			wRaiseFrame(switchmenu->frame->vscr, switchmenu->frame->core);
 
 			if (keyboard)
 				wMenuMapAt(vscr, switchmenu, 0, 0, True);
@@ -146,9 +146,9 @@ void OpenSwitchMenu(virtual_screen *vscr, int x, int y, int keyboard)
 	if (keyboard &&
 	    x == vscr->screen_ptr->scr_width / 2 &&
 	    y == vscr->screen_ptr->scr_height / 2)
-		y = y - switchmenu->frame->core->height / 2;
+		y = y - switchmenu->frame->height / 2;
 
-	wMenuMapAt(vscr, switchmenu, x - switchmenu->frame->core->width / 2, y, keyboard);
+	wMenuMapAt(vscr, switchmenu, x - switchmenu->frame->width / 2, y, keyboard);
 }
 
 static int menuIndexForWindow(WMenu * menu, WWindow * wwin, int old_pos)

@@ -62,9 +62,9 @@ typedef struct WDock {
 
 WDock *clip_create(virtual_screen *vscr, WMPropList *state);
 WDock *dock_create(virtual_screen *vscr);
-void clip_map(WDock *dock, virtual_screen *scr, WMPropList *state);
+void clip_map(WDock *dock, WMPropList *state);
 void clip_unmap(WDock *dock);
-void dock_map(WDock *dock, virtual_screen *scr, WMPropList *dock_state);
+void dock_map(WDock *dock, WMPropList *dock_state);
 void dock_unmap(WDock *dock);
 
 WAppIcon *clip_icon_create(virtual_screen *vscr);

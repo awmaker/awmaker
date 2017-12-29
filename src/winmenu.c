@@ -149,16 +149,16 @@ static void execWindowOptionCommand(WMenu *menu, WMenuEntry *entry)
 	switch (entry->order) {
 	case WO_KEEP_ON_TOP:
 		if (wwin->frame->core->stacking->window_level != WMFloatingLevel)
-			ChangeStackingLevel(wwin->frame->core, WMFloatingLevel);
+			ChangeStackingLevel(wwin->frame->vscr, wwin->frame->core, WMFloatingLevel);
 		else
-			ChangeStackingLevel(wwin->frame->core, WMNormalLevel);
+			ChangeStackingLevel(wwin->frame->vscr, wwin->frame->core, WMNormalLevel);
 		break;
 
 	case WO_KEEP_AT_BOTTOM:
 		if (wwin->frame->core->stacking->window_level != WMSunkenLevel)
-			ChangeStackingLevel(wwin->frame->core, WMSunkenLevel);
+			ChangeStackingLevel(wwin->frame->vscr, wwin->frame->core, WMSunkenLevel);
 		else
-			ChangeStackingLevel(wwin->frame->core, WMNormalLevel);
+			ChangeStackingLevel(wwin->frame->vscr, wwin->frame->core, WMNormalLevel);
 		break;
 
 	case WO_OMNIPRESENT:
@@ -239,8 +239,6 @@ static void execMenuCommand(WMenu *menu, WMenuEntry *entry)
 	WWindow *wwin = (WWindow *) entry->clientdata;
 	WApplication *wapp;
 
-	CloseWindowMenu(menu->frame->vscr);
-
 	switch (entry->order) {
 	case MC_CLOSE:
 		/* send delete message */
@@ -251,7 +249,7 @@ static void execMenuCommand(WMenu *menu, WMenuEntry *entry)
 	case MC_KILL:
 		wretain(wwin);
 		if (wPreferences.dont_confirm_kill
-		    || wMessageDialog(menu->frame->vscr, _("Kill Application"),
+		    || wMessageDialog(menu->vscr, _("Kill Application"),
 				      _
 				      ("This will kill the application.\nAny unsaved changes will be lost.\nPlease confirm."),
 				      _("Yes"), _("No"), NULL) == WAPRDefault) {
@@ -512,7 +510,7 @@ static WMenu *makeWorkspaceMenu(virtual_screen *vscr)
 	WMenu *menu;
 
 	menu = menu_create(vscr, NULL);
-	menu_map(menu, vscr);
+	menu_map(menu);
 
 	if (!menu) {
 		wwarning(_("could not create submenu for window menu"));
@@ -542,7 +540,7 @@ static WMenu *makeOptionsMenu(virtual_screen *vscr)
 	int i;
 
 	menu = menu_create(vscr, NULL);
-	menu_map(menu, vscr);
+	menu_map(menu);
 
 	for (i = 0; i < wlengthof(menu_options_entries); i++) {
 		entry = wMenuAddCallback(menu, _(menu_options_entries[i]), execWindowOptionCommand, NULL);
@@ -564,7 +562,7 @@ static WMenu *makeMaximizeMenu(virtual_screen *vscr)
 	int i;
 
 	menu = menu_create(vscr, NULL);
-	menu_map(menu, vscr);
+	menu_map(menu);
 
 	for (i = 0; i < wlengthof(menu_maximize_entries); i++)
 		wMenuAddCallback(menu, _(menu_maximize_entries[i].label), execMaximizeCommand, NULL);
@@ -578,7 +576,7 @@ static WMenu *createWindowMenu(virtual_screen *vscr)
 	int i;
 
 	menu = menu_create(vscr, NULL);
-	menu_map(menu, vscr);
+	menu_map(menu);
 
 	for (i = 0; i < wlengthof(window_menu_entries); i++) {
 		WMenuEntry *entry;
@@ -593,23 +591,6 @@ static WMenu *createWindowMenu(virtual_screen *vscr)
 	}
 
 	return menu;
-}
-
-void CloseWindowMenu(virtual_screen *vscr)
-{
-	WWindow *wwin;
-
-	if (vscr->menu.window_menu) {
-		if (vscr->menu.window_menu->flags.mapped)
-			wMenuUnmap(vscr->menu.window_menu);
-
-		if (vscr->menu.window_menu->entries[0]->clientdata) {
-			wwin = (WWindow *) vscr->menu.window_menu->entries[0]->clientdata;
-			wwin->flags.menu_open_for_me = 0;
-		}
-
-		vscr->menu.window_menu->entries[0]->clientdata = NULL;
-	}
 }
 
 static void updateMenuForWindow(WMenu *menu, WWindow *wwin)
@@ -724,7 +705,7 @@ static void updateMenuForWindow(WMenu *menu, WWindow *wwin)
 
 static void updateMenuForWindow_map(WMenu *menu)
 {
-	virtual_screen *vscr = menu->frame->vscr;
+	virtual_screen *vscr = menu->vscr;
 	int i;
 	WMenu *omenu, *mmenu, *smenu;
 
@@ -785,7 +766,7 @@ static WMenu *open_window_menu_core(WWindow *wwin)
 
 	wwin->flags.menu_open_for_me = 1;
 
-	updateWorkspaceMenu(vscr, vscr->workspace.submenu);
+	window_menu_create(vscr);
 
 	if (vscr->workspace.submenu->flags.realized)
 		wMenuRealize(vscr->workspace.submenu);
@@ -807,11 +788,11 @@ static void prepare_menu_position(WMenu *menu, int *x, int *y)
 {
 	WMRect rect;
 
-	rect = wGetRectForHead(menu->frame->vscr->screen_ptr,
-			       wGetHeadForPointerLocation(menu->frame->vscr));
+	rect = wGetRectForHead(menu->vscr->screen_ptr,
+			       wGetHeadForPointerLocation(menu->vscr));
 
-	if (*x < rect.pos.x - menu->frame->core->width / 2)
-		*x = rect.pos.x - menu->frame->core->width / 2;
+	if (*x < rect.pos.x - menu->frame->width / 2)
+		*x = rect.pos.x - menu->frame->width / 2;
 
 	if (*y < rect.pos.y)
 		*y = rect.pos.y;
@@ -826,9 +807,9 @@ void OpenWindowMenu(WWindow *wwin, int x, int y, int keyboard)
 		return;
 
 	/* Specific menu position */
-	x -= menu->frame->core->width / 2;
-	if (x + menu->frame->core->width > wwin->frame_x + wwin->frame->core->width)
-		x = wwin->frame_x + wwin->frame->core->width - menu->frame->core->width;
+	x -= menu->frame->width / 2;
+	if (x + menu->frame->width > wwin->frame_x + wwin->frame->width)
+		x = wwin->frame_x + wwin->frame->width - menu->frame->width;
 	if (x < wwin->frame_x)
 		x = wwin->frame_x;
 
@@ -858,26 +839,13 @@ void windowmenu_at_switchmenu_open(WWindow *wwin, int x, int y)
 	for (i = 0; i < vscr->workspace.submenu->entry_no; i++)
 		menu_entry_set_enabled_paint(vscr->workspace.submenu, i);
 
-	x -= menu->frame->core->width / 2;
+	x -= menu->frame->width / 2;
 
 	/* Common menu position */
 	prepare_menu_position(menu, &x, &y);
 
 	if (!wwin->flags.internal_window)
 		wMenuMapAt(vscr, menu, x, y, False);
-}
-
-void OpenMiniwindowMenu(WWindow *wwin, int x, int y)
-{
-	WMenu *menu;
-
-	menu = open_window_menu_core(wwin);
-	if (!menu)
-		return;
-
-	x -= menu->frame->core->width / 2;
-
-	wMenuMapAt(wwin->vscr, menu, x, y, False);
 }
 
 void DestroyWindowMenu(virtual_screen *vscr)

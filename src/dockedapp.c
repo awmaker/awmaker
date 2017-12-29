@@ -188,7 +188,7 @@ static void panelBtnCallback(WMWidget *self, void *data)
 	} else {
 		aicon = panel->editedIcon;
 
-		if (aicon == aicon->icon->core->vscr->clip.icon)
+		if (aicon == aicon->icon->vscr->clip.icon)
 			wClipIconPaint(aicon);
 		else if (wIsADrawer(aicon))
 			wDrawerIconPaint(aicon);
@@ -227,7 +227,7 @@ static void panelBtnCallback(WMWidget *self, void *data)
 void ShowDockAppSettingsPanel(WAppIcon *aicon)
 {
 	AppSettingsPanel *panel;
-	virtual_screen *vscr = aicon->icon->core->vscr;
+	virtual_screen *vscr = aicon->icon->vscr;
 	WScreen *scr = vscr->screen_ptr;
 	Window parent;
 	WMFont *font;

@@ -162,11 +162,33 @@ typedef struct WFrameWindow {
         unsigned int incomplete_title:1;
     } flags;
     int depth;
+    int bordersize;
+    int width;		/* Framewin width */
+    int height;		/* Framewin height */
     Visual *visual;
     Colormap colormap;
     unsigned long *border_pixel;
     unsigned long *focused_border_pixel;
     unsigned long *selected_border_pixel;
+
+	/* Titlebar */
+	int titlebar_width;
+	int titlebar_height;
+
+	/* Resizebar */
+	int resizebar_height;
+
+	/* Buttons */
+	int left_button_pos_width;
+	int left_button_pos_height;
+
+	int right_button_pos_width;
+	int right_button_pos_height;
+
+#ifdef XKB_BUTTON_HINT
+	int language_button_pos_width;
+	int language_button_pos_height;
+#endif
 } WFrameWindow;
 
 void wframewin_set_borders(WFrameWindow *fwin, int flags);

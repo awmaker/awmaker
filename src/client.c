@@ -130,18 +130,14 @@ void wClientGetGravityOffsets(WWindow * wwin, int *ofs_x, int *ofs_y)
 	}
 }
 
-void wClientConfigure(WWindow * wwin, XConfigureRequestEvent * xcre)
+void wClientConfigure(WWindow *wwin, XConfigureRequestEvent *xcre)
 {
 	XWindowChanges xwc;
 	int nx, ny, nwidth, nheight;
 	int ofs_x, ofs_y;
 
-	/*  printf("configure event: %d %d %d %d\n", xcre->x, xcre->y, xcre->width, xcre->height); */
-
-	if (wwin == NULL) {
-		/*
-		 * configure a window that was not mapped by us
-		 */
+	if (!wwin) {
+		/* configure a window that was not mapped by us */
 		xwc.x = xcre->x;
 		xwc.y = xcre->y;
 		xwc.width = xcre->width;
@@ -183,44 +179,45 @@ void wClientConfigure(WWindow * wwin, XConfigureRequestEvent * xcre)
 	if (xcre->value_mask & CWBorderWidth)
 		wwin->old_border_width = xcre->border_width;
 
-	if (!wwin->flags.shaded) {
-		/* If the window is shaded, wrong height will be set for the window */
-		if (xcre->value_mask & CWX)
-			nx = xcre->x;
-		else
-			nx = wwin->frame_x;
+	if (wwin->flags.shaded)
+		return;
 
-		if (xcre->value_mask & CWY)
-			ny = xcre->y - ((ofs_y < 0) ? 0 : wwin->frame->top_width);
-		else
-			ny = wwin->frame_y;
+	/* If the window is shaded, wrong height will be set for the window */
+	if (xcre->value_mask & CWX)
+		nx = xcre->x;
+	else
+		nx = wwin->frame_x;
 
-		if (xcre->value_mask & CWWidth)
-			nwidth = xcre->width;
-		else
-			nwidth = wwin->frame->core->width;
+	if (xcre->value_mask & CWY)
+		ny = xcre->y - ((ofs_y < 0) ? 0 : wwin->frame->top_width);
+	else
+		ny = wwin->frame_y;
 
-		if (xcre->value_mask & CWHeight)
-			nheight = xcre->height;
-		else
-			nheight = wwin->frame->core->height - wwin->frame->top_width - wwin->frame->bottom_width;
+	if (xcre->value_mask & CWWidth)
+		nwidth = xcre->width;
+	else
+		nwidth = wwin->frame->width;
 
-		/* Don't overwrite the saved geometry unnecessarily. */
-		if (!(xcre->value_mask & (CWX | CWY | CWWidth | CWHeight)))
-			return;
+	if (xcre->value_mask & CWHeight)
+		nheight = xcre->height;
+	else
+		nheight = wwin->frame->height - wwin->frame->top_width - wwin->frame->bottom_width;
 
-		if (nwidth != wwin->old_geometry.width)
-			wwin->flags.maximized &= ~(MAX_HORIZONTAL | MAX_TOPHALF | MAX_BOTTOMHALF | MAX_MAXIMUS);
+	/* Don't overwrite the saved geometry unnecessarily. */
+	if (!(xcre->value_mask & (CWX | CWY | CWWidth | CWHeight)))
+		return;
 
-		if (nheight != wwin->old_geometry.height)
-			wwin->flags.maximized &= ~(MAX_VERTICAL | MAX_LEFTHALF | MAX_RIGHTHALF | MAX_MAXIMUS);
+	if (nwidth != wwin->old_geometry.width)
+		wwin->flags.maximized &= ~(MAX_HORIZONTAL | MAX_TOPHALF | MAX_BOTTOMHALF | MAX_MAXIMUS);
 
-		wWindowConfigure(wwin, nx, ny, nwidth, nheight);
-		wwin->old_geometry.x = nx;
-		wwin->old_geometry.y = ny;
-		wwin->old_geometry.width = nwidth;
-		wwin->old_geometry.height = nheight;
-	}
+	if (nheight != wwin->old_geometry.height)
+		wwin->flags.maximized &= ~(MAX_VERTICAL | MAX_LEFTHALF | MAX_RIGHTHALF | MAX_MAXIMUS);
+
+	wWindowConfigure(wwin, nx, ny, nwidth, nheight);
+	wwin->old_geometry.x = nx;
+	wwin->old_geometry.y = ny;
+	wwin->old_geometry.width = nwidth;
+	wwin->old_geometry.height = nheight;
 }
 
 void wClientSendProtocol(WWindow *wwin, Atom protocol, Time time)

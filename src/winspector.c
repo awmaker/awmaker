@@ -721,11 +721,11 @@ static void applySettings(WMWidget *button, void *client_data)
 	 * if the level did not change, ChangeStackingLevel will do nothing anyway
 	 */
 	if (WFLAGP(wwin_inspected, floating))
-		ChangeStackingLevel(wwin_inspected->frame->core, WMFloatingLevel);
+		ChangeStackingLevel(wwin_inspected->frame->vscr, wwin_inspected->frame->core, WMFloatingLevel);
 	else if (WFLAGP(wwin_inspected, sunken))
-		ChangeStackingLevel(wwin_inspected->frame->core, WMSunkenLevel);
+		ChangeStackingLevel(wwin_inspected->frame->vscr, wwin_inspected->frame->core, WMSunkenLevel);
 	else
-		ChangeStackingLevel(wwin_inspected->frame->core, WMNormalLevel);
+		ChangeStackingLevel(wwin_inspected->frame->vscr, wwin_inspected->frame->core, WMNormalLevel);
 
 	wwin_inspected->flags.omnipresent = 0;
 
@@ -1214,7 +1214,7 @@ static InspectorPanel *createInspectorForWindow(WWindow *wwin_inspected, int xpo
 	XSetTransientForHint(dpy, parent, wwin_inspected->client_win);
 
 	if (xpos == UNDEFINED_POS) {
-		x = wwin_inspected->frame_x + wwin_inspected->frame->core->width / 2;
+		x = wwin_inspected->frame_x + wwin_inspected->frame->width / 2;
 		y = wwin_inspected->frame_y + wwin_inspected->frame->top_width * 2;
 		if (y + PHEIGHT > scr->scr_height)
 			y = scr->scr_height - PHEIGHT - 30;

@@ -79,30 +79,30 @@ void wApplicationExtractDirPackIcon(const char *path, const char *wm_instance, c
 	char *iconPath = NULL;
 	char *tmp = NULL;
 
-	if (strstr(path, ".app")) {
-		tmp = wmalloc(strlen(path) + 16);
+	if (!strstr(path, ".app"))
+		return;
 
-		if (wPreferences.supports_tiff) {
-			strcpy(tmp, path);
-			strcat(tmp, ".tiff");
-			if (access(tmp, R_OK) == 0)
-				iconPath = tmp;
-		}
+	tmp = wmalloc(strlen(path) + 16);
+	if (wPreferences.supports_tiff) {
+		strcpy(tmp, path);
+		strcat(tmp, ".tiff");
+		if (access(tmp, R_OK) == 0)
+			iconPath = tmp;
+	}
 
-		if (!iconPath) {
-			strcpy(tmp, path);
-			strcat(tmp, ".xpm");
-			if (access(tmp, R_OK) == 0)
-				iconPath = tmp;
-		}
+	if (!iconPath) {
+		strcpy(tmp, path);
+		strcat(tmp, ".xpm");
+		if (access(tmp, R_OK) == 0)
+			iconPath = tmp;
+	}
 
-		if (!iconPath)
-			wfree(tmp);
+	if (!iconPath)
+		wfree(tmp);
 
-		if (iconPath) {
-			wApplicationSaveIconPathFor(iconPath, wm_instance, wm_class);
-			wfree(iconPath);
-		}
+	if (iconPath) {
+		wApplicationSaveIconPathFor(iconPath, wm_instance, wm_class);
+		wfree(iconPath);
 	}
 }
 
@@ -193,7 +193,7 @@ void paint_app_icon(WApplication *wapp)
 		if (wapp->app_icon->next == NULL && wapp->app_icon->prev == NULL) {
 			PlaceIcon(vscr, &x, &y, wGetHeadForWindow(wapp->main_window_desc));
 			wAppIconMove(wapp->app_icon, x, y);
-			wLowerFrame(icon->core);
+			wLowerFrame(icon->vscr, icon->core);
 		}
 	}
 
@@ -308,7 +308,7 @@ static void wAppIcon_map(WAppIcon *aicon)
 	wXDNDMakeAwareness(aicon->icon->core->window);
 #endif
 
-	AddToStackList(aicon->icon->core);
+	AddToStackList(aicon->icon->vscr, aicon->icon->core);
 }
 
 WAppIcon *dock_icon_create(virtual_screen *vscr, char *command, char *wm_class, char *wm_instance)
@@ -339,7 +339,7 @@ WAppIcon *create_appicon(virtual_screen *vscr, char *command, char *wm_class, ch
 
 void wAppIconDestroy(WAppIcon *aicon)
 {
-	RemoveFromStackList(aicon->icon->core);
+	RemoveFromStackList(aicon->icon->vscr, aicon->icon->core);
 	wIconDestroy(aicon->icon);
 	if (aicon->command)
 		wfree(aicon->command);
@@ -361,7 +361,7 @@ void wAppIconDestroy(WAppIcon *aicon)
 
 static void drawCorner(WIcon *icon)
 {
-	WScreen *scr = icon->core->vscr->screen_ptr;
+	WScreen *scr = icon->vscr->screen_ptr;
 	XPoint points[3];
 
 	points[0].x = 1;
@@ -409,7 +409,7 @@ static void updateDockNumbers(virtual_screen *vscr)
 void wAppIconPaint(WAppIcon *aicon)
 {
 	WApplication *wapp;
-	virtual_screen *vscr = aicon->icon->core->vscr;
+	virtual_screen *vscr = aicon->icon->vscr;
 	WScreen *scr = vscr->screen_ptr;
 
 	if (aicon->icon->owner)
@@ -509,7 +509,7 @@ static void hideCallback(WMenu *menu, WMenuEntry *entry)
 	WApplication *wapp = (WApplication *) entry->clientdata;
 
 	if (wapp->flags.hidden) {
-		wWorkspaceChange(menu->menu->vscr, wapp->last_workspace);
+		wWorkspaceChange(menu->vscr, wapp->last_workspace);
 		wUnhideApplication(wapp, False, False);
 	} else {
 		wHideApplication(wapp);
@@ -542,7 +542,7 @@ static void setIconCallback(WMenu *menu, WMenuEntry *entry)
 		return;
 
 	icon->editing = 1;
-	vscr = icon->icon->core->vscr;
+	vscr = icon->icon->vscr;
 
 	wretain(icon);
 
@@ -591,7 +591,7 @@ static void killCallback(WMenu *menu, WMenuEntry *entry)
 
 	wretain(wapp->main_window_desc);
 	if (wPreferences.dont_confirm_kill
-	    || wMessageDialog(menu->frame->vscr, _("Kill Application"),
+	    || wMessageDialog(menu->vscr, _("Kill Application"),
 			      buffer, _("Yes"), _("No"), NULL) == WAPRDefault) {
 		if (fPtr != NULL) {
 			WWindow *wwin, *twin;
@@ -627,27 +627,32 @@ static WMenu *createApplicationMenu(virtual_screen *vscr)
 	return menu;
 }
 
-void appicon_map(WAppIcon *aicon, virtual_screen *vscr)
+void appicon_map(WAppIcon *aicon)
 {
-	wcore_map_toplevel(aicon->icon->core, vscr, 0, 0, 0,
-			   vscr->screen_ptr->w_depth, vscr->screen_ptr->w_visual,
-			   vscr->screen_ptr->w_colormap, vscr->screen_ptr->white_pixel);
+	WIcon *icon = aicon->icon;
+	WCoreWindow *wcore = icon->core;
+	virtual_screen *vscr = aicon->icon->vscr;
+	WScreen *scr = aicon->icon->vscr->screen_ptr;
 
-	map_icon_image(aicon->icon);
+	wcore_map_toplevel(wcore, vscr, 0, 0, icon->width, icon->height, 0,
+			   scr->w_depth, scr->w_visual,
+			   scr->w_colormap, scr->white_pixel);
 
-	WMAddNotificationObserver(icon_appearanceObserver, aicon->icon, WNIconAppearanceSettingsChanged, aicon->icon);
-	WMAddNotificationObserver(icon_tileObserver, aicon->icon, WNIconTileSettingsChanged, aicon->icon);
+	map_icon_image(icon);
+
+	WMAddNotificationObserver(icon_appearanceObserver, aicon->icon, WNIconAppearanceSettingsChanged, icon);
+	WMAddNotificationObserver(icon_tileObserver, aicon->icon, WNIconTileSettingsChanged, icon);
 
 #ifdef USE_DOCK_XDND
-	wXDNDMakeAwareness(aicon->icon->core->window);
+	wXDNDMakeAwareness(wcore->window);
 #endif
 
-	AddToStackList(aicon->icon->core);
+	AddToStackList(vscr, wcore);
 }
 
 void appicon_unmap(WAppIcon *aicon)
 {
-	RemoveFromStackList(aicon->icon->core);
+	RemoveFromStackList(aicon->icon->vscr, aicon->icon->core);
 	unmap_icon_image(aicon->icon);
 	wcore_unmap(aicon->icon->core);
 }
@@ -661,7 +666,7 @@ static void openApplicationMenu(WApplication *wapp, int x, int y)
 
 	if (!vscr->menu.icon_menu) {
 		vscr->menu.icon_menu = createApplicationMenu(vscr);
-		menu_map(vscr->menu.icon_menu, vscr);
+		menu_map(vscr->menu.icon_menu);
 		wfree(vscr->menu.icon_menu->entries[1]->text);
 	}
 
@@ -674,9 +679,9 @@ static void openApplicationMenu(WApplication *wapp, int x, int y)
 
 	menu->flags.realized = 0;
 
-	x -= menu->frame->core->width / 2;
-	if (x + menu->frame->core->width > scr->scr_width)
-		x = scr->scr_width - menu->frame->core->width;
+	x -= menu->frame->width / 2;
+	if (x + menu->frame->width > scr->scr_width)
+		x = scr->scr_width - menu->frame->width;
 
 	if (x < 0)
 		x = 0;
@@ -702,7 +707,7 @@ static void iconDblClick(WObjDescriptor *desc, XEvent *event)
 {
 	WAppIcon *aicon = desc->parent;
 	WApplication *wapp;
-	virtual_screen *vscr = aicon->icon->core->vscr;
+	virtual_screen *vscr = aicon->icon->vscr;
 	int unhideHere;
 
 	assert(aicon->icon->owner != NULL);
@@ -728,7 +733,7 @@ static void iconDblClick(WObjDescriptor *desc, XEvent *event)
 void appIconMouseDown(WObjDescriptor *desc, XEvent *event)
 {
 	WAppIcon *aicon = desc->parent;
-	virtual_screen *vscr = aicon->icon->core->vscr;
+	virtual_screen *vscr = aicon->icon->vscr;
 	Bool hasMoved;
 
 	if (aicon->editing || WCHECK_STATE(WSTATE_MODAL))
@@ -768,7 +773,7 @@ void appIconMouseDown(WObjDescriptor *desc, XEvent *event)
 		openApplicationMenu(wapp, event->xbutton.x_root, event->xbutton.y_root);
 
 		/* allow drag select of menu */
-		desc = &vscr->menu.icon_menu->menu->descriptor;
+		desc = &vscr->menu.icon_menu->core->descriptor;
 		event->xbutton.send_event = True;
 		(*desc->handle_mousedown) (desc, event);
 		return;
@@ -782,7 +787,7 @@ void appIconMouseDown(WObjDescriptor *desc, XEvent *event)
 Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 {
 	WIcon *icon = aicon->icon;
-	virtual_screen *vscr = aicon->icon->core->vscr;
+	virtual_screen *vscr = aicon->icon->vscr;
 	WScreen *scr = vscr->screen_ptr;
 	WDock *originalDock = aicon->dock; /* can be NULL */
 	WDock *lastDock = originalDock;
@@ -813,12 +818,12 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 		return False;
 
 	if (!(event->xbutton.state & MOD_MASK)) {
-		wRaiseFrame(icon->core);
+		wRaiseFrame(icon->vscr, icon->core);
 	} else {
 		/* If Mod is pressed for an docked appicon, assume it is to undock it,
 		 * so don't lower it */
 		if (originalDock == NULL)
-			wLowerFrame(icon->core);
+			wLowerFrame(icon->vscr, icon->core);
 	}
 
 	if (XGrabPointer(dpy, icon->core->window, True, ButtonMotionMask
@@ -971,7 +976,7 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 					if (theNewDock->auto_raise_lower) {
 						wDockRaise(theNewDock);
 						/* And raise the moving tile above it */
-						wRaiseFrame(aicon->icon->core);
+						wRaiseFrame(aicon->icon->vscr, aicon->icon->core);
 					}
 					lastDock = theNewDock;
 				}
@@ -1283,7 +1288,7 @@ void move_appicon_to_dock(virtual_screen *vscr, WAppIcon *icon, char *wm_class, 
 	aicon = create_appicon(vscr, NULL, wm_class, wm_instance);
 	aicon->icon->core->descriptor.parent_type = WCLASS_APPICON;
 	aicon->icon->core->descriptor.parent = aicon;
-	appicon_map(aicon, vscr);
+	appicon_map(aicon);
 
 	/* Map it on the screen, in the right possition */
 	PlaceIcon(vscr, &x0, &y0, wGetHeadForWindow(aicon->icon->owner));
