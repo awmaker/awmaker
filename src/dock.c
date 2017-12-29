@@ -193,7 +193,7 @@ static void swapDrawers(virtual_screen *vscr, int new_x);
 static WDock *getDrawer(virtual_screen *vscr, int y_index);
 static int indexOfHole(WDock *drawer, WAppIcon *moving_aicon, int redocking);
 static void drawerConsolidateIcons(WDock *drawer);
-static void drawerRestoreState_map(virtual_screen *vscr, WDock *drawer);
+static void drawerRestoreState_map(WDock *drawer);
 
 static int onScreen(virtual_screen *scr, int x, int y);
 
@@ -6431,7 +6431,7 @@ static int addADrawer(virtual_screen *vscr)
 	drawer->icon_array[0]->x_pos = drawer->x_pos;
 	drawer->icon_array[0]->y_pos = drawer->y_pos;
 
-	drawerRestoreState_map(vscr, drawer);
+	drawerRestoreState_map(drawer);
 
 	return 0;
 }
@@ -6872,8 +6872,10 @@ static void drawerRestoreState_unmap(WDock *drawer)
 	drawer_unmap(drawer);
 }
 
-static void drawerRestoreState_map(virtual_screen *vscr, WDock *drawer)
+static void drawerRestoreState_map(WDock *drawer)
 {
+	virtual_screen *vscr = drawer->vscr;
+
 	drawer_map(drawer, vscr);
 
 	/* restore lowered/raised state: same as scr->dock, no matter what */
@@ -6988,5 +6990,5 @@ void wDrawersRestoreState_map(virtual_screen *vscr)
 	WDrawerChain *dc;
 
 	for (dc = vscr->drawer.drawers; dc != NULL; dc = dc->next)
-		drawerRestoreState_map(vscr, dc->adrawer);
+		drawerRestoreState_map(dc->adrawer);
 }
