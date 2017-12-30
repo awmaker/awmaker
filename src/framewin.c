@@ -635,23 +635,27 @@ void wframewin_set_borders(WFrameWindow *fwin, int flags)
 	width = fwin->width;
 	height = get_framewin_height(fwin, flags);
 
-	if (fwin->flags.map_titlebar)
+	if (fwin->flags.map_titlebar) {
 		theight = get_framewin_titleheight(fwin);
 
-	fwin->bordersize = get_framewin_bordersize(theight);
+		fwin->bordersize = get_framewin_bordersize(theight);
 
-	if (fwin->titlebar) {
-		titlebar_unmap(fwin);
-		if (fwin->flags.map_titlebar) {
+		if (fwin->titlebar) {
+			titlebar_unmap(fwin);
+			if (fwin->flags.map_titlebar) {
+				titlebar_map(fwin, theight);
+				titlebar_update(fwin, theight);
+			}
+		} else {
+			titlebar_create(fwin, theight, flags);
 			titlebar_map(fwin, theight);
-			titlebar_update(fwin, theight);
 		}
-	} else {
-		titlebar_create(fwin, theight, flags);
-		titlebar_map(fwin, theight);
-	}
 
-	checkTitleSize(fwin);
+		checkTitleSize(fwin);
+	} else {
+		if (fwin->titlebar)
+			titlebar_unmap(fwin);
+	}
 
 	if (fwin->resizebar) {
 		resizebar_unmap(fwin);
