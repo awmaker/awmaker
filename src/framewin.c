@@ -681,6 +681,7 @@ void wframewin_set_borders(WFrameWindow *fwin, int flags)
 		if (fwin->titlebar) {
 			titlebar_unmap(fwin);
 			if (fwin->flags.map_titlebar) {
+				titlebar_create_update(fwin, theight, flags);
 				titlebar_map(fwin, theight);
 				titlebar_update(fwin, theight);
 			}
