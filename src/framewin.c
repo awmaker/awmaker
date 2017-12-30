@@ -381,7 +381,7 @@ static void right_button_unmap(WFrameWindow *fwin)
 	fwin->flags.right_button = 0;
 }
 
-static void titlebar_create(WFrameWindow *fwin, int theight, int flags)
+static void titlebar_create_update(WFrameWindow *fwin, int theight, int flags)
 {
 	fwin->top_width = theight;
 	fwin->titlebar_height = theight;
@@ -647,7 +647,7 @@ void wframewin_set_borders(WFrameWindow *fwin, int flags)
 				titlebar_update(fwin, theight);
 			}
 		} else {
-			titlebar_create(fwin, theight, flags);
+			titlebar_create_update(fwin, theight, flags);
 			titlebar_map(fwin, theight);
 		}
 
