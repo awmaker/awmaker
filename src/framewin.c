@@ -759,24 +759,26 @@ static void updateTitlebar(WFrameWindow *fwin)
 	fwin->top_width = theight;
 	fwin->flags.need_texture_remake = 1;
 
+	/* First, situate the right button, it doesn't have dependencies */
 	if (wPreferences.new_style == TS_NEW) {
-		fwin->left_button_pos_width = 0;
-		fwin->left_button_pos_height = 0;
 		fwin->right_button_pos_width = width - fwin->bordersize + 1;
 		fwin->right_button_pos_height = 0;
 	} else {	/* !new_style */
-		fwin->left_button_pos_width = 3;
-		fwin->left_button_pos_height = (theight - fwin->bordersize) / 2;
 		fwin->right_button_pos_width = width - fwin->bordersize - 3;
 		fwin->right_button_pos_height = (theight - fwin->bordersize) / 2;
 	}
 
-	if (fwin->left_button && fwin->flags.map_left_button)
-		wCoreConfigure(fwin->left_button, fwin->left_button_pos_width, fwin->left_button_pos_height, fwin->bordersize, fwin->bordersize);
-	if (fwin->right_button && fwin->flags.map_right_button)
-		wCoreConfigure(fwin->right_button, fwin->right_button_pos_width, fwin->right_button_pos_height, fwin->bordersize, fwin->bordersize);
+	/* Second, the left button */
+	if (wPreferences.new_style == TS_NEW) {
+		fwin->left_button_pos_width = 0;
+		fwin->left_button_pos_height = 0;
+	} else {	/* !new_style */
+		fwin->left_button_pos_width = 3;
+		fwin->left_button_pos_height = (theight - fwin->bordersize) / 2;
+	}
 
 #ifdef XKB_BUTTON_HINT
+	/* Language button, depends on left button (TS_NEW) */
 	if (fwin->language_button && fwin->flags.map_language_button) {
 		if (!fwin->flags.hide_left_button && fwin->left_button && !fwin->flags.lbutton_dont_fit) {
 			if (wPreferences.new_style == TS_NEW) {
@@ -800,6 +802,11 @@ static void updateTitlebar(WFrameWindow *fwin)
 			       fwin->bordersize, fwin->bordersize);
 	}
 #endif /* XKB_BUTTON_HINT */
+
+	if (fwin->left_button && fwin->flags.map_left_button)
+		wCoreConfigure(fwin->left_button, fwin->left_button_pos_width, fwin->left_button_pos_height, fwin->bordersize, fwin->bordersize);
+	if (fwin->right_button && fwin->flags.map_right_button)
+		wCoreConfigure(fwin->right_button, fwin->right_button_pos_width, fwin->right_button_pos_height, fwin->bordersize, fwin->bordersize);
 
 	if (wPreferences.new_style == TS_NEW) {
 		if (!fwin->flags.hide_left_button && fwin->left_button &&
