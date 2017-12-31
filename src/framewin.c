@@ -779,30 +779,29 @@ static void updateTitlebar(WFrameWindow *fwin)
 
 #ifdef XKB_BUTTON_HINT
 	/* Language button, depends on left button (TS_NEW) */
-	if (fwin->language_button && fwin->flags.map_language_button) {
-		if (!fwin->flags.hide_left_button && fwin->left_button && !fwin->flags.lbutton_dont_fit) {
-			if (wPreferences.new_style == TS_NEW) {
-				fwin->language_button_pos_width = fwin->bordersize;
-				fwin->language_button_pos_height = 0;
-			} else {
-				fwin->language_button_pos_width = fwin->bordersize + 6;
-				fwin->language_button_pos_height = 4;
-			}
+	if (!fwin->flags.hide_left_button && !fwin->flags.lbutton_dont_fit) {
+		if (wPreferences.new_style == TS_NEW) {
+			fwin->language_button_pos_width = fwin->bordersize;
+			fwin->language_button_pos_height = 0;
 		} else {
-			if (wPreferences.new_style == TS_NEW) {
-				fwin->language_button_pos_width = 0;
-				fwin->language_button_pos_height = 0;
-			} else {
-				fwin->language_button_pos_width = 3;
-				fwin->language_button_pos_height = 4;
-			}
+			fwin->language_button_pos_width = fwin->bordersize + 6;
+			fwin->language_button_pos_height = 4;
 		}
+	} else {
+		if (wPreferences.new_style == TS_NEW) {
+			fwin->language_button_pos_width = 0;
+			fwin->language_button_pos_height = 0;
+		} else {
+			fwin->language_button_pos_width = 3;
+			fwin->language_button_pos_height = 4;
+		}
+	}
 
+	if (fwin->language_button && fwin->flags.map_language_button)
 		wCoreConfigure(fwin->language_button, fwin->language_button_pos_width, fwin->language_button_pos_height,
 			       fwin->bordersize, fwin->bordersize);
-	}
-#endif /* XKB_BUTTON_HINT */
 
+#endif /* XKB_BUTTON_HINT */
 	if (fwin->left_button && fwin->flags.map_left_button)
 		wCoreConfigure(fwin->left_button, fwin->left_button_pos_width, fwin->left_button_pos_height, fwin->bordersize, fwin->bordersize);
 	if (fwin->right_button && fwin->flags.map_right_button)
@@ -814,8 +813,8 @@ static void updateTitlebar(WFrameWindow *fwin)
 			x = fwin->bordersize;
 			width -= fwin->bordersize;
 		}
-
 #ifdef XKB_BUTTON_HINT
+
 		if (!fwin->flags.hide_language_button && fwin->language_button &&
 		    fwin->flags.map_language_button && !fwin->flags.languagebutton_dont_fit) {
 			x += fwin->bordersize;
