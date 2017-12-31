@@ -172,6 +172,7 @@ typedef struct WFrameWindow {
     unsigned long *selected_border_pixel;
 
 	/* Titlebar */
+	int titlebar_pos_width;
 	int titlebar_width;
 	int titlebar_height;
 

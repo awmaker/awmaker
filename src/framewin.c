@@ -752,7 +752,6 @@ void wFrameWindowChangeState(WFrameWindow * fwin, int state)
 
 static void updateTitlebar(WFrameWindow *fwin)
 {
-	int x = 0;
 	int theight = get_framewin_titleheight(fwin);
 	int width = fwin->width;
 
@@ -810,14 +809,14 @@ static void updateTitlebar(WFrameWindow *fwin)
 	if (wPreferences.new_style == TS_NEW) {
 		if (!fwin->flags.hide_left_button && fwin->left_button &&
 		    fwin->flags.map_left_button && !fwin->flags.lbutton_dont_fit) {
-			x = fwin->bordersize;
+			fwin->titlebar_pos_width = fwin->bordersize;
 			width -= fwin->bordersize;
 		}
 #ifdef XKB_BUTTON_HINT
 
 		if (!fwin->flags.hide_language_button && fwin->language_button &&
 		    fwin->flags.map_language_button && !fwin->flags.languagebutton_dont_fit) {
-			x += fwin->bordersize;
+			fwin->titlebar_pos_width += fwin->bordersize;
 			width -= fwin->bordersize;
 		}
 #endif /* XKB_BUTTON_HINT */
@@ -834,7 +833,7 @@ static void updateTitlebar(WFrameWindow *fwin)
 
 	fwin->titlebar_width = width;
 	fwin->titlebar_height = theight;
-	wCoreConfigure(fwin->titlebar, x, 0, width, theight);
+	wCoreConfigure(fwin->titlebar, fwin->titlebar_pos_width, 0, width, theight);
 }
 
 void wframewindow_show_rightbutton(WFrameWindow *fwin)
