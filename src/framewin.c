@@ -484,11 +484,6 @@ static void titlebar_map(WFrameWindow *fwin, int theight)
 	fwin->flags.need_texture_remake = 1;
 }
 
-static void titlebar_update(WFrameWindow *fwin)
-{
-	updateTitlebar(fwin);
-}
-
 static void titlebar_unmap(WFrameWindow *fwin)
 {
 	if (fwin->flags.titlebar) {
@@ -661,7 +656,6 @@ void wframewin_set_borders(WFrameWindow *fwin, int flags)
 			if (fwin->flags.map_titlebar) {
 				titlebar_create_update(fwin, theight, flags);
 				titlebar_map(fwin, theight);
-				titlebar_update(fwin);
 			}
 		} else {
 			titlebar_create_update(fwin, theight, flags);
