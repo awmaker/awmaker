@@ -1404,17 +1404,6 @@ void clip_menu_create(virtual_screen *vscr)
 	vscr->clip.menu = menu;
 }
 
-static void clip_menu_map(WMenu *menu, virtual_screen *vscr)
-{
-	menu_map(menu);
-
-	if (vscr->clip.opt_menu)
-		menu_map(vscr->clip.opt_menu);
-
-	if (vscr->clip.submenu)
-		menu_map(vscr->clip.submenu);
-}
-
 static void clip_menu_unmap(virtual_screen *vscr, WMenu *menu)
 {
 	menu_unmap(vscr->clip.opt_menu);
@@ -7013,7 +7002,14 @@ static void clip_button3_menu(WObjDescriptor *desc, XEvent *event)
 		return;
 	}
 
-	clip_menu_map(dock->menu, vscr);
+	menu_map(dock->menu);
+
+	if (vscr->clip.opt_menu)
+		menu_map(vscr->clip.opt_menu);
+
+	if (vscr->clip.submenu)
+		menu_map(vscr->clip.submenu);
+
 	open_menu_clip(dock, aicon, event);
 	clip_menu_unmap(vscr, dock->menu);
 }
