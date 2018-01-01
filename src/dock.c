@@ -1737,11 +1737,12 @@ WDock *clip_create(virtual_screen *vscr, WMPropList *state)
 	dock->on_right_side = 1;
 	dock->icon_array[0] = btn;
 
-	/* create clip menu */
-	if (!vscr->clip.menu)
-		clip_menu_create(vscr);
+	/* destroy clip menu if exists */
+	/* TODO: kix
+	if (vscr->clip.menu)
+		clip_menu_destroy(vscr); */
 
-	dock->menu = vscr->clip.menu;
+	dock->menu = NULL;
 
 	restore_state_lowered(dock, state);
 	restore_state_collapsed(dock, state);
@@ -6981,6 +6982,9 @@ static void clip_button3_menu(WObjDescriptor *desc, XEvent *event)
 		wwarning("pointer grab failed for clip icon menu");
 		return;
 	}
+
+	clip_menu_create(vscr);
+	clip->menu = vscr->clip.menu;
 
 	menu_map(clip->menu);
 
