@@ -1738,12 +1738,6 @@ WDock *clip_create(virtual_screen *vscr, WMPropList *state)
 	dock->type = WM_CLIP;
 	dock->on_right_side = 1;
 	dock->icon_array[0] = btn;
-
-	/* destroy clip menu if exists */
-	/* TODO: kix
-	if (vscr->clip.menu)
-		clip_menu_destroy(vscr); */
-
 	dock->menu = NULL;
 
 	restore_state_lowered(dock, state);
@@ -7012,6 +7006,7 @@ static void clip_button3_menu(WObjDescriptor *desc, XEvent *event)
 	(*desc2->handle_mousedown) (desc2, event);
 
 	clip_menu_unmap(vscr, clip->menu);
+	clip_menu_destroy(clip);
 }
 
 static void clip_menu_destroy(WDock *clip)
