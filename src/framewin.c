@@ -776,7 +776,7 @@ static void set_titlebar_positions(WFrameWindow *fwin)
 			fwin->language_button_pos_height = 0;
 		} else {
 			fwin->language_button_pos_width = fwin->bordersize + 6;
-			fwin->language_button_pos_height = 4;
+			fwin->language_button_pos_height = (theight - fwin->bordersize) / 2;
 		}
 	} else {
 		if (wPreferences.new_style == TS_NEW) {
@@ -784,7 +784,7 @@ static void set_titlebar_positions(WFrameWindow *fwin)
 			fwin->language_button_pos_height = 0;
 		} else {
 			fwin->language_button_pos_width = 3;
-			fwin->language_button_pos_height = 4;
+			fwin->language_button_pos_height = (theight - fwin->bordersize) / 2;
 		}
 	}
 #endif /* XKB_BUTTON_HINT */
