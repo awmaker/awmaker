@@ -222,6 +222,8 @@ static void dock_autolaunch(int vscrno);
 static void clip_autolaunch(int vscrno);
 static void drawers_autolaunch(int vscrno);
 
+static void clip_button3_menu(WObjDescriptor *desc, XEvent *event);
+
 static void make_keys(void)
 {
 	if (dCommand != NULL)
@@ -5788,18 +5790,7 @@ static void clip_icon_mouse_down(WObjDescriptor *desc, XEvent *event)
 		}
 		break;
 	case Button3:
-		if (event->xbutton.send_event &&
-		    XGrabPointer(dpy, aicon->icon->core->window, True, ButtonMotionMask
-				 | ButtonReleaseMask | ButtonPressMask, GrabModeAsync,
-				 GrabModeAsync, None, None, CurrentTime) != GrabSuccess) {
-			wwarning("pointer grab failed for dockicon menu");
-			return;
-		}
-
-		clip_menu_map(dock->menu, vscr);
-		open_menu_clip(dock, aicon, event);
-		clip_menu_unmap(vscr, dock->menu);
-
+		clip_button3_menu(desc, event);
 		break;
 	case Button4:
 		wWorkspaceRelativeChange(vscr, 1);
@@ -6998,4 +6989,23 @@ void wDrawersRestoreState_map(virtual_screen *vscr)
 
 	for (dc = vscr->drawer.drawers; dc != NULL; dc = dc->next)
 		drawerRestoreState_map(dc->adrawer);
+}
+
+static void clip_button3_menu(WObjDescriptor *desc, XEvent *event)
+{
+	WAppIcon *aicon = desc->parent;
+	WDock *dock = aicon->dock;
+	virtual_screen *vscr = aicon->icon->vscr;
+
+	if (event->xbutton.send_event &&
+	    XGrabPointer(dpy, aicon->icon->core->window, True, ButtonMotionMask
+			 | ButtonReleaseMask | ButtonPressMask, GrabModeAsync,
+			 GrabModeAsync, None, None, CurrentTime) != GrabSuccess) {
+		wwarning("pointer grab failed for dockicon menu");
+		return;
+	}
+
+	clip_menu_map(dock->menu, vscr);
+	open_menu_clip(dock, aicon, event);
+	clip_menu_unmap(vscr, dock->menu);
 }
