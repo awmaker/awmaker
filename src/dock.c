@@ -4959,18 +4959,18 @@ static void set_dockmenu_clip_code(WDock *dock, WMenuEntry *entry, WAppIcon *aic
 		entry->callback = renameCallback;
 		entry->clientdata = dock;
 		entry->flags.indicator = 0;
-		entry->text = _("Rename Workspace");
+		entry->text = wstrdup(_("Rename Workspace"));
 	} else {
 		entry->callback = omnipresentCallback;
 		entry->clientdata = aicon;
 		if (n_selected > 0) {
 			entry->flags.indicator = 0;
-			entry->text = _("Toggle Omnipresent");
+			entry->text = wstrdup(_("Toggle Omnipresent"));
 		} else {
 			entry->flags.indicator = 1;
 			entry->flags.indicator_on = aicon->omnipresent;
 			entry->flags.indicator_type = MI_CHECK;
-			entry->text = _("Omnipresent");
+			entry->text = wstrdup(_("Omnipresent"));
 		}
 	}
 
@@ -4984,9 +4984,9 @@ static void set_dockmenu_clip_code(WDock *dock, WMenuEntry *entry, WAppIcon *aic
 	entry = dock->menu->entries[CM_SELECTALL];
 	entry->clientdata = aicon;
 	if (n_selected > 0)
-		entry->text = _("Unselect All Icons");
+		entry->text = wstrdup(_("Unselect All Icons"));
 	else
-		entry->text = _("Select All Icons");
+		entry->text = wstrdup(_("Select All Icons"));
 
 	menu_entry_set_enabled(dock->menu, CM_SELECTALL, dock->icon_count > 1);
 
@@ -4994,18 +4994,18 @@ static void set_dockmenu_clip_code(WDock *dock, WMenuEntry *entry, WAppIcon *aic
 	entry = dock->menu->entries[CM_KEEP_ICONS];
 	entry->clientdata = aicon;
 	if (n_selected > 1)
-		entry->text = _("Keep Icons");
+		entry->text = wstrdup(_("Keep Icons"));
 	else
-		entry->text = _("Keep Icon");
+		entry->text = strdup(_("Keep Icon"));
 
 	menu_entry_set_enabled(dock->menu, CM_KEEP_ICONS, dock->icon_count > 1);
 
 	/* this is the workspace submenu part */
 	entry = dock->menu->entries[CM_MOVE_ICONS];
 	if (n_selected > 1)
-		entry->text = _("Move Icons To");
+		entry->text = wstrdup(_("Move Icons To"));
 	else
-		entry->text = _("Move Icon To");
+		entry->text = wstrdup(_("Move Icon To"));
 
 	if (vscr->clip.submenu)
 		updateWorkspaceMenu(vscr->clip.submenu, aicon);
@@ -5016,9 +5016,9 @@ static void set_dockmenu_clip_code(WDock *dock, WMenuEntry *entry, WAppIcon *aic
 	entry = dock->menu->entries[CM_REMOVE_ICONS];
 	entry->clientdata = aicon;
 	if (n_selected > 1)
-		entry->text = _("Remove Icons");
+		entry->text = wstrdup(_("Remove Icons"));
 	else
-		entry->text = _("Remove Icon");
+		entry->text = wstrdup(_("Remove Icon"));
 
 	menu_entry_set_enabled(dock->menu, CM_REMOVE_ICONS, dock->icon_count > 1);
 
@@ -5035,9 +5035,9 @@ static void set_dockmenu_clip_code(WDock *dock, WMenuEntry *entry, WAppIcon *aic
 	entry = dock->menu->entries[CM_BRING];
 	entry->clientdata = aicon;
 	if (wapp && wapp->flags.hidden)
-		entry->text = _("Unhide Here");
+		entry->text = wstrdup(_("Unhide Here"));
 	else
-		entry->text = _("Bring Here");
+		entry->text = wstrdup(_("Bring Here"));
 
 	menu_entry_set_enabled(dock->menu, CM_BRING, appIsRunning);
 
@@ -5045,9 +5045,9 @@ static void set_dockmenu_clip_code(WDock *dock, WMenuEntry *entry, WAppIcon *aic
 	entry = dock->menu->entries[CM_HIDE];
 	entry->clientdata = aicon;
 	if (wapp && wapp->flags.hidden)
-		entry->text = _("Unhide");
+		entry->text = wstrdup(_("Unhide"));
 	else
-		entry->text = _("Hide");
+		entry->text = wstrdup(_("Hide"));
 
 	menu_entry_set_enabled(dock->menu, CM_HIDE, appIsRunning);
 
@@ -5065,7 +5065,7 @@ static void set_dockmenu_clip_code(WDock *dock, WMenuEntry *entry, WAppIcon *aic
 		menu_entry_set_enabled(dock->menu, CM_KILL, True);
 	} else {
 		entry->callback = killCallback;
-		entry->text = _("Kill");
+		entry->text = wstrdup(_("Kill"));
 		menu_entry_set_enabled(dock->menu, CM_KILL, appIsRunning);
 	}
 
