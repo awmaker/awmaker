@@ -223,6 +223,7 @@ static void clip_autolaunch(int vscrno);
 static void drawers_autolaunch(int vscrno);
 
 static void clip_button3_menu(WObjDescriptor *desc, XEvent *event);
+static void clip_button2_menu(WObjDescriptor *desc, XEvent *event);
 
 static void make_keys(void)
 {
@@ -5712,7 +5713,6 @@ static void clip_icon_mouse_down(WObjDescriptor *desc, XEvent *event)
 	WAppIcon *aicon = desc->parent;
 	WDock *dock = aicon->dock;
 	virtual_screen *vscr = aicon->icon->vscr;
-	WScreen *scr = vscr->screen_ptr;
 	int sts;
 
 	if (aicon->editing || WCHECK_STATE(WSTATE_MODAL))
@@ -5757,27 +5757,7 @@ static void clip_icon_mouse_down(WObjDescriptor *desc, XEvent *event)
 		break;
 	case Button2:
 		if (aicon == vscr->clip.icon) {
-			if (!vscr->clip.ws_menu)
-				vscr->clip.ws_menu = wWorkspaceMenuMake(vscr, False);
-
-			if (vscr->clip.ws_menu) {
-				WMenu *wsMenu = vscr->clip.ws_menu;
-				int xpos;
-
-				wWorkspaceMenuUpdate(vscr, wsMenu);
-
-				xpos = event->xbutton.x_root - wsMenu->frame->width / 2 - 1;
-				if (xpos < 0)
-					xpos = 0;
-				else if (xpos + wsMenu->frame->width > scr->scr_width - 2)
-					xpos = scr->scr_width - wsMenu->frame->width - 4;
-
-				wMenuMapAt(vscr, wsMenu, xpos, event->xbutton.y_root + 2, False);
-
-				desc = &wsMenu->core->descriptor;
-				event->xany.send_event = True;
-				(*desc->handle_mousedown) (desc, event);
-			}
+			clip_button2_menu(desc, event);
 		} else if (event->xbutton.state & ShiftMask) {
 			sts = wClipMakeIconOmnipresent(aicon, !aicon->omnipresent);
 			if (sts == WO_FAILED || sts == WO_SUCCESS)
@@ -6989,6 +6969,34 @@ void wDrawersRestoreState_map(virtual_screen *vscr)
 
 	for (dc = vscr->drawer.drawers; dc != NULL; dc = dc->next)
 		drawerRestoreState_map(dc->adrawer);
+}
+
+static void clip_button2_menu(WObjDescriptor *desc, XEvent *event)
+{
+	WAppIcon *aicon = desc->parent;
+	virtual_screen *vscr = aicon->icon->vscr;
+	WScreen *scr = vscr->screen_ptr;
+	WMenu *wsMenu;
+	int xpos;
+
+	if (!vscr->clip.ws_menu)
+		vscr->clip.ws_menu = wWorkspaceMenuMake(vscr, False);
+
+	if (vscr->clip.ws_menu) {
+		wsMenu = vscr->clip.ws_menu;
+		wWorkspaceMenuUpdate(vscr, wsMenu);
+		xpos = event->xbutton.x_root - wsMenu->frame->width / 2 - 1;
+		if (xpos < 0)
+			xpos = 0;
+		else if (xpos + wsMenu->frame->width > scr->scr_width - 2)
+			xpos = scr->scr_width - wsMenu->frame->width - 4;
+
+		wMenuMapAt(vscr, wsMenu, xpos, event->xbutton.y_root + 2, False);
+
+		desc = &wsMenu->core->descriptor;
+		event->xany.send_event = True;
+		(*desc->handle_mousedown) (desc, event);
+	}
 }
 
 static void clip_button3_menu(WObjDescriptor *desc, XEvent *event)
