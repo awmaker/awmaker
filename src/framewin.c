@@ -464,7 +464,8 @@ static void titlebar_map(WFrameWindow *fwin, int theight)
 	set_titlebar_positions(fwin);
 
 	wcore_map(fwin->titlebar, fwin->core, fwin->vscr,
-		  0, 0, fwin->titlebar_width, fwin->titlebar_height, 0,
+		  fwin->titlebar_pos_width, 0,
+		  fwin->titlebar_width, fwin->titlebar_height, 0,
 		  fwin->vscr->screen_ptr->w_depth,
 		  fwin->vscr->screen_ptr->w_visual,
 		  fwin->vscr->screen_ptr->w_colormap);
