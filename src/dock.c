@@ -5214,30 +5214,6 @@ static void open_menu_dock(WDock *dock, WAppIcon *aicon, XEvent *event)
 	(*desc->handle_mousedown) (desc, event);
 }
 
-static void open_menu_clip(WDock *dock, WAppIcon *aicon, XEvent *event)
-{
-	virtual_screen *vscr = dock->vscr;
-	WScreen *scr = vscr->screen_ptr;
-	WObjDescriptor *desc;
-	WMenuEntry *entry = NULL;
-	int x_pos;
-
-	set_dockmenu_clip_code(dock, entry, aicon);
-
-	x_pos = event->xbutton.x_root - dock->menu->frame->width / 2 - 1;
-	if (x_pos < 0)
-		x_pos = 0;
-	else if (x_pos + dock->menu->frame->width > scr->scr_width - 2)
-		x_pos = scr->scr_width - dock->menu->frame->width - 4;
-
-	wMenuMapAt(vscr, dock->menu, x_pos, event->xbutton.y_root + 2, False);
-
-	/* allow drag select */
-	event->xany.send_event = True;
-	desc = &dock->menu->core->descriptor;
-	(*desc->handle_mousedown) (desc, event);
-}
-
 static void open_menu_drawer(WDock *dock, WAppIcon *aicon, XEvent *event)
 {
 	virtual_screen *vscr = dock->vscr;
@@ -6990,19 +6966,23 @@ static void clip_button2_menu(WObjDescriptor *desc, XEvent *event)
 
 static void clip_button3_menu(WObjDescriptor *desc, XEvent *event)
 {
+	WObjDescriptor *desc2;
 	WAppIcon *aicon = desc->parent;
-	WDock *dock = aicon->dock;
+	WDock *clip = aicon->dock;
 	virtual_screen *vscr = aicon->icon->vscr;
+	WScreen *scr = vscr->screen_ptr;
+	WMenuEntry *entry = NULL;
+	int x_pos;
 
 	if (event->xbutton.send_event &&
 	    XGrabPointer(dpy, aicon->icon->core->window, True, ButtonMotionMask
 			 | ButtonReleaseMask | ButtonPressMask, GrabModeAsync,
 			 GrabModeAsync, None, None, CurrentTime) != GrabSuccess) {
-		wwarning("pointer grab failed for dockicon menu");
+		wwarning("pointer grab failed for clip icon menu");
 		return;
 	}
 
-	menu_map(dock->menu);
+	menu_map(clip->menu);
 
 	if (vscr->clip.opt_menu)
 		menu_map(vscr->clip.opt_menu);
@@ -7010,6 +6990,20 @@ static void clip_button3_menu(WObjDescriptor *desc, XEvent *event)
 	if (vscr->clip.submenu)
 		menu_map(vscr->clip.submenu);
 
-	open_menu_clip(dock, aicon, event);
-	clip_menu_unmap(vscr, dock->menu);
+	set_dockmenu_clip_code(clip, entry, aicon);
+
+	x_pos = event->xbutton.x_root - clip->menu->frame->width / 2 - 1;
+	if (x_pos < 0)
+		x_pos = 0;
+	else if (x_pos + clip->menu->frame->width > scr->scr_width - 2)
+		x_pos = scr->scr_width - clip->menu->frame->width - 4;
+
+	wMenuMapAt(vscr, clip->menu, x_pos, event->xbutton.y_root + 2, False);
+
+	/* allow drag select */
+	event->xany.send_event = True;
+	desc2 = &clip->menu->core->descriptor;
+	(*desc2->handle_mousedown) (desc2, event);
+
+	clip_menu_unmap(vscr, clip->menu);
 }
