@@ -225,6 +225,8 @@ static void drawers_autolaunch(int vscrno);
 static void clip_button3_menu(WObjDescriptor *desc, XEvent *event);
 static void clip_button2_menu(WObjDescriptor *desc, XEvent *event);
 
+static void clip_menu_destroy(WDock *clip);
+
 static void make_keys(void)
 {
 	if (dCommand != NULL)
@@ -7010,4 +7012,17 @@ static void clip_button3_menu(WObjDescriptor *desc, XEvent *event)
 	(*desc2->handle_mousedown) (desc2, event);
 
 	clip_menu_unmap(vscr, clip->menu);
+}
+
+static void clip_menu_destroy(WDock *clip)
+{
+	virtual_screen *vscr = clip->vscr;
+
+	if (vscr->clip.menu)
+		wMenuDestroy(vscr->clip.menu, True);
+
+	vscr->clip.menu = NULL;
+	vscr->clip.submenu = NULL;
+	vscr->clip.opt_menu = NULL;
+	clip->menu = NULL;
 }
