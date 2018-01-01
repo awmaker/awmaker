@@ -219,8 +219,6 @@ static void left_button_map(WFrameWindow *fwin, int theight)
 	WScreen *scr = vscr->screen_ptr;
 
 	if (wPreferences.new_style == TS_NEW) {
-		fwin->left_button_pos_width = 0;
-		fwin->left_button_pos_height = 0;
 		wcore_map(fwin->left_button, fwin->core, fwin->vscr,
 			  fwin->left_button_pos_width, fwin->left_button_pos_height,
 			  fwin->bordersize, fwin->bordersize, 0,
@@ -233,9 +231,6 @@ static void left_button_map(WFrameWindow *fwin, int theight)
 		else
 			XMapRaised(dpy, fwin->left_button->window);
 	} else {
-		fwin->left_button_pos_width = 3;
-		fwin->left_button_pos_height = (theight - fwin->bordersize) / 2;
-
 		wcore_map(fwin->left_button, fwin->titlebar, fwin->vscr,
 			  fwin->left_button_pos_width, fwin->left_button_pos_height,
 			  fwin->bordersize, fwin->bordersize, 0,
@@ -281,8 +276,6 @@ static void language_button_map(WFrameWindow *fwin, int theight)
 	WScreen *scr = vscr->screen_ptr;
 
 	if (wPreferences.new_style == TS_NEW) {
-		fwin->language_button_pos_width = fwin->bordersize;
-		fwin->language_button_pos_height = 0;
 		wcore_map(fwin->language_button, fwin->core, fwin->vscr,
 			  fwin->language_button_pos_width, fwin->language_button_pos_height,
 			  fwin->bordersize, fwin->bordersize, 0,
@@ -295,8 +288,6 @@ static void language_button_map(WFrameWindow *fwin, int theight)
 		else
 			XMapRaised(dpy, fwin->language_button->window);
 	} else {
-		fwin->language_button_pos_width = fwin->bordersize + 6;
-		fwin->language_button_pos_height = (theight - fwin->bordersize) / 2;
 		wcore_map(fwin->language_button, fwin->titlebar, fwin->vscr,
 			  fwin->language_button_pos_width, fwin->language_button_pos_height,
 			  fwin->bordersize, fwin->bordersize, 0,
@@ -342,8 +333,6 @@ static void right_button_map(WFrameWindow *fwin, int theight)
 	WScreen *scr = vscr->screen_ptr;
 
 	if (wPreferences.new_style == TS_NEW) {
-		fwin->right_button_pos_width = width - fwin->bordersize + 1;
-		fwin->right_button_pos_height = 0;
 		wcore_map(fwin->right_button, fwin->core, fwin->vscr,
 			  fwin->right_button_pos_width, fwin->right_button_pos_height,
 			  fwin->bordersize, fwin->bordersize, 0,
@@ -351,8 +340,6 @@ static void right_button_map(WFrameWindow *fwin, int theight)
 			  fwin->vscr->screen_ptr->w_visual,
 			  fwin->vscr->screen_ptr->w_colormap);
 	} else {
-		fwin->right_button_pos_width = width - fwin->bordersize - 3;
-		fwin->right_button_pos_height = (theight - fwin->bordersize) / 2;
 		wcore_map(fwin->right_button, fwin->titlebar, fwin->vscr,
 			  fwin->right_button_pos_width, fwin->right_button_pos_height,
 			  fwin->bordersize, fwin->bordersize, 0,
