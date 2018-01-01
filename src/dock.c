@@ -1408,10 +1408,6 @@ void clip_menu_create(virtual_screen *vscr)
 
 static void clip_menu_unmap(virtual_screen *vscr, WMenu *menu)
 {
-	menu_unmap(vscr->clip.opt_menu);
-	menu_unmap(vscr->clip.submenu);
-	menu_unmap(menu);
-
 	vscr->clip.opt_menu->flags.realized = 0;
 	vscr->clip.submenu->flags.realized = 0;
 	menu->flags.realized = 0;
