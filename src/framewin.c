@@ -1204,18 +1204,20 @@ static void remakeTexture_resizebar(WFrameWindow *fwin, int state)
 {
 	Pixmap pmap;
 
-	if (fwin->resizebar_texture && fwin->resizebar_texture[0]
-	    && fwin->resizebar && fwin->flags.resizebar && state == 0) {
-		destroy_pixmap(fwin->resizebar_back[0]);
-		if (fwin->resizebar_texture[0]->any.type != WTEX_SOLID) {
-			renderResizebarTexture(fwin->vscr->screen_ptr,
-					       fwin->resizebar_texture[0],
-					       fwin->width,
-					       fwin->resizebar_height, fwin->resizebar_corner_width, &pmap);
+	if (!fwin->resizebar_texture || !fwin->resizebar_texture[0] ||
+	    !fwin->resizebar || !fwin->flags.resizebar || state != 0)
+		return;
 
-			fwin->resizebar_back[0] = pmap;
-		}
-	}
+	destroy_pixmap(fwin->resizebar_back[0]);
+	if (fwin->resizebar_texture[0]->any.type == WTEX_SOLID)
+		return;
+
+	renderResizebarTexture(fwin->vscr->screen_ptr,
+			       fwin->resizebar_texture[0],
+			       fwin->width,
+			       fwin->resizebar_height, fwin->resizebar_corner_width, &pmap);
+
+	fwin->resizebar_back[0] = pmap;
 }
 
 static char *get_title(WFrameWindow *fwin)
