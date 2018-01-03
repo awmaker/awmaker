@@ -887,16 +887,7 @@ void wframewindow_hide_languagebutton(WFrameWindow *fwin)
 void wframewindow_refresh_titlebar(WFrameWindow *fwin)
 {
 	if (fwin->titlebar && fwin->flags.titlebar) {
-		if (wPreferences.new_style == TS_NEW) {
-			updateTitlebar(fwin);
-		} else {
-#ifdef XKB_BUTTON_HINT
-			updateTitlebar(fwin);
-#else
-			XClearWindow(dpy, fwin->titlebar->window);
-			wFrameWindowPaint(fwin);
-#endif
-		}
+		updateTitlebar(fwin);
 		checkTitleSize(fwin);
 	}
 }
