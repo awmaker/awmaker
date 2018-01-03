@@ -42,22 +42,67 @@
 #include "misc.h"
 #include "event.h"
 
-static void handleExpose(WObjDescriptor * desc, XEvent * event);
-static void handleButtonExpose(WObjDescriptor * desc, XEvent * event);
-
-static void buttonMouseDown(WObjDescriptor * desc, XEvent * event);
-static void titlebarMouseDown(WObjDescriptor * desc, XEvent * event);
-static void resizebarMouseDown(WObjDescriptor * desc, XEvent * event);
-
-static void checkTitleSize(WFrameWindow * fwin);
-
-static void paintButton(WFrameWindow *fwin, WCoreWindow *button, int pushed);
-
-static void updateTitlebar(WFrameWindow *fwin);
-
+static void destroy_framewin_button(WFrameWindow *fwin, int state);
+static void destroy_framewin_buttons(WFrameWindow *fwin);
+static void set_framewin_descriptors(WCoreWindow *wcore, void *handle_expose,
+				     void *parent, WClassType parent_type,
+				     void *handle_mousedown);
+static void left_button_create(WFrameWindow *fwin);
+static void left_button_map(WFrameWindow *fwin, int theight);
+static void left_button_unmap(WFrameWindow *fwin);
+#ifdef XKB_BUTTON_HINT
+static void language_button_create(WFrameWindow *fwin);
+static void language_button_map(WFrameWindow *fwin, int theight);
+static void language_button_unmap(WFrameWindow *fwin);
+#endif
+static void right_button_create(WFrameWindow *fwin);
+static void right_button_map(WFrameWindow *fwin, int theight);
+static void right_button_unmap(WFrameWindow *fwin);
+static void titlebar_create_update(WFrameWindow *fwin, int theight, int flags);
+static void titlebar_map(WFrameWindow *fwin, int theight);
+static void titlebar_unmap(WFrameWindow *fwin);
+static void titlebar_destroy(WFrameWindow *fwin);
+static void resizebar_create(WFrameWindow *fwin);
+static void resizebar_destroy(WFrameWindow *fwin);
+static void resizebar_map(WFrameWindow *fwin, int width, int height);
+static void resizebar_unmap(WFrameWindow *fwin);
+static int get_framewin_height(WFrameWindow *fwin, int flags);
+static int get_framewin_titleheight(WFrameWindow *fwin);
+static int get_framewin_btn_size(int titleheight);
 static void set_titlebar_positions(WFrameWindow *fwin);
-static void allocFrameBorderPixel(Colormap colormap, const char *color_name, unsigned long **pixel);
+static void updateTitlebar(WFrameWindow *fwin);
+void wframewindow_show_rightbutton(WFrameWindow *fwin);
+void wframewindow_hide_rightbutton(WFrameWindow *fwin);
+void wframewindow_show_languagebutton(WFrameWindow *fwin);
+void wframewindow_hide_languagebutton(WFrameWindow *fwin);
+static void renderTexture(WScreen *scr, WTexture *texture,
+			 int width, int height,
+			 int bwidth, int bheight,
+			 Pixmap *title,
+			 int left, Pixmap *lbutton,
+#ifdef XKB_BUTTON_HINT
+			 int language, Pixmap *languagebutton,
+#endif
+			 int right, Pixmap *rbutton);
+static void renderResizebarTexture(WScreen *scr, WTexture *texture,
+				   int width, int height, int cwidth,
+				   Pixmap *pmap);
+static void updateTexture_titlebar(WFrameWindow *fwin);
+static void updateTexture_resizebar(WFrameWindow *fwin);
+static void remakeTexture_titlebar(WFrameWindow *fwin, int state);
+static void remakeTexture_resizebar(WFrameWindow *fwin, int state);
 static char *get_title(WFrameWindow *fwin);
+static void paint_title(WFrameWindow *fwin, int lofs, int rofs, int state);
+static void reconfigure(WFrameWindow *fwin, int x, int y,
+			int width, int height, Bool dontMove);
+static void handleExpose(WObjDescriptor *desc, XEvent *event);
+static void checkTitleSize(WFrameWindow *fwin);
+static void paintButton(WFrameWindow *fwin, WCoreWindow *button, int pushed);
+static void handleButtonExpose(WObjDescriptor *desc, XEvent *event);
+static void titlebarMouseDown(WObjDescriptor *desc, XEvent *event);
+static void resizebarMouseDown(WObjDescriptor *desc, XEvent *event);
+static void buttonMouseDown(WObjDescriptor *desc, XEvent *event);
+
 
 static void allocFrameBorderPixel(Colormap colormap, const char *color_name,
 				  unsigned long **pixel)
