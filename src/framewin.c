@@ -59,7 +59,9 @@ static void set_titlebar_positions(WFrameWindow *fwin);
 static void allocFrameBorderPixel(Colormap colormap, const char *color_name, unsigned long **pixel);
 static char *get_title(WFrameWindow *fwin);
 
-static void allocFrameBorderPixel(Colormap colormap, const char *color_name, unsigned long **pixel) {
+static void allocFrameBorderPixel(Colormap colormap, const char *color_name,
+				  unsigned long **pixel)
+{
 	XColor xcol;
 
 	*pixel = NULL;
@@ -993,8 +995,9 @@ static void renderTexture(WScreen *scr, WTexture *texture,
 	RReleaseImage(img);
 }
 
-static void
-renderResizebarTexture(WScreen * scr, WTexture * texture, int width, int height, int cwidth, Pixmap * pmap)
+static void renderResizebarTexture(WScreen *scr, WTexture *texture,
+				   int width, int height, int cwidth,
+				   Pixmap * pmap)
 {
 	RImage *img;
 	RColor light;
@@ -1343,7 +1346,8 @@ void wFrameWindowPaint(WFrameWindow *fwin)
 	}
 }
 
-static void reconfigure(WFrameWindow * fwin, int x, int y, int width, int height, Bool dontMove)
+static void reconfigure(WFrameWindow *fwin, int x, int y,
+			int width, int height, Bool dontMove)
 {
 	int k = (wPreferences.new_style == TS_NEW ? 4 : 3);
 	int resizedHorizontally = 0;
@@ -1467,7 +1471,7 @@ void wFrameWindowUpdateLanguageButton(WFrameWindow *fwin)
 
 /*********************************************************************/
 
-static void handleExpose(WObjDescriptor * desc, XEvent * event)
+static void handleExpose(WObjDescriptor *desc, XEvent *event)
 {
 	WFrameWindow *fwin = (WFrameWindow *) desc->parent;
 
@@ -1674,7 +1678,7 @@ static void titlebarMouseDown(WObjDescriptor *desc, XEvent *event)
 	}
 }
 
-static void resizebarMouseDown(WObjDescriptor * desc, XEvent * event)
+static void resizebarMouseDown(WObjDescriptor *desc, XEvent *event)
 {
 	WFrameWindow *fwin = desc->parent;
 	WCoreWindow *resizebar = desc->self;
