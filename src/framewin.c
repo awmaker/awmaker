@@ -1156,51 +1156,47 @@ static void updateTexture_resizebar(WFrameWindow *fwin)
 static void remakeTexture_titlebar(WFrameWindow *fwin, int state)
 {
 	Pixmap pmap, lpmap, rpmap;
+	int left, right, width;
 #ifdef XKB_BUTTON_HINT
 	Pixmap tpmap;
+	int language;
 #endif
 
-	if (fwin->title_texture[state] && fwin->titlebar && fwin->flags.titlebar) {
-		destroy_framewin_button(fwin, state);
+	if (!fwin->title_texture[state] || !fwin->titlebar || !fwin->flags.titlebar)
+		return;
 
-		if (fwin->title_texture[state]->any.type != WTEX_SOLID) {
-			int left, right;
-			int width;
+	destroy_framewin_button(fwin, state);
+	if (fwin->title_texture[state]->any.type == WTEX_SOLID)
+		return;
+
+	/* eventually surrounded by if new_style */
+	left = fwin->left_button && fwin->flags.map_left_button &&
+	       !fwin->flags.hide_left_button && !fwin->flags.lbutton_dont_fit;
 #ifdef XKB_BUTTON_HINT
-			int language;
+	language = fwin->language_button && fwin->flags.map_language_button &&
+		   !fwin->flags.hide_language_button && !fwin->flags.languagebutton_dont_fit;
 #endif
+	right = fwin->right_button && fwin->flags.map_right_button &&
+		!fwin->flags.hide_right_button && !fwin->flags.rbutton_dont_fit;
 
-			/* eventually surrounded by if new_style */
-			left = fwin->left_button && fwin->flags.map_left_button &&
-			       !fwin->flags.hide_left_button && !fwin->flags.lbutton_dont_fit;
+	width = fwin->width + 1;
+	renderTexture(fwin->vscr->screen_ptr, fwin->title_texture[state],
+		      width, fwin->titlebar_height,
+		      fwin->titlebar_height, fwin->titlebar_height,
+		      &pmap,
+		      left, &lpmap,
 #ifdef XKB_BUTTON_HINT
-			language = fwin->language_button && fwin->flags.map_language_button &&
-				   !fwin->flags.hide_language_button && !fwin->flags.languagebutton_dont_fit;
+		      language, &tpmap,
 #endif
-			right = fwin->right_button && fwin->flags.map_right_button &&
-				!fwin->flags.hide_right_button && !fwin->flags.rbutton_dont_fit;
+		      right, &rpmap);
 
-			width = fwin->width + 1;
-
-			renderTexture(fwin->vscr->screen_ptr, fwin->title_texture[state],
-				      width, fwin->titlebar_height,
-				      fwin->titlebar_height, fwin->titlebar_height,
-				      &pmap,
-				      left, &lpmap,
+	fwin->title_back[state] = pmap;
+	if (wPreferences.new_style == TS_NEW) {
+		fwin->lbutton_back[state] = lpmap;
+		fwin->rbutton_back[state] = rpmap;
 #ifdef XKB_BUTTON_HINT
-				      language, &tpmap,
+		fwin->languagebutton_back[state] = tpmap;
 #endif
-				      right, &rpmap);
-
-			fwin->title_back[state] = pmap;
-			if (wPreferences.new_style == TS_NEW) {
-				fwin->lbutton_back[state] = lpmap;
-				fwin->rbutton_back[state] = rpmap;
-#ifdef XKB_BUTTON_HINT
-				fwin->languagebutton_back[state] = tpmap;
-#endif
-			}
-		}
 	}
 }
 
