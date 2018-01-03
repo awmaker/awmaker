@@ -1141,15 +1141,16 @@ static void updateTexture_titlebar(WFrameWindow *fwin)
 
 static void updateTexture_resizebar(WFrameWindow *fwin)
 {
-	if (fwin->resizebar_texture && fwin->resizebar_texture[0] && fwin->resizebar) {
-		if (fwin->resizebar_texture[0]->any.type != WTEX_SOLID)
-			XSetWindowBackgroundPixmap(dpy, fwin->resizebar->window, fwin->resizebar_back[0]);
-		else
-			XSetWindowBackground(dpy, fwin->resizebar->window,
-					     fwin->resizebar_texture[0]->solid.normal.pixel);
+	if (!fwin->resizebar_texture || !fwin->resizebar_texture[0] || !fwin->resizebar)
+		return;
 
-		XClearWindow(dpy, fwin->resizebar->window);
-	}
+	if (fwin->resizebar_texture[0]->any.type != WTEX_SOLID)
+		XSetWindowBackgroundPixmap(dpy, fwin->resizebar->window, fwin->resizebar_back[0]);
+	else
+		XSetWindowBackground(dpy, fwin->resizebar->window,
+				     fwin->resizebar_texture[0]->solid.normal.pixel);
+
+	XClearWindow(dpy, fwin->resizebar->window);
 }
 
 static void remakeTexture_titlebar(WFrameWindow *fwin, int state)
