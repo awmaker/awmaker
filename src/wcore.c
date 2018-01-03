@@ -117,12 +117,9 @@ void wCoreConfigure(WCoreWindow * core, int req_x, int req_y, int req_w, int req
 	if (req_h < 0)
 		req_h = 0;
 
-	if (req_w != core->width || req_h != core->height) {
-		mask |= CWWidth | CWHeight;
-		xwc.width = req_w;
-		xwc.height = req_h;
-		core->width = req_w;
-		core->height = req_h;
-	}
+	mask |= CWWidth | CWHeight;
+	xwc.width = req_w;
+	xwc.height = req_h;
+
 	XConfigureWindow(dpy, core->window, mask, &xwc);
 }

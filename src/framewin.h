@@ -162,7 +162,6 @@ typedef struct WFrameWindow {
         unsigned int incomplete_title:1;
     } flags;
     int depth;
-    int bordersize;
     int width;		/* Framewin width */
     int height;		/* Framewin height */
     Visual *visual;
@@ -172,6 +171,7 @@ typedef struct WFrameWindow {
     unsigned long *selected_border_pixel;
 
 	/* Titlebar */
+	int titlebar_pos_width;
 	int titlebar_width;
 	int titlebar_height;
 
@@ -179,6 +179,8 @@ typedef struct WFrameWindow {
 	int resizebar_height;
 
 	/* Buttons */
+	int btn_size;
+
 	int left_button_pos_width;
 	int left_button_pos_height;
 

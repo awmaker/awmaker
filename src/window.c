@@ -104,7 +104,7 @@ static void resizebarMouseDown(WCoreWindow *sender, void *data, XEvent *event);
 static void release_wwindowstate(WWindowState *wstate);
 
 static WWindow *window_focus_sloppy(WScreen *scr, WWindow *wwin);
-static WWindow *window_focus_click(virtual_screen *vscr, WWindow *wwin);
+static WWindow *window_focus_click(WWindow *wwin);
 
 static void appearanceObserver(void *self, WMNotification *notif);
 static void discard_hints_from_gtk(WWindow *wwin);
@@ -115,24 +115,22 @@ static void setupGNUstepHints_defaults(WWindow *wwin, int value);
 static void setupGNUstepHints_withborder(WWindow *wwin, GNUstepWMAttributes *gs_hints);
 static void wWindowSetupInitialAttributes_GNUStep(WWindow *wwin, int *level, int *workspace);
 Bool wwindow_set_wmhints(WWindow *wwin, Bool withdraw);
-static void wwindow_set_fakegroupleader(virtual_screen *vscr, WWindow *wwin);
+static void wwindow_set_fakegroupleader(WWindow *wwin);
 static int window_restarting_restore(Window window, WWindow *wwin, WWindowState *win_state, int workspace);
 static void window_restore_shortcut(WWindow *wwin, WWindowState *win_state, WSavedState *wstate);
-static void wwindow_set_workspace(virtual_screen *vscr, WWindow *wwin, WWindow *transientOwner, int *workspace);
-static void wwindow_set_placement_auto(virtual_screen *vscr,
-				       WWindow *wwin, WWindow *transientOwner,
+static void wwindow_set_workspace(WWindow *wwin, WWindow *transientOwner, int *workspace);
+static void wwindow_set_placement_auto(WWindow *wwin, WWindow *transientOwner,
 				       int *x, int *y,
 				       unsigned int *width, unsigned int *height);
 static void wwindow_set_placement_xine(virtual_screen *vscr, int *x, int *y,
 				       unsigned int *width, unsigned int *height);
-static void wwindow_set_placement(virtual_screen *vscr,
-				  WWindow *wwin, WWindow *transientOwner,
+static void wwindow_set_placement(WWindow *wwin, WWindow *transientOwner,
 				  int *x, int *y,
 				  unsigned int *width, unsigned int *height,
 				  WWindowState *win_state);
 static int wwindow_set_mainwindow(WWindow *wwin, int workspace);
-static void wwindow_map(virtual_screen *vscr, WWindow *wwin, int workspace, Bool withdraw);
-static void wwindow_add_to_windowfocuslist(virtual_screen *vscr, WWindow *wwin);
+static void wwindow_map(WWindow *wwin, int workspace, Bool withdraw);
+static void wwindow_add_to_windowfocuslist(WWindow *wwin);
 static void wwindow_set_frame_descriptor(WWindow *wwin);
 static void wwindow_update_title(Display *dpy, Window window, WWindow *wwin);
 /****** Notification Observers ******/
@@ -678,8 +676,9 @@ Bool wwindow_set_wmhints(WWindow *wwin, Bool withdraw)
 	return withdraw;
 }
 
-static void wwindow_set_fakegroupleader(virtual_screen *vscr, WWindow *wwin)
+static void wwindow_set_fakegroupleader(WWindow *wwin)
 {
+	virtual_screen *vscr = wwin->vscr;
 	char *buffer, *instance, *class;
 	WFakeGroupLeader *fPtr;
 	int index;
@@ -790,8 +789,9 @@ static int window_restarting_restore(Window window, WWindow *wwin, WWindowState 
 	return workspace;
 }
 
-static void wwindow_set_workspace(virtual_screen *vscr, WWindow *wwin, WWindow *transientOwner, int *workspace)
+static void wwindow_set_workspace(WWindow *wwin, WWindow *transientOwner, int *workspace)
 {
+	virtual_screen *vscr = wwin->vscr;
 	int w;
 
 	if (*workspace >= 0) {
@@ -831,8 +831,7 @@ static void wwindow_set_position(virtual_screen *vscr, int head,
 		*y = rect.pos.y + rect.size.height - *height;
 }
 
-void wwindow_set_placement_auto(virtual_screen *vscr,
-				WWindow *wwin, WWindow *transientOwner,
+void wwindow_set_placement_auto(WWindow *wwin, WWindow *transientOwner,
 				int *x, int *y,
 				unsigned int *width, unsigned int *height)
 {
@@ -859,8 +858,8 @@ void wwindow_set_placement_auto(virtual_screen *vscr,
 	rect.size.width = transientOwner->frame->width;
 	rect.size.height = transientOwner->frame->height;
 
-	head = wGetHeadForRect(vscr, rect);
-	wwindow_set_position(vscr, head, x, y, width, height);
+	head = wGetHeadForRect(wwin->vscr, rect);
+	wwindow_set_position(wwin->vscr, head, x, y, width, height);
 }
 
 static void wwindow_set_placement_xine(virtual_screen *vscr, int *x, int *y,
@@ -900,12 +899,12 @@ static void wwindow_set_placement_xine(virtual_screen *vscr, int *x, int *y,
 		wwindow_set_position(vscr, head, x, y, width, height);
 }
 
-static void wwindow_set_placement(virtual_screen *vscr,
-				  WWindow *wwin, WWindow *transientOwner,
+static void wwindow_set_placement(WWindow *wwin, WWindow *transientOwner,
 				  int *x, int *y,
 				  unsigned int *width, unsigned int *height,
 				  WWindowState *win_state)
 {
+	virtual_screen *vscr = wwin->vscr;
 	/*
 	 * Do not ask for window placement if the window is
 	 * transient, during startup, or if the window wants
@@ -922,7 +921,7 @@ static void wwindow_set_placement(virtual_screen *vscr,
 	    !wwin->flags.miniaturized &&
 	    !wwin->flags.maximized &&
 	    !(wwin->normal_hints->flags & (USPosition | PPosition))) {
-		wwindow_set_placement_auto(vscr, wwin, transientOwner,
+		wwindow_set_placement_auto(wwin, transientOwner,
 					   x, y, width, height);
 
 		if ((wPreferences.window_placement == WPM_MANUAL) &&
@@ -975,8 +974,10 @@ static int wwindow_set_mainwindow(WWindow *wwin, int workspace)
 	return raise;
 }
 
-static void wwindow_map(virtual_screen *vscr, WWindow *wwin, int workspace, Bool withdraw)
+static void wwindow_map(WWindow *wwin, int workspace, Bool withdraw)
 {
+	virtual_screen *vscr = wwin->vscr;
+
 	if (!wwin->flags.miniaturized &&
 	    (workspace == vscr->workspace.current || IS_OMNIPRESENT(wwin)) &&
 	    !wwin->flags.hidden &&
@@ -1015,8 +1016,9 @@ static void wwindow_map(virtual_screen *vscr, WWindow *wwin, int workspace, Bool
 	}
 }
 
-static void wwindow_add_to_windowfocuslist(virtual_screen *vscr, WWindow *wwin)
+static void wwindow_add_to_windowfocuslist(WWindow *wwin)
 {
+	virtual_screen *vscr = wwin->vscr;
 	WWindow *tmp;
 
 	if (!vscr->window.focused) {
@@ -1036,9 +1038,10 @@ static void wwindow_add_to_windowfocuslist(virtual_screen *vscr, WWindow *wwin)
 	}
 }
 
-static void wwindow_setfocus_tomouse(virtual_screen *vscr, WWindow *wwin,
+static void wwindow_setfocus_tomouse(WWindow *wwin,
 				     WWindow *transientOwner, int workspace)
 {
+	virtual_screen *vscr = wwin->vscr;
 	short same_screen, same_head;
 	int foo;
 	unsigned int bar;
@@ -1284,7 +1287,7 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
         }
 
 	if (!withdraw && wwin->main_window && WFLAGP(wwin, shared_appicon))
-		wwindow_set_fakegroupleader(vscr, wwin);
+		wwindow_set_fakegroupleader(wwin);
 
 	/* Setup the initial state of the window */
 	if (WFLAGP(wwin, start_miniaturized) && !WFLAGP(wwin, no_miniaturizable))
@@ -1347,7 +1350,7 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 	}
 
 	/* set workspace on which the window starts */
-	wwindow_set_workspace(vscr, wwin, transientOwner, &workspace);
+	wwindow_set_workspace(wwin, transientOwner, &workspace);
 
 	/* setup window geometry */
 	if (win_state && win_state->state->w > 0) {
@@ -1358,7 +1361,7 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 	wWindowConstrainSize(wwin, &width, &height);
 
 	/* Setup window placement */
-	wwindow_set_placement(vscr, wwin, transientOwner,
+	wwindow_set_placement(wwin, transientOwner,
 				&x, &y, &width, &height, win_state);
 
 	wNETWMPositionSplash(wwin, &x, &y, width, height);
@@ -1455,7 +1458,7 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 	XLowerWindow(dpy, window);
 
 	/* if window is in this workspace and should be mapped, then  map it */
-	wwindow_map(vscr, wwin, workspace, withdraw);
+	wwindow_map(wwin, workspace, withdraw);
 
 	/* setup stacking descriptor */
 	if (transientOwner)
@@ -1463,7 +1466,7 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 	else
 		wwin->frame->core->stacking->child_of = NULL;
 
-	wwindow_add_to_windowfocuslist(vscr, wwin);
+	wwindow_add_to_windowfocuslist(wwin);
 
 	/* raise is set to true if we un-hid the app when this window was born.
 	 * we raise, else old windows of this app will be above this new one. */
@@ -1477,7 +1480,7 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 	/* Final preparations before window is ready to go */
 	wFrameWindowChangeState(wwin->frame, WS_UNFOCUSED);
 
-	wwindow_setfocus_tomouse(vscr, wwin, transientOwner, workspace);
+	wwindow_setfocus_tomouse(wwin, transientOwner, workspace);
 
 	wWindowResetMouseGrabs(wwin);
 
@@ -1596,7 +1599,7 @@ WWindow *wManageInternalWindow(virtual_screen *vscr, Window window, Window owner
 		wwin->frame->core->stacking->child_of = NULL;
 	}
 
-	wwindow_add_to_windowfocuslist(vscr, wwin);
+	wwindow_add_to_windowfocuslist(wwin);
 
 	if (wwin->flags.is_gnustep == 0)
 		wFrameWindowChangeState(wwin->frame, WS_UNFOCUSED);
@@ -1738,7 +1741,7 @@ void wUnmanageWindow(WWindow *wwin, Bool restore, Bool destroyed)
 		}
 
 		if (wPreferences.focus_mode == WKF_CLICK)
-			newFocusedWindow = window_focus_click(vscr, wwin);
+			newFocusedWindow = window_focus_click(wwin);
 		else if (wPreferences.focus_mode == WKF_SLOPPY)
 			newFocusedWindow = window_focus_sloppy(scr, wwin);
 		else
@@ -3171,7 +3174,7 @@ static void windowLanguageClick(WCoreWindow *sender, void *data, XEvent *event)
 	wFrameWindowUpdateLanguageButton(wwin->frame);
 	if (event->xbutton.button == Button3)
 		return;
-	wRaiseFrame(fwin->core);
+	wRaiseFrame(wwin->frame->vscr, fwin->core);
 }
 #endif
 
@@ -3225,8 +3228,9 @@ static WWindow *window_focus_sloppy(WScreen *scr, WWindow *wwin)
 	return tmp;
 }
 
-static WWindow *window_focus_click(virtual_screen *vscr, WWindow *wwin)
+static WWindow *window_focus_click(WWindow *wwin)
 {
+	virtual_screen *vscr = wwin->vscr;
 	WWindow *tmp = NULL;
 
 	/* if in click to focus mode and the window

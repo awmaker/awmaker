@@ -51,6 +51,7 @@
 static WMenu *makeWorkspaceMenu(virtual_screen *vscr);
 static WMenu *makeOptionsMenu(virtual_screen *vscr);
 static WMenu *makeMaximizeMenu(virtual_screen *vscr);
+static void updateWorkspaceMenu(WMenu *menu);
 
 /*
  * Define the Menu entry that will be present in the Window menu
@@ -352,8 +353,9 @@ static void makeShortcutCommand(WMenu *menu, WMenuEntry *entry)
 	XFlush(dpy);
 }
 
-static void updateWorkspaceMenu(virtual_screen *vscr, WMenu *menu)
+static void updateWorkspaceMenu(WMenu *menu)
 {
+	virtual_screen *vscr = menu->vscr;
 	char title[MAX_WORKSPACENAME_WIDTH + 1];
 	WMenuEntry *entry;
 	int i;
@@ -517,7 +519,7 @@ static WMenu *makeWorkspaceMenu(virtual_screen *vscr)
 		return NULL;
 	}
 
-	updateWorkspaceMenu(vscr, menu);
+	updateWorkspaceMenu(menu);
 
 	if (!menu->flags.realized)
 		wMenuRealize(menu);
