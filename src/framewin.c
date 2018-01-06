@@ -42,6 +42,8 @@
 #include "misc.h"
 #include "event.h"
 
+static void allocFrameBorderPixel(Colormap colormap, const char *color_name,
+				  unsigned long **pixel);
 static void destroy_framewin_button(WFrameWindow *fwin, int state);
 static void destroy_framewin_buttons(WFrameWindow *fwin);
 static void set_framewin_descriptors(WCoreWindow *wcore, void *handle_expose,
@@ -102,6 +104,8 @@ static void handleButtonExpose(WObjDescriptor *desc, XEvent *event);
 static void titlebarMouseDown(WObjDescriptor *desc, XEvent *event);
 static void resizebarMouseDown(WObjDescriptor *desc, XEvent *event);
 static void buttonMouseDown(WObjDescriptor *desc, XEvent *event);
+static void reconfigure_titlebar(WFrameWindow *fwin, int width);
+static void reconfigure_resizebar(WFrameWindow *fwin);
 
 
 static void allocFrameBorderPixel(Colormap colormap, const char *color_name,
