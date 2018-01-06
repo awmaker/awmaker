@@ -1696,41 +1696,43 @@ static void paintButton(WFrameWindow *fwin, WCoreWindow *button, int pushed)
 		d = 0;
 	}
 
-	if (image) {
-		/* display image */
-		XSetClipMask(dpy, copy_gc, image->mask);
-		x = (btn_width - width) / 2 + d;
-		y = (btn_height - image->height) / 2 + d;
-		XSetClipOrigin(dpy, copy_gc, x - left, y);
-		if (!wPreferences.new_style == TS_NEW) {
-			XSetForeground(dpy, copy_gc, scr->black_pixel);
-			if (!pushed) {
-				if (image->depth == 1)
-					XCopyPlane(dpy, image->image, button->window, copy_gc,
-						   left, 0, width, image->height, x, y, 1);
-				else
-					XCopyArea(dpy, image->image, button->window, copy_gc,
-						  left, 0, width, image->height, x, y);
-			} else {
-				if (wPreferences.new_style == TS_OLD) {
-					XSetForeground(dpy, copy_gc, scr->dark_pixel);
-					XFillRectangle(dpy, button->window, copy_gc, 0, 0,
-						       btn_width, btn_height);
-				} else {
-					XSetForeground(dpy, copy_gc, scr->black_pixel);
-					XCopyArea(dpy, image->image, button->window, copy_gc,
-						  left, 0, width, image->height, x, y);
-				}
-			}
+	if (!image)
+		return;
+
+	/* display image */
+	XSetClipMask(dpy, copy_gc, image->mask);
+	x = (btn_width - width) / 2 + d;
+	y = (btn_height - image->height) / 2 + d;
+	XSetClipOrigin(dpy, copy_gc, x - left, y);
+	if (!wPreferences.new_style == TS_NEW) {
+		XSetForeground(dpy, copy_gc, scr->black_pixel);
+		if (!pushed) {
+			if (image->depth == 1)
+				XCopyPlane(dpy, image->image, button->window, copy_gc,
+					   left, 0, width, image->height, x, y, 1);
+			else
+				XCopyArea(dpy, image->image, button->window, copy_gc,
+					  left, 0, width, image->height, x, y);
 		} else {
-			if (pushed) {
-				XSetForeground(dpy, copy_gc, scr->black_pixel);
+			if (wPreferences.new_style == TS_OLD) {
+				XSetForeground(dpy, copy_gc, scr->dark_pixel);
+				XFillRectangle(dpy, button->window, copy_gc, 0, 0,
+					       btn_width, btn_height);
 			} else {
-				XSetForeground(dpy, copy_gc, color);
-				XSetBackground(dpy, copy_gc, texture->any.color.pixel);
+				XSetForeground(dpy, copy_gc, scr->black_pixel);
+				XCopyArea(dpy, image->image, button->window, copy_gc,
+					  left, 0, width, image->height, x, y);
 			}
-			XFillRectangle(dpy, button->window, copy_gc, 0, 0, btn_width, btn_height);
 		}
+	} else {
+		if (pushed) {
+			XSetForeground(dpy, copy_gc, scr->black_pixel);
+		} else {
+			XSetForeground(dpy, copy_gc, color);
+			XSetBackground(dpy, copy_gc, texture->any.color.pixel);
+		}
+
+		XFillRectangle(dpy, button->window, copy_gc, 0, 0, btn_width, btn_height);
 	}
 }
 
