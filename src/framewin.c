@@ -1312,6 +1312,7 @@ static void paint_title(WFrameWindow *fwin, int lofs, int rofs, int state)
 void wFrameWindowPaint(WFrameWindow *fwin)
 {
 	int state, tmp_state, i;
+	int lofs = 6, rofs = 6;
 
 	state = fwin->flags.state;
 
@@ -1364,40 +1365,40 @@ void wFrameWindowPaint(WFrameWindow *fwin)
 				     fwin->resizebar_height, (WTexSolid *) fwin->resizebar_texture[0],
 				     fwin->resizebar_corner_width);
 
-	if (fwin->titlebar && fwin->flags.titlebar && !fwin->flags.repaint_only_resizebar) {
-		int lofs = 6, rofs = 6;
+	if (!fwin->titlebar || !fwin->flags.titlebar ||
+	    fwin->flags.repaint_only_resizebar)
+		return;
 
-		if (!wPreferences.new_style == TS_NEW) {
-			if (fwin->left_button && fwin->flags.map_left_button &&
-			    !fwin->flags.hide_left_button && !fwin->flags.lbutton_dont_fit)
-				lofs += fwin->btn_size + 3;
+	if (!wPreferences.new_style == TS_NEW) {
+		if (fwin->left_button && fwin->flags.map_left_button &&
+		    !fwin->flags.hide_left_button && !fwin->flags.lbutton_dont_fit)
+			lofs += fwin->btn_size + 3;
 
 #ifdef XKB_BUTTON_HINT
-			if (fwin->language_button && fwin->flags.map_language_button &&
-			    !fwin->flags.hide_language_button && !fwin->flags.languagebutton_dont_fit)
-				lofs += fwin->btn_size;
+		if (fwin->language_button && fwin->flags.map_language_button &&
+		    !fwin->flags.hide_language_button && !fwin->flags.languagebutton_dont_fit)
+			lofs += fwin->btn_size;
 #endif
 
-			if (fwin->right_button && fwin->flags.map_right_button &&
-			    !fwin->flags.hide_right_button && !fwin->flags.rbutton_dont_fit)
-				rofs += fwin->btn_size + 3;
-		}
-#ifdef XKB_BUTTON_HINT
-		fwin->languagebutton_image = fwin->vscr->screen_ptr->b_pixmaps[WBUT_XKBGROUP1 + fwin->languagemode];
-#endif
-
-		paint_title(fwin, lofs, rofs, state);
-
-		if (fwin->left_button && fwin->flags.map_left_button)
-			handleButtonExpose(&fwin->left_button->descriptor, NULL);
-
-		if (fwin->right_button && fwin->flags.map_right_button)
-			handleButtonExpose(&fwin->right_button->descriptor, NULL);
-#ifdef XKB_BUTTON_HINT
-		if (fwin->language_button && fwin->flags.map_language_button)
-			handleButtonExpose(&fwin->language_button->descriptor, NULL);
-#endif
+		if (fwin->right_button && fwin->flags.map_right_button &&
+		    !fwin->flags.hide_right_button && !fwin->flags.rbutton_dont_fit)
+			rofs += fwin->btn_size + 3;
 	}
+#ifdef XKB_BUTTON_HINT
+	fwin->languagebutton_image = fwin->vscr->screen_ptr->b_pixmaps[WBUT_XKBGROUP1 + fwin->languagemode];
+#endif
+
+	paint_title(fwin, lofs, rofs, state);
+
+	if (fwin->left_button && fwin->flags.map_left_button)
+		handleButtonExpose(&fwin->left_button->descriptor, NULL);
+
+	if (fwin->right_button && fwin->flags.map_right_button)
+		handleButtonExpose(&fwin->right_button->descriptor, NULL);
+#ifdef XKB_BUTTON_HINT
+	if (fwin->language_button && fwin->flags.map_language_button)
+		handleButtonExpose(&fwin->language_button->descriptor, NULL);
+#endif
 }
 
 void wFrameWindowConfigure(WFrameWindow *fwin, int x, int y, int width, int height)
