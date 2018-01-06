@@ -101,6 +101,8 @@ static void handleExpose(WObjDescriptor *desc, XEvent *event);
 static void checkTitleSize(WFrameWindow *fwin);
 static void paint_button_pushed(WFrameWindow *fwin, WCoreWindow *button,
 				WPixmap *image, int *width, int *left);
+static void paint_button_nopushed(WFrameWindow *fwin, WCoreWindow *button,
+				  WPixmap *image, int *width);
 static void paintButton(WFrameWindow *fwin, WCoreWindow *button, int pushed);
 static void handleButtonExpose(WObjDescriptor *desc, XEvent *event);
 static void titlebarMouseDown(WObjDescriptor *desc, XEvent *event);
@@ -1630,6 +1632,39 @@ static void paint_button_pushed(WFrameWindow *fwin, WCoreWindow *button,
 	}
 }
 
+static void paint_button_nopushed(WFrameWindow *fwin, WCoreWindow *button,
+				  WPixmap *image, int *width)
+{
+	WScreen *scr = fwin->vscr->screen_ptr;
+	WTexture *texture = fwin->title_texture[fwin->flags.state];
+	int btn_width = fwin->btn_size;
+	int btn_height = fwin->btn_size;
+
+	XClearWindow(dpy, button->window);
+
+	if (image) {
+		if (image->width >= image->height * 2)
+			*width = image->width / 2;
+		else
+			*width = image->width;
+	}
+
+	if (wPreferences.new_style == TS_NEW) {
+		/*
+		 * kix: The orignal line was:
+		 * if (texture->any.type == WTEX_SOLID || pushed)
+		 * but it cannot be reached, because if is pushed
+		 * the paintButton do not enter here!
+		 */
+		if (texture->any.type == WTEX_SOLID)
+			wDrawBevel(button->window, btn_width, btn_height,
+				   (WTexSolid *) texture, WREL_RAISED);
+	} else {
+		wDrawBevel(button->window, btn_width, btn_height,
+			   scr->widget_texture, WREL_RAISED);
+	}
+}
+
 static void paintButton(WFrameWindow *fwin, WCoreWindow *button, int pushed)
 {
 	WScreen *scr = fwin->vscr->screen_ptr;
@@ -1657,24 +1692,8 @@ static void paintButton(WFrameWindow *fwin, WCoreWindow *button, int pushed)
 		paint_button_pushed(fwin, button, image, &width, &left);
 		d = 1;
 	} else {
-		XClearWindow(dpy, button->window);
-
-		if (image) {
-			if (image->width >= image->height * 2)
-				width = image->width / 2;
-			else
-				width = image->width;
-		}
+		paint_button_nopushed(fwin, button, image, &width);
 		d = 0;
-
-		if (wPreferences.new_style == TS_NEW) {
-			if (texture->any.type == WTEX_SOLID || pushed)
-				wDrawBevel(button->window, btn_width, btn_height,
-					   (WTexSolid *) texture, WREL_RAISED);
-		} else {
-			wDrawBevel(button->window, btn_width, btn_height,
-				   scr->widget_texture, WREL_RAISED);
-		}
 	}
 
 	if (image) {
