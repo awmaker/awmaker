@@ -1098,52 +1098,54 @@ static void updateTexture_titlebar(WFrameWindow *fwin)
 	unsigned long pixel;
 	int i = fwin->flags.state;
 
-	if (fwin->titlebar && fwin->flags.titlebar) {
-		if (fwin->title_texture[i]->any.type != WTEX_SOLID) {
-			XSetWindowBackgroundPixmap(dpy, fwin->titlebar->window, fwin->title_back[i]);
-			if (wPreferences.new_style == TS_NEW) {
-				if (fwin->left_button && fwin->lbutton_back[i])
-					XSetWindowBackgroundPixmap(dpy, fwin->left_button->window,
-								   fwin->lbutton_back[i]);
-#ifdef XKB_BUTTON_HINT
-				if (fwin->language_button && fwin->languagebutton_back[i])
-					XSetWindowBackgroundPixmap(dpy, fwin->language_button->window,
-								   fwin->languagebutton_back[i]);
-#endif
-				if (fwin->right_button && fwin->rbutton_back[i])
-					XSetWindowBackgroundPixmap(dpy, fwin->right_button->window,
-								   fwin->rbutton_back[i]);
-			}
-		} else {
-			pixel = fwin->title_texture[i]->solid.normal.pixel;
-			XSetWindowBackground(dpy, fwin->titlebar->window, pixel);
-			if (wPreferences.new_style == TS_NEW) {
-				if (fwin->left_button)
-					XSetWindowBackground(dpy, fwin->left_button->window, pixel);
-#ifdef XKB_BUTTON_HINT
-				if (fwin->language_button)
-					XSetWindowBackground(dpy, fwin->language_button->window, pixel);
-#endif
-				if (fwin->right_button)
-					XSetWindowBackground(dpy, fwin->right_button->window, pixel);
-			}
-		}
-		XClearWindow(dpy, fwin->titlebar->window);
+	if (!fwin->titlebar || !fwin->flags.titlebar)
+		return;
 
-		if (fwin->left_button && fwin->flags.map_left_button) {
-			XClearWindow(dpy, fwin->left_button->window);
-			handleButtonExpose(&fwin->left_button->descriptor, NULL);
-		}
+	if (fwin->title_texture[i]->any.type != WTEX_SOLID) {
+		XSetWindowBackgroundPixmap(dpy, fwin->titlebar->window, fwin->title_back[i]);
+		if (wPreferences.new_style == TS_NEW) {
+			if (fwin->left_button && fwin->lbutton_back[i])
+				XSetWindowBackgroundPixmap(dpy, fwin->left_button->window,
+							   fwin->lbutton_back[i]);
 #ifdef XKB_BUTTON_HINT
-		if (fwin->language_button && fwin->flags.map_language_button) {
-			XClearWindow(dpy, fwin->language_button->window);
-			handleButtonExpose(&fwin->language_button->descriptor, NULL);
-		}
+			if (fwin->language_button && fwin->languagebutton_back[i])
+				XSetWindowBackgroundPixmap(dpy, fwin->language_button->window,
+							   fwin->languagebutton_back[i]);
 #endif
-		if (fwin->right_button && fwin->flags.map_right_button) {
-			XClearWindow(dpy, fwin->right_button->window);
-			handleButtonExpose(&fwin->right_button->descriptor, NULL);
+			if (fwin->right_button && fwin->rbutton_back[i])
+				XSetWindowBackgroundPixmap(dpy, fwin->right_button->window,
+							   fwin->rbutton_back[i]);
 		}
+	} else {
+		pixel = fwin->title_texture[i]->solid.normal.pixel;
+		XSetWindowBackground(dpy, fwin->titlebar->window, pixel);
+		if (wPreferences.new_style == TS_NEW) {
+			if (fwin->left_button)
+				XSetWindowBackground(dpy, fwin->left_button->window, pixel);
+#ifdef XKB_BUTTON_HINT
+			if (fwin->language_button)
+				XSetWindowBackground(dpy, fwin->language_button->window, pixel);
+#endif
+			if (fwin->right_button)
+				XSetWindowBackground(dpy, fwin->right_button->window, pixel);
+		}
+	}
+
+	XClearWindow(dpy, fwin->titlebar->window);
+
+	if (fwin->left_button && fwin->flags.map_left_button) {
+		XClearWindow(dpy, fwin->left_button->window);
+		handleButtonExpose(&fwin->left_button->descriptor, NULL);
+	}
+#ifdef XKB_BUTTON_HINT
+	if (fwin->language_button && fwin->flags.map_language_button) {
+		XClearWindow(dpy, fwin->language_button->window);
+		handleButtonExpose(&fwin->language_button->descriptor, NULL);
+	}
+#endif
+	if (fwin->right_button && fwin->flags.map_right_button) {
+		XClearWindow(dpy, fwin->right_button->window);
+		handleButtonExpose(&fwin->right_button->descriptor, NULL);
 	}
 }
 
