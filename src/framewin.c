@@ -99,6 +99,8 @@ static void reconfigure(WFrameWindow *fwin, int x, int y,
 			int width, int height, Bool dontMove);
 static void handleExpose(WObjDescriptor *desc, XEvent *event);
 static void checkTitleSize(WFrameWindow *fwin);
+static void paint_button_pushed(WFrameWindow *fwin, WCoreWindow *button,
+				WPixmap *image, int *width, int *left);
 static void paintButton(WFrameWindow *fwin, WCoreWindow *button, int pushed);
 static void handleButtonExpose(WObjDescriptor *desc, XEvent *event);
 static void titlebarMouseDown(WObjDescriptor *desc, XEvent *event);
@@ -1586,6 +1588,48 @@ static void checkTitleSize(WFrameWindow *fwin)
 		fwin->flags.incomplete_title = 0;
 }
 
+static void paint_button_pushed(WFrameWindow *fwin, WCoreWindow *button,
+				WPixmap *image, int *width, int *left)
+{
+	WScreen *scr = fwin->vscr->screen_ptr;
+	GC copy_gc = scr->copy_gc;
+	int btn_width = fwin->btn_size;
+	int btn_height = fwin->btn_size;
+
+	if (image) {
+		if (image->width >= image->height * 2) {
+			/*
+			 * The image contains 2 pictures: the second is for the
+			 * pushed state
+			 */
+			*width = image->width / 2;
+			*left = image->width / 2;
+		} else {
+			*width = image->width;
+		}
+	}
+
+	XSetClipMask(dpy, copy_gc, None);
+	if (wPreferences.new_style == TS_NEXT)
+		XSetForeground(dpy, copy_gc, scr->black_pixel);
+	else
+		XSetForeground(dpy, copy_gc, scr->white_pixel);
+
+	if (wPreferences.new_style == TS_NEW) {
+		XFillRectangle(dpy, button->window, copy_gc, 0, 0, btn_width - 1, btn_height - 1);
+		XSetForeground(dpy, copy_gc, scr->black_pixel);
+		XDrawRectangle(dpy, button->window, copy_gc, 0, 0, btn_width - 1, btn_height - 1);
+	} else if (wPreferences.new_style == TS_OLD) {
+		XFillRectangle(dpy, button->window, copy_gc, 0, 0, btn_width, btn_height);
+		XSetForeground(dpy, copy_gc, scr->black_pixel);
+		XDrawRectangle(dpy, button->window, copy_gc, 0, 0, btn_width, btn_height);
+	} else {
+		XFillRectangle(dpy, button->window, copy_gc, 0, 0, btn_width - 3, btn_height - 3);
+		XSetForeground(dpy, copy_gc, scr->black_pixel);
+		XDrawRectangle(dpy, button->window, copy_gc, 0, 0, btn_width - 3, btn_height - 3);
+	}
+}
+
 static void paintButton(WFrameWindow *fwin, WCoreWindow *button, int pushed)
 {
 	WScreen *scr = fwin->vscr->screen_ptr;
@@ -1610,36 +1654,8 @@ static void paintButton(WFrameWindow *fwin, WCoreWindow *button, int pushed)
 
 	/* setup stuff according to the state */
 	if (pushed) {
-		if (image) {
-			if (image->width >= image->height * 2) {
-				/* the image contains 2 pictures: the second is for the
-				 * pushed state */
-				width = image->width / 2;
-				left = image->width / 2;
-			} else {
-				width = image->width;
-			}
-		}
-		XSetClipMask(dpy, copy_gc, None);
-		if (wPreferences.new_style == TS_NEXT)
-			XSetForeground(dpy, copy_gc, scr->black_pixel);
-		else
-			XSetForeground(dpy, copy_gc, scr->white_pixel);
-
+		paint_button_pushed(fwin, button, image, &width, &left);
 		d = 1;
-		if (wPreferences.new_style == TS_NEW) {
-			XFillRectangle(dpy, button->window, copy_gc, 0, 0, btn_width - 1, btn_height - 1);
-			XSetForeground(dpy, copy_gc, scr->black_pixel);
-			XDrawRectangle(dpy, button->window, copy_gc, 0, 0, btn_width - 1, btn_height - 1);
-		} else if (wPreferences.new_style == TS_OLD) {
-			XFillRectangle(dpy, button->window, copy_gc, 0, 0, btn_width, btn_height);
-			XSetForeground(dpy, copy_gc, scr->black_pixel);
-			XDrawRectangle(dpy, button->window, copy_gc, 0, 0, btn_width, btn_height);
-		} else {
-			XFillRectangle(dpy, button->window, copy_gc, 0, 0, btn_width - 3, btn_height - 3);
-			XSetForeground(dpy, copy_gc, scr->black_pixel);
-			XDrawRectangle(dpy, button->window, copy_gc, 0, 0, btn_width - 3, btn_height - 3);
-		}
 	} else {
 		XClearWindow(dpy, button->window);
 
