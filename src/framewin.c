@@ -1390,10 +1390,91 @@ void wFrameWindowPaint(WFrameWindow *fwin)
 	}
 }
 
+void wFrameWindowConfigure(WFrameWindow *fwin, int x, int y, int width, int height)
+{
+	reconfigure(fwin, x, y, width, height, False);
+}
+
+static void reconfigure_titlebar(WFrameWindow *fwin, int width)
+{
+	int k = (wPreferences.new_style == TS_NEW ? 4 : 3);
+
+	/* Check if the titlebar is wide enough to hold the buttons.
+	 * Temporarily remove them if can't
+	 */
+	if (fwin->left_button && fwin->flags.map_left_button) {
+		if (width < fwin->top_width * k && !fwin->flags.lbutton_dont_fit) {
+			if (!fwin->flags.hide_left_button)
+				XUnmapWindow(dpy, fwin->left_button->window);
+
+			fwin->flags.lbutton_dont_fit = 1;
+		} else if (width >= fwin->top_width * k && fwin->flags.lbutton_dont_fit) {
+			if (!fwin->flags.hide_left_button)
+				XMapWindow(dpy, fwin->left_button->window);
+
+			fwin->flags.lbutton_dont_fit = 0;
+		}
+	}
+
+#ifdef XKB_BUTTON_HINT
+	if (fwin->language_button && fwin->flags.map_language_button) {
+		if (width < fwin->top_width * k && !fwin->flags.languagebutton_dont_fit) {
+			if (!fwin->flags.hide_language_button)
+				XUnmapWindow(dpy, fwin->language_button->window);
+
+			fwin->flags.languagebutton_dont_fit = 1;
+		} else if (width >= fwin->top_width * k && fwin->flags.languagebutton_dont_fit) {
+			if (!fwin->flags.hide_language_button)
+				XMapWindow(dpy, fwin->language_button->window);
+
+			fwin->flags.languagebutton_dont_fit = 0;
+		}
+	}
+#endif
+
+	if (fwin->right_button && fwin->flags.map_right_button) {
+		if (width < fwin->top_width * 2 && !fwin->flags.rbutton_dont_fit) {
+			if (!fwin->flags.hide_right_button)
+				XUnmapWindow(dpy, fwin->right_button->window);
+
+			fwin->flags.rbutton_dont_fit = 1;
+		} else if (width >= fwin->top_width * 2 && fwin->flags.rbutton_dont_fit) {
+			if (!fwin->flags.hide_right_button)
+				XMapWindow(dpy, fwin->right_button->window);
+
+			fwin->flags.rbutton_dont_fit = 0;
+		}
+	}
+
+	if (wPreferences.new_style == TS_NEW) {
+		if (fwin->right_button && fwin->flags.map_right_button)
+			XMoveWindow(dpy, fwin->right_button->window,
+				    width - fwin->btn_size + 1, 0);
+	} else {
+		if (fwin->right_button && fwin->flags.map_right_button)
+			XMoveWindow(dpy, fwin->right_button->window,
+				    width - fwin->btn_size - 3,
+				    (fwin->titlebar_height - fwin->btn_size) / 2);
+	}
+
+	updateTitlebar(fwin);
+	checkTitleSize(fwin);
+}
+
+static void reconfigure_resizebar(WFrameWindow *fwin)
+{
+	wCoreConfigure(fwin->resizebar, 0,
+		       fwin->height - fwin->resizebar_height,
+		       fwin->width, fwin->resizebar_height);
+
+	fwin->resizebar_corner_width = RESIZEBAR_CORNER_WIDTH;
+	if (fwin->width < RESIZEBAR_CORNER_WIDTH * 2 + RESIZEBAR_MIN_WIDTH)
+		fwin->resizebar_corner_width = fwin->width / 2;
+}
+
 static void reconfigure(WFrameWindow *fwin, int x, int y,
 			int width, int height, Bool dontMove)
 {
-	int k = (wPreferences.new_style == TS_NEW ? 4 : 3);
 	int resizedHorizontally = 0;
 
 	if (dontMove)
@@ -1409,81 +1490,11 @@ static void reconfigure(WFrameWindow *fwin, int x, int y,
 	fwin->width = width;
 	fwin->height = height;
 
-	if (fwin->titlebar && fwin->flags.titlebar && resizedHorizontally) {
-		/* Check if the titlebar is wide enough to hold the buttons.
-		 * Temporarily remove them if can't
-		 */
-		if (fwin->left_button && fwin->flags.map_left_button) {
-			if (width < fwin->top_width * k && !fwin->flags.lbutton_dont_fit) {
-				if (!fwin->flags.hide_left_button)
-					XUnmapWindow(dpy, fwin->left_button->window);
+	if (fwin->titlebar && fwin->flags.titlebar && resizedHorizontally)
+		reconfigure_titlebar(fwin, width);
 
-				fwin->flags.lbutton_dont_fit = 1;
-			} else if (width >= fwin->top_width * k && fwin->flags.lbutton_dont_fit) {
-				if (!fwin->flags.hide_left_button)
-					XMapWindow(dpy, fwin->left_button->window);
-
-				fwin->flags.lbutton_dont_fit = 0;
-			}
-		}
-#ifdef XKB_BUTTON_HINT
-		if (fwin->language_button && fwin->flags.map_language_button) {
-			if (width < fwin->top_width * k && !fwin->flags.languagebutton_dont_fit) {
-				if (!fwin->flags.hide_language_button)
-					XUnmapWindow(dpy, fwin->language_button->window);
-
-				fwin->flags.languagebutton_dont_fit = 1;
-			} else if (width >= fwin->top_width * k && fwin->flags.languagebutton_dont_fit) {
-				if (!fwin->flags.hide_language_button)
-					XMapWindow(dpy, fwin->language_button->window);
-
-				fwin->flags.languagebutton_dont_fit = 0;
-			}
-		}
-#endif
-
-		if (fwin->right_button && fwin->flags.map_right_button) {
-			if (width < fwin->top_width * 2 && !fwin->flags.rbutton_dont_fit) {
-				if (!fwin->flags.hide_right_button)
-					XUnmapWindow(dpy, fwin->right_button->window);
-
-				fwin->flags.rbutton_dont_fit = 1;
-			} else if (width >= fwin->top_width * 2 && fwin->flags.rbutton_dont_fit) {
-				if (!fwin->flags.hide_right_button)
-					XMapWindow(dpy, fwin->right_button->window);
-
-				fwin->flags.rbutton_dont_fit = 0;
-			}
-		}
-
-		if (wPreferences.new_style == TS_NEW) {
-			if (fwin->right_button && fwin->flags.map_right_button)
-				XMoveWindow(dpy, fwin->right_button->window,
-					    width - fwin->btn_size + 1, 0);
-		} else {
-			if (fwin->right_button && fwin->flags.map_right_button)
-				XMoveWindow(dpy, fwin->right_button->window,
-					    width - fwin->btn_size - 3,
-					    (fwin->titlebar_height - fwin->btn_size) / 2);
-		}
-		updateTitlebar(fwin);
-		checkTitleSize(fwin);
-	}
-
-	if (fwin->resizebar && fwin->flags.resizebar) {
-		wCoreConfigure(fwin->resizebar, 0,
-			       fwin->height - fwin->resizebar_height,
-			       fwin->width, fwin->resizebar_height);
-
-		fwin->resizebar_corner_width = RESIZEBAR_CORNER_WIDTH;
-		if (fwin->width < RESIZEBAR_CORNER_WIDTH * 2 + RESIZEBAR_MIN_WIDTH)
-			fwin->resizebar_corner_width = fwin->width / 2;
-	}
-}
-
-void wFrameWindowConfigure(WFrameWindow *fwin, int x, int y, int width, int height)
-{
-	reconfigure(fwin, x, y, width, height, False);
+	if (fwin->resizebar && fwin->flags.resizebar)
+		reconfigure_resizebar(fwin);
 }
 
 void wFrameWindowResize(WFrameWindow *fwin, int width, int height)
