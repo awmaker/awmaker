@@ -771,7 +771,7 @@ void wFrameWindowDestroy(WFrameWindow *fwin)
 	wfree(fwin);
 }
 
-void wFrameWindowChangeState(WFrameWindow * fwin, int state)
+void wFrameWindowChangeState(WFrameWindow *fwin, int state)
 {
 	if (fwin->flags.state == state)
 		return;
@@ -1042,7 +1042,7 @@ static void renderTexture(WScreen *scr, WTexture *texture,
 
 static void renderResizebarTexture(WScreen *scr, WTexture *texture,
 				   int width, int height, int cwidth,
-				   Pixmap * pmap)
+				   Pixmap *pmap)
 {
 	RImage *img;
 	RColor light;
@@ -1482,12 +1482,12 @@ static void reconfigure(WFrameWindow *fwin, int x, int y,
 	}
 }
 
-void wFrameWindowConfigure(WFrameWindow * fwin, int x, int y, int width, int height)
+void wFrameWindowConfigure(WFrameWindow *fwin, int x, int y, int width, int height)
 {
 	reconfigure(fwin, x, y, width, height, False);
 }
 
-void wFrameWindowResize(WFrameWindow * fwin, int width, int height)
+void wFrameWindowResize(WFrameWindow *fwin, int width, int height)
 {
 	reconfigure(fwin, 0, 0, width, height, True);
 }
