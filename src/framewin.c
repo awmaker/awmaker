@@ -42,6 +42,8 @@
 #include "misc.h"
 #include "event.h"
 
+#define TS_NORMAL_PAD 3
+
 static void allocFrameBorderPixel(Colormap colormap, const char *color_name,
 				  unsigned long **pixel);
 static void destroy_framewin_button(WFrameWindow *fwin, int state);
@@ -272,10 +274,10 @@ static void left_button_map(WFrameWindow *fwin, int theight)
 	int width = fwin->width;
 	virtual_screen *vscr = fwin->vscr;
 	WScreen *scr = vscr->screen_ptr;
+	int btn_height;
 
 	if (wPreferences.new_style == TS_NEW) {
-		wcore_map(fwin->left_button, fwin->core, fwin->vscr,
-			  fwin->left_button_pos_width, fwin->left_button_pos_height,
+		wcore_map(fwin->left_button, fwin->core, fwin->vscr, 0, 0,
 			  fwin->btn_size, fwin->btn_size, 0,
 			  fwin->vscr->screen_ptr->w_depth,
 			  fwin->vscr->screen_ptr->w_visual,
@@ -286,8 +288,9 @@ static void left_button_map(WFrameWindow *fwin, int theight)
 		else
 			XMapRaised(dpy, fwin->left_button->window);
 	} else {
+		btn_height = (theight - fwin->btn_size) / 2;
 		wcore_map(fwin->left_button, fwin->titlebar, fwin->vscr,
-			  fwin->left_button_pos_width, fwin->left_button_pos_height,
+			  TS_NORMAL_PAD, btn_height,
 			  fwin->btn_size, fwin->btn_size, 0,
 			  fwin->vscr->screen_ptr->w_depth,
 			  fwin->vscr->screen_ptr->w_visual,
