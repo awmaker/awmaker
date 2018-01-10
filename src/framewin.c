@@ -545,9 +545,6 @@ static void titlebar_map(WFrameWindow *fwin)
 	if (fwin->flags.map_right_button)
 		right_button_map(fwin, theight);
 
-	if (wPreferences.new_style == TS_NEW)
-		updateTitlebar(fwin);
-
 	XMapRaised(dpy, fwin->titlebar->window);
 
 	fwin->flags.need_texture_remake = 1;
