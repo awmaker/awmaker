@@ -332,10 +332,21 @@ static void language_button_map(WFrameWindow *fwin, int theight)
 	int width = fwin->width;
 	virtual_screen *vscr = fwin->vscr;
 	WScreen *scr = vscr->screen_ptr;
+	int btn_height, btn_pad;
+
+	/* Set the starting */
+	if (wPreferences.new_style == TS_NEW)
+		btn_pad = 0;
+	else
+		btn_pad = TS_NORMAL_PAD;
+
+	/* If left button, add extra space (btn_size) */
+	if (fwin->left_button && fwin->flags.map_left_button)
+		btn_pad += fwin->btn_size;
 
 	if (wPreferences.new_style == TS_NEW) {
 		wcore_map(fwin->language_button, fwin->core, fwin->vscr,
-			  fwin->language_button_pos_width, fwin->language_button_pos_height,
+			  btn_pad, 0,
 			  fwin->btn_size, fwin->btn_size, 0,
 			  fwin->vscr->screen_ptr->w_depth,
 			  fwin->vscr->screen_ptr->w_visual,
@@ -346,8 +357,9 @@ static void language_button_map(WFrameWindow *fwin, int theight)
 		else
 			XMapRaised(dpy, fwin->language_button->window);
 	} else {
+		btn_height = (theight - fwin->btn_size) / 2;
 		wcore_map(fwin->language_button, fwin->titlebar, fwin->vscr,
-			  fwin->language_button_pos_width, fwin->language_button_pos_height,
+			  btn_pad, btn_height,
 			  fwin->btn_size, fwin->btn_size, 0,
 			  fwin->vscr->screen_ptr->w_depth,
 			  fwin->vscr->screen_ptr->w_visual,
