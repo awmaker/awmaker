@@ -63,7 +63,7 @@ static void right_button_create(WFrameWindow *fwin);
 static void right_button_map(WFrameWindow *fwin, int theight);
 static void right_button_unmap(WFrameWindow *fwin);
 static void titlebar_create_update(WFrameWindow *fwin, int theight, int flags);
-static void titlebar_map(WFrameWindow *fwin, int theight);
+static void titlebar_map(WFrameWindow *fwin);
 static void titlebar_unmap(WFrameWindow *fwin);
 static void titlebar_destroy(WFrameWindow *fwin);
 static void resizebar_create(WFrameWindow *fwin);
@@ -511,14 +511,17 @@ static void titlebar_create_update(WFrameWindow *fwin, int theight, int flags)
 	}
 }
 
-static void titlebar_map(WFrameWindow *fwin, int theight)
+static void titlebar_map(WFrameWindow *fwin)
 {
+	int theight;
+
 	/* if we didn't have a titlebar and are being requested for
 	 * one, create it */
 	if (!fwin->flags.map_titlebar)
 		return;
 
 	fwin->flags.titlebar = 1;
+	theight = get_framewin_titleheight(fwin);
 	fwin->top_width = theight;
 
 	/* Set the positions for titlebar and buttons */
@@ -721,11 +724,11 @@ void wframewin_set_borders(WFrameWindow *fwin, int flags)
 			titlebar_unmap(fwin);
 			if (fwin->flags.map_titlebar) {
 				titlebar_create_update(fwin, theight, flags);
-				titlebar_map(fwin, theight);
+				titlebar_map(fwin);
 			}
 		} else {
 			titlebar_create_update(fwin, theight, flags);
-			titlebar_map(fwin, theight);
+			titlebar_map(fwin);
 		}
 
 		checkTitleSize(fwin);
