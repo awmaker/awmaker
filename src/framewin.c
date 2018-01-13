@@ -514,6 +514,7 @@ static void titlebar_map(WFrameWindow *fwin, int method)
 	int theight = get_framewin_titleheight(fwin);
 	int width = fwin->width;
 	int btn_height, btn_pad;
+	int rb_pos_width;
 
 	fwin->top_width = theight;
 	fwin->flags.need_texture_remake = 1;
@@ -527,7 +528,6 @@ static void titlebar_map(WFrameWindow *fwin, int method)
 	if (wPreferences.new_style == TS_NEW) {
 		btn_pad = 0;
 
-		fwin->right_button_pos_width = width - fwin->btn_size;
 #ifdef XKB_BUTTON_HINT
 		if (!fwin->flags.hide_left_button && !fwin->flags.lbutton_dont_fit)
 			fwin->language_button_pos_width = fwin->btn_size;
@@ -537,7 +537,6 @@ static void titlebar_map(WFrameWindow *fwin, int method)
 	} else {
 		btn_pad = TS_NORMAL_PAD;
 
-		fwin->right_button_pos_width = width - fwin->btn_size - btn_pad;
 #ifdef XKB_BUTTON_HINT
 		if (!fwin->flags.hide_left_button && !fwin->flags.lbutton_dont_fit)
 			fwin->language_button_pos_width = fwin->btn_size + 2 * btn_pad;
@@ -545,6 +544,8 @@ static void titlebar_map(WFrameWindow *fwin, int method)
 			fwin->language_button_pos_width = btn_pad;
 #endif
 	}
+
+	rb_pos_width = width - fwin->btn_size - btn_pad;
 
 	if (wPreferences.new_style == TS_NEW) {
 		if (!fwin->flags.hide_left_button && fwin->left_button &&
@@ -598,7 +599,7 @@ static void titlebar_map(WFrameWindow *fwin, int method)
 		if (fwin->left_button && fwin->flags.map_left_button)
 			wCoreConfigure(fwin->left_button, btn_pad, btn_height, fwin->btn_size, fwin->btn_size);
 		if (fwin->right_button && fwin->flags.map_right_button)
-			wCoreConfigure(fwin->right_button, fwin->right_button_pos_width, btn_height, fwin->btn_size, fwin->btn_size);
+			wCoreConfigure(fwin->right_button, rb_pos_width, btn_height, fwin->btn_size, fwin->btn_size);
 
 #ifdef XKB_BUTTON_HINT
 		if (fwin->language_button && fwin->flags.map_language_button)
