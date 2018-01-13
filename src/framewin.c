@@ -63,7 +63,7 @@ static void right_button_create(WFrameWindow *fwin);
 static void right_button_map(WFrameWindow *fwin, int theight);
 static void right_button_unmap(WFrameWindow *fwin);
 static void titlebar_create_update(WFrameWindow *fwin, int theight, int flags);
-static void titlebar_map(WFrameWindow *fwin);
+static void titlebar_map(WFrameWindow *fwin, int method);
 static void titlebar_unmap(WFrameWindow *fwin);
 static void titlebar_destroy(WFrameWindow *fwin);
 static void resizebar_create(WFrameWindow *fwin);
@@ -511,43 +511,45 @@ static void titlebar_create_update(WFrameWindow *fwin, int theight, int flags)
 	}
 }
 
-static void titlebar_map(WFrameWindow *fwin)
+static void titlebar_map(WFrameWindow *fwin, int method)
 {
 	int theight;
 
-	/* if we didn't have a titlebar and are being requested for
-	 * one, create it */
-	if (!fwin->flags.map_titlebar)
-		return;
+	if (method == 0) {
+		/* if we didn't have a titlebar and are being requested for
+		 * one, create it */
+		if (!fwin->flags.map_titlebar)
+			return;
 
-	fwin->flags.titlebar = 1;
-	theight = get_framewin_titleheight(fwin);
-	fwin->top_width = theight;
+		fwin->flags.titlebar = 1;
+		theight = get_framewin_titleheight(fwin);
+		fwin->top_width = theight;
 
-	/* Set the positions for titlebar and buttons */
-	set_titlebar_positions(fwin);
+		/* Set the positions for titlebar and buttons */
+		set_titlebar_positions(fwin);
 
-	wcore_map(fwin->titlebar, fwin->core, fwin->vscr,
-		  fwin->titlebar_pos_width, 0,
-		  fwin->titlebar_width, fwin->titlebar_height, 0,
-		  fwin->vscr->screen_ptr->w_depth,
-		  fwin->vscr->screen_ptr->w_visual,
-		  fwin->vscr->screen_ptr->w_colormap);
+		wcore_map(fwin->titlebar, fwin->core, fwin->vscr,
+			  fwin->titlebar_pos_width, 0,
+			  fwin->titlebar_width, fwin->titlebar_height, 0,
+			  fwin->vscr->screen_ptr->w_depth,
+			  fwin->vscr->screen_ptr->w_visual,
+			  fwin->vscr->screen_ptr->w_colormap);
 
-	if (fwin->flags.map_left_button)
-		left_button_map(fwin, theight);
+		if (fwin->flags.map_left_button)
+			left_button_map(fwin, theight);
 
 #ifdef XKB_BUTTON_HINT
-	if (fwin->flags.map_language_button)
-		language_button_map(fwin, theight);
+		if (fwin->flags.map_language_button)
+			language_button_map(fwin, theight);
 #endif
 
-	if (fwin->flags.map_right_button)
-		right_button_map(fwin, theight);
+		if (fwin->flags.map_right_button)
+			right_button_map(fwin, theight);
 
-	XMapRaised(dpy, fwin->titlebar->window);
+		XMapRaised(dpy, fwin->titlebar->window);
 
-	fwin->flags.need_texture_remake = 1;
+		fwin->flags.need_texture_remake = 1;
+	}
 }
 
 static void titlebar_unmap(WFrameWindow *fwin)
@@ -721,11 +723,11 @@ void wframewin_set_borders(WFrameWindow *fwin, int flags)
 			titlebar_unmap(fwin);
 			if (fwin->flags.map_titlebar) {
 				titlebar_create_update(fwin, theight, flags);
-				titlebar_map(fwin);
+				titlebar_map(fwin, 0);
 			}
 		} else {
 			titlebar_create_update(fwin, theight, flags);
-			titlebar_map(fwin);
+			titlebar_map(fwin, 0);
 		}
 
 		checkTitleSize(fwin);
