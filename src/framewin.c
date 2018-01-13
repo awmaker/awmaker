@@ -524,32 +524,25 @@ static void titlebar_map(WFrameWindow *fwin, int method)
 	else
 		btn_height = (theight - fwin->btn_size) / 2;
 
-	/* First, situate the right button, it doesn't have dependencies */
-	if (wPreferences.new_style == TS_NEW)
+	if (wPreferences.new_style == TS_NEW) {
 		fwin->right_button_pos_width = width - fwin->btn_size + 1;
-	else
-		fwin->right_button_pos_width = width - fwin->btn_size - 3;
-
-	/* Second, the left button */
-	if (wPreferences.new_style == TS_NEW)
 		fwin->left_button_pos_width = 0;
-	else
-		fwin->left_button_pos_width = 3;
-
 #ifdef XKB_BUTTON_HINT
-	/* Language button, depends on left button (TS_NEW) */
-	if (!fwin->flags.hide_left_button && !fwin->flags.lbutton_dont_fit) {
-		if (wPreferences.new_style == TS_NEW)
+		if (!fwin->flags.hide_left_button && !fwin->flags.lbutton_dont_fit)
 			fwin->language_button_pos_width = fwin->btn_size;
 		else
-			fwin->language_button_pos_width = fwin->btn_size + 6;
-	} else {
-		if (wPreferences.new_style == TS_NEW)
 			fwin->language_button_pos_width = 0;
+#endif
+	} else {
+		fwin->right_button_pos_width = width - fwin->btn_size - 3;
+		fwin->left_button_pos_width = 3;
+#ifdef XKB_BUTTON_HINT
+		if (!fwin->flags.hide_left_button && !fwin->flags.lbutton_dont_fit)
+			fwin->language_button_pos_width = fwin->btn_size + 6;
 		else
 			fwin->language_button_pos_width = 3;
+#endif
 	}
-#endif /* XKB_BUTTON_HINT */
 
 	if (wPreferences.new_style == TS_NEW) {
 		if (!fwin->flags.hide_left_button && fwin->left_button &&
