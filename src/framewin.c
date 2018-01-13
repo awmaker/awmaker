@@ -610,6 +610,7 @@ static void titlebar_unmap(WFrameWindow *fwin)
 
 		wcore_unmap(fwin->titlebar);
 		fwin->top_width = 0;
+		fwin->titlebar_width = 0;
 		fwin->flags.titlebar = 0;
 	}
 }
