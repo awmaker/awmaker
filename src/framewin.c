@@ -517,7 +517,6 @@ static void titlebar_map(WFrameWindow *fwin, int method)
 	int rb_pos_width, tb_pos_width;
 
 	fwin->top_width = theight;
-	fwin->flags.need_texture_remake = 1;
 
 	/* Style settings (button height and button padding */
 	if (wPreferences.new_style == TS_NEW) {
@@ -590,8 +589,6 @@ static void titlebar_map(WFrameWindow *fwin, int method)
 			right_button_map(fwin, theight);
 
 		XMapRaised(dpy, fwin->titlebar->window);
-
-		fwin->flags.need_texture_remake = 1;
 	}
 
 	if (method == 1) {
@@ -608,6 +605,8 @@ static void titlebar_map(WFrameWindow *fwin, int method)
 
 		wCoreConfigure(fwin->titlebar, fwin->titlebar_pos_width, 0, fwin->titlebar_width, fwin->titlebar_height);
 	}
+
+	fwin->flags.need_texture_remake = 1;
 }
 
 static void titlebar_unmap(WFrameWindow *fwin)
