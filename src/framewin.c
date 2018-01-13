@@ -881,11 +881,6 @@ static void set_titlebar_positions(WFrameWindow *fwin)
 		if (!fwin->flags.hide_right_button && fwin->right_button &&
 		    fwin->flags.map_right_button && !fwin->flags.rbutton_dont_fit)
 			width -= fwin->btn_size;
-
-		fwin->flags.need_texture_remake = 1;
-	} else {
-		if (fwin->titlebar_width != width)
-			fwin->flags.need_texture_remake = 1;
 	}
 
 	fwin->titlebar_width = width;
