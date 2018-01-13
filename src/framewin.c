@@ -399,19 +399,23 @@ static void right_button_create(WFrameWindow *fwin)
 static void right_button_map(WFrameWindow *fwin, int theight)
 {
 	int width = fwin->width;
+	int btn_height, right_button_pos_width;
 	virtual_screen *vscr = fwin->vscr;
 	WScreen *scr = vscr->screen_ptr;
 
 	if (wPreferences.new_style == TS_NEW) {
+		right_button_pos_width = fwin->width - fwin->btn_size + 1;
 		wcore_map(fwin->right_button, fwin->core, fwin->vscr,
-			  fwin->right_button_pos_width, fwin->right_button_pos_height,
+			  right_button_pos_width, 0,
 			  fwin->btn_size, fwin->btn_size, 0,
 			  fwin->vscr->screen_ptr->w_depth,
 			  fwin->vscr->screen_ptr->w_visual,
 			  fwin->vscr->screen_ptr->w_colormap);
 	} else {
+		right_button_pos_width = fwin->width - fwin->btn_size - TS_NORMAL_PAD;
+		btn_height = (theight - fwin->btn_size) / 2;
 		wcore_map(fwin->right_button, fwin->titlebar, fwin->vscr,
-			  fwin->right_button_pos_width, fwin->right_button_pos_height,
+			  right_button_pos_width, btn_height,
 			  fwin->btn_size, fwin->btn_size, 0,
 			  fwin->vscr->screen_ptr->w_depth,
 			  fwin->vscr->screen_ptr->w_visual,
