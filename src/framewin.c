@@ -515,13 +515,13 @@ static void titlebar_map(WFrameWindow *fwin, int method)
 	int theight;
 
 	if (method == 0) {
-		fwin->flags.titlebar = 1;
 		theight = get_framewin_titleheight(fwin);
 		fwin->top_width = theight;
 
 		/* Set the positions for titlebar and buttons */
 		set_titlebar_positions(fwin);
 
+		fwin->flags.titlebar = 1;
 		wcore_map(fwin->titlebar, fwin->core, fwin->vscr,
 			  fwin->titlebar_pos_width, 0,
 			  fwin->titlebar_width, fwin->titlebar_height, 0,
