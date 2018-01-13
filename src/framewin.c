@@ -528,6 +528,22 @@ static void titlebar_map(WFrameWindow *fwin, int method)
 		btn_pad = TS_NORMAL_PAD;
 	}
 
+	/* Right button, left is set using btn_pad variable */
+	rb_pos_width = width - fwin->btn_size - btn_pad;
+
+	/* Update the titlebar size and position (left and right buttons) */
+	if (wPreferences.new_style == TS_NEW) {
+		if (!fwin->flags.hide_left_button && fwin->left_button &&
+		    fwin->flags.map_left_button && !fwin->flags.lbutton_dont_fit) {
+			fwin->titlebar_pos_width = fwin->btn_size;
+			width -= fwin->btn_size;
+		}
+
+		if (!fwin->flags.hide_right_button && fwin->right_button &&
+		    fwin->flags.map_right_button && !fwin->flags.rbutton_dont_fit)
+			width -= fwin->btn_size;
+	}
+
 	/* Language button */
 #ifdef XKB_BUTTON_HINT
 	if (wPreferences.new_style == TS_NEW) {
@@ -535,6 +551,13 @@ static void titlebar_map(WFrameWindow *fwin, int method)
 			fwin->language_button_pos_width = fwin->btn_size;
 		else
 			fwin->language_button_pos_width = btn_pad;
+
+		/* Update the titlebar size and position (language button) */
+		if (!fwin->flags.hide_language_button && fwin->language_button &&
+		    fwin->flags.map_language_button && !fwin->flags.languagebutton_dont_fit) {
+			fwin->titlebar_pos_width += fwin->btn_size;
+			width -= fwin->btn_size;
+		}
 	} else {
 		if (!fwin->flags.hide_left_button && !fwin->flags.lbutton_dont_fit)
 			fwin->language_button_pos_width = fwin->btn_size + 2 * btn_pad;
@@ -542,29 +565,6 @@ static void titlebar_map(WFrameWindow *fwin, int method)
 			fwin->language_button_pos_width = btn_pad;
 	}
 #endif
-
-	/* Right button, left is set using btn_pad variable */
-	rb_pos_width = width - fwin->btn_size - btn_pad;
-
-	if (wPreferences.new_style == TS_NEW) {
-		if (!fwin->flags.hide_left_button && fwin->left_button &&
-		    fwin->flags.map_left_button && !fwin->flags.lbutton_dont_fit) {
-			fwin->titlebar_pos_width = fwin->btn_size;
-			width -= fwin->btn_size;
-		}
-#ifdef XKB_BUTTON_HINT
-
-		if (!fwin->flags.hide_language_button && fwin->language_button &&
-		    fwin->flags.map_language_button && !fwin->flags.languagebutton_dont_fit) {
-			fwin->titlebar_pos_width += fwin->btn_size;
-			width -= fwin->btn_size;
-		}
-#endif /* XKB_BUTTON_HINT */
-
-		if (!fwin->flags.hide_right_button && fwin->right_button &&
-		    fwin->flags.map_right_button && !fwin->flags.rbutton_dont_fit)
-			width -= fwin->btn_size;
-	}
 
 	fwin->titlebar_width = width;
 	fwin->titlebar_height = theight;
