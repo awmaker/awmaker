@@ -182,14 +182,11 @@ typedef struct WFrameWindow {
 	int btn_size;
 
 	int left_button_pos_width;
-	int left_button_pos_height;
 
 	int right_button_pos_width;
-	int right_button_pos_height;
 
 #ifdef XKB_BUTTON_HINT
 	int language_button_pos_width;
-	int language_button_pos_height;
 #endif
 } WFrameWindow;
 
