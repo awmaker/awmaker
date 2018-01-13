@@ -180,10 +180,6 @@ typedef struct WFrameWindow {
 
 	/* Buttons */
 	int btn_size;
-
-#ifdef XKB_BUTTON_HINT
-	int language_button_pos_width;
-#endif
 } WFrameWindow;
 
 void wframewin_set_borders(WFrameWindow *fwin, int flags);

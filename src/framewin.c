@@ -514,7 +514,7 @@ static void titlebar_map(WFrameWindow *fwin, int method)
 	int theight = get_framewin_titleheight(fwin);
 	int width = fwin->width;
 	int btn_height, btn_pad;
-	int rb_pos_width;
+	int rb_pos_width, tb_pos_width;
 
 	fwin->top_width = theight;
 	fwin->flags.need_texture_remake = 1;
@@ -548,9 +548,9 @@ static void titlebar_map(WFrameWindow *fwin, int method)
 #ifdef XKB_BUTTON_HINT
 	if (wPreferences.new_style == TS_NEW) {
 		if (!fwin->flags.hide_left_button && !fwin->flags.lbutton_dont_fit)
-			fwin->language_button_pos_width = fwin->btn_size;
+			tb_pos_width = fwin->btn_size;
 		else
-			fwin->language_button_pos_width = btn_pad;
+			tb_pos_width = btn_pad;
 
 		/* Update the titlebar size and position (language button) */
 		if (!fwin->flags.hide_language_button && fwin->language_button &&
@@ -560,9 +560,9 @@ static void titlebar_map(WFrameWindow *fwin, int method)
 		}
 	} else {
 		if (!fwin->flags.hide_left_button && !fwin->flags.lbutton_dont_fit)
-			fwin->language_button_pos_width = fwin->btn_size + 2 * btn_pad;
+			tb_pos_width = fwin->btn_size + 2 * btn_pad;
 		else
-			fwin->language_button_pos_width = btn_pad;
+			tb_pos_width = btn_pad;
 	}
 #endif
 
@@ -597,13 +597,13 @@ static void titlebar_map(WFrameWindow *fwin, int method)
 	if (method == 1) {
 		if (fwin->left_button && fwin->flags.map_left_button)
 			wCoreConfigure(fwin->left_button, btn_pad, btn_height, fwin->btn_size, fwin->btn_size);
+
 		if (fwin->right_button && fwin->flags.map_right_button)
 			wCoreConfigure(fwin->right_button, rb_pos_width, btn_height, fwin->btn_size, fwin->btn_size);
 
 #ifdef XKB_BUTTON_HINT
 		if (fwin->language_button && fwin->flags.map_language_button)
-			wCoreConfigure(fwin->language_button, fwin->language_button_pos_width, btn_height,
-				       fwin->btn_size, fwin->btn_size);
+			wCoreConfigure(fwin->language_button, tb_pos_width, btn_height, fwin->btn_size, fwin->btn_size);
 #endif
 
 		wCoreConfigure(fwin->titlebar, fwin->titlebar_pos_width, 0, fwin->titlebar_width, fwin->titlebar_height);
