@@ -527,7 +527,7 @@ static void titlebar_map(WFrameWindow *fwin, int method)
 	if (wPreferences.new_style == TS_NEW) {
 		btn_pad = 0;
 
-		fwin->right_button_pos_width = width - fwin->btn_size + 1;
+		fwin->right_button_pos_width = width - fwin->btn_size;
 #ifdef XKB_BUTTON_HINT
 		if (!fwin->flags.hide_left_button && !fwin->flags.lbutton_dont_fit)
 			fwin->language_button_pos_width = fwin->btn_size;
