@@ -74,7 +74,6 @@ static int get_framewin_height(WFrameWindow *fwin, int flags);
 static int get_framewin_titleheight(WFrameWindow *fwin);
 static int get_framewin_btn_size(int titleheight);
 static void set_titlebar_positions(WFrameWindow *fwin);
-static void updateTitlebar(WFrameWindow *fwin);
 void wframewindow_show_rightbutton(WFrameWindow *fwin);
 void wframewindow_hide_rightbutton(WFrameWindow *fwin);
 void wframewindow_show_languagebutton(WFrameWindow *fwin);
@@ -550,6 +549,23 @@ static void titlebar_map(WFrameWindow *fwin, int method)
 
 		fwin->flags.need_texture_remake = 1;
 	}
+
+	if (method == 1) {
+		set_titlebar_positions(fwin);
+
+		if (fwin->left_button && fwin->flags.map_left_button)
+			wCoreConfigure(fwin->left_button, fwin->left_button_pos_width, fwin->left_button_pos_height, fwin->btn_size, fwin->btn_size);
+		if (fwin->right_button && fwin->flags.map_right_button)
+			wCoreConfigure(fwin->right_button, fwin->right_button_pos_width, fwin->right_button_pos_height, fwin->btn_size, fwin->btn_size);
+
+#ifdef XKB_BUTTON_HINT
+		if (fwin->language_button && fwin->flags.map_language_button)
+			wCoreConfigure(fwin->language_button, fwin->language_button_pos_width, fwin->language_button_pos_height,
+				       fwin->btn_size, fwin->btn_size);
+#endif
+
+		wCoreConfigure(fwin->titlebar, fwin->titlebar_pos_width, 0, fwin->titlebar_width, fwin->titlebar_height);
+	}
 }
 
 static void titlebar_unmap(WFrameWindow *fwin)
@@ -889,24 +905,6 @@ static void set_titlebar_positions(WFrameWindow *fwin)
 	fwin->titlebar_height = theight;
 }
 
-static void updateTitlebar(WFrameWindow *fwin)
-{
-	set_titlebar_positions(fwin);
-
-	if (fwin->left_button && fwin->flags.map_left_button)
-		wCoreConfigure(fwin->left_button, fwin->left_button_pos_width, fwin->left_button_pos_height, fwin->btn_size, fwin->btn_size);
-	if (fwin->right_button && fwin->flags.map_right_button)
-		wCoreConfigure(fwin->right_button, fwin->right_button_pos_width, fwin->right_button_pos_height, fwin->btn_size, fwin->btn_size);
-
-#ifdef XKB_BUTTON_HINT
-	if (fwin->language_button && fwin->flags.map_language_button)
-		wCoreConfigure(fwin->language_button, fwin->language_button_pos_width, fwin->language_button_pos_height,
-			       fwin->btn_size, fwin->btn_size);
-#endif
-
-	wCoreConfigure(fwin->titlebar, fwin->titlebar_pos_width, 0, fwin->titlebar_width, fwin->titlebar_height);
-}
-
 void wframewindow_show_rightbutton(WFrameWindow *fwin)
 {
 	if (fwin->right_button && fwin->flags.hide_right_button) {
@@ -958,7 +956,7 @@ void wframewindow_hide_languagebutton(WFrameWindow *fwin)
 void wframewindow_refresh_titlebar(WFrameWindow *fwin)
 {
 	if (fwin->titlebar && fwin->flags.titlebar) {
-		updateTitlebar(fwin);
+		titlebar_map(fwin, 1);
 		checkTitleSize(fwin);
 	}
 }
@@ -1484,7 +1482,7 @@ static void reconfigure_titlebar(WFrameWindow *fwin, int width)
 				    (fwin->titlebar_height - fwin->btn_size) / 2);
 	}
 
-	updateTitlebar(fwin);
+	titlebar_map(fwin, 1);
 	checkTitleSize(fwin);
 }
 
