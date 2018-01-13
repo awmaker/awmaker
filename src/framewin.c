@@ -519,32 +519,31 @@ static void titlebar_map(WFrameWindow *fwin, int method)
 	fwin->top_width = theight;
 	fwin->flags.need_texture_remake = 1;
 
-	/* Button height, same for all buttons */
-	if (wPreferences.new_style == TS_NEW)
-		btn_height = 0;
-	else
-		btn_height = (theight - fwin->btn_size) / 2;
-
+	/* Style settings (button height and button padding */
 	if (wPreferences.new_style == TS_NEW) {
+		btn_height = 0;
 		btn_pad = 0;
+	} else {
+		btn_height = (theight - fwin->btn_size) / 2;
+		btn_pad = TS_NORMAL_PAD;
+	}
 
+	/* Language button */
 #ifdef XKB_BUTTON_HINT
+	if (wPreferences.new_style == TS_NEW) {
 		if (!fwin->flags.hide_left_button && !fwin->flags.lbutton_dont_fit)
 			fwin->language_button_pos_width = fwin->btn_size;
 		else
 			fwin->language_button_pos_width = btn_pad;
-#endif
 	} else {
-		btn_pad = TS_NORMAL_PAD;
-
-#ifdef XKB_BUTTON_HINT
 		if (!fwin->flags.hide_left_button && !fwin->flags.lbutton_dont_fit)
 			fwin->language_button_pos_width = fwin->btn_size + 2 * btn_pad;
 		else
 			fwin->language_button_pos_width = btn_pad;
-#endif
 	}
+#endif
 
+	/* Right button, left is set using btn_pad variable */
 	rb_pos_width = width - fwin->btn_size - btn_pad;
 
 	if (wPreferences.new_style == TS_NEW) {
