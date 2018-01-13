@@ -262,7 +262,8 @@ static void set_framewin_descriptors(WCoreWindow *wcore, void *handle_expose,
 static void left_button_create(WFrameWindow *fwin)
 {
 	fwin->left_button = wcore_create();
-
+	fwin->flags.left_button = 1;
+	fwin->flags.map_left_button = 1;
 	if (fwin->left_button)
 		set_framewin_descriptors(fwin->left_button, handleButtonExpose, fwin, WCLASS_FRAME, buttonMouseDown);
 }
@@ -320,7 +321,8 @@ static void left_button_unmap(WFrameWindow *fwin)
 static void language_button_create(WFrameWindow *fwin)
 {
 	fwin->language_button = wcore_create();
-
+	fwin->flags.language_button = 1;
+	fwin->flags.map_language_button = 1;
 	if (fwin->language_button)
 		set_framewin_descriptors(fwin->language_button, handleButtonExpose, fwin, WCLASS_FRAME, buttonMouseDown);
 }
@@ -389,7 +391,8 @@ static void language_button_unmap(WFrameWindow *fwin)
 static void right_button_create(WFrameWindow *fwin)
 {
 	fwin->right_button = wcore_create();
-
+	fwin->flags.right_button = 1;
+	fwin->flags.map_right_button = 1;
 	if (fwin->right_button)
 		set_framewin_descriptors(fwin->right_button, handleButtonExpose, fwin, WCLASS_FRAME, buttonMouseDown);
 }
@@ -450,31 +453,20 @@ static void titlebar_create_update(WFrameWindow *fwin, int theight, int flags)
 	if (!fwin->titlebar) {
 		fwin->titlebar = wcore_create();
 
-		if (flags & WFF_LEFT_BUTTON) {
-			fwin->flags.left_button = 1;
-			fwin->flags.map_left_button = 1;
+		if (flags & WFF_LEFT_BUTTON)
 			left_button_create(fwin);
-		}
 
 #ifdef XKB_BUTTON_HINT
-		if (flags & WFF_LANGUAGE_BUTTON) {
-			fwin->flags.language_button = 1;
-			fwin->flags.map_language_button = 1;
+		if (flags & WFF_LANGUAGE_BUTTON)
 			language_button_create(fwin);
-		}
 #endif
 
-		if (flags & WFF_RIGHT_BUTTON) {
-			fwin->flags.right_button = 1;
-			fwin->flags.map_right_button = 1;
+		if (flags & WFF_RIGHT_BUTTON)
 			right_button_create(fwin);
-		}
 
 		set_framewin_descriptors(fwin->titlebar, handleExpose, fwin, WCLASS_FRAME, titlebarMouseDown);
 	} else {
 		if (flags & WFF_LEFT_BUTTON) {
-			fwin->flags.left_button = 1;
-			fwin->flags.map_left_button = 1;
 			left_button_create(fwin);
 		} else {
 			fwin->flags.left_button = 0;
@@ -485,8 +477,6 @@ static void titlebar_create_update(WFrameWindow *fwin, int theight, int flags)
 
 #ifdef XKB_BUTTON_HINT
 		if (flags & WFF_LANGUAGE_BUTTON) {
-			fwin->flags.language_button = 1;
-			fwin->flags.map_language_button = 1;
 			language_button_create(fwin);
 		} else {
 			fwin->flags.language_button = 0;
@@ -497,8 +487,6 @@ static void titlebar_create_update(WFrameWindow *fwin, int theight, int flags)
 #endif
 
 		if (flags & WFF_RIGHT_BUTTON) {
-			fwin->flags.right_button = 1;
-			fwin->flags.map_right_button = 1;
 			right_button_create(fwin);
 		} else {
 			fwin->flags.right_button = 0;
