@@ -515,11 +515,6 @@ static void titlebar_map(WFrameWindow *fwin, int method)
 	int theight;
 
 	if (method == 0) {
-		/* if we didn't have a titlebar and are being requested for
-		 * one, create it */
-		if (!fwin->flags.map_titlebar)
-			return;
-
 		fwin->flags.titlebar = 1;
 		theight = get_framewin_titleheight(fwin);
 		fwin->top_width = theight;
