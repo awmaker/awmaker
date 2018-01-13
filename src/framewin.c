@@ -513,26 +513,33 @@ static void titlebar_map(WFrameWindow *fwin, int method)
 {
 	int theight = get_framewin_titleheight(fwin);
 	int width = fwin->width;
+	int btn_height;
 
 	fwin->top_width = theight;
 	fwin->flags.need_texture_remake = 1;
 
+	/* Button height, same for all buttons */
+	if (wPreferences.new_style == TS_NEW)
+		btn_height = 0;
+	else
+		btn_height = (theight - fwin->btn_size) / 2;
+
 	/* First, situate the right button, it doesn't have dependencies */
 	if (wPreferences.new_style == TS_NEW) {
 		fwin->right_button_pos_width = width - fwin->btn_size + 1;
-		fwin->right_button_pos_height = 0;
+		fwin->right_button_pos_height = btn_height;
 	} else {	/* !new_style */
 		fwin->right_button_pos_width = width - fwin->btn_size - 3;
-		fwin->right_button_pos_height = (theight - fwin->btn_size) / 2;
+		fwin->right_button_pos_height = btn_height;
 	}
 
 	/* Second, the left button */
 	if (wPreferences.new_style == TS_NEW) {
 		fwin->left_button_pos_width = 0;
-		fwin->left_button_pos_height = 0;
+		fwin->left_button_pos_height = btn_height;
 	} else {	/* !new_style */
 		fwin->left_button_pos_width = 3;
-		fwin->left_button_pos_height = (theight - fwin->btn_size) / 2;
+		fwin->left_button_pos_height = btn_height;
 	}
 
 #ifdef XKB_BUTTON_HINT
@@ -540,18 +547,18 @@ static void titlebar_map(WFrameWindow *fwin, int method)
 	if (!fwin->flags.hide_left_button && !fwin->flags.lbutton_dont_fit) {
 		if (wPreferences.new_style == TS_NEW) {
 			fwin->language_button_pos_width = fwin->btn_size;
-			fwin->language_button_pos_height = 0;
+			fwin->language_button_pos_height = btn_height;
 		} else {
 			fwin->language_button_pos_width = fwin->btn_size + 6;
-			fwin->language_button_pos_height = (theight - fwin->btn_size) / 2;
+			fwin->language_button_pos_height = btn_height;
 		}
 	} else {
 		if (wPreferences.new_style == TS_NEW) {
 			fwin->language_button_pos_width = 0;
-			fwin->language_button_pos_height = 0;
+			fwin->language_button_pos_height = btn_height;
 		} else {
 			fwin->language_button_pos_width = 3;
-			fwin->language_button_pos_height = (theight - fwin->btn_size) / 2;
+			fwin->language_button_pos_height = btn_height;
 		}
 	}
 #endif /* XKB_BUTTON_HINT */
