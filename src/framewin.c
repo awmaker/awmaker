@@ -469,7 +469,6 @@ static void titlebar_create_update(WFrameWindow *fwin, int theight, int flags)
 		if (flags & WFF_LEFT_BUTTON) {
 			left_button_create(fwin);
 		} else {
-			fwin->flags.left_button = 0;
 			fwin->flags.map_left_button = 0;
 			if (fwin->left_button)
 				left_button_unmap(fwin);
@@ -479,7 +478,6 @@ static void titlebar_create_update(WFrameWindow *fwin, int theight, int flags)
 		if (flags & WFF_LANGUAGE_BUTTON) {
 			language_button_create(fwin);
 		} else {
-			fwin->flags.language_button = 0;
 			fwin->flags.map_language_button = 0;
 			if (fwin->language_button)
 				language_button_unmap(fwin);
@@ -489,7 +487,6 @@ static void titlebar_create_update(WFrameWindow *fwin, int theight, int flags)
 		if (flags & WFF_RIGHT_BUTTON) {
 			right_button_create(fwin);
 		} else {
-			fwin->flags.right_button = 0;
 			fwin->flags.map_right_button = 0;
 			if (fwin->right_button)
 				right_button_unmap(fwin);
