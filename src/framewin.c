@@ -525,41 +525,29 @@ static void titlebar_map(WFrameWindow *fwin, int method)
 		btn_height = (theight - fwin->btn_size) / 2;
 
 	/* First, situate the right button, it doesn't have dependencies */
-	if (wPreferences.new_style == TS_NEW) {
+	if (wPreferences.new_style == TS_NEW)
 		fwin->right_button_pos_width = width - fwin->btn_size + 1;
-		fwin->right_button_pos_height = btn_height;
-	} else {	/* !new_style */
+	else
 		fwin->right_button_pos_width = width - fwin->btn_size - 3;
-		fwin->right_button_pos_height = btn_height;
-	}
 
 	/* Second, the left button */
-	if (wPreferences.new_style == TS_NEW) {
+	if (wPreferences.new_style == TS_NEW)
 		fwin->left_button_pos_width = 0;
-		fwin->left_button_pos_height = btn_height;
-	} else {	/* !new_style */
+	else
 		fwin->left_button_pos_width = 3;
-		fwin->left_button_pos_height = btn_height;
-	}
 
 #ifdef XKB_BUTTON_HINT
 	/* Language button, depends on left button (TS_NEW) */
 	if (!fwin->flags.hide_left_button && !fwin->flags.lbutton_dont_fit) {
-		if (wPreferences.new_style == TS_NEW) {
+		if (wPreferences.new_style == TS_NEW)
 			fwin->language_button_pos_width = fwin->btn_size;
-			fwin->language_button_pos_height = btn_height;
-		} else {
+		else
 			fwin->language_button_pos_width = fwin->btn_size + 6;
-			fwin->language_button_pos_height = btn_height;
-		}
 	} else {
-		if (wPreferences.new_style == TS_NEW) {
+		if (wPreferences.new_style == TS_NEW)
 			fwin->language_button_pos_width = 0;
-			fwin->language_button_pos_height = btn_height;
-		} else {
+		else
 			fwin->language_button_pos_width = 3;
-			fwin->language_button_pos_height = btn_height;
-		}
 	}
 #endif /* XKB_BUTTON_HINT */
 
@@ -613,13 +601,13 @@ static void titlebar_map(WFrameWindow *fwin, int method)
 
 	if (method == 1) {
 		if (fwin->left_button && fwin->flags.map_left_button)
-			wCoreConfigure(fwin->left_button, fwin->left_button_pos_width, fwin->left_button_pos_height, fwin->btn_size, fwin->btn_size);
+			wCoreConfigure(fwin->left_button, fwin->left_button_pos_width, btn_height, fwin->btn_size, fwin->btn_size);
 		if (fwin->right_button && fwin->flags.map_right_button)
-			wCoreConfigure(fwin->right_button, fwin->right_button_pos_width, fwin->right_button_pos_height, fwin->btn_size, fwin->btn_size);
+			wCoreConfigure(fwin->right_button, fwin->right_button_pos_width, btn_height, fwin->btn_size, fwin->btn_size);
 
 #ifdef XKB_BUTTON_HINT
 		if (fwin->language_button && fwin->flags.map_language_button)
-			wCoreConfigure(fwin->language_button, fwin->language_button_pos_width, fwin->language_button_pos_height,
+			wCoreConfigure(fwin->language_button, fwin->language_button_pos_width, btn_height,
 				       fwin->btn_size, fwin->btn_size);
 #endif
 
