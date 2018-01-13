@@ -528,7 +528,6 @@ static void titlebar_map(WFrameWindow *fwin, int method)
 		btn_pad = 0;
 
 		fwin->right_button_pos_width = width - fwin->btn_size + 1;
-		fwin->left_button_pos_width = btn_pad;
 #ifdef XKB_BUTTON_HINT
 		if (!fwin->flags.hide_left_button && !fwin->flags.lbutton_dont_fit)
 			fwin->language_button_pos_width = fwin->btn_size;
@@ -539,7 +538,6 @@ static void titlebar_map(WFrameWindow *fwin, int method)
 		btn_pad = TS_NORMAL_PAD;
 
 		fwin->right_button_pos_width = width - fwin->btn_size - btn_pad;
-		fwin->left_button_pos_width = btn_pad;
 #ifdef XKB_BUTTON_HINT
 		if (!fwin->flags.hide_left_button && !fwin->flags.lbutton_dont_fit)
 			fwin->language_button_pos_width = fwin->btn_size + 2 * btn_pad;
@@ -598,7 +596,7 @@ static void titlebar_map(WFrameWindow *fwin, int method)
 
 	if (method == 1) {
 		if (fwin->left_button && fwin->flags.map_left_button)
-			wCoreConfigure(fwin->left_button, fwin->left_button_pos_width, btn_height, fwin->btn_size, fwin->btn_size);
+			wCoreConfigure(fwin->left_button, btn_pad, btn_height, fwin->btn_size, fwin->btn_size);
 		if (fwin->right_button && fwin->flags.map_right_button)
 			wCoreConfigure(fwin->right_button, fwin->right_button_pos_width, btn_height, fwin->btn_size, fwin->btn_size);
 
