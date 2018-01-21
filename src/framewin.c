@@ -773,40 +773,9 @@ void wframewin_set_borders(WFrameWindow *fwin, int flags)
 	virtual_screen *vscr = fwin->vscr;
 	WScreen *scr = vscr->screen_ptr;
 
-	if (flags & WFF_TITLEBAR)
-		fwin->flags.map_titlebar = 1;
-	else
-		fwin->flags.map_titlebar = 0;
-
-	if (flags & WFF_RESIZEBAR)
-		fwin->flags.map_resizebar = 1;
-	else
-		fwin->flags.map_resizebar = 0;
-
+	wframewindow_set_flags(fwin, flags);
 	if (fwin->flags.shaded)
 		flags |= WFF_IS_SHADED;
-
-	if (flags & WFF_LEFT_BUTTON)
-		fwin->flags.map_left_button = 1;
-	else
-		fwin->flags.map_left_button = 0;
-
-	if (flags & WFF_RIGHT_BUTTON)
-		fwin->flags.map_right_button = 1;
-	else
-		fwin->flags.map_left_button = 0;
-
-	if (flags & WFF_BORDER)
-		fwin->flags.border = 1;
-	else
-		fwin->flags.border = 0;
-
-#ifdef XKB_BUTTON_HINT
-	if (flags & WFF_LANGUAGE_BUTTON)
-		fwin->flags.map_language_button = 1;
-	else
-		fwin->flags.map_language_button = 0;
-#endif
 
 	width = fwin->width;
 	height = get_framewin_height(fwin, flags);
