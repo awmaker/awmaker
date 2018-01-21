@@ -46,6 +46,7 @@
 
 static void allocFrameBorderPixel(Colormap colormap, const char *color_name,
 				  unsigned long **pixel);
+static void wframewindow_set_flags(WFrameWindow *fwin, int flags);
 static void destroy_framewin_button(WFrameWindow *fwin, int state);
 static void destroy_framewin_buttons(WFrameWindow *fwin);
 static void set_framewin_descriptors(WCoreWindow *wcore, void *handle_expose,
@@ -127,6 +128,18 @@ static void allocFrameBorderPixel(Colormap colormap, const char *color_name,
 		**pixel = xcol.pixel;
 }
 
+static void wframewindow_set_flags(WFrameWindow *fwin, int flags)
+{
+	fwin->flags.map_titlebar = (flags & WFF_TITLEBAR) ? 1 : 0;
+	fwin->flags.map_resizebar = (flags & WFF_RESIZEBAR) ? 1 : 0;
+	fwin->flags.map_left_button = (flags & WFF_LEFT_BUTTON) ? 1 : 0;
+	fwin->flags.map_right_button = (flags & WFF_RIGHT_BUTTON) ? 1 : 0;
+#ifdef XKB_BUTTON_HINT
+	fwin->flags.map_language_button = (flags & WFF_LANGUAGE_BUTTON) ? 1 : 0;
+#endif
+	fwin->flags.border = (flags & WFF_BORDER) ? 1 : 0;
+}
+
 WFrameWindow *wframewindow_create(WWindow *parent_wwin, WMenu *parent_wmenu,
 				  int width, int height, int flags)
 {
@@ -138,25 +151,20 @@ WFrameWindow *wframewindow_create(WWindow *parent_wwin, WMenu *parent_wmenu,
 	fwin->core = wcore_create();
 	fwin->parent_wwin = parent_wwin;
 	fwin->parent_wmenu = parent_wmenu;
+	fwin->flags.single_texture = (flags & WFF_SINGLE_STATE) ? 1 : 0;
 
-	fwin->flags.map_titlebar = (flags & WFF_TITLEBAR) ? 1 : 0;
-	fwin->flags.map_resizebar = (flags & WFF_RESIZEBAR) ? 1 : 0;
-	fwin->flags.map_left_button = (flags & WFF_LEFT_BUTTON) ? 1 : 0;
+	wframewindow_set_flags(fwin, flags);
 	if (fwin->flags.map_left_button)
 		fwin->titlebar_width -= fwin->btn_size;
 
-	fwin->flags.map_right_button = (flags & WFF_RIGHT_BUTTON) ? 1 : 0;
 	if (fwin->flags.map_right_button)
 		fwin->titlebar_width -= fwin->btn_size;
 
 #ifdef XKB_BUTTON_HINT
-	fwin->flags.map_language_button = (flags & WFF_LANGUAGE_BUTTON) ? 1 : 0;
 	if (fwin->flags.map_language_button)
 		fwin->titlebar_width -= fwin->btn_size;
 #endif
 
-	fwin->flags.single_texture = (flags & WFF_SINGLE_STATE) ? 1 : 0;
-	fwin->flags.border = (flags & WFF_BORDER) ? 1 : 0;
 	fwin->btn_size = 0;
 
 	return fwin;
