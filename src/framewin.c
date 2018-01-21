@@ -152,19 +152,7 @@ WFrameWindow *wframewindow_create(WWindow *parent_wwin, WMenu *parent_wmenu,
 	fwin->parent_wwin = parent_wwin;
 	fwin->parent_wmenu = parent_wmenu;
 	fwin->flags.single_texture = (flags & WFF_SINGLE_STATE) ? 1 : 0;
-
 	wframewindow_set_flags(fwin, flags);
-	if (fwin->flags.map_left_button)
-		fwin->titlebar_width -= fwin->btn_size;
-
-	if (fwin->flags.map_right_button)
-		fwin->titlebar_width -= fwin->btn_size;
-
-#ifdef XKB_BUTTON_HINT
-	if (fwin->flags.map_language_button)
-		fwin->titlebar_width -= fwin->btn_size;
-#endif
-
 	fwin->btn_size = 0;
 
 	return fwin;
