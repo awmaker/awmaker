@@ -636,23 +636,24 @@ static void titlebar_map(WFrameWindow *fwin, int method)
 
 static void titlebar_unmap(WFrameWindow *fwin)
 {
-	if (fwin->flags.titlebar) {
-		if (fwin->flags.map_left_button)
-			left_button_unmap(fwin);
+	if (!fwin->flags.titlebar)
+		return;
 
-		if (fwin->flags.map_right_button)
-			right_button_unmap(fwin);
+	if (fwin->flags.map_left_button)
+		left_button_unmap(fwin);
+
+	if (fwin->flags.map_right_button)
+		right_button_unmap(fwin);
 
 #ifdef XKB_BUTTON_HINT
-		if (fwin->flags.map_language_button)
-			language_button_unmap(fwin);
+	if (fwin->flags.map_language_button)
+		language_button_unmap(fwin);
 #endif
 
-		wcore_unmap(fwin->titlebar);
-		fwin->top_width = 0;
-		fwin->titlebar_width = 0;
-		fwin->flags.titlebar = 0;
-	}
+	wcore_unmap(fwin->titlebar);
+	fwin->top_width = 0;
+	fwin->titlebar_width = 0;
+	fwin->flags.titlebar = 0;
 }
 
 static void titlebar_destroy(WFrameWindow *fwin)
