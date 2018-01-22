@@ -533,7 +533,10 @@ static void titlebar_map(WFrameWindow *fwin, int method)
 	int theight = get_framewin_titleheight(fwin);
 	int width = fwin->width;
 	int btn_height, btn_pad;
-	int rb_pos_width, tb_pos_width;
+	int rb_pos_width;
+#ifdef XKB_BUTTON_HINT
+	int tb_pos_width;
+#endif
 
 	fwin->top_width = theight;
 	fwin->titlebar_pos_width = 0;
