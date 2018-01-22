@@ -265,9 +265,13 @@ static void set_framewin_descriptors(WCoreWindow *wcore, void *handle_expose,
 
 static void left_button_create(WFrameWindow *fwin)
 {
-	fwin->left_button = wcore_create();
 	fwin->flags.left_button = 1;
 	fwin->flags.map_left_button = 1;
+
+	if (fwin->left_button)
+		return;
+
+	fwin->left_button = wcore_create();
 	if (fwin->left_button)
 		set_framewin_descriptors(fwin->left_button, handleButtonExpose, fwin, WCLASS_FRAME, buttonMouseDown);
 
@@ -331,9 +335,13 @@ static void left_button_unmap(WFrameWindow *fwin)
 #ifdef XKB_BUTTON_HINT
 static void language_button_create(WFrameWindow *fwin)
 {
-	fwin->language_button = wcore_create();
 	fwin->flags.language_button = 1;
 	fwin->flags.map_language_button = 1;
+
+	if (fwin->language_button)
+		return;
+
+	fwin->language_button = wcore_create();
 	if (fwin->language_button)
 		set_framewin_descriptors(fwin->language_button, handleButtonExpose, fwin, WCLASS_FRAME, buttonMouseDown);
 
@@ -408,9 +416,13 @@ static void language_button_unmap(WFrameWindow *fwin)
 
 static void right_button_create(WFrameWindow *fwin)
 {
-	fwin->right_button = wcore_create();
 	fwin->flags.right_button = 1;
 	fwin->flags.map_right_button = 1;
+
+	if (fwin->right_button)
+		return;
+
+	fwin->right_button = wcore_create();
 	if (fwin->right_button)
 		set_framewin_descriptors(fwin->right_button, handleButtonExpose, fwin, WCLASS_FRAME, buttonMouseDown);
 
