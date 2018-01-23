@@ -52,17 +52,24 @@ static void destroy_framewin_buttons(WFrameWindow *fwin);
 static void set_framewin_descriptors(WCoreWindow *wcore, void *handle_expose,
 				     void *parent, WClassType parent_type,
 				     void *handle_mousedown);
+
 static void left_button_create(WFrameWindow *fwin);
 static void left_button_map(WFrameWindow *fwin, int theight);
 static void left_button_unmap(WFrameWindow *fwin);
+static void left_button_destroy(WFrameWindow *fwin);
+
 #ifdef XKB_BUTTON_HINT
 static void language_button_create(WFrameWindow *fwin);
 static void language_button_map(WFrameWindow *fwin, int theight);
 static void language_button_unmap(WFrameWindow *fwin);
+static void language_button_destroy(WFrameWindow *fwin);
 #endif
+
 static void right_button_create(WFrameWindow *fwin);
 static void right_button_map(WFrameWindow *fwin, int theight);
 static void right_button_unmap(WFrameWindow *fwin);
+static void right_button_destroy(WFrameWindow *fwin);
+
 static void titlebar_create_update(WFrameWindow *fwin, int theight, int flags);
 static void titlebar_map(WFrameWindow *fwin, int method);
 static void titlebar_unmap(WFrameWindow *fwin);
@@ -332,6 +339,12 @@ static void left_button_unmap(WFrameWindow *fwin)
 		fwin->titlebar_width += fwin->btn_size;
 }
 
+static void left_button_destroy(WFrameWindow *fwin)
+{
+	wframewindow_destroy_wcorewindow(fwin->left_button);
+	fwin->left_button = NULL;
+}
+
 #ifdef XKB_BUTTON_HINT
 static void language_button_create(WFrameWindow *fwin)
 {
@@ -412,6 +425,12 @@ static void language_button_unmap(WFrameWindow *fwin)
 	if (wPreferences.new_style == TS_NEW)
 		fwin->titlebar_width += fwin->btn_size;
 }
+
+static void language_button_destroy(WFrameWindow *fwin)
+{
+	wframewindow_destroy_wcorewindow(fwin->language_button);
+	fwin->language_button = NULL;
+}
 #endif
 
 static void right_button_create(WFrameWindow *fwin)
@@ -479,6 +498,12 @@ static void right_button_unmap(WFrameWindow *fwin)
 
 	if (wPreferences.new_style == TS_NEW)
 		fwin->titlebar_width += fwin->btn_size;
+}
+
+static void right_button_destroy(WFrameWindow *fwin)
+{
+	wframewindow_destroy_wcorewindow(fwin->right_button);
+	fwin->right_button = NULL;
 }
 
 static void titlebar_create_update(WFrameWindow *fwin, int theight, int flags)
@@ -661,14 +686,11 @@ static void titlebar_unmap(WFrameWindow *fwin)
 
 static void titlebar_destroy(WFrameWindow *fwin)
 {
-	wframewindow_destroy_wcorewindow(fwin->left_button);
-	fwin->left_button = NULL;
+	left_button_destroy(fwin);
 #ifdef XKB_BUTTON_HINT
-	wframewindow_destroy_wcorewindow(fwin->language_button);
-	fwin->language_button = NULL;
+	language_button_destroy(fwin);
 #endif
-	wframewindow_destroy_wcorewindow(fwin->right_button);
-	fwin->right_button = NULL;
+	right_button_destroy(fwin);
 	wframewindow_destroy_wcorewindow(fwin->titlebar);
 	fwin->titlebar = NULL;
 	fwin->titlebar_height = 0;
