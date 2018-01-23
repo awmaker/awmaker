@@ -604,23 +604,18 @@ static void titlebar_map(WFrameWindow *fwin, int method)
 
 	/* Language button */
 #ifdef XKB_BUTTON_HINT
-	if (wPreferences.new_style == TS_NEW) {
-		if (!fwin->flags.hide_left_button && !fwin->flags.lbutton_dont_fit)
-			tb_pos_width = fwin->btn_size;
-		else
-			tb_pos_width = btn_pad;
+	if (!fwin->flags.hide_left_button && !fwin->flags.lbutton_dont_fit)
+		tb_pos_width = fwin->btn_size + 2 * btn_pad;
+	else
+		tb_pos_width = btn_pad;
 
+	if (wPreferences.new_style == TS_NEW) {
 		/* Update the titlebar size and position (language button) */
 		if (!fwin->flags.hide_language_button && fwin->language_button &&
 		    fwin->flags.map_language_button && !fwin->flags.languagebutton_dont_fit) {
 			fwin->titlebar_pos_width += fwin->btn_size;
 			width -= fwin->btn_size;
 		}
-	} else {
-		if (!fwin->flags.hide_left_button && !fwin->flags.lbutton_dont_fit)
-			tb_pos_width = fwin->btn_size + 2 * btn_pad;
-		else
-			tb_pos_width = btn_pad;
 	}
 #endif
 
