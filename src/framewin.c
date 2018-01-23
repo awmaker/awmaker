@@ -520,24 +520,30 @@ static void titlebar_create_update(WFrameWindow *fwin, int theight, int flags)
 	if (flags & WFF_LEFT_BUTTON) {
 		left_button_create(fwin);
 	} else {
-		if (fwin->left_button)
+		if (fwin->left_button) {
 			left_button_unmap(fwin);
+			left_button_destroy(fwin);
+		}
 	}
 
 #ifdef XKB_BUTTON_HINT
 	if (flags & WFF_LANGUAGE_BUTTON) {
 		language_button_create(fwin);
 	} else {
-		if (fwin->language_button)
+		if (fwin->language_button) {
 			language_button_unmap(fwin);
+			language_button_destroy(fwin);
+		}
 	}
 #endif
 
 	if (flags & WFF_RIGHT_BUTTON) {
 		right_button_create(fwin);
 	} else {
-		if (fwin->right_button)
+		if (fwin->right_button) {
 			right_button_unmap(fwin);
+			right_button_destroy(fwin);
+		}
 	}
 }
 
