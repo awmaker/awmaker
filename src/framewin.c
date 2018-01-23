@@ -561,16 +561,16 @@ static void titlebar_map(WFrameWindow *fwin, int method)
 	fwin->titlebar_pos_width = 0;
 
 	if (wPreferences.new_style == TS_NEW) {
-		if (fwin->right_button && fwin->flags.map_right_button)
+		if (fwin->right_button && fwin->flags.map_right_button && !fwin->flags.rbutton_dont_fit)
 			fwin->titlebar_width -= fwin->btn_size;
 
-		if (fwin->left_button && fwin->flags.map_left_button) {
+		if (fwin->left_button && fwin->flags.map_left_button && !fwin->flags.lbutton_dont_fit) {
 			fwin->titlebar_pos_width = fwin->btn_size;
 			fwin->titlebar_width -= fwin->btn_size;
 		}
 
 #ifdef XKB_BUTTON_HINT
-		if (fwin->language_button && fwin->flags.map_language_button) {
+		if (fwin->language_button && fwin->flags.map_language_button && !fwin->flags.languagebutton_dont_fit) {
 			fwin->titlebar_pos_width += fwin->btn_size;
 			fwin->titlebar_width -= fwin->btn_size;
 		}
