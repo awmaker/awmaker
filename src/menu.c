@@ -2405,34 +2405,33 @@ static int restoreMenu(virtual_screen *vscr, WMPropList *menu)
 		return False;
 
 	pmenu = vscr->menu.switch_menu;
-	if (pmenu) {
-		width = get_menu_width_full(pmenu);
-		height = get_menu_height_full(pmenu);
-		WMRect rect = wGetRectForHead(vscr->screen_ptr, wGetHeadForPointerLocation(vscr));
+	if (!pmenu)
+		return False;
 
-		if (lowered)
-			changeMenuLevels(pmenu, True);
+	width = get_menu_width_full(pmenu);
+	height = get_menu_height_full(pmenu);
+	WMRect rect = wGetRectForHead(vscr->screen_ptr, wGetHeadForPointerLocation(vscr));
 
-		if (x < rect.pos.x - width)
-			x = rect.pos.x;
+	if (lowered)
+		changeMenuLevels(pmenu, True);
 
-		if (x > rect.pos.x + rect.size.width)
-			x = rect.pos.x + rect.size.width - width;
+	if (x < rect.pos.x - width)
+		x = rect.pos.x;
 
-		if (y < rect.pos.y)
-			y = rect.pos.y;
+	if (x > rect.pos.x + rect.size.width)
+		x = rect.pos.x + rect.size.width - width;
 
-		if (y > rect.pos.y + rect.size.height)
-			y = rect.pos.y + rect.size.height - height;
+	if (y < rect.pos.y)
+		y = rect.pos.y;
 
-		wMenuMove(pmenu, x, y, True);
-		pmenu->flags.buttoned = 1;
-		wframewindow_show_rightbutton(pmenu->frame);
-		wframewindow_refresh_titlebar(pmenu->frame);
-		return True;
-	}
+	if (y > rect.pos.y + rect.size.height)
+		y = rect.pos.y + rect.size.height - height;
 
-	return False;
+	wMenuMove(pmenu, x, y, True);
+	pmenu->flags.buttoned = 1;
+	wframewindow_show_rightbutton(pmenu->frame);
+	wframewindow_refresh_titlebar(pmenu->frame);
+	return True;
 }
 
 static int restoreMenuRecurs(WMPropList *menus, WMenu *menu, const char *path)
