@@ -262,10 +262,6 @@ void menu_map(WMenu *menu)
 	menu->frame->core->descriptor.parent = menu;
 	menu->frame->core->descriptor.parent_type = WCLASS_MENU;
 	menu->frame->core->descriptor.handle_mousedown = menuMouseDown;
-
-	wframewindow_hide_rightbutton(menu->frame);
-	wframewindow_refresh_titlebar(menu->frame);
-
 	menu->frame->rbutton_image = vscr->screen_ptr->b_pixmaps[WBUT_CLOSE];
 
 	menu->frame_x = 0;
