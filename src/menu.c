@@ -169,7 +169,7 @@ WMenu *menu_create(virtual_screen *vscr, const char *title)
 
 	flags = WFF_SINGLE_STATE | WFF_BORDER;
 	if (title)
-		flags |= WFF_TITLEBAR | WFF_RIGHT_BUTTON;
+		flags |= WFF_TITLEBAR;
 
 	menu = wmalloc(sizeof(WMenu));
 	menu->width = 1;
@@ -543,7 +543,7 @@ void wMenuRealize(WMenu *menu)
 
 	flags = WFF_BORDER;
 	if (menu->flags.titled)
-		flags |= WFF_TITLEBAR | WFF_RIGHT_BUTTON;
+		flags |= WFF_TITLEBAR;
 
 	wframewin_set_borders(menu->frame, flags);
 
@@ -2143,7 +2143,7 @@ static void menuTitleMouseDown(WCoreWindow * sender, void *data, XEvent * event)
 	XEvent ev;
 	int x = menu->frame_x, y = menu->frame_y;
 	int dx = event->xbutton.x_root, dy = event->xbutton.y_root;
-	int lower;
+	int lower, flags;
 	Bool started;
 
 	/* Parameter not used, but tell the compiler that it is ok */
@@ -2181,7 +2181,9 @@ static void menuTitleMouseDown(WCoreWindow * sender, void *data, XEvent * event)
 	/* tear off the menu if it's a root menu or a cascade application menu */
 	if (!menu->flags.buttoned && (!menu->flags.app_menu || menu->parent != NULL)) {
 		menu->flags.buttoned = 1;
-		wframewindow_show_rightbutton(menu->frame);
+		flags = WFF_SINGLE_STATE | WFF_BORDER | WFF_TITLEBAR | WFF_RIGHT_BUTTON;
+
+		wframewin_set_borders(menu->frame, flags);
 		wframewindow_refresh_titlebar(menu->frame);
 		if (menu->parent) /* turn off selected menu entry in parent menu */
 			selectEntry(menu->parent, -1);
