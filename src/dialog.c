@@ -149,20 +149,16 @@ static int alert_panel(WMAlertPanel *panel, virtual_screen *vscr, const char *ti
 	WWindow *wwin;
 	const int win_width = ALERT_WIDTH;
 	const int win_height = ALERT_HEIGHT;
-	int result;
+	int result, wframeflags;
 	WMPoint center;
 
 	parent = XCreateSimpleWindow(dpy, scr->root_win, 0, 0, win_width, win_height, 0, 0, 0);
 	XReparentWindow(dpy, WMWidgetXID(panel->win), parent, 0, 0);
 	center = getCenter(vscr, win_width, win_height);
-	wwin = wManageInternalWindow(vscr, parent, None, title, center.x, center.y, win_width, win_height);
 
-	wWindowUpdateButtonImages(wwin);
-	wframewindow_show_rightbutton(wwin->frame);
-#ifdef XKB_BUTTON_HINT
-	wframewindow_hide_languagebutton(wwin->frame);
-#endif
-	wframewindow_refresh_titlebar(wwin->frame);
+	wframeflags = WFF_BORDER | WFF_TITLEBAR;
+
+	wwin = wManageInternalWindow(vscr, parent, None, title, center.x, center.y, win_width, win_height, wframeflags);
 
 	wwin->client_leader = WMWidgetXID(panel->win);
 	WMMapWidget(panel->win);
@@ -470,23 +466,20 @@ static char *create_input_panel(virtual_screen *vscr, WMInputPanel *panel)
 	char *result = NULL;
 	Window parent;
 	WMPoint center;
+	int wframeflags;
 
 	parent = XCreateSimpleWindow(dpy, scr->root_win, 0, 0, win_width, win_height, 0, 0, 0);
 	XSelectInput(dpy, parent, KeyPressMask | KeyReleaseMask);
 	XReparentWindow(dpy, WMWidgetXID(panel->win), parent, 0, 0);
 	center = getCenter(vscr, win_width, win_height);
-	wwin = wManageInternalWindow(vscr, parent, None, NULL, center.x, center.y, win_width, win_height);
+
+	wframeflags = WFF_BORDER | WFF_TITLEBAR;
+
+	wwin = wManageInternalWindow(vscr, parent, None, NULL, center.x, center.y, win_width, win_height, wframeflags);
 	wwin->client_leader = WMWidgetXID(panel->win);
 
 	WSETUFLAG(wwin, no_closable, 0);
 	WSETUFLAG(wwin, no_close_button, 0);
-
-	wWindowUpdateButtonImages(wwin);
-	wframewindow_show_rightbutton(wwin->frame);
-#ifdef XKB_BUTTON_HINT
-	wframewindow_hide_languagebutton(wwin->frame);
-#endif
-	wframewindow_refresh_titlebar(wwin->frame);
 
 	WMMapWidget(panel->win);
 	wWindowMap(wwin);
@@ -1027,6 +1020,7 @@ Bool wIconChooserDialog(AppSettingsPanel *app_panel, InspectorPanel *ins_panel, 
 	IconPanel *panel;
 	Bool result;
 	WMPoint center;
+	int wframeflags;
 
 	panel = wmalloc(sizeof(IconPanel));
 	if (app_panel) {
@@ -1056,7 +1050,10 @@ Bool wIconChooserDialog(AppSettingsPanel *app_panel, InspectorPanel *ins_panel, 
 	XReparentWindow(dpy, WMWidgetXID(panel->win), parent, 0, 0);
 	title = create_dialog_iconchooser_title(instance, class);
 	center = getCenter(vscr, win_width, win_height);
-	panel->wwin = wManageInternalWindow(vscr, parent, None, title, center.x, center.y, win_width, win_height);
+
+	wframeflags = WFF_BORDER | WFF_TITLEBAR;
+
+	panel->wwin = wManageInternalWindow(vscr, parent, None, title, center.x, center.y, win_width, win_height, wframeflags);
 	wfree(title);
 
 	/* put icon paths in the list */
@@ -1389,6 +1386,7 @@ void panel_show(virtual_screen *vscr, int type)
 	WMPoint center;
 	int win_width = 0, win_height = 0;
 	char title[256];
+	int wframeflags;
 
 	switch (type) {
 	case PANEL_LEGAL:
@@ -1439,17 +1437,13 @@ void panel_show(virtual_screen *vscr, int type)
 	parent = XCreateSimpleWindow(dpy, vscr->screen_ptr->root_win, 0, 0, win_width, win_height, 0, 0, 0);
 	XReparentWindow(dpy, WMWidgetXID(panel->win), parent, 0, 0);
 	center = getCenter(vscr, win_width, win_height);
-	wwin = wManageInternalWindow(vscr, parent, None, title, center.x, center.y, win_width, win_height);
+
+	wframeflags = WFF_RIGHT_BUTTON | WFF_BORDER | WFF_TITLEBAR;
+
+	wwin = wManageInternalWindow(vscr, parent, None, title, center.x, center.y, win_width, win_height, wframeflags);
 
 	WSETUFLAG(wwin, no_closable, 0);
 	WSETUFLAG(wwin, no_close_button, 0);
-
-	wWindowUpdateButtonImages(wwin);
-	wframewindow_show_rightbutton(wwin->frame);
-#ifdef XKB_BUTTON_HINT
-	wframewindow_hide_languagebutton(wwin->frame);
-#endif
-	wframewindow_refresh_titlebar(wwin->frame);
 
 	switch (type) {
 	case PANEL_LEGAL:

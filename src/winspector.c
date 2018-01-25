@@ -1042,7 +1042,7 @@ static InspectorPanel *createInspectorForWindow(WWindow *wwin_inspected, int xpo
 	InspectorPanel *panel;
 	Window parent;
 	char *str = NULL, *tmp = NULL;
-	int x, y, btn_width, frame_width;
+	int x, y, btn_width, frame_width, wframeflags;
 	WMButton *selectedBtn = NULL;
 
 
@@ -1224,7 +1224,9 @@ static InspectorPanel *createInspectorForWindow(WWindow *wwin_inspected, int xpo
 		y = ypos;
 	}
 
-	panel->wwin = wManageInternalWindow(vscr, parent, wwin_inspected->client_win, "Inspector", x, y, PWIDTH, PHEIGHT);
+	wframeflags = WFF_RIGHT_BUTTON | WFF_BORDER | WFF_TITLEBAR;
+
+	panel->wwin = wManageInternalWindow(vscr, parent, wwin_inspected->client_win, "Inspector", x, y, PWIDTH, PHEIGHT, wframeflags);
 
 	if (!selectedBtn)
 		selectedBtn = panel->defaultRb;
@@ -1237,12 +1239,6 @@ static InspectorPanel *createInspectorForWindow(WWindow *wwin_inspected, int xpo
 
 	panel->wwin->client_flags.no_closable = 0;
 	panel->wwin->client_flags.no_close_button = 0;
-	wWindowUpdateButtonImages(panel->wwin);
-	wframewindow_show_rightbutton(panel->wwin->frame);
-#ifdef XKB_BUTTON_HINT
-	wframewindow_hide_languagebutton(panel->wwin->frame);
-#endif
-	wframewindow_refresh_titlebar(panel->wwin->frame);
 	panel->wwin->frame->on_click_right = destroyInspector;
 
 	wWindowMap(panel->wwin);

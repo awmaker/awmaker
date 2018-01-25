@@ -1510,10 +1510,9 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 }
 
 WWindow *wManageInternalWindow(virtual_screen *vscr, Window window, Window owner,
-			       const char *title, int x, int y, int width, int height)
+			       const char *title, int x, int y, int width, int height, int wframeflags)
 {
 	WWindow *wwin;
-	int foo;
 
 	wwin = wWindowCreate();
 
@@ -1537,13 +1536,7 @@ WWindow *wManageInternalWindow(virtual_screen *vscr, Window window, Window owner
 	wwin->frame_x = wwin->client.x;
 	wwin->frame_y = wwin->client.y;
 
-	foo = WFF_RIGHT_BUTTON | WFF_BORDER;
-	foo |= WFF_TITLEBAR;
-#ifdef XKB_BUTTON_HINT
-	foo |= WFF_LANGUAGE_BUTTON;
-#endif
-
-	wwin->frame = wframewindow_create(wwin, NULL, width, height, foo);
+	wwin->frame = wframewindow_create(wwin, NULL, width, height, wframeflags);
 	wframewindow_map(wwin->frame, vscr, WMFloatingLevel,
 			 wwin->frame_x, wwin->frame_y,
 			 &wPreferences.window_title_clearance,

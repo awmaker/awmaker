@@ -81,10 +81,6 @@ static void resizebar_unmap(WFrameWindow *fwin);
 static int get_framewin_height(WFrameWindow *fwin, int flags);
 static int get_framewin_titleheight(WFrameWindow *fwin);
 static int get_framewin_btn_size(int titleheight);
-void wframewindow_show_rightbutton(WFrameWindow *fwin);
-void wframewindow_hide_rightbutton(WFrameWindow *fwin);
-void wframewindow_show_languagebutton(WFrameWindow *fwin);
-void wframewindow_hide_languagebutton(WFrameWindow *fwin);
 static void renderTexture(WScreen *scr, WTexture *texture,
 			 int width, int height,
 			 int bwidth, int bheight,
@@ -807,8 +803,10 @@ void wframewin_set_borders(WFrameWindow *fwin, int flags)
 		if (fwin->flags.map_resizebar)
 			resizebar_map(fwin, width, height);
 	} else {
-		resizebar_create(fwin);
-		resizebar_map(fwin, width, height);
+		if (fwin->flags.map_resizebar) {
+			resizebar_create(fwin);
+			resizebar_map(fwin, width, height);
+		}
 	}
 
 	if (height + fwin->top_width + fwin->bottom_width != fwin->height && !(flags & WFF_IS_SHADED))
@@ -909,41 +907,6 @@ void wframewindow_hide_rightbutton(WFrameWindow *fwin)
 		fwin->flags.hide_right_button = 1;
 		fwin->flags.map_right_button = 0;
 	}
-}
-
-void wframewindow_show_languagebutton(WFrameWindow *fwin)
-{
-#ifdef XKB_BUTTON_HINT
-	if (fwin->language_button && fwin->flags.hide_language_button) {
-		if (!fwin->flags.languagebutton_dont_fit)
-			XMapWindow(dpy, fwin->language_button->window);
-
-		if (wPreferences.new_style == TS_NEW)
-			fwin->titlebar_width -= fwin->btn_size;
-
-		fwin->flags.hide_language_button = 0;
-		fwin->flags.map_language_button = 1;
-	}
-#else
-	(void) fwin;
-#endif
-}
-
-void wframewindow_hide_languagebutton(WFrameWindow *fwin)
-{
-#ifdef XKB_BUTTON_HINT
-	if (fwin->language_button && fwin->flags.map_language_button) {
-		XUnmapWindow(dpy, fwin->language_button->window);
-
-		if (wPreferences.new_style == TS_NEW)
-			fwin->titlebar_width += fwin->btn_size;
-
-		fwin->flags.hide_language_button = 1;
-		fwin->flags.map_language_button = 0;
-	}
-#else
-	(void) fwin;
-#endif
 }
 
 void wframewindow_refresh_titlebar(WFrameWindow *fwin)
