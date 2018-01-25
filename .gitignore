@@ -43,6 +43,7 @@ README.i18n
 
 # These are compilation results
 src/wmaker
+src/awmaker
 test/wtest
 
 util/convertfonts

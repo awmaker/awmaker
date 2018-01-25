@@ -169,7 +169,7 @@ WMenu *menu_create(virtual_screen *vscr, const char *title)
 
 	flags = WFF_SINGLE_STATE | WFF_BORDER;
 	if (title)
-		flags |= WFF_TITLEBAR | WFF_RIGHT_BUTTON;
+		flags |= WFF_TITLEBAR;
 
 	menu = wmalloc(sizeof(WMenu));
 	menu->width = 1;
@@ -262,10 +262,6 @@ void menu_map(WMenu *menu)
 	menu->frame->core->descriptor.parent = menu;
 	menu->frame->core->descriptor.parent_type = WCLASS_MENU;
 	menu->frame->core->descriptor.handle_mousedown = menuMouseDown;
-
-	wframewindow_hide_rightbutton(menu->frame);
-	wframewindow_refresh_titlebar(menu->frame);
-
 	menu->frame->rbutton_image = vscr->screen_ptr->b_pixmaps[WBUT_CLOSE];
 
 	menu->frame_x = 0;
@@ -543,7 +539,7 @@ void wMenuRealize(WMenu *menu)
 
 	flags = WFF_BORDER;
 	if (menu->flags.titled)
-		flags |= WFF_TITLEBAR | WFF_RIGHT_BUTTON;
+		flags |= WFF_TITLEBAR;
 
 	wframewin_set_borders(menu->frame, flags);
 
@@ -1232,6 +1228,9 @@ static WMenu *findMenu(virtual_screen *vscr, int *x_ret, int *y_ret)
 	Window root_ret, win, junk_win;
 	int x, y, wx, wy;
 	unsigned int mask;
+
+	if (!vscr)
+		return NULL;
 
 	XQueryPointer(dpy, vscr->screen_ptr->root_win, &root_ret, &win, &x, &y, &wx, &wy, &mask);
 
@@ -2143,7 +2142,7 @@ static void menuTitleMouseDown(WCoreWindow * sender, void *data, XEvent * event)
 	XEvent ev;
 	int x = menu->frame_x, y = menu->frame_y;
 	int dx = event->xbutton.x_root, dy = event->xbutton.y_root;
-	int lower;
+	int lower, flags;
 	Bool started;
 
 	/* Parameter not used, but tell the compiler that it is ok */
@@ -2181,7 +2180,9 @@ static void menuTitleMouseDown(WCoreWindow * sender, void *data, XEvent * event)
 	/* tear off the menu if it's a root menu or a cascade application menu */
 	if (!menu->flags.buttoned && (!menu->flags.app_menu || menu->parent != NULL)) {
 		menu->flags.buttoned = 1;
-		wframewindow_show_rightbutton(menu->frame);
+		flags = WFF_SINGLE_STATE | WFF_BORDER | WFF_TITLEBAR | WFF_RIGHT_BUTTON;
+
+		wframewin_set_borders(menu->frame, flags);
 		wframewindow_refresh_titlebar(menu->frame);
 		if (menu->parent) /* turn off selected menu entry in parent menu */
 			selectEntry(menu->parent, -1);
@@ -2407,34 +2408,33 @@ static int restoreMenu(virtual_screen *vscr, WMPropList *menu)
 		return False;
 
 	pmenu = vscr->menu.switch_menu;
-	if (pmenu) {
-		width = get_menu_width_full(pmenu);
-		height = get_menu_height_full(pmenu);
-		WMRect rect = wGetRectForHead(vscr->screen_ptr, wGetHeadForPointerLocation(vscr));
+	if (!pmenu)
+		return False;
 
-		if (lowered)
-			changeMenuLevels(pmenu, True);
+	width = get_menu_width_full(pmenu);
+	height = get_menu_height_full(pmenu);
+	WMRect rect = wGetRectForHead(vscr->screen_ptr, wGetHeadForPointerLocation(vscr));
 
-		if (x < rect.pos.x - width)
-			x = rect.pos.x;
+	if (lowered)
+		changeMenuLevels(pmenu, True);
 
-		if (x > rect.pos.x + rect.size.width)
-			x = rect.pos.x + rect.size.width - width;
+	if (x < rect.pos.x - width)
+		x = rect.pos.x;
 
-		if (y < rect.pos.y)
-			y = rect.pos.y;
+	if (x > rect.pos.x + rect.size.width)
+		x = rect.pos.x + rect.size.width - width;
 
-		if (y > rect.pos.y + rect.size.height)
-			y = rect.pos.y + rect.size.height - height;
+	if (y < rect.pos.y)
+		y = rect.pos.y;
 
-		wMenuMove(pmenu, x, y, True);
-		pmenu->flags.buttoned = 1;
-		wframewindow_show_rightbutton(pmenu->frame);
-		wframewindow_refresh_titlebar(pmenu->frame);
-		return True;
-	}
+	if (y > rect.pos.y + rect.size.height)
+		y = rect.pos.y + rect.size.height - height;
 
-	return False;
+	wMenuMove(pmenu, x, y, True);
+	pmenu->flags.buttoned = 1;
+	wframewindow_show_rightbutton(pmenu->frame);
+	wframewindow_refresh_titlebar(pmenu->frame);
+	return True;
 }
 
 static int restoreMenuRecurs(WMPropList *menus, WMenu *menu, const char *path)

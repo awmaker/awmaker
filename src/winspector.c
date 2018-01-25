@@ -344,7 +344,6 @@ static void destroyInspector(WCoreWindow *foo, void *data, XEvent *event)
 		panel = panel->nextPtr;
 
 	winspector_destroy(panel);
-	panel->nextPtr = NULL;
 }
 
 void wDestroyInspectorPanels(void)
