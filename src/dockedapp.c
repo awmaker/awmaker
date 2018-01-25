@@ -390,11 +390,7 @@ void ShowDockAppSettingsPanel(WAppIcon *aicon)
 		x = rect.pos.x + (rect.size.width - PWIDTH) / 2;
 	}
 
-	wframeflags = WFF_RIGHT_BUTTON | WFF_BORDER;
-	wframeflags |= WFF_TITLEBAR;
-#ifdef XKB_BUTTON_HINT
-	wframeflags |= WFF_LANGUAGE_BUTTON;
-#endif
+	wframeflags = WFF_TITLEBAR | WFF_BORDER;
 
 	panel->wwin = wManageInternalWindow(vscr, parent, None,
 					    _("Docked Application Settings"), x, y, PWIDTH, PHEIGHT, wframeflags);
