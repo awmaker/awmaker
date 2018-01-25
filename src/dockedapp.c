@@ -231,7 +231,7 @@ void ShowDockAppSettingsPanel(WAppIcon *aicon)
 	WScreen *scr = vscr->screen_ptr;
 	Window parent;
 	WMFont *font;
-	int x, y;
+	int x, y, wframeflags;
 	WMBox *vbox, *hbox;
 	WMRect rect;
 
@@ -390,8 +390,14 @@ void ShowDockAppSettingsPanel(WAppIcon *aicon)
 		x = rect.pos.x + (rect.size.width - PWIDTH) / 2;
 	}
 
+	wframeflags = WFF_RIGHT_BUTTON | WFF_BORDER;
+	wframeflags |= WFF_TITLEBAR;
+#ifdef XKB_BUTTON_HINT
+	wframeflags |= WFF_LANGUAGE_BUTTON;
+#endif
+
 	panel->wwin = wManageInternalWindow(vscr, parent, None,
-					    _("Docked Application Settings"), x, y, PWIDTH, PHEIGHT);
+					    _("Docked Application Settings"), x, y, PWIDTH, PHEIGHT, wframeflags);
 
 	panel->wwin->client_leader = WMWidgetXID(panel->win);
 	panel->parent = parent;

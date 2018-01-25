@@ -1042,7 +1042,7 @@ static InspectorPanel *createInspectorForWindow(WWindow *wwin_inspected, int xpo
 	InspectorPanel *panel;
 	Window parent;
 	char *str = NULL, *tmp = NULL;
-	int x, y, btn_width, frame_width;
+	int x, y, btn_width, frame_width, wframeflags;
 	WMButton *selectedBtn = NULL;
 
 
@@ -1224,7 +1224,13 @@ static InspectorPanel *createInspectorForWindow(WWindow *wwin_inspected, int xpo
 		y = ypos;
 	}
 
-	panel->wwin = wManageInternalWindow(vscr, parent, wwin_inspected->client_win, "Inspector", x, y, PWIDTH, PHEIGHT);
+	wframeflags = WFF_RIGHT_BUTTON | WFF_BORDER;
+	wframeflags |= WFF_TITLEBAR;
+#ifdef XKB_BUTTON_HINT
+	wframeflags |= WFF_LANGUAGE_BUTTON;
+#endif
+
+	panel->wwin = wManageInternalWindow(vscr, parent, wwin_inspected->client_win, "Inspector", x, y, PWIDTH, PHEIGHT, wframeflags);
 
 	if (!selectedBtn)
 		selectedBtn = panel->defaultRb;

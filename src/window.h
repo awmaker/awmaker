@@ -374,7 +374,7 @@ void wWindowResetMouseGrabs(WWindow *wwin);
 WWindow *wManageWindow(virtual_screen *vscr, Window window);
 WWindow *wManageInternalWindow(virtual_screen *vscr, Window window, Window owner,
                                const char *title, int x, int y,
-                               int width, int height);
+                               int width, int height, int wframeflags);
 Bool RelaunchWindow(WWindow *wwin);
 
 void wWindowSetupInitialAttributes(WWindow *wwin, int *level, int *workspace);
