@@ -191,8 +191,6 @@ int wFrameWindowChangeTitle(WFrameWindow *fwin, const char *new_title);
 
 void wframewindow_show_rightbutton(WFrameWindow *fwin);
 void wframewindow_hide_rightbutton(WFrameWindow *fwin);
-void wframewindow_show_languagebutton(WFrameWindow *fwin);
-void wframewindow_hide_languagebutton(WFrameWindow *fwin);
 void wframewindow_refresh_titlebar(WFrameWindow *fwin);
 
 #ifdef XKB_BUTTON_HINT
