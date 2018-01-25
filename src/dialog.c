@@ -1051,11 +1051,7 @@ Bool wIconChooserDialog(AppSettingsPanel *app_panel, InspectorPanel *ins_panel, 
 	title = create_dialog_iconchooser_title(instance, class);
 	center = getCenter(vscr, win_width, win_height);
 
-	wframeflags = WFF_RIGHT_BUTTON | WFF_BORDER;
-	wframeflags |= WFF_TITLEBAR;
-#ifdef XKB_BUTTON_HINT
-	wframeflags |= WFF_LANGUAGE_BUTTON;
-#endif
+	wframeflags = WFF_BORDER | WFF_TITLEBAR;
 
 	panel->wwin = wManageInternalWindow(vscr, parent, None, title, center.x, center.y, win_width, win_height, wframeflags);
 	wfree(title);
