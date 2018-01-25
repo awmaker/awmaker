@@ -803,8 +803,10 @@ void wframewin_set_borders(WFrameWindow *fwin, int flags)
 		if (fwin->flags.map_resizebar)
 			resizebar_map(fwin, width, height);
 	} else {
-		resizebar_create(fwin);
-		resizebar_map(fwin, width, height);
+		if (fwin->flags.map_resizebar) {
+			resizebar_create(fwin);
+			resizebar_map(fwin, width, height);
+		}
 	}
 
 	if (height + fwin->top_width + fwin->bottom_width != fwin->height && !(flags & WFF_IS_SHADED))
