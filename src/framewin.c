@@ -587,14 +587,14 @@ static void titlebar_map(WFrameWindow *fwin, int method)
 
 	/* Update the titlebar size and position (left and right buttons) */
 	if (wPreferences.new_style == TS_NEW) {
-		if (!fwin->flags.hide_left_button && fwin->left_button &&
+		if (fwin->left_button &&
 		    fwin->flags.map_left_button && !fwin->flags.lbutton_dont_fit)
 			width -= fwin->btn_size;
 	}
 
 	/* Language button */
 #ifdef XKB_BUTTON_HINT
-	if (!fwin->flags.hide_left_button && !fwin->flags.lbutton_dont_fit)
+	if (!fwin->flags.lbutton_dont_fit)
 		tb_pos_width = fwin->btn_size + 2 * btn_pad;
 	else
 		tb_pos_width = btn_pad;
@@ -1141,7 +1141,7 @@ static void remakeTexture_titlebar(WFrameWindow *fwin, int state)
 
 	/* eventually surrounded by if new_style */
 	left = fwin->left_button && fwin->flags.map_left_button &&
-	       !fwin->flags.hide_left_button && !fwin->flags.lbutton_dont_fit;
+	       !fwin->flags.lbutton_dont_fit;
 #ifdef XKB_BUTTON_HINT
 	language = fwin->language_button && fwin->flags.map_language_button &&
 		   !fwin->flags.hide_language_button && !fwin->flags.languagebutton_dont_fit;
@@ -1331,7 +1331,7 @@ void wFrameWindowPaint(WFrameWindow *fwin)
 
 	if (wPreferences.new_style != TS_NEW) {
 		if (fwin->left_button && fwin->flags.map_left_button &&
-		    !fwin->flags.hide_left_button && !fwin->flags.lbutton_dont_fit)
+		    !fwin->flags.lbutton_dont_fit)
 			lofs += fwin->btn_size + TS_NORMAL_PAD;
 
 #ifdef XKB_BUTTON_HINT
@@ -1376,14 +1376,10 @@ static void reconfigure_titlebar(WFrameWindow *fwin, int width)
 	 */
 	if (fwin->left_button && fwin->flags.map_left_button) {
 		if (width < fwin->top_width * k && !fwin->flags.lbutton_dont_fit) {
-			if (!fwin->flags.hide_left_button)
-				XUnmapWindow(dpy, fwin->left_button->window);
-
+			XUnmapWindow(dpy, fwin->left_button->window);
 			fwin->flags.lbutton_dont_fit = 1;
 		} else if (width >= fwin->top_width * k && fwin->flags.lbutton_dont_fit) {
-			if (!fwin->flags.hide_left_button)
-				XMapWindow(dpy, fwin->left_button->window);
-
+			XMapWindow(dpy, fwin->left_button->window);
 			fwin->flags.lbutton_dont_fit = 0;
 		}
 	}
@@ -1541,7 +1537,7 @@ static void checkTitleSize(WFrameWindow *fwin)
 
 	if (wPreferences.new_style != TS_NEW) {
 		if (fwin->left_button && fwin->flags.map_left_button &&
-		    !fwin->flags.hide_left_button && !fwin->flags.lbutton_dont_fit)
+		    !fwin->flags.lbutton_dont_fit)
 			width -= fwin->btn_size + TS_NORMAL_PAD;
 
 #ifdef XKB_BUTTON_HINT

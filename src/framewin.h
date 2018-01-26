@@ -140,7 +140,6 @@ typedef struct WFrameWindow {
 	unsigned int shaded:1;
 	unsigned int border:1;
 
-        unsigned int hide_left_button:1;
         unsigned int hide_right_button:1;
 #ifdef XKB_BUTTON_HINT
         unsigned int hide_language_button:1;
