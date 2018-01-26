@@ -79,7 +79,7 @@
 
 /***** Local Stuff *****/
 static WWindowState *windowState = NULL;
-static FocusMode getFocusMode(WWindow *wwin);
+static void setFocusMode(WWindow *wwin);
 static int getSavedState(Window window, WSavedState **state);
 static void setupGNUstepHints(WWindow *wwin, GNUstepWMAttributes *gs_hints);
 
@@ -1259,8 +1259,7 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 		}
 	}
 
-	/* guess the focus mode */
-	wwin->focus_mode = getFocusMode(wwin);
+	setFocusMode(wwin);
 
 	/* get geometry stuff */
 	wClientGetNormalHints(wwin, &wattribs, True, &x, &y, &width, &height);
@@ -2645,7 +2644,7 @@ void wWindowSetShape(WWindow * wwin)
 
 /* ====================================================================== */
 
-static FocusMode getFocusMode(WWindow *wwin)
+static void setFocusMode(WWindow *wwin)
 {
 	FocusMode mode;
 
@@ -2664,7 +2663,8 @@ static FocusMode getFocusMode(WWindow *wwin)
 	} else {
 		mode = WFM_PASSIVE;
 	}
-	return mode;
+
+	wwin->focus_mode = mode;
 }
 
 void wWindowSetKeyGrabs(WWindow * wwin)
