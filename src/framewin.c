@@ -1143,7 +1143,7 @@ static void remakeTexture_titlebar(WFrameWindow *fwin, int state)
 	       !fwin->flags.lbutton_dont_fit;
 #ifdef XKB_BUTTON_HINT
 	language = fwin->language_button && fwin->flags.map_language_button &&
-		   !fwin->flags.hide_language_button && !fwin->flags.languagebutton_dont_fit;
+		   !fwin->flags.languagebutton_dont_fit;
 #endif
 	right = fwin->right_button && fwin->flags.map_right_button &&
 		!fwin->flags.rbutton_dont_fit;
@@ -1335,7 +1335,7 @@ void wFrameWindowPaint(WFrameWindow *fwin)
 
 #ifdef XKB_BUTTON_HINT
 		if (fwin->language_button && fwin->flags.map_language_button &&
-		    !fwin->flags.hide_language_button && !fwin->flags.languagebutton_dont_fit)
+		    !fwin->flags.languagebutton_dont_fit)
 			lofs += fwin->btn_size;
 #endif
 
@@ -1386,14 +1386,10 @@ static void reconfigure_titlebar(WFrameWindow *fwin, int width)
 #ifdef XKB_BUTTON_HINT
 	if (fwin->language_button && fwin->flags.map_language_button) {
 		if (width < fwin->top_width * k && !fwin->flags.languagebutton_dont_fit) {
-			if (!fwin->flags.hide_language_button)
-				XUnmapWindow(dpy, fwin->language_button->window);
-
+			XUnmapWindow(dpy, fwin->language_button->window);
 			fwin->flags.languagebutton_dont_fit = 1;
 		} else if (width >= fwin->top_width * k && fwin->flags.languagebutton_dont_fit) {
-			if (!fwin->flags.hide_language_button)
-				XMapWindow(dpy, fwin->language_button->window);
-
+			XMapWindow(dpy, fwin->language_button->window);
 			fwin->flags.languagebutton_dont_fit = 0;
 		}
 	}
@@ -1537,7 +1533,7 @@ static void checkTitleSize(WFrameWindow *fwin)
 
 #ifdef XKB_BUTTON_HINT
 		if (fwin->language_button && fwin->flags.map_language_button &&
-		    !fwin->flags.hide_language_button && !fwin->flags.languagebutton_dont_fit)
+		    !fwin->flags.languagebutton_dont_fit)
 			width -= fwin->btn_size + TS_NORMAL_PAD;
 #endif
 
