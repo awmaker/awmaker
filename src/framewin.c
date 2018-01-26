@@ -606,7 +606,7 @@ static void titlebar_map(WFrameWindow *fwin, int method)
 		fwin->flags.titlebar = 1;
 		wcore_map(fwin->titlebar, fwin->core, fwin->vscr,
 			  titlebar_pos_width, 0,
-			  fwin->titlebar_width, fwin->titlebar_height, 0,
+			  fwin->titlebar_width + 1, fwin->titlebar_height, 0,
 			  fwin->vscr->screen_ptr->w_depth,
 			  fwin->vscr->screen_ptr->w_visual,
 			  fwin->vscr->screen_ptr->w_colormap);
@@ -637,7 +637,7 @@ static void titlebar_map(WFrameWindow *fwin, int method)
 			wCoreConfigure(fwin->language_button, tb_pos_width, btn_height, fwin->btn_size, fwin->btn_size);
 #endif
 
-		wCoreConfigure(fwin->titlebar, titlebar_pos_width, 0, fwin->titlebar_width, fwin->titlebar_height);
+		wCoreConfigure(fwin->titlebar, titlebar_pos_width, 0, fwin->titlebar_width + 1, fwin->titlebar_height);
 	}
 
 	fwin->flags.need_texture_remake = 1;
