@@ -2471,7 +2471,7 @@ static int restoreMenuRecurs(WMPropList *menus, WMenu *menu, const char *path)
 	return res;
 }
 
-void wMenuRestoreState(virtual_screen *vscr)
+void menus_restore(virtual_screen *vscr)
 {
 	WMPropList *menus, *menu, *key, *skey;
 
