@@ -750,17 +750,13 @@ static int get_framewin_titleheight(WFrameWindow *fwin)
 
 static int get_framewin_btn_size(int titleheight)
 {
-	int bsize;
+	if (wPreferences.new_style == TS_NEW)
+		return titleheight;
 
-	if (wPreferences.new_style == TS_NEW) {
-		bsize = titleheight;
-	} else if (wPreferences.new_style == TS_OLD) {
-		bsize = titleheight - 7;
-	} else {
-		bsize = titleheight - 8;
-	}
+	if (wPreferences.new_style == TS_OLD)
+		return titleheight - 7;
 
-	return bsize;
+	return titleheight - 8;
 }
 
 void wframewin_set_borders(WFrameWindow *fwin, int flags)
