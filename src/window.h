@@ -142,6 +142,8 @@ typedef struct {
      */
     unsigned int emulate_appicon:1;
 
+    /* Ignore any changes to the decoration elements (titlebar, etc) */
+    unsigned int ignore_decoration_changes:1;
 } WWindowAttributes;
 
 

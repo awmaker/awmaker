@@ -22,6 +22,7 @@
 #include "WPrefs.h"
 #include <assert.h>
 #include <ctype.h>
+#include <unistd.h>
 
 #include <X11/keysym.h>
 #include <X11/cursorfont.h>
@@ -1482,7 +1483,8 @@ static WMPropList *getDefaultMenu(_Panel * panel)
 static void showData(_Panel * panel)
 {
 	const char *gspath;
-	char *menuPath;
+	char *menuPath, *labelText;
+	char buf[1024];
 	WMPropList *pmenu;
 
 	gspath = wusergnusteppath();
@@ -1492,6 +1494,41 @@ static void showData(_Panel * panel)
 	strcat(menuPath, "/Defaults/WMRootMenu");
 
 	pmenu = WMReadPropListFromFile(menuPath);
+
+	/* check if WMRootMenu references another file, and if so,
+	   if that file is in proplist format */
+	while (WMIsPLString(pmenu)) {
+		char *path = NULL;
+
+		path = wexpandpath(WMGetFromPLString(pmenu));
+
+		if (access(path, F_OK) < 0)
+			path = wfindfile(DEF_CONFIG_PATHS, path);
+
+		/* TODO: if needed, concatenate locale suffix to path.
+		   See getLocalizedMenuFile() in src/rootmenu.c. */
+
+		if (!path)
+			break;
+
+		if (access(path, W_OK) < 0) {
+			snprintf(buf, 1024,
+				 _("The menu file \"%s\" referenced by "
+				   "WMRootMenu is read-only.\n"
+				   "You cannot use WPrefs to modify it."),
+				 path);
+			WMRunAlertPanel(WMWidgetScreen(panel->parent),
+					panel->parent,
+					_("Warning"), buf,
+					_("OK"), NULL, NULL);
+			panel->dontSave = True;
+			wfree(path);
+			return;
+		}
+
+		pmenu = WMReadPropListFromFile(path);
+		menuPath = path;
+	}
 
 	if (!pmenu || !WMIsPLArray(pmenu)) {
 		int res;
@@ -1516,6 +1553,14 @@ static void showData(_Panel * panel)
 	}
 
 	panel->menuPath = menuPath;
+
+	snprintf(buf, 1024,
+		 _("\n\nWhen saved, the menu will be written to the file\n\"%s\"."),
+		 menuPath);
+	labelText = WMGetLabelText(panel->sections[NoInfo][0]);
+	labelText = wstrconcat(labelText, buf);
+	WMSetLabelText(panel->sections[NoInfo][0], labelText);
+	wfree(labelText);
 
 	buildMenuFromPL(panel, pmenu);
 

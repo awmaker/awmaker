@@ -471,6 +471,21 @@ void wWindowSetupInitialAttributes(WWindow *wwin, int *level, int *workspace)
 	wDefaultFillAttributes(wwin->wm_instance, wwin->wm_class, &wwin->client_flags,
 			       &wwin->defined_user_flags, False);
 
+	/*
+	 * Restore decoration if the user has enabled the
+	 * IgnoreDecorationChanges option
+	 */
+	if (wwin->user_flags.ignore_decoration_changes) {
+		wwin->user_flags.no_titlebar = 0;
+		wwin->user_flags.no_resizable = 0;
+		wwin->user_flags.no_miniaturizable = 0;
+		wwin->user_flags.no_resizebar = 0;
+		wwin->user_flags.no_close_button = 0;
+		wwin->user_flags.no_miniaturize_button = 0;
+		wwin->user_flags.no_border = 0;
+		wwin->user_flags.no_movable = 0;
+	}
+
 	/* Sanity checks for attributes that depend on other attributes */
 	if (wwin->user_flags.no_appicon && wwin->defined_user_flags.no_appicon)
 		wwin->user_flags.emulate_appicon = 0;
@@ -2204,6 +2219,15 @@ void wWindowConfigure(WWindow *wwin, int req_x, int req_y, int req_width, int re
 {
 	int synth_notify = False;
 	int resize;
+
+	/*
+	 * if window size is guaranteed to fail - fix it to some reasonable defaults
+	 */
+	if (req_height > SHRT_MAX)
+		req_height = 480;
+
+	if (req_width > SHRT_MAX)
+		req_height = 640;
 
 	resize = (req_width != wwin->width || req_height != wwin->height);
 	/*

@@ -5,6 +5,7 @@
                 "Black" WS_BACK '(solid, black)'
                 "Blue"  WS_BACK '(solid, "#505075")'
                 "Indigo" WS_BACK '(solid, "#243e6c")'
+                "Bluemarine" WS_BACK '(solid, "#224477")'
                 "Deep Blue" WS_BACK '(solid, "#180090")'
                 "Purple" WS_BACK '(solid, "#554466")'
                 "Wheat"  WS_BACK '(solid, "wheat4")'
@@ -22,7 +23,10 @@
 		"Wine Shades" WS_BACK '(vgradient, "#600040", "#180010")'
         "Gradient" END
         "Images" MENU
-            "Tiled" OPEN_MENU LOCAL_BACKGROUNDS_DIR BACKGROUNDS_DIR USER_BACKGROUNDS_DIR WITH wmsetbg -u -t
-            "Scaled" OPEN_MENU LOCAL_BACKGROUNDS_DIR BACKGROUNDS_DIR USER_BACKGROUNDS_DIR WITH wmsetbg -u -s
-        "Image" END
+            "Tiled" OPEN_MENU  BACKGROUNDS_DIR USER_BACKGROUNDS_DIR WITH wmsetbg -u -t
+            "Scaled" OPEN_MENU  BACKGROUNDS_DIR USER_BACKGROUNDS_DIR WITH wmsetbg -u -s
+            "Centered" OPEN_MENU  BACKGROUNDS_DIR USER_BACKGROUNDS_DIR WITH wmsetbg -u -e
+            "Maximized" OPEN_MENU  BACKGROUNDS_DIR USER_BACKGROUNDS_DIR WITH wmsetbg -u -a
+            "Filled" OPEN_MENU  BACKGROUNDS_DIR USER_BACKGROUNDS_DIR WITH wmsetbg -u -f
+        "Images" END
 "Background" END

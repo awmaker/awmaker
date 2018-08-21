@@ -115,6 +115,16 @@ WindowMaker/Defaults/WMState
 WindowMaker/Defaults/WMWindowAttributes
 WindowMaker/Defaults/WindowMaker
 WindowMaker/IconSets/Default.iconset
+WindowMaker/appearance.menu
+WindowMaker/appearance.menu.fy
+WindowMaker/appearance.menu.nl
+WindowMaker/plmenu.pl
+WindowMaker/plmenu.zh_CN
+WindowMaker/wmmacros
+
+doc/wmaker.1
+doc/wmsetbg.1
+wmlib/wmlib.pc
 
 # Some text editors generate backup files
 *~
