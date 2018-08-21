@@ -99,8 +99,7 @@ static void remakeTexture_titlebar(WFrameWindow *fwin, int state);
 static void remakeTexture_resizebar(WFrameWindow *fwin, int state);
 static char *get_title(WFrameWindow *fwin);
 static void paint_title(WFrameWindow *fwin, int lofs, int rofs, int state);
-static void reconfigure(WFrameWindow *fwin, int x, int y,
-			int width, int height);
+static void reconfigure(WFrameWindow *fwin, int width, int height);
 static void handleExpose(WObjDescriptor *desc, XEvent *event);
 static void checkTitleSize(WFrameWindow *fwin);
 static void paint_button_pushed(WFrameWindow *fwin, WCoreWindow *button,
@@ -1365,7 +1364,7 @@ void wFrameWindowPaint(WFrameWindow *fwin)
 void wFrameWindowConfigure(WFrameWindow *fwin, int x, int y, int width, int height)
 {
 	XMoveResizeWindow(dpy, fwin->core->window, x, y, width, height);
-	reconfigure(fwin, x, y, width, height);
+	reconfigure(fwin, width, height);
 }
 
 static void reconfigure_titlebar(WFrameWindow *fwin, int width)
@@ -1457,8 +1456,7 @@ static void reconfigure_resizebar(WFrameWindow *fwin)
 		fwin->resizebar_corner_width = fwin->width / 2;
 }
 
-static void reconfigure(WFrameWindow *fwin, int x, int y,
-			int width, int height)
+static void reconfigure(WFrameWindow *fwin, int width, int height)
 {
 	int resizedHorizontally = 0;
 
@@ -1480,7 +1478,7 @@ static void reconfigure(WFrameWindow *fwin, int x, int y,
 void wFrameWindowResize(WFrameWindow *fwin, int width, int height)
 {
 	XResizeWindow(dpy, fwin->core->window, width, height);
-	reconfigure(fwin, 0, 0, width, height);
+	reconfigure(fwin, width, height);
 }
 
 int wFrameWindowChangeTitle(WFrameWindow *fwin, const char *new_title)
