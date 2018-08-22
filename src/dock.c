@@ -5573,6 +5573,11 @@ static void dock_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 	desc = &dock->menu->core->descriptor;
 	(*desc->handle_mousedown) (desc, event);
 	dock_menu_unmap(vscr, dock->menu);
+
+	/* Destroy the menu */
+	wMenuDestroy(dock->menu);
+	vscr->dock.pos_menu = NULL;
+	dock->menu = NULL;
 }
 
 static void dock_icon_mouse_down(WObjDescriptor *desc, XEvent *event)
