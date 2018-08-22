@@ -5474,6 +5474,13 @@ static void dock_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 	WApplication *wapp = NULL;
 	int appIsRunning, x_pos;
 
+	/* Get info about the application */
+	if (aicon->icon->owner)
+		wapp = wApplicationOf(aicon->icon->owner->main_window);
+
+	appIsRunning = aicon->running && aicon->icon && aicon->icon->owner;
+
+	/* Create the menu */
 	if (!dock->menu) {
 		dock->menu = menu_create(vscr, NULL);
 
@@ -5509,11 +5516,6 @@ static void dock_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 	updateDockPositionMenu(dock);
 
 	if (!wPreferences.flags.nodrawer) {
-		if (aicon->icon->owner)
-			wapp = wApplicationOf(aicon->icon->owner->main_window);
-
-		appIsRunning = aicon->running && aicon->icon && aicon->icon->owner;
-
 		/* add a drawer */
 		entry = dock->menu->entries[DM_ADD_DRAWER];
 		entry->clientdata = aicon;
