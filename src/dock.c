@@ -1477,38 +1477,6 @@ static void drawer_menu_unmap(virtual_screen *vscr, WMenu *menu)
 	menu->flags.realized = 0;
 }
 
-static WMenu *dock_menu_create(virtual_screen *vscr)
-{
-	WMenu *menu;
-	WMenuEntry *entry;
-
-	menu = menu_create(vscr, NULL);
-
-	entry = wMenuAddCallback(menu, _("Dock position"), NULL, NULL);
-	if (!vscr->dock.pos_menu)
-		vscr->dock.pos_menu = makeDockPositionMenu(vscr);
-
-	wMenuEntrySetCascade_create(menu, entry, vscr->dock.pos_menu);
-
-	if (!wPreferences.flags.nodrawer)
-		wMenuAddCallback(menu, _("Add a drawer"), addADrawerCallback, NULL);
-
-	wMenuAddCallback(menu, _("Launch"), launchCallback, NULL);
-	wMenuAddCallback(menu, _("Unhide Here"), unhideHereCallback, NULL);
-
-	entry = wMenuAddCallback(menu, _("Hide"), hideCallback, NULL);
-	wfree(entry->text);
-	entry->text = _("Hide"); /* can be: Unhide */
-
-	wMenuAddCallback(menu, _("Settings..."), settingsCallback, NULL);
-
-	entry = wMenuAddCallback(menu, _("Kill"), killCallback, NULL);
-	wfree(entry->text);
-	entry->text = _("Kill"); /* can be: Remove drawer */
-
-	return menu;
-}
-
 static void dock_menu_unmap(virtual_screen *vscr, WMenu *menu)
 {
 	menu_unmap(vscr->dock.pos_menu);
@@ -5506,8 +5474,31 @@ static void dock_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 	WApplication *wapp = NULL;
 	int appIsRunning, x_pos;
 
-	if (!dock->menu)
-		dock->menu = dock_menu_create(vscr);
+	if (!dock->menu) {
+		dock->menu = menu_create(vscr, NULL);
+
+		entry = wMenuAddCallback(dock->menu, _("Dock position"), NULL, NULL);
+		if (!vscr->dock.pos_menu)
+			vscr->dock.pos_menu = makeDockPositionMenu(vscr);
+
+		wMenuEntrySetCascade_create(dock->menu, entry, vscr->dock.pos_menu);
+
+		if (!wPreferences.flags.nodrawer)
+			wMenuAddCallback(dock->menu, _("Add a drawer"), addADrawerCallback, NULL);
+
+		wMenuAddCallback(dock->menu, _("Launch"), launchCallback, NULL);
+		wMenuAddCallback(dock->menu, _("Unhide Here"), unhideHereCallback, NULL);
+
+		entry = wMenuAddCallback(dock->menu, _("Hide"), hideCallback, NULL);
+		wfree(entry->text);
+		entry->text = _("Hide"); /* can be: Unhide */
+
+		wMenuAddCallback(dock->menu, _("Settings..."), settingsCallback, NULL);
+
+		entry = wMenuAddCallback(dock->menu, _("Kill"), killCallback, NULL);
+		wfree(entry->text);
+		entry->text = _("Kill"); /* can be: Remove drawer */
+	}
 
 	menu_map(dock->menu);
 
