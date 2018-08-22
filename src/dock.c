@@ -1552,9 +1552,7 @@ WDock *dock_create(virtual_screen *vscr)
 
 	/* Set basic variables */
 	dock->type = WM_DOCK;
-
-	/* create dock menu */
-	dock->menu = dock_menu_create(vscr);
+	dock->menu = NULL;
 
 	btn = dock_icon_create(vscr, NULL, "WMDock", "Logo");
 
@@ -5507,6 +5505,9 @@ static void dock_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 	WMenuEntry *entry = NULL;
 	WApplication *wapp = NULL;
 	int appIsRunning, x_pos;
+
+	if (!dock->menu)
+		dock->menu = dock_menu_create(vscr);
 
 	menu_map(dock->menu);
 
