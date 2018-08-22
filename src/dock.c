@@ -5729,7 +5729,7 @@ static void drawer_icon_mouse_down(WObjDescriptor *desc, XEvent *event)
 
 	vscr->last_dock = dock;
 
-	if (dock->menu->flags.mapped)
+	if (dock->menu && dock->menu->flags.mapped)
 		wMenuUnmap(dock->menu);
 
 	if (IsDoubleClick(vscr, event)) {
