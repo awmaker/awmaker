@@ -5501,9 +5501,11 @@ static void dock_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 		else
 			wMenuAddCallback(dock->menu, _("Bring Here"), unhideHereCallback, NULL);
 
-		entry = wMenuAddCallback(dock->menu, _("Hide"), hideCallback, NULL);
-		wfree(entry->text);
-		entry->text = _("Hide"); /* can be: Unhide */
+		/* Hide / Unhide */
+		if (wapp && wapp->flags.hidden)
+			entry = wMenuAddCallback(dock->menu, _("Unhide"), hideCallback, NULL);
+		else
+			entry = wMenuAddCallback(dock->menu, _("Hide"), hideCallback, NULL);
 
 		wMenuAddCallback(dock->menu, _("Settings..."), settingsCallback, NULL);
 
@@ -5539,11 +5541,6 @@ static void dock_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 		/* hide */
 		entry = dock->menu->entries[DM_HIDE];
 		entry->clientdata = aicon;
-		if (wapp && wapp->flags.hidden)
-			entry->text = _("Unhide");
-		else
-			entry->text = _("Hide");
-
 		menu_entry_set_enabled(dock->menu, DM_HIDE, appIsRunning);
 
 		/* settings */
