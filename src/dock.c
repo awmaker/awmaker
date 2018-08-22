@@ -5494,7 +5494,12 @@ static void dock_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 			wMenuAddCallback(dock->menu, _("Add a drawer"), addADrawerCallback, NULL);
 
 		wMenuAddCallback(dock->menu, _("Launch"), launchCallback, NULL);
-		wMenuAddCallback(dock->menu, _("Unhide Here"), unhideHereCallback, NULL);
+
+		/* Unhide Here / Bring Here */
+		if (wapp && wapp->flags.hidden)
+			wMenuAddCallback(dock->menu, _("Unhide Here"), unhideHereCallback, NULL);
+		else
+			wMenuAddCallback(dock->menu, _("Bring Here"), unhideHereCallback, NULL);
 
 		entry = wMenuAddCallback(dock->menu, _("Hide"), hideCallback, NULL);
 		wfree(entry->text);
@@ -5529,11 +5534,6 @@ static void dock_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 		/* unhide here */
 		entry = dock->menu->entries[DM_BRING];
 		entry->clientdata = aicon;
-		if (wapp && wapp->flags.hidden)
-			entry->text = _("Unhide Here");
-		else
-			entry->text = _("Bring Here");
-
 		menu_entry_set_enabled(dock->menu, DM_BRING, appIsRunning);
 
 		/* hide */
