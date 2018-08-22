@@ -5472,39 +5472,37 @@ static void dock_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 	appIsRunning = aicon->running && aicon->icon && aicon->icon->owner;
 
 	/* Create the menu */
-	if (!dock->menu) {
-		dock->menu = menu_create(vscr, NULL);
+	dock->menu = menu_create(vscr, NULL);
 
-		entry = wMenuAddCallback(dock->menu, _("Dock position"), NULL, NULL);
-		if (!vscr->dock.pos_menu)
-			vscr->dock.pos_menu = makeDockPositionMenu(vscr);
+	entry = wMenuAddCallback(dock->menu, _("Dock position"), NULL, NULL);
+	if (!vscr->dock.pos_menu)
+		vscr->dock.pos_menu = makeDockPositionMenu(vscr);
 
-		wMenuEntrySetCascade_create(dock->menu, entry, vscr->dock.pos_menu);
+	wMenuEntrySetCascade_create(dock->menu, entry, vscr->dock.pos_menu);
 
-		if (!wPreferences.flags.nodrawer)
-			wMenuAddCallback(dock->menu, _("Add a drawer"), addADrawerCallback, NULL);
+	if (!wPreferences.flags.nodrawer)
+		wMenuAddCallback(dock->menu, _("Add a drawer"), addADrawerCallback, NULL);
 
-		wMenuAddCallback(dock->menu, _("Launch"), launchCallback, NULL);
+	wMenuAddCallback(dock->menu, _("Launch"), launchCallback, NULL);
 
-		/* Unhide Here / Bring Here */
-		if (wapp && wapp->flags.hidden)
-			wMenuAddCallback(dock->menu, _("Unhide Here"), unhideHereCallback, NULL);
-		else
-			wMenuAddCallback(dock->menu, _("Bring Here"), unhideHereCallback, NULL);
+	/* Unhide Here / Bring Here */
+	if (wapp && wapp->flags.hidden)
+		wMenuAddCallback(dock->menu, _("Unhide Here"), unhideHereCallback, NULL);
+	else
+		wMenuAddCallback(dock->menu, _("Bring Here"), unhideHereCallback, NULL);
 
-		/* Hide / Unhide */
-		if (wapp && wapp->flags.hidden)
-			entry = wMenuAddCallback(dock->menu, _("Unhide"), hideCallback, NULL);
-		else
-			entry = wMenuAddCallback(dock->menu, _("Hide"), hideCallback, NULL);
+	/* Hide / Unhide */
+	if (wapp && wapp->flags.hidden)
+		entry = wMenuAddCallback(dock->menu, _("Unhide"), hideCallback, NULL);
+	else
+		entry = wMenuAddCallback(dock->menu, _("Hide"), hideCallback, NULL);
 
-		wMenuAddCallback(dock->menu, _("Settings..."), settingsCallback, NULL);
+	wMenuAddCallback(dock->menu, _("Settings..."), settingsCallback, NULL);
 
-		if (wIsADrawer(aicon))
-			entry = wMenuAddCallback(dock->menu, _("Remove drawer"), removeDrawerCallback, NULL);
-		else
-			entry = wMenuAddCallback(dock->menu, _("Kill"), killCallback, NULL);
-	}
+	if (wIsADrawer(aicon))
+		entry = wMenuAddCallback(dock->menu, _("Remove drawer"), removeDrawerCallback, NULL);
+	else
+		entry = wMenuAddCallback(dock->menu, _("Kill"), killCallback, NULL);
 
 	menu_map(dock->menu);
 
