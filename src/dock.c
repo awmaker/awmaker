@@ -5474,12 +5474,14 @@ static void dock_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 	/* Create the menu */
 	dock->menu = menu_create(vscr, NULL);
 
+	/* Dock position menu */
 	entry = wMenuAddCallback(dock->menu, _("Dock position"), NULL, NULL);
 	if (!vscr->dock.pos_menu)
 		vscr->dock.pos_menu = makeDockPositionMenu(vscr);
 
 	wMenuEntrySetCascade_create(dock->menu, entry, vscr->dock.pos_menu);
 
+	/* Add drawer menu */
 	if (!wPreferences.flags.nodrawer)
 		wMenuAddCallback(dock->menu, _("Add a drawer"), addADrawerCallback, NULL);
 
@@ -5497,20 +5499,14 @@ static void dock_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 	else
 		entry = wMenuAddCallback(dock->menu, _("Hide"), hideCallback, NULL);
 
+	/* Settings */
 	wMenuAddCallback(dock->menu, _("Settings..."), settingsCallback, NULL);
 
+	/* Remove drawer / kill */
 	if (wIsADrawer(aicon))
 		entry = wMenuAddCallback(dock->menu, _("Remove drawer"), removeDrawerCallback, NULL);
 	else
 		entry = wMenuAddCallback(dock->menu, _("Kill"), killCallback, NULL);
-
-	menu_map(dock->menu);
-
-	if (vscr->dock.pos_menu)
-		menu_map(vscr->dock.pos_menu);
-
-	/* Dock position menu */
-	updateDockPositionMenu(dock);
 
 	if (!wPreferences.flags.nodrawer) {
 		/* add a drawer */
@@ -5553,6 +5549,15 @@ static void dock_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 		menu_entry_set_enabled_paint(dock->menu, DM_SETTINGS);
 		menu_entry_set_enabled_paint(dock->menu, DM_KILL);
 	}
+
+	/* Positions and mapping */
+	menu_map(dock->menu);
+
+	if (vscr->dock.pos_menu)
+		menu_map(vscr->dock.pos_menu);
+
+	/* Dock position menu */
+	updateDockPositionMenu(dock);
 
 	x_pos = dock->on_right_side ? scr->scr_width - dock->menu->frame->width - 3 : 0;
 	wMenuMapAt(vscr, dock->menu, x_pos, event->xbutton.y_root + 2, False);
