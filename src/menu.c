@@ -2397,9 +2397,8 @@ static Bool getMenuInfo(WMPropList *info, int *x, int *y, Bool *lowered)
 
 static int restoreMenu(virtual_screen *vscr, WMPropList *menu)
 {
-	int x, y, width, height;
+	int x, y;
 	Bool lowered = False;
-	WMenu *pmenu = NULL;
 
 	if (!menu)
 		return False;
@@ -2407,33 +2406,9 @@ static int restoreMenu(virtual_screen *vscr, WMPropList *menu)
 	if (!getMenuInfo(menu, &x, &y, &lowered))
 		return False;
 
-	pmenu = vscr->menu.switch_menu;
-	if (!pmenu)
-		return False;
-
-	width = get_menu_width_full(pmenu);
-	height = get_menu_height_full(pmenu);
-	WMRect rect = wGetRectForHead(vscr->screen_ptr, wGetHeadForPointerLocation(vscr));
-
-	if (lowered)
-		changeMenuLevels(pmenu, True);
-
-	if (x < rect.pos.x - width)
-		x = rect.pos.x;
-
-	if (x > rect.pos.x + rect.size.width)
-		x = rect.pos.x + rect.size.width - width;
-
-	if (y < rect.pos.y)
-		y = rect.pos.y;
-
-	if (y > rect.pos.y + rect.size.height)
-		y = rect.pos.y + rect.size.height - height;
-
-	wMenuMove(pmenu, x, y, True);
-	pmenu->flags.buttoned = 1;
-	wframewindow_show_rightbutton(pmenu->frame);
-	wframewindow_refresh_titlebar(pmenu->frame);
+	OpenSwitchMenu(vscr, x, y, False);
+	wframewindow_show_rightbutton(vscr->menu.switch_menu->frame);
+	wframewindow_refresh_titlebar(vscr->menu.switch_menu->frame);
 	return True;
 }
 
@@ -2499,14 +2474,16 @@ void wMenuRestoreState(virtual_screen *vscr)
 	if (!w_global.session_state)
 		return;
 
+	/* Get the opened menus using the "Menus" info from WMState files */
 	key = WMCreatePLString("Menus");
 	menus = WMGetFromPLDictionary(w_global.session_state, key);
 	WMReleasePropList(key);
 
+	/* If "Menus" do not exists, return */
 	if (!menus)
 		return;
 
-	/* restore menus */
+	/* Get the SwitchMenu key and restore the menu */
 	skey = WMCreatePLString("SwitchMenu");
 	menu = WMGetFromPLDictionary(menus, skey);
 	WMReleasePropList(skey);
