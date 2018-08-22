@@ -4856,68 +4856,67 @@ static void set_dockmenu_dock_code(WDock *dock, WMenuEntry *entry, WAppIcon *aic
 	/* Dock position menu */
 	updateDockPositionMenu(dock);
 
-	if (wPreferences.flags.nodrawer)
-		return;
+	if (!wPreferences.flags.nodrawer) {
+		if (aicon->icon->owner)
+			wapp = wApplicationOf(aicon->icon->owner->main_window);
 
-	if (aicon->icon->owner)
-		wapp = wApplicationOf(aicon->icon->owner->main_window);
+		appIsRunning = aicon->running && aicon->icon && aicon->icon->owner;
 
-	appIsRunning = aicon->running && aicon->icon && aicon->icon->owner;
+		/* add a drawer */
+		entry = dock->menu->entries[DM_ADD_DRAWER];
+		entry->clientdata = aicon;
+		menu_entry_set_enabled(dock->menu, DM_ADD_DRAWER, True);
 
-	/* add a drawer */
-	entry = dock->menu->entries[DM_ADD_DRAWER];
-	entry->clientdata = aicon;
-	menu_entry_set_enabled(dock->menu, DM_ADD_DRAWER, True);
+		/* launch */
+		entry = dock->menu->entries[DM_LAUNCH];
+		entry->clientdata = aicon;
+		menu_entry_set_enabled(dock->menu, DM_LAUNCH, aicon->command != NULL);
 
-	/* launch */
-	entry = dock->menu->entries[DM_LAUNCH];
-	entry->clientdata = aicon;
-	menu_entry_set_enabled(dock->menu, DM_LAUNCH, aicon->command != NULL);
+		/* unhide here */
+		entry = dock->menu->entries[DM_BRING];
+		entry->clientdata = aicon;
+		if (wapp && wapp->flags.hidden)
+			entry->text = _("Unhide Here");
+		else
+			entry->text = _("Bring Here");
 
-	/* unhide here */
-	entry = dock->menu->entries[DM_BRING];
-	entry->clientdata = aicon;
-	if (wapp && wapp->flags.hidden)
-		entry->text = _("Unhide Here");
-	else
-		entry->text = _("Bring Here");
+		menu_entry_set_enabled(dock->menu, DM_BRING, appIsRunning);
 
-	menu_entry_set_enabled(dock->menu, DM_BRING, appIsRunning);
+		/* hide */
+		entry = dock->menu->entries[DM_HIDE];
+		entry->clientdata = aicon;
+		if (wapp && wapp->flags.hidden)
+			entry->text = _("Unhide");
+		else
+			entry->text = _("Hide");
 
-	/* hide */
-	entry = dock->menu->entries[DM_HIDE];
-	entry->clientdata = aicon;
-	if (wapp && wapp->flags.hidden)
-		entry->text = _("Unhide");
-	else
-		entry->text = _("Hide");
+		menu_entry_set_enabled(dock->menu, DM_HIDE, appIsRunning);
 
-	menu_entry_set_enabled(dock->menu, DM_HIDE, appIsRunning);
+		/* settings */
+		entry = dock->menu->entries[DM_SETTINGS];
+		entry->clientdata = aicon;
+		menu_entry_set_enabled(dock->menu, DM_SETTINGS, !aicon->editing && !wPreferences.flags.noupdates);
 
-	/* settings */
-	entry = dock->menu->entries[DM_SETTINGS];
-	entry->clientdata = aicon;
-	menu_entry_set_enabled(dock->menu, DM_SETTINGS, !aicon->editing && !wPreferences.flags.noupdates);
+		/* kill or remove drawer */
+		entry = dock->menu->entries[DM_KILL];
+		entry->clientdata = aicon;
+		if (wIsADrawer(aicon)) {
+			entry->callback = removeDrawerCallback;
+			entry->text = _("Remove drawer");
+			menu_entry_set_enabled(dock->menu, DM_KILL, True);
+		} else {
+			entry->callback = killCallback;
+			entry->text = _("Kill");
+			menu_entry_set_enabled(dock->menu, DM_KILL, appIsRunning);
+		}
 
-	/* kill or remove drawer */
-	entry = dock->menu->entries[DM_KILL];
-	entry->clientdata = aicon;
-	if (wIsADrawer(aicon)) {
-		entry->callback = removeDrawerCallback;
-		entry->text = _("Remove drawer");
-		menu_entry_set_enabled(dock->menu, DM_KILL, True);
-	} else {
-		entry->callback = killCallback;
-		entry->text = _("Kill");
-		menu_entry_set_enabled(dock->menu, DM_KILL, appIsRunning);
+		menu_entry_set_enabled_paint(dock->menu, DM_ADD_DRAWER);
+		menu_entry_set_enabled_paint(dock->menu, DM_LAUNCH);
+		menu_entry_set_enabled_paint(dock->menu, DM_BRING);
+		menu_entry_set_enabled_paint(dock->menu, DM_HIDE);
+		menu_entry_set_enabled_paint(dock->menu, DM_SETTINGS);
+		menu_entry_set_enabled_paint(dock->menu, DM_KILL);
 	}
-
-	menu_entry_set_enabled_paint(dock->menu, DM_ADD_DRAWER);
-	menu_entry_set_enabled_paint(dock->menu, DM_LAUNCH);
-	menu_entry_set_enabled_paint(dock->menu, DM_BRING);
-	menu_entry_set_enabled_paint(dock->menu, DM_HIDE);
-	menu_entry_set_enabled_paint(dock->menu, DM_SETTINGS);
-	menu_entry_set_enabled_paint(dock->menu, DM_KILL);
 }
 
 static void set_dockmenu_clip_code(WDock *dock, WMenuEntry *entry, WAppIcon *aicon)
