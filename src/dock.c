@@ -1477,15 +1477,6 @@ static void drawer_menu_unmap(virtual_screen *vscr, WMenu *menu)
 	menu->flags.realized = 0;
 }
 
-static void dock_menu_unmap(virtual_screen *vscr, WMenu *menu)
-{
-	menu_unmap(vscr->dock.pos_menu);
-	menu_unmap(menu);
-
-	vscr->dock.pos_menu->flags.realized = 0;
-	menu->flags.realized = 0;
-}
-
 static WDock *dock_create_core(virtual_screen *vscr)
 {
 	WDock *dock;
@@ -5572,9 +5563,10 @@ static void dock_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 	event->xany.send_event = True;
 	desc = &dock->menu->core->descriptor;
 	(*desc->handle_mousedown) (desc, event);
-	dock_menu_unmap(vscr, dock->menu);
 
 	/* Destroy the menu */
+	vscr->dock.pos_menu->flags.realized = 0;
+	dock->menu->flags.realized = 0;
 	wMenuDestroy(dock->menu);
 	vscr->dock.pos_menu = NULL;
 	dock->menu = NULL;
