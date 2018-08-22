@@ -810,10 +810,6 @@ void OpenWindowMenu(WWindow *wwin, int x, int y, int keyboard)
 
 	/* Specific menu position */
 	x -= menu->frame->width / 2;
-	if (x + menu->frame->width > wwin->frame_x + wwin->frame->width)
-		x = wwin->frame_x + wwin->frame->width - menu->frame->width;
-	if (x < wwin->frame_x)
-		x = wwin->frame_x;
 
 	/* Common menu position */
 	prepare_menu_position(menu, &x, &y);
