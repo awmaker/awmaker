@@ -2395,7 +2395,7 @@ static Bool getMenuInfo(WMPropList *info, int *x, int *y, Bool *lowered)
 	return True;
 }
 
-static int restoreMenu(virtual_screen *vscr, WMPropList *menu)
+static int restore_switchmenu(virtual_screen *vscr, WMPropList *menu)
 {
 	int x, y;
 	Bool lowered = False;
@@ -2487,7 +2487,7 @@ void wMenuRestoreState(virtual_screen *vscr)
 	skey = WMCreatePLString("SwitchMenu");
 	menu = WMGetFromPLDictionary(menus, skey);
 	WMReleasePropList(skey);
-	restoreMenu(vscr, menu);
+	restore_switchmenu(vscr, menu);
 
 	if (!vscr->menu.root_menu) {
 		OpenRootMenu(vscr, vscr->screen_ptr->scr_width * 2, 0, False);
