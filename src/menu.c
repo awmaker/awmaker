@@ -2408,7 +2408,6 @@ static int restore_switchmenu(virtual_screen *vscr, WMPropList *menu)
 
 	OpenSwitchMenu(vscr, x, y, False);
 	wframewindow_show_rightbutton(vscr->menu.switch_menu->frame);
-	wframewindow_refresh_titlebar(vscr->menu.switch_menu->frame);
 	return True;
 }
 
