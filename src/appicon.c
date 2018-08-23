@@ -802,7 +802,8 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 	WDock *lastDock = originalDock;
 	WDock *allDocks[vscr->drawer.drawer_count + 2]; /* clip, dock and drawers (order determined at runtime) */
 	WDrawerChain *dc;
-	Bool dockable, ondock;
+	Bool dockable = True;
+	Bool ondock = True;
 	Bool grabbed = False;
 	Bool collapsed = False; /* Stores the collapsed state of lastDock, before the moving appicon entered it */
 	int superfluous = wPreferences.superfluous; /* we cache it to avoid problems */
@@ -841,10 +842,7 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 		wwarning("Pointer grab failed in wHandleAppIconMove");
 	}
 
-	if (originalDock != NULL) {
-	    dockable = True;
-	    ondock = True;
-	} else {
+	if (originalDock == NULL) {
 		ondock = False;
 		if (wPreferences.flags.nodock && wPreferences.flags.noclip && wPreferences.flags.nodrawer)
 			dockable = 0;
