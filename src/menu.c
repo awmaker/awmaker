@@ -91,6 +91,7 @@ static void selectEntry(WMenu *menu, int entry_no);
 static void closeCascade(WMenu *menu);
 static void set_menu_width(WMenu *menu);
 static void set_menu_coords(WMenu *menu, int *x, int *y);
+static void set_menu_coords2(WMenu *menu, int *x, int *y);
 static Bool save_rootmenu_recurs(WMPropList *menus, WMenu *menu);
 static Bool restore_rootmenu_recurs(WMPropList *menus, WMenu *menu, const char *path);
 static void menu_delete_handlers(WMenu *menu, delay_data *d_data);
@@ -1037,8 +1038,6 @@ static int keyboardMenu(WMenu *menu)
 
 void wMenuMapAt(virtual_screen *vscr, WMenu *menu, int x, int y, int keyboard)
 {
-	WMRect rect;
-
 	/* Set the vscr */
 	menu->vscr = vscr;
 	menu->frame->vscr = vscr;
@@ -1047,18 +1046,8 @@ void wMenuMapAt(virtual_screen *vscr, WMenu *menu, int x, int y, int keyboard)
 		wMenuRealize(menu);
 
 	if (!menu->flags.mapped) {
-		if (wPreferences.wrap_menus) {
-			rect = wGetRectForHead(vscr->screen_ptr, wGetHeadForPointerLocation(vscr));
-
-			if (x < rect.pos.x)
-				x = rect.pos.x;
-			if (y < rect.pos.y)
-				y = rect.pos.y;
-			if (x + get_menu_width_full(menu) > rect.pos.x + rect.size.width)
-				x = rect.pos.x + rect.size.width - get_menu_width_full(menu);
-			if (y + get_menu_height_full(menu) > rect.pos.y + rect.size.height)
-				y = rect.pos.y + rect.size.height - get_menu_height_full(menu);
-		}
+		if (wPreferences.wrap_menus)
+			set_menu_coords2(menu, &x, &y);
 
 		XMoveWindow(dpy, menu->frame->core->window, x, y);
 		menu->frame_x = x;
@@ -2453,6 +2442,23 @@ static void set_menu_coords(WMenu *menu, int *x, int *y)
 
 	if (*y > rect.pos.y + rect.size.height)
 		*y = rect.pos.y + rect.size.height - height;
+}
+
+static void set_menu_coords2(WMenu *menu, int *x, int *y)
+{
+	WMRect rect;
+	virtual_screen *vscr = menu->vscr;
+
+	rect = wGetRectForHead(vscr->screen_ptr, wGetHeadForPointerLocation(vscr));
+
+	if (*x < rect.pos.x)
+		*x = rect.pos.x;
+	if (*y < rect.pos.y)
+		*y = rect.pos.y;
+	if (*x + get_menu_width_full(menu) > rect.pos.x + rect.size.width)
+		*x = rect.pos.x + rect.size.width - get_menu_width_full(menu);
+	if (*y + get_menu_height_full(menu) > rect.pos.y + rect.size.height)
+		*y = rect.pos.y + rect.size.height - get_menu_height_full(menu);
 }
 
 static Bool restore_rootmenu_recurs(WMPropList *menus, WMenu *menu, const char *path)
