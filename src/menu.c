@@ -2421,6 +2421,16 @@ static int restore_switchmenu(virtual_screen *vscr, WMPropList *menu)
 	return True;
 }
 
+static void restore_rootmenu(virtual_screen *vscr, WMPropList *menus)
+{
+	if (!vscr->menu.root_menu) {
+		OpenRootMenu(vscr, vscr->screen_ptr->scr_width * 2, 0, False);
+		wMenuUnmap(vscr->menu.root_menu);
+	}
+
+	restore_rootmenu_recurs(menus, vscr->menu.root_menu, "");
+}
+
 static Bool restore_rootmenu_recurs(WMPropList *menus, WMenu *menu, const char *path)
 {
 	virtual_screen *vscr = menu->vscr;
@@ -2500,12 +2510,8 @@ void menus_restore(virtual_screen *vscr)
 	WMReleasePropList(skey);
 	restore_switchmenu(vscr, menu);
 
-	if (!vscr->menu.root_menu) {
-		OpenRootMenu(vscr, vscr->screen_ptr->scr_width * 2, 0, False);
-		wMenuUnmap(vscr->menu.root_menu);
-	}
-
-	restore_rootmenu_recurs(menus, vscr->menu.root_menu, "");
+	/* Restore the Root menus */
+	restore_rootmenu(vscr, menus);
 }
 
 void menu_move_visible(WMenu *menu)
