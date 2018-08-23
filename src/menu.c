@@ -90,6 +90,7 @@ static void updateTexture(WMenu *menu);
 static void selectEntry(WMenu *menu, int entry_no);
 static void closeCascade(WMenu *menu);
 static void set_menu_width(WMenu *menu);
+static void set_menu_coords(WMenu *menu, int *x, int *y);
 static Bool save_rootmenu_recurs(WMPropList *menus, WMenu *menu);
 static Bool restore_rootmenu_recurs(WMPropList *menus, WMenu *menu, const char *path);
 static void menu_delete_handlers(WMenu *menu, delay_data *d_data);
@@ -2431,12 +2432,34 @@ static void restore_rootmenu(virtual_screen *vscr, WMPropList *menus)
 	restore_rootmenu_recurs(menus, vscr->menu.root_menu, "");
 }
 
+static void set_menu_coords(WMenu *menu, int *x, int *y)
+{
+	virtual_screen *vscr = menu->vscr;
+	int width, height;
+
+	width = get_menu_width_full(menu);
+	height = get_menu_height_full(menu);
+	WMRect rect = wGetRectForHead(vscr->screen_ptr, wGetHeadForPointerLocation(vscr));
+
+	if (*x < rect.pos.x - width)
+		*x = rect.pos.x;
+
+	if (*x > rect.pos.x + rect.size.width)
+		*x = rect.pos.x + rect.size.width - width;
+
+	if (*y < rect.pos.y)
+		*y = rect.pos.y;
+
+	if (*y > rect.pos.y + rect.size.height)
+		*y = rect.pos.y + rect.size.height - height;
+}
+
 static Bool restore_rootmenu_recurs(WMPropList *menus, WMenu *menu, const char *path)
 {
 	virtual_screen *vscr = menu->vscr;
 	WMPropList *key, *entry;
 	char buffer[512];
-	int i, x, y, width, height;
+	int i, x, y;
 	Bool res, lowered;
 
 	if (strlen(path) + strlen(menu->title) > 510)
@@ -2447,25 +2470,8 @@ static Bool restore_rootmenu_recurs(WMPropList *menus, WMenu *menu, const char *
 	entry = WMGetFromPLDictionary(menus, key);
 	res = False;
 
-	if (entry && getMenuInfo(entry, &x, &y, &lowered) &&
-	    !menu->flags.mapped) {
-		width = get_menu_width_full(menu);
-		height = get_menu_height_full(menu);
-		WMRect rect = wGetRectForHead(vscr->screen_ptr,
-					      wGetHeadForPointerLocation(vscr));
-
-		if (x < rect.pos.x - width)
-			x = rect.pos.x;
-
-		if (x > rect.pos.x + rect.size.width)
-			x = rect.pos.x + rect.size.width - width;
-
-		if (y < rect.pos.y)
-			y = rect.pos.y;
-
-		if (y > rect.pos.y + rect.size.height)
-			y = rect.pos.y + rect.size.height - height;
-
+	if (entry && getMenuInfo(entry, &x, &y, &lowered) && !menu->flags.mapped) {
+		set_menu_coords(menu, &x, &y);
 		wMenuMapAt(vscr, menu, x, y, False);
 		if (lowered)
 			changeMenuLevels(menu, True);
