@@ -852,7 +852,8 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 			dockable = canBeDocked(icon->owner);
 	}
 
-	/* We try the various docks in that order:
+	/*
+	 * We try the various docks in that order:
 	 * - First, the dock the appicon comes from, if any
 	 * - Then, the drawers
 	 * - Then, the "dock" (WM_DOCK)
@@ -860,12 +861,12 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 	 */
 	i = 0;
 	if (originalDock != NULL)
-		allDocks[ i++ ] = originalDock;
+		allDocks[i++] = originalDock;
 
 	/* Testing vscr->drawers is enough, no need to test wPreferences.flags.nodrawer */
 	for (dc = vscr->drawer.drawers; dc != NULL; dc = dc->next)
 		if (dc->adrawer != originalDock)
-			allDocks[ i++ ] = dc->adrawer;
+			allDocks[i++] = dc->adrawer;
 
 	if (!wPreferences.flags.nodock && vscr->dock.dock != originalDock)
 		allDocks[i++] = vscr->dock.dock;
@@ -874,13 +875,15 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 	    originalDock != vscr->workspace.array[vscr->workspace.current]->clip)
 		allDocks[i++] = vscr->workspace.array[vscr->workspace.current]->clip;
 
-	for ( ; i < vscr->drawer.drawer_count + 2; i++) /* In case the clip, the dock, or both, are disabled */
+	/* In case the clip, the dock, or both, are disabled */
+	for ( ; i < vscr->drawer.drawer_count + 2; i++)
 		allDocks[i] = NULL;
 
 	wins[0] = icon->core->window;
 	wins[1] = scr->dock_shadow;
 	XRestackWindows(dpy, wins, 2);
 	XMoveResizeWindow(dpy, scr->dock_shadow, aicon->x_pos, aicon->y_pos, ICON_SIZE, ICON_SIZE);
+
 	if (superfluous) {
 		if (icon->pixmap != None)
 			ghost = MakeGhostIcon(vscr, icon->pixmap);
