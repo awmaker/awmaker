@@ -1230,7 +1230,7 @@ static WMenu *findMenu(virtual_screen *vscr, int *x_ret, int *y_ret)
 	int x, y, wx, wy;
 	unsigned int mask;
 
-	if (!vscr)
+	if (!vscr && !vscr->screen_ptr)
 		return NULL;
 
 	XQueryPointer(dpy, vscr->screen_ptr->root_win, &root_ret, &win, &x, &y, &wx, &wy, &mask);
@@ -1616,8 +1616,8 @@ static void delaySelection(void *data)
 
 	d->magic = NULL;
 
-	if (!d->menu) {
-		menu = findMenu(d->menu->vscr, &x, &y);
+	if (!d->menu && d->vscr) {
+		menu = findMenu(d->vscr, &x, &y);
 		if (menu && (d->menu == menu || d->delayed_select)) {
 			entry_no = getEntryAt(menu, y);
 			selectEntry(menu, entry_no);
