@@ -2448,8 +2448,7 @@ void wWindowConfigureBorders(WWindow *wwin)
 	if (!WFLAGP(wwin, no_miniaturize_button))
 		flags = WFF_LEFT_BUTTON;
 
-	if (!WFLAGP(wwin, no_close_button) ||
-	    wwin->frame->flags.hide_right_button)
+	if (!WFLAGP(wwin, no_close_button))
 		flags |= WFF_RIGHT_BUTTON;
 
 #ifdef XKB_BUTTON_HINT

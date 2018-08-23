@@ -894,7 +894,6 @@ void wframewindow_hide_rightbutton(WFrameWindow *fwin)
 		if (wPreferences.new_style == TS_NEW)
 			fwin->titlebar_width += fwin->btn_size;
 
-		fwin->flags.hide_right_button = 1;
 		fwin->flags.map_right_button = 0;
 	}
 }
@@ -1147,7 +1146,7 @@ static void remakeTexture_titlebar(WFrameWindow *fwin, int state)
 		   !fwin->flags.hide_language_button && !fwin->flags.languagebutton_dont_fit;
 #endif
 	right = fwin->right_button && fwin->flags.map_right_button &&
-		!fwin->flags.hide_right_button && !fwin->flags.rbutton_dont_fit;
+		!fwin->flags.rbutton_dont_fit;
 
 	width = fwin->width + 1;
 	renderTexture(fwin->vscr->screen_ptr, fwin->title_texture[state],
@@ -1341,7 +1340,7 @@ void wFrameWindowPaint(WFrameWindow *fwin)
 #endif
 
 		if (fwin->right_button && fwin->flags.map_right_button &&
-		    !fwin->flags.hide_right_button && !fwin->flags.rbutton_dont_fit)
+		    !fwin->flags.rbutton_dont_fit)
 			rofs += fwin->btn_size + TS_NORMAL_PAD;
 	}
 #ifdef XKB_BUTTON_HINT
@@ -1402,14 +1401,10 @@ static void reconfigure_titlebar(WFrameWindow *fwin, int width)
 
 	if (fwin->right_button && fwin->flags.map_right_button) {
 		if (width < fwin->top_width * 2 && !fwin->flags.rbutton_dont_fit) {
-			if (!fwin->flags.hide_right_button)
-				XUnmapWindow(dpy, fwin->right_button->window);
-
+			XUnmapWindow(dpy, fwin->right_button->window);
 			fwin->flags.rbutton_dont_fit = 1;
 		} else if (width >= fwin->top_width * 2 && fwin->flags.rbutton_dont_fit) {
-			if (!fwin->flags.hide_right_button)
-				XMapWindow(dpy, fwin->right_button->window);
-
+			XMapWindow(dpy, fwin->right_button->window);
 			fwin->flags.rbutton_dont_fit = 0;
 		}
 	}
@@ -1547,7 +1542,7 @@ static void checkTitleSize(WFrameWindow *fwin)
 #endif
 
 		if (fwin->right_button && fwin->flags.map_right_button &&
-		    !fwin->flags.hide_right_button && !fwin->flags.rbutton_dont_fit)
+		    !fwin->flags.rbutton_dont_fit)
 			width -= fwin->btn_size + TS_NORMAL_PAD;
 	}
 
