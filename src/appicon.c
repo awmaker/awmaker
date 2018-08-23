@@ -919,10 +919,10 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 		case MotionNotify:
 			hasMoved = True;
 			if (!grabbed) {
-				if (abs(ofs_x - ev.xmotion.x) >= MOVE_THRESHOLD
-				    || abs(ofs_y - ev.xmotion.y) >= MOVE_THRESHOLD) {
-					XChangeActivePointerGrab(dpy, ButtonMotionMask
-								 | ButtonReleaseMask | ButtonPressMask,
+				if (abs(ofs_x - ev.xmotion.x) >= MOVE_THRESHOLD ||
+				    abs(ofs_y - ev.xmotion.y) >= MOVE_THRESHOLD) {
+					XChangeActivePointerGrab(dpy,
+								 ButtonMotionMask | ButtonReleaseMask | ButtonPressMask,
 								 wPreferences.cursor[WCUR_MOVE], CurrentTime);
 					grabbed = 1;
 				} else {
