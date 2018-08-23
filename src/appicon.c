@@ -838,11 +838,11 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 		wRaiseFrame(icon->vscr, icon->core);
 	}
 
-	if (XGrabPointer(dpy, icon->core->window, True, ButtonMotionMask
-			 | ButtonReleaseMask | ButtonPressMask, GrabModeAsync,
-			 GrabModeAsync, None, None, CurrentTime) != GrabSuccess) {
+	if (XGrabPointer(dpy, icon->core->window, True,
+			 ButtonMotionMask | ButtonReleaseMask | ButtonPressMask,
+			 GrabModeAsync, GrabModeAsync, None, None,
+			 CurrentTime) != GrabSuccess)
 		wwarning("Pointer grab failed in wHandleAppIconMove");
-	}
 
 	if (originalDock == NULL) {
 		ondock = False;
