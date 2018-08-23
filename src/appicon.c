@@ -827,13 +827,15 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 	if (wPreferences.flags.noupdates && originalDock != NULL)
 		return False;
 
-	if (!(event->xbutton.state & MOD_MASK)) {
-		wRaiseFrame(icon->vscr, icon->core);
-	} else {
-		/* If Mod is pressed for an docked appicon, assume it is to undock it,
-		 * so don't lower it */
+	if (event->xbutton.state & MOD_MASK) {
+		/*
+		 * If Mod is pressed for an docked appicon,
+		 * assume it is to undock it,so don't lower it
+		 */
 		if (originalDock == NULL)
 			wLowerFrame(icon->vscr, icon->core);
+	} else {
+		wRaiseFrame(icon->vscr, icon->core);
 	}
 
 	if (XGrabPointer(dpy, icon->core->window, True, ButtonMotionMask
