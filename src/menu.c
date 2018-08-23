@@ -538,9 +538,11 @@ void wMenuRealize(WMenu *menu)
 
 	scr = menu->vscr->screen_ptr;
 
-	flags = WFF_BORDER;
+	flags = WFF_SINGLE_STATE | WFF_BORDER;
 	if (menu->flags.titled)
 		flags |= WFF_TITLEBAR;
+	if (menu->frame->flags.map_right_button)
+		flags |= WFF_RIGHT_BUTTON;
 
 	wframewin_set_borders(menu->frame, flags);
 
