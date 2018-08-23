@@ -75,6 +75,7 @@ typedef struct _delay {
 } _delay;
 
 typedef struct {
+	virtual_screen *vscr;
 	int *delayed_select;
 	WMenu *menu;
 	WMHandlerID magic;
@@ -1764,6 +1765,7 @@ static void menu_moved_toitem(WMenu *menu, WMenu *smenu, XEvent *ev,
 
 		d_data->delayed_select = NULL;
 		d_data->menu = menu;
+		d_data->vscr = menu->vscr;
 		d_data->magic = WMAddTimerHandler(MENU_SELECT_DELAY,
 						  delaySelection, &d_data);
 		*prevx = ev->xmotion.x_root;
@@ -1887,7 +1889,7 @@ static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
 	int entry_no;
 	int x, y, prevx, prevy;
 	int old_frame_x = 0, old_frame_y = 0;
-	delay_data d_data = { NULL, NULL, NULL };
+	delay_data d_data = { NULL, NULL, NULL, NULL };
 	Bool iswinmenu;
 
 	menu->flags.inside_handler = 1;
@@ -1902,6 +1904,7 @@ static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
 			delayed_select = 1;
 			d_data.delayed_select = &delayed_select;
 			d_data.menu = menu;
+			d_data.vscr = menu->vscr;
 			d_data.magic = WMAddTimerHandler(wPreferences.dblclick_time, delaySelection, &d_data);
 		}
 	}
