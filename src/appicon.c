@@ -930,14 +930,15 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 			}
 
 			if (omnipresent && !showed_all_clips) {
-				int i;
-				for (i = 0; i < vscr->workspace.count; i++) {
-					if (i == vscr->workspace.current)
+				for (int j = 0; j < vscr->workspace.count; j++) {
+					if (j == vscr->workspace.current)
 						continue;
 
-					wDockShowIcons(vscr->workspace.array[i]->clip);
-					/* Note: if dock is collapsed (for instance, because it
-					   auto-collapses), its icons still won't show up */
+					wDockShowIcons(vscr->workspace.array[j]->clip);
+					/*
+					 * Note: if dock is collapsed (for instance, because it
+					 * auto-collapses), its icons still won't show up
+					 */
 				}
 
 				showed_all_clips = True; /* To prevent flickering */
