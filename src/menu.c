@@ -1040,6 +1040,7 @@ void wMenuMapAt(virtual_screen *vscr, WMenu *menu, int x, int y, int keyboard)
 	WMRect rect;
 
 	/* Set the vscr */
+	menu->vscr = vscr;
 	menu->frame->vscr = vscr;
 
 	if (!menu->flags.realized)
