@@ -908,10 +908,12 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 			break;
 
 		case EnterNotify:
-			/* It means the cursor moved so fast that it entered
+			/*
+			 * It means the cursor moved so fast that it entered
 			 * something else (if moving slowly, it would have
 			 * stayed in the appIcon that is being moved. Ignore
-			 * such "spurious" EnterNotifiy's */
+			 * such "spurious" EnterNotifiy's
+			 */
 			break;
 
 		case MotionNotify:
