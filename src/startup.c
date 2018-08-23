@@ -611,7 +611,7 @@ void StartUp(Bool defaultScreenOnly)
 		w_global.startup.phase2 = 0;
 
 		/* restore saved menus */
-		wMenuRestoreState(w_global.vscreens[j]);
+		menus_restore(w_global.vscreens[j]);
 
 		/* If we're not restarting, restore session */
 		if (wPreferences.flags.restarting == 0 && !wPreferences.flags.norestore)

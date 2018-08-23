@@ -79,7 +79,7 @@
 
 /***** Local Stuff *****/
 static WWindowState *windowState = NULL;
-static FocusMode getFocusMode(WWindow *wwin);
+static void setFocusMode(WWindow *wwin);
 static int getSavedState(Window window, WSavedState **state);
 static void setupGNUstepHints(WWindow *wwin, GNUstepWMAttributes *gs_hints);
 
@@ -1259,8 +1259,7 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 		}
 	}
 
-	/* guess the focus mode */
-	wwin->focus_mode = getFocusMode(wwin);
+	setFocusMode(wwin);
 
 	/* get geometry stuff */
 	wClientGetNormalHints(wwin, &wattribs, True, &x, &y, &width, &height);
@@ -2446,18 +2445,14 @@ void wWindowConfigureBorders(WWindow *wwin)
 	if (!wwin->frame)
 		return;
 
-	if (!WFLAGP(wwin, no_miniaturize_button) ||
-	    wwin->frame->flags.hide_left_button)
+	if (!WFLAGP(wwin, no_miniaturize_button))
 		flags = WFF_LEFT_BUTTON;
 
-	if (!WFLAGP(wwin, no_close_button) ||
-	    wwin->frame->flags.hide_right_button)
+	if (!WFLAGP(wwin, no_close_button))
 		flags |= WFF_RIGHT_BUTTON;
 
 #ifdef XKB_BUTTON_HINT
-	if ((wPreferences.modelock) &&
-	    ((!WFLAGP(wwin, no_language_button) ||
-	     wwin->frame->flags.hide_language_button)))
+	if (wPreferences.modelock && !WFLAGP(wwin, no_language_button))
 		flags |= WFF_LANGUAGE_BUTTON;
 #endif
 
@@ -2645,7 +2640,7 @@ void wWindowSetShape(WWindow * wwin)
 
 /* ====================================================================== */
 
-static FocusMode getFocusMode(WWindow *wwin)
+static void setFocusMode(WWindow *wwin)
 {
 	FocusMode mode;
 
@@ -2664,7 +2659,8 @@ static FocusMode getFocusMode(WWindow *wwin)
 	} else {
 		mode = WFM_PASSIVE;
 	}
-	return mode;
+
+	wwin->focus_mode = mode;
 }
 
 void wWindowSetKeyGrabs(WWindow * wwin)

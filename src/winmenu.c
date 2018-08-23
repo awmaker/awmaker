@@ -793,6 +793,7 @@ static void prepare_menu_position(WMenu *menu, int *x, int *y)
 	rect = wGetRectForHead(menu->vscr->screen_ptr,
 			       wGetHeadForPointerLocation(menu->vscr));
 
+	*x -= menu->frame->width / 2;
 	if (*x < rect.pos.x - menu->frame->width / 2)
 		*x = rect.pos.x - menu->frame->width / 2;
 
@@ -807,13 +808,6 @@ void OpenWindowMenu(WWindow *wwin, int x, int y, int keyboard)
 	menu = open_window_menu_core(wwin);
 	if (!menu)
 		return;
-
-	/* Specific menu position */
-	x -= menu->frame->width / 2;
-	if (x + menu->frame->width > wwin->frame_x + wwin->frame->width)
-		x = wwin->frame_x + wwin->frame->width - menu->frame->width;
-	if (x < wwin->frame_x)
-		x = wwin->frame_x;
 
 	/* Common menu position */
 	prepare_menu_position(menu, &x, &y);
@@ -840,8 +834,6 @@ void windowmenu_at_switchmenu_open(WWindow *wwin, int x, int y)
 
 	for (i = 0; i < vscr->workspace.submenu->entry_no; i++)
 		menu_entry_set_enabled_paint(vscr->workspace.submenu, i);
-
-	x -= menu->frame->width / 2;
 
 	/* Common menu position */
 	prepare_menu_position(menu, &x, &y);
