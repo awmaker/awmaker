@@ -884,16 +884,11 @@ void wFrameWindowChangeState(WFrameWindow *fwin, int state)
 
 void wframewindow_show_rightbutton(WFrameWindow *fwin)
 {
-	if (fwin->right_button && fwin->flags.hide_right_button) {
-		if (!fwin->flags.rbutton_dont_fit)
-			XMapWindow(dpy, fwin->right_button->window);
+	int flags;
 
-		if (wPreferences.new_style == TS_NEW)
-			fwin->titlebar_width -= fwin->btn_size;
-
-		fwin->flags.hide_right_button = 0;
-		fwin->flags.map_right_button = 1;
-	}
+	flags = WFF_SINGLE_STATE | WFF_BORDER | WFF_TITLEBAR | WFF_RIGHT_BUTTON;
+	wframewin_set_borders(fwin, flags);
+	wframewindow_refresh_titlebar(fwin);
 }
 
 void wframewindow_hide_rightbutton(WFrameWindow *fwin)

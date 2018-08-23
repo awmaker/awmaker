@@ -2452,9 +2452,11 @@ static int restoreMenuRecurs(WMPropList *menus, WMenu *menu, const char *path)
 			y = rect.pos.y + rect.size.height - height;
 
 		wMenuMove(menu, x, y, True);
+
+		/* Show the right button */
 		menu->flags.buttoned = 1;
 		wframewindow_show_rightbutton(menu->frame);
-		wframewindow_refresh_titlebar(menu->frame);
+
 		res = True;
 	}
 
