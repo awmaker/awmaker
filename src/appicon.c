@@ -898,8 +898,10 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 		XMapWindow(dpy, scr->dock_shadow);
 
 	while (1) {
-		WMMaskEvent(dpy, PointerMotionMask | ButtonReleaseMask | ButtonPressMask
-			    | ButtonMotionMask | ExposureMask | EnterWindowMask, &ev);
+		WMMaskEvent(dpy,
+			    PointerMotionMask | ButtonReleaseMask | ButtonPressMask |
+			    ButtonMotionMask | ExposureMask | EnterWindowMask, &ev);
+
 		switch (ev.type) {
 		case Expose:
 			WMHandleEvent(&ev);
