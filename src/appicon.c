@@ -845,7 +845,7 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 	if (originalDock == NULL) {
 		ondock = False;
 		if (wPreferences.flags.nodock && wPreferences.flags.noclip && wPreferences.flags.nodrawer)
-			dockable = 0;
+			dockable = False;
 		else
 			dockable = canBeDocked(icon->owner);
 	}
