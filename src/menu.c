@@ -2454,10 +2454,6 @@ static Bool restore_rootmenu_recurs(WMPropList *menus, WMenu *menu, const char *
 		WMRect rect = wGetRectForHead(vscr->screen_ptr,
 					      wGetHeadForPointerLocation(vscr));
 
-		wMenuMapAt(vscr, menu, x, y, False);
-		if (lowered)
-			changeMenuLevels(menu, True);
-
 		if (x < rect.pos.x - width)
 			x = rect.pos.x;
 
@@ -2470,7 +2466,9 @@ static Bool restore_rootmenu_recurs(WMPropList *menus, WMenu *menu, const char *
 		if (y > rect.pos.y + rect.size.height)
 			y = rect.pos.y + rect.size.height - height;
 
-		wMenuMove(menu, x, y, True);
+		wMenuMapAt(vscr, menu, x, y, False);
+		if (lowered)
+			changeMenuLevels(menu, True);
 
 		/* Show the right button */
 		menu->flags.buttoned = 1;
