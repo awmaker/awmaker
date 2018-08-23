@@ -2404,21 +2404,21 @@ static Bool getMenuInfo(WMPropList *info, int *x, int *y, Bool *lowered)
 	return True;
 }
 
-static int restore_switchmenu(virtual_screen *vscr, WMPropList *menu)
+static void restore_switchmenu(virtual_screen *vscr, WMPropList *menu)
 {
 	int x, y;
 	Bool lowered = False;
 
 	if (!menu)
-		return False;
+		return;
 
 	if (!getMenuInfo(menu, &x, &y, &lowered))
-		return False;
+		return;
 
 	OpenSwitchMenu(vscr, x, y, False);
 	vscr->menu.switch_menu->flags.buttoned = 1;
 	wframewindow_show_rightbutton(vscr->menu.switch_menu->frame);
-	return True;
+	return;
 }
 
 static void restore_rootmenu(virtual_screen *vscr, WMPropList *menus)
