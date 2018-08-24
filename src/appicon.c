@@ -71,7 +71,7 @@ static void wAppIcon_map(WAppIcon *aicon);
 static void remove_from_appicon_list(WAppIcon *appicon);
 static void create_appicon_from_dock(WWindow *wwin, WApplication *wapp);
 
-static void appicon_move_or_detach(virtual_screen *vscr, WDock *originalDock, WAppIcon *aicon, Bool superfluous, int x, int y);
+static void appicon_move_or_detach(virtual_screen *vscr, WDock *originalDock, WAppIcon *aicon, int x, int y);
 
 /* This function is used if the application is a .app. It checks if it has an icon in it
  * like for example /usr/local/GNUstep/Applications/WPrefs.app/WPrefs.tiff
@@ -795,8 +795,10 @@ void appIconMouseDown(WObjDescriptor *desc, XEvent *event)
 		iconDblClick(desc, event);
 }
 
-static void appicon_move_or_detach(virtual_screen *vscr, WDock *originalDock, WAppIcon *aicon, Bool superfluous, int x, int y)
+static void appicon_move_or_detach(virtual_screen *vscr, WDock *originalDock, WAppIcon *aicon, int x, int y)
 {
+	int superfluous = wPreferences.superfluous;
+
 	if (originalDock != NULL) { /* Detaching a docked appicon */
 		if (superfluous) {
 			if (!aicon->running && !wPreferences.no_animations) {
@@ -1121,7 +1123,7 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 				if (lastDock->auto_collapse)
 					collapsed = 0;
 			} else {
-				appicon_move_or_detach(vscr, originalDock, aicon, superfluous, x, y);
+				appicon_move_or_detach(vscr, originalDock, aicon, x, y);
 			}
 
 			if (superfluous) {
