@@ -71,6 +71,8 @@ static void wAppIcon_map(WAppIcon *aicon);
 static void remove_from_appicon_list(WAppIcon *appicon);
 static void create_appicon_from_dock(WWindow *wwin, WApplication *wapp);
 
+static void appicon_move_or_detach(virtual_screen *vscr, WDock *originalDock, WAppIcon *aicon, Bool superfluous, int x, int y);
+
 /* This function is used if the application is a .app. It checks if it has an icon in it
  * like for example /usr/local/GNUstep/Applications/WPrefs.app/WPrefs.tiff
  */
@@ -793,6 +795,32 @@ void appIconMouseDown(WObjDescriptor *desc, XEvent *event)
 		iconDblClick(desc, event);
 }
 
+static void appicon_move_or_detach(virtual_screen *vscr, WDock *originalDock, WAppIcon *aicon, Bool superfluous, int x, int y)
+{
+	if (originalDock != NULL) { /* Detaching a docked appicon */
+		if (superfluous) {
+			if (!aicon->running && !wPreferences.no_animations) {
+				/* We need to deselect it, even if is deselected in
+				 * wDockDetach(), because else DoKaboom() will fail.
+				 */
+				if (aicon->icon->selected)
+					wIconSelect(aicon->icon);
+
+				DoKaboom(vscr, aicon->icon->core->window, x, y);
+			}
+		}
+
+		wDockDetach(originalDock, aicon);
+		if (originalDock->auto_collapse && !originalDock->collapsed) {
+			originalDock->collapsed = 1;
+			wDockHideIcons(originalDock);
+		}
+
+		if (originalDock->auto_raise_lower)
+			wDockLower(originalDock);
+	}
+}
+
 Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 {
 	WIcon *icon = aicon->icon;
@@ -1093,28 +1121,7 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 				if (lastDock->auto_collapse)
 					collapsed = 0;
 			} else {
-				if (originalDock != NULL) { /* Detaching a docked appicon */
-					if (superfluous) {
-						if (!aicon->running && !wPreferences.no_animations) {
-							/* We need to deselect it, even if is deselected in
-							 * wDockDetach(), because else DoKaboom() will fail.
-							 */
-							if (aicon->icon->selected)
-								wIconSelect(aicon->icon);
-
-							DoKaboom(vscr, aicon->icon->core->window, x, y);
-						}
-					}
-
-					wDockDetach(originalDock, aicon);
-					if (originalDock->auto_collapse && !originalDock->collapsed) {
-						originalDock->collapsed = 1;
-						wDockHideIcons(originalDock);
-					}
-
-					if (originalDock->auto_raise_lower)
-						wDockLower(originalDock);
-				}
+				appicon_move_or_detach(vscr, originalDock, aicon, superfluous, x, y);
 			}
 
 			if (superfluous) {
