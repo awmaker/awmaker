@@ -1007,7 +1007,7 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 
 				ondock = 1;
 			} else {
-				lastDock = theNewDock; /* i.e., NULL */
+				lastDock = NULL;
 				if (ondock)
 					XUnmapWindow(dpy, scr->dock_shadow);
 
