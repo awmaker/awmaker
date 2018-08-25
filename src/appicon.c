@@ -77,7 +77,7 @@ static void appicon_move_motion(virtual_screen *vscr, WScreen *scr, XEvent ev,
                                 Bool *collapsed, Bool *dockable, Bool *ondock,
                                 int *x, int *y, int *ix, int *iy,
                                 int *shad_x, int *shad_y, int *ofs_x, int *ofs_y,
-				Bool *grabbed, int omnipresent, Bool *showed_all_clips, int *i);
+				Bool *grabbed, int omnipresent, Bool *showed_all_clips);
 static void appicon_move_to_dock(WDock *originalDock, WDock *lastDock,
 				 WAppIcon *aicon, WIcon *icon, int x, int y,
 				 int oldX, int oldY, int shad_x, int shad_y,
@@ -989,10 +989,10 @@ static void appicon_move_motion(virtual_screen *vscr, WScreen *scr, XEvent ev,
                                 Bool *collapsed, Bool *dockable, Bool *ondock,
                                 int *x, int *y, int *ix, int *iy,
                                 int *shad_x, int *shad_y, int *ofs_x, int *ofs_y,
-				Bool *grabbed, int omnipresent, Bool *showed_all_clips, int *i)
+				Bool *grabbed, int omnipresent, Bool *showed_all_clips)
 {
 	WDock *theNewDock = NULL;
-	int j;
+	int i, j;
 
 	if (!(*grabbed)) {
 		if (abs(*ofs_x - ev.xmotion.x) < MOVE_THRESHOLD &&
@@ -1024,8 +1024,8 @@ static void appicon_move_motion(virtual_screen *vscr, WScreen *scr, XEvent ev,
 	*y = ev.xmotion.y_root - *ofs_y;
 	wAppIconMove(aicon, *x, *y);
 	if (!(ev.xmotion.state & MOD_MASK) || aicon->launching || aicon->lock || *originalDock == NULL) {
-		for (*i = 0; *dockable && *i < vscr->drawer.drawer_count + 2; (*i)++) {
-			WDock *theDock = allDocks[*i];
+		for (i = 0; *dockable && i < vscr->drawer.drawer_count + 2; i++) {
+			WDock *theDock = allDocks[i];
 			if (theDock == NULL)
 				break;
 
@@ -1224,7 +1224,7 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 					    &shad_x, &shad_y,
 					    &ofs_x, &ofs_y,
 					    &grabbed, omnipresent,
-					    &showed_all_clips, &i);
+					    &showed_all_clips);
 			break;
 
 		case ButtonPress:
