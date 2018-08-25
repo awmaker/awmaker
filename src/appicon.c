@@ -71,6 +71,10 @@ static void wAppIcon_map(WAppIcon *aicon);
 static void remove_from_appicon_list(WAppIcon *appicon);
 static void create_appicon_from_dock(WWindow *wwin, WApplication *wapp);
 
+static void appicon_move_to_dock(WDock *originalDock, WDock *lastDock,
+				 WAppIcon *aicon, WIcon *icon, int x, int y,
+				 int oldX, int oldY, int shad_x, int shad_y,
+				 int ix, int iy, Bool *docked, Bool *collapsed);
 static void appicon_move_to_nodock(WDock *originalDock, WDock *lastDock,
 				   WAppIcon *aicon, WIcon *icon, int x, int y,
 				   int oldX, int oldY);
@@ -798,6 +802,55 @@ void appIconMouseDown(WObjDescriptor *desc, XEvent *event)
 		iconDblClick(desc, event);
 }
 
+static void appicon_move_to_dock(WDock *originalDock, WDock *lastDock,
+				 WAppIcon *aicon, WIcon *icon, int x, int y,
+				 int oldX, int oldY, int shad_x, int shad_y,
+				 int ix, int iy, Bool *docked, Bool *collapsed)
+{
+	virtual_screen *vscr = aicon->icon->vscr;
+	WScreen *scr = vscr->screen_ptr;
+
+	slide_window(icon->core->window, x, y, shad_x, shad_y);
+	XUnmapWindow(dpy, scr->dock_shadow);
+	if (originalDock == NULL) { // docking an undocked appicon
+		*docked = wDockAttachIcon(lastDock, aicon, ix, iy, False);
+		if (!*docked) {
+			/* AppIcon got rejected (happens only when we can't get the
+			   command for that appicon, and the user cancels the
+			   wInputDialog asking for one). Make the rejection obvious by
+			   sliding the icon to its old position */
+			if (lastDock->type == WM_DRAWER) /* Also fill the gap left in the drawer */
+				wDrawerFillTheGap(lastDock, aicon, False);
+
+			slide_window(icon->core->window, x, y, oldX, oldY);
+		}
+	} else { /* moving a docked appicon to a dock */
+		if (originalDock == lastDock) {
+			*docked = True;
+			wDockReattachIcon(originalDock, aicon, ix, iy);
+		} else {
+			*docked = wDockMoveIconBetweenDocks(originalDock, lastDock, aicon, ix, iy);
+			if (!*docked) {
+				appicon_move_to_nodock(originalDock, lastDock, aicon, icon, x, y, oldX, oldY);
+			} else {
+				if (originalDock->auto_collapse && !originalDock->collapsed) {
+					originalDock->collapsed = 1;
+					wDockHideIcons(originalDock);
+				}
+
+				if (originalDock->auto_raise_lower)
+					wDockLower(originalDock);
+			}
+		}
+	}
+
+	/* If docked (or tried to dock) to a auto_collapsing dock, unset
+	 * collapsed, so that wHandleAppIconMove doesn't collapse it
+	 * right away (the timer will take care of it) */
+	if (lastDock->auto_collapse)
+		*collapsed = 0;
+}
+
 static void appicon_move_to_nodock(WDock *originalDock, WDock *lastDock,
 				   WAppIcon *aicon, WIcon *icon, int x, int y,
 				   int oldX, int oldY)
@@ -1102,49 +1155,13 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 			XUngrabPointer(dpy, CurrentTime);
 
 			Bool docked = False;
-			if (ondock) {
-				slide_window(icon->core->window, x, y, shad_x, shad_y);
-				XUnmapWindow(dpy, scr->dock_shadow);
-				if (originalDock == NULL) { // docking an undocked appicon
-					docked = wDockAttachIcon(lastDock, aicon, ix, iy, False);
-					if (!docked) {
-						/* AppIcon got rejected (happens only when we can't get the
-						   command for that appicon, and the user cancels the
-						   wInputDialog asking for one). Make the rejection obvious by
-						   sliding the icon to its old position */
-						if (lastDock->type == WM_DRAWER) /* Also fill the gap left in the drawer */
-							wDrawerFillTheGap(lastDock, aicon, False);
-
-						slide_window(icon->core->window, x, y, oldX, oldY);
-					}
-				} else { /* moving a docked appicon to a dock */
-					if (originalDock == lastDock) {
-						docked = True;
-						wDockReattachIcon(originalDock, aicon, ix, iy);
-					} else {
-						docked = wDockMoveIconBetweenDocks(originalDock, lastDock, aicon, ix, iy);
-						if (!docked) {
-							appicon_move_to_nodock(originalDock, lastDock, aicon, icon, x, y, oldX, oldY);
-						} else {
-							if (originalDock->auto_collapse && !originalDock->collapsed) {
-								originalDock->collapsed = 1;
-								wDockHideIcons(originalDock);
-							}
-
-							if (originalDock->auto_raise_lower)
-								wDockLower(originalDock);
-						}
-					}
-				}
-
-				/* If docked (or tried to dock) to a auto_collapsing dock, unset
-				 * collapsed, so that wHandleAppIconMove doesn't collapse it
-				 * right away (the timer will take care of it) */
-				if (lastDock->auto_collapse)
-					collapsed = 0;
-			} else {
+			if (ondock)
+				appicon_move_to_dock(originalDock, lastDock,
+						     aicon, icon, x, y,
+						     oldX, oldY, shad_x, shad_y,
+						     ix, iy, &docked, &collapsed);
+			else
 				appicon_move_or_detach(originalDock, aicon, x, y);
-			}
 
 			if (superfluous) {
 				if (ghost != None)
