@@ -812,19 +812,25 @@ static void appicon_move_to_dock(WDock *originalDock, WDock *lastDock,
 
 	slide_window(icon->core->window, x, y, shad_x, shad_y);
 	XUnmapWindow(dpy, scr->dock_shadow);
-	if (originalDock == NULL) { // docking an undocked appicon
+
+	if (originalDock == NULL) {
+		/* Docking an undocked appicon */
 		*docked = wDockAttachIcon(lastDock, aicon, ix, iy, False);
+
 		if (!*docked) {
-			/* AppIcon got rejected (happens only when we can't get the
-			   command for that appicon, and the user cancels the
-			   wInputDialog asking for one). Make the rejection obvious by
-			   sliding the icon to its old position */
+			/*
+			 * AppIcon got rejected (happens only when we can't get the
+			 * command for that appicon, and the user cancels the
+			 * wInputDialog asking for one). Make the rejection obvious by
+			 * sliding the icon to its old position
+			 */
 			if (lastDock->type == WM_DRAWER) /* Also fill the gap left in the drawer */
 				wDrawerFillTheGap(lastDock, aicon, False);
 
 			slide_window(icon->core->window, x, y, oldX, oldY);
 		}
-	} else { /* moving a docked appicon to a dock */
+	} else {
+		/* moving a docked appicon to a dock */
 		if (originalDock == lastDock) {
 			*docked = True;
 			wDockReattachIcon(originalDock, aicon, ix, iy);
