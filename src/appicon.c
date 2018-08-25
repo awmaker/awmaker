@@ -843,28 +843,31 @@ static void appicon_move_or_detach(WDock *originalDock, WAppIcon *aicon, int x, 
 	virtual_screen *vscr = aicon->icon->vscr;
 	int superfluous = wPreferences.superfluous;
 
-	if (originalDock != NULL) { /* Detaching a docked appicon */
-		if (superfluous) {
-			if (!aicon->running && !wPreferences.no_animations) {
-				/* We need to deselect it, even if is deselected in
-				 * wDockDetach(), because else DoKaboom() will fail.
-				 */
-				if (aicon->icon->selected)
-					wIconSelect(aicon->icon);
+	if (originalDock == NULL)
+		return;
 
-				DoKaboom(vscr, aicon->icon->core->window, x, y);
-			}
+	/* Detaching a docked appicon */
+	if (superfluous) {
+		if (!aicon->running && !wPreferences.no_animations) {
+			/*
+			 * We need to deselect it, even if is deselected in
+			 * wDockDetach(), because else DoKaboom() will fail.
+			 */
+			if (aicon->icon->selected)
+				wIconSelect(aicon->icon);
+
+			DoKaboom(vscr, aicon->icon->core->window, x, y);
 		}
-
-		wDockDetach(originalDock, aicon);
-		if (originalDock->auto_collapse && !originalDock->collapsed) {
-			originalDock->collapsed = 1;
-			wDockHideIcons(originalDock);
-		}
-
-		if (originalDock->auto_raise_lower)
-			wDockLower(originalDock);
 	}
+
+	wDockDetach(originalDock, aicon);
+	if (originalDock->auto_collapse && !originalDock->collapsed) {
+		originalDock->collapsed = 1;
+		wDockHideIcons(originalDock);
+	}
+
+	if (originalDock->auto_raise_lower)
+		wDockLower(originalDock);
 }
 
 Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
