@@ -802,7 +802,8 @@ static void appicon_move_to_nodock(WDock *originalDock, WDock *lastDock,
 				   WAppIcon *aicon, WIcon *icon, int x, int y,
 				   int oldX, int oldY)
 {
-	int i;
+	WAppIcon *aiconsToShift[originalDock->icon_count];
+	int i, j = 0;
 
 	/*
 	 * Possible scenario: user moved an auto-attracted appicon
@@ -814,22 +815,23 @@ static void appicon_move_to_nodock(WDock *originalDock, WDock *lastDock,
 
 	/* If aicon comes from a drawer, make some room to reattach it */
 	if (originalDock->type == WM_DRAWER) {
-		WAppIcon *aiconsToShift[ originalDock->icon_count ];
-		int j = 0;
-
 		for (i = 0; i < originalDock->max_icons; i++) {
-			WAppIcon *ai = originalDock->icon_array[ i ];
+			WAppIcon *ai = originalDock->icon_array[i];
 			if (ai && ai != aicon &&
-				abs(ai->xindex) >= abs(aicon->xindex))
+			    abs(ai->xindex) >= abs(aicon->xindex))
 				aiconsToShift[j++] = ai;
 		}
 
+		/* Trust this never happens? */
 		if (j != originalDock->icon_count - abs(aicon->xindex) - 1)
-			/* Trust this never happens? */
 			wwarning("Shifting j=%d appicons (instead of %d!) to reinsert aicon at index %d.",
-				j, originalDock->icon_count - abs(aicon->xindex) - 1, aicon->xindex);
+				 j, originalDock->icon_count - abs(aicon->xindex) - 1, aicon->xindex);
+
 		wSlideAppicons(aiconsToShift, j, originalDock->on_right_side);
-		/* Trust the appicon is inserted at exactly the same place, so its oldX/oldY are consistent with its "new" location? */
+		/*
+		 * Trust the appicon is inserted at exactly the same place,
+		 * so its oldX/oldY are consistent with its "new" location?
+		 */
 	}
 
 	slide_window(icon->core->window, x, y, oldX, oldY);
