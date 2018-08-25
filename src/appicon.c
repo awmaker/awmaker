@@ -71,6 +71,9 @@ static void wAppIcon_map(WAppIcon *aicon);
 static void remove_from_appicon_list(WAppIcon *appicon);
 static void create_appicon_from_dock(WWindow *wwin, WApplication *wapp);
 
+static void appicon_move_to_nodock(WDock *originalDock, WDock *lastDock,
+				   WAppIcon *aicon, WIcon *icon, int x, int y,
+				   int oldX, int oldY);
 static void appicon_move_or_detach(WDock *originalDock, WAppIcon *aicon, int x, int y);
 
 /* This function is used if the application is a .app. It checks if it has an icon in it
@@ -795,6 +798,44 @@ void appIconMouseDown(WObjDescriptor *desc, XEvent *event)
 		iconDblClick(desc, event);
 }
 
+static void appicon_move_to_nodock(WDock *originalDock, WDock *lastDock,
+				   WAppIcon *aicon, WIcon *icon, int x, int y,
+				   int oldX, int oldY)
+{
+	int i;
+
+	/*
+	 * Possible scenario: user moved an auto-attracted appicon
+	 * from the clip to the dock, and cancelled the wInputDialog
+	 * asking for a command
+	 */
+	if (lastDock->type == WM_DRAWER)
+		wDrawerFillTheGap(lastDock, aicon, False);
+
+	/* If aicon comes from a drawer, make some room to reattach it */
+	if (originalDock->type == WM_DRAWER) {
+		WAppIcon *aiconsToShift[ originalDock->icon_count ];
+		int j = 0;
+
+		for (i = 0; i < originalDock->max_icons; i++) {
+			WAppIcon *ai = originalDock->icon_array[ i ];
+			if (ai && ai != aicon &&
+				abs(ai->xindex) >= abs(aicon->xindex))
+				aiconsToShift[j++] = ai;
+		}
+
+		if (j != originalDock->icon_count - abs(aicon->xindex) - 1)
+			/* Trust this never happens? */
+			wwarning("Shifting j=%d appicons (instead of %d!) to reinsert aicon at index %d.",
+				j, originalDock->icon_count - abs(aicon->xindex) - 1, aicon->xindex);
+		wSlideAppicons(aiconsToShift, j, originalDock->on_right_side);
+		/* Trust the appicon is inserted at exactly the same place, so its oldX/oldY are consistent with its "new" location? */
+	}
+
+	slide_window(icon->core->window, x, y, oldX, oldY);
+	wDockReattachIcon(originalDock, aicon, aicon->xindex, aicon->yindex);
+}
+
 static void appicon_move_or_detach(WDock *originalDock, WAppIcon *aicon, int x, int y)
 {
 	virtual_screen *vscr = aicon->icon->vscr;
@@ -1078,34 +1119,7 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 					} else {
 						docked = wDockMoveIconBetweenDocks(originalDock, lastDock, aicon, ix, iy);
 						if (!docked) {
-							/* Possible scenario: user moved an auto-attracted appicon
-							   from the clip to the dock, and cancelled the wInputDialog
-							   asking for a command */
-							if (lastDock->type == WM_DRAWER)
-								wDrawerFillTheGap(lastDock, aicon, False);
-
-							/* If aicon comes from a drawer, make some room to reattach it */
-							if (originalDock->type == WM_DRAWER) {
-								WAppIcon *aiconsToShift[ originalDock->icon_count ];
-								int j = 0;
-
-								for (i = 0; i < originalDock->max_icons; i++) {
-									WAppIcon *ai = originalDock->icon_array[ i ];
-									if (ai && ai != aicon &&
-										abs(ai->xindex) >= abs(aicon->xindex))
-										aiconsToShift[j++] = ai;
-								}
-
-								if (j != originalDock->icon_count - abs(aicon->xindex) - 1)
-									/* Trust this never happens? */
-									wwarning("Shifting j=%d appicons (instead of %d!) to reinsert aicon at index %d.",
-										j, originalDock->icon_count - abs(aicon->xindex) - 1, aicon->xindex);
-								wSlideAppicons(aiconsToShift, j, originalDock->on_right_side);
-								/* Trust the appicon is inserted at exactly the same place, so its oldX/oldY are consistent with its "new" location? */
-							}
-
-							slide_window(icon->core->window, x, y, oldX, oldY);
-							wDockReattachIcon(originalDock, aicon, aicon->xindex, aicon->yindex);
+							appicon_move_to_nodock(originalDock, lastDock, aicon, icon, x, y, oldX, oldY);
 						} else {
 							if (originalDock->auto_collapse && !originalDock->collapsed) {
 								originalDock->collapsed = 1;
