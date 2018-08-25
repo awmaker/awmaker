@@ -991,6 +991,9 @@ static void appicon_move_motion(virtual_screen *vscr, WScreen *scr, XEvent ev,
                                 int *shad_x, int *shad_y, int *ofs_x, int *ofs_y,
 				Bool *grabbed, int omnipresent, Bool *showed_all_clips, int *i)
 {
+	WDock *theNewDock = NULL;
+	int j;
+
 	if (!(*grabbed)) {
 		if (abs(*ofs_x - ev.xmotion.x) < MOVE_THRESHOLD &&
 		    abs(*ofs_y - ev.xmotion.y) < MOVE_THRESHOLD)
@@ -1003,7 +1006,7 @@ static void appicon_move_motion(virtual_screen *vscr, WScreen *scr, XEvent ev,
 	}
 
 	if (omnipresent && !(*showed_all_clips)) {
-		for (int j = 0; j < vscr->workspace.count; j++) {
+		for (j = 0; j < vscr->workspace.count; j++) {
 			if (j == vscr->workspace.current)
 				continue;
 
@@ -1020,7 +1023,6 @@ static void appicon_move_motion(virtual_screen *vscr, WScreen *scr, XEvent ev,
 	*x = ev.xmotion.x_root - *ofs_x;
 	*y = ev.xmotion.y_root - *ofs_y;
 	wAppIconMove(aicon, *x, *y);
-	WDock *theNewDock = NULL;
 	if (!(ev.xmotion.state & MOD_MASK) || aicon->launching || aicon->lock || *originalDock == NULL) {
 		for (*i = 0; *dockable && *i < vscr->drawer.drawer_count + 2; (*i)++) {
 			WDock *theDock = allDocks[*i];
@@ -1033,11 +1035,10 @@ static void appicon_move_motion(virtual_screen *vscr, WScreen *scr, XEvent ev,
 			}
 		}
 
+		/* Stay in lastDock if no dock really wants us */
 		if (*originalDock != NULL && theNewDock == NULL &&
-			(aicon->launching || aicon->lock || aicon->running)) {
-			/* In those cases, stay in lastDock if no dock really wants us */
+		    (aicon->launching || aicon->lock || aicon->running))
 			theNewDock = *lastDock;
-		}
 	}
 
 	if (*lastDock != NULL && *lastDock != theNewDock) {
