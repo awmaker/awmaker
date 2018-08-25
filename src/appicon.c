@@ -942,11 +942,11 @@ static void appicon_move_button_release(WDock *originalDock, WDock *lastDock,
 {
 	virtual_screen *vscr = aicon->icon->vscr;
 	WScreen *scr = vscr->screen_ptr;
-	int superfluous = wPreferences.superfluous;
+	int i, superfluous = wPreferences.superfluous;
+	Bool docked = False;
 
 	XUngrabPointer(dpy, CurrentTime);
 
-	Bool docked = False;
 	if (ondock)
 		appicon_move_to_dock(originalDock, lastDock,
 				     aicon, icon, x, y,
@@ -963,7 +963,6 @@ static void appicon_move_button_release(WDock *originalDock, WDock *lastDock,
 	}
 
 	if (showed_all_clips) {
-		int i;
 		for (i = 0; i < vscr->workspace.count; i++) {
 			if (i == vscr->workspace.current)
 				continue;
@@ -972,8 +971,8 @@ static void appicon_move_button_release(WDock *originalDock, WDock *lastDock,
 		}
 	}
 
+	/* Need to rearrange unless moving from dock to dock */
 	if (wPreferences.auto_arrange_icons && !(originalDock != NULL && docked))
-		/* Need to rearrange unless moving from dock to dock */
 		wArrangeIcons(vscr, True);
 }
 
