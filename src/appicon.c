@@ -79,6 +79,11 @@ static void appicon_move_to_nodock(WDock *originalDock, WDock *lastDock,
 				   WAppIcon *aicon, WIcon *icon, int x, int y,
 				   int oldX, int oldY);
 static void appicon_move_or_detach(WDock *originalDock, WAppIcon *aicon, int x, int y);
+static void appicon_move_button_release(WDock *originalDock, WDock *lastDock,
+					WAppIcon *aicon, WIcon *icon, int x, int y,
+					int oldX, int oldY, int shad_x, int shad_y,
+					int ix, int iy, Bool *collapsed, Bool ondock,
+					Bool ghost, Bool showed_all_clips);
 
 /* This function is used if the application is a .app. It checks if it has an icon in it
  * like for example /usr/local/GNUstep/Applications/WPrefs.app/WPrefs.tiff
@@ -929,6 +934,49 @@ static void appicon_move_or_detach(WDock *originalDock, WAppIcon *aicon, int x, 
 		wDockLower(originalDock);
 }
 
+static void appicon_move_button_release(WDock *originalDock, WDock *lastDock,
+					WAppIcon *aicon, WIcon *icon, int x, int y,
+					int oldX, int oldY, int shad_x, int shad_y,
+					int ix, int iy, Bool *collapsed, Bool ondock,
+					Bool ghost, Bool showed_all_clips)
+{
+	virtual_screen *vscr = aicon->icon->vscr;
+	WScreen *scr = vscr->screen_ptr;
+	int superfluous = wPreferences.superfluous;
+
+	XUngrabPointer(dpy, CurrentTime);
+
+	Bool docked = False;
+	if (ondock)
+		appicon_move_to_dock(originalDock, lastDock,
+				     aicon, icon, x, y,
+				     oldX, oldY, shad_x, shad_y,
+				     ix, iy, &docked, collapsed);
+	else
+		appicon_move_or_detach(originalDock, aicon, x, y);
+
+	if (superfluous) {
+		if (ghost != None)
+			XFreePixmap(dpy, ghost);
+
+		XSetWindowBackground(dpy, scr->dock_shadow, scr->white_pixel);
+	}
+
+	if (showed_all_clips) {
+		int i;
+		for (i = 0; i < vscr->workspace.count; i++) {
+			if (i == vscr->workspace.current)
+				continue;
+
+			wDockHideIcons(vscr->workspace.array[i]->clip);
+		}
+	}
+
+	if (wPreferences.auto_arrange_icons && !(originalDock != NULL && docked))
+		/* Need to rearrange unless moving from dock to dock */
+		wArrangeIcons(vscr, True);
+}
+
 Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 {
 	WIcon *icon = aicon->icon;
@@ -1158,38 +1206,11 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 			if (ev.xbutton.button != clickButton)
 				break;
 
-			XUngrabPointer(dpy, CurrentTime);
-
-			Bool docked = False;
-			if (ondock)
-				appicon_move_to_dock(originalDock, lastDock,
-						     aicon, icon, x, y,
-						     oldX, oldY, shad_x, shad_y,
-						     ix, iy, &docked, &collapsed);
-			else
-				appicon_move_or_detach(originalDock, aicon, x, y);
-
-			if (superfluous) {
-				if (ghost != None)
-					XFreePixmap(dpy, ghost);
-
-				XSetWindowBackground(dpy, scr->dock_shadow, scr->white_pixel);
-			}
-
-			if (showed_all_clips) {
-				int i;
-				for (i = 0; i < vscr->workspace.count; i++) {
-					if (i == vscr->workspace.current)
-						continue;
-
-					wDockHideIcons(vscr->workspace.array[i]->clip);
-				}
-			}
-
-			if (wPreferences.auto_arrange_icons && !(originalDock != NULL && docked))
-				/* Need to rearrange unless moving from dock to dock */
-				wArrangeIcons(vscr, True);
-
+			appicon_move_button_release(originalDock, lastDock,
+						    aicon, icon, x, y,
+						    oldX, oldY, shad_x, shad_y,
+						    ix, iy, &collapsed, ondock,
+						    ghost, showed_all_clips);
 			return hasMoved;
 		}
 	}
