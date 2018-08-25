@@ -71,6 +71,13 @@ static void wAppIcon_map(WAppIcon *aicon);
 static void remove_from_appicon_list(WAppIcon *appicon);
 static void create_appicon_from_dock(WWindow *wwin, WApplication *wapp);
 
+static void appicon_move_motion(virtual_screen *vscr, WScreen *scr, XEvent ev,
+                                WDock **lastDock, WDock **originalDock,
+                                WAppIcon *aicon, WDock **allDocks,
+                                Bool *collapsed, Bool *dockable, Bool *ondock,
+                                int *x, int *y, int *ix, int *iy,
+                                int *shad_x, int *shad_y, int *ofs_x, int *ofs_y,
+				Bool *grabbed, int omnipresent, Bool *showed_all_clips, int *i);
 static void appicon_move_to_dock(WDock *originalDock, WDock *lastDock,
 				 WAppIcon *aicon, WIcon *icon, int x, int y,
 				 int oldX, int oldY, int shad_x, int shad_y,
@@ -976,6 +983,113 @@ static void appicon_move_button_release(WDock *originalDock, WDock *lastDock,
 		wArrangeIcons(vscr, True);
 }
 
+static void appicon_move_motion(virtual_screen *vscr, WScreen *scr, XEvent ev,
+                                WDock **lastDock, WDock **originalDock,
+                                WAppIcon *aicon, WDock **allDocks,
+                                Bool *collapsed, Bool *dockable, Bool *ondock,
+                                int *x, int *y, int *ix, int *iy,
+                                int *shad_x, int *shad_y, int *ofs_x, int *ofs_y,
+				Bool *grabbed, int omnipresent, Bool *showed_all_clips, int *i)
+{
+	if (!(*grabbed)) {
+		if (abs(*ofs_x - ev.xmotion.x) < MOVE_THRESHOLD &&
+		    abs(*ofs_y - ev.xmotion.y) < MOVE_THRESHOLD)
+			return;
+
+		XChangeActivePointerGrab(dpy,
+					 ButtonMotionMask | ButtonReleaseMask | ButtonPressMask,
+					 wPreferences.cursor[WCUR_MOVE], CurrentTime);
+		*grabbed = True;
+	}
+
+	if (omnipresent && !(*showed_all_clips)) {
+		for (int j = 0; j < vscr->workspace.count; j++) {
+			if (j == vscr->workspace.current)
+				continue;
+
+			wDockShowIcons(vscr->workspace.array[j]->clip);
+			/*
+			 * Note: if dock is collapsed (for instance, because it
+			 * auto-collapses), its icons still won't show up
+			 */
+		}
+
+		*showed_all_clips = True; /* To prevent flickering */
+	}
+
+	*x = ev.xmotion.x_root - *ofs_x;
+	*y = ev.xmotion.y_root - *ofs_y;
+	wAppIconMove(aicon, *x, *y);
+	WDock *theNewDock = NULL;
+	if (!(ev.xmotion.state & MOD_MASK) || aicon->launching || aicon->lock || *originalDock == NULL) {
+		for (*i = 0; *dockable && *i < vscr->drawer.drawer_count + 2; (*i)++) {
+			WDock *theDock = allDocks[*i];
+			if (theDock == NULL)
+				break;
+
+			if (wDockSnapIcon(theDock, aicon, *x, *y, ix, iy, (theDock == *originalDock))) {
+				theNewDock = theDock;
+				break;
+			}
+		}
+
+		if (*originalDock != NULL && theNewDock == NULL &&
+			(aicon->launching || aicon->lock || aicon->running)) {
+			/* In those cases, stay in lastDock if no dock really wants us */
+			theNewDock = *lastDock;
+		}
+	}
+
+	if (*lastDock != NULL && *lastDock != theNewDock) {
+		/* Leave lastDock in the state we found it */
+		if ((*lastDock)->type == WM_DRAWER)
+			wDrawerFillTheGap(*lastDock, aicon, (*lastDock == *originalDock));
+
+		if (*collapsed) {
+			(*lastDock)->collapsed = 1;
+			wDockHideIcons(*lastDock);
+			*collapsed = False;
+		}
+
+		if ((*lastDock)->auto_raise_lower)
+			wDockLower(*lastDock);
+	}
+
+	if (theNewDock != NULL) {
+		if (*lastDock != theNewDock) {
+			*collapsed = theNewDock->collapsed;
+			if (*collapsed) {
+				theNewDock->collapsed = 0;
+				wDockShowIcons(theNewDock);
+			}
+
+			if (theNewDock->auto_raise_lower) {
+				wDockRaise(theNewDock);
+				/* And raise the moving tile above it */
+				wRaiseFrame(aicon->icon->vscr, aicon->icon->core);
+			}
+
+			*lastDock = theNewDock;
+		}
+
+		*shad_x = (*lastDock)->x_pos + *ix * wPreferences.icon_size;
+		*shad_y = (*lastDock)->y_pos + *iy * wPreferences.icon_size;
+
+		XMoveWindow(dpy, scr->dock_shadow, *shad_x, *shad_y);
+
+		if (!(*ondock))
+			XMapWindow(dpy, scr->dock_shadow);
+
+		*ondock = 1;
+	} else {
+		*lastDock = NULL;
+		if (*ondock)
+			XUnmapWindow(dpy, scr->dock_shadow);
+
+		*ondock = 0;
+	}
+}
+
 Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 {
 	WIcon *icon = aicon->icon;
@@ -1101,101 +1215,15 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 
 		case MotionNotify:
 			hasMoved = True;
-			if (!grabbed) {
-				if (abs(ofs_x - ev.xmotion.x) < MOVE_THRESHOLD &&
-				    abs(ofs_y - ev.xmotion.y) < MOVE_THRESHOLD)
-					break;
-
-				XChangeActivePointerGrab(dpy,
-							 ButtonMotionMask | ButtonReleaseMask | ButtonPressMask,
-							 wPreferences.cursor[WCUR_MOVE], CurrentTime);
-				grabbed = 1;
-			}
-
-			if (omnipresent && !showed_all_clips) {
-				for (int j = 0; j < vscr->workspace.count; j++) {
-					if (j == vscr->workspace.current)
-						continue;
-
-					wDockShowIcons(vscr->workspace.array[j]->clip);
-					/*
-					 * Note: if dock is collapsed (for instance, because it
-					 * auto-collapses), its icons still won't show up
-					 */
-				}
-
-				showed_all_clips = True; /* To prevent flickering */
-			}
-
-			x = ev.xmotion.x_root - ofs_x;
-			y = ev.xmotion.y_root - ofs_y;
-			wAppIconMove(aicon, x, y);
-
-			WDock *theNewDock = NULL;
-			if (!(ev.xmotion.state & MOD_MASK) || aicon->launching || aicon->lock || originalDock == NULL) {
-				for (i = 0; dockable && i < vscr->drawer.drawer_count + 2; i++) {
-					WDock *theDock = allDocks[i];
-					if (theDock == NULL)
-						break;
-
-					if (wDockSnapIcon(theDock, aicon, x, y, &ix, &iy, (theDock == originalDock))) {
-						theNewDock = theDock;
-						break;
-					}
-				}
-				if (originalDock != NULL && theNewDock == NULL &&
-					(aicon->launching || aicon->lock || aicon->running)) {
-					/* In those cases, stay in lastDock if no dock really wants us */
-					theNewDock = lastDock;
-				}
-			}
-			if (lastDock != NULL && lastDock != theNewDock) {
-				/* Leave lastDock in the state we found it */
-				if (lastDock->type == WM_DRAWER)
-					wDrawerFillTheGap(lastDock, aicon, (lastDock == originalDock));
-
-				if (collapsed) {
-					lastDock->collapsed = 1;
-					wDockHideIcons(lastDock);
-					collapsed = False;
-				}
-
-				if (lastDock->auto_raise_lower)
-					wDockLower(lastDock);
-			}
-
-			if (theNewDock != NULL) {
-				if (lastDock != theNewDock) {
-					collapsed = theNewDock->collapsed;
-					if (collapsed) {
-						theNewDock->collapsed = 0;
-						wDockShowIcons(theNewDock);
-					}
-
-					if (theNewDock->auto_raise_lower) {
-						wDockRaise(theNewDock);
-						/* And raise the moving tile above it */
-						wRaiseFrame(aicon->icon->vscr, aicon->icon->core);
-					}
-					lastDock = theNewDock;
-				}
-
-				shad_x = lastDock->x_pos + ix*wPreferences.icon_size;
-				shad_y = lastDock->y_pos + iy*wPreferences.icon_size;
-			  
-				XMoveWindow(dpy, scr->dock_shadow, shad_x, shad_y);
-			  
-				if (!ondock)
-					XMapWindow(dpy, scr->dock_shadow);
-
-				ondock = 1;
-			} else {
-				lastDock = NULL;
-				if (ondock)
-					XUnmapWindow(dpy, scr->dock_shadow);
-
-				ondock = 0;
-			}
+			appicon_move_motion(vscr, scr, ev, &lastDock,
+					    &originalDock, aicon,
+					    allDocks, &collapsed,
+					    &dockable, &ondock,
+					    &x, &y, &ix, &iy,
+					    &shad_x, &shad_y,
+					    &ofs_x, &ofs_y,
+					    &grabbed, omnipresent,
+					    &showed_all_clips, &i);
 			break;
 
 		case ButtonPress:
