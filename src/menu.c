@@ -90,8 +90,8 @@ static void updateTexture(WMenu *menu);
 static void selectEntry(WMenu *menu, int entry_no);
 static void closeCascade(WMenu *menu);
 static void set_menu_width(WMenu *menu);
-static Bool saveMenuRecurs(WMPropList *menus, WMenu *menu);
-static int restoreMenuRecurs(WMPropList *menus, WMenu *menu, const char *path);
+static Bool save_rootmenu_recurs(WMPropList *menus, WMenu *menu);
+static int restore_rootmenu_recurs(WMPropList *menus, WMenu *menu, const char *path);
 static void menu_delete_handlers(WMenu *menu, delay_data *d_data);
 static void menu_blink_selected(WMenu *menu);
 static int get_menu_height(WMenu *menu);
@@ -2300,7 +2300,7 @@ void wMenuSaveState(virtual_screen *vscr)
 	}
 
 	/* Save the root menu or their submenus, if are buttoned */
-	if (saveMenuRecurs(menus, vscr->menu.root_menu))
+	if (save_rootmenu_recurs(menus, vscr->menu.root_menu))
 		save_menus = 1;
 
 	/* Save the workspace menu, if buttoned */
@@ -2344,7 +2344,8 @@ static Bool getMenuPath(WMenu *menu, char *buffer, int bufSize)
 	return True;
 }
 
-static Bool saveMenuRecurs(WMPropList *menus, WMenu *menu)
+/* Save the root menu or/and their submenus */
+static Bool save_rootmenu_recurs(WMPropList *menus, WMenu *menu)
 {
 	virtual_screen *vscr = menu->vscr;
 	WMPropList *key;
@@ -2368,7 +2369,7 @@ static Bool saveMenuRecurs(WMPropList *menus, WMenu *menu)
 	WMReleasePropList(key);
 
 	for (i = 0; i < menu->cascade_no; i++)
-		saveMenuRecurs(menus, menu->cascades[i]);
+		save_rootmenu_recurs(menus, menu->cascades[i]);
 
 	return 1;
 }
@@ -2420,7 +2421,7 @@ static int restore_switchmenu(virtual_screen *vscr, WMPropList *menu)
 	return True;
 }
 
-static int restoreMenuRecurs(WMPropList *menus, WMenu *menu, const char *path)
+static int restore_rootmenu_recurs(WMPropList *menus, WMenu *menu, const char *path)
 {
 	virtual_screen *vscr = menu->vscr;
 	WMPropList *key, *entry;
@@ -2471,7 +2472,7 @@ static int restoreMenuRecurs(WMPropList *menus, WMenu *menu, const char *path)
 	WMReleasePropList(key);
 
 	for (i = 0; i < menu->cascade_no; i++)
-		if (restoreMenuRecurs(menus, menu->cascades[i], buffer) != False)
+		if (restore_rootmenu_recurs(menus, menu->cascades[i], buffer) != False)
 			res = True;
 
 	return res;
@@ -2504,7 +2505,7 @@ void menus_restore(virtual_screen *vscr)
 		wMenuUnmap(vscr->menu.root_menu);
 	}
 
-	restoreMenuRecurs(menus, vscr->menu.root_menu, "");
+	restore_rootmenu_recurs(menus, vscr->menu.root_menu, "");
 }
 
 void menu_move_visible(WMenu *menu)
