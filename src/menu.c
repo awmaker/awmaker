@@ -2291,6 +2291,7 @@ void wMenuSaveState(virtual_screen *vscr)
 
 	menus = WMCreatePLDictionary(NULL, NULL);
 
+	/* Save the switch menu, if buttoned */
 	if (vscr->menu.switch_menu && vscr->menu.switch_menu->flags.buttoned) {
 		key = WMCreatePLString("SwitchMenu");
 		saveMenuInfo(menus, vscr->menu.switch_menu, key);
@@ -2298,9 +2299,11 @@ void wMenuSaveState(virtual_screen *vscr)
 		save_menus = 1;
 	}
 
+	/* Save the root menu or their submenus, if are buttoned */
 	if (saveMenuRecurs(menus, vscr->menu.root_menu))
 		save_menus = 1;
 
+	/* Save the workspace menu, if buttoned */
 	if (vscr->workspace.menu && vscr->workspace.menu->flags.buttoned) {
 		key = WMCreatePLString("WorkspaceMenu");
 		saveMenuInfo(menus, vscr->workspace.menu, key);
