@@ -91,7 +91,7 @@ static void selectEntry(WMenu *menu, int entry_no);
 static void closeCascade(WMenu *menu);
 static void set_menu_width(WMenu *menu);
 static Bool save_rootmenu_recurs(WMPropList *menus, WMenu *menu);
-static int restore_rootmenu_recurs(WMPropList *menus, WMenu *menu, const char *path);
+static Bool restore_rootmenu_recurs(WMPropList *menus, WMenu *menu, const char *path);
 static void menu_delete_handlers(WMenu *menu, delay_data *d_data);
 static void menu_blink_selected(WMenu *menu);
 static int get_menu_height(WMenu *menu);
@@ -2421,13 +2421,13 @@ static int restore_switchmenu(virtual_screen *vscr, WMPropList *menu)
 	return True;
 }
 
-static int restore_rootmenu_recurs(WMPropList *menus, WMenu *menu, const char *path)
+static Bool restore_rootmenu_recurs(WMPropList *menus, WMenu *menu, const char *path)
 {
 	virtual_screen *vscr = menu->vscr;
 	WMPropList *key, *entry;
 	char buffer[512];
-	int i, x, y, res, width, height;
-	Bool lowered;
+	int i, x, y, width, height;
+	Bool res, lowered;
 
 	if (strlen(path) + strlen(menu->title) > 510)
 		return False;
