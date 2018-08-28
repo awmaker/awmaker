@@ -858,4 +858,5 @@ void DestroyWindowMenu(virtual_screen *vscr)
 	vscr->menu.window_menu->entries[MC_SELECT]->text = NULL;
 	wMenuDestroy(vscr->menu.window_menu, True);
 	vscr->menu.window_menu = NULL;
+	vscr->workspace.submenu = NULL;
 }
