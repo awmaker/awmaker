@@ -1848,21 +1848,23 @@ static void handleKeyPress(XEvent *event)
 static void handleMotionNotify(XEvent *event)
 {
 	virtual_screen *vscr = wScreenForRootWindow(event->xmotion.root);
+	WMPoint p;
+	WMRect rect;
+	WMenu *menu;
 
-	if (wPreferences.scrollable_menus) {
-		WMPoint p = wmkpoint(event->xmotion.x_root, event->xmotion.y_root);
-		WMRect rect = wGetRectForHead(vscr->screen_ptr, wGetHeadForPoint(vscr, p));
+	if (!wPreferences.scrollable_menus)
+		return;
 
-		if (vscr->screen_ptr->flags.jump_back_pending ||
-		    p.x <= (rect.pos.x + 1) ||
-		    p.x >= (rect.pos.x + rect.size.width - 2) ||
-		    p.y <= (rect.pos.y + 1) || p.y >= (rect.pos.y + rect.size.height - 2)) {
-			WMenu *menu;
-
-			menu = wMenuUnderPointer(vscr);
-			if (menu != NULL)
-				wMenuScroll(menu);
-		}
+	p = wmkpoint(event->xmotion.x_root, event->xmotion.y_root);
+	rect = wGetRectForHead(vscr->screen_ptr, wGetHeadForPoint(vscr, p));
+	if (vscr->screen_ptr->flags.jump_back_pending ||
+	    p.x <= (rect.pos.x + 1) ||
+	    p.x >= (rect.pos.x + rect.size.width - 2) ||
+	    p.y <= (rect.pos.y + 1) ||
+	    p.y >= (rect.pos.y + rect.size.height - 2)) {
+		menu = wMenuUnderPointer(vscr);
+		if (menu != NULL)
+			wMenuScroll(menu);
 	}
 }
 
