@@ -643,14 +643,18 @@ static void killCallback(WMenu *menu, WMenuEntry *entry)
 	WCHANGE_STATE(WSTATE_NORMAL);
 }
 
-static WMenu *createApplicationMenu(virtual_screen *vscr)
+static WMenu *createApplicationMenu(virtual_screen *vscr, Bool hidden)
 {
 	WMenu *menu;
 
 	menu = menu_create(vscr, NULL);
 
 	wMenuAddCallback(menu, _("Unhide Here"), unhideHereCallback, NULL);
-	wMenuAddCallback(menu, _("Hide"), hideCallback, NULL);
+	if (hidden)
+		wMenuAddCallback(menu, _("Unhide"), hideCallback, NULL);
+	else
+		wMenuAddCallback(menu, _("Hide"), hideCallback, NULL);
+
 	wMenuAddCallback(menu, _("Launch"), relaunchCallback, NULL);
 	wMenuAddCallback(menu, _("Set Icon..."), setIconCallback, NULL);
 	wMenuAddCallback(menu, _("Kill"), killCallback, NULL);
@@ -696,18 +700,11 @@ static void openApplicationMenu(WApplication *wapp, int x, int y)
 	int i;
 
 	if (!vscr->menu.icon_menu) {
-		vscr->menu.icon_menu = createApplicationMenu(vscr);
+		vscr->menu.icon_menu = createApplicationMenu(vscr, wapp->flags.hidden);
 		menu_map(vscr->menu.icon_menu);
-		wfree(vscr->menu.icon_menu->entries[1]->text);
 	}
 
 	menu = vscr->menu.icon_menu;
-
-	if (wapp->flags.hidden)
-		menu->entries[1]->text = _("Unhide");
-	else
-		menu->entries[1]->text = _("Hide");
-
 	menu->flags.realized = 0;
 
 	x -= menu->frame->width / 2;
@@ -786,6 +783,9 @@ static void appicon_handle_menubutton(WAppIcon *aicon, XEvent *event)
 	desc = &vscr->menu.icon_menu->core->descriptor;
 	event->xbutton.send_event = True;
 	(*desc->handle_mousedown) (desc, event);
+
+	wMenuDestroy(vscr->menu.icon_menu, True);
+	vscr->menu.icon_menu = NULL;
 }
 
 void appIconMouseDown(WObjDescriptor *desc, XEvent *event)
