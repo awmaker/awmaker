@@ -2424,12 +2424,13 @@ static void restore_rootmenu(virtual_screen *vscr, WMPropList *menus)
 
 static void set_menu_coords(WMenu *menu, int *x, int *y)
 {
+	WMRect rect;
 	virtual_screen *vscr = menu->vscr;
 	int width, height;
 
 	width = get_menu_width_full(menu);
 	height = get_menu_height_full(menu);
-	WMRect rect = wGetRectForHead(vscr->screen_ptr, wGetHeadForPointerLocation(vscr));
+	rect = wGetRectForHead(vscr->screen_ptr, wGetHeadForPointerLocation(vscr));
 
 	if (*x < rect.pos.x - width)
 		*x = rect.pos.x;
@@ -2448,17 +2449,23 @@ static void set_menu_coords2(WMenu *menu, int *x, int *y)
 {
 	WMRect rect;
 	virtual_screen *vscr = menu->vscr;
+	int width, height;
 
+	width = get_menu_width_full(menu);
+	height = get_menu_height_full(menu);
 	rect = wGetRectForHead(vscr->screen_ptr, wGetHeadForPointerLocation(vscr));
 
 	if (*x < rect.pos.x)
 		*x = rect.pos.x;
+
+	if (*x + width > rect.pos.x + rect.size.width)
+		*x = rect.pos.x + rect.size.width - width;
+
 	if (*y < rect.pos.y)
 		*y = rect.pos.y;
-	if (*x + get_menu_width_full(menu) > rect.pos.x + rect.size.width)
-		*x = rect.pos.x + rect.size.width - get_menu_width_full(menu);
-	if (*y + get_menu_height_full(menu) > rect.pos.y + rect.size.height)
-		*y = rect.pos.y + rect.size.height - get_menu_height_full(menu);
+
+	if (*y + height > rect.pos.y + rect.size.height)
+		*y = rect.pos.y + rect.size.height - height;
 }
 
 static Bool restore_rootmenu_recurs(WMPropList *menus, WMenu *menu, const char *path)
