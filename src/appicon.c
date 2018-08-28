@@ -700,10 +700,13 @@ static WMenu *openApplicationMenu(WApplication *wapp, int x, int y)
 	int i;
 
 	menu = createApplicationMenu(vscr, wapp->flags.hidden);
-	menu_map(menu);
-
 	menu->flags.realized = 0;
 
+	/* set client data */
+	for (i = 0; i < menu->entry_no; i++)
+		menu->entries[i]->clientdata = wapp;
+
+	/* Menu position inside the screen */
 	x -= menu->frame->width / 2;
 	if (x + menu->frame->width > scr->scr_width)
 		x = scr->scr_width - menu->frame->width;
@@ -711,10 +714,7 @@ static WMenu *openApplicationMenu(WApplication *wapp, int x, int y)
 	if (x < 0)
 		x = 0;
 
-	/* set client data */
-	for (i = 0; i < menu->entry_no; i++)
-		menu->entries[i]->clientdata = wapp;
-
+	menu_map_pos(menu, x, y);
 	wMenuMapAt(vscr, menu, x, y, False);
 
 	return menu;
