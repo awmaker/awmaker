@@ -92,6 +92,7 @@ static void closeCascade(WMenu *menu);
 static void set_menu_width(WMenu *menu);
 static void set_menu_coords(WMenu *menu, int *x, int *y);
 static void set_menu_coords2(WMenu *menu, int *x, int *y);
+static void menu_map_core(WMenu *menu, int x, int y);
 static Bool save_rootmenu_recurs(WMPropList *menus, WMenu *menu);
 static Bool restore_rootmenu_recurs(WMPropList *menus, WMenu *menu, const char *path);
 static void menu_delete_handlers(WMenu *menu, delay_data *d_data);
@@ -243,7 +244,7 @@ void menu_destroy(WMenu *menu)
 	wfree(menu);
 }
 
-void menu_map(WMenu *menu)
+static void menu_map_core(WMenu *menu, int x, int y)
 {
 	virtual_screen *vscr = menu->vscr;
 	int tmp;
@@ -267,11 +268,11 @@ void menu_map(WMenu *menu)
 	menu->frame->core->descriptor.handle_mousedown = menuMouseDown;
 	menu->frame->rbutton_image = vscr->screen_ptr->b_pixmaps[WBUT_CLOSE];
 
-	menu->frame_x = 0;
-	menu->frame_y = 0;
+	menu->frame_x = x;
+	menu->frame_y = y;
 
 	wcore_map(menu->core, menu->frame->core,
-		  menu->vscr, 0, 0,
+		  menu->vscr, menu->frame_x, menu->frame_y,
 		  menu->width, get_menu_height(menu), 0,
 		  menu->vscr->screen_ptr->w_depth,
 		  menu->vscr->screen_ptr->w_visual,
@@ -290,6 +291,11 @@ void menu_map(WMenu *menu)
 
 	WMAddNotificationObserver(appearanceObserver, menu, WNMenuAppearanceSettingsChanged, menu);
 	WMAddNotificationObserver(appearanceObserver, menu, WNMenuTitleAppearanceSettingsChanged, menu);
+}
+
+void menu_map(WMenu *menu)
+{
+	menu_map_core(menu, 0, 0);
 }
 
 static void insertEntry(WMenu *menu, WMenuEntry *entry, int index)
