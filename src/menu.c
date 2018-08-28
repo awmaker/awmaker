@@ -298,6 +298,11 @@ void menu_map(WMenu *menu)
 	menu_map_core(menu, 0, 0);
 }
 
+void menu_map_pos(WMenu *menu, int x, int y)
+{
+	menu_map_core(menu, x, y);
+}
+
 static void insertEntry(WMenu *menu, WMenuEntry *entry, int index)
 {
 	int i;
