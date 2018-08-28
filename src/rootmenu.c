@@ -1043,7 +1043,7 @@ static WMenu *parseCascade(virtual_screen *vscr, WMenu *menu, WMenuParser parser
 			menu_map(cascade);
 			cascade->on_destroy = removeShortcutsForMenu;
 			if (!parseCascade(vscr, cascade, parser))
-				wMenuDestroy(cascade, True);
+				wMenuDestroy(cascade);
 			else
 				wMenuEntrySetCascade_create(menu, wMenuAddCallback(menu, M_(title), NULL, NULL), cascade);
 
@@ -1086,7 +1086,7 @@ static WMenu *readMenu(virtual_screen *vscr, const char *flat_file, FILE *file)
 			menu_map(menu);
 			menu->on_destroy = removeShortcutsForMenu;
 			if (!parseCascade(vscr, menu, parser)) {
-				wMenuDestroy(menu, True);
+				wMenuDestroy(menu);
 				menu = NULL;
 			}
 
@@ -1675,7 +1675,7 @@ void rootmenu_destroy(virtual_screen *vscr)
 		return;
 
 	WMRemoveNotificationObserver(vscr->menu.root_menu);
-	wMenuDestroy(vscr->menu.root_menu, True);
+	wMenuDestroy(vscr->menu.root_menu);
 	vscr->menu.root_menu = NULL;
 	vscr->menu.flags.root_menu_changed_shortcuts = 0;
 	vscr->menu.flags.added_workspace_menu = 0;

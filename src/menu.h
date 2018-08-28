@@ -104,7 +104,7 @@ typedef struct WMenu {
 
 
 void wMenuPaint(WMenu *menu);
-void wMenuDestroy(WMenu *menu, int recurse);
+void wMenuDestroy(WMenu *menu);
 void wMenuRealize(WMenu *menu);
 WMenuEntry *wMenuInsertCascade(WMenu *menu, int index, const char *text,
 			       WMenu *cascade);

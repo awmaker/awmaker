@@ -99,7 +99,7 @@ static WMenu *parseMenuCommand(virtual_screen *vscr, Window win, char **slist, i
 		int ecode, etag, enab;
 
 		if (sscanf(slist[*index], "%i", &command) != 1) {
-			wMenuDestroy(menu, True);
+			wMenuDestroy(menu);
 			wwarning(_("appmenu: bad menu entry \"%s\" in window %lx"), slist[*index], win);
 			return NULL;
 		}
@@ -115,7 +115,7 @@ static WMenu *parseMenuCommand(virtual_screen *vscr, Window win, char **slist, i
 			if (command == wmNormalItem) {
 				if (sscanf(slist[*index], "%i %i %i %i %n",
 					   &command, &ecode, &etag, &enab, &pos) != 4 || ecode != code) {
-					wMenuDestroy(menu, True);
+					wMenuDestroy(menu);
 					wwarning(_("appmenu: bad menu entry \"%s\" in window %lx"),
 						 slist[*index], win);
 					return NULL;
@@ -125,7 +125,7 @@ static WMenu *parseMenuCommand(virtual_screen *vscr, Window win, char **slist, i
 			} else {
 				if (sscanf(slist[*index], "%i %i %i %i %s %n",
 					   &command, &ecode, &etag, &enab, rtext, &pos) != 5 || ecode != code) {
-					wMenuDestroy(menu, True);
+					wMenuDestroy(menu);
 					wwarning(_("appmenu: bad menu entry \"%s\" in window %lx"),
 						 slist[*index], win);
 					return NULL;
@@ -135,7 +135,7 @@ static WMenu *parseMenuCommand(virtual_screen *vscr, Window win, char **slist, i
 			data = malloc(sizeof(WAppMenuData));
 			if (data == NULL) {
 				wwarning(_("appmenu: out of memory creating menu for window %lx"), win);
-				wMenuDestroy(menu, True);
+				wMenuDestroy(menu);
 				return NULL;
 			}
 			data->code = code;
@@ -143,7 +143,7 @@ static WMenu *parseMenuCommand(virtual_screen *vscr, Window win, char **slist, i
 			data->window = win;
 			entry = wMenuAddCallback(menu, title, notifyClient, data);
 			if (!entry) {
-				wMenuDestroy(menu, True);
+				wMenuDestroy(menu);
 				wwarning(_("appmenu: out of memory creating menu for window %lx"), win);
 				wfree(data);
 				return NULL;
@@ -162,7 +162,7 @@ static WMenu *parseMenuCommand(virtual_screen *vscr, Window win, char **slist, i
 
 			if (sscanf(slist[*index], "%i %i %i %i %i %n",
 				   &command, &ecode, &etag, &enab, &ncode, &pos) != 5 || ecode != code) {
-				wMenuDestroy(menu, True);
+				wMenuDestroy(menu);
 				wwarning(_("appmenu: bad menu entry \"%s\" in window %lx"), slist[*index], win);
 
 				return NULL;
@@ -175,15 +175,15 @@ static WMenu *parseMenuCommand(virtual_screen *vscr, Window win, char **slist, i
 			entry = wMenuAddCallback(menu, title, NULL, NULL);
 
 			if (!entry) {
-				wMenuDestroy(menu, True);
-				wMenuDestroy(submenu, True);
+				wMenuDestroy(menu);
+				wMenuDestroy(submenu);
 				wwarning(_("appmenu: out of memory creating menu for window %lx"), win);
 				return NULL;
 			}
 
 			wMenuEntrySetCascade_create(menu, entry, submenu);
 		} else {
-			wMenuDestroy(menu, True);
+			wMenuDestroy(menu);
 			wwarning(_("appmenu: bad menu entry \"%s\" in window %lx"), slist[*index], win);
 			return NULL;
 		}
@@ -258,6 +258,6 @@ void destroy_app_menu(WApplication *wapp)
 	if (!wapp || !wapp->app_menu)
 		return;
 
-	wMenuDestroy(wapp->app_menu, True);
+	wMenuDestroy(wapp->app_menu);
 	wapp->app_menu = NULL;
 }

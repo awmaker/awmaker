@@ -7010,7 +7010,7 @@ static void clip_menu_destroy(WDock *clip)
 	virtual_screen *vscr = clip->vscr;
 
 	if (vscr->clip.menu)
-		wMenuDestroy(vscr->clip.menu, True);
+		wMenuDestroy(vscr->clip.menu);
 
 	vscr->clip.menu = NULL;
 	vscr->clip.submenu = NULL;

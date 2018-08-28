@@ -856,7 +856,7 @@ void DestroyWindowMenu(virtual_screen *vscr)
 	vscr->menu.window_menu->entries[MC_MAXIMIZE]->text = NULL;
 	vscr->menu.window_menu->entries[MC_SHADE]->text = NULL;
 	vscr->menu.window_menu->entries[MC_SELECT]->text = NULL;
-	wMenuDestroy(vscr->menu.window_menu, True);
+	wMenuDestroy(vscr->menu.window_menu);
 	vscr->menu.window_menu = NULL;
 	vscr->workspace.submenu = NULL;
 }

@@ -783,7 +783,7 @@ static void appicon_handle_menubutton(WAppIcon *aicon, XEvent *event)
 	event->xbutton.send_event = True;
 	(*desc->handle_mousedown) (desc, event);
 
-	wMenuDestroy(menu, True);
+	wMenuDestroy(menu);
 }
 
 void appIconMouseDown(WObjDescriptor *desc, XEvent *event)

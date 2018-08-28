@@ -381,7 +381,7 @@ void wMenuEntryRemoveCascade(WMenu *menu, WMenuEntry *entry)
 	    menu->cascades[entry->cascade] == NULL)
 		return;
 
-	wMenuDestroy(menu->cascades[entry->cascade], True);
+	wMenuDestroy(menu->cascades[entry->cascade]);
 	menu->cascades[entry->cascade] = NULL;
 	entry->cascade = -1;
 }
@@ -583,7 +583,7 @@ void wMenuRealize(WMenu *menu)
 		wMenuPaint(menu);
 }
 
-void wMenuDestroy(WMenu *menu, int recurse)
+void wMenuDestroy(WMenu *menu)
 {
 	int i;
 
@@ -620,12 +620,10 @@ void wMenuDestroy(WMenu *menu, int recurse)
 		menu->entries[i] = NULL;
 	}
 
-	if (recurse) {
-		for (i = 0; i < menu->cascade_no; i++) {
-			if (menu->cascades[i]) {
-				wMenuDestroy(menu->cascades[i], recurse);
-				menu->cascades[i] = NULL;
-			}
+	for (i = 0; i < menu->cascade_no; i++) {
+		if (menu->cascades[i]) {
+			wMenuDestroy(menu->cascades[i]);
+			menu->cascades[i] = NULL;
 		}
 	}
 
