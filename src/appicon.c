@@ -64,6 +64,7 @@
 #define ICON_SIZE      wPreferences.icon_size
 
 static void iconDblClick(WObjDescriptor *desc, XEvent *event);
+static void appicon_handle_menubutton(WAppIcon *aicon, XEvent *event);
 static void iconExpose(WObjDescriptor *desc, XEvent *event);
 static void wApplicationSaveIconPathFor(const char *iconPath, const char *wm_instance, const char *wm_class);
 static void wAppIcon_create(WApplication *wapp);
@@ -760,6 +761,33 @@ static void iconDblClick(WObjDescriptor *desc, XEvent *event)
 		wHideOtherApplications(aicon->icon->owner);
 }
 
+static void appicon_handle_menubutton(WAppIcon *aicon, XEvent *event)
+{
+	WObjDescriptor *desc;
+	virtual_screen *vscr = aicon->icon->vscr;
+	WApplication *wapp;
+
+	wapp = wApplicationOf(aicon->icon->owner->main_window);
+	if (!wapp)
+		return;
+
+	if (event->xbutton.send_event &&
+	    XGrabPointer(dpy, aicon->icon->core->window, True, ButtonMotionMask
+			 | ButtonReleaseMask | ButtonPressMask, GrabModeAsync,
+			 GrabModeAsync, None, None, CurrentTime) != GrabSuccess) {
+		wwarning("pointer grab failed for appicon menu");
+
+		return;
+	}
+
+	openApplicationMenu(wapp, event->xbutton.x_root, event->xbutton.y_root);
+
+	/* allow drag select of menu */
+	desc = &vscr->menu.icon_menu->core->descriptor;
+	event->xbutton.send_event = True;
+	(*desc->handle_mousedown) (desc, event);
+}
+
 void appIconMouseDown(WObjDescriptor *desc, XEvent *event)
 {
 	WAppIcon *aicon = desc->parent;
@@ -786,26 +814,7 @@ void appIconMouseDown(WObjDescriptor *desc, XEvent *event)
 	}
 
 	if (event->xbutton.button == Button3) {
-		WObjDescriptor *desc;
-		WApplication *wapp = wApplicationOf(aicon->icon->owner->main_window);
-		if (!wapp)
-			return;
-
-		if (event->xbutton.send_event &&
-		    XGrabPointer(dpy, aicon->icon->core->window, True, ButtonMotionMask
-				 | ButtonReleaseMask | ButtonPressMask, GrabModeAsync,
-				 GrabModeAsync, None, None, CurrentTime) != GrabSuccess) {
-			wwarning("pointer grab failed for appicon menu");
-
-			return;
-		}
-
-		openApplicationMenu(wapp, event->xbutton.x_root, event->xbutton.y_root);
-
-		/* allow drag select of menu */
-		desc = &vscr->menu.icon_menu->core->descriptor;
-		event->xbutton.send_event = True;
-		(*desc->handle_mousedown) (desc, event);
+		appicon_handle_menubutton(aicon, event);
 		return;
 	}
 
