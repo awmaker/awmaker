@@ -692,19 +692,16 @@ void appicon_unmap(WAppIcon *aicon)
 	wcore_unmap(aicon->icon->core);
 }
 
-static void openApplicationMenu(WApplication *wapp, int x, int y)
+static WMenu *openApplicationMenu(WApplication *wapp, int x, int y)
 {
 	WMenu *menu;
 	virtual_screen *vscr = wapp->main_window_desc->vscr;
 	WScreen *scr = vscr->screen_ptr;
 	int i;
 
-	if (!vscr->menu.icon_menu) {
-		vscr->menu.icon_menu = createApplicationMenu(vscr, wapp->flags.hidden);
-		menu_map(vscr->menu.icon_menu);
-	}
+	menu = createApplicationMenu(vscr, wapp->flags.hidden);
+	menu_map(menu);
 
-	menu = vscr->menu.icon_menu;
 	menu->flags.realized = 0;
 
 	x -= menu->frame->width / 2;
@@ -719,6 +716,8 @@ static void openApplicationMenu(WApplication *wapp, int x, int y)
 		menu->entries[i]->clientdata = wapp;
 
 	wMenuMapAt(vscr, menu, x, y, False);
+
+	return menu;
 }
 
 /******************************************************************/
@@ -760,8 +759,8 @@ static void iconDblClick(WObjDescriptor *desc, XEvent *event)
 
 static void appicon_handle_menubutton(WAppIcon *aicon, XEvent *event)
 {
+	WMenu *menu;
 	WObjDescriptor *desc;
-	virtual_screen *vscr = aicon->icon->vscr;
 	WApplication *wapp;
 
 	wapp = wApplicationOf(aicon->icon->owner->main_window);
@@ -777,15 +776,14 @@ static void appicon_handle_menubutton(WAppIcon *aicon, XEvent *event)
 		return;
 	}
 
-	openApplicationMenu(wapp, event->xbutton.x_root, event->xbutton.y_root);
+	menu = openApplicationMenu(wapp, event->xbutton.x_root, event->xbutton.y_root);
 
 	/* allow drag select of menu */
-	desc = &vscr->menu.icon_menu->core->descriptor;
+	desc = &menu->core->descriptor;
 	event->xbutton.send_event = True;
 	(*desc->handle_mousedown) (desc, event);
 
-	wMenuDestroy(vscr->menu.icon_menu, True);
-	vscr->menu.icon_menu = NULL;
+	wMenuDestroy(menu, True);
 }
 
 void appIconMouseDown(WObjDescriptor *desc, XEvent *event)
