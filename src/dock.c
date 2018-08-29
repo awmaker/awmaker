@@ -1509,14 +1509,6 @@ static WMenu *dock_menu_create(virtual_screen *vscr)
 	return menu;
 }
 
-static void dock_menu_map(WMenu *menu, virtual_screen *vscr)
-{
-	menu_map(menu);
-
-	if (vscr->dock.pos_menu)
-		menu_map(vscr->dock.pos_menu);
-}
-
 static void dock_menu_unmap(virtual_screen *vscr, WMenu *menu)
 {
 	menu_unmap(vscr->dock.pos_menu);
@@ -5602,7 +5594,11 @@ static void dock_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 {
 	virtual_screen *vscr = aicon->icon->vscr;
 
-	dock_menu_map(dock->menu, vscr);
+	menu_map(dock->menu);
+
+	if (vscr->dock.pos_menu)
+		menu_map(vscr->dock.pos_menu);
+
 	open_menu_dock(dock, aicon, event);
 	dock_menu_unmap(vscr, dock->menu);
 }
