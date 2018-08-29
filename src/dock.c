@@ -5598,6 +5598,15 @@ static void handleClipChangeWorkspace(virtual_screen *vscr, XEvent *event)
 	wClipIconPaint(vscr->clip.icon);
 }
 
+static void dock_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
+{
+	virtual_screen *vscr = aicon->icon->vscr;
+
+	dock_menu_map(dock->menu, vscr);
+	open_menu_dock(dock, aicon, event);
+	dock_menu_unmap(vscr, dock->menu);
+}
+
 static void dock_icon_mouse_down(WObjDescriptor *desc, XEvent *event)
 {
 	WAppIcon *aicon = desc->parent;
@@ -5654,10 +5663,7 @@ static void dock_icon_mouse_down(WObjDescriptor *desc, XEvent *event)
 			return;
 		}
 
-		dock_menu_map(dock->menu, vscr);
-		open_menu_dock(dock, aicon, event);
-		dock_menu_unmap(vscr, dock->menu);
-
+		dock_menu(dock, aicon, event);
 		break;
 	case Button4:
 		break;
