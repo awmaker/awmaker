@@ -5459,6 +5459,7 @@ static void dock_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 {
 	virtual_screen *vscr = aicon->icon->vscr;
 	WScreen *scr = vscr->screen_ptr;
+	WMenu *pos_menu;
 	WObjDescriptor *desc;
 	WMenuEntry *entry = NULL;
 	WApplication *wapp = NULL;
@@ -5475,10 +5476,8 @@ static void dock_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 
 	/* Dock position menu */
 	entry = wMenuAddCallback(dock->menu, _("Dock position"), NULL, NULL);
-	if (!vscr->dock.pos_menu)
-		vscr->dock.pos_menu = makeDockPositionMenu(vscr);
-
-	wMenuEntrySetCascade_create(dock->menu, entry, vscr->dock.pos_menu);
+	pos_menu = makeDockPositionMenu(vscr);
+	wMenuEntrySetCascade_create(dock->menu, entry, pos_menu);
 
 	/* Add drawer menu */
 	if (!wPreferences.flags.nodrawer)
@@ -5551,12 +5550,10 @@ static void dock_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 
 	/* Positions and mapping */
 	menu_map(dock->menu);
-
-	if (vscr->dock.pos_menu)
-		menu_map(vscr->dock.pos_menu);
+	menu_map(pos_menu);
 
 	/* Dock position menu */
-	updateDockPositionMenu(dock, vscr->dock.pos_menu);
+	updateDockPositionMenu(dock, pos_menu);
 
 	x_pos = dock->on_right_side ? scr->scr_width - dock->menu->frame->width - 3 : 0;
 	wMenuMapAt(vscr, dock->menu, x_pos, event->xbutton.y_root + 2, False);
@@ -5567,10 +5564,10 @@ static void dock_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 	(*desc->handle_mousedown) (desc, event);
 
 	/* Destroy the menu */
-	vscr->dock.pos_menu->flags.realized = 0;
+	pos_menu->flags.realized = 0;
 	dock->menu->flags.realized = 0;
 	wMenuDestroy(dock->menu);
-	vscr->dock.pos_menu = NULL;
+	pos_menu = NULL;
 	dock->menu = NULL;
 }
 
