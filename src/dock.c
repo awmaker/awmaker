@@ -5548,12 +5548,12 @@ static void dock_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 		menu_entry_set_enabled_paint(dock->menu, DM_KILL);
 	}
 
+	/* Dock position menu */
+	updateDockPositionMenu(dock, pos_menu);
+
 	/* Positions and mapping */
 	menu_map(dock->menu);
 	menu_map(pos_menu);
-
-	/* Dock position menu */
-	updateDockPositionMenu(dock, pos_menu);
 
 	x_pos = dock->on_right_side ? scr->scr_width - dock->menu->frame->width - 3 : 0;
 	wMenuMapAt(vscr, dock->menu, x_pos, event->xbutton.y_root + 2, False);
