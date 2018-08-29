@@ -1288,27 +1288,26 @@ static void setDockPositionKeepOnTopCallback(WMenu *menu, WMenuEntry *entry)
 	entry->flags.indicator_on = 1;
 }
 
-static void updateDockPositionMenu(WDock *dock)
+static void updateDockPositionMenu(WDock *dock, WMenu *pos_menu)
 {
-	virtual_screen *vscr = dock->vscr;
 	WMenuEntry *entry;
 	int index = 0;
 
-	if (!vscr->dock.pos_menu || !dock)
+	if (!pos_menu || !dock)
 		return;
 
 	/* Normal level */
-	entry = vscr->dock.pos_menu->entries[index++];
+	entry = pos_menu->entries[index++];
 	entry->flags.indicator_on = (dock->lowered && !dock->auto_raise_lower);
 	entry->clientdata = dock;
 
 	/* Auto-raise/lower */
-	entry = vscr->dock.pos_menu->entries[index++];
+	entry = pos_menu->entries[index++];
 	entry->flags.indicator_on = dock->auto_raise_lower;
 	entry->clientdata = dock;
 
 	/* Keep on top */
-	entry = vscr->dock.pos_menu->entries[index++];
+	entry = pos_menu->entries[index++];
 	entry->flags.indicator_on = !dock->lowered;
 	entry->clientdata = dock;
 
@@ -5557,7 +5556,7 @@ static void dock_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 		menu_map(vscr->dock.pos_menu);
 
 	/* Dock position menu */
-	updateDockPositionMenu(dock);
+	updateDockPositionMenu(dock, vscr->dock.pos_menu);
 
 	x_pos = dock->on_right_side ? scr->scr_width - dock->menu->frame->width - 3 : 0;
 	wMenuMapAt(vscr, dock->menu, x_pos, event->xbutton.y_root + 2, False);
