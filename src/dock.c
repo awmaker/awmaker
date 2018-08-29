@@ -5180,25 +5180,6 @@ static void set_dockmenu_drawer_code(WDock *dock, WMenuEntry *entry, WAppIcon *a
 	menu_entry_set_enabled_paint(dock->menu, RM_KILL);
 }
 
-static void open_menu_dock(WDock *dock, WAppIcon *aicon, XEvent *event)
-{
-	virtual_screen *vscr = dock->vscr;
-	WScreen *scr = vscr->screen_ptr;
-	WObjDescriptor *desc;
-	WMenuEntry *entry = NULL;
-	int x_pos;
-
-	set_dockmenu_dock_code(dock, entry, aicon);
-
-	x_pos = dock->on_right_side ? scr->scr_width - dock->menu->frame->width - 3 : 0;
-	wMenuMapAt(vscr, dock->menu, x_pos, event->xbutton.y_root + 2, False);
-
-	/* allow drag select */
-	event->xany.send_event = True;
-	desc = &dock->menu->core->descriptor;
-	(*desc->handle_mousedown) (desc, event);
-}
-
 static void open_menu_drawer(WDock *dock, WAppIcon *aicon, XEvent *event)
 {
 	virtual_screen *vscr = dock->vscr;
@@ -5593,13 +5574,25 @@ static void handleClipChangeWorkspace(virtual_screen *vscr, XEvent *event)
 static void dock_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 {
 	virtual_screen *vscr = aicon->icon->vscr;
+	WScreen *scr = vscr->screen_ptr;
+	WObjDescriptor *desc;
+	WMenuEntry *entry = NULL;
+	int x_pos;
 
 	menu_map(dock->menu);
 
 	if (vscr->dock.pos_menu)
 		menu_map(vscr->dock.pos_menu);
 
-	open_menu_dock(dock, aicon, event);
+	set_dockmenu_dock_code(dock, entry, aicon);
+
+	x_pos = dock->on_right_side ? scr->scr_width - dock->menu->frame->width - 3 : 0;
+	wMenuMapAt(vscr, dock->menu, x_pos, event->xbutton.y_root + 2, False);
+
+	/* allow drag select */
+	event->xany.send_event = True;
+	desc = &dock->menu->core->descriptor;
+	(*desc->handle_mousedown) (desc, event);
 	dock_menu_unmap(vscr, dock->menu);
 }
 
