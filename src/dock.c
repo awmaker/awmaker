@@ -4740,153 +4740,6 @@ static void toggleCollapsed(WDock *dock)
 	}
 }
 
-static void set_dockmenu_clip_code(WDock *dock, WMenuEntry *entry, WAppIcon *aicon)
-{
-	WApplication *wapp = NULL;
-	int n_selected, appIsRunning;
-	virtual_screen *vscr = dock->vscr;
-
-	appIsRunning = aicon->running && aicon->icon && aicon->icon->owner;
-
-	if (aicon->icon->owner)
-		wapp = wApplicationOf(aicon->icon->owner->main_window);
-
-	/* clip/drawer options */
-	if (vscr->clip.opt_menu)
-		updateOptionsMenu(dock, vscr->clip.opt_menu);
-
-	n_selected = numberOfSelectedIcons(dock);
-
-	/* Rename Workspace */
-	entry = dock->menu->entries[CM_ONE];
-	if (aicon == vscr->clip.icon) {
-		entry->callback = renameCallback;
-		entry->clientdata = dock;
-		entry->flags.indicator = 0;
-		entry->text = wstrdup(_("Rename Workspace"));
-	} else {
-		entry->callback = omnipresentCallback;
-		entry->clientdata = aicon;
-		if (n_selected > 0) {
-			entry->flags.indicator = 0;
-			entry->text = wstrdup(_("Toggle Omnipresent"));
-		} else {
-			entry->flags.indicator = 1;
-			entry->flags.indicator_on = aicon->omnipresent;
-			entry->flags.indicator_type = MI_CHECK;
-			entry->text = wstrdup(_("Omnipresent"));
-		}
-	}
-
-	/* select/unselect icon */
-	entry = dock->menu->entries[CM_SELECT];
-	entry->clientdata = aicon;
-	entry->flags.indicator_on = aicon->icon->selected;
-	menu_entry_set_enabled(dock->menu, CM_SELECT, aicon != vscr->clip.icon && !wIsADrawer(aicon));
-
-	/* select/unselect all icons */
-	entry = dock->menu->entries[CM_SELECTALL];
-	entry->clientdata = aicon;
-	if (n_selected > 0)
-		entry->text = wstrdup(_("Unselect All Icons"));
-	else
-		entry->text = wstrdup(_("Select All Icons"));
-
-	menu_entry_set_enabled(dock->menu, CM_SELECTALL, dock->icon_count > 1);
-
-	/* keep icon(s) */
-	entry = dock->menu->entries[CM_KEEP_ICONS];
-	entry->clientdata = aicon;
-	if (n_selected > 1)
-		entry->text = wstrdup(_("Keep Icons"));
-	else
-		entry->text = strdup(_("Keep Icon"));
-
-	menu_entry_set_enabled(dock->menu, CM_KEEP_ICONS, dock->icon_count > 1);
-
-	/* this is the workspace submenu part */
-	entry = dock->menu->entries[CM_MOVE_ICONS];
-	if (n_selected > 1)
-		entry->text = wstrdup(_("Move Icons To"));
-	else
-		entry->text = wstrdup(_("Move Icon To"));
-
-	if (vscr->clip.submenu)
-		updateWorkspaceMenu(vscr->clip.submenu, aicon);
-
-	menu_entry_set_enabled(dock->menu, CM_MOVE_ICONS, !aicon->omnipresent);
-
-	/* remove icon(s) */
-	entry = dock->menu->entries[CM_REMOVE_ICONS];
-	entry->clientdata = aicon;
-	if (n_selected > 1)
-		entry->text = wstrdup(_("Remove Icons"));
-	else
-		entry->text = wstrdup(_("Remove Icon"));
-
-	menu_entry_set_enabled(dock->menu, CM_REMOVE_ICONS, dock->icon_count > 1);
-
-	/* attract icon(s) */
-	entry = dock->menu->entries[CM_ATTRACT];
-	entry->clientdata = aicon;
-
-	/* launch */
-	entry = dock->menu->entries[CM_LAUNCH];
-	entry->clientdata = aicon;
-	menu_entry_set_enabled(dock->menu, CM_LAUNCH, aicon->command != NULL);
-
-	/* unhide here */
-	entry = dock->menu->entries[CM_BRING];
-	entry->clientdata = aicon;
-	if (wapp && wapp->flags.hidden)
-		entry->text = wstrdup(_("Unhide Here"));
-	else
-		entry->text = wstrdup(_("Bring Here"));
-
-	menu_entry_set_enabled(dock->menu, CM_BRING, appIsRunning);
-
-	/* hide */
-	entry = dock->menu->entries[CM_HIDE];
-	entry->clientdata = aicon;
-	if (wapp && wapp->flags.hidden)
-		entry->text = wstrdup(_("Unhide"));
-	else
-		entry->text = wstrdup(_("Hide"));
-
-	menu_entry_set_enabled(dock->menu, CM_HIDE, appIsRunning);
-
-	/* settings */
-	entry = dock->menu->entries[CM_SETTINGS];
-	entry->clientdata = aicon;
-	menu_entry_set_enabled(dock->menu, CM_SETTINGS, !aicon->editing && !wPreferences.flags.noupdates);
-
-	/* kill or remove drawer */
-	entry = dock->menu->entries[CM_KILL];
-	entry->clientdata = aicon;
-	if (wIsADrawer(aicon)) {
-		entry->callback = removeDrawerCallback;
-		entry->text = _("Remove drawer");
-		menu_entry_set_enabled(dock->menu, CM_KILL, True);
-	} else {
-		entry->callback = killCallback;
-		entry->text = wstrdup(_("Kill"));
-		menu_entry_set_enabled(dock->menu, CM_KILL, appIsRunning);
-	}
-
-	dock->menu->flags.realized = 0;
-
-	menu_entry_set_enabled_paint(dock->menu, CM_SELECT);
-	menu_entry_set_enabled_paint(dock->menu, CM_SELECTALL);
-	menu_entry_set_enabled_paint(dock->menu, CM_KEEP_ICONS);
-	menu_entry_set_enabled_paint(dock->menu, CM_MOVE_ICONS);
-	menu_entry_set_enabled_paint(dock->menu, CM_REMOVE_ICONS);
-	menu_entry_set_enabled_paint(dock->menu, CM_LAUNCH);
-	menu_entry_set_enabled_paint(dock->menu, CM_BRING);
-	menu_entry_set_enabled_paint(dock->menu, CM_HIDE);
-	menu_entry_set_enabled_paint(dock->menu, CM_SETTINGS);
-	menu_entry_set_enabled_paint(dock->menu, CM_KILL);
-}
-
 static void set_dockmenu_drawer_code(WDock *dock, WMenuEntry *entry, WAppIcon *aicon)
 {
 	virtual_screen *vscr = dock->vscr;
@@ -6866,12 +6719,13 @@ static void clip_button2_menu(WObjDescriptor *desc, XEvent *event)
 static void clip_button3_menu(WObjDescriptor *desc, XEvent *event)
 {
 	WObjDescriptor *desc2;
+	WApplication *wapp = NULL;
 	WAppIcon *aicon = desc->parent;
 	WDock *clip = aicon->dock;
 	virtual_screen *vscr = aicon->icon->vscr;
 	WScreen *scr = vscr->screen_ptr;
 	WMenuEntry *entry = NULL;
-	int x_pos;
+	int x_pos, n_selected, appIsRunning;
 
 	if (event->xbutton.send_event &&
 	    XGrabPointer(dpy, aicon->icon->core->window, True, ButtonMotionMask
@@ -6947,7 +6801,145 @@ static void clip_button3_menu(WObjDescriptor *desc, XEvent *event)
 	if (vscr->clip.submenu)
 		menu_map(vscr->clip.submenu);
 
-	set_dockmenu_clip_code(clip, entry, aicon);
+	appIsRunning = aicon->running && aicon->icon && aicon->icon->owner;
+
+	if (aicon->icon->owner)
+		wapp = wApplicationOf(aicon->icon->owner->main_window);
+
+	/* clip/drawer options */
+	if (vscr->clip.opt_menu)
+		updateOptionsMenu(clip, vscr->clip.opt_menu);
+
+	n_selected = numberOfSelectedIcons(clip);
+
+	/* Rename Workspace */
+	entry = clip->menu->entries[CM_ONE];
+	if (aicon == vscr->clip.icon) {
+		entry->callback = renameCallback;
+		entry->clientdata = clip;
+		entry->flags.indicator = 0;
+		entry->text = wstrdup(_("Rename Workspace"));
+	} else {
+		entry->callback = omnipresentCallback;
+		entry->clientdata = aicon;
+		if (n_selected > 0) {
+			entry->flags.indicator = 0;
+			entry->text = wstrdup(_("Toggle Omnipresent"));
+		} else {
+			entry->flags.indicator = 1;
+			entry->flags.indicator_on = aicon->omnipresent;
+			entry->flags.indicator_type = MI_CHECK;
+			entry->text = wstrdup(_("Omnipresent"));
+		}
+	}
+
+	/* select/unselect icon */
+	entry = clip->menu->entries[CM_SELECT];
+	entry->clientdata = aicon;
+	entry->flags.indicator_on = aicon->icon->selected;
+	menu_entry_set_enabled(clip->menu, CM_SELECT, aicon != vscr->clip.icon && !wIsADrawer(aicon));
+
+	/* select/unselect all icons */
+	entry = clip->menu->entries[CM_SELECTALL];
+	entry->clientdata = aicon;
+	if (n_selected > 0)
+		entry->text = wstrdup(_("Unselect All Icons"));
+	else
+		entry->text = wstrdup(_("Select All Icons"));
+
+	menu_entry_set_enabled(clip->menu, CM_SELECTALL, clip->icon_count > 1);
+
+	/* keep icon(s) */
+	entry = clip->menu->entries[CM_KEEP_ICONS];
+	entry->clientdata = aicon;
+	if (n_selected > 1)
+		entry->text = wstrdup(_("Keep Icons"));
+	else
+		entry->text = strdup(_("Keep Icon"));
+
+	menu_entry_set_enabled(clip->menu, CM_KEEP_ICONS, clip->icon_count > 1);
+
+	/* this is the workspace submenu part */
+	entry = clip->menu->entries[CM_MOVE_ICONS];
+	if (n_selected > 1)
+		entry->text = wstrdup(_("Move Icons To"));
+	else
+		entry->text = wstrdup(_("Move Icon To"));
+
+	if (vscr->clip.submenu)
+		updateWorkspaceMenu(vscr->clip.submenu, aicon);
+
+	menu_entry_set_enabled(clip->menu, CM_MOVE_ICONS, !aicon->omnipresent);
+
+	/* remove icon(s) */
+	entry = clip->menu->entries[CM_REMOVE_ICONS];
+	entry->clientdata = aicon;
+	if (n_selected > 1)
+		entry->text = wstrdup(_("Remove Icons"));
+	else
+		entry->text = wstrdup(_("Remove Icon"));
+
+	menu_entry_set_enabled(clip->menu, CM_REMOVE_ICONS, clip->icon_count > 1);
+
+	/* attract icon(s) */
+	entry = clip->menu->entries[CM_ATTRACT];
+	entry->clientdata = aicon;
+
+	/* launch */
+	entry = clip->menu->entries[CM_LAUNCH];
+	entry->clientdata = aicon;
+	menu_entry_set_enabled(clip->menu, CM_LAUNCH, aicon->command != NULL);
+
+	/* unhide here */
+	entry = clip->menu->entries[CM_BRING];
+	entry->clientdata = aicon;
+	if (wapp && wapp->flags.hidden)
+		entry->text = wstrdup(_("Unhide Here"));
+	else
+		entry->text = wstrdup(_("Bring Here"));
+
+	menu_entry_set_enabled(clip->menu, CM_BRING, appIsRunning);
+
+	/* hide */
+	entry = clip->menu->entries[CM_HIDE];
+	entry->clientdata = aicon;
+	if (wapp && wapp->flags.hidden)
+		entry->text = wstrdup(_("Unhide"));
+	else
+		entry->text = wstrdup(_("Hide"));
+
+	menu_entry_set_enabled(clip->menu, CM_HIDE, appIsRunning);
+
+	/* settings */
+	entry = clip->menu->entries[CM_SETTINGS];
+	entry->clientdata = aicon;
+	menu_entry_set_enabled(clip->menu, CM_SETTINGS, !aicon->editing && !wPreferences.flags.noupdates);
+
+	/* kill or remove drawer */
+	entry = clip->menu->entries[CM_KILL];
+	entry->clientdata = aicon;
+	if (wIsADrawer(aicon)) {
+		entry->callback = removeDrawerCallback;
+		entry->text = _("Remove drawer");
+		menu_entry_set_enabled(clip->menu, CM_KILL, True);
+	} else {
+		entry->callback = killCallback;
+		entry->text = wstrdup(_("Kill"));
+		menu_entry_set_enabled(clip->menu, CM_KILL, appIsRunning);
+	}
+
+	clip->menu->flags.realized = 0;
+
+	menu_entry_set_enabled_paint(clip->menu, CM_SELECT);
+	menu_entry_set_enabled_paint(clip->menu, CM_SELECTALL);
+	menu_entry_set_enabled_paint(clip->menu, CM_KEEP_ICONS);
+	menu_entry_set_enabled_paint(clip->menu, CM_MOVE_ICONS);
+	menu_entry_set_enabled_paint(clip->menu, CM_REMOVE_ICONS);
+	menu_entry_set_enabled_paint(clip->menu, CM_LAUNCH);
+	menu_entry_set_enabled_paint(clip->menu, CM_BRING);
+	menu_entry_set_enabled_paint(clip->menu, CM_HIDE);
+	menu_entry_set_enabled_paint(clip->menu, CM_SETTINGS);
+	menu_entry_set_enabled_paint(clip->menu, CM_KILL);
 
 	x_pos = event->xbutton.x_root - clip->menu->frame->width / 2 - 1;
 	if (x_pos < 0)
