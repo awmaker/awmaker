@@ -3519,6 +3519,7 @@ Bool wDockMoveIconBetweenDocks(WDock *src, WDock *dest, WAppIcon *icon, int x, i
 	/* New type is like the destination type */
 	switch (dest->type) {
 	case WM_DOCK:
+		icon->icon->core->descriptor.handle_mousedown = dock_icon_mouse_down;
 		icon->icon->core->descriptor.handle_enternotify = dock_enter_notify;
 		icon->icon->core->descriptor.handle_leavenotify = dock_leave_notify;
 
@@ -3538,6 +3539,7 @@ Bool wDockMoveIconBetweenDocks(WDock *src, WDock *dest, WAppIcon *icon, int x, i
 
 		break;
 	case WM_CLIP:
+		icon->icon->core->descriptor.handle_mousedown = clip_icon_mouse_down;
 		icon->icon->core->descriptor.handle_enternotify = clip_enter_notify;
 		icon->icon->core->descriptor.handle_leavenotify = clip_leave_notify;
 
@@ -3546,6 +3548,7 @@ Bool wDockMoveIconBetweenDocks(WDock *src, WDock *dest, WAppIcon *icon, int x, i
 
 		break;
 	case WM_DRAWER:
+		icon->icon->core->descriptor.handle_mousedown = drawer_icon_mouse_down;
 		icon->icon->core->descriptor.handle_enternotify = drawer_enter_notify;
 		icon->icon->core->descriptor.handle_leavenotify = drawer_leave_notify;
 
