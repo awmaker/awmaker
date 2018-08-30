@@ -6773,9 +6773,11 @@ static void clip_button3_menu(WObjDescriptor *desc, XEvent *event)
 	else
 		entry = wMenuAddCallback(clip->menu, _("Keep Icon"), keepIconsCallback, NULL);
 
-	entry = wMenuAddCallback(clip->menu, _("Move Icon To"), NULL, NULL);
-	wfree(entry->text);
-	entry->text = _("Move Icon To"); /* can be: Move Icons to */
+	/* Move Icon or Icons To */
+	if (n_selected > 1)
+		entry = wMenuAddCallback(clip->menu, _("Move Icons To"), NULL, NULL);
+	else
+		entry = wMenuAddCallback(clip->menu, _("Move Icon To"), NULL, NULL);
 
 	if (vscr->clip.submenu)
 		wMenuEntrySetCascade_create(clip->menu, entry, vscr->clip.submenu);
@@ -6856,11 +6858,6 @@ static void clip_button3_menu(WObjDescriptor *desc, XEvent *event)
 
 	/* this is the workspace submenu part */
 	entry = clip->menu->entries[CM_MOVE_ICONS];
-	if (n_selected > 1)
-		entry->text = wstrdup(_("Move Icons To"));
-	else
-		entry->text = wstrdup(_("Move Icon To"));
-
 	if (vscr->clip.submenu)
 		updateWorkspaceMenu(vscr->clip.submenu, aicon);
 
