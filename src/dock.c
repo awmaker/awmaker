@@ -6737,6 +6737,10 @@ static void clip_button3_menu(WObjDescriptor *desc, XEvent *event)
 
 	/* Set some variables used in the menu */
 	n_selected = numberOfSelectedIcons(clip);
+	appIsRunning = aicon->running && aicon->icon && aicon->icon->owner;
+
+	if (aicon->icon->owner)
+		wapp = wApplicationOf(aicon->icon->owner->main_window);
 
 	/* Create menus */
 	clip->menu = menu_create(vscr, NULL);
@@ -6788,10 +6792,14 @@ static void clip_button3_menu(WObjDescriptor *desc, XEvent *event)
 	else
 		entry = wMenuAddCallback(clip->menu, _("Remove Icon"), clip_remove_icons_callback, NULL);
 
-
 	wMenuAddCallback(clip->menu, _("Attract Icons"), attractIconsCallback, NULL);
 	wMenuAddCallback(clip->menu, _("Launch"), launchCallback, NULL);
-	wMenuAddCallback(clip->menu, _("Unhide Here"), unhideHereCallback, NULL);
+
+	/* Unhide Here / Bring Here */
+	if (wapp && wapp->flags.hidden)
+		wMenuAddCallback(clip->menu, _("Unhide Here"), unhideHereCallback, NULL);
+	else
+		wMenuAddCallback(clip->menu, _("Bring Here"), unhideHereCallback, NULL);
 
 	entry = wMenuAddCallback(clip->menu, _("Hide"), hideCallback, NULL);
 	wfree(entry->text);
@@ -6812,11 +6820,6 @@ static void clip_button3_menu(WObjDescriptor *desc, XEvent *event)
 
 	if (vscr->clip.submenu)
 		menu_map(vscr->clip.submenu);
-
-	appIsRunning = aicon->running && aicon->icon && aicon->icon->owner;
-
-	if (aicon->icon->owner)
-		wapp = wApplicationOf(aicon->icon->owner->main_window);
 
 	/* clip/drawer options */
 	if (vscr->clip.opt_menu)
@@ -6883,11 +6886,6 @@ static void clip_button3_menu(WObjDescriptor *desc, XEvent *event)
 	/* unhide here */
 	entry = clip->menu->entries[CM_BRING];
 	entry->clientdata = aicon;
-	if (wapp && wapp->flags.hidden)
-		entry->text = wstrdup(_("Unhide Here"));
-	else
-		entry->text = wstrdup(_("Bring Here"));
-
 	menu_entry_set_enabled(clip->menu, CM_BRING, appIsRunning);
 
 	/* hide */
