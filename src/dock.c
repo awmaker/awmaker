@@ -6782,9 +6782,12 @@ static void clip_button3_menu(WObjDescriptor *desc, XEvent *event)
 	if (vscr->clip.submenu)
 		wMenuEntrySetCascade_create(clip->menu, entry, vscr->clip.submenu);
 
-	entry = wMenuAddCallback(clip->menu, _("Remove Icon"), clip_remove_icons_callback, NULL);
-	wfree(entry->text);
-	entry->text = _("Remove Icon"); /* can be: Remove Icons */
+	/* Remove Icon or Icons */
+	if (n_selected > 1)
+		entry = wMenuAddCallback(clip->menu, _("Remove Icons"), clip_remove_icons_callback, NULL);
+	else
+		entry = wMenuAddCallback(clip->menu, _("Remove Icon"), clip_remove_icons_callback, NULL);
+
 
 	wMenuAddCallback(clip->menu, _("Attract Icons"), attractIconsCallback, NULL);
 	wMenuAddCallback(clip->menu, _("Launch"), launchCallback, NULL);
@@ -6866,11 +6869,6 @@ static void clip_button3_menu(WObjDescriptor *desc, XEvent *event)
 	/* remove icon(s) */
 	entry = clip->menu->entries[CM_REMOVE_ICONS];
 	entry->clientdata = aicon;
-	if (n_selected > 1)
-		entry->text = wstrdup(_("Remove Icons"));
-	else
-		entry->text = wstrdup(_("Remove Icon"));
-
 	menu_entry_set_enabled(clip->menu, CM_REMOVE_ICONS, clip->icon_count > 1);
 
 	/* attract icon(s) */
