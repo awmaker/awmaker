@@ -6735,6 +6735,9 @@ static void clip_button3_menu(WObjDescriptor *desc, XEvent *event)
 		return;
 	}
 
+	/* Set some variables used in the menu */
+	n_selected = numberOfSelectedIcons(clip);
+
 	/* Create menus */
 	clip->menu = menu_create(vscr, NULL);
 	vscr->clip.submenu = makeWorkspaceMenu(vscr);
@@ -6758,9 +6761,11 @@ static void clip_button3_menu(WObjDescriptor *desc, XEvent *event)
 	entry->flags.indicator_on = 1;
 	entry->flags.indicator_type = MI_CHECK;
 
-	entry = wMenuAddCallback(clip->menu, _("Select All Icons"), selectIconsCallback, NULL);
-	wfree(entry->text);
-	entry->text = _("Select All Icons"); /* can be: Unselect all icons */
+	/* Select / Unslect All Icons */
+	if (n_selected > 0)
+		entry = wMenuAddCallback(clip->menu, _("Unselect All Icons"), selectIconsCallback, NULL);
+	else
+		entry = wMenuAddCallback(clip->menu, _("Select All Icons"), selectIconsCallback, NULL);
 
 	entry = wMenuAddCallback(clip->menu, _("Keep Icon"), keepIconsCallback, NULL);
 	wfree(entry->text);
@@ -6810,8 +6815,6 @@ static void clip_button3_menu(WObjDescriptor *desc, XEvent *event)
 	if (vscr->clip.opt_menu)
 		updateOptionsMenu(clip, vscr->clip.opt_menu);
 
-	n_selected = numberOfSelectedIcons(clip);
-
 	/* Rename Workspace */
 	entry = clip->menu->entries[CM_ONE];
 	if (aicon == vscr->clip.icon) {
@@ -6842,11 +6845,6 @@ static void clip_button3_menu(WObjDescriptor *desc, XEvent *event)
 	/* select/unselect all icons */
 	entry = clip->menu->entries[CM_SELECTALL];
 	entry->clientdata = aicon;
-	if (n_selected > 0)
-		entry->text = wstrdup(_("Unselect All Icons"));
-	else
-		entry->text = wstrdup(_("Select All Icons"));
-
 	menu_entry_set_enabled(clip->menu, CM_SELECTALL, clip->icon_count > 1);
 
 	/* keep icon(s) */
