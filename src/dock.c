@@ -6767,9 +6767,11 @@ static void clip_button3_menu(WObjDescriptor *desc, XEvent *event)
 	else
 		entry = wMenuAddCallback(clip->menu, _("Select All Icons"), selectIconsCallback, NULL);
 
-	entry = wMenuAddCallback(clip->menu, _("Keep Icon"), keepIconsCallback, NULL);
-	wfree(entry->text);
-	entry->text = _("Keep Icon"); /* can be: Keep Icons */
+	/* Keep Icon / Keep Icons */
+	if (n_selected > 1)
+		entry = wMenuAddCallback(clip->menu, _("Keep Icons"), keepIconsCallback, NULL);
+	else
+		entry = wMenuAddCallback(clip->menu, _("Keep Icon"), keepIconsCallback, NULL);
 
 	entry = wMenuAddCallback(clip->menu, _("Move Icon To"), NULL, NULL);
 	wfree(entry->text);
@@ -6850,11 +6852,6 @@ static void clip_button3_menu(WObjDescriptor *desc, XEvent *event)
 	/* keep icon(s) */
 	entry = clip->menu->entries[CM_KEEP_ICONS];
 	entry->clientdata = aicon;
-	if (n_selected > 1)
-		entry->text = wstrdup(_("Keep Icons"));
-	else
-		entry->text = strdup(_("Keep Icon"));
-
 	menu_entry_set_enabled(clip->menu, CM_KEEP_ICONS, clip->icon_count > 1);
 
 	/* this is the workspace submenu part */
