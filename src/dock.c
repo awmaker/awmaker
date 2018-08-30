@@ -149,7 +149,7 @@ static void drawer_icon_mouse_down(WObjDescriptor *desc, XEvent *event);
 
 static pid_t execCommand(WAppIcon *btn, const char *command, WSavedState *state);
 
-static void trackDeadProcess(pid_t pid, unsigned char status, WDock *dock);
+static void trackDeadProcess(pid_t pid, unsigned int status, WDock *dock);
 
 static int getClipButton(int px, int py);
 
@@ -4648,8 +4648,9 @@ void wClipUpdateForWorkspaceChange(virtual_screen *vscr, int workspace)
 	}
 }
 
-static void trackDeadProcess(pid_t pid, unsigned char status, WDock *dock)
+static void trackDeadProcess(pid_t pid, unsigned int status, WDock *client_data)
 {
+	WDock *dock = (WDock *) client_data;
 	WAppIcon *icon;
 	int i;
 
