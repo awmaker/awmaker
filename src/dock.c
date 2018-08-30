@@ -1341,70 +1341,6 @@ static WMenu *makeDockPositionMenu(virtual_screen *vscr)
 	return menu;
 }
 
-void clip_menu_create(virtual_screen *vscr)
-{
-	WMenu *menu;
-	WMenuEntry *entry;
-
-	/* Create menus */
-	menu = menu_create(vscr, NULL);
-	vscr->clip.submenu = makeWorkspaceMenu(vscr);
-	if (!vscr->clip.opt_menu)
-		vscr->clip.opt_menu = clip_make_options_menu(vscr);
-
-	entry = wMenuAddCallback(menu, _("Clip Options"), NULL, NULL);
-
-	wMenuEntrySetCascade_create(menu, entry, vscr->clip.opt_menu);
-
-	/* The same menu is used for the dock and its appicons. If the menu
-	 * entry text is different between the two contexts, or if it can
-	 * change depending on some state, free the duplicated string (from
-	 * wMenuInsertCallback) and use gettext's string */
-	entry = wMenuAddCallback(menu, _("Rename Workspace"), renameCallback, NULL);
-	wfree(entry->text);
-	entry->text = _("Rename Workspace"); /* can be: (Toggle) Omnipresent */
-
-	entry = wMenuAddCallback(menu, _("Selected"), selectCallback, NULL);
-	entry->flags.indicator = 1;
-	entry->flags.indicator_on = 1;
-	entry->flags.indicator_type = MI_CHECK;
-
-	entry = wMenuAddCallback(menu, _("Select All Icons"), selectIconsCallback, NULL);
-	wfree(entry->text);
-	entry->text = _("Select All Icons"); /* can be: Unselect all icons */
-
-	entry = wMenuAddCallback(menu, _("Keep Icon"), keepIconsCallback, NULL);
-	wfree(entry->text);
-	entry->text = _("Keep Icon"); /* can be: Keep Icons */
-
-	entry = wMenuAddCallback(menu, _("Move Icon To"), NULL, NULL);
-	wfree(entry->text);
-	entry->text = _("Move Icon To"); /* can be: Move Icons to */
-
-	if (vscr->clip.submenu)
-		wMenuEntrySetCascade_create(menu, entry, vscr->clip.submenu);
-
-	entry = wMenuAddCallback(menu, _("Remove Icon"), clip_remove_icons_callback, NULL);
-	wfree(entry->text);
-	entry->text = _("Remove Icon"); /* can be: Remove Icons */
-
-	wMenuAddCallback(menu, _("Attract Icons"), attractIconsCallback, NULL);
-	wMenuAddCallback(menu, _("Launch"), launchCallback, NULL);
-	wMenuAddCallback(menu, _("Unhide Here"), unhideHereCallback, NULL);
-
-	entry = wMenuAddCallback(menu, _("Hide"), hideCallback, NULL);
-	wfree(entry->text);
-	entry->text = _("Hide"); /* can be: Unhide */
-
-	wMenuAddCallback(menu, _("Settings..."), settingsCallback, NULL);
-
-	entry = wMenuAddCallback(menu, _("Kill"), killCallback, NULL);
-	wfree(entry->text);
-	entry->text = _("Kill"); /* can be: Remove drawer */
-
-	vscr->clip.menu = menu;
-}
-
 static void clip_menu_unmap(virtual_screen *vscr, WMenu *menu)
 {
 	vscr->clip.opt_menu->flags.realized = 0;
@@ -6945,8 +6881,63 @@ static void clip_button3_menu(WObjDescriptor *desc, XEvent *event)
 		return;
 	}
 
-	clip_menu_create(vscr);
-	clip->menu = vscr->clip.menu;
+	/* Create menus */
+	clip->menu = menu_create(vscr, NULL);
+	vscr->clip.submenu = makeWorkspaceMenu(vscr);
+	if (!vscr->clip.opt_menu)
+		vscr->clip.opt_menu = clip_make_options_menu(vscr);
+
+	entry = wMenuAddCallback(clip->menu, _("Clip Options"), NULL, NULL);
+
+	wMenuEntrySetCascade_create(clip->menu, entry, vscr->clip.opt_menu);
+
+	/* The same menu is used for the dock and its appicons. If the menu
+	 * entry text is different between the two contexts, or if it can
+	 * change depending on some state, free the duplicated string (from
+	 * wMenuInsertCallback) and use gettext's string */
+	entry = wMenuAddCallback(clip->menu, _("Rename Workspace"), renameCallback, NULL);
+	wfree(entry->text);
+	entry->text = _("Rename Workspace"); /* can be: (Toggle) Omnipresent */
+
+	entry = wMenuAddCallback(clip->menu, _("Selected"), selectCallback, NULL);
+	entry->flags.indicator = 1;
+	entry->flags.indicator_on = 1;
+	entry->flags.indicator_type = MI_CHECK;
+
+	entry = wMenuAddCallback(clip->menu, _("Select All Icons"), selectIconsCallback, NULL);
+	wfree(entry->text);
+	entry->text = _("Select All Icons"); /* can be: Unselect all icons */
+
+	entry = wMenuAddCallback(clip->menu, _("Keep Icon"), keepIconsCallback, NULL);
+	wfree(entry->text);
+	entry->text = _("Keep Icon"); /* can be: Keep Icons */
+
+	entry = wMenuAddCallback(clip->menu, _("Move Icon To"), NULL, NULL);
+	wfree(entry->text);
+	entry->text = _("Move Icon To"); /* can be: Move Icons to */
+
+	if (vscr->clip.submenu)
+		wMenuEntrySetCascade_create(clip->menu, entry, vscr->clip.submenu);
+
+	entry = wMenuAddCallback(clip->menu, _("Remove Icon"), clip_remove_icons_callback, NULL);
+	wfree(entry->text);
+	entry->text = _("Remove Icon"); /* can be: Remove Icons */
+
+	wMenuAddCallback(clip->menu, _("Attract Icons"), attractIconsCallback, NULL);
+	wMenuAddCallback(clip->menu, _("Launch"), launchCallback, NULL);
+	wMenuAddCallback(clip->menu, _("Unhide Here"), unhideHereCallback, NULL);
+
+	entry = wMenuAddCallback(clip->menu, _("Hide"), hideCallback, NULL);
+	wfree(entry->text);
+	entry->text = _("Hide"); /* can be: Unhide */
+
+	wMenuAddCallback(clip->menu, _("Settings..."), settingsCallback, NULL);
+
+	entry = wMenuAddCallback(clip->menu, _("Kill"), killCallback, NULL);
+	wfree(entry->text);
+	entry->text = _("Kill"); /* can be: Remove drawer */
+
+	vscr->clip.menu = clip->menu;
 
 	menu_map(clip->menu);
 
