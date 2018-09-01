@@ -5358,6 +5358,15 @@ static void dock_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 	dock->menu = NULL;
 }
 
+static void drawer_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
+{
+	virtual_screen *vscr = aicon->icon->vscr;
+
+	drawer_menu_map(dock->menu, vscr);
+	open_menu_drawer(dock, aicon, event);
+	drawer_menu_unmap(vscr, dock->menu);
+}
+
 static void dock_icon_mouse_down(WObjDescriptor *desc, XEvent *event)
 {
 	WAppIcon *aicon = desc->parent;
@@ -5560,10 +5569,7 @@ static void drawer_icon_mouse_down(WObjDescriptor *desc, XEvent *event)
 			return;
 		}
 
-		drawer_menu_map(dock->menu, vscr);
-		open_menu_drawer(dock, aicon, event);
-		drawer_menu_unmap(vscr, dock->menu);
-
+		drawer_menu(dock, aicon, event);
 		break;
 	case Button4:
 		break;
