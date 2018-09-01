@@ -5213,9 +5213,11 @@ static void drawer_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 
 		wMenuAddCallback(menu, _("Settings..."), settingsCallback, NULL);
 
-		entry = wMenuAddCallback(menu, _("Kill"), killCallback, NULL);
-		wfree(entry->text);
-		entry->text = _("Kill"); /* can be: Remove drawer */
+		/* Remove drawer / Kill */
+		if (wIsADrawer(aicon))
+			entry = wMenuAddCallback(menu, _("Remove drawer"), removeDrawerCallback, NULL);
+		else
+			entry = wMenuAddCallback(menu, _("Kill"), killCallback, NULL);
 
 		vscr->dock.drawer_menu = menu;
 	}
@@ -5282,15 +5284,10 @@ static void drawer_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 	/* kill or remove drawer */
 	entry = dock->menu->entries[RM_KILL];
 	entry->clientdata = aicon;
-	if (wIsADrawer(aicon)) {
-		entry->callback = removeDrawerCallback;
-		entry->text = _("Remove drawer");
+	if (wIsADrawer(aicon))
 		menu_entry_set_enabled(dock->menu, RM_KILL, True);
-	} else {
-		entry->callback = killCallback;
-		entry->text = _("Kill");
+	else
 		menu_entry_set_enabled(dock->menu, RM_KILL, appIsRunning);
-	}
 
 	dock->menu->flags.realized = 0;
 
