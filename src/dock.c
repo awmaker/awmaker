@@ -1676,12 +1676,7 @@ WDock *drawer_create(virtual_screen *vscr, const char *name)
 	btn->icon->core->descriptor.parent_type = WCLASS_DOCK_ICON;
 	btn->icon->core->descriptor.parent = btn;
 	btn->icon->tile_type = TILE_DRAWER;
-
-	/* create dock menu */
-	if (!vscr->dock.drawer_menu)
-		drawer_menu_create(vscr);
-
-	dock->menu = vscr->dock.drawer_menu;
+	dock->menu = NULL;
 	drawerAppendToChain(dock);
 
 	return dock;
@@ -5362,6 +5357,11 @@ static void drawer_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 {
 	virtual_screen *vscr = aicon->icon->vscr;
 
+	/* create dock menu */
+	if (!vscr->dock.drawer_menu)
+		drawer_menu_create(vscr);
+
+	dock->menu = vscr->dock.drawer_menu;
 	drawer_menu_map(dock->menu, vscr);
 	open_menu_drawer(dock, aicon, event);
 	drawer_menu_unmap(vscr, dock->menu);
