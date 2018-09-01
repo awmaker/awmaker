@@ -6716,6 +6716,7 @@ static void clip_button2_menu(WObjDescriptor *desc, XEvent *event)
 
 static void clip_button3_menu(WObjDescriptor *desc, XEvent *event)
 {
+	WMenu *opt_menu;
 	WObjDescriptor *desc2;
 	WApplication *wapp = NULL;
 	WAppIcon *aicon = desc->parent;
@@ -6743,9 +6744,9 @@ static void clip_button3_menu(WObjDescriptor *desc, XEvent *event)
 	/* Create menus */
 	clip->menu = menu_create(vscr, NULL);
 	vscr->clip.submenu = makeWorkspaceMenu(vscr);
-	vscr->clip.opt_menu = clip_make_options_menu(vscr);
+	opt_menu = clip_make_options_menu(vscr);
 	entry = wMenuAddCallback(clip->menu, _("Clip Options"), NULL, NULL);
-	wMenuEntrySetCascade_create(clip->menu, entry, vscr->clip.opt_menu);
+	wMenuEntrySetCascade_create(clip->menu, entry, opt_menu);
 
 	/*
 	 * The same menu is used for the dock and its appicons. If the menu
@@ -6820,11 +6821,11 @@ static void clip_button3_menu(WObjDescriptor *desc, XEvent *event)
 	vscr->clip.menu = clip->menu;
 
 	menu_map(clip->menu);
-	menu_map(vscr->clip.opt_menu);
+	menu_map(opt_menu);
 	menu_map(vscr->clip.submenu);
 
 	/* clip/drawer options */
-	updateOptionsMenu(clip, vscr->clip.opt_menu);
+	updateOptionsMenu(clip, opt_menu);
 
 	/* Rename Workspace */
 	entry = clip->menu->entries[CM_ONE];
@@ -6926,7 +6927,7 @@ static void clip_button3_menu(WObjDescriptor *desc, XEvent *event)
 	desc2 = &clip->menu->core->descriptor;
 	(*desc2->handle_mousedown) (desc2, event);
 
-	vscr->clip.opt_menu->flags.realized = 0;
+	opt_menu->flags.realized = 0;
 	vscr->clip.submenu->flags.realized = 0;
 	clip->menu->flags.realized = 0;
 
@@ -6935,6 +6936,6 @@ static void clip_button3_menu(WObjDescriptor *desc, XEvent *event)
 
 	vscr->clip.menu = NULL;
 	vscr->clip.submenu = NULL;
-	vscr->clip.opt_menu = NULL;
+	opt_menu = NULL;
 	clip->menu = NULL;
 }

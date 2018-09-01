@@ -107,7 +107,6 @@ struct virtual_screen {
 
 		struct WMenu *menu;           /* Menu for clips */
 		struct WMenu *submenu;        /* Workspace list for clips */
-		struct WMenu *opt_menu;       /* Options for Clip */
 		struct WMenu *ws_menu;        /* workspace menu for clip */
 
 		int mapped;             /* The clip is mapped */
