@@ -6818,8 +6818,6 @@ static void clip_button3_menu(WObjDescriptor *desc, XEvent *event)
 	else
 		entry = wMenuAddCallback(clip->menu, _("Kill"), killCallback, NULL);
 
-	vscr->clip.menu = clip->menu;
-
 	menu_map(clip->menu);
 	menu_map(opt_menu);
 	menu_map(wks_menu);
@@ -6931,10 +6929,8 @@ static void clip_button3_menu(WObjDescriptor *desc, XEvent *event)
 	wks_menu->flags.realized = 0;
 	clip->menu->flags.realized = 0;
 
-	if (vscr->clip.menu)
-		wMenuDestroy(vscr->clip.menu);
+	wMenuDestroy(clip->menu);
 
-	vscr->clip.menu = NULL;
 	wks_menu = NULL;
 	opt_menu = NULL;
 	clip->menu = NULL;
