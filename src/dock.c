@@ -5162,6 +5162,13 @@ static void drawer_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 	int n_selected, appIsRunning, x_pos;
 	WApplication *wapp = NULL;
 
+	/* Set some variables used in the menu */
+	n_selected = numberOfSelectedIcons(dock);
+	appIsRunning = aicon->running && aicon->icon && aicon->icon->owner;
+
+	if (aicon->icon->owner)
+		wapp = wApplicationOf(aicon->icon->owner->main_window);
+
 	/* create dock menu */
 	if (!vscr->dock.drawer_menu) {
 		menu = menu_create(vscr, NULL);
@@ -5211,16 +5218,9 @@ static void drawer_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 	if (vscr->dock.drawer_opt_menu)
 		menu_map(vscr->dock.drawer_opt_menu);
 
-	appIsRunning = aicon->running && aicon->icon && aicon->icon->owner;
-
-	if (aicon->icon->owner)
-		wapp = wApplicationOf(aicon->icon->owner->main_window);
-
 	/* clip/drawer options */
 	if (vscr->dock.drawer_opt_menu)
 		updateOptionsMenu(dock, vscr->dock.drawer_opt_menu);
-
-	n_selected = numberOfSelectedIcons(dock);
 
 	/* select/unselect icon */
 	entry = dock->menu->entries[RM_SELECT];
