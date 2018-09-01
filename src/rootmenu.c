@@ -846,7 +846,6 @@ static void cleanupWindowsMenu(WMenu *menu)
 
 static WMenuEntry *addWindowsMenu(virtual_screen *vscr, WMenu *menu, const char *title)
 {
-	WMenu *wwmenu;
 	WWindow *wwin;
 	WMenuEntry *entry;
 
@@ -858,9 +857,8 @@ static WMenuEntry *addWindowsMenu(virtual_screen *vscr, WMenu *menu, const char 
 
 	vscr->menu.flags.added_window_menu = 1;
 
-	wwmenu = menu_create(vscr, _("Window List"));
-	wwmenu->on_destroy = cleanupWindowsMenu;
-	vscr->menu.root_switch = wwmenu;
+	vscr->menu.root_switch = menu_create(vscr, _("Window List"));
+	vscr->menu.root_switch->on_destroy = cleanupWindowsMenu;
 	wwin = vscr->window.focused;
 	while (wwin) {
 		switchmenu_additem(vscr->menu.root_switch, wwin);
@@ -868,7 +866,7 @@ static WMenuEntry *addWindowsMenu(virtual_screen *vscr, WMenu *menu, const char 
 	}
 
 	entry = wMenuAddCallback(menu, title, NULL, NULL);
-	wMenuEntrySetCascade_create(menu, entry, wwmenu);
+	wMenuEntrySetCascade_create(menu, entry, vscr->menu.root_switch);
 
 	return entry;
 }
