@@ -1339,15 +1339,6 @@ static WMenu *makeDockPositionMenu(virtual_screen *vscr)
 	return menu;
 }
 
-static void drawer_menu_unmap(virtual_screen *vscr, WMenu *menu)
-{
-	menu_unmap(vscr->dock.drawer_opt_menu);
-	menu_unmap(menu);
-
-	vscr->dock.drawer_opt_menu->flags.realized = 0;
-	menu->flags.realized = 0;
-}
-
 static WDock *dock_create_core(virtual_screen *vscr)
 {
 	WDock *dock;
@@ -5338,7 +5329,12 @@ static void drawer_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 	event->xany.send_event = True;
 	desc = &dock->menu->core->descriptor;
 	(*desc->handle_mousedown) (desc, event);
-	drawer_menu_unmap(vscr, dock->menu);
+
+	menu_unmap(vscr->dock.drawer_opt_menu);
+	menu_unmap(dock->menu);
+
+	vscr->dock.drawer_opt_menu->flags.realized = 0;
+	dock->menu->flags.realized = 0;
 }
 
 static void dock_icon_mouse_down(WObjDescriptor *desc, XEvent *event)
