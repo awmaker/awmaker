@@ -991,9 +991,9 @@ static void handleClientMessage(XEvent *event)
 			wColormapAllowClientInstallation(vscr, False);
 
 	} else if (event->xclient.message_type == w_global.atom.wmaker.command) {
-		len = sizeof(event->xclient.data.b) + 1;
-		command = wmalloc(len);
-		strncpy(command, event->xclient.data.b, sizeof(event->xclient.data.b));
+		len = sizeof(event->xclient.data.b);
+		command = wmalloc(len + 1);
+		strncpy(command, event->xclient.data.b, len);
 
 		if (strncmp(command, "Reconfigure", sizeof("Reconfigure")) == 0) {
 			wwarning(_("Got Reconfigure command"));
