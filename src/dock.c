@@ -5485,6 +5485,14 @@ static void clip_icon_mouse_down(WObjDescriptor *desc, XEvent *event)
 		}
 		break;
 	case Button3:
+		if (event->xbutton.send_event &&
+		    XGrabPointer(dpy, aicon->icon->core->window, True, ButtonMotionMask
+				 | ButtonReleaseMask | ButtonPressMask, GrabModeAsync,
+				 GrabModeAsync, None, None, CurrentTime) != GrabSuccess) {
+			wwarning("pointer grab failed for clip icon menu");
+			return;
+		}
+
 		clip_button3_menu(desc, event);
 		break;
 	case Button4:
@@ -6726,14 +6734,6 @@ static void clip_button3_menu(WObjDescriptor *desc, XEvent *event)
 	WScreen *scr = vscr->screen_ptr;
 	WMenuEntry *entry = NULL;
 	int x_pos, n_selected, appIsRunning;
-
-	if (event->xbutton.send_event &&
-	    XGrabPointer(dpy, aicon->icon->core->window, True, ButtonMotionMask
-			 | ButtonReleaseMask | ButtonPressMask, GrabModeAsync,
-			 GrabModeAsync, None, None, CurrentTime) != GrabSuccess) {
-		wwarning("pointer grab failed for clip icon menu");
-		return;
-	}
 
 	/* Set some variables used in the menu */
 	n_selected = numberOfSelectedIcons(clip);
