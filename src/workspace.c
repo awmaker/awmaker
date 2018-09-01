@@ -224,10 +224,10 @@ static void update_submenu(WMenu *menu)
 	virtual_screen *vscr;
 	int i;
 
-	vscr = menu->vscr;
 	if (!menu)
 		return;
 
+	vscr = menu->vscr;
 	i = menu->entry_no;
 	while (i > vscr->workspace.count)
 		wMenuRemoveItem(menu, --i);
