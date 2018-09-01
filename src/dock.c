@@ -6759,14 +6759,21 @@ static void clip_button3_menu(WObjDescriptor *desc, XEvent *event)
 
 	wMenuEntrySetCascade_create(clip->menu, entry, vscr->clip.opt_menu);
 
-	/* The same menu is used for the dock and its appicons. If the menu
+	/*
+	 * The same menu is used for the dock and its appicons. If the menu
 	 * entry text is different between the two contexts, or if it can
 	 * change depending on some state, free the duplicated string (from
-	 * wMenuInsertCallback) and use gettext's string */
-	entry = wMenuAddCallback(clip->menu, _("Rename Workspace"), renameCallback, NULL);
-	wfree(entry->text);
-	entry->text = _("Rename Workspace"); /* can be: (Toggle) Omnipresent */
+	 * wMenuInsertCallback) and use gettext's string
+	 */
+	if (aicon == vscr->clip.icon)
+		entry = wMenuAddCallback(clip->menu, _("Rename Workspace"), renameCallback, NULL);
+	else
+		if (n_selected > 0)
+			entry = wMenuAddCallback(clip->menu, _("Toggle Omnipresent"), omnipresentCallback, NULL);
+		else
+			entry = wMenuAddCallback(clip->menu, _("Omnipresent"), omnipresentCallback, NULL);
 
+	/* Selected */
 	entry = wMenuAddCallback(clip->menu, _("Selected"), selectCallback, NULL);
 	entry->flags.indicator = 1;
 	entry->flags.indicator_on = 1;
@@ -6840,21 +6847,16 @@ static void clip_button3_menu(WObjDescriptor *desc, XEvent *event)
 	/* Rename Workspace */
 	entry = clip->menu->entries[CM_ONE];
 	if (aicon == vscr->clip.icon) {
-		entry->callback = renameCallback;
 		entry->clientdata = clip;
 		entry->flags.indicator = 0;
-		entry->text = wstrdup(_("Rename Workspace"));
 	} else {
-		entry->callback = omnipresentCallback;
 		entry->clientdata = aicon;
 		if (n_selected > 0) {
 			entry->flags.indicator = 0;
-			entry->text = wstrdup(_("Toggle Omnipresent"));
 		} else {
 			entry->flags.indicator = 1;
 			entry->flags.indicator_on = aicon->omnipresent;
 			entry->flags.indicator_type = MI_CHECK;
-			entry->text = wstrdup(_("Omnipresent"));
 		}
 	}
 
