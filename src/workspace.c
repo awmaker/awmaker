@@ -64,7 +64,6 @@ int set_clip_omnipresent(virtual_screen *vscr, int wksno);
 void menu_workspace_addwks(virtual_screen *vscr, WMenu *menu);
 void menu_workspace_delwks(virtual_screen *vscr, WMenu *menu);
 void menu_workspace_shortcut_labels(virtual_screen *vscr, WMenu *menu);
-void wWorkspaceMenuUpdate_map(virtual_screen *vscr, WMenu *menu);
 
 static WMPropList *dWorkspaces = NULL;
 static WMPropList *dClip, *dName;
@@ -591,6 +590,7 @@ void wWorkspaceForceChange(virtual_screen *vscr, int workspace)
 	vscr->workspace.current = workspace;
 
 	wWorkspaceMenuUpdate(vscr, vscr->workspace.menu);
+	wWorkspaceMenuUpdate_map(vscr, vscr->workspace.menu);
 
 	tmp = vscr->window.focused;
 	if (tmp != NULL) {
@@ -966,7 +966,6 @@ void wWorkspaceMenuUpdate(virtual_screen *vscr, WMenu *menu)
 		menu_workspace_delwks(vscr, menu);
 
 	menu_workspace_shortcut_labels(vscr, menu);
-	wWorkspaceMenuUpdate_map(vscr, menu);
 }
 
 void wWorkspaceSaveState(virtual_screen *vscr, WMPropList *old_state)
