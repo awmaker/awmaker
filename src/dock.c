@@ -6817,9 +6817,11 @@ static void clip_button3_menu(WObjDescriptor *desc, XEvent *event)
 	/* Settings */
 	wMenuAddCallback(clip->menu, _("Settings..."), settingsCallback, NULL);
 
-	entry = wMenuAddCallback(clip->menu, _("Kill"), killCallback, NULL);
-	wfree(entry->text);
-	entry->text = _("Kill"); /* can be: Remove drawer */
+	/* Kill / Remove Drawer */
+	if (wIsADrawer(aicon))
+		entry = wMenuAddCallback(clip->menu, _("Remove drawer"), removeDrawerCallback, NULL);
+	else
+		entry = wMenuAddCallback(clip->menu, _("Kill"), killCallback, NULL);
 
 	vscr->clip.menu = clip->menu;
 
@@ -6911,15 +6913,10 @@ static void clip_button3_menu(WObjDescriptor *desc, XEvent *event)
 	/* kill or remove drawer */
 	entry = clip->menu->entries[CM_KILL];
 	entry->clientdata = aicon;
-	if (wIsADrawer(aicon)) {
-		entry->callback = removeDrawerCallback;
-		entry->text = _("Remove drawer");
+	if (wIsADrawer(aicon))
 		menu_entry_set_enabled(clip->menu, CM_KILL, True);
-	} else {
-		entry->callback = killCallback;
-		entry->text = wstrdup(_("Kill"));
+	else
 		menu_entry_set_enabled(clip->menu, CM_KILL, appIsRunning);
-	}
 
 	clip->menu->flags.realized = 0;
 
