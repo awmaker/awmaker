@@ -6743,11 +6743,8 @@ static void clip_button3_menu(WObjDescriptor *desc, XEvent *event)
 	/* Create menus */
 	clip->menu = menu_create(vscr, NULL);
 	vscr->clip.submenu = makeWorkspaceMenu(vscr);
-	if (!vscr->clip.opt_menu)
-		vscr->clip.opt_menu = clip_make_options_menu(vscr);
-
+	vscr->clip.opt_menu = clip_make_options_menu(vscr);
 	entry = wMenuAddCallback(clip->menu, _("Clip Options"), NULL, NULL);
-
 	wMenuEntrySetCascade_create(clip->menu, entry, vscr->clip.opt_menu);
 
 	/*
@@ -6788,8 +6785,7 @@ static void clip_button3_menu(WObjDescriptor *desc, XEvent *event)
 	else
 		entry = wMenuAddCallback(clip->menu, _("Move Icon To"), NULL, NULL);
 
-	if (vscr->clip.submenu)
-		wMenuEntrySetCascade_create(clip->menu, entry, vscr->clip.submenu);
+	wMenuEntrySetCascade_create(clip->menu, entry, vscr->clip.submenu);
 
 	/* Remove Icon or Icons */
 	if (n_selected > 1)
@@ -6824,16 +6820,11 @@ static void clip_button3_menu(WObjDescriptor *desc, XEvent *event)
 	vscr->clip.menu = clip->menu;
 
 	menu_map(clip->menu);
-
-	if (vscr->clip.opt_menu)
-		menu_map(vscr->clip.opt_menu);
-
-	if (vscr->clip.submenu)
-		menu_map(vscr->clip.submenu);
+	menu_map(vscr->clip.opt_menu);
+	menu_map(vscr->clip.submenu);
 
 	/* clip/drawer options */
-	if (vscr->clip.opt_menu)
-		updateOptionsMenu(clip, vscr->clip.opt_menu);
+	updateOptionsMenu(clip, vscr->clip.opt_menu);
 
 	/* Rename Workspace */
 	entry = clip->menu->entries[CM_ONE];
@@ -6869,9 +6860,7 @@ static void clip_button3_menu(WObjDescriptor *desc, XEvent *event)
 
 	/* this is the workspace submenu part */
 	entry = clip->menu->entries[CM_MOVE_ICONS];
-	if (vscr->clip.submenu)
-		updateWorkspaceMenu(vscr->clip.submenu, aicon);
-
+	updateWorkspaceMenu(vscr->clip.submenu, aicon);
 	menu_entry_set_enabled(clip->menu, CM_MOVE_ICONS, !aicon->omnipresent);
 
 	/* remove icon(s) */
