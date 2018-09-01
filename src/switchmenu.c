@@ -104,7 +104,6 @@ WMenu *switchmenu_create(virtual_screen *vscr)
 		wwin = wwin->prev;
 	}
 
-	menu_move_visible(switch_menu);
 	return switch_menu;
 }
 
