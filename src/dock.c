@@ -6694,8 +6694,7 @@ static void clip_button2_menu(WObjDescriptor *desc, XEvent *event)
 	WMenu *wsMenu;
 	int xpos;
 
-	vscr->clip.ws_menu = wWorkspaceMenuMake(vscr, False);
-	wsMenu = vscr->clip.ws_menu;
+	wsMenu = wWorkspaceMenuMake(vscr, False);
 	wWorkspaceMenuUpdate(vscr, wsMenu);
 
 	xpos = event->xbutton.x_root - wsMenu->frame->width / 2 - 1;
@@ -6711,9 +6710,9 @@ static void clip_button2_menu(WObjDescriptor *desc, XEvent *event)
 	event->xany.send_event = True;
 	(*desc->handle_mousedown) (desc, event);
 
-	vscr->clip.ws_menu->flags.realized = 0;
-	wMenuDestroy(vscr->clip.ws_menu);
-	vscr->clip.ws_menu = NULL;
+	wsMenu->flags.realized = 0;
+	wMenuDestroy(wsMenu);
+	wsMenu = NULL;
 }
 
 static void clip_button3_menu(WObjDescriptor *desc, XEvent *event)
