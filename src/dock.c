@@ -4791,30 +4791,6 @@ static void set_dockmenu_drawer_code(WDock *dock, WMenuEntry *entry, WAppIcon *a
 	menu_entry_set_enabled_paint(dock->menu, RM_KILL);
 }
 
-static void open_menu_drawer(WDock *dock, WAppIcon *aicon, XEvent *event)
-{
-	virtual_screen *vscr = dock->vscr;
-	WScreen *scr = vscr->screen_ptr;
-	WObjDescriptor *desc;
-	WMenuEntry *entry = NULL;
-	int x_pos;
-
-	set_dockmenu_drawer_code(dock, entry, aicon);
-
-	x_pos = event->xbutton.x_root - dock->menu->frame->width / 2 - 1;
-	if (x_pos < 0)
-		x_pos = 0;
-	else if (x_pos + dock->menu->frame->width > scr->scr_width - 2)
-		x_pos = scr->scr_width - dock->menu->frame->width - 4;
-
-	wMenuMapAt(vscr, dock->menu, x_pos, event->xbutton.y_root + 2, False);
-
-	/* allow drag select */
-	event->xany.send_event = True;
-	desc = &dock->menu->core->descriptor;
-	(*desc->handle_mousedown) (desc, event);
-}
-
 /******************************************************************/
 static void iconDblClick(WObjDescriptor *desc, XEvent *event)
 {
@@ -5300,9 +5276,12 @@ static void dock_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 
 static void drawer_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 {
+	virtual_screen *vscr = aicon->icon->vscr;
+	WScreen *scr = vscr->screen_ptr;
 	WMenu *menu;
 	WMenuEntry *entry;
-	virtual_screen *vscr = aicon->icon->vscr;
+	WObjDescriptor *desc;
+	int x_pos;
 
 	/* create dock menu */
 	if (!vscr->dock.drawer_menu) {
@@ -5353,7 +5332,20 @@ static void drawer_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 	if (vscr->dock.drawer_opt_menu)
 		menu_map(vscr->dock.drawer_opt_menu);
 
-	open_menu_drawer(dock, aicon, event);
+	set_dockmenu_drawer_code(dock, entry, aicon);
+
+	x_pos = event->xbutton.x_root - dock->menu->frame->width / 2 - 1;
+	if (x_pos < 0)
+		x_pos = 0;
+	else if (x_pos + dock->menu->frame->width > scr->scr_width - 2)
+		x_pos = scr->scr_width - dock->menu->frame->width - 4;
+
+	wMenuMapAt(vscr, dock->menu, x_pos, event->xbutton.y_root + 2, False);
+
+	/* allow drag select */
+	event->xany.send_event = True;
+	desc = &dock->menu->core->descriptor;
+	(*desc->handle_mousedown) (desc, event);
 	drawer_menu_unmap(vscr, dock->menu);
 }
 
