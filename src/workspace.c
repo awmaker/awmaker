@@ -211,7 +211,7 @@ void workspace_map(virtual_screen *vscr, WWorkspace *wspace, int wksno, WMPropLi
 		clip_icon_map(vscr);
 
 	set_clip_in_workspace_map(vscr, wspace, wksno, wks_state);
-	wWorkspaceMenuUpdate_map(vscr, vscr->workspace.menu);
+	wWorkspaceMenuUpdate_map(vscr);
 
 	wNETWMUpdateDesktop(vscr);
 	WMPostNotificationName(WMNWorkspaceCreated, vscr, (void *)(uintptr_t) (vscr->workspace.count - 1));
@@ -285,7 +285,7 @@ Bool wWorkspaceDelete(virtual_screen *vscr, int workspace)
 
 	menu_workspace_delwks(vscr, vscr->workspace.menu);
 	menu_workspace_shortcut_labels(vscr, vscr->workspace.menu);
-	wWorkspaceMenuUpdate_map(vscr, vscr->workspace.menu);
+	wWorkspaceMenuUpdate_map(vscr);
 
 	update_submenu(vscr->workspace.submenu);
 
@@ -590,7 +590,7 @@ void wWorkspaceForceChange(virtual_screen *vscr, int workspace)
 	vscr->workspace.current = workspace;
 
 	wWorkspaceMenuUpdate(vscr, vscr->workspace.menu);
-	wWorkspaceMenuUpdate_map(vscr, vscr->workspace.menu);
+	wWorkspaceMenuUpdate_map(vscr);
 
 	tmp = vscr->window.focused;
 	if (tmp != NULL) {
@@ -941,8 +941,9 @@ void workspaces_set_menu_enabled_items(virtual_screen *vscr, WMenu *menu)
 	menu_entry_set_enabled_paint(menu, MC_LAST_USED);
 }
 
-void wWorkspaceMenuUpdate_map(virtual_screen *vscr, WMenu *menu)
+void wWorkspaceMenuUpdate_map(virtual_screen *vscr)
 {
+	WMenu *menu = vscr->workspace.menu;
 	int tmp;
 
 	if (!menu)

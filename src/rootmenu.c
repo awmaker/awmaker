@@ -833,7 +833,7 @@ static WMenuEntry *addWorkspaceMenu(virtual_screen *vscr, WMenu *menu, const cha
 	entry = wMenuAddCallback(menu, title, NULL, NULL);
 	wMenuEntrySetCascade_create(menu, entry, vscr->workspace.menu);
 	wWorkspaceMenuUpdate(vscr, vscr->workspace.menu);
-	wWorkspaceMenuUpdate_map(vscr, vscr->workspace.menu);
+	wWorkspaceMenuUpdate_map(vscr);
 
 	return entry;
 }
