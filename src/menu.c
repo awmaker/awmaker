@@ -1232,7 +1232,13 @@ static WMenu *findMenu(virtual_screen *vscr, int *x_ret, int *y_ret)
 	int x, y, wx, wy;
 	unsigned int mask;
 
-	if (!vscr && !vscr->screen_ptr)
+	if (!vscr)
+		return NULL;
+
+	if (!vscr->screen_ptr)
+		return NULL;
+
+	if (vscr->screen_ptr->root_win == None)
 		return NULL;
 
 	XQueryPointer(dpy, vscr->screen_ptr->root_win, &root_ret, &win, &x, &y, &wx, &wy, &mask);
