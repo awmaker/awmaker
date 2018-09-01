@@ -5156,7 +5156,7 @@ static void drawer_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 {
 	virtual_screen *vscr = aicon->icon->vscr;
 	WScreen *scr = vscr->screen_ptr;
-	WMenu *menu, *opt_menu;
+	WMenu *opt_menu;
 	WMenuEntry *entry;
 	WObjDescriptor *desc;
 	int n_selected, appIsRunning, x_pos;
@@ -5170,60 +5170,59 @@ static void drawer_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 		wapp = wApplicationOf(aicon->icon->owner->main_window);
 
 	/* create dock menu */
-	menu = menu_create(vscr, NULL);
+	dock->menu = menu_create(vscr, NULL);
 
 	/* Drawer options */
-	entry = wMenuAddCallback(menu, _("Drawer options"), NULL, NULL);
+	entry = wMenuAddCallback(dock->menu, _("Drawer options"), NULL, NULL);
 	opt_menu = drawer_make_options_menu(vscr);
-	wMenuEntrySetCascade_create(menu, entry, opt_menu);
+	wMenuEntrySetCascade_create(dock->menu, entry, opt_menu);
 
-	entry = wMenuAddCallback(menu, _("Selected"), selectCallback, NULL);
+	entry = wMenuAddCallback(dock->menu, _("Selected"), selectCallback, NULL);
 	entry->flags.indicator = 1;
 	entry->flags.indicator_on = 1;
 	entry->flags.indicator_type = MI_CHECK;
 
 	/* Select All Icons / Unselect All Icons */
 	if (n_selected > 0)
-		entry = wMenuAddCallback(menu, _("Unselect All Icons"), selectIconsCallback, NULL);
+		entry = wMenuAddCallback(dock->menu, _("Unselect All Icons"), selectIconsCallback, NULL);
 	else
-		entry = wMenuAddCallback(menu, _("Select All Icons"), selectIconsCallback, NULL);
+		entry = wMenuAddCallback(dock->menu, _("Select All Icons"), selectIconsCallback, NULL);
 
 	/* Keep Icons / Keep Icon */
 	if (n_selected > 1)
-		entry = wMenuAddCallback(menu, _("Keep Icons"), keepIconsCallback, NULL);
+		entry = wMenuAddCallback(dock->menu, _("Keep Icons"), keepIconsCallback, NULL);
 	else
-		entry = wMenuAddCallback(menu, _("Keep Icon"), keepIconsCallback, NULL);
+		entry = wMenuAddCallback(dock->menu, _("Keep Icon"), keepIconsCallback, NULL);
 
 	/* Remove Icons / Remove Icon */
 	if (n_selected > 1)
-		entry = wMenuAddCallback(menu, _("Remove Icons"), drawer_remove_icons_callback, NULL);
+		entry = wMenuAddCallback(dock->menu, _("Remove Icons"), drawer_remove_icons_callback, NULL);
 	else
-		entry = wMenuAddCallback(menu, _("Remove Icon"), drawer_remove_icons_callback, NULL);
+		entry = wMenuAddCallback(dock->menu, _("Remove Icon"), drawer_remove_icons_callback, NULL);
 
-	wMenuAddCallback(menu, _("Attract Icons"), attractIconsCallback, NULL);
-	wMenuAddCallback(menu, _("Launch"), launchCallback, NULL);
+	wMenuAddCallback(dock->menu, _("Attract Icons"), attractIconsCallback, NULL);
+	wMenuAddCallback(dock->menu, _("Launch"), launchCallback, NULL);
 
 	/* Unhide Here / Bring Here */
 	if (wapp && wapp->flags.hidden)
-		wMenuAddCallback(menu, _("Unhide Here"), unhideHereCallback, NULL);
+		wMenuAddCallback(dock->menu, _("Unhide Here"), unhideHereCallback, NULL);
 	else
-		wMenuAddCallback(menu, _("Bring Here"), unhideHereCallback, NULL);
+		wMenuAddCallback(dock->menu, _("Bring Here"), unhideHereCallback, NULL);
 
 	/* Hide / Unhide Icons */
 	if (wapp && wapp->flags.hidden)
-		entry = wMenuAddCallback(menu, _("Unhide"), hideCallback, NULL);
+		entry = wMenuAddCallback(dock->menu, _("Unhide"), hideCallback, NULL);
 	else
-		entry = wMenuAddCallback(menu, _("Hide"), hideCallback, NULL);
+		entry = wMenuAddCallback(dock->menu, _("Hide"), hideCallback, NULL);
 
-	wMenuAddCallback(menu, _("Settings..."), settingsCallback, NULL);
+	wMenuAddCallback(dock->menu, _("Settings..."), settingsCallback, NULL);
 
 	/* Remove drawer / Kill */
 	if (wIsADrawer(aicon))
-		entry = wMenuAddCallback(menu, _("Remove drawer"), removeDrawerCallback, NULL);
+		entry = wMenuAddCallback(dock->menu, _("Remove drawer"), removeDrawerCallback, NULL);
 	else
-		entry = wMenuAddCallback(menu, _("Kill"), killCallback, NULL);
+		entry = wMenuAddCallback(dock->menu, _("Kill"), killCallback, NULL);
 
-	dock->menu = menu;
 	menu_map(dock->menu);
 	menu_map(opt_menu);
 	updateOptionsMenu(dock, opt_menu);
