@@ -5156,7 +5156,7 @@ static void drawer_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 {
 	virtual_screen *vscr = aicon->icon->vscr;
 	WScreen *scr = vscr->screen_ptr;
-	WMenu *menu;
+	WMenu *menu, *opt_menu;
 	WMenuEntry *entry;
 	WObjDescriptor *desc;
 	int n_selected, appIsRunning, x_pos;
@@ -5174,8 +5174,8 @@ static void drawer_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 
 	/* Drawer options */
 	entry = wMenuAddCallback(menu, _("Drawer options"), NULL, NULL);
-	vscr->dock.drawer_opt_menu = drawer_make_options_menu(vscr);
-	wMenuEntrySetCascade_create(menu, entry, vscr->dock.drawer_opt_menu);
+	opt_menu = drawer_make_options_menu(vscr);
+	wMenuEntrySetCascade_create(menu, entry, opt_menu);
 
 	entry = wMenuAddCallback(menu, _("Selected"), selectCallback, NULL);
 	entry->flags.indicator = 1;
@@ -5226,12 +5226,8 @@ static void drawer_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 	vscr->dock.drawer_menu = menu;
 	dock->menu = vscr->dock.drawer_menu;
 	menu_map(dock->menu);
-	if (vscr->dock.drawer_opt_menu)
-		menu_map(vscr->dock.drawer_opt_menu);
-
-	/* clip/drawer options */
-	if (vscr->dock.drawer_opt_menu)
-		updateOptionsMenu(dock, vscr->dock.drawer_opt_menu);
+	menu_map(opt_menu);
+	updateOptionsMenu(dock, opt_menu);
 
 	/* select/unselect icon */
 	entry = dock->menu->entries[RM_SELECT];
@@ -5312,10 +5308,10 @@ static void drawer_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 	(*desc->handle_mousedown) (desc, event);
 
 	/* Destroy the menu */
-	vscr->dock.drawer_opt_menu->flags.realized = 0;
+	opt_menu->flags.realized = 0;
 	dock->menu->flags.realized = 0;
 	wMenuDestroy(dock->menu);
-	vscr->dock.drawer_opt_menu = NULL;
+	opt_menu = NULL;
 	vscr->dock.drawer_menu = NULL;
 	dock->menu = NULL;
 }
