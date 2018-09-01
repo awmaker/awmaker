@@ -5189,9 +5189,11 @@ static void drawer_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 		else
 			entry = wMenuAddCallback(menu, _("Select All Icons"), selectIconsCallback, NULL);
 
-		entry = wMenuAddCallback(menu, _("Keep Icon"), keepIconsCallback, NULL);
-		wfree(entry->text);
-		entry->text = _("Keep Icon"); /* can be: Keep Icons */
+		/* Keep Icons / Keep Icon */
+		if (n_selected > 1)
+			entry = wMenuAddCallback(menu, _("Keep Icons"), keepIconsCallback, NULL);
+		else
+			entry = wMenuAddCallback(menu, _("Keep Icon"), keepIconsCallback, NULL);
 
 		entry = wMenuAddCallback(menu, _("Remove Icon"), drawer_remove_icons_callback, NULL);
 		wfree(entry->text);
@@ -5237,11 +5239,6 @@ static void drawer_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 	/* keep icon(s) */
 	entry = dock->menu->entries[RM_KEEP_ICONS];
 	entry->clientdata = aicon;
-	if (n_selected > 1)
-		entry->text = _("Keep Icons");
-	else
-		entry->text = _("Keep Icon");
-
 	menu_entry_set_enabled(dock->menu, RM_KEEP_ICONS, dock->icon_count > 1);
 
 	/* remove icon(s) */
