@@ -120,24 +120,21 @@ void switchmenu_destroy(virtual_screen *vscr)
 /* Open switch menu */
 void OpenSwitchMenu(virtual_screen *vscr, int x, int y, int keyboard)
 {
-	WMenu *switchmenu;
-
 	if (!vscr->menu.switch_menu) {
 		vscr->menu.switch_menu = switchmenu_create(vscr);
 		menu_map(vscr->menu.switch_menu);
 	}
 
-	switchmenu = vscr->menu.switch_menu;
-
 	/* Mapped, so unmap or raise */
-	if (switchmenu->flags.mapped) {
-		if (!switchmenu->flags.buttoned) {
+	if (vscr->menu.switch_menu->flags.mapped) {
+		if (!vscr->menu.switch_menu->flags.buttoned) {
 			switchmenu_destroy(vscr);
 		} else {
-			wRaiseFrame(switchmenu->frame->vscr, switchmenu->frame->core);
+			wRaiseFrame(vscr->menu.switch_menu->frame->vscr,
+				    vscr->menu.switch_menu->frame->core);
 
 			if (keyboard)
-				wMenuMapAt(vscr, switchmenu, 0, 0, True);
+				wMenuMapAt(vscr, vscr->menu.switch_menu, 0, 0, True);
 		}
 		return;
 	}
@@ -146,9 +143,9 @@ void OpenSwitchMenu(virtual_screen *vscr, int x, int y, int keyboard)
 	if (keyboard &&
 	    x == vscr->screen_ptr->scr_width / 2 &&
 	    y == vscr->screen_ptr->scr_height / 2)
-		y = y - switchmenu->frame->height / 2;
+		y = y - vscr->menu.switch_menu->frame->height / 2;
 
-	wMenuMapAt(vscr, switchmenu, x, y, keyboard);
+	wMenuMapAt(vscr, vscr->menu.switch_menu, x, y, keyboard);
 }
 
 static int menuIndexForWindow(WMenu * menu, WWindow * wwin, int old_pos)
