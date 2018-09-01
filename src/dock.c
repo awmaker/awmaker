@@ -5205,9 +5205,11 @@ static void drawer_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 		wMenuAddCallback(menu, _("Launch"), launchCallback, NULL);
 		wMenuAddCallback(menu, _("Unhide Here"), unhideHereCallback, NULL);
 
-		entry = wMenuAddCallback(menu, _("Hide"), hideCallback, NULL);
-		wfree(entry->text);
-		entry->text = _("Hide"); /* can be: Unhide */
+		/* Hide / Unhide Icons */
+		if (wapp && wapp->flags.hidden)
+			entry = wMenuAddCallback(menu, _("Unhide"), hideCallback, NULL);
+		else
+			entry = wMenuAddCallback(menu, _("Hide"), hideCallback, NULL);
 
 		wMenuAddCallback(menu, _("Settings..."), settingsCallback, NULL);
 
@@ -5270,11 +5272,6 @@ static void drawer_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 	/* hide */
 	entry = dock->menu->entries[RM_HIDE];
 	entry->clientdata = aicon;
-	if (wapp && wapp->flags.hidden)
-		entry->text = _("Unhide");
-	else
-		entry->text = _("Hide");
-
 	menu_entry_set_enabled(dock->menu, RM_HIDE, appIsRunning);
 
 	/* settings */
