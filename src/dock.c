@@ -6694,29 +6694,26 @@ static void clip_button2_menu(WObjDescriptor *desc, XEvent *event)
 	WMenu *wsMenu;
 	int xpos;
 
-	if (!vscr->clip.ws_menu)
-		vscr->clip.ws_menu = wWorkspaceMenuMake(vscr, False);
+	vscr->clip.ws_menu = wWorkspaceMenuMake(vscr, False);
+	wsMenu = vscr->clip.ws_menu;
+	wWorkspaceMenuUpdate(vscr, wsMenu);
 
-	if (vscr->clip.ws_menu) {
-		wsMenu = vscr->clip.ws_menu;
-		wWorkspaceMenuUpdate(vscr, wsMenu);
-		xpos = event->xbutton.x_root - wsMenu->frame->width / 2 - 1;
-		if (xpos < 0)
-			xpos = 0;
-		else if (xpos + wsMenu->frame->width > scr->scr_width - 2)
-			xpos = scr->scr_width - wsMenu->frame->width - 4;
+	xpos = event->xbutton.x_root - wsMenu->frame->width / 2 - 1;
+	if (xpos < 0)
+		xpos = 0;
+	else if (xpos + wsMenu->frame->width > scr->scr_width - 2)
+		xpos = scr->scr_width - wsMenu->frame->width - 4;
 
-		wMenuMapAt(vscr, wsMenu, xpos, event->xbutton.y_root + 2, False);
+	wMenuMapAt(vscr, wsMenu, xpos, event->xbutton.y_root + 2, False);
 
-		desc = &wsMenu->core->descriptor;
-		/* allow drag select */
-		event->xany.send_event = True;
-		(*desc->handle_mousedown) (desc, event);
+	desc = &wsMenu->core->descriptor;
+	/* allow drag select */
+	event->xany.send_event = True;
+	(*desc->handle_mousedown) (desc, event);
 
-		vscr->clip.ws_menu->flags.realized = 0;
-		wMenuDestroy(vscr->clip.ws_menu);
-		vscr->clip.ws_menu = NULL;
-	}
+	vscr->clip.ws_menu->flags.realized = 0;
+	wMenuDestroy(vscr->clip.ws_menu);
+	vscr->clip.ws_menu = NULL;
 }
 
 static void clip_button3_menu(WObjDescriptor *desc, XEvent *event)
