@@ -5132,11 +5132,12 @@ static void dock_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 	/* Dock position menu */
 	updateDockPositionMenu(dock, pos_menu);
 
+	x_pos = dock->on_right_side ? scr->scr_width - dock->menu->frame->width - 3 : 0;
+
 	/* Positions and mapping */
 	menu_map(dock->menu);
 	menu_map(pos_menu);
 
-	x_pos = dock->on_right_side ? scr->scr_width - dock->menu->frame->width - 3 : 0;
 	wMenuMapAt(vscr, dock->menu, x_pos, event->xbutton.y_root + 2, False);
 
 	/* allow drag select */
@@ -5223,8 +5224,6 @@ static void drawer_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 	else
 		entry = wMenuAddCallback(dock->menu, _("Kill"), killCallback, NULL);
 
-	menu_map(dock->menu);
-	menu_map(opt_menu);
 	updateOptionsMenu(dock, opt_menu);
 
 	/* select/unselect icon */
@@ -5280,8 +5279,6 @@ static void drawer_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 	else
 		menu_entry_set_enabled(dock->menu, RM_KILL, appIsRunning);
 
-	dock->menu->flags.realized = 0;
-
 	menu_entry_set_enabled_paint(dock->menu, RM_SELECT);
 	menu_entry_set_enabled_paint(dock->menu, RM_SELECTALL);
 	menu_entry_set_enabled_paint(dock->menu, RM_KEEP_ICONS);
@@ -5297,6 +5294,10 @@ static void drawer_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 		x_pos = 0;
 	else if (x_pos + dock->menu->frame->width > scr->scr_width - 2)
 		x_pos = scr->scr_width - dock->menu->frame->width - 4;
+
+	menu_map(dock->menu);
+	menu_map(opt_menu);
+	dock->menu->flags.realized = 0;
 
 	wMenuMapAt(vscr, dock->menu, x_pos, event->xbutton.y_root + 2, False);
 
@@ -6771,10 +6772,6 @@ static void clip_button3_menu(WObjDescriptor *desc, XEvent *event)
 	else
 		entry = wMenuAddCallback(clip->menu, _("Kill"), killCallback, NULL);
 
-	menu_map(clip->menu);
-	menu_map(opt_menu);
-	menu_map(wks_menu);
-
 	/* clip/drawer options */
 	updateOptionsMenu(clip, opt_menu);
 
@@ -6852,8 +6849,6 @@ static void clip_button3_menu(WObjDescriptor *desc, XEvent *event)
 	else
 		menu_entry_set_enabled(clip->menu, CM_KILL, appIsRunning);
 
-	clip->menu->flags.realized = 0;
-
 	menu_entry_set_enabled_paint(clip->menu, CM_SELECT);
 	menu_entry_set_enabled_paint(clip->menu, CM_SELECTALL);
 	menu_entry_set_enabled_paint(clip->menu, CM_KEEP_ICONS);
@@ -6870,6 +6865,11 @@ static void clip_button3_menu(WObjDescriptor *desc, XEvent *event)
 		x_pos = 0;
 	else if (x_pos + clip->menu->frame->width > scr->scr_width - 2)
 		x_pos = scr->scr_width - clip->menu->frame->width - 4;
+
+	menu_map(clip->menu);
+	menu_map(opt_menu);
+	menu_map(wks_menu);
+	clip->menu->flags.realized = 0;
 
 	wMenuMapAt(vscr, clip->menu, x_pos, event->xbutton.y_root + 2, False);
 
