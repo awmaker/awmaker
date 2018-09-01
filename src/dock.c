@@ -6709,8 +6709,13 @@ static void clip_button2_menu(WObjDescriptor *desc, XEvent *event)
 		wMenuMapAt(vscr, wsMenu, xpos, event->xbutton.y_root + 2, False);
 
 		desc = &wsMenu->core->descriptor;
+		/* allow drag select */
 		event->xany.send_event = True;
 		(*desc->handle_mousedown) (desc, event);
+
+		vscr->clip.ws_menu->flags.realized = 0;
+		wMenuDestroy(vscr->clip.ws_menu);
+		vscr->clip.ws_menu = NULL;
 	}
 }
 
