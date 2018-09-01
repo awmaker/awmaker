@@ -816,7 +816,6 @@ static void cleanupWorkspaceMenu(WMenu *menu)
 
 static WMenuEntry *addWorkspaceMenu(virtual_screen *vscr, WMenu *menu, const char *title)
 {
-	WMenu *wsmenu;
 	WMenuEntry *entry;
 
 	if (vscr->menu.flags.added_workspace_menu) {
@@ -827,14 +826,13 @@ static WMenuEntry *addWorkspaceMenu(virtual_screen *vscr, WMenu *menu, const cha
 
 	vscr->menu.flags.added_workspace_menu = 1;
 
-	wsmenu = wWorkspaceMenuMake(vscr, True);
-	menu_map(wsmenu);
-	wsmenu->on_destroy = cleanupWorkspaceMenu;
+	vscr->workspace.menu = wWorkspaceMenuMake(vscr, True);
+	menu_map(vscr->workspace.menu);
+	vscr->workspace.menu->on_destroy = cleanupWorkspaceMenu;
 
-	vscr->workspace.menu = wsmenu;
 	entry = wMenuAddCallback(menu, title, NULL, NULL);
-	wMenuEntrySetCascade_create(menu, entry, wsmenu);
-	wWorkspaceMenuUpdate(vscr, wsmenu);
+	wMenuEntrySetCascade_create(menu, entry, vscr->workspace.menu);
+	wWorkspaceMenuUpdate(vscr, vscr->workspace.menu);
 
 	return entry;
 }
