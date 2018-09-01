@@ -5184,9 +5184,10 @@ static void drawer_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 		entry->flags.indicator_type = MI_CHECK;
 
 		/* Select All Icons / Unselect All Icons */
-		entry = wMenuAddCallback(menu, _("Select All Icons"), selectIconsCallback, NULL);
-		wfree(entry->text);
-		entry->text = _("Select All Icons"); /* can be: Unselect all icons */
+		if (n_selected > 0)
+			entry = wMenuAddCallback(menu, _("Unselect All Icons"), selectIconsCallback, NULL);
+		else
+			entry = wMenuAddCallback(menu, _("Select All Icons"), selectIconsCallback, NULL);
 
 		entry = wMenuAddCallback(menu, _("Keep Icon"), keepIconsCallback, NULL);
 		wfree(entry->text);
@@ -5231,11 +5232,6 @@ static void drawer_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 	/* select/unselect all icons */
 	entry = dock->menu->entries[RM_SELECTALL];
 	entry->clientdata = aicon;
-	if (n_selected > 0)
-		entry->text = _("Unselect All Icons");
-	else
-		entry->text = _("Select All Icons");
-
 	menu_entry_set_enabled(dock->menu, RM_SELECTALL, dock->icon_count > 1);
 
 	/* keep icon(s) */
