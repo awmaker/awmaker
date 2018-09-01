@@ -1339,14 +1339,6 @@ static WMenu *makeDockPositionMenu(virtual_screen *vscr)
 	return menu;
 }
 
-static void drawer_menu_map(WMenu *menu, virtual_screen *vscr)
-{
-	menu_map(menu);
-
-	if (vscr->dock.drawer_opt_menu)
-		menu_map(vscr->dock.drawer_opt_menu);
-}
-
 static void drawer_menu_unmap(virtual_screen *vscr, WMenu *menu)
 {
 	menu_unmap(vscr->dock.drawer_opt_menu);
@@ -5357,7 +5349,10 @@ static void drawer_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 	}
 
 	dock->menu = vscr->dock.drawer_menu;
-	drawer_menu_map(dock->menu, vscr);
+	menu_map(dock->menu);
+	if (vscr->dock.drawer_opt_menu)
+		menu_map(vscr->dock.drawer_opt_menu);
+
 	open_menu_drawer(dock, aicon, event);
 	drawer_menu_unmap(vscr, dock->menu);
 }
