@@ -6808,10 +6808,13 @@ static void clip_button3_menu(WObjDescriptor *desc, XEvent *event)
 	else
 		wMenuAddCallback(clip->menu, _("Bring Here"), unhideHereCallback, NULL);
 
-	entry = wMenuAddCallback(clip->menu, _("Hide"), hideCallback, NULL);
-	wfree(entry->text);
-	entry->text = _("Hide"); /* can be: Unhide */
+	/* Hide / Unhide */
+	if (wapp && wapp->flags.hidden)
+		entry = wMenuAddCallback(clip->menu, _("Unhide"), hideCallback, NULL);
+	else
+		entry = wMenuAddCallback(clip->menu, _("Hide"), hideCallback, NULL);
 
+	/* Settings */
 	wMenuAddCallback(clip->menu, _("Settings..."), settingsCallback, NULL);
 
 	entry = wMenuAddCallback(clip->menu, _("Kill"), killCallback, NULL);
@@ -6898,11 +6901,6 @@ static void clip_button3_menu(WObjDescriptor *desc, XEvent *event)
 	/* hide */
 	entry = clip->menu->entries[CM_HIDE];
 	entry->clientdata = aicon;
-	if (wapp && wapp->flags.hidden)
-		entry->text = wstrdup(_("Unhide"));
-	else
-		entry->text = wstrdup(_("Hide"));
-
 	menu_entry_set_enabled(clip->menu, CM_HIDE, appIsRunning);
 
 	/* settings */
