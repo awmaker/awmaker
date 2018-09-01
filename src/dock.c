@@ -6656,7 +6656,6 @@ static void clip_button2_menu(WObjDescriptor *desc, XEvent *event)
 	int xpos;
 
 	wsMenu = wWorkspaceMenuMake(vscr, False);
-	menu_map(wsMenu);
 	wWorkspaceMenuUpdate(vscr, wsMenu);
 	workspaces_set_menu_enabled_items(vscr, wsMenu);
 
@@ -6666,6 +6665,7 @@ static void clip_button2_menu(WObjDescriptor *desc, XEvent *event)
 	else if (xpos + wsMenu->frame->width > scr->scr_width - 2)
 		xpos = scr->scr_width - wsMenu->frame->width - 4;
 
+	menu_map(wsMenu);
 	wMenuMapAt(vscr, wsMenu, xpos, event->xbutton.y_root + 2, False);
 
 	desc = &wsMenu->core->descriptor;
