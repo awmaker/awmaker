@@ -5166,10 +5166,9 @@ static void drawer_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 	if (!vscr->dock.drawer_menu) {
 		menu = menu_create(vscr, NULL);
 
+		/* Drawer options */
 		entry = wMenuAddCallback(menu, _("Drawer options"), NULL, NULL);
-
 		vscr->dock.drawer_opt_menu = drawer_make_options_menu(vscr);
-
 		wMenuEntrySetCascade_create(menu, entry, vscr->dock.drawer_opt_menu);
 
 		entry = wMenuAddCallback(menu, _("Selected"), selectCallback, NULL);
@@ -5177,6 +5176,7 @@ static void drawer_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 		entry->flags.indicator_on = 1;
 		entry->flags.indicator_type = MI_CHECK;
 
+		/* Select All Icons / Unselect All Icons */
 		entry = wMenuAddCallback(menu, _("Select All Icons"), selectIconsCallback, NULL);
 		wfree(entry->text);
 		entry->text = _("Select All Icons"); /* can be: Unselect all icons */
