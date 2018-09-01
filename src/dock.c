@@ -5314,11 +5314,13 @@ static void drawer_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 	desc = &dock->menu->core->descriptor;
 	(*desc->handle_mousedown) (desc, event);
 
-	menu_unmap(vscr->dock.drawer_opt_menu);
-	menu_unmap(dock->menu);
-
+	/* Destroy the menu */
 	vscr->dock.drawer_opt_menu->flags.realized = 0;
 	dock->menu->flags.realized = 0;
+	wMenuDestroy(dock->menu);
+	vscr->dock.drawer_opt_menu = NULL;
+	vscr->dock.drawer_menu = NULL;
+	dock->menu = NULL;
 }
 
 static void dock_icon_mouse_down(WObjDescriptor *desc, XEvent *event)
