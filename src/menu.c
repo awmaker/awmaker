@@ -1033,10 +1033,6 @@ static int keyboardMenu(WMenu *menu)
 
 		(*entry->callback) (menu, entry);
 	} else {
-		if (!menu->flags.buttoned) {
-			wMenuUnmap(menu);
-			move_menus(menu, old_pos_x, old_pos_y);
-		}
 		selectEntry(menu, -1);
 	}
 
