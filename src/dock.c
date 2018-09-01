@@ -5195,9 +5195,11 @@ static void drawer_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 		else
 			entry = wMenuAddCallback(menu, _("Keep Icon"), keepIconsCallback, NULL);
 
-		entry = wMenuAddCallback(menu, _("Remove Icon"), drawer_remove_icons_callback, NULL);
-		wfree(entry->text);
-		entry->text = _("Remove Icon"); /* can be: Remove Icons */
+		/* Remove Icons / Remove Icon */
+		if (n_selected > 1)
+			entry = wMenuAddCallback(menu, _("Remove Icons"), drawer_remove_icons_callback, NULL);
+		else
+			entry = wMenuAddCallback(menu, _("Remove Icon"), drawer_remove_icons_callback, NULL);
 
 		wMenuAddCallback(menu, _("Attract Icons"), attractIconsCallback, NULL);
 		wMenuAddCallback(menu, _("Launch"), launchCallback, NULL);
@@ -5244,11 +5246,6 @@ static void drawer_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 	/* remove icon(s) */
 	entry = dock->menu->entries[RM_REMOVE_ICONS];
 	entry->clientdata = aicon;
-	if (n_selected > 1)
-		entry->text = _("Remove Icons");
-	else
-		entry->text = _("Remove Icon");
-
 	menu_entry_set_enabled(dock->menu, RM_REMOVE_ICONS, dock->icon_count > 1);
 
 	/* attract icon(s) */
