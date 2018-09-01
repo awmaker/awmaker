@@ -174,9 +174,6 @@ static void workspace_create_core(virtual_screen *vscr, WMPropList *wks_state, c
 
 	menu_workspace_addwks(vscr, vscr->workspace.menu);
 	menu_workspace_shortcut_labels(vscr, vscr->workspace.menu);
-
-	menu_workspace_addwks(vscr, vscr->clip.ws_menu);
-	menu_workspace_shortcut_labels(vscr, vscr->clip.ws_menu);
 }
 
 void workspace_create(virtual_screen *vscr)
@@ -216,7 +213,6 @@ void workspace_map(virtual_screen *vscr, WWorkspace *wspace, int wksno, WMPropLi
 
 	set_clip_in_workspace_map(vscr, wspace, wksno, wks_state);
 	wWorkspaceMenuUpdate_map(vscr, vscr->workspace.menu);
-	wWorkspaceMenuUpdate_map(vscr, vscr->clip.ws_menu);
 
 	wNETWMUpdateDesktop(vscr);
 	WMPostNotificationName(WMNWorkspaceCreated, vscr, (void *)(uintptr_t) (vscr->workspace.count - 1));
@@ -291,9 +287,6 @@ Bool wWorkspaceDelete(virtual_screen *vscr, int workspace)
 	menu_workspace_delwks(vscr, vscr->workspace.menu);
 	menu_workspace_shortcut_labels(vscr, vscr->workspace.menu);
 	wWorkspaceMenuUpdate_map(vscr, vscr->workspace.menu);
-	menu_workspace_delwks(vscr, vscr->clip.ws_menu);
-	menu_workspace_shortcut_labels(vscr, vscr->clip.ws_menu);
-	wWorkspaceMenuUpdate_map(vscr, vscr->clip.ws_menu);
 
 	update_submenu(vscr->workspace.submenu);
 
@@ -598,7 +591,6 @@ void wWorkspaceForceChange(virtual_screen *vscr, int workspace)
 	vscr->workspace.current = workspace;
 
 	wWorkspaceMenuUpdate(vscr, vscr->workspace.menu);
-	wWorkspaceMenuUpdate(vscr, vscr->clip.ws_menu);
 
 	tmp = vscr->window.focused;
 	if (tmp != NULL) {
@@ -830,14 +822,6 @@ void wWorkspaceRename(virtual_screen *vscr, int workspace, const char *name)
 	/* update workspace */
 	wfree(vscr->workspace.array[workspace]->name);
 	vscr->workspace.array[workspace]->name = wstrdup(buf);
-
-	if (vscr->clip.ws_menu) {
-		if (strcmp(vscr->clip.ws_menu->entries[workspace + MC_WORKSPACE1]->text, buf) != 0) {
-			wfree(vscr->clip.ws_menu->entries[workspace + MC_WORKSPACE1]->text);
-			vscr->clip.ws_menu->entries[workspace + MC_WORKSPACE1]->text = wstrdup(buf);
-			wMenuRealize(vscr->clip.ws_menu);
-		}
-	}
 
 	if (vscr->workspace.menu) {
 		if (strcmp(vscr->workspace.menu->entries[workspace + MC_WORKSPACE1]->text, buf) != 0) {
