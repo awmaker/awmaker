@@ -106,7 +106,6 @@ struct virtual_screen {
 		WAppIconChain *global_icons;  /* Omnipresent icons chain in clip */
 
 		struct WMenu *menu;           /* Menu for clips */
-		struct WMenu *submenu;        /* Workspace list for clips */
 		struct WMenu *ws_menu;        /* workspace menu for clip */
 
 		int mapped;             /* The clip is mapped */

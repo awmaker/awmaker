@@ -1339,8 +1339,6 @@ static void refresh_defaults(virtual_screen *vscr, unsigned int needs_refresh)
 			wWorkspaceMenuUpdate(vscr, vscr->clip.ws_menu);
 		if (vscr->workspace.submenu)
 			vscr->workspace.submenu->flags.realized = 0;
-		if (vscr->clip.submenu)
-			vscr->clip.submenu->flags.realized = 0;
 	}
 }
 

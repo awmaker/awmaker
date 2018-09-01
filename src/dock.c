@@ -6716,7 +6716,7 @@ static void clip_button2_menu(WObjDescriptor *desc, XEvent *event)
 
 static void clip_button3_menu(WObjDescriptor *desc, XEvent *event)
 {
-	WMenu *opt_menu;
+	WMenu *opt_menu, *wks_menu;
 	WObjDescriptor *desc2;
 	WApplication *wapp = NULL;
 	WAppIcon *aicon = desc->parent;
@@ -6743,7 +6743,7 @@ static void clip_button3_menu(WObjDescriptor *desc, XEvent *event)
 
 	/* Create menus */
 	clip->menu = menu_create(vscr, NULL);
-	vscr->clip.submenu = makeWorkspaceMenu(vscr);
+	wks_menu = makeWorkspaceMenu(vscr);
 	opt_menu = clip_make_options_menu(vscr);
 	entry = wMenuAddCallback(clip->menu, _("Clip Options"), NULL, NULL);
 	wMenuEntrySetCascade_create(clip->menu, entry, opt_menu);
@@ -6786,7 +6786,7 @@ static void clip_button3_menu(WObjDescriptor *desc, XEvent *event)
 	else
 		entry = wMenuAddCallback(clip->menu, _("Move Icon To"), NULL, NULL);
 
-	wMenuEntrySetCascade_create(clip->menu, entry, vscr->clip.submenu);
+	wMenuEntrySetCascade_create(clip->menu, entry, wks_menu);
 
 	/* Remove Icon or Icons */
 	if (n_selected > 1)
@@ -6822,7 +6822,7 @@ static void clip_button3_menu(WObjDescriptor *desc, XEvent *event)
 
 	menu_map(clip->menu);
 	menu_map(opt_menu);
-	menu_map(vscr->clip.submenu);
+	menu_map(wks_menu);
 
 	/* clip/drawer options */
 	updateOptionsMenu(clip, opt_menu);
@@ -6861,7 +6861,7 @@ static void clip_button3_menu(WObjDescriptor *desc, XEvent *event)
 
 	/* this is the workspace submenu part */
 	entry = clip->menu->entries[CM_MOVE_ICONS];
-	updateWorkspaceMenu(vscr->clip.submenu, aicon);
+	updateWorkspaceMenu(wks_menu, aicon);
 	menu_entry_set_enabled(clip->menu, CM_MOVE_ICONS, !aicon->omnipresent);
 
 	/* remove icon(s) */
@@ -6928,14 +6928,14 @@ static void clip_button3_menu(WObjDescriptor *desc, XEvent *event)
 	(*desc2->handle_mousedown) (desc2, event);
 
 	opt_menu->flags.realized = 0;
-	vscr->clip.submenu->flags.realized = 0;
+	wks_menu->flags.realized = 0;
 	clip->menu->flags.realized = 0;
 
 	if (vscr->clip.menu)
 		wMenuDestroy(vscr->clip.menu);
 
 	vscr->clip.menu = NULL;
-	vscr->clip.submenu = NULL;
+	wks_menu = NULL;
 	opt_menu = NULL;
 	clip->menu = NULL;
 }

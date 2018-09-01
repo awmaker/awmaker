@@ -296,7 +296,6 @@ Bool wWorkspaceDelete(virtual_screen *vscr, int workspace)
 	wWorkspaceMenuUpdate_map(vscr, vscr->clip.ws_menu);
 
 	update_submenu(vscr->workspace.submenu);
-	update_submenu(vscr->clip.submenu);
 
 	wNETWMUpdateDesktop(vscr);
 	WMPostNotificationName(WMNWorkspaceDestroyed, vscr, (void *)(uintptr_t) (vscr->workspace.count - 1));
