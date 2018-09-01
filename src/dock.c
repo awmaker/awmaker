@@ -6656,6 +6656,7 @@ static void clip_button2_menu(WObjDescriptor *desc, XEvent *event)
 	int xpos;
 
 	wsMenu = wWorkspaceMenuMake(vscr, False);
+	menu_map(wsMenu);
 	wWorkspaceMenuUpdate(vscr, wsMenu);
 
 	xpos = event->xbutton.x_root - wsMenu->frame->width / 2 - 1;

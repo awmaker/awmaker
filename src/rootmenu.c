@@ -828,6 +828,7 @@ static WMenuEntry *addWorkspaceMenu(virtual_screen *vscr, WMenu *menu, const cha
 	vscr->menu.flags.added_workspace_menu = 1;
 
 	wsmenu = wWorkspaceMenuMake(vscr, True);
+	menu_map(wsmenu);
 	wsmenu->on_destroy = cleanupWorkspaceMenu;
 
 	vscr->workspace.menu = wsmenu;

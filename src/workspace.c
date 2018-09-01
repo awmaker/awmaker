@@ -856,14 +856,11 @@ WMenu *wWorkspaceMenuMake(virtual_screen *vscr, Bool titled)
 	else
 		wsmenu = menu_create(vscr, NULL);
 
-	menu_map(wsmenu);
-
 	/* callback to be called when an entry is edited */
 	wsmenu->on_edit = onMenuEntryEdited;
 
 	wMenuAddCallback(wsmenu, _("New"), newWSCommand, NULL);
 	wMenuAddCallback(wsmenu, _("Destroy Last"), deleteWSCommand, NULL);
-
 	entry = wMenuAddCallback(wsmenu, _("Last Used"), lastWSCommand, NULL);
 	entry->rtext = GetShortcutKey(wKeyBindings[WKBD_LASTWORKSPACE]);
 
