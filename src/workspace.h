@@ -47,4 +47,5 @@ void wWorkspaceRelativeChange(virtual_screen *vscr, int amount);
 
 void workspaces_restore(virtual_screen *vscr);
 void workspaces_restore_map(virtual_screen *vscr);
+void workspaces_set_menu_enabled_items(virtual_screen *vscr, WMenu *menu);
 #endif

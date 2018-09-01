@@ -923,15 +923,8 @@ void menu_workspace_shortcut_labels(virtual_screen *vscr, WMenu *menu)
 	menu->entries[vscr->workspace.current + MC_WORKSPACE1]->flags.indicator_on = 1;
 }
 
-void wWorkspaceMenuUpdate_map(virtual_screen *vscr, WMenu *menu)
+void workspaces_set_menu_enabled_items(virtual_screen *vscr, WMenu *menu)
 {
-	int tmp;
-
-	if (!menu)
-		return;
-
-	wMenuRealize(menu);
-
 	/* don't let user destroy current workspace */
 	if (vscr->workspace.current == vscr->workspace.count - 1)
 		menu_entry_set_enabled(menu, MC_DESTROY_LAST, False);
@@ -946,6 +939,17 @@ void wWorkspaceMenuUpdate_map(virtual_screen *vscr, WMenu *menu)
 
 	menu_entry_set_enabled_paint(menu, MC_DESTROY_LAST);
 	menu_entry_set_enabled_paint(menu, MC_LAST_USED);
+}
+
+void wWorkspaceMenuUpdate_map(virtual_screen *vscr, WMenu *menu)
+{
+	int tmp;
+
+	if (!menu)
+		return;
+
+	wMenuRealize(menu);
+	workspaces_set_menu_enabled_items(vscr, menu);
 
 	tmp = menu->frame->top_width + 5;
 	/* if menu got unreachable, bring it to a visible place */
