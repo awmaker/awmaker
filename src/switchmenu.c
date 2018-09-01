@@ -97,14 +97,12 @@ WMenu *switchmenu_create(virtual_screen *vscr)
 
 	switch_menu = menu_create(vscr, _("Windows"));
 	switchmenu_setup_switchmenu_notif();
-	menu_map(switch_menu);
 	wwin = vscr->window.focused;
 	while (wwin) {
 		switchmenu_additem(switch_menu, wwin);
 		wwin = wwin->prev;
 	}
 
-	menu_move_visible(switch_menu);
 	return switch_menu;
 }
 
@@ -114,7 +112,7 @@ void switchmenu_destroy(virtual_screen *vscr)
 		return;
 
 	WMRemoveNotificationObserver(vscr->menu.switch_menu);
-	wMenuDestroy(vscr->menu.switch_menu, True);
+	wMenuDestroy(vscr->menu.switch_menu);
 	vscr->menu.switch_menu = NULL;
 	vscr->menu.flags.added_window_menu = 0;
 }
@@ -122,22 +120,21 @@ void switchmenu_destroy(virtual_screen *vscr)
 /* Open switch menu */
 void OpenSwitchMenu(virtual_screen *vscr, int x, int y, int keyboard)
 {
-	WMenu *switchmenu;
-
-	if (!vscr->menu.switch_menu)
+	if (!vscr->menu.switch_menu) {
 		vscr->menu.switch_menu = switchmenu_create(vscr);
-
-	switchmenu = vscr->menu.switch_menu;
+		menu_map(vscr->menu.switch_menu);
+	}
 
 	/* Mapped, so unmap or raise */
-	if (switchmenu->flags.mapped) {
-		if (!switchmenu->flags.buttoned) {
+	if (vscr->menu.switch_menu->flags.mapped) {
+		if (!vscr->menu.switch_menu->flags.buttoned) {
 			switchmenu_destroy(vscr);
 		} else {
-			wRaiseFrame(switchmenu->frame->vscr, switchmenu->frame->core);
+			wRaiseFrame(vscr->menu.switch_menu->frame->vscr,
+				    vscr->menu.switch_menu->frame->core);
 
 			if (keyboard)
-				wMenuMapAt(vscr, switchmenu, 0, 0, True);
+				wMenuMapAt(vscr, vscr->menu.switch_menu, 0, 0, True);
 		}
 		return;
 	}
@@ -146,9 +143,9 @@ void OpenSwitchMenu(virtual_screen *vscr, int x, int y, int keyboard)
 	if (keyboard &&
 	    x == vscr->screen_ptr->scr_width / 2 &&
 	    y == vscr->screen_ptr->scr_height / 2)
-		y = y - switchmenu->frame->height / 2;
+		y = y - vscr->menu.switch_menu->frame->height / 2;
 
-	wMenuMapAt(vscr, switchmenu, x, y, keyboard);
+	wMenuMapAt(vscr, vscr->menu.switch_menu, x, y, keyboard);
 }
 
 static int menuIndexForWindow(WMenu * menu, WWindow * wwin, int old_pos)

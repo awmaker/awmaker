@@ -816,7 +816,6 @@ static void cleanupWorkspaceMenu(WMenu *menu)
 
 static WMenuEntry *addWorkspaceMenu(virtual_screen *vscr, WMenu *menu, const char *title)
 {
-	WMenu *wsmenu;
 	WMenuEntry *entry;
 
 	if (vscr->menu.flags.added_workspace_menu) {
@@ -827,13 +826,14 @@ static WMenuEntry *addWorkspaceMenu(virtual_screen *vscr, WMenu *menu, const cha
 
 	vscr->menu.flags.added_workspace_menu = 1;
 
-	wsmenu = wWorkspaceMenuMake(vscr, True);
-	wsmenu->on_destroy = cleanupWorkspaceMenu;
+	vscr->workspace.menu = wWorkspaceMenuMake(vscr, True);
+	menu_map(vscr->workspace.menu);
+	vscr->workspace.menu->on_destroy = cleanupWorkspaceMenu;
 
-	vscr->workspace.menu = wsmenu;
 	entry = wMenuAddCallback(menu, title, NULL, NULL);
-	wMenuEntrySetCascade_create(menu, entry, wsmenu);
-	wWorkspaceMenuUpdate(vscr, wsmenu);
+	wMenuEntrySetCascade_create(menu, entry, vscr->workspace.menu);
+	wWorkspaceMenuUpdate(vscr, vscr->workspace.menu);
+	wWorkspaceMenuUpdate_map(vscr);
 
 	return entry;
 }
@@ -846,7 +846,6 @@ static void cleanupWindowsMenu(WMenu *menu)
 
 static WMenuEntry *addWindowsMenu(virtual_screen *vscr, WMenu *menu, const char *title)
 {
-	WMenu *wwmenu;
 	WWindow *wwin;
 	WMenuEntry *entry;
 
@@ -858,20 +857,16 @@ static WMenuEntry *addWindowsMenu(virtual_screen *vscr, WMenu *menu, const char 
 
 	vscr->menu.flags.added_window_menu = 1;
 
-	wwmenu = menu_create(vscr, _("Window List"));
-	menu_map(wwmenu);
-
-	wwmenu->on_destroy = cleanupWindowsMenu;
-	vscr->menu.root_switch = wwmenu;
+	vscr->menu.root_switch = menu_create(vscr, _("Window List"));
+	vscr->menu.root_switch->on_destroy = cleanupWindowsMenu;
 	wwin = vscr->window.focused;
 	while (wwin) {
 		switchmenu_additem(vscr->menu.root_switch, wwin);
-		menu_move_visible(vscr->menu.root_switch);
 		wwin = wwin->prev;
 	}
 
 	entry = wMenuAddCallback(menu, title, NULL, NULL);
-	wMenuEntrySetCascade_create(menu, entry, wwmenu);
+	wMenuEntrySetCascade_create(menu, entry, vscr->menu.root_switch);
 
 	return entry;
 }
@@ -965,6 +960,7 @@ static WMenuEntry *addMenuEntry(WMenu *menu, const char *title, const char *shor
 		shortcutOk = True;
 	} else if (strcmp(command, "WINDOWS_MENU") == 0) {
 		entry = addWindowsMenu(vscr, menu, title);
+		menu_map(vscr->menu.root_switch);
 
 		shortcutOk = True;
 	} else if (strcmp(command, "ARRANGE_ICONS") == 0) {
@@ -1043,7 +1039,7 @@ static WMenu *parseCascade(virtual_screen *vscr, WMenu *menu, WMenuParser parser
 			menu_map(cascade);
 			cascade->on_destroy = removeShortcutsForMenu;
 			if (!parseCascade(vscr, cascade, parser))
-				wMenuDestroy(cascade, True);
+				wMenuDestroy(cascade);
 			else
 				wMenuEntrySetCascade_create(menu, wMenuAddCallback(menu, M_(title), NULL, NULL), cascade);
 
@@ -1086,7 +1082,7 @@ static WMenu *readMenu(virtual_screen *vscr, const char *flat_file, FILE *file)
 			menu_map(menu);
 			menu->on_destroy = removeShortcutsForMenu;
 			if (!parseCascade(vscr, menu, parser)) {
-				wMenuDestroy(menu, True);
+				wMenuDestroy(menu);
 				menu = NULL;
 			}
 
@@ -1675,7 +1671,7 @@ void rootmenu_destroy(virtual_screen *vscr)
 		return;
 
 	WMRemoveNotificationObserver(vscr->menu.root_menu);
-	wMenuDestroy(vscr->menu.root_menu, True);
+	wMenuDestroy(vscr->menu.root_menu);
 	vscr->menu.root_menu = NULL;
 	vscr->menu.flags.root_menu_changed_shortcuts = 0;
 	vscr->menu.flags.added_workspace_menu = 0;

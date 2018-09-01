@@ -346,7 +346,7 @@ void destroy_user_menu(WApplication *wapp)
 		return;
 
 	wMenuUnmap(wapp->user_menu);
-	wMenuDestroy(wapp->user_menu, True);
+	wMenuDestroy(wapp->user_menu);
 	wapp->user_menu = NULL;
 }
 

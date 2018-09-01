@@ -64,7 +64,6 @@ int set_clip_omnipresent(virtual_screen *vscr, int wksno);
 void menu_workspace_addwks(virtual_screen *vscr, WMenu *menu);
 void menu_workspace_delwks(virtual_screen *vscr, WMenu *menu);
 void menu_workspace_shortcut_labels(virtual_screen *vscr, WMenu *menu);
-void wWorkspaceMenuUpdate_map(virtual_screen *vscr, WMenu *menu);
 
 static WMPropList *dWorkspaces = NULL;
 static WMPropList *dClip, *dName;
@@ -174,9 +173,6 @@ static void workspace_create_core(virtual_screen *vscr, WMPropList *wks_state, c
 
 	menu_workspace_addwks(vscr, vscr->workspace.menu);
 	menu_workspace_shortcut_labels(vscr, vscr->workspace.menu);
-
-	menu_workspace_addwks(vscr, vscr->clip.ws_menu);
-	menu_workspace_shortcut_labels(vscr, vscr->clip.ws_menu);
 }
 
 void workspace_create(virtual_screen *vscr)
@@ -215,8 +211,7 @@ void workspace_map(virtual_screen *vscr, WWorkspace *wspace, int wksno, WMPropLi
 		clip_icon_map(vscr);
 
 	set_clip_in_workspace_map(vscr, wspace, wksno, wks_state);
-	wWorkspaceMenuUpdate_map(vscr, vscr->workspace.menu);
-	wWorkspaceMenuUpdate_map(vscr, vscr->clip.ws_menu);
+	wWorkspaceMenuUpdate_map(vscr);
 
 	wNETWMUpdateDesktop(vscr);
 	WMPostNotificationName(WMNWorkspaceCreated, vscr, (void *)(uintptr_t) (vscr->workspace.count - 1));
@@ -228,10 +223,10 @@ static void update_submenu(WMenu *menu)
 	virtual_screen *vscr;
 	int i;
 
-	vscr = menu->vscr;
 	if (!menu)
 		return;
 
+	vscr = menu->vscr;
 	i = menu->entry_no;
 	while (i > vscr->workspace.count)
 		wMenuRemoveItem(menu, --i);
@@ -290,13 +285,9 @@ Bool wWorkspaceDelete(virtual_screen *vscr, int workspace)
 
 	menu_workspace_delwks(vscr, vscr->workspace.menu);
 	menu_workspace_shortcut_labels(vscr, vscr->workspace.menu);
-	wWorkspaceMenuUpdate_map(vscr, vscr->workspace.menu);
-	menu_workspace_delwks(vscr, vscr->clip.ws_menu);
-	menu_workspace_shortcut_labels(vscr, vscr->clip.ws_menu);
-	wWorkspaceMenuUpdate_map(vscr, vscr->clip.ws_menu);
+	wWorkspaceMenuUpdate_map(vscr);
 
 	update_submenu(vscr->workspace.submenu);
-	update_submenu(vscr->clip.submenu);
 
 	wNETWMUpdateDesktop(vscr);
 	WMPostNotificationName(WMNWorkspaceDestroyed, vscr, (void *)(uintptr_t) (vscr->workspace.count - 1));
@@ -599,7 +590,7 @@ void wWorkspaceForceChange(virtual_screen *vscr, int workspace)
 	vscr->workspace.current = workspace;
 
 	wWorkspaceMenuUpdate(vscr, vscr->workspace.menu);
-	wWorkspaceMenuUpdate(vscr, vscr->clip.ws_menu);
+	wWorkspaceMenuUpdate_map(vscr);
 
 	tmp = vscr->window.focused;
 	if (tmp != NULL) {
@@ -832,14 +823,6 @@ void wWorkspaceRename(virtual_screen *vscr, int workspace, const char *name)
 	wfree(vscr->workspace.array[workspace]->name);
 	vscr->workspace.array[workspace]->name = wstrdup(buf);
 
-	if (vscr->clip.ws_menu) {
-		if (strcmp(vscr->clip.ws_menu->entries[workspace + MC_WORKSPACE1]->text, buf) != 0) {
-			wfree(vscr->clip.ws_menu->entries[workspace + MC_WORKSPACE1]->text);
-			vscr->clip.ws_menu->entries[workspace + MC_WORKSPACE1]->text = wstrdup(buf);
-			wMenuRealize(vscr->clip.ws_menu);
-		}
-	}
-
 	if (vscr->workspace.menu) {
 		if (strcmp(vscr->workspace.menu->entries[workspace + MC_WORKSPACE1]->text, buf) != 0) {
 			wfree(vscr->workspace.menu->entries[workspace + MC_WORKSPACE1]->text);
@@ -873,14 +856,11 @@ WMenu *wWorkspaceMenuMake(virtual_screen *vscr, Bool titled)
 	else
 		wsmenu = menu_create(vscr, NULL);
 
-	menu_map(wsmenu);
-
 	/* callback to be called when an entry is edited */
 	wsmenu->on_edit = onMenuEntryEdited;
 
 	wMenuAddCallback(wsmenu, _("New"), newWSCommand, NULL);
 	wMenuAddCallback(wsmenu, _("Destroy Last"), deleteWSCommand, NULL);
-
 	entry = wMenuAddCallback(wsmenu, _("Last Used"), lastWSCommand, NULL);
 	entry->rtext = GetShortcutKey(wKeyBindings[WKBD_LASTWORKSPACE]);
 
@@ -943,15 +923,8 @@ void menu_workspace_shortcut_labels(virtual_screen *vscr, WMenu *menu)
 	menu->entries[vscr->workspace.current + MC_WORKSPACE1]->flags.indicator_on = 1;
 }
 
-void wWorkspaceMenuUpdate_map(virtual_screen *vscr, WMenu *menu)
+void workspaces_set_menu_enabled_items(virtual_screen *vscr, WMenu *menu)
 {
-	int tmp;
-
-	if (!menu)
-		return;
-
-	wMenuRealize(menu);
-
 	/* don't let user destroy current workspace */
 	if (vscr->workspace.current == vscr->workspace.count - 1)
 		menu_entry_set_enabled(menu, MC_DESTROY_LAST, False);
@@ -966,6 +939,18 @@ void wWorkspaceMenuUpdate_map(virtual_screen *vscr, WMenu *menu)
 
 	menu_entry_set_enabled_paint(menu, MC_DESTROY_LAST);
 	menu_entry_set_enabled_paint(menu, MC_LAST_USED);
+}
+
+void wWorkspaceMenuUpdate_map(virtual_screen *vscr)
+{
+	WMenu *menu = vscr->workspace.menu;
+	int tmp;
+
+	if (!menu)
+		return;
+
+	wMenuRealize(menu);
+	workspaces_set_menu_enabled_items(vscr, menu);
 
 	tmp = menu->frame->top_width + 5;
 	/* if menu got unreachable, bring it to a visible place */
@@ -986,7 +971,6 @@ void wWorkspaceMenuUpdate(virtual_screen *vscr, WMenu *menu)
 		menu_workspace_delwks(vscr, menu);
 
 	menu_workspace_shortcut_labels(vscr, menu);
-	wWorkspaceMenuUpdate_map(vscr, menu);
 }
 
 void wWorkspaceSaveState(virtual_screen *vscr, WMPropList *old_state)

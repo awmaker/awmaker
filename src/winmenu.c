@@ -786,16 +786,21 @@ static WMenu *open_window_menu_core(WWindow *wwin)
 	return menu;
 }
 
-static void prepare_menu_position(WMenu *menu, int *x, int *y)
+static void prepare_menu_position(WMenu *menu, int *x, int *y, int keyboard)
 {
 	WMRect rect;
 
 	rect = wGetRectForHead(menu->vscr->screen_ptr,
 			       wGetHeadForPointerLocation(menu->vscr));
 
-	*x -= menu->frame->width / 2;
-	if (*x < rect.pos.x - menu->frame->width / 2)
-		*x = rect.pos.x - menu->frame->width / 2;
+	if (keyboard) {
+		if (*x < rect.pos.x)
+			*y = rect.pos.x;
+	} else {
+		*x -= menu->frame->width / 2;
+		if (*x < rect.pos.x - menu->frame->width / 2)
+			*x = rect.pos.x - menu->frame->width / 2;
+	}
 
 	if (*y < rect.pos.y)
 		*y = rect.pos.y;
@@ -810,7 +815,7 @@ void OpenWindowMenu(WWindow *wwin, int x, int y, int keyboard)
 		return;
 
 	/* Common menu position */
-	prepare_menu_position(menu, &x, &y);
+	prepare_menu_position(menu, &x, &y, keyboard);
 
 	if (!wwin->flags.internal_window)
 		wMenuMapAt(wwin->vscr, menu, x, y, keyboard);
@@ -836,7 +841,7 @@ void windowmenu_at_switchmenu_open(WWindow *wwin, int x, int y)
 		menu_entry_set_enabled_paint(vscr->workspace.submenu, i);
 
 	/* Common menu position */
-	prepare_menu_position(menu, &x, &y);
+	prepare_menu_position(menu, &x, &y, False);
 
 	if (!wwin->flags.internal_window)
 		wMenuMapAt(vscr, menu, x, y, False);
@@ -851,6 +856,7 @@ void DestroyWindowMenu(virtual_screen *vscr)
 	vscr->menu.window_menu->entries[MC_MAXIMIZE]->text = NULL;
 	vscr->menu.window_menu->entries[MC_SHADE]->text = NULL;
 	vscr->menu.window_menu->entries[MC_SELECT]->text = NULL;
-	wMenuDestroy(vscr->menu.window_menu, True);
+	wMenuDestroy(vscr->menu.window_menu);
 	vscr->menu.window_menu = NULL;
+	vscr->workspace.submenu = NULL;
 }

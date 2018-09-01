@@ -1333,14 +1333,12 @@ static void refresh_defaults(virtual_screen *vscr, unsigned int needs_refresh)
 		WMPostNotificationName(WNIconTileSettingsChanged, NULL, NULL);
 
 	if (needs_refresh & REFRESH_WORKSPACE_MENU) {
-		if (vscr->workspace.menu)
+		if (vscr->workspace.menu) {
 			wWorkspaceMenuUpdate(vscr, vscr->workspace.menu);
-		if (vscr->clip.ws_menu)
-			wWorkspaceMenuUpdate(vscr, vscr->clip.ws_menu);
+			wWorkspaceMenuUpdate_map(vscr);
+		}
 		if (vscr->workspace.submenu)
 			vscr->workspace.submenu->flags.realized = 0;
-		if (vscr->clip.submenu)
-			vscr->clip.submenu->flags.realized = 0;
 	}
 }
 

@@ -62,7 +62,6 @@ struct virtual_screen {
 		struct WMenu *root_menu;   /* root window menu */
 		struct WMenu *root_switch; /* window list menu for root_menu */
 		struct WMenu *switch_menu; /* window list menu */
-		struct WMenu *icon_menu;   /* icon/appicon menu */
 		struct WMenu *window_menu; /* window command menu */
 
 		struct {
@@ -106,21 +105,12 @@ struct virtual_screen {
 		struct WAppIcon *icon;        /* The clip main icon, or the dock's, if they are merged */
 		WAppIconChain *global_icons;  /* Omnipresent icons chain in clip */
 
-		struct WMenu *menu;           /* Menu for clips */
-		struct WMenu *submenu;        /* Workspace list for clips */
-		struct WMenu *opt_menu;       /* Options for Clip */
-		struct WMenu *ws_menu;        /* workspace menu for clip */
-
 		int mapped;             /* The clip is mapped */
 	} clip;
 
 	/* Dock related */
 	struct {
 		struct WDock *dock;            /* Window Maker Dock. */
-		struct WMenu *pos_menu;        /* Menu for position of the dock */
-		struct WMenu *dock_menu;       /* Dock menu */
-		struct WMenu *drawer_menu;     /* Menu for the drawers */
-		struct WMenu *drawer_opt_menu; /* Options for drawers */
 	} dock;
 
 	/* Drawers related */

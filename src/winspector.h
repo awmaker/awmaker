@@ -60,9 +60,9 @@ struct InspectorPanel {
 	/* 3rd page. more attributes */
 	WMFrame *moreFrm;
 #ifndef XKB_BUTTON_HINT
-	WMButton *moreChk[11];
-#else
 	WMButton *moreChk[12];
+#else
+	WMButton *moreChk[13];
 #endif
 
 	/* 4th page. icon and workspace */
