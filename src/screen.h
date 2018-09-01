@@ -112,7 +112,6 @@ struct virtual_screen {
 	struct {
 		struct WDock *dock;            /* Window Maker Dock. */
 		struct WMenu *dock_menu;       /* Dock menu */
-		struct WMenu *drawer_menu;     /* Menu for the drawers */
 	} dock;
 
 	/* Drawers related */

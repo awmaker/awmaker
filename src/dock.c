@@ -5223,8 +5223,7 @@ static void drawer_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 	else
 		entry = wMenuAddCallback(menu, _("Kill"), killCallback, NULL);
 
-	vscr->dock.drawer_menu = menu;
-	dock->menu = vscr->dock.drawer_menu;
+	dock->menu = menu;
 	menu_map(dock->menu);
 	menu_map(opt_menu);
 	updateOptionsMenu(dock, opt_menu);
@@ -5312,7 +5311,6 @@ static void drawer_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 	dock->menu->flags.realized = 0;
 	wMenuDestroy(dock->menu);
 	opt_menu = NULL;
-	vscr->dock.drawer_menu = NULL;
 	dock->menu = NULL;
 }
 
