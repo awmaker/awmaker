@@ -398,6 +398,7 @@ extern struct WPreferences {
 	char disable_root_mouse;           /* disable button events in root window */
 	char auto_focus;                   /* focus window when it's mapped */
 	char *icon_back_file;              /* background image for icons */
+	char enforce_icon_margin;          /* auto-shrink icon images */
 
 	signed char icon_yard;             /* aka iconbox */
 
