@@ -418,11 +418,10 @@ void wAppIconMove(WAppIcon *aicon, int x, int y)
 static void updateDockNumbers(virtual_screen *vscr)
 {
 	int length;
-	char *ws_numbers;
+	char *ws_numbers[20];
 	WAppIcon *dicon = vscr->dock.dock->icon_array[0];
 
-	ws_numbers = wmalloc(20);
-	snprintf(ws_numbers, 20, "%i [ %i ]", vscr->workspace.current + 1, ((vscr->workspace.current / 10) + 1));
+	snprintf(ws_numbers, sizeof(ws_numbers), "%i [ %i ]", vscr->current_workspace + 1, ((vscr->current_workspace / 10) + 1));
 	length = strlen(ws_numbers);
 
 	XClearArea(dpy, dicon->icon->core->window, 2, 2, 50, WMFontHeight(vscr->screen_ptr->icon_title_font) + 1, False);
@@ -432,8 +431,6 @@ static void updateDockNumbers(virtual_screen *vscr)
 
 	WMDrawString(vscr->screen_ptr->wmscreen, dicon->icon->core->window, vscr->screen_ptr->white,
 		     vscr->screen_ptr->icon_title_font, 3, 2, ws_numbers, length);
-
-	wfree(ws_numbers);
 }
 #endif				/* WS_INDICATOR */
 
