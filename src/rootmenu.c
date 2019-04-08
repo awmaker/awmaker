@@ -71,7 +71,6 @@ static WMenu *readMenuFile(virtual_screen *vscr, const char *file_name);
 static WMenu *readMenuDirectory(virtual_screen *vscr, const char *title, char **file_name, const char *command);
 static WMenu *configureMenu(virtual_screen *vscr, WMPropList *definition);
 static void menu_parser_register_macros(WMenuParser parser);
-static void rootmenu_map(WMenu *menu, int x, int y, int keyboard);
 static void observer(void *self, WMNotification *notif);
 static void wsobserver(void *self, WMNotification *notif);
 static void rootmenu_setup_switchmenu_notif(void);
@@ -416,7 +415,7 @@ void wRootMenuBindShortcuts(Window window)
 	}
 }
 
-static void rebindKeygrabs(virtual_screen *vscr)
+void rebindKeygrabs(virtual_screen *vscr)
 {
 	WWindow *wwin;
 
@@ -1641,7 +1640,7 @@ static WMenu *configureMenu(virtual_screen *vscr, WMPropList *definition)
 	return menu;
 }
 
-static WMenu *create_rootmenu(virtual_screen *vscr)
+WMenu *create_rootmenu(virtual_screen *vscr)
 {
 	WMenu *menu = NULL;
 	WMPropList *definition;
@@ -1725,7 +1724,7 @@ void OpenRootMenu(virtual_screen *vscr, int x, int y, int keyboard)
 		rebindKeygrabs(vscr);
 }
 
-static void rootmenu_map(WMenu *menu, int x, int y, int keyboard)
+void rootmenu_map(WMenu *menu, int x, int y, int keyboard)
 {
 	virtual_screen *vscr;
 	int newx, newy;
