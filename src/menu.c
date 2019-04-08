@@ -2445,17 +2445,15 @@ static void restore_switchmenu_map(virtual_screen *vscr)
 
 static void restore_rootmenu(virtual_screen *vscr, WMPropList *menus)
 {
-	if (!vscr->menu.root_menu) {
-		vscr->menu.root_menu = create_rootmenu(vscr);
-		vscr->menu.root_menu->x_pos = vscr->screen_ptr->scr_width * 2;
-		vscr->menu.root_menu->y_pos = 0;
-		rootmenu_map(vscr, False);
+	vscr->menu.root_menu = create_rootmenu(vscr);
+	vscr->menu.root_menu->x_pos = vscr->screen_ptr->scr_width * 2;
+	vscr->menu.root_menu->y_pos = 0;
+	rootmenu_map(vscr, False);
 
-		if (vscr->menu.flags.root_menu_changed_shortcuts)
-			rebindKeygrabs(vscr);
+	if (vscr->menu.flags.root_menu_changed_shortcuts)
+		rebindKeygrabs(vscr);
 
-		wMenuUnmap(vscr->menu.root_menu);
-	}
+	wMenuUnmap(vscr->menu.root_menu);
 
 	restore_rootmenu_recurs(menus, vscr->menu.root_menu, "");
 }
