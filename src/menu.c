@@ -2458,6 +2458,9 @@ static void set_menu_coords(WMenu *menu, int *x, int *y)
 
 	if (*y > rect.pos.y + rect.size.height)
 		*y = rect.pos.y + rect.size.height - height;
+
+	menu->x_pos = *x;
+	menu->y_pos = *y;
 }
 
 static void set_menu_coords2(WMenu *menu, int *x, int *y)
@@ -2481,6 +2484,9 @@ static void set_menu_coords2(WMenu *menu, int *x, int *y)
 
 	if (*y + height > rect.pos.y + rect.size.height)
 		*y = rect.pos.y + rect.size.height - height;
+
+	menu->x_pos = *x;
+	menu->y_pos = *y;
 }
 
 static Bool restore_rootmenu_recurs(WMPropList *menus, WMenu *menu, const char *path)
