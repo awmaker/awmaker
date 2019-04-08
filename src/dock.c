@@ -5140,7 +5140,7 @@ static void dock_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 
 	dock->menu->x_pos = x_pos;
 	dock->menu->y_pos = event->xbutton.y_root + 2;
-	wMenuMapAt(vscr, dock->menu, x_pos, event->xbutton.y_root + 2, False);
+	wMenuMapAt(vscr, dock->menu, False);
 
 	/* allow drag select */
 	event->xany.send_event = True;
@@ -5303,7 +5303,7 @@ static void drawer_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 
 	dock->menu->x_pos = x_pos;
 	dock->menu->y_pos = event->xbutton.y_root + 2;
-	wMenuMapAt(vscr, dock->menu, x_pos, event->xbutton.y_root + 2, False);
+	wMenuMapAt(vscr, dock->menu, False);
 
 	/* allow drag select */
 	event->xany.send_event = True;
@@ -6672,7 +6672,7 @@ static void clip_button2_menu(WObjDescriptor *desc, XEvent *event)
 	menu_map(wsMenu);
 	wsMenu->x_pos = xpos;
 	wsMenu->y_pos = event->xbutton.y_root + 2;
-	wMenuMapAt(vscr, wsMenu, xpos, event->xbutton.y_root + 2, False);
+	wMenuMapAt(vscr, wsMenu, False);
 
 	desc = &wsMenu->core->descriptor;
 	/* allow drag select */
@@ -6881,7 +6881,7 @@ static void clip_button3_menu(WObjDescriptor *desc, XEvent *event)
 
 	clip->menu->x_pos = x_pos;
 	clip->menu->y_pos = event->xbutton.y_root + 2;
-	wMenuMapAt(vscr, clip->menu, x_pos, event->xbutton.y_root + 2, False);
+	wMenuMapAt(vscr, clip->menu, False);
 
 	/* allow drag select */
 	event->xany.send_event = True;

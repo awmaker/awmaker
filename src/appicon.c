@@ -715,7 +715,7 @@ static WMenu *openApplicationMenu(WApplication *wapp, int x, int y)
 		x = 0;
 
 	menu_map_pos(menu, x, y);
-	wMenuMapAt(vscr, menu, x, y, False);
+	wMenuMapAt(vscr, menu, False);
 
 	return menu;
 }

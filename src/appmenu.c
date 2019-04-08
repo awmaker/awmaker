@@ -255,7 +255,7 @@ void wAppMenuMap(WMenu *menu, WWindow *wwin)
 	menu->x_pos = x;
 	menu->y_pos = wwin->frame_y;
 
-	wMenuMapAt(wwin->vscr, menu, x, wwin->frame_y, False);
+	wMenuMapAt(wwin->vscr, menu, False);
 }
 
 void destroy_app_menu(WApplication *wapp)

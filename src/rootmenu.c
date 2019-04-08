@@ -1713,7 +1713,7 @@ void OpenRootMenu(virtual_screen *vscr, int x, int y, int keyboard)
 			if (keyboard) {
 				rootmenu->x_pos = 0;
 				rootmenu->y_pos = 0;
-				wMenuMapAt(vscr, rootmenu, 0, 0, True);
+				wMenuMapAt(vscr, rootmenu, True);
 			}
 		}
 		return;
@@ -1749,7 +1749,7 @@ static void rootmenu_map(WMenu *menu, int x, int y, int keyboard)
 
 	vscr->menu.root_menu->x_pos = newx;
 	vscr->menu.root_menu->y_pos = newy;
-	wMenuMapAt(vscr, menu, newx, newy, keyboard);
+	wMenuMapAt(vscr, menu, keyboard);
 }
 
 static void rootmenu_setup_switchmenu_notif(void)

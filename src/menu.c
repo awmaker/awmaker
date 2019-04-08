@@ -1043,11 +1043,15 @@ static int keyboardMenu(WMenu *menu)
 	return False;
 }
 
-void wMenuMapAt(virtual_screen *vscr, WMenu *menu, int x, int y, int keyboard)
+void wMenuMapAt(virtual_screen *vscr, WMenu *menu, int keyboard)
 {
+	int x, y;
+
 	/* Set the vscr */
 	menu->vscr = vscr;
 	menu->frame->vscr = vscr;
+	x = menu->x_pos;
+	y = menu->y_pos;
 
 	if (!menu->flags.realized)
 		wMenuRealize(menu);
@@ -1217,7 +1221,7 @@ static void selectEntry(WMenu *menu, int entry_no)
 
 			menu->cascades[entry->cascade]->x_pos = x;
 			menu->cascades[entry->cascade]->y_pos = y;
-			wMenuMapAt(menu->vscr, menu->cascades[entry->cascade], x, y, False);
+			wMenuMapAt(menu->vscr, menu->cascades[entry->cascade], False);
 			menu->cascades[entry->cascade]->parent = menu;
 		}
 		paintEntry(menu, entry_no, True);
@@ -2426,8 +2430,7 @@ static void restore_switchmenu(virtual_screen *vscr, WMPropList *menu)
 	vscr->menu.switch_menu->y_pos = y;
 	menu_map(vscr->menu.switch_menu);
 
-	wMenuMapAt(vscr, vscr->menu.switch_menu, vscr->menu.switch_menu->x_pos,
-		   vscr->menu.switch_menu->y_pos, False);
+	wMenuMapAt(vscr, vscr->menu.switch_menu, False);
 
 	vscr->menu.switch_menu->flags.buttoned = 1;
 	wframewindow_show_rightbutton(vscr->menu.switch_menu->frame);
@@ -2514,7 +2517,7 @@ static Bool restore_rootmenu_recurs(WMPropList *menus, WMenu *menu, const char *
 
 	if (entry && getMenuInfo(entry, &x, &y, &lowered) && !menu->flags.mapped) {
 		set_menu_coords(menu, &x, &y);
-		wMenuMapAt(vscr, menu, menu->x_pos, menu->y_pos, False);
+		wMenuMapAt(vscr, menu, False);
 		if (lowered)
 			changeMenuLevels(menu, True);
 

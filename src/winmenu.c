@@ -820,7 +820,7 @@ void OpenWindowMenu(WWindow *wwin, int x, int y, int keyboard)
 	if (!wwin->flags.internal_window) {
 		menu->x_pos = x;
 		menu->y_pos = y;
-		wMenuMapAt(wwin->vscr, menu, x, y, keyboard);
+		wMenuMapAt(wwin->vscr, menu, keyboard);
 	}
 }
 
@@ -849,7 +849,7 @@ void windowmenu_at_switchmenu_open(WWindow *wwin, int x, int y)
 	if (!wwin->flags.internal_window) {
 		menu->x_pos = x;
 		menu->y_pos = y;
-		wMenuMapAt(vscr, menu, x, y, False);
+		wMenuMapAt(vscr, menu, False);
 	}
 }
 

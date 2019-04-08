@@ -136,7 +136,7 @@ void OpenSwitchMenu(virtual_screen *vscr, int x, int y, int keyboard)
 			if (keyboard) {
 				vscr->menu.switch_menu->x_pos = 0;
 				vscr->menu.switch_menu->y_pos = 0;
-				wMenuMapAt(vscr, vscr->menu.switch_menu, 0, 0, True);
+				wMenuMapAt(vscr, vscr->menu.switch_menu, True);
 			}
 		}
 		return;
@@ -150,7 +150,7 @@ void OpenSwitchMenu(virtual_screen *vscr, int x, int y, int keyboard)
 
 	vscr->menu.switch_menu->x_pos = x;
 	vscr->menu.switch_menu->y_pos = y;
-	wMenuMapAt(vscr, vscr->menu.switch_menu, x, y, keyboard);
+	wMenuMapAt(vscr, vscr->menu.switch_menu, keyboard);
 }
 
 static int menuIndexForWindow(WMenu * menu, WWindow * wwin, int old_pos)
