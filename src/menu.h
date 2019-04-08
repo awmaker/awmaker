@@ -53,6 +53,7 @@ typedef struct WMenu {
 	virtual_screen *vscr;			/* Where is the menu */
 	char *title;				/* Menu title */
 	struct WMenu *parent;
+	int x_pos, y_pos;			/* Menu position */
 
 	time_t timestamp;			/* for the root menu. Last time
 						 * menu was reloaded */
