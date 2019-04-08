@@ -100,6 +100,8 @@ static void menu_blink_selected(WMenu *menu);
 static int get_menu_height(WMenu *menu);
 static int get_menu_height_full(WMenu *menu);
 static int get_menu_width_full(WMenu *menu);
+static void restore_switchmenu(virtual_screen *vscr, WMPropList *menu);
+static void restore_switchmenu_map(virtual_screen *vscr);
 /****** Notification Observers ******/
 
 static void appearanceObserver(void *self, WMNotification *notif)
@@ -2428,13 +2430,17 @@ static void restore_switchmenu(virtual_screen *vscr, WMPropList *menu)
 	vscr->menu.switch_menu = switchmenu_create(vscr);
 	vscr->menu.switch_menu->x_pos = x;
 	vscr->menu.switch_menu->y_pos = y;
-	menu_map(vscr->menu.switch_menu);
-
-	wMenuMapAt(vscr, vscr->menu.switch_menu, False);
-
 	vscr->menu.switch_menu->flags.buttoned = 1;
+}
+
+static void restore_switchmenu_map(virtual_screen *vscr)
+{
+	if (!vscr->menu.switch_menu)
+		return;
+
+	menu_map(vscr->menu.switch_menu);
+	wMenuMapAt(vscr, vscr->menu.switch_menu, False);
 	wframewindow_show_rightbutton(vscr->menu.switch_menu->frame);
-	return;
 }
 
 static void restore_rootmenu(virtual_screen *vscr, WMPropList *menus)
@@ -2558,6 +2564,7 @@ void menus_restore(virtual_screen *vscr)
 	menu = WMGetFromPLDictionary(menus, skey);
 	WMReleasePropList(skey);
 	restore_switchmenu(vscr, menu);
+	restore_switchmenu_map(vscr);
 
 	/* Restore the Root menus */
 	restore_rootmenu(vscr, menus);
