@@ -1718,21 +1718,25 @@ void OpenRootMenu(virtual_screen *vscr, int x, int y, int keyboard)
 		return;
 	}
 
-	rootmenu_map(vscr->menu.root_menu, x, y, keyboard);
+	vscr->menu.root_menu->x_pos = x;
+	vscr->menu.root_menu->y_pos = y;
+	rootmenu_map(vscr->menu.root_menu, keyboard);
 
 	if (vscr->menu.flags.root_menu_changed_shortcuts)
 		rebindKeygrabs(vscr);
 }
 
-void rootmenu_map(WMenu *menu, int x, int y, int keyboard)
+void rootmenu_map(WMenu *menu, int keyboard)
 {
 	virtual_screen *vscr;
-	int newx, newy;
+	int x, y, newx, newy;
 
 	if (!menu)
 		return;
 
 	vscr = menu->vscr;
+	x = menu->x_pos;
+	y = menu->y_pos;
 
 	if (keyboard && x == 0 && y == 0) {
 		newx = newy = 0;

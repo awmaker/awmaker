@@ -2447,7 +2447,9 @@ static void restore_rootmenu(virtual_screen *vscr, WMPropList *menus)
 {
 	if (!vscr->menu.root_menu) {
 		vscr->menu.root_menu = create_rootmenu(vscr);
-		rootmenu_map(vscr->menu.root_menu, vscr->screen_ptr->scr_width * 2, 0, False);
+		vscr->menu.root_menu->x_pos = vscr->screen_ptr->scr_width * 2;
+		vscr->menu.root_menu->y_pos = 0;
+		rootmenu_map(vscr->menu.root_menu, False);
 
 		if (vscr->menu.flags.root_menu_changed_shortcuts)
 			rebindKeygrabs(vscr);
