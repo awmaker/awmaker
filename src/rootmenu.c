@@ -858,10 +858,12 @@ static WMenuEntry *addWindowsMenu(virtual_screen *vscr, WMenu *menu, const char 
 	vscr->menu.flags.added_window_menu = 1;
 
 	vscr->menu.root_switch = menu_create(vscr, _("Window List"));
+	menu_map(vscr->menu.root_switch);
 	vscr->menu.root_switch->on_destroy = cleanupWindowsMenu;
 	wwin = vscr->window.focused;
 	while (wwin) {
 		switchmenu_additem(vscr->menu.root_switch, wwin);
+		menu_move_visible(vscr->menu.root_switch);
 		wwin = wwin->prev;
 	}
 
@@ -960,7 +962,6 @@ static WMenuEntry *addMenuEntry(WMenu *menu, const char *title, const char *shor
 		shortcutOk = True;
 	} else if (strcmp(command, "WINDOWS_MENU") == 0) {
 		entry = addWindowsMenu(vscr, menu, title);
-		menu_map(vscr->menu.root_switch);
 
 		shortcutOk = True;
 	} else if (strcmp(command, "ARRANGE_ICONS") == 0) {
