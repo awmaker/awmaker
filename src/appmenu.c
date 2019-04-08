@@ -239,6 +239,9 @@ void wAppMenuMap(WMenu *menu, WWindow *wwin)
 	if (!menu || !wwin)
 		return;
 
+	if (menu->flags.mapped)
+		return;
+
 	x = 0;
 	min = 20;	/* Keep at least 20 pixels visible */
 
@@ -249,8 +252,7 @@ void wAppMenuMap(WMenu *menu, WWindow *wwin)
 			x = min - menu->frame->width;
 	}
 
-	if (!menu->flags.mapped)
-		wMenuMapAt(wwin->vscr, menu, x, wwin->frame_y, False);
+	wMenuMapAt(wwin->vscr, menu, x, wwin->frame_y, False);
 }
 
 void destroy_app_menu(WApplication *wapp)
