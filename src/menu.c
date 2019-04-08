@@ -1215,6 +1215,8 @@ static void selectEntry(WMenu *menu, int entry_no)
 					y -= menu->cascades[entry->cascade]->frame->top_width;
 			}
 
+			menu->cascades[entry->cascade]->x_pos = x;
+			menu->cascades[entry->cascade]->y_pos = y;
 			wMenuMapAt(menu->vscr, menu->cascades[entry->cascade], x, y, False);
 			menu->cascades[entry->cascade]->parent = menu;
 		}
