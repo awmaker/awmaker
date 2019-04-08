@@ -252,6 +252,9 @@ void wAppMenuMap(WMenu *menu, WWindow *wwin)
 			x = min - menu->frame->width;
 	}
 
+	menu->x_pos = x;
+	menu->y_pos = wwin->frame_y;
+
 	wMenuMapAt(wwin->vscr, menu, x, wwin->frame_y, False);
 }
 
