@@ -2507,7 +2507,7 @@ static Bool restore_rootmenu_recurs(WMPropList *menus, WMenu *menu, const char *
 
 	if (entry && getMenuInfo(entry, &x, &y, &lowered) && !menu->flags.mapped) {
 		set_menu_coords(menu, &x, &y);
-		wMenuMapAt(vscr, menu, x, y, False);
+		wMenuMapAt(vscr, menu, menu->x_pos, menu->y_pos, False);
 		if (lowered)
 			changeMenuLevels(menu, True);
 
