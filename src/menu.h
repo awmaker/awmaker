@@ -127,6 +127,7 @@ void wMenuScroll(WMenu *menu);
 WMenu *wMenuUnderPointer(virtual_screen *vscr);
 void wMenuSaveState(virtual_screen *vscr);
 void menus_restore(virtual_screen *vscr);
+void menus_restore_map(virtual_screen *vscr);
 
 WMenu *menu_create(virtual_screen *vscr, const char *title);
 void menu_map(WMenu *menu);

@@ -2564,10 +2564,14 @@ void menus_restore(virtual_screen *vscr)
 	menu = WMGetFromPLDictionary(menus, skey);
 	WMReleasePropList(skey);
 	restore_switchmenu(vscr, menu);
-	restore_switchmenu_map(vscr);
 
 	/* Restore the Root menus */
 	restore_rootmenu(vscr, menus);
+}
+
+void menus_restore_map(virtual_screen *vscr)
+{
+	restore_switchmenu_map(vscr);
 }
 
 void menu_move_visible(WMenu *menu)
