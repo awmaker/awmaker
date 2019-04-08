@@ -2420,9 +2420,12 @@ static void restore_switchmenu(virtual_screen *vscr, WMPropList *menu)
 		return;
 
 	vscr->menu.switch_menu = switchmenu_create(vscr);
+	vscr->menu.switch_menu->x_pos = x;
+	vscr->menu.switch_menu->y_pos = y;
 	menu_map(vscr->menu.switch_menu);
 
-	wMenuMapAt(vscr, vscr->menu.switch_menu, x, y, False);
+	wMenuMapAt(vscr, vscr->menu.switch_menu, vscr->menu.switch_menu->x_pos,
+		   vscr->menu.switch_menu->y_pos, False);
 
 	vscr->menu.switch_menu->flags.buttoned = 1;
 	wframewindow_show_rightbutton(vscr->menu.switch_menu->frame);
