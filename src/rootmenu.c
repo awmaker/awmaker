@@ -1710,8 +1710,11 @@ void OpenRootMenu(virtual_screen *vscr, int x, int y, int keyboard)
 		} else {
 			wRaiseFrame(vscr, rootmenu->frame->core);
 
-			if (keyboard)
+			if (keyboard) {
+				rootmenu->x_pos = 0;
+				rootmenu->y_pos = 0;
 				wMenuMapAt(vscr, rootmenu, 0, 0, True);
+			}
 		}
 		return;
 	}
@@ -1744,6 +1747,8 @@ static void rootmenu_map(WMenu *menu, int x, int y, int keyboard)
 		newy = y;
 	}
 
+	vscr->menu.root_menu->x_pos = newx;
+	vscr->menu.root_menu->y_pos = newy;
 	wMenuMapAt(vscr, menu, newx, newy, keyboard);
 }
 
