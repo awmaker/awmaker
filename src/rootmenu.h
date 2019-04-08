@@ -26,7 +26,7 @@ Bool wRootMenuPerformShortcut(XEvent *event);
 void wRootMenuBindShortcuts(Window window);
 void OpenRootMenu(virtual_screen *vscr, int x, int y, int keyboard);
 WMenu *create_rootmenu(virtual_screen *vscr);
-void rootmenu_map(WMenu *menu, int keyboard);
+void rootmenu_map(virtual_screen *vscr, int keyboard);
 void rootmenu_destroy(virtual_screen *vscr);
 void rebindKeygrabs(virtual_screen *vscr);
 

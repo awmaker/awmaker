@@ -1720,39 +1720,37 @@ void OpenRootMenu(virtual_screen *vscr, int x, int y, int keyboard)
 
 	vscr->menu.root_menu->x_pos = x;
 	vscr->menu.root_menu->y_pos = y;
-	rootmenu_map(vscr->menu.root_menu, keyboard);
+	rootmenu_map(vscr, keyboard);
 
 	if (vscr->menu.flags.root_menu_changed_shortcuts)
 		rebindKeygrabs(vscr);
 }
 
-void rootmenu_map(WMenu *menu, int keyboard)
+void rootmenu_map(virtual_screen *vscr, int keyboard)
 {
-	virtual_screen *vscr;
 	int x, y, newx, newy;
 
-	if (!menu)
+	if (!vscr->menu.root_menu)
 		return;
 
-	vscr = menu->vscr;
-	x = menu->x_pos;
-	y = menu->y_pos;
+	x = vscr->menu.root_menu->x_pos;
+	y = vscr->menu.root_menu->y_pos;
 
 	if (keyboard && x == 0 && y == 0) {
 		newx = newy = 0;
 	} else if (keyboard &&
 		   x == vscr->screen_ptr->scr_width / 2 &&
 		   y == vscr->screen_ptr->scr_height / 2) {
-		newx = x - menu->frame->width / 2;
-		newy = y - menu->frame->height / 2;
+		newx = x - vscr->menu.root_menu->frame->width / 2;
+		newy = y - vscr->menu.root_menu->frame->height / 2;
 	} else {
-		newx = x - menu->frame->width / 2;
+		newx = x - vscr->menu.root_menu->frame->width / 2;
 		newy = y;
 	}
 
 	vscr->menu.root_menu->x_pos = newx;
 	vscr->menu.root_menu->y_pos = newy;
-	wMenuMapAt(vscr, menu, keyboard);
+	wMenuMapAt(vscr, vscr->menu.root_menu, keyboard);
 }
 
 static void rootmenu_setup_switchmenu_notif(void)
