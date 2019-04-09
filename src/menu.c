@@ -2566,12 +2566,12 @@ void menus_restore(virtual_screen *vscr)
 
 	/* Restore the Root menus */
 	restore_rootmenu(vscr, menus);
-	restore_rootmenu_map(vscr);
 }
 
 void menus_restore_map(virtual_screen *vscr)
 {
 	restore_switchmenu_map(vscr);
+	restore_rootmenu_map(vscr);
 }
 
 void menu_move_visible(WMenu *menu)
