@@ -2551,32 +2551,17 @@ static Bool restore_rootmenu_recurs(WMPropList *menus, WMenu *menu, const char *
 
 static Bool restore_rootmenu_recurs_next(WMPropList *menus, WMenu *menu, const char *path)
 {
-	virtual_screen *vscr = menu->vscr;
-	WMPropList *key, *entry;
+	WMPropList *key;
 	char buffer[512];
-	int i, x, y;
-	Bool res, lowered;
+	int i;
+	Bool res;
 
 	if (strlen(path) + strlen(menu->title) > 510)
 		return False;
 
 	snprintf(buffer, sizeof(buffer), "%s\\%s", path, menu->title);
 	key = WMCreatePLString(buffer);
-	entry = WMGetFromPLDictionary(menus, key);
 	res = False;
-
-	if (entry && getMenuInfo(entry, &x, &y, &lowered) && !menu->flags.mapped) {
-		set_menu_coords(menu, &x, &y);
-		wMenuMapAt(vscr, menu, False);
-		if (lowered)
-			changeMenuLevels(menu, True);
-
-		/* Show the right button */
-		menu->flags.buttoned = 1;
-		wframewindow_show_rightbutton(menu->frame);
-
-		res = True;
-	}
 
 	WMReleasePropList(key);
 
