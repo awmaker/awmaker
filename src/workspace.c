@@ -123,8 +123,7 @@ static void set_clip_in_workspace(virtual_screen *vscr, WWorkspace *wspace, WMPr
 	if (wks_state)
 		clip_state = WMGetFromPLDictionary(wks_state, dClip);
 
-	if (!wPreferences.flags.noclip)
-		wspace->clip = clip_create(vscr, clip_state);
+	wspace->clip = clip_create(vscr, clip_state);
 }
 
 static void set_clip_in_workspace_map(virtual_screen *vscr, WWorkspace *wspace, int wksno, WMPropList *wks_state)
