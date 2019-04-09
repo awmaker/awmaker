@@ -2453,16 +2453,16 @@ static void restore_rootmenu(virtual_screen *vscr, WMPropList *menus)
 	for (i = 0; i < vscr->menu.root_menu->cascade_no; i++)
 		restore_rootmenu_recurs(menus, vscr->menu.root_menu->cascades[i], buffer);
 
+	/* If title is too long, here, change it */
+	if (strlen(vscr->menu.root_menu->title) > (ROOTMENU_TITLELEN - 2))
+		snprintf(vscr->menu.root_menu->title, sizeof(buffer) - 2, "Window Maker");
+
 	rootmenu_map(vscr, False);
 
 	if (vscr->menu.flags.root_menu_changed_shortcuts)
 		rebindKeygrabs(vscr);
 
 	wMenuUnmap(vscr->menu.root_menu);
-
-	/* If title is too long, here, change it */
-	if (strlen(vscr->menu.root_menu->title) > (ROOTMENU_TITLELEN - 2))
-		snprintf(vscr->menu.root_menu->title, sizeof(buffer) - 2, "Window Maker");
 
 	snprintf(buffer, sizeof(buffer), "\\%s", vscr->menu.root_menu->title);
 	key = WMCreatePLString(buffer);
