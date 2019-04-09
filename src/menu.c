@@ -91,7 +91,6 @@ static void updateTexture(WMenu *menu);
 static void selectEntry(WMenu *menu, int entry_no);
 static void closeCascade(WMenu *menu);
 static void set_menu_width(WMenu *menu);
-static void set_menu_coords(WMenu *menu);
 static void set_menu_coords2(WMenu *menu);
 static void menu_map_core(WMenu *menu, int x, int y);
 static Bool save_rootmenu_recurs(WMPropList *menus, WMenu *menu);
@@ -2477,7 +2476,6 @@ static void restore_rootmenu(virtual_screen *vscr, WMPropList *menus)
 	WMReleasePropList(key);
 
 	if (!vscr->menu.root_menu->flags.mapped) {
-		set_menu_coords(vscr->menu.root_menu);
 		wMenuMapAt(vscr, vscr->menu.root_menu, False);
 		if (lowered)
 			changeMenuLevels(vscr->menu.root_menu, True);
@@ -2486,35 +2484,6 @@ static void restore_rootmenu(virtual_screen *vscr, WMPropList *menus)
 		vscr->menu.root_menu->flags.buttoned = 1;
 		wframewindow_show_rightbutton(vscr->menu.root_menu->frame);
 	}
-}
-
-static void set_menu_coords(WMenu *menu)
-{
-	WMRect rect;
-	virtual_screen *vscr = menu->vscr;
-	int x, y, width, height;
-
-	x = menu->x_pos;
-	y = menu->y_pos;
-
-	width = get_menu_width_full(menu);
-	height = get_menu_height_full(menu);
-	rect = wGetRectForHead(vscr->screen_ptr, wGetHeadForPointerLocation(vscr));
-
-	if (x < rect.pos.x - width)
-		x = rect.pos.x;
-
-	if (x > rect.pos.x + rect.size.width)
-		x = rect.pos.x + rect.size.width - width;
-
-	if (y < rect.pos.y)
-		y = rect.pos.y;
-
-	if (y > rect.pos.y + rect.size.height)
-		y = rect.pos.y + rect.size.height - height;
-
-	menu->x_pos = x;
-	menu->y_pos = y;
 }
 
 static void set_menu_coords2(WMenu *menu)
