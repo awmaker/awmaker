@@ -2457,12 +2457,8 @@ static void restore_rootmenu(virtual_screen *vscr, WMPropList *menus)
 	if (strlen(vscr->menu.root_menu->title) > (ROOTMENU_TITLELEN - 2))
 		snprintf(vscr->menu.root_menu->title, sizeof(buffer) - 2, "Window Maker");
 
-	rootmenu_map(vscr, False);
-
 	if (vscr->menu.flags.root_menu_changed_shortcuts)
 		rebindKeygrabs(vscr);
-
-	wMenuUnmap(vscr->menu.root_menu);
 
 	snprintf(buffer, sizeof(buffer), "\\%s", vscr->menu.root_menu->title);
 	key = WMCreatePLString(buffer);
