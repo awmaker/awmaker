@@ -37,7 +37,6 @@ void read_defaults_noscreen(virtual_screen *vscr, WMPropList *new_dict);
 void wDefaultUpdateIcons(virtual_screen *vscr);
 void wReadStaticDefaults(WMPropList *dict);
 void wDefaultsCheckDomains(void *arg);
-void wSaveDefaults(virtual_screen *vscr);
 void wDefaultFillAttributes(const char *instance, const char *class,
                             WWindowAttributes *attr, WWindowAttributes *mask,
                             Bool useGlobalDefault);
