@@ -2460,10 +2460,10 @@ static void restore_rootmenu(virtual_screen *vscr, WMPropList *menus)
 
 	wMenuUnmap(vscr->menu.root_menu);
 
-	if (strlen("") + strlen(vscr->menu.root_menu->title) > 510)
+	if (strlen(vscr->menu.root_menu->title) > 510)
 		return;
 
-	snprintf(buffer, sizeof(buffer), "%s\\%s", "", vscr->menu.root_menu->title);
+	snprintf(buffer, sizeof(buffer), "\\%s", vscr->menu.root_menu->title);
 	key = WMCreatePLString(buffer);
 	entry = WMGetFromPLDictionary(menus, key);
 
