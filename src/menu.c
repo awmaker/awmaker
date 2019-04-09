@@ -2474,6 +2474,8 @@ static void restore_rootmenu(virtual_screen *vscr, WMPropList *menus)
 		vscr->menu.root_menu->y_pos = y;
 	}
 
+	WMReleasePropList(key);
+
 	if (!vscr->menu.root_menu->flags.mapped) {
 		set_menu_coords(vscr->menu.root_menu);
 		wMenuMapAt(vscr, vscr->menu.root_menu, False);
@@ -2484,8 +2486,6 @@ static void restore_rootmenu(virtual_screen *vscr, WMPropList *menus)
 		vscr->menu.root_menu->flags.buttoned = 1;
 		wframewindow_show_rightbutton(vscr->menu.root_menu->frame);
 	}
-
-	WMReleasePropList(key);
 }
 
 static void set_menu_coords(WMenu *menu)
