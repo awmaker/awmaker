@@ -2448,7 +2448,8 @@ static void restore_rootmenu(virtual_screen *vscr, WMPropList *menus)
 	Bool lowered;
 
 	vscr->menu.root_menu = create_rootmenu(vscr);
-	vscr->menu.root_menu->x_pos = vscr->screen_ptr->scr_width * 2;
+	/* Defaults for the root menu, updated using getMenuInfo later */
+	vscr->menu.root_menu->x_pos = 0;
 	vscr->menu.root_menu->y_pos = 0;
 
 	for (i = 0; i < vscr->menu.root_menu->cascade_no; i++)
@@ -2462,6 +2463,7 @@ static void restore_rootmenu(virtual_screen *vscr, WMPropList *menus)
 	key = WMCreatePLString(buffer);
 	entry = WMGetFromPLDictionary(menus, key);
 
+	/* Update the default position */
 	if (entry && getMenuInfo(entry, &x, &y, &lowered)) {
 		vscr->menu.root_menu->x_pos = x;
 		vscr->menu.root_menu->y_pos = y;
