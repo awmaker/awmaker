@@ -2475,6 +2475,9 @@ static void restore_rootmenu(virtual_screen *vscr, WMPropList *menus)
 
 static void restore_rootmenu_map(virtual_screen *vscr)
 {
+	if (!vscr->menu.root_menu)
+		return;
+
 	if (vscr->menu.flags.root_menu_changed_shortcuts)
 		rebindKeygrabs(vscr);
 
