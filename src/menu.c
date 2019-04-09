@@ -2453,6 +2453,10 @@ static void restore_rootmenu(virtual_screen *vscr, WMPropList *menus)
 	vscr->menu.root_menu = create_rootmenu(vscr);
 	vscr->menu.root_menu->x_pos = vscr->screen_ptr->scr_width * 2;
 	vscr->menu.root_menu->y_pos = 0;
+
+	for (i = 0; i < vscr->menu.root_menu->cascade_no; i++)
+		restore_rootmenu_recurs(menus, vscr->menu.root_menu->cascades[i], buffer);
+
 	rootmenu_map(vscr, False);
 
 	if (vscr->menu.flags.root_menu_changed_shortcuts)
@@ -2480,9 +2484,6 @@ static void restore_rootmenu(virtual_screen *vscr, WMPropList *menus)
 	}
 
 	WMReleasePropList(key);
-
-	for (i = 0; i < vscr->menu.root_menu->cascade_no; i++)
-		restore_rootmenu_recurs(menus, vscr->menu.root_menu->cascades[i], buffer);
 }
 
 static void set_menu_coords(WMenu *menu, int *x, int *y)
