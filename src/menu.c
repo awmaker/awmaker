@@ -2469,7 +2469,7 @@ static void restore_rootmenu(virtual_screen *vscr, WMPropList *menus)
 	key = WMCreatePLString(buffer);
 	entry = WMGetFromPLDictionary(menus, key);
 
-	if (entry && getMenuInfo(entry, &x, &y, &lowered) && !vscr->menu.root_menu->flags.mapped) {
+	if (entry && getMenuInfo(entry, &x, &y, &lowered)) {
 		vscr->menu.root_menu->x_pos = x;
 		vscr->menu.root_menu->y_pos = y;
 	}
