@@ -2412,10 +2412,15 @@ static Bool getMenuInfo(WMPropList *info, int *x, int *y, Bool *lowered)
 	return True;
 }
 
-static void restore_switchmenu(virtual_screen *vscr, WMPropList *menu)
+static void restore_switchmenu(virtual_screen *vscr, WMPropList *menus)
 {
+	WMPropList *skey, *menu;
 	int x, y;
 	Bool lowered = False;
+
+	skey = WMCreatePLString("SwitchMenu");
+	menu = WMGetFromPLDictionary(menus, skey);
+	WMReleasePropList(skey);
 
 	if (!menu)
 		return;
@@ -2544,7 +2549,7 @@ static Bool restore_rootmenu_recurs(WMPropList *menus, WMenu *menu, const char *
 
 void menus_restore(virtual_screen *vscr)
 {
-	WMPropList *menus, *menu, *key, *skey;
+	WMPropList *menus, *key;
 
 	if (!w_global.session_state)
 		return;
@@ -2558,11 +2563,8 @@ void menus_restore(virtual_screen *vscr)
 	if (!menus)
 		return;
 
-	/* Get the SwitchMenu key and restore the menu */
-	skey = WMCreatePLString("SwitchMenu");
-	menu = WMGetFromPLDictionary(menus, skey);
-	WMReleasePropList(skey);
-	restore_switchmenu(vscr, menu);
+	/* Restore the SwitchMenu */
+	restore_switchmenu(vscr, menus);
 
 	/* Restore the Root menus */
 	restore_rootmenu(vscr, menus);
