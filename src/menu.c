@@ -2474,7 +2474,7 @@ static void restore_rootmenu(virtual_screen *vscr, WMPropList *menus)
 		vscr->menu.root_menu->y_pos = y;
 	}
 
-	if (entry && getMenuInfo(entry, &x, &y, &lowered) && !vscr->menu.root_menu->flags.mapped) {
+	if (!vscr->menu.root_menu->flags.mapped) {
 		set_menu_coords(vscr->menu.root_menu);
 		wMenuMapAt(vscr, vscr->menu.root_menu, False);
 		if (lowered)
