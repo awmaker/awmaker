@@ -94,7 +94,7 @@ static void set_menu_coords(WMenu *menu, int *x, int *y);
 static void set_menu_coords2(WMenu *menu, int *x, int *y);
 static void menu_map_core(WMenu *menu, int x, int y);
 static Bool save_rootmenu_recurs(WMPropList *menus, WMenu *menu);
-static Bool restore_rootmenu_recurs_next(WMPropList *menus, WMenu *menu, const char *path);
+static Bool restore_rootmenu_recurs(WMPropList *menus, WMenu *menu, const char *path);
 static void menu_delete_handlers(WMenu *menu, delay_data *d_data);
 static void menu_blink_selected(WMenu *menu);
 static int get_menu_height(WMenu *menu);
@@ -2482,7 +2482,7 @@ static void restore_rootmenu(virtual_screen *vscr, WMPropList *menus)
 	WMReleasePropList(key);
 
 	for (i = 0; i < vscr->menu.root_menu->cascade_no; i++)
-		restore_rootmenu_recurs_next(menus, vscr->menu.root_menu->cascades[i], buffer);
+		restore_rootmenu_recurs(menus, vscr->menu.root_menu->cascades[i], buffer);
 }
 
 static void set_menu_coords(WMenu *menu, int *x, int *y)
@@ -2537,7 +2537,7 @@ static void set_menu_coords2(WMenu *menu, int *x, int *y)
 	menu->y_pos = *y;
 }
 
-static Bool restore_rootmenu_recurs_next(WMPropList *menus, WMenu *menu, const char *path)
+static Bool restore_rootmenu_recurs(WMPropList *menus, WMenu *menu, const char *path)
 {
 	WMPropList *key;
 	char buffer[512];
@@ -2554,7 +2554,7 @@ static Bool restore_rootmenu_recurs_next(WMPropList *menus, WMenu *menu, const c
 	WMReleasePropList(key);
 
 	for (i = 0; i < menu->cascade_no; i++)
-		if (restore_rootmenu_recurs_next(menus, menu->cascades[i], buffer) != False)
+		if (restore_rootmenu_recurs(menus, menu->cascades[i], buffer) != False)
 			res = True;
 
 	return res;
