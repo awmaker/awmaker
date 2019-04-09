@@ -2460,8 +2460,9 @@ static void restore_rootmenu(virtual_screen *vscr, WMPropList *menus)
 
 	wMenuUnmap(vscr->menu.root_menu);
 
+	/* If title is too long, here, change it */
 	if (strlen(vscr->menu.root_menu->title) > 510)
-		return;
+		snprintf(vscr->menu.root_menu->title, sizeof(buffer) - 2, "Window Maker");
 
 	snprintf(buffer, sizeof(buffer), "\\%s", vscr->menu.root_menu->title);
 	key = WMCreatePLString(buffer);
