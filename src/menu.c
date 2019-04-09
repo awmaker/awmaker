@@ -2475,15 +2475,13 @@ static void restore_rootmenu(virtual_screen *vscr, WMPropList *menus)
 
 	WMReleasePropList(key);
 
-	if (!vscr->menu.root_menu->flags.mapped) {
-		wMenuMapAt(vscr, vscr->menu.root_menu, False);
-		if (lowered)
-			changeMenuLevels(vscr->menu.root_menu, True);
+	wMenuMapAt(vscr, vscr->menu.root_menu, False);
+	if (lowered)
+		changeMenuLevels(vscr->menu.root_menu, True);
 
-		/* Show the right button */
-		vscr->menu.root_menu->flags.buttoned = 1;
-		wframewindow_show_rightbutton(vscr->menu.root_menu->frame);
-	}
+	/* Show the right button */
+	vscr->menu.root_menu->flags.buttoned = 1;
+	wframewindow_show_rightbutton(vscr->menu.root_menu->frame);
 }
 
 static void set_menu_coords2(WMenu *menu)
