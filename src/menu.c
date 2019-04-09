@@ -2427,6 +2427,7 @@ static void restore_switchmenu(virtual_screen *vscr, WMPropList *menu)
 	vscr->menu.switch_menu->x_pos = x;
 	vscr->menu.switch_menu->y_pos = y;
 	vscr->menu.switch_menu->flags.buttoned = 1;
+	vscr->menu.switch_menu->flags.lowered = lowered;
 }
 
 static void restore_switchmenu_map(virtual_screen *vscr)
@@ -2464,6 +2465,7 @@ static void restore_rootmenu(virtual_screen *vscr, WMPropList *menus)
 	if (entry && getMenuInfo(entry, &x, &y, &lowered)) {
 		vscr->menu.root_menu->x_pos = x;
 		vscr->menu.root_menu->y_pos = y;
+		vscr->menu.root_menu->flags.lowered = lowered;
 	}
 
 	WMReleasePropList(key);
@@ -2472,7 +2474,7 @@ static void restore_rootmenu(virtual_screen *vscr, WMPropList *menus)
 		rebindKeygrabs(vscr);
 
 	wMenuMapAt(vscr, vscr->menu.root_menu, False);
-	if (lowered)
+	if (vscr->menu.root_menu->flags.lowered)
 		changeMenuLevels(vscr->menu.root_menu, True);
 
 	/* Show the right button */
