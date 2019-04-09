@@ -2457,9 +2457,6 @@ static void restore_rootmenu(virtual_screen *vscr, WMPropList *menus)
 	if (strlen(vscr->menu.root_menu->title) > (ROOTMENU_TITLELEN - 2))
 		snprintf(vscr->menu.root_menu->title, sizeof(buffer) - 2, "Window Maker");
 
-	if (vscr->menu.flags.root_menu_changed_shortcuts)
-		rebindKeygrabs(vscr);
-
 	snprintf(buffer, sizeof(buffer), "\\%s", vscr->menu.root_menu->title);
 	key = WMCreatePLString(buffer);
 	entry = WMGetFromPLDictionary(menus, key);
@@ -2470,6 +2467,9 @@ static void restore_rootmenu(virtual_screen *vscr, WMPropList *menus)
 	}
 
 	WMReleasePropList(key);
+
+	if (vscr->menu.flags.root_menu_changed_shortcuts)
+		rebindKeygrabs(vscr);
 
 	wMenuMapAt(vscr, vscr->menu.root_menu, False);
 	if (lowered)
