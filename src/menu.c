@@ -50,6 +50,7 @@
 #define F_BOTTOM	2
 #define F_NONE		3
 
+#define ROOTMENU_TITLELEN  512
 #define MENU_SCROLL_BORDER   5
 
 #define MENU_SCROLL_STEP  menuScrollParameters[(int)wPreferences.menu_scroll_speed].steps
@@ -2446,7 +2447,7 @@ static void restore_switchmenu_map(virtual_screen *vscr)
 static void restore_rootmenu(virtual_screen *vscr, WMPropList *menus)
 {
 	WMPropList *key, *entry;
-	char buffer[512];
+	char buffer[ROOTMENU_TITLELEN];
 	int i, x, y;
 	Bool lowered;
 
@@ -2465,7 +2466,7 @@ static void restore_rootmenu(virtual_screen *vscr, WMPropList *menus)
 	wMenuUnmap(vscr->menu.root_menu);
 
 	/* If title is too long, here, change it */
-	if (strlen(vscr->menu.root_menu->title) > 510)
+	if (strlen(vscr->menu.root_menu->title) > (ROOTMENU_TITLELEN - 2))
 		snprintf(vscr->menu.root_menu->title, sizeof(buffer) - 2, "Window Maker");
 
 	snprintf(buffer, sizeof(buffer), "\\%s", vscr->menu.root_menu->title);
