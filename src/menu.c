@@ -1192,10 +1192,9 @@ static void selectEntry(WMenu *menu, int entry_no)
 				x = menu->x_pos + get_menu_width_full(menu);
 			}
 
-			if (wPreferences.align_menus) {
-				y = menu->y_pos;
-			} else {
-				y = menu->y_pos + menu->entry_height * entry_no;
+			y = menu->y_pos;
+			if (!wPreferences.align_menus) {
+				y += menu->entry_height * entry_no;
 				if (menu->flags.titled)
 					y += menu->frame->top_width;
 
@@ -2089,10 +2088,9 @@ void wMenuMove(WMenu *menu, int submenus)
 
 	if (submenus < 0 && menu->parent != NULL && menu->parent->flags.mapped && !menu->parent->flags.buttoned) {
 		menu->parent->x_pos = menu->x_pos - get_menu_width_full(menu->parent);
-		if (wPreferences.align_menus)
-			menu->parent->y_pos = menu->y_pos;
-		else
-			menu->parent->y_pos = menu->y_pos - menu->parent->entry_height * menu->parent->selected_entry;
+		menu->parent->y_pos = menu->y_pos;
+		if (!wPreferences.align_menus)
+			menu->parent->y_pos -= menu->parent->entry_height * menu->parent->selected_entry;
 
 		wMenuMove(menu->parent, submenus);
 	}
