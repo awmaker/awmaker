@@ -62,7 +62,6 @@ typedef struct WMenu {
 	struct WFrameWindow *frame;
 	WCoreWindow *core;			/* the window menu */
 	Pixmap menu_texture_data;
-	int frame_x, frame_y;			/* position of the frame in root*/
 
 	WMenuEntry **entries;			/* array of entries */
 	short alloced_entries;			/* number of entries allocated in
