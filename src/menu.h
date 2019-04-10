@@ -121,7 +121,7 @@ void wMenuRemoveItem(WMenu *menu, int index);
 void wMenuMapAt(virtual_screen *vscr, WMenu *menu, int keyboard);
 void wMenuUnmap(WMenu *menu);
 void wMenuSetEnabled(WMenu *menu, int index, int enable);
-void wMenuMove(WMenu *menu, int x, int y, int submenus);
+void wMenuMove(WMenu *menu, int submenus);
 void wMenuEntryRemoveCascade(WMenu *menu, WMenuEntry *entry);
 void wMenuScroll(WMenu *menu);
 WMenu *wMenuUnderPointer(virtual_screen *vscr);

@@ -809,7 +809,7 @@ static void move_menus(WMenu *menu, int x, int y)
 
 	menu->x_pos = x;
 	menu->x_pos = y;
-	wMenuMove(menu, x, y, True);
+	wMenuMove(menu, True);
 }
 
 static void makeVisible(WMenu *menu)
@@ -1423,7 +1423,7 @@ static void dragScrollMenuCallback(void *data)
 	if (hamount != 0 || vamount != 0) {
 		parent->x_pos = parent->frame_x + hamount;
 		parent->y_pos = parent->frame_y + vamount;
-		wMenuMove(parent, parent->frame_x + hamount, parent->frame_y + vamount, True);
+		wMenuMove(parent, True);
 		if (findMenu(vscr, &x, &y)) {
 			newSelectedEntry = getEntryAt(menu, y);
 			selectEntry(menu, newSelectedEntry);
@@ -1462,7 +1462,7 @@ static void scrollMenuCallback(void *data)
 	if (hamount != 0 || vamount != 0) {
 		parent->x_pos = parent->frame_x + hamount;
 		parent->y_pos = parent->frame_y + vamount;
-		wMenuMove(parent, parent->frame_x + hamount, parent->frame_y + vamount, True);
+		wMenuMove(parent, True);
 
 		/* keep scrolling */
 		menu->timer = WMAddTimerHandler(MENU_SCROLL_DELAY, scrollMenuCallback, menu);
@@ -1499,7 +1499,7 @@ static void callback_leaving(void *user_param)
 
 	dl->menu->x_pos = dl->ox;
 	dl->menu->y_pos = dl->oy;
-	wMenuMove(dl->menu, dl->ox, dl->oy, True);
+	wMenuMove(dl->menu, True);
 	dl->menu->jump_back = NULL;
 	dl->menu->vscr->screen_ptr->flags.jump_back_pending = 0;
 	wfree(dl);
@@ -2056,7 +2056,7 @@ static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
 		wrapped_menu = parentMenu(desc->parent);
 		wrapped_menu->x_pos = old_frame_x;
 		wrapped_menu->y_pos = old_frame_y;
-		wMenuMove(wrapped_menu, old_frame_x, old_frame_y, True);
+		wMenuMove(wrapped_menu, True);
 	}
 
 	menu_delete_handlers(menu, &d_data);
@@ -2077,7 +2077,7 @@ static void menu_delete_handlers(WMenu *menu, delay_data *d_data)
 	}
 }
 
-void wMenuMove(WMenu *menu, int x, int y, int submenus)
+void wMenuMove(WMenu *menu, int submenus)
 {
 	WMenu *submenu;
 	int i;
@@ -2085,9 +2085,9 @@ void wMenuMove(WMenu *menu, int x, int y, int submenus)
 	if (!menu)
 		return;
 
-	menu->frame_x = x;
-	menu->frame_y = y;
-	XMoveWindow(dpy, menu->frame->core->window, x, y);
+	menu->frame_x = menu->x_pos;
+	menu->frame_y = menu->y_pos;
+	XMoveWindow(dpy, menu->frame->core->window, menu->x_pos, menu->y_pos);
 
 	if (submenus > 0 && menu->selected_entry >= 0) {
 		i = menu->entries[menu->selected_entry]->cascade;
@@ -2095,31 +2095,24 @@ void wMenuMove(WMenu *menu, int x, int y, int submenus)
 		if (i >= 0 && menu->cascades) {
 			submenu = menu->cascades[i];
 			if (submenu->flags.mapped && !submenu->flags.buttoned) {
-				if (wPreferences.align_menus) {
-					submenu->x_pos = x + get_menu_width_full(menu);
-					submenu->y_pos = y;
-					wMenuMove(submenu, x + get_menu_width_full(menu), y, submenus);
-				} else {
-					submenu->x_pos = x + get_menu_width_full(menu);
-					submenu->y_pos = y + submenu->entry_height * menu->selected_entry;
-					wMenuMove(submenu, x + get_menu_width_full(menu),
-						  y + submenu->entry_height * menu->selected_entry, submenus);
-				}
+				submenu->x_pos = menu->x_pos + get_menu_width_full(menu);
+				submenu->y_pos = menu->y_pos;
+				if (!wPreferences.align_menus)
+					submenu->y_pos += submenu->entry_height * menu->selected_entry;
+
+				wMenuMove(submenu, submenus);
 			}
 		}
 	}
 
 	if (submenus < 0 && menu->parent != NULL && menu->parent->flags.mapped && !menu->parent->flags.buttoned) {
-		if (wPreferences.align_menus) {
-			menu->parent->x_pos = x - get_menu_width_full(menu->parent);
-			menu->parent->y_pos = y;
-			wMenuMove(menu->parent, x - get_menu_width_full(menu->parent), y, submenus);
-		} else {
-			menu->parent->x_pos = x - get_menu_width_full(menu->parent);
+		menu->parent->x_pos = menu->x_pos - get_menu_width_full(menu->parent);
+		if (wPreferences.align_menus)
+			menu->parent->y_pos = menu->y_pos;
+		else
 			menu->parent->y_pos = menu->frame_y - menu->parent->entry_height * menu->parent->selected_entry;
-			wMenuMove(menu->parent, x - get_menu_width_full(menu->parent), menu->frame_y
-				  - menu->parent->entry_height * menu->parent->selected_entry, submenus);
-		}
+
+		wMenuMove(menu->parent, submenus);
 	}
 }
 
@@ -2236,7 +2229,7 @@ static void menuTitleMouseDown(WCoreWindow * sender, void *data, XEvent * event)
 				dy = ev.xmotion.y_root;
 				menu->x_pos = x;
 				menu->y_pos = y;
-				wMenuMove(menu, x, y, True);
+				wMenuMove(menu, True);
 			} else {
 				if (abs(ev.xmotion.x_root - dx) > MOVE_THRESHOLD ||
 				    abs(ev.xmotion.y_root - dy) > MOVE_THRESHOLD) {
@@ -2611,7 +2604,7 @@ void menu_move_visible(WMenu *menu)
 	if (menu->frame_x < new_x) {
 		menu->x_pos = new_x;
 		menu->y_pos = menu->frame_y;
-		wMenuMove(menu, new_x, menu->frame_y, False);
+		wMenuMove(menu, False);
 	}
 
 	wMenuPaint(menu);
