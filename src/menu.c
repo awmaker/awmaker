@@ -304,8 +304,6 @@ void menu_map(WMenu *menu)
 
 void menu_map_pos(WMenu *menu, int x, int y)
 {
-	menu->x_pos = x;
-	menu->y_pos = y;
 	menu_map_core(menu, x, y);
 }
 
