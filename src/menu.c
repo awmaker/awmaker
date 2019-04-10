@@ -92,7 +92,6 @@ static void selectEntry(WMenu *menu, int entry_no);
 static void closeCascade(WMenu *menu);
 static void set_menu_width(WMenu *menu);
 static void set_menu_coords2(WMenu *menu);
-static void menu_map_core(WMenu *menu, int x, int y);
 static Bool save_rootmenu_recurs(WMPropList *menus, WMenu *menu);
 static Bool restore_rootmenu_recurs(WMPropList *menus, WMenu *menu, const char *path);
 static void menu_delete_handlers(WMenu *menu, delay_data *d_data);
@@ -248,7 +247,7 @@ void menu_destroy(WMenu *menu)
 	wfree(menu);
 }
 
-static void menu_map_core(WMenu *menu, int x, int y)
+void menu_map(WMenu *menu)
 {
 	virtual_screen *vscr = menu->vscr;
 	int tmp;
@@ -295,11 +294,6 @@ static void menu_map_core(WMenu *menu, int x, int y)
 
 	WMAddNotificationObserver(appearanceObserver, menu, WNMenuAppearanceSettingsChanged, menu);
 	WMAddNotificationObserver(appearanceObserver, menu, WNMenuTitleAppearanceSettingsChanged, menu);
-}
-
-void menu_map(WMenu *menu)
-{
-	menu_map_core(menu, menu->x_pos, menu->y_pos);
 }
 
 static void insertEntry(WMenu *menu, WMenuEntry *entry, int index)
