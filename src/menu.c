@@ -272,8 +272,8 @@ static void menu_map_core(WMenu *menu, int x, int y)
 	menu->frame->core->descriptor.handle_mousedown = menuMouseDown;
 	menu->frame->rbutton_image = vscr->screen_ptr->b_pixmaps[WBUT_CLOSE];
 
-	menu->frame_x = x;
-	menu->frame_y = y;
+	menu->frame_x = menu->x_pos;
+	menu->frame_y = menu->y_pos;
 
 	wcore_map(menu->core, menu->frame->core,
 		  menu->vscr, menu->frame_x, menu->frame_y,
