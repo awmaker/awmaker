@@ -807,6 +807,8 @@ static void move_menus(WMenu *menu, int x, int y)
 			y -= menu->selected_entry * menu->entry_height;
 	}
 
+	menu->x_pos = x;
+	menu->x_pos = y;
 	wMenuMove(menu, x, y, True);
 }
 
@@ -1419,6 +1421,8 @@ static void dragScrollMenuCallback(void *data)
 	getScrollAmount(menu, &hamount, &vamount);
 
 	if (hamount != 0 || vamount != 0) {
+		parent->x_pos = parent->frame_x + hamount;
+		parent->y_pos = parent->frame_y + vamount;
 		wMenuMove(parent, parent->frame_x + hamount, parent->frame_y + vamount, True);
 		if (findMenu(vscr, &x, &y)) {
 			newSelectedEntry = getEntryAt(menu, y);
@@ -1456,6 +1460,8 @@ static void scrollMenuCallback(void *data)
 	getScrollAmount(menu, &hamount, &vamount);
 
 	if (hamount != 0 || vamount != 0) {
+		parent->x_pos = parent->frame_x + hamount;
+		parent->y_pos = parent->frame_y + vamount;
 		wMenuMove(parent, parent->frame_x + hamount, parent->frame_y + vamount, True);
 
 		/* keep scrolling */
@@ -1491,6 +1497,8 @@ static void callback_leaving(void *user_param)
 {
 	_delay *dl = (_delay *) user_param;
 
+	dl->menu->x_pos = dl->ox;
+	dl->menu->y_pos = dl->oy;
 	wMenuMove(dl->menu, dl->ox, dl->oy, True);
 	dl->menu->jump_back = NULL;
 	dl->menu->vscr->screen_ptr->flags.jump_back_pending = 0;
@@ -1891,6 +1899,7 @@ static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
 	XButtonEvent *bev = &event->xbutton;
 	WMenu *smenu, *menu = desc->parent;
 	virtual_screen *vscr = menu->vscr;
+	WMenu *wrapped_menu;
 	WMenuEntry *entry = NULL;
 	XEvent ev;
 	int close_on_exit = 0;
@@ -2043,8 +2052,12 @@ static void menuMouseDown(WObjDescriptor *desc, XEvent *event)
 	if (close_on_exit || !smenu)
 		closeCascade(desc->parent);
 
-	if (!wPreferences.wrap_menus)
-		wMenuMove(parentMenu(desc->parent), old_frame_x, old_frame_y, True);
+	if (!wPreferences.wrap_menus) {
+		wrapped_menu = parentMenu(desc->parent);
+		wrapped_menu->x_pos = old_frame_x;
+		wrapped_menu->y_pos = old_frame_y;
+		wMenuMove(wrapped_menu, old_frame_x, old_frame_y, True);
+	}
 
 	menu_delete_handlers(menu, &d_data);
 	((WMenu *) desc->parent)->flags.inside_handler = 0;
@@ -2082,21 +2095,31 @@ void wMenuMove(WMenu *menu, int x, int y, int submenus)
 		if (i >= 0 && menu->cascades) {
 			submenu = menu->cascades[i];
 			if (submenu->flags.mapped && !submenu->flags.buttoned) {
-				if (wPreferences.align_menus)
+				if (wPreferences.align_menus) {
+					submenu->x_pos = x + get_menu_width_full(menu);
+					submenu->y_pos = y;
 					wMenuMove(submenu, x + get_menu_width_full(menu), y, submenus);
-				else
+				} else {
+					submenu->x_pos = x + get_menu_width_full(menu);
+					submenu->y_pos = y + submenu->entry_height * menu->selected_entry;
 					wMenuMove(submenu, x + get_menu_width_full(menu),
 						  y + submenu->entry_height * menu->selected_entry, submenus);
+				}
 			}
 		}
 	}
 
 	if (submenus < 0 && menu->parent != NULL && menu->parent->flags.mapped && !menu->parent->flags.buttoned) {
-		if (wPreferences.align_menus)
+		if (wPreferences.align_menus) {
+			menu->parent->x_pos = x - get_menu_width_full(menu->parent);
+			menu->parent->y_pos = y;
 			wMenuMove(menu->parent, x - get_menu_width_full(menu->parent), y, submenus);
-		else
+		} else {
+			menu->parent->x_pos = x - get_menu_width_full(menu->parent);
+			menu->parent->y_pos = menu->frame_y - menu->parent->entry_height * menu->parent->selected_entry;
 			wMenuMove(menu->parent, x - get_menu_width_full(menu->parent), menu->frame_y
 				  - menu->parent->entry_height * menu->parent->selected_entry, submenus);
+		}
 	}
 }
 
@@ -2211,6 +2234,8 @@ static void menuTitleMouseDown(WCoreWindow * sender, void *data, XEvent * event)
 				y += ev.xmotion.y_root - dy;
 				dx = ev.xmotion.x_root;
 				dy = ev.xmotion.y_root;
+				menu->x_pos = x;
+				menu->y_pos = y;
 				wMenuMove(menu, x, y, True);
 			} else {
 				if (abs(ev.xmotion.x_root - dx) > MOVE_THRESHOLD ||
@@ -2583,8 +2608,11 @@ void menu_move_visible(WMenu *menu)
 	wMenuRealize(menu);
 	new_x = menu->frame->top_width - (int) menu->frame->width + 5;
 	/* if menu got unreachable, bring it to a visible place */
-	if (menu->frame_x < new_x)
+	if (menu->frame_x < new_x) {
+		menu->x_pos = new_x;
+		menu->y_pos = menu->frame_y;
 		wMenuMove(menu, new_x, menu->frame_y, False);
+	}
 
 	wMenuPaint(menu);
 }
