@@ -942,23 +942,11 @@ void workspaces_set_menu_enabled_items(virtual_screen *vscr, WMenu *menu)
 
 void wWorkspaceMenuUpdate_map(virtual_screen *vscr)
 {
-	WMenu *menu = vscr->workspace.menu;
-	int tmp;
-
-	if (!menu)
+	if (!vscr->workspace.menu)
 		return;
 
-	wMenuRealize(menu);
-	workspaces_set_menu_enabled_items(vscr, menu);
-
-	tmp = menu->frame->top_width + 5;
-	/* if menu got unreachable, bring it to a visible place */
-	if (menu->x_pos < tmp - (int) menu->frame->width) {
-		menu->x_pos = tmp - (int) menu->frame->width;
-		wMenuMove(menu, False);
-	}
-
-	wMenuPaint(menu);
+	workspaces_set_menu_enabled_items(vscr, vscr->workspace.menu);
+	menu_move_visible(vscr->workspace.menu);
 }
 
 void wWorkspaceMenuUpdate(virtual_screen *vscr, WMenu *menu)
