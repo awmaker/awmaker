@@ -299,12 +299,12 @@ static void menu_map_core(WMenu *menu, int x, int y)
 
 void menu_map(WMenu *menu)
 {
-	menu_map_core(menu, 0, 0);
+	menu_map_core(menu, menu->x_pos, menu->y_pos);
 }
 
 void menu_map_pos(WMenu *menu, int x, int y)
 {
-	menu_map_core(menu, x, y);
+	menu_map_core(menu, menu->x_pos, menu->y_pos);
 }
 
 static void insertEntry(WMenu *menu, WMenuEntry *entry, int index)
