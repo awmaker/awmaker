@@ -182,6 +182,8 @@ WMenu *menu_create(virtual_screen *vscr, const char *title)
 	menu->frame = wframewindow_create(NULL, menu, 1, 1, flags);
 	menu->core = wcore_create();
 	menu->vscr = vscr;
+	menu->x_pos = 0;
+	menu->y_pos = 0;
 
 	if (title) {
 		menu->title = wstrdup(title);
