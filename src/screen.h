@@ -149,7 +149,6 @@ struct WScreen {
     Window root_win;		       /* root window of screen */
     int  depth;			       /* depth of the default visual */
     Colormap colormap;		       /* root colormap */
-    int root_colormap_install_count;
     struct WWindow *original_cmap_window; /* colormap before installing
                                            * root colormap temporarily */
     struct WWindow *cmap_window;
