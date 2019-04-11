@@ -817,8 +817,11 @@ void OpenWindowMenu(WWindow *wwin, int x, int y, int keyboard)
 	/* Common menu position */
 	prepare_menu_position(menu, &x, &y, keyboard);
 
-	if (!wwin->flags.internal_window)
-		wMenuMapAt(wwin->vscr, menu, x, y, keyboard);
+	if (!wwin->flags.internal_window) {
+		menu->x_pos = x;
+		menu->y_pos = y;
+		wMenuMapAt(wwin->vscr, menu, keyboard);
+	}
 }
 
 void windowmenu_at_switchmenu_open(WWindow *wwin, int x, int y)
@@ -843,8 +846,11 @@ void windowmenu_at_switchmenu_open(WWindow *wwin, int x, int y)
 	/* Common menu position */
 	prepare_menu_position(menu, &x, &y, False);
 
-	if (!wwin->flags.internal_window)
-		wMenuMapAt(vscr, menu, x, y, False);
+	if (!wwin->flags.internal_window) {
+		menu->x_pos = x;
+		menu->y_pos = y;
+		wMenuMapAt(vscr, menu, False);
+	}
 }
 
 void DestroyWindowMenu(virtual_screen *vscr)

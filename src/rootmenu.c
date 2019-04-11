@@ -71,7 +71,6 @@ static WMenu *readMenuFile(virtual_screen *vscr, const char *file_name);
 static WMenu *readMenuDirectory(virtual_screen *vscr, const char *title, char **file_name, const char *command);
 static WMenu *configureMenu(virtual_screen *vscr, WMPropList *definition);
 static void menu_parser_register_macros(WMenuParser parser);
-static void rootmenu_map(WMenu *menu, int x, int y, int keyboard);
 static void observer(void *self, WMNotification *notif);
 static void wsobserver(void *self, WMNotification *notif);
 static void rootmenu_setup_switchmenu_notif(void);
@@ -416,7 +415,7 @@ void wRootMenuBindShortcuts(Window window)
 	}
 }
 
-static void rebindKeygrabs(virtual_screen *vscr)
+void rebindKeygrabs(virtual_screen *vscr)
 {
 	WWindow *wwin;
 
@@ -858,10 +857,12 @@ static WMenuEntry *addWindowsMenu(virtual_screen *vscr, WMenu *menu, const char 
 	vscr->menu.flags.added_window_menu = 1;
 
 	vscr->menu.root_switch = menu_create(vscr, _("Window List"));
+	menu_map(vscr->menu.root_switch);
 	vscr->menu.root_switch->on_destroy = cleanupWindowsMenu;
 	wwin = vscr->window.focused;
 	while (wwin) {
 		switchmenu_additem(vscr->menu.root_switch, wwin);
+		menu_move_visible(vscr->menu.root_switch);
 		wwin = wwin->prev;
 	}
 
@@ -960,7 +961,6 @@ static WMenuEntry *addMenuEntry(WMenu *menu, const char *title, const char *shor
 		shortcutOk = True;
 	} else if (strcmp(command, "WINDOWS_MENU") == 0) {
 		entry = addWindowsMenu(vscr, menu, title);
-		menu_map(vscr->menu.root_switch);
 
 		shortcutOk = True;
 	} else if (strcmp(command, "ARRANGE_ICONS") == 0) {
@@ -1640,7 +1640,7 @@ static WMenu *configureMenu(virtual_screen *vscr, WMPropList *definition)
 	return menu;
 }
 
-static WMenu *create_rootmenu(virtual_screen *vscr)
+WMenu *create_rootmenu(virtual_screen *vscr)
 {
 	WMenu *menu = NULL;
 	WMPropList *definition;
@@ -1709,41 +1709,48 @@ void OpenRootMenu(virtual_screen *vscr, int x, int y, int keyboard)
 		} else {
 			wRaiseFrame(vscr, rootmenu->frame->core);
 
-			if (keyboard)
-				wMenuMapAt(vscr, rootmenu, 0, 0, True);
+			if (keyboard) {
+				rootmenu->x_pos = 0;
+				rootmenu->y_pos = 0;
+				wMenuMapAt(vscr, rootmenu, True);
+			}
 		}
 		return;
 	}
 
-	rootmenu_map(vscr->menu.root_menu, x, y, keyboard);
+	vscr->menu.root_menu->x_pos = x;
+	vscr->menu.root_menu->y_pos = y;
+	rootmenu_map(vscr, keyboard);
 
 	if (vscr->menu.flags.root_menu_changed_shortcuts)
 		rebindKeygrabs(vscr);
 }
 
-static void rootmenu_map(WMenu *menu, int x, int y, int keyboard)
+void rootmenu_map(virtual_screen *vscr, int keyboard)
 {
-	virtual_screen *vscr;
-	int newx, newy;
+	int x, y, newx, newy;
 
-	if (!menu)
+	if (!vscr->menu.root_menu)
 		return;
 
-	vscr = menu->vscr;
+	x = vscr->menu.root_menu->x_pos;
+	y = vscr->menu.root_menu->y_pos;
 
 	if (keyboard && x == 0 && y == 0) {
 		newx = newy = 0;
 	} else if (keyboard &&
 		   x == vscr->screen_ptr->scr_width / 2 &&
 		   y == vscr->screen_ptr->scr_height / 2) {
-		newx = x - menu->frame->width / 2;
-		newy = y - menu->frame->height / 2;
+		newx = x - vscr->menu.root_menu->frame->width / 2;
+		newy = y - vscr->menu.root_menu->frame->height / 2;
 	} else {
-		newx = x - menu->frame->width / 2;
+		newx = x - vscr->menu.root_menu->frame->width / 2;
 		newy = y;
 	}
 
-	wMenuMapAt(vscr, menu, newx, newy, keyboard);
+	vscr->menu.root_menu->x_pos = newx;
+	vscr->menu.root_menu->y_pos = newy;
+	wMenuMapAt(vscr, vscr->menu.root_menu, keyboard);
 }
 
 static void rootmenu_setup_switchmenu_notif(void)

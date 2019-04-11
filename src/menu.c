@@ -50,6 +50,7 @@
 #define F_BOTTOM	2
 #define F_NONE		3
 
+#define ROOTMENU_TITLELEN  512
 #define MENU_SCROLL_BORDER   5
 
 #define MENU_SCROLL_STEP  menuScrollParameters[(int)wPreferences.menu_scroll_speed].steps
@@ -90,8 +91,7 @@ static void updateTexture(WMenu *menu);
 static void selectEntry(WMenu *menu, int entry_no);
 static void closeCascade(WMenu *menu);
 static void set_menu_width(WMenu *menu);
-static void set_menu_coords(WMenu *menu, int *x, int *y);
-static void set_menu_coords2(WMenu *menu, int *x, int *y);
+static void set_menu_coords2(WMenu *menu);
 static void menu_map_core(WMenu *menu, int x, int y);
 static Bool save_rootmenu_recurs(WMPropList *menus, WMenu *menu);
 static Bool restore_rootmenu_recurs(WMPropList *menus, WMenu *menu, const char *path);
@@ -100,6 +100,8 @@ static void menu_blink_selected(WMenu *menu);
 static int get_menu_height(WMenu *menu);
 static int get_menu_height_full(WMenu *menu);
 static int get_menu_width_full(WMenu *menu);
+static void restore_switchmenu(virtual_screen *vscr, WMPropList *menu);
+static void restore_switchmenu_map(virtual_screen *vscr);
 /****** Notification Observers ******/
 
 static void appearanceObserver(void *self, WMNotification *notif)
@@ -300,6 +302,8 @@ void menu_map(WMenu *menu)
 
 void menu_map_pos(WMenu *menu, int x, int y)
 {
+	menu->x_pos = x;
+	menu->y_pos = y;
 	menu_map_core(menu, x, y);
 }
 
@@ -1041,7 +1045,7 @@ static int keyboardMenu(WMenu *menu)
 	return False;
 }
 
-void wMenuMapAt(virtual_screen *vscr, WMenu *menu, int x, int y, int keyboard)
+void wMenuMapAt(virtual_screen *vscr, WMenu *menu, int keyboard)
 {
 	/* Set the vscr */
 	menu->vscr = vscr;
@@ -1052,11 +1056,11 @@ void wMenuMapAt(virtual_screen *vscr, WMenu *menu, int x, int y, int keyboard)
 
 	if (!menu->flags.mapped) {
 		if (wPreferences.wrap_menus)
-			set_menu_coords2(menu, &x, &y);
+			set_menu_coords2(menu);
 
-		XMoveWindow(dpy, menu->frame->core->window, x, y);
-		menu->frame_x = x;
-		menu->frame_y = y;
+		XMoveWindow(dpy, menu->frame->core->window, menu->x_pos, menu->y_pos);
+		menu->frame_x = menu->x_pos;
+		menu->frame_y = menu->y_pos;
 		XMapWindow(dpy, menu->frame->core->window);
 		wRaiseFrame(menu->frame->vscr, menu->frame->core);
 		menu->flags.mapped = 1;
@@ -1213,7 +1217,9 @@ static void selectEntry(WMenu *menu, int entry_no)
 					y -= menu->cascades[entry->cascade]->frame->top_width;
 			}
 
-			wMenuMapAt(menu->vscr, menu->cascades[entry->cascade], x, y, False);
+			menu->cascades[entry->cascade]->x_pos = x;
+			menu->cascades[entry->cascade]->y_pos = y;
+			wMenuMapAt(menu->vscr, menu->cascades[entry->cascade], False);
 			menu->cascades[entry->cascade]->parent = menu;
 		}
 		paintEntry(menu, entry_no, True);
@@ -2417,96 +2423,115 @@ static void restore_switchmenu(virtual_screen *vscr, WMPropList *menu)
 	if (!getMenuInfo(menu, &x, &y, &lowered))
 		return;
 
-	OpenSwitchMenu(vscr, x, y, False);
+	vscr->menu.switch_menu = switchmenu_create(vscr);
+	vscr->menu.switch_menu->x_pos = x;
+	vscr->menu.switch_menu->y_pos = y;
 	vscr->menu.switch_menu->flags.buttoned = 1;
+	vscr->menu.switch_menu->flags.lowered = lowered;
+}
+
+static void restore_switchmenu_map(virtual_screen *vscr)
+{
+	if (!vscr->menu.switch_menu)
+		return;
+
+	menu_map(vscr->menu.switch_menu);
+	wMenuMapAt(vscr, vscr->menu.switch_menu, False);
 	wframewindow_show_rightbutton(vscr->menu.switch_menu->frame);
-	return;
 }
 
 static void restore_rootmenu(virtual_screen *vscr, WMPropList *menus)
 {
-	if (!vscr->menu.root_menu) {
-		OpenRootMenu(vscr, vscr->screen_ptr->scr_width * 2, 0, False);
-		wMenuUnmap(vscr->menu.root_menu);
+	WMPropList *key, *entry;
+	char buffer[ROOTMENU_TITLELEN];
+	int i, x, y;
+	Bool lowered;
+
+	vscr->menu.root_menu = create_rootmenu(vscr);
+	/* Defaults for the root menu, updated using getMenuInfo later */
+	vscr->menu.root_menu->x_pos = 0;
+	vscr->menu.root_menu->y_pos = 0;
+
+	for (i = 0; i < vscr->menu.root_menu->cascade_no; i++)
+		restore_rootmenu_recurs(menus, vscr->menu.root_menu->cascades[i], buffer);
+
+	/* If title is too long, here, change it */
+	if (strlen(vscr->menu.root_menu->title) > (ROOTMENU_TITLELEN - 2))
+		snprintf(vscr->menu.root_menu->title, sizeof(buffer) - 2, "Window Maker");
+
+	snprintf(buffer, sizeof(buffer), "\\%s", vscr->menu.root_menu->title);
+	key = WMCreatePLString(buffer);
+	entry = WMGetFromPLDictionary(menus, key);
+
+	/* Update the default position */
+	if (entry && getMenuInfo(entry, &x, &y, &lowered)) {
+		vscr->menu.root_menu->x_pos = x;
+		vscr->menu.root_menu->y_pos = y;
+		vscr->menu.root_menu->flags.lowered = lowered;
 	}
 
-	restore_rootmenu_recurs(menus, vscr->menu.root_menu, "");
+	WMReleasePropList(key);
 }
 
-static void set_menu_coords(WMenu *menu, int *x, int *y)
+static void restore_rootmenu_map(virtual_screen *vscr)
+{
+	if (!vscr->menu.root_menu)
+		return;
+
+	if (vscr->menu.flags.root_menu_changed_shortcuts)
+		rebindKeygrabs(vscr);
+
+	wMenuMapAt(vscr, vscr->menu.root_menu, False);
+	if (vscr->menu.root_menu->flags.lowered)
+		changeMenuLevels(vscr->menu.root_menu, True);
+
+	/* Show the right button */
+	vscr->menu.root_menu->flags.buttoned = 1;
+	wframewindow_show_rightbutton(vscr->menu.root_menu->frame);
+}
+
+static void set_menu_coords2(WMenu *menu)
 {
 	WMRect rect;
 	virtual_screen *vscr = menu->vscr;
-	int width, height;
+	int x, y, width, height;
+
+	x = menu->x_pos;
+	y = menu->y_pos;
 
 	width = get_menu_width_full(menu);
 	height = get_menu_height_full(menu);
 	rect = wGetRectForHead(vscr->screen_ptr, wGetHeadForPointerLocation(vscr));
 
-	if (*x < rect.pos.x - width)
-		*x = rect.pos.x;
+	if (x < rect.pos.x)
+		x = rect.pos.x;
 
-	if (*x > rect.pos.x + rect.size.width)
-		*x = rect.pos.x + rect.size.width - width;
+	if (x + width > rect.pos.x + rect.size.width)
+		x = rect.pos.x + rect.size.width - width;
 
-	if (*y < rect.pos.y)
-		*y = rect.pos.y;
+	if (y < rect.pos.y)
+		y = rect.pos.y;
 
-	if (*y > rect.pos.y + rect.size.height)
-		*y = rect.pos.y + rect.size.height - height;
-}
+	if (y + height > rect.pos.y + rect.size.height)
+		y = rect.pos.y + rect.size.height - height;
 
-static void set_menu_coords2(WMenu *menu, int *x, int *y)
-{
-	WMRect rect;
-	virtual_screen *vscr = menu->vscr;
-	int width, height;
-
-	width = get_menu_width_full(menu);
-	height = get_menu_height_full(menu);
-	rect = wGetRectForHead(vscr->screen_ptr, wGetHeadForPointerLocation(vscr));
-
-	if (*x < rect.pos.x)
-		*x = rect.pos.x;
-
-	if (*x + width > rect.pos.x + rect.size.width)
-		*x = rect.pos.x + rect.size.width - width;
-
-	if (*y < rect.pos.y)
-		*y = rect.pos.y;
-
-	if (*y + height > rect.pos.y + rect.size.height)
-		*y = rect.pos.y + rect.size.height - height;
+	menu->x_pos = x;
+	menu->y_pos = y;
 }
 
 static Bool restore_rootmenu_recurs(WMPropList *menus, WMenu *menu, const char *path)
 {
-	virtual_screen *vscr = menu->vscr;
-	WMPropList *key, *entry;
+	WMPropList *key;
 	char buffer[512];
-	int i, x, y;
-	Bool res, lowered;
+	int i;
+	Bool res;
 
 	if (strlen(path) + strlen(menu->title) > 510)
 		return False;
 
 	snprintf(buffer, sizeof(buffer), "%s\\%s", path, menu->title);
 	key = WMCreatePLString(buffer);
-	entry = WMGetFromPLDictionary(menus, key);
 	res = False;
-
-	if (entry && getMenuInfo(entry, &x, &y, &lowered) && !menu->flags.mapped) {
-		set_menu_coords(menu, &x, &y);
-		wMenuMapAt(vscr, menu, x, y, False);
-		if (lowered)
-			changeMenuLevels(menu, True);
-
-		/* Show the right button */
-		menu->flags.buttoned = 1;
-		wframewindow_show_rightbutton(menu->frame);
-
-		res = True;
-	}
 
 	WMReleasePropList(key);
 
@@ -2541,6 +2566,12 @@ void menus_restore(virtual_screen *vscr)
 
 	/* Restore the Root menus */
 	restore_rootmenu(vscr, menus);
+}
+
+void menus_restore_map(virtual_screen *vscr)
+{
+	restore_switchmenu_map(vscr);
+	restore_rootmenu_map(vscr);
 }
 
 void menu_move_visible(WMenu *menu)

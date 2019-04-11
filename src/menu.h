@@ -53,6 +53,7 @@ typedef struct WMenu {
 	virtual_screen *vscr;			/* Where is the menu */
 	char *title;				/* Menu title */
 	struct WMenu *parent;
+	int x_pos, y_pos;			/* Menu position */
 
 	time_t timestamp;			/* for the root menu. Last time
 						 * menu was reloaded */
@@ -117,7 +118,7 @@ WMenuEntry *wMenuInsertCallback(WMenu *menu, int index, const char *text,
 
 void wMenuRemoveItem(WMenu *menu, int index);
 
-void wMenuMapAt(virtual_screen *vscr, WMenu *menu, int x, int y, int keyboard);
+void wMenuMapAt(virtual_screen *vscr, WMenu *menu, int keyboard);
 void wMenuUnmap(WMenu *menu);
 void wMenuSetEnabled(WMenu *menu, int index, int enable);
 void wMenuMove(WMenu *menu, int x, int y, int submenus);
@@ -126,6 +127,7 @@ void wMenuScroll(WMenu *menu);
 WMenu *wMenuUnderPointer(virtual_screen *vscr);
 void wMenuSaveState(virtual_screen *vscr);
 void menus_restore(virtual_screen *vscr);
+void menus_restore_map(virtual_screen *vscr);
 
 WMenu *menu_create(virtual_screen *vscr, const char *title);
 void menu_map(WMenu *menu);
