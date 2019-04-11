@@ -39,12 +39,23 @@
 #include "xinerama.h"
 #include "placement.h"
 
+static int get_y_origin(WArea usableArea);
+static int get_x_origin(WArea usableArea);
 
-#define X_ORIGIN WMAX(usableArea.x1,\
-    wPreferences.window_place_origin.x)
+static int get_x_origin(WArea usableArea) {
+	if (usableArea.x1 > wPreferences.window_place_origin.x)
+		return usableArea.x1;
+	else
+		return wPreferences.window_place_origin.x;
+}
 
-#define Y_ORIGIN WMAX(usableArea.y1,\
-    wPreferences.window_place_origin.y)
+static int get_y_origin(WArea usableArea) {
+	if (usableArea.y1 > wPreferences.window_place_origin.y)
+		return usableArea.y1;
+	else
+		return wPreferences.window_place_origin.y;
+}
+
 
 /* Returns True if it is an icon and is in this workspace */
 static Bool
@@ -344,7 +355,7 @@ static void
 smartPlaceWindow(WWindow *wwin, int *x_ret, int *y_ret, unsigned int width,
 		 unsigned int height, WArea usableArea)
 {
-	int test_x = 0, test_y = Y_ORIGIN;
+	int test_x = 0, test_y = get_y_origin(usableArea);
 	int from_x, to_x, from_y, to_y;
 	int sx;
 	int min_isect, min_isect_x, min_isect_y;
@@ -352,7 +363,7 @@ smartPlaceWindow(WWindow *wwin, int *x_ret, int *y_ret, unsigned int width,
 
 	set_width_height(wwin, &width, &height);
 
-	sx = X_ORIGIN;
+	sx = get_x_origin(usableArea);
 	min_isect = INT_MAX;
 	min_isect_x = sx;
 	min_isect_y = test_y;
@@ -374,13 +385,13 @@ smartPlaceWindow(WWindow *wwin, int *x_ret, int *y_ret, unsigned int width,
 	}
 
 	from_x = min_isect_x - PLACETEST_HSTEP + 1;
-	from_x = WMAX(from_x, X_ORIGIN);
+	from_x = WMAX(from_x, get_x_origin(usableArea));
 	to_x = min_isect_x + PLACETEST_HSTEP;
 	if (to_x + width > usableArea.x2)
 		to_x = usableArea.x2 - width;
 
 	from_y = min_isect_y - PLACETEST_VSTEP + 1;
-	from_y = WMAX(from_y, Y_ORIGIN);
+	from_y = WMAX(from_y, get_y_origin(usableArea));
 	to_y = min_isect_y + PLACETEST_VSTEP;
 	if (to_y + height > usableArea.y2)
 		to_y = usableArea.y2 - height;
@@ -442,8 +453,8 @@ autoPlaceWindow(WWindow *wwin, int *x_ret, int *y_ret,
 	}
 
 	/* this was based on fvwm2's smart placement */
-	for (y = Y_ORIGIN; (y + height) < sh; y += PLACETEST_VSTEP) {
-		for (x = X_ORIGIN; (x + width) < sw; x += PLACETEST_HSTEP) {
+	for (y = get_y_origin(usableArea); (y + height) < sh; y += PLACETEST_VSTEP) {
+		for (x = get_x_origin(usableArea); (x + width) < sw; x += PLACETEST_HSTEP) {
 			if (screen_has_space(vscr, x, y,
 					     width, height, ignore_sunken)) {
 				*x_ret = x;
@@ -462,13 +473,13 @@ cascadeWindow(WScreen *scr, WWindow *wwin, int *x_ret, int *y_ret,
 {
 	set_width_height(wwin, &width, &height);
 
-	*x_ret = h * scr->cascade_index + X_ORIGIN;
-	*y_ret = h * scr->cascade_index + Y_ORIGIN;
+	*x_ret = h * scr->cascade_index + get_x_origin(usableArea);
+	*y_ret = h * scr->cascade_index + get_y_origin(usableArea);
 
 	if (width + *x_ret > usableArea.x2 || height + *y_ret > usableArea.y2) {
 		scr->cascade_index = 0;
-		*x_ret = X_ORIGIN;
-		*y_ret = Y_ORIGIN;
+		*x_ret = get_x_origin(usableArea);
+		*y_ret = get_y_origin(usableArea);
 	}
 }
 
@@ -479,14 +490,14 @@ static void randomPlaceWindow(WWindow *wwin, int *x_ret, int *y_ret,
 
 	set_width_height(wwin, &width, &height);
 
-	w = ((usableArea.x2 - X_ORIGIN) - width);
-	h = ((usableArea.y2 - Y_ORIGIN) - height);
+	w = ((usableArea.x2 - get_x_origin(usableArea)) - width);
+	h = ((usableArea.y2 - get_y_origin(usableArea)) - height);
 	if (w < 1)
 		w = 1;
 	if (h < 1)
 		h = 1;
-	*x_ret = X_ORIGIN + rand() % w;
-	*y_ret = Y_ORIGIN + rand() % h;
+	*x_ret = get_x_origin(usableArea) + rand() % w;
+	*y_ret = get_y_origin(usableArea) + rand() % h;
 }
 
 void PlaceWindow(WWindow *wwin, int *x_ret, int *y_ret, unsigned width, unsigned height)
