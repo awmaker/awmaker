@@ -577,6 +577,7 @@ void StartUp(Bool defaultScreenOnly)
 	for (j = 0; j < w_global.screen_count; j++) {
 		vscr = w_global.vscreens[j];
 		vscr->screen_ptr = wScreen[j];
+		wScreen[j]->vscr = vscr;
 
 		/* read defaults for this screen */
 		wReadDefaults(vscr, w_global.domain.wmaker->dictionary);

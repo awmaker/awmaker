@@ -135,6 +135,8 @@ struct virtual_screen {
 
 /* each WScreen is saved into a context associated with it's root window */
 struct WScreen {
+	virtual_screen *vscr;                    /* Virtual screen used by the WScreen */
+
     int	screen;			       /* screen number */
     Window info_window;		       /* for our window manager info stuff */
 #ifdef USE_ICCCM_WMREPLACE
