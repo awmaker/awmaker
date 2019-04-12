@@ -89,6 +89,7 @@ static WScreen **wScreen = NULL;
 static void manageAllWindows(virtual_screen *scr, int crashed);
 static void hide_all_applications(virtual_screen *vscr);
 static void remove_icon_windows(Window *children, unsigned int nchildren);
+static void bind(virtual_screen *vscr, WScreen *scr);
 
 static int catchXError(Display *dpy, XErrorEvent *error)
 {
@@ -521,6 +522,12 @@ void startup_virtual(void)
 	}
 }
 
+static void bind(virtual_screen *vscr, WScreen *scr)
+{
+	vscr->screen_ptr = scr;
+	scr->vscr = vscr;
+}
+
 /*
  *----------------------------------------------------------
  * StartUp--
@@ -535,6 +542,7 @@ void StartUp(Bool defaultScreenOnly)
 {
 	int j, max, lastDesktop;
 	virtual_screen *vscr;
+	WScreen *scr;
 
 	startup_set_atoms();
 	startup_set_cursors();
@@ -576,8 +584,8 @@ void StartUp(Bool defaultScreenOnly)
 	/* Bind the Virtual Screens and the Real Screens */
 	for (j = 0; j < w_global.screen_count; j++) {
 		vscr = w_global.vscreens[j];
-		vscr->screen_ptr = wScreen[j];
-		wScreen[j]->vscr = vscr;
+		scr = wScreen[j];
+		bind(vscr, scr);
 
 		/* read defaults for this screen */
 		wReadDefaults(vscr, w_global.domain.wmaker->dictionary);
