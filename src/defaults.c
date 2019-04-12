@@ -3597,3 +3597,7 @@ char *get_wmstate_file(virtual_screen *vscr)
 
 	return str;
 }
+
+void apply_defaults_to_screen(virtual_screen *vscr, WScreen *scr)
+{
+}

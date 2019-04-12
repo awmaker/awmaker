@@ -526,6 +526,9 @@ static void bind(virtual_screen *vscr, WScreen *scr)
 {
 	vscr->screen_ptr = scr;
 	scr->vscr = vscr;
+
+	/* Apply the defaults config */
+	apply_defaults_to_screen(vscr, scr);
 }
 
 /*
