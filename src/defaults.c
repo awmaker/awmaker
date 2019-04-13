@@ -1510,6 +1510,9 @@ static int getCoord(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *valu
 	int nelem, changed = 0;
 	WMPropList *elem_x, *elem_y;
 
+	/* Parameter not used, but tell the compiler that it is ok */
+	(void) vscr;
+
  again:
 	if (!WMIsPLArray(value)) {
 		wwarning(_("Wrong option format for key \"%s\". Should be %s."), entry->key, "Coordinate");
@@ -1561,15 +1564,6 @@ static int getCoord(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *valu
 		}
 		return False;
 	}
-
-	if (data.x < 0)
-		data.x = 0;
-	else if (data.x > vscr->screen_ptr->scr_width / 3)
-		data.x = vscr->screen_ptr->scr_width / 3;
-	if (data.y < 0)
-		data.y = 0;
-	else if (data.y > vscr->screen_ptr->scr_height / 3)
-		data.y = vscr->screen_ptr->scr_height / 3;
 
 	if (ret)
 		*ret = &data;
@@ -3598,6 +3592,22 @@ char *get_wmstate_file(virtual_screen *vscr)
 	return str;
 }
 
+static void convert_window_place_origin(WScreen *scr)
+{
+	if (wPreferences.window_place_origin.x < 0)
+		wPreferences.window_place_origin.x = 0;
+	else if (wPreferences.window_place_origin.x > scr->scr_width / 3)
+		wPreferences.window_place_origin.x = scr->scr_width / 3;
+	if (wPreferences.window_place_origin.y < 0)
+		wPreferences.window_place_origin.y = 0;
+	else if (wPreferences.window_place_origin.y > scr->scr_height / 3)
+		wPreferences.window_place_origin.y = scr->scr_height / 3;
+}
+
 void apply_defaults_to_screen(virtual_screen *vscr, WScreen *scr)
 {
+	/* Parameter not used, but tell the compiler that it is ok */
+	(void) vscr;
+
+	convert_window_place_origin(scr);
 }
