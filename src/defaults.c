@@ -1331,7 +1331,6 @@ void wReadDefaults(virtual_screen *vscr, WMPropList *new_dict)
 	unsigned int needs_refresh;
 
 	needs_refresh = read_defaults_step1(vscr, new_dict);
-	read_defaults_noscreen(vscr, new_dict);
 
 	if (needs_refresh != 0 && !w_global.startup.phase1)
 		refresh_defaults(vscr, needs_refresh);

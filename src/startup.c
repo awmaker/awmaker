@@ -587,6 +587,8 @@ void StartUp(Bool defaultScreenOnly)
 	/* Bind the Virtual Screens and the Real Screens */
 	for (j = 0; j < w_global.screen_count; j++) {
 		vscr = w_global.vscreens[j];
+		read_defaults_noscreen(vscr, w_global.domain.wmaker->dictionary);
+
 		scr = wScreen[j];
 		bind(vscr, scr);
 
