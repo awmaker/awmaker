@@ -184,6 +184,9 @@ static WDECallbackUpdate setCursor;
 
 #define REFRESH_FRAME_BORDER REFRESH_MENU_FONT|REFRESH_WINDOW_FONT
 
+#define NUM2STRING_(x) #x
+#define NUM2STRING(x) NUM2STRING_(x)
+
 static WOptionEnumeration seFocusModes[] = {
 	{"Manual", WKF_CLICK, 0}, {"ClickToFocus", WKF_CLICK, 1},
 	{"Sloppy", WKF_SLOPPY, 0}, {"SemiAuto", WKF_SLOPPY, 1}, {"Auto", WKF_SLOPPY, 1},
@@ -356,17 +359,6 @@ WDefaultEntry noscreenOptionList[] = {
 	    &wPreferences.pixmap_path, getPathList, NULL, NULL, NULL},
 	{"IconPath", DEF_ICON_PATHS, NULL,
 	    &wPreferences.icon_path, getPathList, NULL, NULL, NULL},
-};
-
-#define NUM2STRING_(x) #x
-#define NUM2STRING(x) NUM2STRING_(x)
-
-WDefaultEntry optionList[] = {
-
-	/* dynamic options */
-
-	{"IconPosition", "blh", seIconPositions,
-	    &wPreferences.icon_yard, getEnum, setIconPosition, NULL, NULL},
 	{"IconificationStyle", "Zoom", seIconificationStyles,
 	    &wPreferences.iconification_style, getEnum, NULL, NULL, NULL},
 	{"DisableWSMouseActions", "NO", NULL,
@@ -401,12 +393,6 @@ WDefaultEntry optionList[] = {
 	    &wPreferences.ws_cycle, getBool, NULL, NULL, NULL},
 	{"WorkspaceNameDisplayPosition", "center", seDisplayPositions,
 	    &wPreferences.workspace_name_display_position, getEnum, NULL, NULL, NULL},
-	{"WorkspaceBorder", "None", seWorkspaceBorder,
-	    &wPreferences.workspace_border_position, getEnum, updateUsableArea, NULL, NULL},
-	{"WorkspaceBorderSize", "0", NULL,
-	    &wPreferences.workspace_border_size, getInt, updateUsableArea, NULL, NULL},
-	{"StickyIcons", "NO", NULL,
-	    &wPreferences.sticky_icons, getBool, setStickyIcons, NULL, NULL},
 	{"SaveSessionOnExit", "NO", NULL,
 	    &wPreferences.save_session_on_exit, getBool, NULL, NULL, NULL},
 	{"WrapMenus", "NO", NULL,
@@ -425,7 +411,7 @@ WDefaultEntry optionList[] = {
 	    &wPreferences.raise_appicons_when_bouncing, getBool, NULL, NULL, NULL},
 	{"DoNotMakeAppIconsBounce", "NO", NULL,
 	    &wPreferences.do_not_make_appicons_bounce, getBool, NULL, NULL, NULL},
-	{"DoubleClickTime", "250", (void *)&wPreferences.dblclick_time,
+	{"DoubleClickTime", "250", (void *) &wPreferences.dblclick_time,
 	    &wPreferences.dblclick_time, getInt, setDoubleClick, NULL, NULL},
 	{"ClipAutoraiseDelay", "600", NULL,
 	     &wPreferences.clip_auto_raise_delay, getInt, NULL, NULL, NULL},
@@ -479,10 +465,6 @@ WDefaultEntry optionList[] = {
 	    &wPreferences.highlight_active_app, getBool, NULL, NULL, NULL},
 	{"AutoArrangeIcons", "NO", NULL,
 	    &wPreferences.auto_arrange_icons, getBool, NULL, NULL, NULL},
-	{"NoWindowOverDock", "NO", NULL,
-	    &wPreferences.no_window_over_dock, getBool, updateUsableArea, NULL, NULL},
-	{"NoWindowOverIcons", "NO", NULL,
-	    &wPreferences.no_window_over_icons, getBool, updateUsableArea, NULL, NULL},
 	{"WindowPlaceOrigin", "(64, 0)", NULL,
 	    &wPreferences.window_place_origin, getCoord, NULL, NULL, NULL},
 	{"ResizeDisplay", "center", seGeomDisplays,
@@ -519,28 +501,14 @@ WDefaultEntry optionList[] = {
 	    &wPreferences.minipreview_size, getInt, NULL, NULL, NULL},
 	{"IgnoreGtkHints", "NO", NULL,
 	    &wPreferences.ignore_gtk_decoration_hints, getBool, NULL, NULL, NULL},
-
-	/* style options */
-
 	{"MenuStyle", "normal", seMenuStyles,
 	    &wPreferences.menu_style, getEnum, setMenuStyle, NULL, NULL},
-	{"WidgetColor", "(solid, gray)", NULL,
-	    NULL, getTexture, setWidgetColor, NULL, NULL},
-	{"WorkspaceSpecificBack", "()", NULL,
-	    NULL, getWSSpecificBackground, setWorkspaceSpecificBack, NULL, NULL},
-	/* WorkspaceBack must come after WorkspaceSpecificBack or
-	 * WorkspaceBack won't know WorkspaceSpecificBack was also
-	 * specified and 2 copies of wmsetbg will be launched */
-	{"WorkspaceBack", "(solid, \"rgb:50/50/75\")", NULL,
-	    NULL, getWSBackground, setWorkspaceBack, NULL, NULL},
+
+	/* style options */
 	{"SmoothWorkspaceBack", "NO", NULL,
 	    NULL, getBool, NULL, NULL, NULL},
-	{"IconBack", "(dgradient, \"rgb:a6/a6/b6\", \"rgb:51/55/61\")", NULL,
-	    NULL, getTexture, setIconTile, NULL, NULL},
 	{"TitleJustify", "center", seJustifications,
 	    &wPreferences.title_justification, getEnum, setJustify, NULL, NULL},
-	{"WindowTitleFont", DEF_TITLE_FONT, NULL,
-	    NULL, getFont, setWinTitleFont, NULL, NULL},
 	{"WindowTitleExtendSpace", DEF_WINDOW_TITLE_EXTEND_SPACE, NULL,
 	    &wPreferences.window_title_clearance, getInt, setClearance, NULL, NULL},
 	{"WindowTitleMinHeight", "0", NULL,
@@ -555,6 +523,48 @@ WDefaultEntry optionList[] = {
 	    &wPreferences.menu_title_max_height, getInt, setClearance, NULL, NULL},
 	{"MenuTextExtendSpace", DEF_MENU_TEXT_EXTEND_SPACE, NULL,
 	    &wPreferences.menu_text_clearance, getInt, setClearance, NULL, NULL},
+	{"ShowClipTitle", "YES", NULL,
+	    &wPreferences.show_clip_title, getBool, NULL, NULL, NULL},
+	{"DialogHistoryLines", "500", NULL,
+	    &wPreferences.history_lines, getInt, NULL, NULL, NULL},
+	{"CycleActiveHeadOnly", "NO", NULL,
+	    &wPreferences.cycle_active_head_only, getBool, NULL, NULL, NULL},
+	{"CycleIgnoreMinimized", "NO", NULL,
+	    &wPreferences.cycle_ignore_minimized, getBool, NULL, NULL, NULL}
+};
+
+WDefaultEntry optionList[] = {
+
+	/* dynamic options */
+
+	{"NoWindowOverDock", "NO", NULL,
+	    &wPreferences.no_window_over_dock, getBool, updateUsableArea, NULL, NULL},
+	{"NoWindowOverIcons", "NO", NULL,
+	    &wPreferences.no_window_over_icons, getBool, updateUsableArea, NULL, NULL},
+	{"IconPosition", "blh", seIconPositions,
+	    &wPreferences.icon_yard, getEnum, setIconPosition, NULL, NULL},
+	{"WorkspaceBorder", "None", seWorkspaceBorder,
+	    &wPreferences.workspace_border_position, getEnum, updateUsableArea, NULL, NULL},
+	{"WorkspaceBorderSize", "0", NULL,
+	    &wPreferences.workspace_border_size, getInt, updateUsableArea, NULL, NULL},
+	{"StickyIcons", "NO", NULL,
+	    &wPreferences.sticky_icons, getBool, setStickyIcons, NULL, NULL},
+
+	/* style options */
+
+	{"WidgetColor", "(solid, gray)", NULL,
+	    NULL, getTexture, setWidgetColor, NULL, NULL},
+	{"WorkspaceSpecificBack", "()", NULL,
+	    NULL, getWSSpecificBackground, setWorkspaceSpecificBack, NULL, NULL},
+	/* WorkspaceBack must come after WorkspaceSpecificBack or
+	 * WorkspaceBack won't know WorkspaceSpecificBack was also
+	 * specified and 2 copies of wmsetbg will be launched */
+	{"WorkspaceBack", "(solid, \"rgb:50/50/75\")", NULL,
+	    NULL, getWSBackground, setWorkspaceBack, NULL, NULL},
+	{"IconBack", "(dgradient, \"rgb:a6/a6/b6\", \"rgb:51/55/61\")", NULL,
+	    NULL, getTexture, setIconTile, NULL, NULL},
+	{"WindowTitleFont", DEF_TITLE_FONT, NULL,
+	    NULL, getFont, setWinTitleFont, NULL, NULL},
 	{"MenuTitleFont", DEF_MENU_TITLE_FONT, NULL,
 	    NULL, getFont, setMenuTitleFont, NULL, NULL},
 	{"MenuTextFont", DEF_MENU_ENTRY_FONT, NULL,
@@ -563,8 +573,6 @@ WDefaultEntry optionList[] = {
 	    NULL, getFont, setIconTitleFont, NULL, NULL},
 	{"ClipTitleFont", DEF_CLIP_TITLE_FONT, NULL,
 	    NULL, getFont, setClipTitleFont, NULL, NULL},
-	{"ShowClipTitle", "YES", NULL,
-		&wPreferences.show_clip_title, getBool, NULL, NULL, NULL},
 	{"LargeDisplayFont", DEF_WORKSPACE_NAME_FONT, NULL,
 	    NULL, getFont, setLargeDisplayFont, NULL, NULL},
 	{"HighlightColor", "white", NULL,
@@ -813,13 +821,7 @@ WDefaultEntry optionList[] = {
 	{"TextCursor", "(builtin, xterm)", (void *)WCUR_TEXT,
 	    NULL, getCursor, setCursor, NULL, NULL},
 	{"SelectCursor", "(builtin, cross)", (void *)WCUR_SELECT,
-	    NULL, getCursor, setCursor, NULL, NULL},
-	{"DialogHistoryLines", "500", NULL,
-	    &wPreferences.history_lines, getInt, NULL, NULL, NULL},
-	{"CycleActiveHeadOnly", "NO", NULL,
-	    &wPreferences.cycle_active_head_only, getBool, NULL, NULL, NULL},
-	{"CycleIgnoreMinimized", "NO", NULL,
-	    &wPreferences.cycle_ignore_minimized, getBool, NULL, NULL, NULL}
+	    NULL, getCursor, setCursor, NULL, NULL}
 };
 
 static void initDefaults(void)
@@ -2606,7 +2608,7 @@ static int setIfDockPresent(virtual_screen *vscr, WDefaultEntry *entry, void *td
 	switch (which) {
 	case WM_DOCK:
 		wPreferences.flags.nodock = wPreferences.flags.nodock || *flag;
-		// Drawers require the dock
+		/* Drawers require the dock */
 		wPreferences.flags.nodrawer = wPreferences.flags.nodrawer || wPreferences.flags.nodock;
 		break;
 	case WM_CLIP:
@@ -2618,6 +2620,7 @@ static int setIfDockPresent(virtual_screen *vscr, WDefaultEntry *entry, void *td
 	default:
 		break;
 	}
+
 	return 0;
 }
 
