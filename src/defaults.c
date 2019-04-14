@@ -102,6 +102,7 @@ static WDECallbackConvert getColor;
 static WDECallbackConvert getKeybind;
 static WDECallbackConvert getModMask;
 static WDECallbackConvert getPropList;
+static WDECallbackConvert getCursor;
 
 /* value setting functions */
 static WDECallbackUpdate setJustify;
@@ -141,17 +142,12 @@ static WDECallbackUpdate setKeyGrab;
 static WDECallbackUpdate setDoubleClick;
 static WDECallbackUpdate setIconPosition;
 static WDECallbackUpdate setWorkspaceMapBackground;
-
 static WDECallbackUpdate setClipTitleFont;
 static WDECallbackUpdate setClipTitleColor;
-
 static WDECallbackUpdate setMenuStyle;
 static WDECallbackUpdate setSwPOptions;
 static WDECallbackUpdate updateUsableArea;
-
 static WDECallbackUpdate setModifierKeyLabels;
-
-static WDECallbackConvert getCursor;
 static WDECallbackUpdate setCursor;
 
 /*
