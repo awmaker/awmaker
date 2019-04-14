@@ -1150,7 +1150,6 @@ void wDefaultsCheckDomains(void *arg)
 void read_defaults_noscreen(virtual_screen *vscr, WMPropList *new_dict)
 {
 	unsigned int i;
-	int update_workspace_back = 0;
 	WMPropList *plvalue, *old_value, *old_dict = NULL;
 	WDefaultEntry *entry;
 	void *tdata;
@@ -1189,26 +1188,11 @@ void read_defaults_noscreen(virtual_screen *vscr, WMPropList *new_dict)
 			 * We must continue, except if WorkspaceSpecificBack
 			 * was updated previously
 			 */
-			if (!(strcmp(entry->key, "WorkspaceBack") == 0 &&
-			    update_workspace_back &&
-			    vscr->screen_ptr->flags.backimage_helper_launched))
-				continue;
 		}
 
-		if (plvalue) {
-			/* convert data */
-			if ((*entry->convert) (vscr, entry, plvalue, entry->addr, &tdata)) {
-				/*
-				 * If the WorkspaceSpecificBack data has been changed
-				 * so that the helper will be launched now, we must be
-				 * sure to send the default background texture config
-				 * to the helper.
-				 */
-				if (strcmp(entry->key, "WorkspaceSpecificBack") == 0 &&
-				    !vscr->screen_ptr->flags.backimage_helper_launched)
-					update_workspace_back = 1;
-			}
-		}
+		/* convert data */
+		if (plvalue)
+			(*entry->convert) (vscr, entry, plvalue, entry->addr, &tdata);
 	}
 }
 
