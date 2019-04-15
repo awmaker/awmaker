@@ -1179,14 +1179,12 @@ void wDefaultsCheckDomains(void *arg)
 #endif
 }
 
-void read_defaults_noscreen(virtual_screen *vscr, WMPropList *new_dict)
+void read_defaults_noscreen(WMPropList *new_dict)
 {
 	unsigned int i;
 	WMPropList *plvalue, *old_value, *old_dict = NULL;
 	WDefaultEntry *entry;
 	void *tdata;
-
-	(void) vscr;
 
 	if (w_global.domain.wmaker->dictionary != new_dict)
 		old_dict = w_global.domain.wmaker->dictionary;

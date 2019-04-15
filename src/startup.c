@@ -474,6 +474,7 @@ void startup_virtual(void)
 	int max = 1;
 
 	startup_set_defaults_virtual();
+	read_defaults_noscreen(w_global.domain.wmaker->dictionary);
 
 	w_global.vscreens = wmalloc(sizeof(virtual_screen *) * max);
 	w_global.vscreen_count = 0;
@@ -484,8 +485,6 @@ void startup_virtual(void)
 		vscr->id = w_global.vscreen_count;
 		w_global.vscreens[j] = vscr;
 		w_global.vscreen_count++;
-
-		read_defaults_noscreen(vscr, w_global.domain.wmaker->dictionary);
 
 		vscr->clip.icon = clip_icon_create(vscr);
 	}
@@ -556,7 +555,6 @@ void StartUp(Bool defaultScreenOnly)
 	/* Bind the Virtual Screens and the Real Screens */
 	for (j = 0; j < w_global.screen_count; j++) {
 		vscr = w_global.vscreens[j];
-		read_defaults_noscreen(vscr, w_global.domain.wmaker->dictionary);
 
 		scr = wScreen[j];
 		bind(vscr, scr);
