@@ -28,14 +28,9 @@ typedef struct WDDomain {
 	time_t timestamp;
 } WDDomain;
 
-WDDomain *wDefaultsInitDomain(const char *domain, Bool requireDictionary);
-
-void wDefaultsMergeGlobalMenus(WDDomain *menuDomain);
-
 void wReadDefaults(virtual_screen *vscr, WMPropList *new_dict);
 void read_defaults_noscreen(virtual_screen *vscr, WMPropList *new_dict);
 void wDefaultUpdateIcons(virtual_screen *vscr);
-void wReadStaticDefaults(WMPropList *dict);
 void wDefaultsCheckDomains(void *arg);
 void wDefaultFillAttributes(const char *instance, const char *class,
                             WWindowAttributes *attr, WWindowAttributes *mask,
@@ -60,5 +55,5 @@ void wDefaultPurgeInfo(const char *instance, const char *class);
 char *get_wmstate_file(virtual_screen *vscr);
 void apply_defaults_to_screen(virtual_screen *vscr, WScreen *scr);
 
-void init_defaults(void);
+void startup_set_defaults_virtual(void);
 #endif /* WMDEFAULTS_H_ */

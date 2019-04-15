@@ -409,40 +409,6 @@ static void startup_set_signals(void)
 	WMHookEventHandler(DispatchEvent);
 }
 
-static void startup_set_defaults_virtual(void)
-{
-	/* Initialize the defaults variables */
-	init_defaults();
-
-	/* initialize defaults stuff */
-	w_global.domain.wmaker = wDefaultsInitDomain("WindowMaker", True);
-	if (!w_global.domain.wmaker->dictionary)
-		wwarning(_("could not read domain \"%s\" from defaults database"), "WindowMaker");
-
-	/* read defaults that don't change until a restart and are
-	 * screen independent */
-	wReadStaticDefaults(w_global.domain.wmaker ? w_global.domain.wmaker->dictionary : NULL);
-
-	/* check sanity of some values */
-	if (wPreferences.icon_size < 16) {
-		wwarning(_("icon size is configured to %i, but it's too small. Using 16 instead"),
-			 wPreferences.icon_size);
-
-		wPreferences.icon_size = 16;
-	}
-
-	/* init other domains */
-	w_global.domain.root_menu = wDefaultsInitDomain("WMRootMenu", False);
-	if (!w_global.domain.root_menu->dictionary)
-		wwarning(_("could not read domain \"%s\" from defaults database"), "WMRootMenu");
-
-	wDefaultsMergeGlobalMenus(w_global.domain.root_menu);
-
-	w_global.domain.window_attr = wDefaultsInitDomain("WMWindowAttributes", True);
-	if (!w_global.domain.window_attr->dictionary)
-		wwarning(_("could not read domain \"%s\" from defaults database"), "WMWindowAttributes");
-}
-
 static void startup_set_defaults(void)
 {
 	char **formats;
