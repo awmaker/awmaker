@@ -1189,8 +1189,13 @@ void read_defaults_noscreen(virtual_screen *vscr, WMPropList *new_dict)
 		}
 
 		/* convert data */
-		if (plvalue)
-			(*entry->convert) (vscr, entry, plvalue, entry->addr, &tdata);
+		if (plvalue) {
+			/* convert data */
+			if ((*entry->convert) (vscr, entry, plvalue, entry->addr, &tdata)) {
+				if (entry->update)
+					(*entry->update) (vscr, entry, tdata, entry->extra_data);
+			}
+		}
 	}
 }
 
