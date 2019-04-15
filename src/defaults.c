@@ -1186,6 +1186,8 @@ void read_defaults_noscreen(virtual_screen *vscr, WMPropList *new_dict)
 	WDefaultEntry *entry;
 	void *tdata;
 
+	(void) vscr;
+
 	if (w_global.domain.wmaker->dictionary != new_dict)
 		old_dict = w_global.domain.wmaker->dictionary;
 
@@ -1225,9 +1227,9 @@ void read_defaults_noscreen(virtual_screen *vscr, WMPropList *new_dict)
 		/* convert data */
 		if (plvalue) {
 			/* convert data */
-			if ((*entry->convert) (vscr, entry, plvalue, entry->addr, &tdata)) {
+			if ((*entry->convert) (NULL, entry, plvalue, entry->addr, &tdata)) {
 				if (entry->update)
-					(*entry->update) (vscr, entry, tdata, entry->extra_data);
+					(*entry->update) (NULL, entry, tdata, entry->extra_data);
 			}
 		}
 	}
