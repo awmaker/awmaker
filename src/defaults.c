@@ -820,7 +820,7 @@ WDefaultEntry optionList[] = {
 	    NULL, getCursor, setCursor, NULL, NULL}
 };
 
-static void initDefaults(void)
+void init_defaults(void)
 {
 	unsigned int i;
 	WDefaultEntry *entry;
@@ -948,13 +948,7 @@ WDDomain *wDefaultsInitDomain(const char *domain, Bool requireDictionary)
 {
 	WDDomain *db;
 	struct stat stbuf;
-	static int inited = 0;
 	WMPropList *shared_dict = NULL;
-
-	if (!inited) {
-		inited = 1;
-		initDefaults();
-	}
 
 	db = wmalloc(sizeof(WDDomain));
 	db->domain_name = domain;

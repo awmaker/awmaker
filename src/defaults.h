@@ -59,4 +59,6 @@ void wDefaultPurgeInfo(const char *instance, const char *class);
 
 char *get_wmstate_file(virtual_screen *vscr);
 void apply_defaults_to_screen(virtual_screen *vscr, WScreen *scr);
+
+void init_defaults(void);
 #endif /* WMDEFAULTS_H_ */

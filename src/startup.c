@@ -411,6 +411,9 @@ static void startup_set_signals(void)
 
 static void startup_set_defaults_virtual(void)
 {
+	/* Initialize the defaults variables */
+	init_defaults();
+
 	/* initialize defaults stuff */
 	w_global.domain.wmaker = wDefaultsInitDomain("WindowMaker", True);
 	if (!w_global.domain.wmaker->dictionary)
