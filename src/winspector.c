@@ -35,7 +35,7 @@
 #include "framewin.h"
 #include "window.h"
 #include "workspace.h"
-#include "defaults.h"
+#include "wdefaults.h"
 #include "dialog.h"
 #include "icon.h"
 #include "stacking.h"

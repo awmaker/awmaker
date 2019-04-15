@@ -40,7 +40,7 @@
 #include "actions.h"
 #include "stacking.h"
 #include "application.h"
-#include "defaults.h"
+#include "wdefaults.h"
 #include "appicon.h"
 #include "wmspec.h"
 #include "misc.h"

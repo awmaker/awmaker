@@ -823,6 +823,7 @@ WDefaultEntry optionList[] = {
 static void init_defaults(void);
 static void wReadStaticDefaults(WMPropList *dict);
 static void wDefaultsMergeGlobalMenus(WDDomain *menuDomain);
+static void wDefaultUpdateIcons(virtual_screen *vscr);
 static WDDomain *wDefaultsInitDomain(const char *domain, Bool requireDictionary);
 
 void startup_set_defaults_virtual(void)
@@ -1372,7 +1373,7 @@ void wReadDefaults(virtual_screen *vscr, WMPropList *new_dict)
 		refresh_defaults(vscr, needs_refresh);
 }
 
-void wDefaultUpdateIcons(virtual_screen *vscr)
+static void wDefaultUpdateIcons(virtual_screen *vscr)
 {
 	WAppIcon *aicon = w_global.app_icon_list;
 	WDrawerChain *dc;

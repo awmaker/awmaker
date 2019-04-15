@@ -51,7 +51,7 @@
 #include "properties.h"
 #include "menu.h"
 #include "client.h"
-#include "defaults.h"
+#include "wdefaults.h"
 #include "workspace.h"
 #include "framewin.h"
 #include "superfluous.h"

@@ -43,6 +43,7 @@
 #include "pixmap.h"
 #include "menu.h"
 #include "window.h"
+#include "wdefaults.h"
 #include "main.h"
 #include "actions.h"
 #include "properties.h"
