@@ -447,7 +447,7 @@ WDefaultEntry noscreenOptionList[] = {
 	    &wPreferences.snap_edge_detect, getInt, NULL, NULL, NULL},
 	{"SnapCornerDetect", "10", NULL,
 	    &wPreferences.snap_corner_detect, getInt, NULL, NULL, NULL},
-	{"SnapToTopMaximezesFullscreen", "NO", NULL,
+	{"SnapToTopMaximizesFullscreen", "NO", NULL,
 	    &wPreferences.snap_to_top_maximizes_fullscreen, getBool, NULL, NULL, NULL},
 	{"DragMaximizedWindow", "Move", seDragMaximizedWindow,
 	    &wPreferences.drag_maximized_window, getEnum, NULL, NULL, NULL},
