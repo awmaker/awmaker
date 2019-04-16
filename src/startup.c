@@ -474,7 +474,6 @@ void startup_virtual(void)
 	int max = 1;
 
 	startup_set_defaults_virtual();
-	read_defaults_noscreen(w_global.domain.wmaker->dictionary);
 
 	w_global.vscreens = wmalloc(sizeof(virtual_screen *) * max);
 	w_global.vscreen_count = 0;

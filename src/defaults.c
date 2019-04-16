@@ -821,6 +821,7 @@ WDefaultEntry optionList[] = {
 };
 
 static void init_defaults(void);
+static void read_defaults_noscreen(WMPropList *new_dict);
 static void wReadStaticDefaults(WMPropList *dict);
 static void wDefaultsMergeGlobalMenus(WDDomain *menuDomain);
 static void wDefaultUpdateIcons(virtual_screen *vscr);
@@ -858,6 +859,8 @@ void startup_set_defaults_virtual(void)
 	w_global.domain.window_attr = wDefaultsInitDomain("WMWindowAttributes", True);
 	if (!w_global.domain.window_attr->dictionary)
 		wwarning(_("could not read domain \"%s\" from defaults database"), "WMWindowAttributes");
+
+	read_defaults_noscreen(w_global.domain.wmaker->dictionary);
 }
 
 static void init_defaults(void)
@@ -1179,7 +1182,7 @@ void wDefaultsCheckDomains(void *arg)
 #endif
 }
 
-void read_defaults_noscreen(WMPropList *new_dict)
+static void read_defaults_noscreen(WMPropList *new_dict)
 {
 	unsigned int i;
 	WMPropList *plvalue, *old_value, *old_dict = NULL;
