@@ -1030,34 +1030,6 @@ static WDDomain *wDefaultsInitDomain(const char *domain, Bool requireDictionary)
 	return db;
 }
 
-static void wReadStaticDefaults(WMPropList *dict)
-{
-	WMPropList *plvalue;
-	WDefaultEntry *entry;
-	unsigned int i;
-	void *tdata;
-
-	for (i = 0; i < wlengthof(staticOptionList); i++) {
-		entry = &staticOptionList[i];
-
-		if (dict)
-			plvalue = WMGetFromPLDictionary(dict, entry->plkey);
-		else
-			plvalue = NULL;
-
-		/* no default in the DB. Use builtin default */
-		if (!plvalue)
-			plvalue = entry->plvalue;
-
-		if (plvalue) {
-			/* convert data */
-			(*entry->convert) (NULL, entry, plvalue, entry->addr, &tdata);
-			if (entry->update)
-				(*entry->update) (NULL, entry, tdata, entry->extra_data);
-		}
-	}
-}
-
 void wDefaultsCheckDomains(void *arg)
 {
 	virtual_screen *vscr;
@@ -1180,6 +1152,34 @@ void wDefaultsCheckDomains(void *arg)
 	if (!arg)
 		WMAddTimerHandler(DEFAULTS_CHECK_INTERVAL, wDefaultsCheckDomains, arg);
 #endif
+}
+
+static void wReadStaticDefaults(WMPropList *dict)
+{
+	WMPropList *plvalue;
+	WDefaultEntry *entry;
+	unsigned int i;
+	void *tdata;
+
+	for (i = 0; i < wlengthof(staticOptionList); i++) {
+		entry = &staticOptionList[i];
+
+		if (dict)
+			plvalue = WMGetFromPLDictionary(dict, entry->plkey);
+		else
+			plvalue = NULL;
+
+		/* no default in the DB. Use builtin default */
+		if (!plvalue)
+			plvalue = entry->plvalue;
+
+		if (plvalue) {
+			/* convert data */
+			(*entry->convert) (NULL, entry, plvalue, entry->addr, &tdata);
+			if (entry->update)
+				(*entry->update) (NULL, entry, tdata, entry->extra_data);
+		}
+	}
 }
 
 static void read_defaults_noscreen(WMPropList *new_dict)
