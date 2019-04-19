@@ -143,7 +143,7 @@ static int get_menu_height_full(WMenu *menu)
 	int height;
 
 	height = menu->frame->height;
-	height += 2 * menu->vscr->screen_ptr->frame_border_width;
+	height += 2 * menu->vscr->frame.border_width;
 	return height;
 }
 
@@ -152,7 +152,7 @@ static int get_menu_width_full(WMenu *menu)
 	int width;
 
 	width = menu->frame->width;
-	width += 2 * menu->vscr->screen_ptr->frame_border_width;
+	width += 2 * menu->vscr->frame.border_width;
 	return width;
 }
 

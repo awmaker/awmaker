@@ -198,7 +198,8 @@ static void mapPositionDisplay(WWindow *wwin, int x, int y, int w, int h)
 
 static void showGeometry(WWindow *wwin, int x1, int y1, int x2, int y2, int direction)
 {
-	WScreen *scr = wwin->vscr->screen_ptr;
+	virtual_screen *vscr = wwin->vscr;
+	WScreen *scr = vscr->screen_ptr;
 	Window root = scr->root_win;
 	GC gc = scr->line_gc;
 	int ty, by, my, x, y, mx, s;
@@ -212,10 +213,10 @@ static void showGeometry(WWindow *wwin, int x1, int y1, int x2, int y2, int dire
 	x2--;
 
 	if (HAS_BORDER_WITH_SELECT(wwin)) {
-		x1 += scr->frame_border_width;
-		x2 += scr->frame_border_width;
-		y1 += scr->frame_border_width;
-		y2 += scr->frame_border_width;
+		x1 += vscr->frame.border_width;
+		x2 += vscr->frame.border_width;
+		y1 += vscr->frame.border_width;
+		y2 += vscr->frame.border_width;
 	}
 
 	ty = y1 + wwin->frame->top_width;
@@ -457,8 +458,8 @@ static void drawTransparentFrame(WWindow *wwin, int x, int y, int width, int hei
 	int bottom = 0;
 
 	if (HAS_BORDER_WITH_SELECT(wwin)) {
-		x += wwin->vscr->screen_ptr->frame_border_width;
-		y += wwin->vscr->screen_ptr->frame_border_width;
+		x += wwin->vscr->frame.border_width;
+		y += wwin->vscr->frame.border_width;
 	}
 
 	if (HAS_TITLEBAR(wwin) && !wwin->flags.shaded) {
@@ -582,9 +583,9 @@ typedef struct {
 #define WTOP(w) (w)->frame_y
 #define WLEFT(w) (w)->frame_x
 #define WRIGHT(w) ((w)->frame_x + (int)(w)->frame->width - 1 + \
-    (HAS_BORDER_WITH_SELECT(w) ? 2*(w)->vscr->screen_ptr->frame_border_width : 0))
+    (HAS_BORDER_WITH_SELECT(w) ? 2*(w)->vscr->frame.border_width : 0))
 #define WBOTTOM(w) ((w)->frame_y + (int)(w)->frame->height - 1 + \
-    (HAS_BORDER_WITH_SELECT(w) ? 2*(w)->vscr->screen_ptr->frame_border_width : 0))
+    (HAS_BORDER_WITH_SELECT(w) ? 2*(w)->vscr->frame.border_width : 0))
 
 static int compareWTop(const void *a, const void *b)
 {
@@ -815,8 +816,8 @@ static void initMoveData(WWindow *wwin, MoveData *data)
 	data->calcX = wwin->frame_x;
 	data->calcY = wwin->frame_y;
 
-	data->winWidth = wwin->frame->width + (HAS_BORDER_WITH_SELECT(wwin) ? 2 * wwin->vscr->screen_ptr->frame_border_width : 0);
-	data->winHeight = wwin->frame->height + (HAS_BORDER_WITH_SELECT(wwin) ? 2 * wwin->vscr->screen_ptr->frame_border_width : 0);
+	data->winWidth = wwin->frame->width + (HAS_BORDER_WITH_SELECT(wwin) ? 2 * wwin->vscr->frame.border_width : 0);
+	data->winHeight = wwin->frame->height + (HAS_BORDER_WITH_SELECT(wwin) ? 2 * wwin->vscr->frame.border_width : 0);
 
 	data->snap = SNAP_NONE;
 }

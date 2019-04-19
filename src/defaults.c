@@ -3066,7 +3066,7 @@ static int setFrameBorderWidth(virtual_screen *vscr, WDefaultEntry *entry, void 
 	(void) entry;
 	(void) foo;
 
-	vscr->screen_ptr->frame_border_width = *value;
+	vscr->frame.border_width = *value;
 
 	return REFRESH_FRAME_BORDER;
 }

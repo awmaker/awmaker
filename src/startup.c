@@ -724,7 +724,7 @@ static void manageAllWindows(virtual_screen *vscr, int crashRecovery)
 			}
 
 			if (crashRecovery) {
-				border = (!HAS_BORDER(wwin) ? 0 : scr->frame_border_width);
+				border = (!HAS_BORDER(wwin) ? 0 : vscr->frame.border_width);
 
 				wWindowMove(wwin, wwin->frame_x - border,
 					    wwin->frame_y - border -

@@ -131,6 +131,10 @@ struct virtual_screen {
                                                   * another window entered fullscreen
                                                   */
 	} window;
+
+	struct {
+		int border_width;
+	} frame;
 };
 
 /* each WScreen is saved into a context associated with it's root window */
@@ -220,7 +224,6 @@ struct WScreen {
     WMColor *mtext_color;	       /* menu item text */
     WMColor *dtext_color;	       /* disabled menu item text */
 
-    int frame_border_width;
     WMColor *frame_border_color;
     WMColor *frame_focused_border_color;
     WMColor *frame_selected_border_color;

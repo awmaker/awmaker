@@ -305,8 +305,8 @@ static void set_width_height(WWindow *wwin, unsigned int *width, unsigned int *h
 	}
 
 	if (HAS_BORDER(wwin)) {
-		*height += 2 * wwin->vscr->screen_ptr->frame_border_width;
-		*width  += 2 * wwin->vscr->screen_ptr->frame_border_width;
+		*height += 2 * wwin->vscr->frame.border_width;
+		*width  += 2 * wwin->vscr->frame.border_width;
 	}
 }
 
