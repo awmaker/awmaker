@@ -498,8 +498,6 @@ WDefaultEntry noscreenOptionList[] = {
 	    &wPreferences.minipreview_size, getInt, NULL, NULL, NULL},
 	{"IgnoreGtkHints", "NO", NULL,
 	    &wPreferences.ignore_gtk_decoration_hints, getBool, NULL, NULL, NULL},
-	{"MenuStyle", "normal", seMenuStyles,
-	    &wPreferences.menu_style, getEnum, setMenuStyle, NULL, NULL},
 
 	/* style options */
 	{"SmoothWorkspaceBack", "NO", NULL,
@@ -549,6 +547,8 @@ WDefaultEntry optionList[] = {
 
 	/* style options */
 
+	{"MenuStyle", "normal", seMenuStyles,
+	    &wPreferences.menu_style, getEnum, setMenuStyle, NULL, NULL},
 	{"WidgetColor", "(solid, gray)", NULL,
 	    NULL, getTexture, setWidgetColor, NULL, NULL},
 	{"WorkspaceSpecificBack", "()", NULL,
