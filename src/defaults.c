@@ -863,6 +863,7 @@ void startup_set_defaults_virtual(void)
 	read_defaults_noscreen(w_global.domain.wmaker->dictionary);
 }
 
+/* This function sets the default values for all lists */
 static void init_defaults(void)
 {
 	unsigned int i;
@@ -870,6 +871,7 @@ static void init_defaults(void)
 
 	WMPLSetCaseSensitive(False);
 
+	/* Set the default values for the option list */
 	for (i = 0; i < wlengthof(optionList); i++) {
 		entry = &optionList[i];
 
@@ -880,6 +882,7 @@ static void init_defaults(void)
 			entry->plvalue = NULL;
 	}
 
+	/* Set the default values for the noscren option list */
 	for (i = 0; i < wlengthof(noscreenOptionList); i++) {
 		entry = &noscreenOptionList[i];
 
@@ -890,6 +893,7 @@ static void init_defaults(void)
 			entry->plvalue = NULL;
 	}
 
+	/* Set the default values for the static option list */
 	for (i = 0; i < wlengthof(staticOptionList); i++) {
 		entry = &staticOptionList[i];
 
@@ -1154,6 +1158,11 @@ void wDefaultsCheckDomains(void *arg)
 #endif
 }
 
+/* This function read the static list values
+ * All these values uses only the WPreferences and
+ * the callbacks updates the WPreferences.
+ * X11 Calls are not used in this list
+ */
 static void wReadStaticDefaults(WMPropList *dict)
 {
 	WMPropList *plvalue;
