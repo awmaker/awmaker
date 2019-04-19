@@ -533,22 +533,22 @@ WDefaultEntry optionList[] = {
 	/* dynamic options */
 
 	{"NoWindowOverDock", "NO", NULL,
-	    &wPreferences.no_window_over_dock, getBool, updateUsableArea, NULL, NULL},
+	    &wPreferences.no_window_over_dock, getBool, updateUsableArea, NULL, NULL}, /* - */
 	{"NoWindowOverIcons", "NO", NULL,
-	    &wPreferences.no_window_over_icons, getBool, updateUsableArea, NULL, NULL},
+	    &wPreferences.no_window_over_icons, getBool, updateUsableArea, NULL, NULL}, /* - */
 	{"IconPosition", "blh", seIconPositions,
 	    &wPreferences.icon_yard, getEnum, setIconPosition, NULL, NULL},
 	{"WorkspaceBorder", "None", seWorkspaceBorder,
-	    &wPreferences.workspace_border_position, getEnum, updateUsableArea, NULL, NULL},
+	    &wPreferences.workspace_border_position, getEnum, updateUsableArea, NULL, NULL}, /* - */
 	{"WorkspaceBorderSize", "0", NULL,
-	    &wPreferences.workspace_border_size, getInt, updateUsableArea, NULL, NULL},
+	    &wPreferences.workspace_border_size, getInt, updateUsableArea, NULL, NULL}, /* - */
 	{"StickyIcons", "NO", NULL,
 	    &wPreferences.sticky_icons, getBool, setStickyIcons, NULL, NULL},
 
 	/* style options */
 
 	{"MenuStyle", "normal", seMenuStyles,
-	    &wPreferences.menu_style, getEnum, setMenuStyle, NULL, NULL},
+	    &wPreferences.menu_style, getEnum, setMenuStyle, NULL, NULL}, /* - */
 	{"WidgetColor", "(solid, gray)", NULL,
 	    NULL, getTexture, setWidgetColor, NULL, NULL},
 	{"WorkspaceSpecificBack", "()", NULL,
