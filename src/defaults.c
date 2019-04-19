@@ -177,6 +177,7 @@ static WDECallbackUpdate setCursor;
 #define REFRESH_ICON_TITLE_BACK (1<<13)
 
 #define REFRESH_WORKSPACE_MENU	(1<<14)
+#define REFRESH_USABLE_AREA	(1<<15)
 
 #define REFRESH_FRAME_BORDER REFRESH_MENU_FONT|REFRESH_WINDOW_FONT
 
@@ -1373,6 +1374,9 @@ static void refresh_defaults(virtual_screen *vscr, unsigned int needs_refresh)
 		if (vscr->workspace.submenu)
 			vscr->workspace.submenu->flags.realized = 0;
 	}
+
+	if (needs_refresh & REFRESH_USABLE_AREA)
+		wScreenUpdateUsableArea(vscr);
 }
 
 void wReadDefaults(virtual_screen *vscr, WMPropList *new_dict)
@@ -3378,13 +3382,13 @@ static int setIconPosition(virtual_screen *vscr, WDefaultEntry *entry, void *bar
 static int updateUsableArea(virtual_screen *vscr, WDefaultEntry *entry, void *bar, void *foo)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
+	(void) vscr;
 	(void) entry;
 	(void) bar;
 	(void) foo;
 
-	wScreenUpdateUsableArea(vscr);
+	return REFRESH_USABLE_AREA;
 
-	return 0;
 }
 
 static int setWorkspaceMapBackground(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
