@@ -179,6 +179,7 @@ static WDECallbackUpdate setCursor;
 #define REFRESH_WORKSPACE_MENU	(1<<14)
 #define REFRESH_USABLE_AREA	(1<<15)
 #define REFRESH_ARRANGE_ICONS	(1<<16)
+#define REFRESH_STICKY_ICONS	(1<<17)
 
 #define REFRESH_FRAME_BORDER REFRESH_MENU_FONT|REFRESH_WINDOW_FONT
 
@@ -1385,6 +1386,10 @@ static void refresh_defaults(virtual_screen *vscr, unsigned int needs_refresh)
 	if (needs_refresh & REFRESH_USABLE_AREA && !(needs_refresh & REFRESH_ARRANGE_ICONS))
 		wScreenUpdateUsableArea(vscr);
 
+	if (needs_refresh & REFRESH_STICKY_ICONS && vscr->workspace.array) {
+		wWorkspaceForceChange(vscr, vscr->workspace.current);
+		wArrangeIcons(vscr, False);
+	}
 }
 
 void wReadDefaults(virtual_screen *vscr, WMPropList *new_dict)
@@ -2713,16 +2718,12 @@ static int setWrapAppiconsInDock(virtual_screen *vscr, WDefaultEntry *entry, voi
 static int setStickyIcons(virtual_screen *vscr, WDefaultEntry *entry, void *bar, void *foo)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
+	(void) vscr;
 	(void) entry;
 	(void) bar;
 	(void) foo;
 
-	if (vscr->workspace.array) {
-		wWorkspaceForceChange(vscr, vscr->workspace.current);
-		wArrangeIcons(vscr, False);
-	}
-
-	return 0;
+	return REFRESH_STICKY_ICONS;
 }
 
 static int setIconTile(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
