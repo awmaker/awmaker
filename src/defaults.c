@@ -610,9 +610,9 @@ WDefaultEntry optionList[] = {
 	    NULL, getColor, setIconTitleColor, NULL, NULL},
 	{"IconTitleBack", "black", NULL,
 	    NULL, getColor, setIconTitleBack, NULL, NULL},
-	{"SwitchPanelImages", "(swtile.png, swback.png, 30, 40)", &wPreferences,
+	{"SwitchPanelImages", "(swtile.png, swback.png, 30, 40)", NULL,
 	    NULL, getPropList, setSwPOptions, NULL, NULL},
-	{"ModifierKeyLabels", "(\"Shift+\", \"Control+\", \"Mod1+\", \"Mod2+\", \"Mod3+\", \"Mod4+\", \"Mod5+\")", &wPreferences,
+	{"ModifierKeyLabels", "(\"Shift+\", \"Control+\", \"Mod1+\", \"Mod2+\", \"Mod3+\", \"Mod4+\", \"Mod5+\")", NULL,
 	    NULL, getPropList, setModifierKeyLabels, NULL, NULL},
 	{"FrameBorderWidth", "1", NULL,
 	    NULL, getInt, setFrameBorderWidth, NULL, NULL}, /* - */
@@ -3441,12 +3441,13 @@ static int setSwPOptions(virtual_screen *vscr, WDefaultEntry *entry, void *tdata
 	char *path;
 	RImage *bgimage;
 	int cwidth, cheight;
-	struct WPreferences *prefs = foo;
+
+	(void) foo;
 
 	if (!WMIsPLArray(array) || WMGetPropListItemCount(array) == 0) {
-		if (prefs->swtileImage)
-			RReleaseImage(prefs->swtileImage);
-		prefs->swtileImage = NULL;
+		if (wPreferences.swtileImage)
+			RReleaseImage(wPreferences.swtileImage);
+		wPreferences.swtileImage = NULL;
 
 		WMReleasePropList(array);
 		return 0;
@@ -3481,38 +3482,39 @@ static int setSwPOptions(virtual_screen *vscr, WDefaultEntry *entry, void *tdata
 					int i;
 					int swidth, theight;
 					for (i = 0; i < 9; i++) {
-						if (prefs->swbackImage[i])
-							RReleaseImage(prefs->swbackImage[i]);
-						prefs->swbackImage[i] = NULL;
+						if (wPreferences.swbackImage[i])
+							RReleaseImage(wPreferences.swbackImage[i]);
+
+						wPreferences.swbackImage[i] = NULL;
 					}
 					swidth = (bgimage->width - cwidth) / 2;
 					theight = (bgimage->height - cheight) / 2;
 
-					prefs->swbackImage[0] = chopOffImage(bgimage, 0, 0, swidth, theight);
-					prefs->swbackImage[1] = chopOffImage(bgimage, swidth, 0, cwidth, theight);
-					prefs->swbackImage[2] = chopOffImage(bgimage, swidth + cwidth, 0,
+					wPreferences.swbackImage[0] = chopOffImage(bgimage, 0, 0, swidth, theight);
+					wPreferences.swbackImage[1] = chopOffImage(bgimage, swidth, 0, cwidth, theight);
+					wPreferences.swbackImage[2] = chopOffImage(bgimage, swidth + cwidth, 0,
 									     swidth, theight);
 
-					prefs->swbackImage[3] = chopOffImage(bgimage, 0, theight, swidth, cheight);
-					prefs->swbackImage[4] = chopOffImage(bgimage, swidth, theight,
+					wPreferences.swbackImage[3] = chopOffImage(bgimage, 0, theight, swidth, cheight);
+					wPreferences.swbackImage[4] = chopOffImage(bgimage, swidth, theight,
 									     cwidth, cheight);
-					prefs->swbackImage[5] = chopOffImage(bgimage, swidth + cwidth, theight,
+					wPreferences.swbackImage[5] = chopOffImage(bgimage, swidth + cwidth, theight,
 									     swidth, cheight);
 
-					prefs->swbackImage[6] = chopOffImage(bgimage, 0, theight + cheight,
+					wPreferences.swbackImage[6] = chopOffImage(bgimage, 0, theight + cheight,
 									     swidth, theight);
-					prefs->swbackImage[7] = chopOffImage(bgimage, swidth, theight + cheight,
+					wPreferences.swbackImage[7] = chopOffImage(bgimage, swidth, theight + cheight,
 									     cwidth, theight);
-					prefs->swbackImage[8] =
+					wPreferences.swbackImage[8] =
 					    chopOffImage(bgimage, swidth + cwidth, theight + cheight, swidth,
 							 theight);
 
 					// check if anything failed
 					for (i = 0; i < 9; i++) {
-						if (!prefs->swbackImage[i]) {
+						if (!wPreferences.swbackImage[i]) {
 							for (; i >= 0; --i) {
-								RReleaseImage(prefs->swbackImage[i]);
-								prefs->swbackImage[i] = NULL;
+								RReleaseImage(wPreferences.swbackImage[i]);
+								wPreferences.swbackImage[i] = NULL;
 							}
 							break;
 						}
@@ -3534,11 +3536,11 @@ static int setSwPOptions(virtual_screen *vscr, WDefaultEntry *entry, void *tdata
 			wwarning(_("Could not find image \"%s\" for option \"%s\""),
 				 WMGetFromPLString(WMGetFromPLArray(array, 0)), entry->key);
 		} else {
-			if (prefs->swtileImage)
-				RReleaseImage(prefs->swtileImage);
+			if (wPreferences.swtileImage)
+				RReleaseImage(wPreferences.swtileImage);
 
-			prefs->swtileImage = RLoadImage(vscr->screen_ptr->rcontext, path, 0);
-			if (!prefs->swtileImage)
+			wPreferences.swtileImage = RLoadImage(vscr->screen_ptr->rcontext, path, 0);
+			if (!wPreferences.swtileImage)
 				wwarning(_("Could not load image \"%s\" for option \"%s\""), path, entry->key);
 
 			wfree(path);
@@ -3559,7 +3561,8 @@ static int setModifierKeyLabels(virtual_screen *vscr, WDefaultEntry *entry, void
 {
 	WMPropList *array = tdata;
 	int i;
-	struct WPreferences *prefs = foo;
+
+	(void) foo;
 
 	if (!WMIsPLArray(array) || WMGetPropListItemCount(array) != 7) {
 		wwarning(_("Value for option \"%s\" must be an array of 7 strings"), entry->key);
@@ -3570,14 +3573,16 @@ static int setModifierKeyLabels(virtual_screen *vscr, WDefaultEntry *entry, void
 	DestroyWindowMenu(vscr);
 
 	for (i = 0; i < 7; i++) {
-		if (prefs->modifier_labels[i])
-			wfree(prefs->modifier_labels[i]);
+		if (wPreferences.modifier_labels[i]) {
+			wfree(wPreferences.modifier_labels[i]);
+			wPreferences.modifier_labels[i] = NULL;
+		}
 
 		if (WMIsPLString(WMGetFromPLArray(array, i))) {
-			prefs->modifier_labels[i] = wstrdup(WMGetFromPLString(WMGetFromPLArray(array, i)));
+			wPreferences.modifier_labels[i] = wstrdup(WMGetFromPLString(WMGetFromPLArray(array, i)));
 		} else {
 			wwarning(_("Invalid argument for option \"%s\" item %d"), entry->key, i);
-			prefs->modifier_labels[i] = NULL;
+			wPreferences.modifier_labels[i] = NULL;
 		}
 	}
 
