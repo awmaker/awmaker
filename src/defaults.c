@@ -563,17 +563,17 @@ WDefaultEntry optionList[] = {
 	{"IconBack", "(dgradient, \"rgb:a6/a6/b6\", \"rgb:51/55/61\")", NULL,
 	    NULL, getTexture, setIconTile, NULL, NULL},
 	{"WindowTitleFont", DEF_TITLE_FONT, NULL,
-	    NULL, getFont, setWinTitleFont, NULL, NULL},
+	    &wPreferences.font.wintitle, getFont, setWinTitleFont, NULL, NULL},
 	{"MenuTitleFont", DEF_MENU_TITLE_FONT, NULL,
-	    NULL, getFont, setMenuTitleFont, NULL, NULL},
+	    &wPreferences.font.menutitle, getFont, setMenuTitleFont, NULL, NULL},
 	{"MenuTextFont", DEF_MENU_ENTRY_FONT, NULL,
-	    NULL, getFont, setMenuTextFont, NULL, NULL},
+	    &wPreferences.font.menutext, getFont, setMenuTextFont, NULL, NULL},
 	{"IconTitleFont", DEF_ICON_TITLE_FONT, NULL,
-	    NULL, getFont, setIconTitleFont, NULL, NULL},
+	    &wPreferences.font.icontitle, getFont, setIconTitleFont, NULL, NULL},
 	{"ClipTitleFont", DEF_CLIP_TITLE_FONT, NULL,
-	    NULL, getFont, setClipTitleFont, NULL, NULL},
+	    &wPreferences.font.cliptitle, getFont, setClipTitleFont, NULL, NULL},
 	{"LargeDisplayFont", DEF_WORKSPACE_NAME_FONT, NULL,
-	    NULL, getFont, setLargeDisplayFont, NULL, NULL},
+	    &wPreferences.font.largedisplay, getFont, setLargeDisplayFont, NULL, NULL},
 	{"HighlightColor", "white", NULL,
 	    NULL, getColor, setHightlight, NULL, NULL},
 	{"HighlightTextColor", "black", NULL,
@@ -2229,27 +2229,24 @@ getWSSpecificBackground(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *
 
 static int getFont(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
 {
-	static WMFont *font;
 	const char *val;
+	char *fontname;
+	int len;
 
+	(void) vscr;
 	(void) addr;
 
 	GET_STRING_OR_DEFAULT("Font", val);
+	len = sizeof(char *) * (strlen(val));
 
-	font = WMCreateFont(vscr->screen_ptr->wmscreen, val);
-	if (!font)
-		font = WMCreateFont(vscr->screen_ptr->wmscreen, "fixed");
+	fontname = wmalloc(len + sizeof(char *));
+	snprintf(fontname, len, "%s", val);
 
-	if (!font) {
-		wfatal(_("could not load any usable font!!!"));
-		exit(1);
-	}
+	if (addr)
+		*(char **)addr = fontname;
 
 	if (ret)
-		*ret = font;
-
-	/* can't assign font value outside update function */
-	wassertrv(addr == NULL, True);
+		*ret = &fontname;
 
 	return True;
 }
@@ -2795,11 +2792,34 @@ static int setIconTile(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, 
 
 static int setWinTitleFont(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
 {
-	WMFont *font = tdata;
+	WMFont *font = NULL;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 	(void) foo;
+	(void) tdata;
+	int fixedlen = sizeof(char *) * 5;
+
+	/* We must have the font loaded, but... */
+	if (!wPreferences.font.wintitle) {
+		wPreferences.font.wintitle = wmalloc(fixedlen + sizeof(char *));
+		snprintf(wPreferences.font.wintitle, fixedlen, "fixed");
+	}
+
+	font = WMCreateFont(vscr->screen_ptr->wmscreen, wPreferences.font.wintitle);
+	if (!font) {
+		if (wPreferences.font.wintitle)
+			free(wPreferences.font.wintitle);
+
+		wPreferences.font.wintitle = wmalloc(fixedlen + sizeof(char *));
+		snprintf(wPreferences.font.wintitle, fixedlen, "fixed");
+		font = WMCreateFont(vscr->screen_ptr->wmscreen, wPreferences.font.wintitle);
+	}
+
+	if (!font) {
+		wfatal(_("could not load any usable font!!!"));
+		exit(1);
+	}
 
 	if (vscr->screen_ptr->title_font)
 		WMReleaseFont(vscr->screen_ptr->title_font);
@@ -2811,11 +2831,34 @@ static int setWinTitleFont(virtual_screen *vscr, WDefaultEntry *entry, void *tda
 
 static int setMenuTitleFont(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
 {
-	WMFont *font = tdata;
+	WMFont *font = NULL;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 	(void) foo;
+	(void) tdata;
+	int fixedlen = sizeof(char *) * 5;
+
+	/* We must have the font loaded, but... */
+	if (!wPreferences.font.menutitle) {
+		wPreferences.font.menutitle = wmalloc(fixedlen + sizeof(char *));
+		snprintf(wPreferences.font.menutitle, fixedlen, "fixed");
+	}
+
+	font = WMCreateFont(vscr->screen_ptr->wmscreen, wPreferences.font.menutitle);
+	if (!font) {
+		if (wPreferences.font.menutitle)
+			free(wPreferences.font.menutitle);
+
+		wPreferences.font.menutitle = wmalloc(fixedlen + sizeof(char *));
+		snprintf(wPreferences.font.menutitle, fixedlen, "fixed");
+		font = WMCreateFont(vscr->screen_ptr->wmscreen, wPreferences.font.menutitle);
+	}
+
+	if (!font) {
+		wfatal(_("could not load any usable font!!!"));
+		exit(1);
+	}
 
 	if (vscr->screen_ptr->menu_title_font)
 		WMReleaseFont(vscr->screen_ptr->menu_title_font);
@@ -2827,11 +2870,34 @@ static int setMenuTitleFont(virtual_screen *vscr, WDefaultEntry *entry, void *td
 
 static int setMenuTextFont(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
 {
-	WMFont *font = tdata;
+	WMFont *font = NULL;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 	(void) foo;
+	(void) tdata;
+	int fixedlen = sizeof(char *) * 5;
+
+	/* We must have the font loaded, but... */
+	if (!wPreferences.font.menutext) {
+		wPreferences.font.menutext = wmalloc(fixedlen + sizeof(char *));
+		snprintf(wPreferences.font.menutext, fixedlen, "fixed");
+	}
+
+	font = WMCreateFont(vscr->screen_ptr->wmscreen, wPreferences.font.menutext);
+	if (!font) {
+		if (wPreferences.font.menutext)
+			free(wPreferences.font.menutext);
+
+		wPreferences.font.menutext = wmalloc(fixedlen + sizeof(char *));
+		snprintf(wPreferences.font.menutext, fixedlen, "fixed");
+		font = WMCreateFont(vscr->screen_ptr->wmscreen, wPreferences.font.menutext);
+	}
+
+	if (!font) {
+		wfatal(_("could not load any usable font!!!"));
+		exit(1);
+	}
 
 	if (vscr->screen_ptr->menu_entry_font)
 		WMReleaseFont(vscr->screen_ptr->menu_entry_font);
@@ -2843,11 +2909,34 @@ static int setMenuTextFont(virtual_screen *vscr, WDefaultEntry *entry, void *tda
 
 static int setIconTitleFont(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
 {
-	WMFont *font = tdata;
+	WMFont *font = NULL;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 	(void) foo;
+	(void) tdata;
+	int fixedlen = sizeof(char *) * 5;
+
+	/* We must have the font loaded, but... */
+	if (!wPreferences.font.icontitle) {
+		wPreferences.font.icontitle = wmalloc(fixedlen + sizeof(char *));
+		snprintf(wPreferences.font.icontitle, fixedlen, "fixed");
+	}
+
+	font = WMCreateFont(vscr->screen_ptr->wmscreen, wPreferences.font.icontitle);
+	if (!font) {
+		if (wPreferences.font.icontitle)
+			free(wPreferences.font.icontitle);
+
+		wPreferences.font.icontitle = wmalloc(fixedlen + sizeof(char *));
+		snprintf(wPreferences.font.icontitle, fixedlen, "fixed");
+		font = WMCreateFont(vscr->screen_ptr->wmscreen, wPreferences.font.icontitle);
+	}
+
+	if (!font) {
+		wfatal(_("could not load any usable font!!!"));
+		exit(1);
+	}
 
 	if (vscr->screen_ptr->icon_title_font)
 		WMReleaseFont(vscr->screen_ptr->icon_title_font);
@@ -2859,11 +2948,34 @@ static int setIconTitleFont(virtual_screen *vscr, WDefaultEntry *entry, void *td
 
 static int setClipTitleFont(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
 {
-	WMFont *font = tdata;
+	WMFont *font = NULL;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 	(void) foo;
+	(void) tdata;
+	int fixedlen = sizeof(char *) * 5;
+
+	/* We must have the font loaded, but... */
+	if (!wPreferences.font.cliptitle) {
+		wPreferences.font.cliptitle = wmalloc(fixedlen + sizeof(char *));
+		snprintf(wPreferences.font.cliptitle, fixedlen, "fixed");
+	}
+
+	font = WMCreateFont(vscr->screen_ptr->wmscreen, wPreferences.font.cliptitle);
+	if (!font) {
+		if (wPreferences.font.cliptitle)
+			free(wPreferences.font.cliptitle);
+
+		wPreferences.font.cliptitle = wmalloc(fixedlen + sizeof(char *));
+		snprintf(wPreferences.font.cliptitle, fixedlen, "fixed");
+		font = WMCreateFont(vscr->screen_ptr->wmscreen, wPreferences.font.cliptitle);
+	}
+
+	if (!font) {
+		wfatal(_("could not load any usable font!!!"));
+		exit(1);
+	}
 
 	if (vscr->screen_ptr->clip_title_font)
 		WMReleaseFont(vscr->screen_ptr->clip_title_font);
@@ -2875,11 +2987,34 @@ static int setClipTitleFont(virtual_screen *vscr, WDefaultEntry *entry, void *td
 
 static int setLargeDisplayFont(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
 {
-	WMFont *font = tdata;
+	WMFont *font = NULL;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 	(void) foo;
+	(void) tdata;
+	int fixedlen = sizeof(char *) * 5;
+
+	/* We must have the font loaded, but... */
+	if (!wPreferences.font.largedisplay) {
+		wPreferences.font.largedisplay = wmalloc(fixedlen + sizeof(char *));
+		snprintf(wPreferences.font.largedisplay, fixedlen, "fixed");
+	}
+
+	font = WMCreateFont(vscr->screen_ptr->wmscreen, wPreferences.font.largedisplay);
+	if (!font) {
+		if (wPreferences.font.largedisplay)
+			free(wPreferences.font.largedisplay);
+
+		wPreferences.font.largedisplay = wmalloc(fixedlen + sizeof(char *));
+		snprintf(wPreferences.font.largedisplay, fixedlen, "fixed");
+		font = WMCreateFont(vscr->screen_ptr->wmscreen, wPreferences.font.largedisplay);
+	}
+
+	if (!font) {
+		wfatal(_("could not load any usable font!!!"));
+		exit(1);
+	}
 
 	if (vscr->workspace.font_for_name)
 		WMReleaseFont(vscr->workspace.font_for_name);

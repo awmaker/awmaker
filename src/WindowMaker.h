@@ -494,6 +494,16 @@ extern struct WPreferences {
 
 	/* Map table between w_cursor and actual X id */
 	Cursor cursor[WCUR_LAST];
+
+	/* Font names */
+	struct {
+		char *wintitle;
+		char *menutitle;
+		char *menutext;
+		char *icontitle;
+		char *cliptitle;
+		char *largedisplay;
+	} font;
 } wPreferences;
 
 /****** Global Variables  ******/
