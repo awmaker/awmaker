@@ -563,17 +563,17 @@ WDefaultEntry optionList[] = {
 	{"IconBack", "(dgradient, \"rgb:a6/a6/b6\", \"rgb:51/55/61\")", NULL,
 	    NULL, getTexture, setIconTile, NULL, NULL},
 	{"WindowTitleFont", DEF_TITLE_FONT, NULL,
-	    &wPreferences.font.wintitle, getFont, setWinTitleFont, NULL, NULL},
+	    &wPreferences.font.wintitle, getFont, setWinTitleFont, NULL, NULL}, /* - */
 	{"MenuTitleFont", DEF_MENU_TITLE_FONT, NULL,
-	    &wPreferences.font.menutitle, getFont, setMenuTitleFont, NULL, NULL},
+	    &wPreferences.font.menutitle, getFont, setMenuTitleFont, NULL, NULL}, /* - */
 	{"MenuTextFont", DEF_MENU_ENTRY_FONT, NULL,
-	    &wPreferences.font.menutext, getFont, setMenuTextFont, NULL, NULL},
+	    &wPreferences.font.menutext, getFont, setMenuTextFont, NULL, NULL}, /* - */
 	{"IconTitleFont", DEF_ICON_TITLE_FONT, NULL,
-	    &wPreferences.font.icontitle, getFont, setIconTitleFont, NULL, NULL},
+	    &wPreferences.font.icontitle, getFont, setIconTitleFont, NULL, NULL}, /* - */
 	{"ClipTitleFont", DEF_CLIP_TITLE_FONT, NULL,
-	    &wPreferences.font.cliptitle, getFont, setClipTitleFont, NULL, NULL},
+	    &wPreferences.font.cliptitle, getFont, setClipTitleFont, NULL, NULL}, /* - */
 	{"LargeDisplayFont", DEF_WORKSPACE_NAME_FONT, NULL,
-	    &wPreferences.font.largedisplay, getFont, setLargeDisplayFont, NULL, NULL},
+	    &wPreferences.font.largedisplay, getFont, setLargeDisplayFont, NULL, NULL}, /* - */
 	{"HighlightColor", "white", NULL,
 	    NULL, getColor, setHightlight, NULL, NULL},
 	{"HighlightTextColor", "black", NULL,
