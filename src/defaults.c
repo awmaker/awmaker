@@ -545,7 +545,7 @@ WDefaultEntry optionList[] = {
 	{"WorkspaceBorderSize", "0", NULL,
 	    &wPreferences.workspace_border_size, getInt, updateUsableArea, NULL, NULL}, /* - */
 	{"StickyIcons", "NO", NULL,
-	    &wPreferences.sticky_icons, getBool, setStickyIcons, NULL, NULL},
+	    &wPreferences.sticky_icons, getBool, setStickyIcons, NULL, NULL}, /* - */
 
 	/* style options */
 
@@ -790,7 +790,7 @@ WDefaultEntry optionList[] = {
 	{"ToggleKbdModeKey", "None", (void *)WKBD_TOGGLE,
 	    NULL, getKeybind, setKeyGrab, NULL, NULL},
 	{"KbdModeLock", "NO", NULL,
-	    &wPreferences.modelock, getBool, NULL, NULL, NULL},
+	    &wPreferences.modelock, getBool, NULL, NULL, NULL}, /* - */
 #endif				/* KEEP_XKB_LOCK_STATUS */
 
 	{"NormalCursor", "(builtin, left_ptr)", (void *)WCUR_ROOT,
