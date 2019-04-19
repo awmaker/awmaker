@@ -614,7 +614,7 @@ WDefaultEntry optionList[] = {
 	{"ModifierKeyLabels", "(\"Shift+\", \"Control+\", \"Mod1+\", \"Mod2+\", \"Mod3+\", \"Mod4+\", \"Mod5+\")", &wPreferences,
 	    NULL, getPropList, setModifierKeyLabels, NULL, NULL},
 	{"FrameBorderWidth", "1", NULL,
-	    NULL, getInt, setFrameBorderWidth, NULL, NULL},
+	    NULL, getInt, setFrameBorderWidth, NULL, NULL}, /* - */
 	{"FrameBorderColor", "black", NULL,
 	    NULL, getColor, setFrameBorderColor, NULL, NULL},
 	{"FrameFocusedBorderColor", "black", NULL,
