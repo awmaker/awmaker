@@ -324,6 +324,11 @@ typedef struct WCoord {
 	int x, y;
 } WCoord;
 
+typedef struct defstruct {
+	char *defvalue;                    /* Default value (color name) */
+	char *value;                       /* Color name value used */
+} defstruct;
+
 extern struct WPreferences {
 	char *pixmap_path;                 /* : separated list of paths to find pixmaps */
 	char *icon_path;                   /* : separated list of paths to find icons */
@@ -504,6 +509,27 @@ extern struct WPreferences {
 		char *cliptitle;
 		char *largedisplay;
 	} font;
+
+	/* Color names */
+	struct {
+		defstruct *widget;
+		defstruct *highlight;
+		defstruct *highlighttext;
+		defstruct *cliptitle;
+		defstruct *cliptitlecollapsed;
+		defstruct *titlefocused;
+		defstruct *titleowner;
+		defstruct *titleunfocused;
+		defstruct *menutitle;
+		defstruct *menutext;
+		defstruct *menudisabled;
+		defstruct *icontitle;
+		defstruct *icontitleback;
+		defstruct *frameborder;
+		defstruct *frameborderfocused;
+		defstruct *frameborderselected;
+	} color;
+
 } wPreferences;
 
 /****** Global Variables  ******/

@@ -124,7 +124,9 @@ static WDECallbackUpdate setFrameBorderColor;
 static WDECallbackUpdate setFrameFocusedBorderColor;
 static WDECallbackUpdate setFrameSelectedBorderColor;
 static WDECallbackUpdate setLargeDisplayFont;
-static WDECallbackUpdate setWTitleColor;
+static WDECallbackUpdate setWTitleColorFocused;
+static WDECallbackUpdate setWTitleColorOwner;
+static WDECallbackUpdate setWTitleColorUnfocused;
 static WDECallbackUpdate setFTitleBack;
 static WDECallbackUpdate setPTitleBack;
 static WDECallbackUpdate setUTitleBack;
@@ -144,6 +146,7 @@ static WDECallbackUpdate setIconPosition;
 static WDECallbackUpdate setWorkspaceMapBackground;
 static WDECallbackUpdate setClipTitleFont;
 static WDECallbackUpdate setClipTitleColor;
+static WDECallbackUpdate setClipTitleColorCollapsed;
 static WDECallbackUpdate setMenuStyle;
 static WDECallbackUpdate setSwPOptions;
 static WDECallbackUpdate updateUsableArea;
@@ -575,19 +578,19 @@ WDefaultEntry optionList[] = {
 	{"LargeDisplayFont", DEF_WORKSPACE_NAME_FONT, NULL,
 	    &wPreferences.font.largedisplay, getFont, setLargeDisplayFont, NULL, NULL}, /* - */
 	{"HighlightColor", "white", NULL,
-	    NULL, getColor, setHightlight, NULL, NULL},
+	    &wPreferences.color.highlight, getColor, setHightlight, NULL, NULL},
 	{"HighlightTextColor", "black", NULL,
-	    NULL, getColor, setHightlightText, NULL, NULL},
-	{"ClipTitleColor", "black", (void *)CLIP_NORMAL,
-	    NULL, getColor, setClipTitleColor, NULL, NULL},
-	{"CClipTitleColor", "\"rgb:61/61/61\"", (void *)CLIP_COLLAPSED,
-	    NULL, getColor, setClipTitleColor, NULL, NULL},
-	{"FTitleColor", "white", (void *)WS_FOCUSED,
-	    NULL, getColor, setWTitleColor, NULL, NULL},
-	{"PTitleColor", "white", (void *)WS_PFOCUSED,
-	    NULL, getColor, setWTitleColor, NULL, NULL},
-	{"UTitleColor", "black", (void *)WS_UNFOCUSED,
-	    NULL, getColor, setWTitleColor, NULL, NULL},
+	    &wPreferences.color.highlighttext, getColor, setHightlightText, NULL, NULL},
+	{"ClipTitleColor", "black", NULL,
+	    &wPreferences.color.cliptitle, getColor, setClipTitleColor, NULL, NULL},
+	{"CClipTitleColor", "\"rgb:61/61/61\"", NULL,
+	    &wPreferences.color.cliptitlecollapsed, getColor, setClipTitleColorCollapsed, NULL, NULL},
+	{"FTitleColor", "white", NULL,
+	    &wPreferences.color.titlefocused, getColor, setWTitleColorFocused, NULL, NULL},
+	{"PTitleColor", "white", NULL,
+	    &wPreferences.color.titleowner, getColor, setWTitleColorOwner, NULL, NULL},
+	{"UTitleColor", "black", NULL,
+	    &wPreferences.color.titleunfocused, getColor, setWTitleColorUnfocused, NULL, NULL},
 	{"FTitleBack", "(solid, black)", NULL,
 	    NULL, getTexture, setFTitleBack, NULL, NULL},
 	{"PTitleBack", "(solid, gray40)", NULL,
@@ -597,19 +600,19 @@ WDefaultEntry optionList[] = {
 	{"ResizebarBack", "(solid, \"rgb:aa/aa/aa\")", NULL,
 	    NULL, getTexture, setResizebarBack, NULL, NULL},
 	{"MenuTitleColor", "white", NULL,
-	    NULL, getColor, setMenuTitleColor, NULL, NULL},
+	    &wPreferences.color.menutitle, getColor, setMenuTitleColor, NULL, NULL},
 	{"MenuTextColor", "black", NULL,
-	    NULL, getColor, setMenuTextColor, NULL, NULL},
+	    &wPreferences.color.menutext, getColor, setMenuTextColor, NULL, NULL},
 	{"MenuDisabledColor", "gray50", NULL,
-	    NULL, getColor, setMenuDisabledColor, NULL, NULL},
+	    &wPreferences.color.menudisabled, getColor, setMenuDisabledColor, NULL, NULL},
 	{"MenuTitleBack", "(solid, black)", NULL,
 	    NULL, getTexture, setMenuTitleBack, NULL, NULL},
 	{"MenuTextBack", "(solid, \"rgb:aa/aa/aa\")", NULL,
 	    NULL, getTexture, setMenuTextBack, NULL, NULL},
 	{"IconTitleColor", "white", NULL,
-	    NULL, getColor, setIconTitleColor, NULL, NULL},
+	    &wPreferences.color.icontitle, getColor, setIconTitleColor, NULL, NULL},
 	{"IconTitleBack", "black", NULL,
-	    NULL, getColor, setIconTitleBack, NULL, NULL},
+	    &wPreferences.color.icontitleback, getColor, setIconTitleBack, NULL, NULL},
 	{"SwitchPanelImages", "(swtile.png, swback.png, 30, 40)", NULL,
 	    NULL, getPropList, setSwPOptions, NULL, NULL},
 	{"ModifierKeyLabels", "(\"Shift+\", \"Control+\", \"Mod1+\", \"Mod2+\", \"Mod3+\", \"Mod4+\", \"Mod5+\")", NULL,
@@ -617,11 +620,11 @@ WDefaultEntry optionList[] = {
 	{"FrameBorderWidth", "1", NULL,
 	    NULL, getInt, setFrameBorderWidth, NULL, NULL}, /* - */
 	{"FrameBorderColor", "black", NULL,
-	    NULL, getColor, setFrameBorderColor, NULL, NULL},
+	    &wPreferences.color.frameborder, getColor, setFrameBorderColor, NULL, NULL},
 	{"FrameFocusedBorderColor", "black", NULL,
-	    NULL, getColor, setFrameFocusedBorderColor, NULL, NULL},
+	    &wPreferences.color.frameborderfocused, getColor, setFrameFocusedBorderColor, NULL, NULL},
 	{"FrameSelectedBorderColor", "white", NULL,
-	    NULL, getColor, setFrameSelectedBorderColor, NULL, NULL},
+	    &wPreferences.color.frameborderselected, getColor, setFrameSelectedBorderColor, NULL, NULL},
 	{"WorkspaceMapBack", "(solid, black)", NULL,
 	    NULL, getTexture, setWorkspaceMapBackground, NULL, NULL},
 
@@ -2253,30 +2256,37 @@ static int getFont(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *value
 
 static int getColor(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
 {
-	static XColor color;
 	const char *val;
-	int second_pass = 0;
+	int len, def_len;
+	defstruct *color;
+	char *colorname, *def_colorname;
 
+	(void) vscr;
 	(void) addr;
 
+	/* Value */
 	GET_STRING_OR_DEFAULT("Color", val);
+	len = sizeof(char *) * (strlen(val));
+	colorname = wmalloc(len + sizeof(char *));
+	snprintf(colorname, len, "%s", val);
 
- again:
-	if (!wGetColor(vscr->screen_ptr, val, &color)) {
-		wwarning(_("could not get color for key \"%s\""), entry->key);
-		if (second_pass == 0) {
-			val = WMGetFromPLString(entry->plvalue);
-			second_pass = 1;
-			wwarning(_("using default \"%s\" instead"), val);
-			goto again;
-		}
-		return False;
-	}
+	/* Save the default value */
+	val = WMGetFromPLString(entry->plvalue);
+	def_len = sizeof(char *) * (strlen(val));
+	def_colorname = wmalloc(def_len + sizeof(char *));
+	snprintf(def_colorname, def_len, "%s", val);
+
+	color = wmalloc(sizeof(struct defstruct));
+
+	color->value = colorname;
+	color->defvalue = def_colorname;
+
+	/* TODO: We need free the previous memory, if used */
+	if (addr)
+		*(defstruct **)addr = color;
 
 	if (ret)
 		*ret = &color;
-
-	assert(addr == NULL);
 
 	return True;
 }
@@ -3026,11 +3036,22 @@ static int setLargeDisplayFont(virtual_screen *vscr, WDefaultEntry *entry, void 
 
 static int setHightlight(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
 {
-	XColor *color = tdata;
+	XColor clr, *color = NULL;
+	color = &clr;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 	(void) foo;
+	(void) tdata;
+
+	if (!wGetColor(vscr->screen_ptr, wPreferences.color.highlight->value, color)) {
+		wwarning(_("could not get color for key \"%s\""), entry->key);
+		wwarning(_("using default \"%s\" instead"), wPreferences.color.highlight->defvalue);
+		if (!wGetColor(vscr->screen_ptr, wPreferences.color.highlight->defvalue, color)) {
+			wwarning(_("could not get color for key \"%s\""), entry->key);
+			return False;
+		}
+	}
 
 	if (vscr->screen_ptr->select_color)
 		WMReleaseColor(vscr->screen_ptr->select_color);
@@ -3044,11 +3065,22 @@ static int setHightlight(virtual_screen *vscr, WDefaultEntry *entry, void *tdata
 
 static int setHightlightText(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
 {
-	XColor *color = tdata;
+	XColor clr, *color = NULL;
+	color = &clr;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 	(void) foo;
+	(void) tdata;
+
+	if (!wGetColor(vscr->screen_ptr, wPreferences.color.highlighttext->value, color)) {
+		wwarning(_("could not get color for key \"%s\""), entry->key);
+		wwarning(_("using default \"%s\" instead"), wPreferences.color.highlighttext->defvalue);
+		if (!wGetColor(vscr->screen_ptr, wPreferences.color.highlighttext->defvalue, color)) {
+			wwarning(_("could not get color for key \"%s\""), entry->key);
+			return False;
+		}
+	}
 
 	if (vscr->screen_ptr->select_text_color)
 		WMReleaseColor(vscr->screen_ptr->select_text_color);
@@ -3062,33 +3094,143 @@ static int setHightlightText(virtual_screen *vscr, WDefaultEntry *entry, void *t
 
 static int setClipTitleColor(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data)
 {
-	XColor *color = tdata;
-	long widx = (long) extra_data;
+	XColor clr, *color = NULL;
+	color = &clr;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
+	(void) tdata;
+	(void) extra_data;
 
-	if (vscr->screen_ptr->clip_title_color[widx])
-		WMReleaseColor(vscr->screen_ptr->clip_title_color[widx]);
+	if (!wGetColor(vscr->screen_ptr, wPreferences.color.cliptitle->value, color)) {
+		wwarning(_("could not get color for key \"%s\""), entry->key);
+		wwarning(_("using default \"%s\" instead"), wPreferences.color.cliptitle->defvalue);
+		if (!wGetColor(vscr->screen_ptr, wPreferences.color.cliptitle->defvalue, color)) {
+			wwarning(_("could not get color for key \"%s\""), entry->key);
+			return False;
+		}
+	}
 
-	vscr->screen_ptr->clip_title_color[widx] = WMCreateRGBColor(vscr->screen_ptr->wmscreen, color->red, color->green, color->blue, True);
+	if (vscr->screen_ptr->clip_title_color[CLIP_NORMAL])
+		WMReleaseColor(vscr->screen_ptr->clip_title_color[CLIP_NORMAL]);
+
+	vscr->screen_ptr->clip_title_color[CLIP_NORMAL] = WMCreateRGBColor(vscr->screen_ptr->wmscreen, color->red, color->green, color->blue, True);
 	wFreeColor(vscr->screen_ptr, color->pixel);
 
 	return REFRESH_ICON_TITLE_COLOR;
 }
 
-static int setWTitleColor(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data)
+static int setClipTitleColorCollapsed(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data)
 {
-	XColor *color = tdata;
-	long widx = (long) extra_data;
+	XColor clr, *color = NULL;
+	color = &clr;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
+	(void) tdata;
+	(void) extra_data;
 
-	if (vscr->screen_ptr->window_title_color[widx])
-		WMReleaseColor(vscr->screen_ptr->window_title_color[widx]);
+	if (!wGetColor(vscr->screen_ptr, wPreferences.color.cliptitlecollapsed->value, color)) {
+		wwarning(_("could not get color for key \"%s\""), entry->key);
+		wwarning(_("using default \"%s\" instead"), wPreferences.color.cliptitlecollapsed->defvalue);
+		if (!wGetColor(vscr->screen_ptr, wPreferences.color.cliptitlecollapsed->defvalue, color)) {
+			wwarning(_("could not get color for key \"%s\""), entry->key);
+			return False;
+		}
+	}
 
-	vscr->screen_ptr->window_title_color[widx] =
+	if (vscr->screen_ptr->clip_title_color[CLIP_COLLAPSED])
+		WMReleaseColor(vscr->screen_ptr->clip_title_color[CLIP_COLLAPSED]);
+
+	vscr->screen_ptr->clip_title_color[CLIP_COLLAPSED] = WMCreateRGBColor(vscr->screen_ptr->wmscreen, color->red, color->green, color->blue, True);
+	wFreeColor(vscr->screen_ptr, color->pixel);
+
+	return REFRESH_ICON_TITLE_COLOR;
+}
+
+static int setWTitleColorFocused(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data)
+{
+	XColor clr, *color = NULL;
+	color = &clr;
+
+	/* Parameter not used, but tell the compiler that it is ok */
+	(void) entry;
+	(void) tdata;
+	(void) extra_data;
+
+	if (!wGetColor(vscr->screen_ptr, wPreferences.color.titlefocused->value, color)) {
+		wwarning(_("could not get color for key \"%s\""), entry->key);
+		wwarning(_("using default \"%s\" instead"), wPreferences.color.titlefocused->defvalue);
+		if (!wGetColor(vscr->screen_ptr, wPreferences.color.titlefocused->defvalue, color)) {
+			wwarning(_("could not get color for key \"%s\""), entry->key);
+			return False;
+		}
+	}
+
+	if (vscr->screen_ptr->window_title_color[WS_FOCUSED])
+		WMReleaseColor(vscr->screen_ptr->window_title_color[WS_FOCUSED]);
+
+	vscr->screen_ptr->window_title_color[WS_FOCUSED] =
+	    WMCreateRGBColor(vscr->screen_ptr->wmscreen, color->red, color->green, color->blue, True);
+
+	wFreeColor(vscr->screen_ptr, color->pixel);
+
+	return REFRESH_WINDOW_TITLE_COLOR;
+}
+
+static int setWTitleColorOwner(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data)
+{
+	XColor clr, *color = NULL;
+	color = &clr;
+
+	/* Parameter not used, but tell the compiler that it is ok */
+	(void) entry;
+	(void) tdata;
+	(void) extra_data;
+
+	if (!wGetColor(vscr->screen_ptr, wPreferences.color.titleowner->value, color)) {
+		wwarning(_("could not get color for key \"%s\""), entry->key);
+		wwarning(_("using default \"%s\" instead"), wPreferences.color.titleowner->defvalue);
+		if (!wGetColor(vscr->screen_ptr, wPreferences.color.titleowner->defvalue, color)) {
+			wwarning(_("could not get color for key \"%s\""), entry->key);
+			return False;
+		}
+	}
+
+	if (vscr->screen_ptr->window_title_color[WS_PFOCUSED])
+		WMReleaseColor(vscr->screen_ptr->window_title_color[WS_PFOCUSED]);
+
+	vscr->screen_ptr->window_title_color[WS_PFOCUSED] =
+	    WMCreateRGBColor(vscr->screen_ptr->wmscreen, color->red, color->green, color->blue, True);
+
+	wFreeColor(vscr->screen_ptr, color->pixel);
+
+	return REFRESH_WINDOW_TITLE_COLOR;
+}
+
+static int setWTitleColorUnfocused(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data)
+{
+	XColor clr, *color = NULL;
+	color = &clr;
+
+	/* Parameter not used, but tell the compiler that it is ok */
+	(void) entry;
+	(void) tdata;
+	(void) extra_data;
+
+	if (!wGetColor(vscr->screen_ptr, wPreferences.color.titleunfocused->value, color)) {
+		wwarning(_("could not get color for key \"%s\""), entry->key);
+		wwarning(_("using default \"%s\" instead"), wPreferences.color.titleunfocused->defvalue);
+		if (!wGetColor(vscr->screen_ptr, wPreferences.color.titleunfocused->defvalue, color)) {
+			wwarning(_("could not get color for key \"%s\""), entry->key);
+			return False;
+		}
+	}
+
+	if (vscr->screen_ptr->window_title_color[WS_UNFOCUSED])
+		WMReleaseColor(vscr->screen_ptr->window_title_color[WS_UNFOCUSED]);
+
+	vscr->screen_ptr->window_title_color[WS_UNFOCUSED] =
 	    WMCreateRGBColor(vscr->screen_ptr->wmscreen, color->red, color->green, color->blue, True);
 
 	wFreeColor(vscr->screen_ptr, color->pixel);
@@ -3098,11 +3240,22 @@ static int setWTitleColor(virtual_screen *vscr, WDefaultEntry *entry, void *tdat
 
 static int setMenuTitleColor(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data)
 {
-	XColor *color = tdata;
+	XColor clr, *color = NULL;
+	color = &clr;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
+	(void) tdata;
 	(void) extra_data;
+
+	if (!wGetColor(vscr->screen_ptr, wPreferences.color.menutitle->value, color)) {
+		wwarning(_("could not get color for key \"%s\""), entry->key);
+		wwarning(_("using default \"%s\" instead"), wPreferences.color.menutitle->defvalue);
+		if (!wGetColor(vscr->screen_ptr, wPreferences.color.menutitle->defvalue, color)) {
+			wwarning(_("could not get color for key \"%s\""), entry->key);
+			return False;
+		}
+	}
 
 	if (vscr->screen_ptr->menu_title_color[0])
 		WMReleaseColor(vscr->screen_ptr->menu_title_color[0]);
@@ -3114,13 +3267,24 @@ static int setMenuTitleColor(virtual_screen *vscr, WDefaultEntry *entry, void *t
 	return REFRESH_MENU_TITLE_COLOR;
 }
 
-static int setMenuTextColor(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setMenuTextColor(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data)
 {
-	XColor *color = tdata;
+	XColor clr, *color = NULL;
+	color = &clr;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
-	(void) foo;
+	(void) tdata;
+	(void) extra_data;
+
+	if (!wGetColor(vscr->screen_ptr, wPreferences.color.menutext->value, color)) {
+		wwarning(_("could not get color for key \"%s\""), entry->key);
+		wwarning(_("using default \"%s\" instead"), wPreferences.color.menutext->defvalue);
+		if (!wGetColor(vscr->screen_ptr, wPreferences.color.menutext->defvalue, color)) {
+			wwarning(_("could not get color for key \"%s\""), entry->key);
+			return False;
+		}
+	}
 
 	if (vscr->screen_ptr->mtext_color)
 		WMReleaseColor(vscr->screen_ptr->mtext_color);
@@ -3137,13 +3301,24 @@ static int setMenuTextColor(virtual_screen *vscr, WDefaultEntry *entry, void *td
 	return REFRESH_MENU_COLOR;
 }
 
-static int setMenuDisabledColor(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setMenuDisabledColor(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data)
 {
-	XColor *color = tdata;
+	XColor clr, *color = NULL;
+	color = &clr;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
-	(void) foo;
+	(void) tdata;
+	(void) extra_data;
+
+	if (!wGetColor(vscr->screen_ptr, wPreferences.color.menudisabled->value, color)) {
+		wwarning(_("could not get color for key \"%s\""), entry->key);
+		wwarning(_("using default \"%s\" instead"), wPreferences.color.menudisabled->defvalue);
+		if (!wGetColor(vscr->screen_ptr, wPreferences.color.menudisabled->defvalue, color)) {
+			wwarning(_("could not get color for key \"%s\""), entry->key);
+			return False;
+		}
+	}
 
 	if (vscr->screen_ptr->dtext_color)
 		WMReleaseColor(vscr->screen_ptr->dtext_color);
@@ -3160,13 +3335,24 @@ static int setMenuDisabledColor(virtual_screen *vscr, WDefaultEntry *entry, void
 	return REFRESH_MENU_COLOR;
 }
 
-static int setIconTitleColor(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setIconTitleColor(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data)
 {
-	XColor *color = tdata;
+	XColor clr, *color = NULL;
+	color = &clr;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
-	(void) foo;
+	(void) tdata;
+	(void) extra_data;
+
+	if (!wGetColor(vscr->screen_ptr, wPreferences.color.icontitle->value, color)) {
+		wwarning(_("could not get color for key \"%s\""), entry->key);
+		wwarning(_("using default \"%s\" instead"), wPreferences.color.icontitle->defvalue);
+		if (!wGetColor(vscr->screen_ptr, wPreferences.color.icontitle->defvalue, color)) {
+			wwarning(_("could not get color for key \"%s\""), entry->key);
+			return False;
+		}
+	}
 
 	if (vscr->screen_ptr->icon_title_color)
 		WMReleaseColor(vscr->screen_ptr->icon_title_color);
@@ -3178,13 +3364,24 @@ static int setIconTitleColor(virtual_screen *vscr, WDefaultEntry *entry, void *t
 	return REFRESH_ICON_TITLE_COLOR;
 }
 
-static int setIconTitleBack(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setIconTitleBack(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data)
 {
-	XColor *color = tdata;
+	XColor clr, *color = NULL;
+	color = &clr;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
-	(void) foo;
+	(void) tdata;
+	(void) extra_data;
+
+	if (!wGetColor(vscr->screen_ptr, wPreferences.color.icontitleback->value, color)) {
+		wwarning(_("could not get color for key \"%s\""), entry->key);
+		wwarning(_("using default \"%s\" instead"), wPreferences.color.icontitleback->defvalue);
+		if (!wGetColor(vscr->screen_ptr, wPreferences.color.icontitleback->defvalue, color)) {
+			wwarning(_("could not get color for key \"%s\""), entry->key);
+			return False;
+		}
+	}
 
 	if (vscr->screen_ptr->icon_title_texture)
 		wTextureDestroy(vscr, (WTexture *) vscr->screen_ptr->icon_title_texture);
@@ -3194,26 +3391,37 @@ static int setIconTitleBack(virtual_screen *vscr, WDefaultEntry *entry, void *td
 	return REFRESH_ICON_TITLE_BACK;
 }
 
-static int setFrameBorderWidth(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setFrameBorderWidth(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data)
 {
 	int *value = tdata;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
-	(void) foo;
+	(void) extra_data;
 
 	vscr->frame.border_width = *value;
 
 	return REFRESH_FRAME_BORDER;
 }
 
-static int setFrameBorderColor(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setFrameBorderColor(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data)
 {
-	XColor *color = tdata;
+	XColor clr, *color = NULL;
+	color = &clr;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
-	(void) foo;
+	(void) tdata;
+	(void) extra_data;
+
+	if (!wGetColor(vscr->screen_ptr, wPreferences.color.frameborder->value, color)) {
+		wwarning(_("could not get color for key \"%s\""), entry->key);
+		wwarning(_("using default \"%s\" instead"), wPreferences.color.frameborder->defvalue);
+		if (!wGetColor(vscr->screen_ptr, wPreferences.color.frameborder->defvalue, color)) {
+			wwarning(_("could not get color for key \"%s\""), entry->key);
+			return False;
+		}
+	}
 
 	if (vscr->screen_ptr->frame_border_color)
 		WMReleaseColor(vscr->screen_ptr->frame_border_color);
@@ -3225,13 +3433,24 @@ static int setFrameBorderColor(virtual_screen *vscr, WDefaultEntry *entry, void 
 	return REFRESH_FRAME_BORDER;
 }
 
-static int setFrameFocusedBorderColor(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setFrameFocusedBorderColor(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data)
 {
-	XColor *color = tdata;
+	XColor clr, *color = NULL;
+	color = &clr;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
-	(void) foo;
+	(void) tdata;
+	(void) extra_data;
+
+	if (!wGetColor(vscr->screen_ptr, wPreferences.color.frameborderfocused->value, color)) {
+		wwarning(_("could not get color for key \"%s\""), entry->key);
+		wwarning(_("using default \"%s\" instead"), wPreferences.color.frameborderfocused->defvalue);
+		if (!wGetColor(vscr->screen_ptr, wPreferences.color.frameborderfocused->defvalue, color)) {
+			wwarning(_("could not get color for key \"%s\""), entry->key);
+			return False;
+		}
+	}
 
 	if (vscr->screen_ptr->frame_focused_border_color)
 		WMReleaseColor(vscr->screen_ptr->frame_focused_border_color);
@@ -3243,13 +3462,24 @@ static int setFrameFocusedBorderColor(virtual_screen *vscr, WDefaultEntry *entry
 	return REFRESH_FRAME_BORDER;
 }
 
-static int setFrameSelectedBorderColor(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setFrameSelectedBorderColor(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data)
 {
-	XColor *color = tdata;
+	XColor clr, *color = NULL;
+	color = &clr;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
-	(void) foo;
+	(void) tdata;
+	(void) extra_data;
+
+	if (!wGetColor(vscr->screen_ptr, wPreferences.color.frameborderselected->value, color)) {
+		wwarning(_("could not get color for key \"%s\""), entry->key);
+		wwarning(_("using default \"%s\" instead"), wPreferences.color.frameborderselected->defvalue);
+		if (!wGetColor(vscr->screen_ptr, wPreferences.color.frameborderselected->defvalue, color)) {
+			wwarning(_("could not get color for key \"%s\""), entry->key);
+			return False;
+		}
+	}
 
 	if (vscr->screen_ptr->frame_selected_border_color)
 		WMReleaseColor(vscr->screen_ptr->frame_selected_border_color);
