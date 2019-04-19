@@ -178,6 +178,7 @@ static WDECallbackUpdate setCursor;
 
 #define REFRESH_WORKSPACE_MENU	(1<<14)
 #define REFRESH_USABLE_AREA	(1<<15)
+#define REFRESH_ARRANGE_ICONS	(1<<16)
 
 #define REFRESH_FRAME_BORDER REFRESH_MENU_FONT|REFRESH_WINDOW_FONT
 
@@ -537,7 +538,7 @@ WDefaultEntry optionList[] = {
 	{"NoWindowOverIcons", "NO", NULL,
 	    &wPreferences.no_window_over_icons, getBool, updateUsableArea, NULL, NULL}, /* - */
 	{"IconPosition", "blh", seIconPositions,
-	    &wPreferences.icon_yard, getEnum, setIconPosition, NULL, NULL},
+	    &wPreferences.icon_yard, getEnum, setIconPosition, NULL, NULL}, /* - */
 	{"WorkspaceBorder", "None", seWorkspaceBorder,
 	    &wPreferences.workspace_border_position, getEnum, updateUsableArea, NULL, NULL}, /* - */
 	{"WorkspaceBorderSize", "0", NULL,
@@ -1375,8 +1376,15 @@ static void refresh_defaults(virtual_screen *vscr, unsigned int needs_refresh)
 			vscr->workspace.submenu->flags.realized = 0;
 	}
 
-	if (needs_refresh & REFRESH_USABLE_AREA)
+	if (needs_refresh & REFRESH_ARRANGE_ICONS) {
 		wScreenUpdateUsableArea(vscr);
+		wArrangeIcons(vscr, True);
+	}
+
+	/* Do not refresh if we already did it with the REFRESH_ARRANGE_ICONS */
+	if (needs_refresh & REFRESH_USABLE_AREA && !(needs_refresh & REFRESH_ARRANGE_ICONS))
+		wScreenUpdateUsableArea(vscr);
+
 }
 
 void wReadDefaults(virtual_screen *vscr, WMPropList *new_dict)
@@ -3369,14 +3377,12 @@ static int setKeyGrab(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, v
 static int setIconPosition(virtual_screen *vscr, WDefaultEntry *entry, void *bar, void *foo)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
+	(void) vscr;
 	(void) entry;
 	(void) bar;
 	(void) foo;
 
-	wScreenUpdateUsableArea(vscr);
-	wArrangeIcons(vscr, True);
-
-	return 0;
+	return REFRESH_ARRANGE_ICONS;
 }
 
 static int updateUsableArea(virtual_screen *vscr, WDefaultEntry *entry, void *bar, void *foo)
