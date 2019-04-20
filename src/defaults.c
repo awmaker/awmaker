@@ -797,33 +797,33 @@ WDefaultEntry optionList[] = {
 #endif				/* KEEP_XKB_LOCK_STATUS */
 
 	{"NormalCursor", "(builtin, left_ptr)", (void *)WCUR_ROOT,
-	    NULL, getCursor, setCursor, NULL, NULL},
+	    &wPreferences.cursors.root, getCursor, setCursor, NULL, NULL},
 	{"ArrowCursor", "(builtin, top_left_arrow)", (void *)WCUR_ARROW,
-	    NULL, getCursor, setCursor, NULL, NULL},
+	    &wPreferences.cursors.arrow, getCursor, setCursor, NULL, NULL},
 	{"MoveCursor", "(builtin, fleur)", (void *)WCUR_MOVE,
-	    NULL, getCursor, setCursor, NULL, NULL},
+	    &wPreferences.cursors.move, getCursor, setCursor, NULL, NULL},
 	{"ResizeCursor", "(builtin, sizing)", (void *)WCUR_RESIZE,
-	    NULL, getCursor, setCursor, NULL, NULL},
+	    &wPreferences.cursors.resize, getCursor, setCursor, NULL, NULL},
 	{"TopLeftResizeCursor", "(builtin, top_left_corner)", (void *)WCUR_TOPLEFTRESIZE,
-	    NULL, getCursor, setCursor, NULL, NULL},
+	    &wPreferences.cursors.resizetopleft, getCursor, setCursor, NULL, NULL},
 	{"TopRightResizeCursor", "(builtin, top_right_corner)", (void *)WCUR_TOPRIGHTRESIZE,
-	    NULL, getCursor, setCursor, NULL, NULL},
+	    &wPreferences.cursors.resizetopright, getCursor, setCursor, NULL, NULL},
 	{"BottomLeftResizeCursor", "(builtin, bottom_left_corner)", (void *)WCUR_BOTTOMLEFTRESIZE,
-	    NULL, getCursor, setCursor, NULL, NULL},
+	    &wPreferences.cursors.resizebottomleft, getCursor, setCursor, NULL, NULL},
 	{"BottomRightResizeCursor", "(builtin, bottom_right_corner)", (void *)WCUR_BOTTOMRIGHTRESIZE,
-	    NULL, getCursor, setCursor, NULL, NULL},
+	    &wPreferences.cursors.resizebottomright, getCursor, setCursor, NULL, NULL},
 	{"VerticalResizeCursor", "(builtin, sb_v_double_arrow)", (void *)WCUR_VERTICALRESIZE,
-	    NULL, getCursor, setCursor, NULL, NULL},
+	    &wPreferences.cursors.resizevertical, getCursor, setCursor, NULL, NULL},
 	{"HorizontalResizeCursor", "(builtin, sb_h_double_arrow)", (void *)WCUR_HORIZONRESIZE,
-	    NULL, getCursor, setCursor, NULL, NULL},
+	    &wPreferences.cursors.resizehorizontal, getCursor, setCursor, NULL, NULL},
 	{"WaitCursor", "(builtin, watch)", (void *)WCUR_WAIT,
-	    NULL, getCursor, setCursor, NULL, NULL},
+	    &wPreferences.cursors.wait, getCursor, setCursor, NULL, NULL},
 	{"QuestionCursor", "(builtin, question_arrow)", (void *)WCUR_QUESTION,
-	    NULL, getCursor, setCursor, NULL, NULL},
+	    &wPreferences.cursors.question, getCursor, setCursor, NULL, NULL},
 	{"TextCursor", "(builtin, xterm)", (void *)WCUR_TEXT,
-	    NULL, getCursor, setCursor, NULL, NULL},
+	    &wPreferences.cursors.text, getCursor, setCursor, NULL, NULL},
 	{"SelectCursor", "(builtin, cross)", (void *)WCUR_SELECT,
-	    NULL, getCursor, setCursor, NULL, NULL}
+	    &wPreferences.cursors.select, getCursor, setCursor, NULL, NULL}
 };
 
 static void init_defaults(void);
@@ -2603,43 +2603,46 @@ static int parse_cursor(virtual_screen *vscr, WMPropList *pl, Cursor *cursor)
 
 static int getCursor(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
 {
-	static Cursor cursor;
-	int status;
-	int changed = 0;
+	defstructpl *defstruct;
+	WMPropList *cursorname, *defcursorname;
 
- again:
-	if (!WMIsPLArray(value)) {
+	(void) vscr;
+
+	defstruct = NULL;
+	defcursorname = cursorname = NULL;
+
+	if (WMIsPLArray(value)) {
+		cursorname = WMDeepCopyPropList(value);
+	} else {
 		wwarning(_("Wrong option format for key \"%s\". Should be %s."),
 			 entry->key, "cursor specification");
-		if (!changed) {
-			value = entry->plvalue;
-			changed = 1;
-			wwarning(_("using default \"%s\" instead"), entry->default_value);
-			goto again;
-		}
-		return (False);
+		wwarning(_("using default \"%s\" instead"), entry->default_value);
+		if (WMIsPLArray(entry->plvalue))
+			cursorname = WMDeepCopyPropList(entry->plvalue);
+		else
+			/* This should not happend */
+			return (False);
 	}
 
-	status = parse_cursor(vscr, value, &cursor);
-	if (!status) {
-		wwarning(_("Error in cursor specification for key \"%s\""), entry->key);
-		if (!changed) {
-			value = entry->plvalue;
-			changed = 1;
-			wwarning(_("using default \"%s\" instead"), entry->default_value);
-			goto again;
-		}
+	if (WMIsPLArray(entry->plvalue))
+		defcursorname = WMDeepCopyPropList(entry->plvalue);
+	else
+		/* If no default, use the provided... it should never happends */
+		defcursorname = WMDeepCopyPropList(cursorname);
 
-		return (False);
-	}
+	defstruct = wmalloc(sizeof(struct defstruct));
+
+	defstruct->value = cursorname;
+	defstruct->defvalue = defcursorname;
+
+	/* TODO: We need free the previous memory, if used */
+	if (addr)
+		*(defstructpl **)addr = defstruct;
 
 	if (ret)
-		*ret = &cursor;
+		*ret = &defstruct;
 
-	if (addr)
-		*(Cursor *) addr = cursor;
-
-	return (True);
+	return True;
 }
 
 #undef CURSOR_ID_NONE
@@ -3974,19 +3977,99 @@ static int setDoubleClick(virtual_screen *vscr, WDefaultEntry *entry, void *tdat
 
 static int setCursor(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data)
 {
-	Cursor *cursor = tdata;
+	WMPropList *value = NULL;
+	Cursor cursor;
+	int status;
 	long widx = (long) extra_data;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
+	(void) tdata;
+
+	if (widx == WCUR_ROOT) {
+		value = wPreferences.cursors.root->value;
+	} else if (widx == WCUR_NORMAL) {
+		/* Only for documentation, this case is not used */
+		value = wPreferences.cursors.normal->value;
+	} else if (widx == WCUR_MOVE) {
+		value = wPreferences.cursors.move->value;
+	} else if (widx == WCUR_RESIZE) {
+		value = wPreferences.cursors.resize->value;
+	} else if (widx == WCUR_TOPLEFTRESIZE) {
+		value = wPreferences.cursors.resizetopleft->value;
+	} else if (widx == WCUR_TOPRIGHTRESIZE) {
+		value = wPreferences.cursors.resizetopright->value;
+	} else if (widx == WCUR_BOTTOMLEFTRESIZE) {
+		value = wPreferences.cursors.resizebottomleft->value;
+	} else if (widx == WCUR_BOTTOMRIGHTRESIZE) {
+		value = wPreferences.cursors.resizebottomright->value;
+	} else if (widx == WCUR_VERTICALRESIZE) {
+		value = wPreferences.cursors.resizevertical->value;
+	} else if (widx == WCUR_HORIZONRESIZE) {
+		value = wPreferences.cursors.resizehorizontal->value;
+	} else if (widx == WCUR_WAIT) {
+		value = wPreferences.cursors.wait->value;
+	} else if (widx == WCUR_ARROW) {
+		value = wPreferences.cursors.arrow->value;
+	} else if (widx == WCUR_QUESTION) {
+		value = wPreferences.cursors.question->value;
+	} else if (widx == WCUR_TEXT) {
+		value = wPreferences.cursors.text->value;
+	} else if (widx == WCUR_SELECT) {
+		value = wPreferences.cursors.select->value;
+	} else if (widx == WCUR_EMPTY) {
+		/* Only for documentation, this case is not used */
+	}
+
+	status = parse_cursor(vscr, value, &cursor);
+	if (!status) {
+		wwarning(_("Error in cursor specification. using default instead"));
+
+		if (widx == WCUR_ROOT) {
+			value = wPreferences.cursors.root->defvalue;
+		} else if (widx == WCUR_NORMAL) {
+			/* Only for documentation, this case is not used */
+			value = wPreferences.cursors.normal->value;
+		} else if (widx == WCUR_MOVE) {
+			value = wPreferences.cursors.move->defvalue;
+		} else if (widx == WCUR_RESIZE) {
+			value = wPreferences.cursors.resize->defvalue;
+		} else if (widx == WCUR_TOPLEFTRESIZE) {
+			value = wPreferences.cursors.resizetopleft->defvalue;
+		} else if (widx == WCUR_TOPRIGHTRESIZE) {
+			value = wPreferences.cursors.resizetopright->defvalue;
+		} else if (widx == WCUR_BOTTOMLEFTRESIZE) {
+			value = wPreferences.cursors.resizebottomleft->defvalue;
+		} else if (widx == WCUR_BOTTOMRIGHTRESIZE) {
+			value = wPreferences.cursors.resizebottomright->defvalue;
+		} else if (widx == WCUR_VERTICALRESIZE) {
+			value = wPreferences.cursors.resizevertical->defvalue;
+		} else if (widx == WCUR_HORIZONRESIZE) {
+			value = wPreferences.cursors.resizehorizontal->defvalue;
+		} else if (widx == WCUR_WAIT) {
+			value = wPreferences.cursors.wait->defvalue;
+		} else if (widx == WCUR_ARROW) {
+			value = wPreferences.cursors.arrow->defvalue;
+		} else if (widx == WCUR_QUESTION) {
+			value = wPreferences.cursors.question->defvalue;
+		} else if (widx == WCUR_TEXT) {
+			value = wPreferences.cursors.text->defvalue;
+		} else if (widx == WCUR_SELECT) {
+			value = wPreferences.cursors.select->defvalue;
+		} else if (widx == WCUR_EMPTY) {
+			/* Only for documentation, this case is not used */
+		}
+
+		status = parse_cursor(vscr, value, &cursor);
+	}
 
 	if (wPreferences.cursor[widx] != None)
 		XFreeCursor(dpy, wPreferences.cursor[widx]);
 
-	wPreferences.cursor[widx] = *cursor;
+	wPreferences.cursor[widx] = cursor;
 
-	if (widx == WCUR_ROOT && *cursor != None)
-		XDefineCursor(dpy, vscr->screen_ptr->root_win, *cursor);
+	if (widx == WCUR_ROOT && cursor != None)
+		XDefineCursor(dpy, vscr->screen_ptr->root_win, cursor);
 
 	return 0;
 }

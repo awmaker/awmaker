@@ -329,6 +329,11 @@ typedef struct defstruct {
 	char *value;                       /* Color name value used */
 } defstruct;
 
+typedef struct defstructpl {
+	WMPropList *defvalue;              /* Default value (color name) */
+	WMPropList *value;                 /* Color name value used */
+} defstructpl;
+
 extern struct WPreferences {
 	char *pixmap_path;                 /* : separated list of paths to find pixmaps */
 	char *icon_path;                   /* : separated list of paths to find icons */
@@ -529,6 +534,25 @@ extern struct WPreferences {
 		defstruct *frameborderfocused;
 		defstruct *frameborderselected;
 	} color;
+
+	/* Cursors */
+	struct {
+		defstructpl *arrow;
+		defstructpl *move;
+		defstructpl *normal;
+		defstructpl *question;
+		defstructpl *resize;
+		defstructpl *resizebottomleft;
+		defstructpl *resizebottomright;
+		defstructpl *resizehorizontal;
+		defstructpl *resizetopleft;
+		defstructpl *resizetopright;
+		defstructpl *resizevertical;
+		defstructpl *select;
+		defstructpl *text;
+		defstructpl *wait;
+		defstructpl *root;
+	} cursors;	/* cursor name is used for Cursor 48 lines above */
 
 } wPreferences;
 
