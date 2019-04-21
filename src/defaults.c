@@ -553,7 +553,7 @@ WDefaultEntry optionList[] = {
 	{"MenuStyle", "normal", seMenuStyles,
 	    &wPreferences.menu_style, getEnum, setMenuStyle, NULL, NULL}, /* - */
 	{"WidgetColor", "(solid, gray)", NULL,
-	    NULL, getTexture, setWidgetColor, NULL, NULL},
+	    &wPreferences.texture.widgetcolor, getTexture, setWidgetColor, NULL, NULL},
 	{"WorkspaceSpecificBack", "()", NULL,
 	    NULL, getWSSpecificBackground, setWorkspaceSpecificBack, NULL, NULL},
 	/* WorkspaceBack must come after WorkspaceSpecificBack or
@@ -562,7 +562,7 @@ WDefaultEntry optionList[] = {
 	{"WorkspaceBack", "(solid, \"rgb:50/50/75\")", NULL,
 	    NULL, getWSBackground, setWorkspaceBack, NULL, NULL},
 	{"IconBack", "(dgradient, \"rgb:a6/a6/b6\", \"rgb:51/55/61\")", NULL,
-	    NULL, getTexture, setIconTile, NULL, NULL},
+	    &wPreferences.texture.iconback, getTexture, setIconTile, NULL, NULL},
 	{"WindowTitleFont", DEF_TITLE_FONT, NULL,
 	    &wPreferences.font.wintitle, getFont, setWinTitleFont, NULL, NULL}, /* - */
 	{"MenuTitleFont", DEF_MENU_TITLE_FONT, NULL,
@@ -590,13 +590,13 @@ WDefaultEntry optionList[] = {
 	{"UTitleColor", "black", NULL,
 	    &wPreferences.color.titleunfocused, getColor, setWTitleColorUnfocused, NULL, NULL},
 	{"FTitleBack", "(solid, black)", NULL,
-	    NULL, getTexture, setFTitleBack, NULL, NULL},
+	    &wPreferences.texture.titlebackfocused, getTexture, setFTitleBack, NULL, NULL},
 	{"PTitleBack", "(solid, gray40)", NULL,
-	    NULL, getTexture, setPTitleBack, NULL, NULL},
+	    &wPreferences.texture.titlebackowner, getTexture, setPTitleBack, NULL, NULL},
 	{"UTitleBack", "(solid, \"rgb:aa/aa/aa\")", NULL,
-	    NULL, getTexture, setUTitleBack, NULL, NULL},
+	    &wPreferences.texture.titlebackunfocused, getTexture, setUTitleBack, NULL, NULL},
 	{"ResizebarBack", "(solid, \"rgb:aa/aa/aa\")", NULL,
-	    NULL, getTexture, setResizebarBack, NULL, NULL},
+	    &wPreferences.texture.resizebarback, getTexture, setResizebarBack, NULL, NULL},
 	{"MenuTitleColor", "white", NULL,
 	    &wPreferences.color.menutitle, getColor, setMenuTitleColor, NULL, NULL},
 	{"MenuTextColor", "black", NULL,
@@ -604,9 +604,9 @@ WDefaultEntry optionList[] = {
 	{"MenuDisabledColor", "gray50", NULL,
 	    &wPreferences.color.menudisabled, getColor, setMenuDisabledColor, NULL, NULL},
 	{"MenuTitleBack", "(solid, black)", NULL,
-	    NULL, getTexture, setMenuTitleBack, NULL, NULL},
+	    &wPreferences.texture.menutitleback, getTexture, setMenuTitleBack, NULL, NULL},
 	{"MenuTextBack", "(solid, \"rgb:aa/aa/aa\")", NULL,
-	    NULL, getTexture, setMenuTextBack, NULL, NULL},
+	    &wPreferences.texture.menutextback, getTexture, setMenuTextBack, NULL, NULL},
 	{"IconTitleColor", "white", NULL,
 	    &wPreferences.color.icontitle, getColor, setIconTitleColor, NULL, NULL},
 	{"IconTitleBack", "black", NULL,
@@ -624,7 +624,7 @@ WDefaultEntry optionList[] = {
 	{"FrameSelectedBorderColor", "white", NULL,
 	    &wPreferences.color.frameborderselected, getColor, setFrameSelectedBorderColor, NULL, NULL},
 	{"WorkspaceMapBack", "(solid, black)", NULL,
-	    NULL, getTexture, setWorkspaceMapBackground, NULL, NULL},
+	    &wPreferences.texture.workspacemapback, getTexture, setWorkspaceMapBackground, NULL, NULL},
 
 	/* keybindings */
 

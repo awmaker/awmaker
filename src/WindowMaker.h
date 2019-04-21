@@ -640,6 +640,18 @@ extern struct WPreferences {
 		char workspaceprev[MAX_SHORTCUT_LENGTH];
 	} key;
 
+	struct {
+		defstructpl *widgetcolor;
+		defstructpl *iconback;
+		defstructpl *titlebackfocused;
+		defstructpl *titlebackowner;
+		defstructpl *titlebackunfocused;
+		defstructpl *resizebarback;
+		defstructpl *menutitleback;
+		defstructpl *menutextback;
+		defstructpl *workspacemapback;
+	} texture;
+
 } wPreferences;
 
 /****** Global Variables  ******/
