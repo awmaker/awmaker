@@ -64,8 +64,6 @@
 #include "misc.h"
 #include "winmenu.h"
 
-#define MAX_SHORTCUT_LENGTH 32
-
 typedef struct _WDefaultEntry  WDefaultEntry;
 typedef int (WDECallbackConvert) (virtual_screen *vscr, WDefaultEntry *entry, WMPropList *plvalue, void *addr, void **tdata);
 typedef int (WDECallbackUpdate) (virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data);
@@ -631,167 +629,167 @@ WDefaultEntry optionList[] = {
 	/* keybindings */
 
 	{"RootMenuKey", "F12", (void *)WKBD_ROOTMENU,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.rootmenu, getKeybind, setKeyGrab, NULL, NULL},
 	{"WindowListKey", "F11", (void *)WKBD_WINDOWLIST,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.windowlist, getKeybind, setKeyGrab, NULL, NULL},
 	{"WindowMenuKey", "Control+Escape", (void *)WKBD_WINDOWMENU,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.windowmenu, getKeybind, setKeyGrab, NULL, NULL},
 	{"DockRaiseLowerKey", "None", (void *)WKBD_DOCKRAISELOWER,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.dockraiselower, getKeybind, setKeyGrab, NULL, NULL},
 	{"ClipRaiseLowerKey", "None", (void *)WKBD_CLIPRAISELOWER,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.clipraiselower, getKeybind, setKeyGrab, NULL, NULL},
 	{"MiniaturizeKey", "Mod1+M", (void *)WKBD_MINIATURIZE,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.miniaturize, getKeybind, setKeyGrab, NULL, NULL},
 	{"MinimizeAllKey", "None", (void *)WKBD_MINIMIZEALL,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL },
+	    &wPreferences.key.minimizeall, getKeybind, setKeyGrab, NULL, NULL},
 	{"HideKey", "Mod1+H", (void *)WKBD_HIDE,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.hide, getKeybind, setKeyGrab, NULL, NULL},
 	{"HideOthersKey", "None", (void *)WKBD_HIDE_OTHERS,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.hideothers, getKeybind, setKeyGrab, NULL, NULL},
 	{"MoveResizeKey", "None", (void *)WKBD_MOVERESIZE,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.moveresize, getKeybind, setKeyGrab, NULL, NULL},
 	{"CloseKey", "None", (void *)WKBD_CLOSE,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.close, getKeybind, setKeyGrab, NULL, NULL},
 	{"MaximizeKey", "None", (void *)WKBD_MAXIMIZE,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.maximize, getKeybind, setKeyGrab, NULL, NULL},
 	{"VMaximizeKey", "None", (void *)WKBD_VMAXIMIZE,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.maximizev, getKeybind, setKeyGrab, NULL, NULL},
 	{"HMaximizeKey", "None", (void *)WKBD_HMAXIMIZE,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.maximizeh, getKeybind, setKeyGrab, NULL, NULL},
 	{"LHMaximizeKey", "None", (void *)WKBD_LHMAXIMIZE,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.maximizelh, getKeybind, setKeyGrab, NULL, NULL},
 	{"RHMaximizeKey", "None", (void *)WKBD_RHMAXIMIZE,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.maximizerh, getKeybind, setKeyGrab, NULL, NULL},
 	{"THMaximizeKey", "None", (void *)WKBD_THMAXIMIZE,
-		NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.maximizeth, getKeybind, setKeyGrab, NULL, NULL},
 	{"BHMaximizeKey", "None", (void *)WKBD_BHMAXIMIZE,
-		NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.maximizebh, getKeybind, setKeyGrab, NULL, NULL},
 	{"LTCMaximizeKey", "None", (void *)WKBD_LTCMAXIMIZE,
-		NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.maximizeltc, getKeybind, setKeyGrab, NULL, NULL},
 	{"RTCMaximizeKey", "None", (void *)WKBD_RTCMAXIMIZE,
-		NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.maximizertc, getKeybind, setKeyGrab, NULL, NULL},
 	{"LBCMaximizeKey", "None", (void *)WKBD_LBCMAXIMIZE,
-		NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.maximizelbc, getKeybind, setKeyGrab, NULL, NULL},
 	{"RBCMaximizeKey", "None", (void *)WKBD_RBCMAXIMIZE,
-		NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.maximizerbc, getKeybind, setKeyGrab, NULL, NULL},
 	{"MaximusKey", "None", (void *)WKBD_MAXIMUS,
-		NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.maximus, getKeybind, setKeyGrab, NULL, NULL},
 	{"KeepOnTopKey", "None", (void *)WKBD_KEEP_ON_TOP,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.keepontop, getKeybind, setKeyGrab, NULL, NULL},
 	{"KeepAtBottomKey", "None", (void *)WKBD_KEEP_AT_BOTTOM,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.keepatbottom, getKeybind, setKeyGrab, NULL, NULL},
 	{"OmnipresentKey", "None", (void *)WKBD_OMNIPRESENT,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.omnipresent, getKeybind, setKeyGrab, NULL, NULL},
 	{"RaiseKey", "Mod1+Up", (void *)WKBD_RAISE,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.raise, getKeybind, setKeyGrab, NULL, NULL},
 	{"LowerKey", "Mod1+Down", (void *)WKBD_LOWER,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.lower, getKeybind, setKeyGrab, NULL, NULL},
 	{"RaiseLowerKey", "None", (void *)WKBD_RAISELOWER,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.raiselower, getKeybind, setKeyGrab, NULL, NULL},
 	{"ShadeKey", "None", (void *)WKBD_SHADE,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.shade, getKeybind, setKeyGrab, NULL, NULL},
 	{"SelectKey", "None", (void *)WKBD_SELECT,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.select, getKeybind, setKeyGrab, NULL, NULL},
 	{"WorkspaceMapKey", "None", (void *)WKBD_WORKSPACEMAP,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.workspacemap, getKeybind, setKeyGrab, NULL, NULL},
 	{"FocusNextKey", "Mod1+Tab", (void *)WKBD_FOCUSNEXT,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.focusnext, getKeybind, setKeyGrab, NULL, NULL},
 	{"FocusPrevKey", "Mod1+Shift+Tab", (void *)WKBD_FOCUSPREV,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.focusprev, getKeybind, setKeyGrab, NULL, NULL},
 	{"GroupNextKey", "None", (void *)WKBD_GROUPNEXT,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.groupnext, getKeybind, setKeyGrab, NULL, NULL},
 	{"GroupPrevKey", "None", (void *)WKBD_GROUPPREV,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.groupprev, getKeybind, setKeyGrab, NULL, NULL},
 	{"NextWorkspaceKey", "Mod1+Control+Right", (void *)WKBD_NEXTWORKSPACE,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.workspacenext, getKeybind, setKeyGrab, NULL, NULL},
 	{"PrevWorkspaceKey", "Mod1+Control+Left", (void *)WKBD_PREVWORKSPACE,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.workspaceprev, getKeybind, setKeyGrab, NULL, NULL},
 	{"LastWorkspaceKey", "None", (void *)WKBD_LASTWORKSPACE,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.workspacelast, getKeybind, setKeyGrab, NULL, NULL},
 	{"NextWorkspaceLayerKey", "None", (void *)WKBD_NEXTWSLAYER,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.workspacelayernext, getKeybind, setKeyGrab, NULL, NULL},
 	{"PrevWorkspaceLayerKey", "None", (void *)WKBD_PREVWSLAYER,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.workspacelayerprev, getKeybind, setKeyGrab, NULL, NULL},
 	{"Workspace1Key", "Mod1+1", (void *)WKBD_WORKSPACE1,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.workspace1, getKeybind, setKeyGrab, NULL, NULL},
 	{"Workspace2Key", "Mod1+2", (void *)WKBD_WORKSPACE2,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.workspace2, getKeybind, setKeyGrab, NULL, NULL},
 	{"Workspace3Key", "Mod1+3", (void *)WKBD_WORKSPACE3,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.workspace3, getKeybind, setKeyGrab, NULL, NULL},
 	{"Workspace4Key", "Mod1+4", (void *)WKBD_WORKSPACE4,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.workspace4, getKeybind, setKeyGrab, NULL, NULL},
 	{"Workspace5Key", "Mod1+5", (void *)WKBD_WORKSPACE5,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.workspace5, getKeybind, setKeyGrab, NULL, NULL},
 	{"Workspace6Key", "Mod1+6", (void *)WKBD_WORKSPACE6,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.workspace6, getKeybind, setKeyGrab, NULL, NULL},
 	{"Workspace7Key", "Mod1+7", (void *)WKBD_WORKSPACE7,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.workspace7, getKeybind, setKeyGrab, NULL, NULL},
 	{"Workspace8Key", "Mod1+8", (void *)WKBD_WORKSPACE8,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.workspace8, getKeybind, setKeyGrab, NULL, NULL},
 	{"Workspace9Key", "Mod1+9", (void *)WKBD_WORKSPACE9,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.workspace9, getKeybind, setKeyGrab, NULL, NULL},
 	{"Workspace10Key", "Mod1+0", (void *)WKBD_WORKSPACE10,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.workspace10, getKeybind, setKeyGrab, NULL, NULL},
 	{"MoveToWorkspace1Key", "None", (void *)WKBD_MOVE_WORKSPACE1,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.movetoworkspace1, getKeybind, setKeyGrab, NULL, NULL},
 	{"MoveToWorkspace2Key", "None", (void *)WKBD_MOVE_WORKSPACE2,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.movetoworkspace2, getKeybind, setKeyGrab, NULL, NULL},
 	{"MoveToWorkspace3Key", "None", (void *)WKBD_MOVE_WORKSPACE3,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.movetoworkspace3, getKeybind, setKeyGrab, NULL, NULL},
 	{"MoveToWorkspace4Key", "None", (void *)WKBD_MOVE_WORKSPACE4,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.movetoworkspace4, getKeybind, setKeyGrab, NULL, NULL},
 	{"MoveToWorkspace5Key", "None", (void *)WKBD_MOVE_WORKSPACE5,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.movetoworkspace5, getKeybind, setKeyGrab, NULL, NULL},
 	{"MoveToWorkspace6Key", "None", (void *)WKBD_MOVE_WORKSPACE6,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.movetoworkspace6, getKeybind, setKeyGrab, NULL, NULL},
 	{"MoveToWorkspace7Key", "None", (void *)WKBD_MOVE_WORKSPACE7,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.movetoworkspace7, getKeybind, setKeyGrab, NULL, NULL},
 	{"MoveToWorkspace8Key", "None", (void *)WKBD_MOVE_WORKSPACE8,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.movetoworkspace8, getKeybind, setKeyGrab, NULL, NULL},
 	{"MoveToWorkspace9Key", "None", (void *)WKBD_MOVE_WORKSPACE9,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.movetoworkspace9, getKeybind, setKeyGrab, NULL, NULL},
 	{"MoveToWorkspace10Key", "None", (void *)WKBD_MOVE_WORKSPACE10,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.movetoworkspace10, getKeybind, setKeyGrab, NULL, NULL},
 	{"MoveToNextWorkspaceKey", "None", (void *)WKBD_MOVE_NEXTWORKSPACE,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.movetonextworkspace, getKeybind, setKeyGrab, NULL, NULL},
 	{"MoveToPrevWorkspaceKey", "None", (void *)WKBD_MOVE_PREVWORKSPACE,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.movetoprevworkspace, getKeybind, setKeyGrab, NULL, NULL},
 	{"MoveToLastWorkspaceKey", "None", (void *)WKBD_MOVE_LASTWORKSPACE,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.movetolastworkspace, getKeybind, setKeyGrab, NULL, NULL},
 	{"MoveToNextWorkspaceLayerKey", "None", (void *)WKBD_MOVE_NEXTWSLAYER,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.movetonextworkspace, getKeybind, setKeyGrab, NULL, NULL},
 	{"MoveToPrevWorkspaceLayerKey", "None", (void *)WKBD_MOVE_PREVWSLAYER,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.movetoprevworkspace, getKeybind, setKeyGrab, NULL, NULL},
 	{"WindowShortcut1Key", "None", (void *)WKBD_WINDOW1,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.windowshortcut1, getKeybind, setKeyGrab, NULL, NULL},
 	{"WindowShortcut2Key", "None", (void *)WKBD_WINDOW2,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.windowshortcut2, getKeybind, setKeyGrab, NULL, NULL},
 	{"WindowShortcut3Key", "None", (void *)WKBD_WINDOW3,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.windowshortcut3, getKeybind, setKeyGrab, NULL, NULL},
 	{"WindowShortcut4Key", "None", (void *)WKBD_WINDOW4,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.windowshortcut4, getKeybind, setKeyGrab, NULL, NULL},
 	{"WindowShortcut5Key", "None", (void *)WKBD_WINDOW5,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.windowshortcut5, getKeybind, setKeyGrab, NULL, NULL},
 	{"WindowShortcut6Key", "None", (void *)WKBD_WINDOW6,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.windowshortcut6, getKeybind, setKeyGrab, NULL, NULL},
 	{"WindowShortcut7Key", "None", (void *)WKBD_WINDOW7,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.windowshortcut7, getKeybind, setKeyGrab, NULL, NULL},
 	{"WindowShortcut8Key", "None", (void *)WKBD_WINDOW8,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.windowshortcut8, getKeybind, setKeyGrab, NULL, NULL},
 	{"WindowShortcut9Key", "None", (void *)WKBD_WINDOW9,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.windowshortcut9, getKeybind, setKeyGrab, NULL, NULL},
 	{"WindowShortcut10Key", "None", (void *)WKBD_WINDOW10,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.windowshortcut10, getKeybind, setKeyGrab, NULL, NULL},
 	{"WindowRelaunchKey", "None", (void *)WKBD_RELAUNCH,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.windowrelaunch, getKeybind, setKeyGrab, NULL, NULL},
 	{"ScreenSwitchKey", "None", (void *)WKBD_SWITCH_SCREEN,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.screenswitch, getKeybind, setKeyGrab, NULL, NULL},
 	{"RunKey", "None", (void *)WKBD_RUN,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.run, getKeybind, setKeyGrab, NULL, NULL},
 
 #ifdef KEEP_XKB_LOCK_STATUS
 	{"ToggleKbdModeKey", "None", (void *)WKBD_TOGGLE,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.togglekbdmode, getKeybind, setKeyGrab, NULL, NULL},
 	{"KbdModeLock", "NO", NULL,
 	    &wPreferences.modelock, getBool, NULL, NULL, NULL}, /* - */
 #endif				/* KEEP_XKB_LOCK_STATUS */
@@ -2293,11 +2291,7 @@ static int getColor(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *valu
 
 static int getKeybind(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
 {
-	static WShortKey shortcut;
-	KeySym ksym;
 	const char *val;
-	char *k;
-	char buf[MAX_SHORTCUT_LENGTH], *b;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) vscr;
@@ -2305,50 +2299,11 @@ static int getKeybind(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *va
 
 	GET_STRING_OR_DEFAULT("Key spec", val);
 
-	if (!val || strcasecmp(val, "NONE") == 0) {
-		shortcut.keycode = 0;
-		shortcut.modifier = 0;
-		if (ret)
-			*ret = &shortcut;
-		return True;
-	}
-
-	wstrlcpy(buf, val, MAX_SHORTCUT_LENGTH);
-
-	b = (char *)buf;
-
-	/* get modifiers */
-	shortcut.modifier = 0;
-	while ((k = strchr(b, '+')) != NULL) {
-		int mod;
-
-		*k = 0;
-		mod = wXModifierFromKey(b);
-		if (mod < 0) {
-			wwarning(_("%s: invalid key modifier \"%s\""), entry->key, b);
-			return False;
-		}
-		shortcut.modifier |= mod;
-
-		b = k + 1;
-	}
-
-	/* get key */
-	ksym = XStringToKeysym(b);
-
-	if (ksym == NoSymbol) {
-		wwarning(_("%s:invalid kbd shortcut specification \"%s\""), entry->key, val);
-		return False;
-	}
-
-	shortcut.keycode = XKeysymToKeycode(dpy, ksym);
-	if (shortcut.keycode == 0) {
-		wwarning(_("%s:invalid key in shortcut \"%s\""), entry->key, val);
-		return False;
-	}
+	if (addr)
+		wstrlcpy(addr, val, MAX_SHORTCUT_LENGTH);
 
 	if (ret)
-		*ret = &shortcut;
+		*ret = addr;
 
 	return True;
 }
@@ -3712,14 +3667,232 @@ static int setMenuTextBack(virtual_screen *vscr, WDefaultEntry *entry, void *tda
 
 static int setKeyGrab(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data)
 {
-	WShortKey *shortcut = tdata;
+	WShortKey shortcut;
 	WWindow *wwin;
+	char buf[MAX_SHORTCUT_LENGTH];
 	long widx = (long) extra_data;
+	KeySym ksym;
+	char *k, *b, *value;
+	int mod;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
+	(void) tdata;
 
-	wKeyBindings[widx] = *shortcut;
+	/* TODO: make this as list/array... and remove this ugly if-else block */
+	if (widx == WKBD_ROOTMENU) { /* "RootMenuKey" */
+		value = wPreferences.key.rootmenu;
+	} else if (widx == WKBD_WINDOWLIST) { /* "WindowListKey" */
+		value = wPreferences.key.windowlist;
+	} else if (widx == WKBD_WINDOWMENU) { /* "WindowMenuKey" */
+		value = wPreferences.key.windowmenu;
+	} else if (widx == WKBD_DOCKRAISELOWER) { /* "DockRaiseLowerKey" */
+		value = wPreferences.key.dockraiselower;
+	} else if (widx == WKBD_CLIPRAISELOWER) { /* "ClipRaiseLowerKey" */
+		value = wPreferences.key.clipraiselower;
+	} else if (widx == WKBD_MINIATURIZE) { /* "MiniaturizeKey" */
+		value = wPreferences.key.miniaturize;
+	} else if (widx == WKBD_MINIMIZEALL) { /* "MinimizeAllKey" */
+		value = wPreferences.key.minimizeall;
+	} else if (widx == WKBD_HIDE) { /* "HideKey" */
+		value = wPreferences.key.hide;
+	} else if (widx == WKBD_HIDE_OTHERS) { /* "HideOthersKey" */
+		value = wPreferences.key.hideothers;
+	} else if (widx == WKBD_MOVERESIZE) { /* "MoveResizeKey" */
+		value = wPreferences.key.moveresize;
+	} else if (widx == WKBD_CLOSE) { /* "CloseKey" */
+		value = wPreferences.key.close;
+	} else if (widx == WKBD_MAXIMIZE) { /* "MaximizeKey" */
+		value = wPreferences.key.maximize;
+	} else if (widx == WKBD_VMAXIMIZE) { /* "VMaximizeKey" */
+		value = wPreferences.key.maximizev;
+	} else if (widx == WKBD_HMAXIMIZE) { /* "HMaximizeKey" */
+		value = wPreferences.key.maximizeh;
+	} else if (widx == WKBD_LHMAXIMIZE) { /* "LHMaximizeKey" */
+		value = wPreferences.key.maximizelh;
+	} else if (widx == WKBD_RHMAXIMIZE) { /* "RHMaximizeKey" */
+		value = wPreferences.key.maximizerh;
+	} else if (widx == WKBD_THMAXIMIZE) { /* "THMaximizeKey" */
+		value = wPreferences.key.maximizeth;
+	} else if (widx == WKBD_BHMAXIMIZE) { /* "BHMaximizeKey" */
+		value = wPreferences.key.maximizebh;
+	} else if (widx == WKBD_LTCMAXIMIZE) { /* "LTCMaximizeKey" */
+		value = wPreferences.key.maximizeltc;
+	} else if (widx == WKBD_RTCMAXIMIZE) { /* "RTCMaximizeKey" */
+		value = wPreferences.key.maximizertc;
+	} else if (widx == WKBD_LBCMAXIMIZE) { /* "LBCMaximizeKey" */
+		value = wPreferences.key.maximizelbc;
+	} else if (widx == WKBD_RBCMAXIMIZE) { /* "RBCMaximizeKey" */
+		value = wPreferences.key.maximizerbc;
+	} else if (widx == WKBD_MAXIMUS) { /* "MaximusKey" */
+		value = wPreferences.key.maximus;
+	} else if (widx == WKBD_KEEP_ON_TOP) { /* "KeepOnTopKey" */
+		value = wPreferences.key.keepontop;
+	} else if (widx == WKBD_KEEP_AT_BOTTOM) { /* "KeepAtBottomKey" */
+		value = wPreferences.key.keepatbottom;
+	} else if (widx == WKBD_OMNIPRESENT) { /* "OmnipresentKey" */
+		value = wPreferences.key.omnipresent;
+	} else if (widx == WKBD_RAISE) { /* "RaiseKey" */
+		value = wPreferences.key.raise;
+	} else if (widx == WKBD_LOWER) { /* "LowerKey" */
+		value = wPreferences.key.lower;
+	} else if (widx == WKBD_RAISELOWER) { /* "RaiseLowerKey" */
+		value = wPreferences.key.raiselower;
+	} else if (widx == WKBD_SHADE) { /* "ShadeKey" */
+		value = wPreferences.key.shade;
+	} else if (widx == WKBD_SELECT) { /* "SelectKey" */
+		value = wPreferences.key.select;
+	} else if (widx == WKBD_WORKSPACEMAP) { /* "WorkspaceMapKey" */
+		value = wPreferences.key.workspacemap;
+	} else if (widx == WKBD_FOCUSNEXT) { /* "FocusNextKey" */
+		value = wPreferences.key.focusnext;
+	} else if (widx == WKBD_FOCUSPREV) { /* "FocusPrevKey" */
+		value = wPreferences.key.focusprev;
+	} else if (widx == WKBD_GROUPNEXT) { /* "GroupNextKey" */
+		value = wPreferences.key.groupnext;
+	} else if (widx == WKBD_GROUPPREV) { /* "GroupPrevKey" */
+		value = wPreferences.key.groupprev;
+	} else if (widx == WKBD_NEXTWORKSPACE) { /* "NextWorkspaceKey" */
+		value = wPreferences.key.workspacenext;
+	} else if (widx == WKBD_PREVWORKSPACE) { /* "PrevWorkspaceKey" */
+		value = wPreferences.key.workspaceprev;
+	} else if (widx == WKBD_LASTWORKSPACE) { /* "LastWorkspaceKey" */
+		value = wPreferences.key.workspacelast;
+	} else if (widx == WKBD_NEXTWSLAYER) { /* "NextWorkspaceLayerKey" */
+		value = wPreferences.key.workspacelayernext;
+	} else if (widx == WKBD_PREVWSLAYER) { /* "PrevWorkspaceLayerKey" */
+		value = wPreferences.key.workspacelayerprev;
+	} else if (widx == WKBD_WORKSPACE1) { /* "Workspace1Key" */
+		value = wPreferences.key.workspace1;
+	} else if (widx == WKBD_WORKSPACE2) { /* "Workspace2Key" */
+		value = wPreferences.key.workspace2;
+	} else if (widx == WKBD_WORKSPACE3) { /* "Workspace3Key" */
+		value = wPreferences.key.workspace3;
+	} else if (widx == WKBD_WORKSPACE4) { /* "Workspace4Key" */
+		value = wPreferences.key.workspace4;
+	} else if (widx == WKBD_WORKSPACE5) { /* "Workspace5Key" */
+		value = wPreferences.key.workspace5;
+	} else if (widx == WKBD_WORKSPACE6) { /* "Workspace6Key" */
+		value = wPreferences.key.workspace6;
+	} else if (widx == WKBD_WORKSPACE7) { /* "Workspace7Key" */
+		value = wPreferences.key.workspace7;
+	} else if (widx == WKBD_WORKSPACE8) { /* "Workspace8Key" */
+		value = wPreferences.key.workspace8;
+	} else if (widx == WKBD_WORKSPACE9) { /* "Workspace9Key" */
+		value = wPreferences.key.workspace9;
+	} else if (widx == WKBD_WORKSPACE10) { /* "Workspace10Key" */
+		value = wPreferences.key.workspace10;
+	} else if (widx == WKBD_MOVE_WORKSPACE1) { /* "MoveToWorkspace1Key" */
+		value = wPreferences.key.movetoworkspace1;
+	} else if (widx == WKBD_MOVE_WORKSPACE2) { /* "MoveToWorkspace2Key" */
+		value = wPreferences.key.movetoworkspace2;
+	} else if (widx == WKBD_MOVE_WORKSPACE3) { /* "MoveToWorkspace3Key" */
+		value = wPreferences.key.movetoworkspace3;
+	} else if (widx == WKBD_MOVE_WORKSPACE4) { /* "MoveToWorkspace4Key" */
+		value = wPreferences.key.movetoworkspace4;
+	} else if (widx == WKBD_MOVE_WORKSPACE5) { /* "MoveToWorkspace5Key" */
+		value = wPreferences.key.movetoworkspace5;
+	} else if (widx == WKBD_MOVE_WORKSPACE6) { /* "MoveToWorkspace6Key" */
+		value = wPreferences.key.movetoworkspace6;
+	} else if (widx == WKBD_MOVE_WORKSPACE7) { /* "MoveToWorkspace7Key" */
+		value = wPreferences.key.movetoworkspace7;
+	} else if (widx == WKBD_MOVE_WORKSPACE8) { /* "MoveToWorkspace8Key" */
+		value = wPreferences.key.movetoworkspace8;
+	} else if (widx == WKBD_MOVE_WORKSPACE9) { /* "MoveToWorkspace9Key" */
+		value = wPreferences.key.movetoworkspace9;
+	} else if (widx == WKBD_MOVE_WORKSPACE10) { /* "MoveToWorkspace10Key" */
+		value = wPreferences.key.movetoworkspace10;
+	} else if (widx == WKBD_MOVE_NEXTWORKSPACE) { /* "MoveToNextWorkspaceKey" */
+		value = wPreferences.key.movetonextworkspace;
+	} else if (widx == WKBD_MOVE_PREVWORKSPACE) { /* "MoveToPrevWorkspaceKey" */
+		value = wPreferences.key.movetoprevworkspace;
+	} else if (widx == WKBD_MOVE_LASTWORKSPACE) { /* "MoveToLastWorkspaceKey" */
+		value = wPreferences.key.movetolastworkspace;
+	} else if (widx == WKBD_MOVE_NEXTWSLAYER) { /* "MoveToNextWorkspaceLayerKey" */
+		value = wPreferences.key.movetonextworkspace;
+	} else if (widx == WKBD_MOVE_PREVWSLAYER) { /* "MoveToPrevWorkspaceLayerKey" */
+		value = wPreferences.key.movetoprevworkspace;
+	} else if (widx == WKBD_WINDOW1) { /* "WindowShortcut1Key" */
+		value = wPreferences.key.windowshortcut1;
+	} else if (widx == WKBD_WINDOW2) { /* "WindowShortcut2Key" */
+		value = wPreferences.key.windowshortcut2;
+	} else if (widx == WKBD_WINDOW3) { /* "WindowShortcut3Key" */
+		value = wPreferences.key.windowshortcut3;
+	} else if (widx == WKBD_WINDOW4) { /* "WindowShortcut4Key" */
+		value = wPreferences.key.windowshortcut4;
+	} else if (widx == WKBD_WINDOW5) { /* "WindowShortcut5Key" */
+		value = wPreferences.key.windowshortcut5;
+	} else if (widx == WKBD_WINDOW6) { /* "WindowShortcut6Key" */
+		value = wPreferences.key.windowshortcut6;
+	} else if (widx == WKBD_WINDOW7) { /* "WindowShortcut7Key" */
+		value = wPreferences.key.windowshortcut7;
+	} else if (widx == WKBD_WINDOW8) { /* "WindowShortcut8Key" */
+		value = wPreferences.key.windowshortcut8;
+	} else if (widx == WKBD_WINDOW9) { /* "WindowShortcut9Key" */
+		value = wPreferences.key.windowshortcut9;
+	} else if (widx == WKBD_WINDOW10) { /* "WindowShortcut10Key" */
+		value = wPreferences.key.windowshortcut10;
+	} else if (widx == WKBD_RELAUNCH) { /* "WindowRelaunchKey" */
+		value = wPreferences.key.windowrelaunch;
+	} else if (widx == WKBD_SWITCH_SCREEN) { /* "ScreenSwitchKey" */
+		value = wPreferences.key.screenswitch;
+	} else if (widx == WKBD_RUN) { /* "RunKey" */
+		value = wPreferences.key.run;
+#ifdef KEEP_XKB_LOCK_STATUS
+	} else if (widx == WKBD_TOGGLE) { /* "ToggleKbdModeKey" */
+		value = wPreferences.key.togglekbdmode;
+#endif
+	}
+
+	wstrlcpy(buf, value, MAX_SHORTCUT_LENGTH);
+
+		int error = 0;
+
+	if ((strlen(value) == 0) || (strcasecmp(value, "NONE") == 0)) {
+		shortcut.keycode = 0;
+		shortcut.modifier = 0;
+	} else {
+
+		b = buf;
+
+		/* get modifiers */
+		shortcut.modifier = 0;
+		while ((!error) && ((k = strchr(b, '+')) != NULL)) {
+			*k = 0;
+			mod = wXModifierFromKey(b);
+			if (mod < 0) {
+				wwarning(_("%s: invalid key modifier \"%s\""), entry->key, b);
+				error = 1;
+			}
+			shortcut.modifier |= mod;
+
+			b = k + 1;
+		}
+
+		if (!error) {
+			/* get key */
+			ksym = XStringToKeysym(b);
+
+			if (ksym == NoSymbol) {
+				wwarning(_("%s:invalid kbd shortcut specification \"%s\""), entry->key, value);
+				error = 1;
+			}
+
+			if (!error) {
+				shortcut.keycode = XKeysymToKeycode(dpy, ksym);
+				if (shortcut.keycode == 0) {
+					wwarning(_("%s:invalid key in shortcut \"%s\""), entry->key, value);
+					error = 1;
+				}
+			}
+		}
+	}
+
+	/* If no error, assign the keybind
+	 * TODO: else... what?
+	 * Now assign shortcut with modifier=0 key=0
+	 */
+	wKeyBindings[widx] = shortcut;
 
 	wwin = vscr->window.focused;
 

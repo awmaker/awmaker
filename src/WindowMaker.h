@@ -126,6 +126,8 @@ typedef enum {
 	WCUR_LAST
 } w_cursor;
 
+#define MAX_SHORTCUT_LENGTH 32
+
 /* geometry displays */
 #define WDIS_NEW		0	/* new style */
 #define WDIS_CENTER		1	/* center of screen */
@@ -553,6 +555,90 @@ extern struct WPreferences {
 		defstructpl *wait;
 		defstructpl *root;
 	} cursors;	/* cursor name is used for Cursor 48 lines above */
+
+	/* Key binds */
+	struct {
+		char clipraiselower[MAX_SHORTCUT_LENGTH];
+		char close[MAX_SHORTCUT_LENGTH];
+		char dockraiselower[MAX_SHORTCUT_LENGTH];
+		char focusnext[MAX_SHORTCUT_LENGTH];
+		char focusprev[MAX_SHORTCUT_LENGTH];
+		char groupnext[MAX_SHORTCUT_LENGTH];
+		char groupprev[MAX_SHORTCUT_LENGTH];
+		char hide[MAX_SHORTCUT_LENGTH];
+		char hideothers[MAX_SHORTCUT_LENGTH];
+		char keepatbottom[MAX_SHORTCUT_LENGTH];
+		char keepontop[MAX_SHORTCUT_LENGTH];
+		char lower[MAX_SHORTCUT_LENGTH];
+		char maximize[MAX_SHORTCUT_LENGTH];
+		char maximizebh[MAX_SHORTCUT_LENGTH];
+		char maximizeh[MAX_SHORTCUT_LENGTH];
+		char maximizelbc[MAX_SHORTCUT_LENGTH];
+		char maximizelh[MAX_SHORTCUT_LENGTH];
+		char maximizeltc[MAX_SHORTCUT_LENGTH];
+		char maximizerbc[MAX_SHORTCUT_LENGTH];
+		char maximizerh[MAX_SHORTCUT_LENGTH];
+		char maximizertc[MAX_SHORTCUT_LENGTH];
+		char maximizeth[MAX_SHORTCUT_LENGTH];
+		char maximizev[MAX_SHORTCUT_LENGTH];
+		char maximus[MAX_SHORTCUT_LENGTH];
+		char miniaturize[MAX_SHORTCUT_LENGTH];
+		char minimizeall[MAX_SHORTCUT_LENGTH];
+		char moveresize[MAX_SHORTCUT_LENGTH];
+		char movetolastworkspace[MAX_SHORTCUT_LENGTH];
+		char movetonextworkspace[MAX_SHORTCUT_LENGTH];
+		char movetonextworkspacelayer[MAX_SHORTCUT_LENGTH];
+		char movetoprevworkspace[MAX_SHORTCUT_LENGTH];
+		char movetoprevworkspacelayer[MAX_SHORTCUT_LENGTH];
+		char movetoworkspace1[MAX_SHORTCUT_LENGTH];
+		char movetoworkspace2[MAX_SHORTCUT_LENGTH];
+		char movetoworkspace3[MAX_SHORTCUT_LENGTH];
+		char movetoworkspace4[MAX_SHORTCUT_LENGTH];
+		char movetoworkspace5[MAX_SHORTCUT_LENGTH];
+		char movetoworkspace6[MAX_SHORTCUT_LENGTH];
+		char movetoworkspace7[MAX_SHORTCUT_LENGTH];
+		char movetoworkspace8[MAX_SHORTCUT_LENGTH];
+		char movetoworkspace9[MAX_SHORTCUT_LENGTH];
+		char movetoworkspace10[MAX_SHORTCUT_LENGTH];
+		char omnipresent[MAX_SHORTCUT_LENGTH];
+		char raise[MAX_SHORTCUT_LENGTH];
+		char raiselower[MAX_SHORTCUT_LENGTH];
+		char rootmenu[MAX_SHORTCUT_LENGTH];
+		char run[MAX_SHORTCUT_LENGTH];
+		char screenswitch[MAX_SHORTCUT_LENGTH];
+		char select[MAX_SHORTCUT_LENGTH];
+		char shade[MAX_SHORTCUT_LENGTH];
+		char togglekbdmode[MAX_SHORTCUT_LENGTH];
+		char windowlist[MAX_SHORTCUT_LENGTH];
+		char windowmenu[MAX_SHORTCUT_LENGTH];
+		char windowrelaunch[MAX_SHORTCUT_LENGTH];
+		char windowshortcut1[MAX_SHORTCUT_LENGTH];
+		char windowshortcut2[MAX_SHORTCUT_LENGTH];
+		char windowshortcut3[MAX_SHORTCUT_LENGTH];
+		char windowshortcut4[MAX_SHORTCUT_LENGTH];
+		char windowshortcut5[MAX_SHORTCUT_LENGTH];
+		char windowshortcut6[MAX_SHORTCUT_LENGTH];
+		char windowshortcut7[MAX_SHORTCUT_LENGTH];
+		char windowshortcut8[MAX_SHORTCUT_LENGTH];
+		char windowshortcut9[MAX_SHORTCUT_LENGTH];
+		char windowshortcut10[MAX_SHORTCUT_LENGTH];
+		char workspace1[MAX_SHORTCUT_LENGTH];
+		char workspace2[MAX_SHORTCUT_LENGTH];
+		char workspace3[MAX_SHORTCUT_LENGTH];
+		char workspace4[MAX_SHORTCUT_LENGTH];
+		char workspace5[MAX_SHORTCUT_LENGTH];
+		char workspace6[MAX_SHORTCUT_LENGTH];
+		char workspace7[MAX_SHORTCUT_LENGTH];
+		char workspace8[MAX_SHORTCUT_LENGTH];
+		char workspace9[MAX_SHORTCUT_LENGTH];
+		char workspace10[MAX_SHORTCUT_LENGTH];
+		char workspacelast[MAX_SHORTCUT_LENGTH];
+		char workspacelayernext[MAX_SHORTCUT_LENGTH];
+		char workspacelayerprev[MAX_SHORTCUT_LENGTH];
+		char workspacemap[MAX_SHORTCUT_LENGTH];
+		char workspacenext[MAX_SHORTCUT_LENGTH];
+		char workspaceprev[MAX_SHORTCUT_LENGTH];
+	} key;
 
 } wPreferences;
 
