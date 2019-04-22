@@ -2673,39 +2673,41 @@ static int setStickyIcons(virtual_screen *vscr, WDefaultEntry *entry, void *bar,
 	return REFRESH_STICKY_ICONS;
 }
 
-WTexture *get_texture_from_defstruct(virtual_screen *vscr, defstructpl *ds, WDefaultEntry *entry)
+WTexture *get_texture_from_defstruct(virtual_screen *vscr, defstructpl *ds)
 {
+	char *key;
 	static WTexture *texture;
 	WMPropList *value, *defvalue;
 	int changed = 0;
 
-value = ds->value;
-defvalue = ds->defvalue;
+	key = ds->key;
+	value = ds->value;
+	defvalue = ds->defvalue;
 
  again:
 	if (!WMIsPLArray(value)) {
-		wwarning(_("Wrong option format for key \"%s\". Should be %s."), entry->key, "Texture");
+		wwarning(_("Wrong option format for key \"%s\". Should be %s."), key, "Texture");
 		if (changed == 0) {
-			value = entry->plvalue;
+			value = ds->defvalue;
 			changed = 1;
-			wwarning(_("using default \"%s\" instead"), entry->default_value);
+			wwarning(_("using default value instead"));
 			goto again;
 		}
 		return NULL;
 	}
 
-	if (strcmp(entry->key, "WidgetColor") == 0 && !changed) {
+	if (strcmp(key, "WidgetColor") == 0 && !changed) {
 		WMPropList *pl;
 
 		pl = WMGetFromPLArray(value, 0);
 		if (!pl || !WMIsPLString(pl) || !WMGetFromPLString(pl)
 		    || strcasecmp(WMGetFromPLString(pl), "solid") != 0) {
 			wwarning(_("Wrong option format for key \"%s\". Should be %s."),
-				 entry->key, "Solid Texture");
+				 key, "Solid Texture");
 
-			value = entry->plvalue;
+			value = defvalue;
 			changed = 1;
-			wwarning(_("using default \"%s\" instead"), entry->default_value);
+			wwarning(_("using default value instead"));
 			goto again;
 		}
 	}
@@ -2713,11 +2715,11 @@ defvalue = ds->defvalue;
 	texture = parse_texture(vscr, value);
 
 	if (!texture) {
-		wwarning(_("Error in texture specification for key \"%s\""), entry->key);
+		wwarning(_("Error in texture specification for key \"%s\""), key);
 		if (changed == 0) {
-			value = entry->plvalue;
+			value = defvalue;
 			changed = 1;
-			wwarning(_("using default \"%s\" instead"), entry->default_value);
+			wwarning(_("using default value instead"));
 			goto again;
 		}
 		return NULL;
@@ -2737,7 +2739,7 @@ static int setIconTile(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, 
 	(void) foo;
 	(void) tdata;
 
-	*texture = get_texture_from_defstruct(vscr, wPreferences.texture.iconback, entry);
+	*texture = get_texture_from_defstruct(vscr, wPreferences.texture.iconback);
 
 	img = wTextureRenderImage(*texture, wPreferences.icon_size,
 				  wPreferences.icon_size, ((*texture)->any.type & WREL_BORDER_MASK)
@@ -3597,7 +3599,7 @@ static int setWidgetColor(virtual_screen *vscr, WDefaultEntry *entry, void *tdat
 	(void) foo;
 	(void) tdata;
 
-	*texture = get_texture_from_defstruct(vscr, wPreferences.texture.widgetcolor, entry);
+	*texture = get_texture_from_defstruct(vscr, wPreferences.texture.widgetcolor);
 
 	if (vscr->screen_ptr->widget_texture)
 		wTextureDestroy(vscr, (WTexture *) vscr->screen_ptr->widget_texture);
@@ -3616,7 +3618,7 @@ static int setFTitleBack(virtual_screen *vscr, WDefaultEntry *entry, void *tdata
 	(void) foo;
 	(void) tdata;
 
-	*texture = get_texture_from_defstruct(vscr, wPreferences.texture.titlebackfocused, entry);
+	*texture = get_texture_from_defstruct(vscr, wPreferences.texture.titlebackfocused);
 
 	if (vscr->screen_ptr->window_title_texture[WS_FOCUSED])
 		wTextureDestroy(vscr, vscr->screen_ptr->window_title_texture[WS_FOCUSED]);
@@ -3635,7 +3637,7 @@ static int setPTitleBack(virtual_screen *vscr, WDefaultEntry *entry, void *tdata
 	(void) foo;
 	(void) tdata;
 
-	*texture = get_texture_from_defstruct(vscr, wPreferences.texture.titlebackowner, entry);
+	*texture = get_texture_from_defstruct(vscr, wPreferences.texture.titlebackowner);
 
 	if (vscr->screen_ptr->window_title_texture[WS_PFOCUSED])
 		wTextureDestroy(vscr, vscr->screen_ptr->window_title_texture[WS_PFOCUSED]);
@@ -3654,7 +3656,7 @@ static int setUTitleBack(virtual_screen *vscr, WDefaultEntry *entry, void *tdata
 	(void) foo;
 	(void) tdata;
 
-	*texture = get_texture_from_defstruct(vscr, wPreferences.texture.titlebackunfocused, entry);
+	*texture = get_texture_from_defstruct(vscr, wPreferences.texture.titlebackunfocused);
 
 	if (vscr->screen_ptr->window_title_texture[WS_UNFOCUSED])
 		wTextureDestroy(vscr, vscr->screen_ptr->window_title_texture[WS_UNFOCUSED]);
@@ -3673,7 +3675,7 @@ static int setResizebarBack(virtual_screen *vscr, WDefaultEntry *entry, void *td
 	(void) foo;
 	(void) tdata;
 
-	*texture = get_texture_from_defstruct(vscr, wPreferences.texture.resizebarback, entry);
+	*texture = get_texture_from_defstruct(vscr, wPreferences.texture.resizebarback);
 
 	if (vscr->screen_ptr->resizebar_texture[0])
 		wTextureDestroy(vscr, vscr->screen_ptr->resizebar_texture[0]);
@@ -3692,7 +3694,7 @@ static int setMenuTitleBack(virtual_screen *vscr, WDefaultEntry *entry, void *td
 	(void) foo;
 	(void) tdata;
 
-	*texture = get_texture_from_defstruct(vscr, wPreferences.texture.menutitleback, entry);
+	*texture = get_texture_from_defstruct(vscr, wPreferences.texture.menutitleback);
 
 	if (vscr->screen_ptr->menu_title_texture[0])
 		wTextureDestroy(vscr, vscr->screen_ptr->menu_title_texture[0]);
@@ -3711,7 +3713,7 @@ static int setMenuTextBack(virtual_screen *vscr, WDefaultEntry *entry, void *tda
 	(void) foo;
 	(void) tdata;
 
-	*texture = get_texture_from_defstruct(vscr, wPreferences.texture.menutextback, entry);
+	*texture = get_texture_from_defstruct(vscr, wPreferences.texture.menutextback);
 
 	if (vscr->screen_ptr->menu_item_texture) {
 		wTextureDestroy(vscr, vscr->screen_ptr->menu_item_texture);
@@ -4007,7 +4009,7 @@ static int setWorkspaceMapBackground(virtual_screen *vscr, WDefaultEntry *entry,
 	(void) foo;
 	(void) tdata;
 
-	*texture = get_texture_from_defstruct(vscr, wPreferences.texture.workspacemapback, entry);
+	*texture = get_texture_from_defstruct(vscr, wPreferences.texture.workspacemapback);
 
 	if (wPreferences.wsmbackTexture)
 		wTextureDestroy(vscr, wPreferences.wsmbackTexture);
