@@ -612,9 +612,9 @@ WDefaultEntry optionList[] = {
 	{"IconTitleBack", "black", NULL,
 	    &wPreferences.color.icontitleback, getColor, setIconTitleBack, NULL, NULL},
 	{"SwitchPanelImages", "(swtile.png, swback.png, 30, 40)", NULL,
-	    NULL, getPropList, setSwPOptions, NULL, NULL},
+	    &wPreferences.sp_options, getPropList, setSwPOptions, NULL, NULL},
 	{"ModifierKeyLabels", "(\"Shift+\", \"Control+\", \"Mod1+\", \"Mod2+\", \"Mod3+\", \"Mod4+\", \"Mod5+\")", NULL,
-	    NULL, getPropList, setModifierKeyLabels, NULL, NULL},
+	    &wPreferences.modifierkeylabels, getPropList, setModifierKeyLabels, NULL, NULL},
 	{"FrameBorderWidth", "1", NULL,
 	    NULL, getInt, setFrameBorderWidth, NULL, NULL}, /* - */
 	{"FrameBorderColor", "black", NULL,
@@ -1634,6 +1634,7 @@ static int getPropList(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *v
 	WMRetainPropList(value);
 
 	*ret = value;
+	*(WMPropList **) addr = value;
 
 	return True;
 }

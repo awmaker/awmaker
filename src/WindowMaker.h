@@ -483,9 +483,6 @@ extern struct WPreferences {
 	int clip_auto_expand_delay;         /* Delay after which the clip will expand when entered */
 	int clip_auto_collapse_delay;       /* Delay after which the clip will collapse when leaved */
 
-	RImage *swtileImage;
-	RImage *swbackImage[9];
-
 	union WTexture *wsmbackTexture;
 
 	char show_clip_title;
@@ -558,6 +555,8 @@ extern struct WPreferences {
 	} cursors;	/* cursor name is used for Cursor 48 lines above */
 
 	/* Key binds */
+	WMPropList *modifierkeylabels;
+
 	struct {
 		char clipraiselower[MAX_SHORTCUT_LENGTH];
 		char close[MAX_SHORTCUT_LENGTH];
@@ -652,6 +651,11 @@ extern struct WPreferences {
 		defstructpl *menutextback;
 		defstructpl *workspacemapback;
 	} texture;
+
+	/* Switch Panel */
+	WMPropList *sp_options;
+	RImage *swtileImage;
+	RImage *swbackImage[9];
 
 } wPreferences;
 
