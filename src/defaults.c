@@ -4043,12 +4043,15 @@ static RImage *chopOffImage(RImage *image, int x, int y, int w, int h)
 
 static int setSwPOptions(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
 {
-	WMPropList *array = tdata;
+	WMPropList *array;
 	char *path;
 	RImage *bgimage;
 	int cwidth, cheight;
 
 	(void) foo;
+	(void) tdata;
+
+	array = wPreferences.sp_options;
 
 	if (!WMIsPLArray(array) || WMGetPropListItemCount(array) == 0) {
 		if (wPreferences.swtileImage)
@@ -4165,10 +4168,13 @@ static int setSwPOptions(virtual_screen *vscr, WDefaultEntry *entry, void *tdata
 
 static int setModifierKeyLabels(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
 {
-	WMPropList *array = tdata;
+	WMPropList *array;
 	int i;
 
 	(void) foo;
+	(void) tdata;
+
+	array = wPreferences.modifierkeylabels;
 
 	if (!WMIsPLArray(array) || WMGetPropListItemCount(array) != 7) {
 		wwarning(_("Value for option \"%s\" must be an array of 7 strings"), entry->key);
