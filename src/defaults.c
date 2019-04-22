@@ -2070,8 +2070,16 @@ static int getTexture(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *va
 {
 	defstructpl *defstruct;
 	WMPropList *name, *defname;
+	int len;
+	char *key;
+
 
 	(void) vscr;
+
+	key = NULL;
+	len = sizeof(char *) * (strlen(entry->key));
+	key = wmalloc(len + sizeof(char *));
+	snprintf(key, len, "%s", entry->key);
 
 	defstruct = NULL;
 	defname = name = NULL;
@@ -2081,6 +2089,7 @@ static int getTexture(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *va
 
 	defstruct = wmalloc(sizeof(struct defstruct));
 
+	defstruct->key = key;
 	defstruct->value = name;
 	defstruct->defvalue = defname;
 

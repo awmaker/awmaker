@@ -332,6 +332,7 @@ typedef struct defstruct {
 } defstruct;
 
 typedef struct defstructpl {
+	char *key;                         /* Entry key */
 	WMPropList *defvalue;              /* Default value (color name) */
 	WMPropList *value;                 /* Color name value used */
 } defstructpl;
