@@ -661,6 +661,9 @@ extern struct WPreferences {
 	WMPropList *workspaceback;
 	WMPropList *workspacespecificback;
 
+	/* Frame border */
+	int border_width;
+
 } wPreferences;
 
 /****** Global Variables  ******/

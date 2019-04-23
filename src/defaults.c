@@ -616,7 +616,7 @@ WDefaultEntry optionList[] = {
 	{"ModifierKeyLabels", "(\"Shift+\", \"Control+\", \"Mod1+\", \"Mod2+\", \"Mod3+\", \"Mod4+\", \"Mod5+\")", NULL,
 	    &wPreferences.modifierkeylabels, getPropList, setModifierKeyLabels, NULL, NULL},
 	{"FrameBorderWidth", "1", NULL,
-	    NULL, getInt, setFrameBorderWidth, NULL, NULL}, /* - */
+	    &wPreferences.border_width, getInt, setFrameBorderWidth, NULL, NULL}, /* - */
 	{"FrameBorderColor", "black", NULL,
 	    &wPreferences.color.frameborder, getColor, setFrameBorderColor, NULL, NULL},
 	{"FrameFocusedBorderColor", "black", NULL,
@@ -3352,13 +3352,12 @@ static int setIconTitleBack(virtual_screen *vscr, WDefaultEntry *entry, void *td
 
 static int setFrameBorderWidth(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data)
 {
-	int *value = tdata;
-
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 	(void) extra_data;
+	(void) tdata;
 
-	vscr->frame.border_width = *value;
+	vscr->frame.border_width = wPreferences.border_width;
 
 	return REFRESH_FRAME_BORDER;
 }
