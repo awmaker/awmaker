@@ -347,7 +347,7 @@ WDefaultEntry staticOptionList[] = {
 	{"DisableDrawers", "NO", (void *)WM_DRAWER,
 	    NULL, getBool, setIfDockPresent, NULL, NULL},
 	{"ClipMergedInDock", "NO", NULL,
-	    NULL, getBool, setClipMergedInDock, NULL, NULL},
+	    &wPreferences.flags.clip_merged_in_dock, getBool, setClipMergedInDock, NULL, NULL},
 	{"DisableMiniwindows", "NO", NULL,
 	    &wPreferences.disable_miniwindows, getBool, NULL, NULL, NULL},
 	{"EnableWorkspacePager", "NO", NULL,
@@ -422,7 +422,7 @@ WDefaultEntry noscreenOptionList[] = {
 	{"ClipAutocollapseDelay", "1000", NULL,
 	    &wPreferences.clip_auto_collapse_delay, getInt, NULL, NULL, NULL},
 	{"WrapAppiconsInDock", "YES", NULL,
-	    NULL, getBool, setWrapAppiconsInDock, NULL, NULL},
+	    &wPreferences.flags.wrap_appicons_in_dock, getBool, setWrapAppiconsInDock, NULL, NULL},
 	{"AlignSubmenus", "NO", NULL,
 	    &wPreferences.align_menus, getBool, NULL, NULL, NULL},
 	{"ViKeyMenus", "NO", NULL,
@@ -2602,28 +2602,24 @@ static int setIfDockPresent(virtual_screen *vscr, WDefaultEntry *entry, void *td
 
 static int setClipMergedInDock(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
 {
-	char *flag = tdata;
-
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) vscr;
 	(void) entry;
 	(void) foo;
+	(void) tdata;
 
-	wPreferences.flags.clip_merged_in_dock = *flag;
-	wPreferences.flags.noclip = wPreferences.flags.noclip || *flag;
+	wPreferences.flags.noclip = wPreferences.flags.noclip || wPreferences.flags.clip_merged_in_dock;
 	return 0;
 }
 
 static int setWrapAppiconsInDock(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
 {
-	char *flag = tdata;
-
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) vscr;
 	(void) entry;
 	(void) foo;
+	(void) tdata;
 
-	wPreferences.flags.wrap_appicons_in_dock = *flag;
 	return 0;
 }
 
