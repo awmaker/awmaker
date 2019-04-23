@@ -341,11 +341,11 @@ WDefaultEntry staticOptionList[] = {
 	{"NewStyle", "new", seTitlebarModes,
 	    &wPreferences.new_style, getEnum, NULL, NULL, NULL},
 	{"DisableDock", "NO", (void *)WM_DOCK,
-	    NULL, getBool, setIfDockPresent, NULL, NULL},
+	    &wPreferences.flags.nodock, getBool, setIfDockPresent, NULL, NULL},
 	{"DisableClip", "NO", (void *)WM_CLIP,
-	    NULL, getBool, setIfDockPresent, NULL, NULL},
+	    &wPreferences.flags.noclip, getBool, setIfDockPresent, NULL, NULL},
 	{"DisableDrawers", "NO", (void *)WM_DRAWER,
-	    NULL, getBool, setIfDockPresent, NULL, NULL},
+	    &wPreferences.flags.nodrawer, getBool, setIfDockPresent, NULL, NULL},
 	{"ClipMergedInDock", "NO", NULL,
 	    &wPreferences.flags.clip_merged_in_dock, getBool, setClipMergedInDock, NULL, NULL},
 	{"DisableMiniwindows", "NO", NULL,
@@ -2574,24 +2574,20 @@ static int setClearance(virtual_screen *vscr, WDefaultEntry *entry, void *bar, v
 
 static int setIfDockPresent(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data)
 {
-	char *flag = tdata;
 	long which = (long) extra_data;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) vscr;
 	(void) entry;
+	(void) tdata;
 
 	switch (which) {
 	case WM_DOCK:
-		wPreferences.flags.nodock = wPreferences.flags.nodock || *flag;
-		/* Drawers require the dock */
 		wPreferences.flags.nodrawer = wPreferences.flags.nodrawer || wPreferences.flags.nodock;
 		break;
 	case WM_CLIP:
-		wPreferences.flags.noclip = wPreferences.flags.noclip || *flag;
 		break;
 	case WM_DRAWER:
-		wPreferences.flags.nodrawer = wPreferences.flags.nodrawer || *flag;
 		break;
 	default:
 		break;
