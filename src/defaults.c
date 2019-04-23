@@ -65,7 +65,7 @@
 #include "winmenu.h"
 
 typedef struct _WDefaultEntry  WDefaultEntry;
-typedef int (WDECallbackConvert) (virtual_screen *vscr, WDefaultEntry *entry, WMPropList *plvalue, void *addr, void **tdata);
+typedef int (WDECallbackConvert) (WDefaultEntry *entry, WMPropList *plvalue, void *addr, void **tdata);
 typedef int (WDECallbackUpdate) (virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data);
 
 struct _WDefaultEntry {
@@ -1188,7 +1188,7 @@ static void wReadStaticDefaults(WMPropList *dict)
 
 		if (plvalue) {
 			/* convert data */
-			(*entry->convert) (NULL, entry, plvalue, entry->addr, &tdata);
+			(*entry->convert) (entry, plvalue, entry->addr, &tdata);
 			if (entry->update)
 				(*entry->update) (NULL, entry, tdata, entry->extra_data);
 		}
@@ -1241,7 +1241,7 @@ static void read_defaults_noscreen(WMPropList *new_dict)
 		/* convert data */
 		if (plvalue) {
 			/* convert data */
-			if ((*entry->convert) (NULL, entry, plvalue, entry->addr, &tdata)) {
+			if ((*entry->convert) (entry, plvalue, entry->addr, &tdata)) {
 				if (entry->update)
 					(*entry->update) (NULL, entry, tdata, entry->extra_data);
 			}
@@ -1299,7 +1299,7 @@ static unsigned int read_defaults_step1(virtual_screen *vscr, WMPropList *new_di
 
 		if (plvalue) {
 			/* convert data */
-			if ((*entry->convert) (vscr, entry, plvalue, entry->addr, &tdata)) {
+			if ((*entry->convert) (entry, plvalue, entry->addr, &tdata)) {
 				/*
 				 * If the WorkspaceSpecificBack data has been changed
 				 * so that the helper will be launched now, we must be
@@ -1480,14 +1480,11 @@ static int string2index(WMPropList *key, WMPropList *val, const char *def, WOpti
  * ret - is the address to store a pointer to a temporary buffer. ret
  * 	must not be freed and is used by the set functions
  */
-static int getBool(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
+static int getBool(WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
 {
 	static char data;
 	const char *val;
 	int second_pass = 0;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) vscr;
 
 	GET_STRING_OR_DEFAULT("Boolean", val);
 
@@ -1526,13 +1523,10 @@ static int getBool(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *value
 	return True;
 }
 
-static int getInt(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
+static int getInt(WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
 {
 	static int data;
 	const char *val;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) vscr;
 
 	GET_STRING_OR_DEFAULT("Integer", val);
 
@@ -1553,15 +1547,12 @@ static int getInt(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *value,
 	return True;
 }
 
-static int getCoord(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
+static int getCoord(WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
 {
 	static WCoord data;
 	char *val_x, *val_y;
 	int nelem, changed = 0;
 	WMPropList *elem_x, *elem_y;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) vscr;
 
  again:
 	if (!WMIsPLArray(value)) {
@@ -1624,10 +1615,9 @@ static int getCoord(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *valu
 	return True;
 }
 
-static int getPropList(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
+static int getPropList(WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
-	(void) vscr;
 	(void) entry;
 	(void) addr;
 
@@ -1639,7 +1629,7 @@ static int getPropList(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *v
 	return True;
 }
 
-static int getPathList(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
+static int getPathList(WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
 {
 	static char *data;
 	int i, count, len;
@@ -1648,7 +1638,6 @@ static int getPathList(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *v
 	int changed = 0;
 
 	/* Parameter not used, but tell the compiler that it is ok */
-	(void) vscr;
 	(void) ret;
 
  again:
@@ -1708,12 +1697,9 @@ static int getPathList(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *v
 	return True;
 }
 
-static int getEnum(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
+static int getEnum(WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
 {
 	static signed char data;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) vscr;
 
 	data = string2index(entry->plkey, value, entry->default_value, (WOptionEnumeration *) entry->extra_data);
 	if (data < 0)
@@ -2067,15 +2053,12 @@ static WTexture *parse_texture(virtual_screen *vscr, WMPropList *pl)
 	return texture;
 }
 
-static int getTexture(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
+static int getTexture(WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
 {
 	defstructpl *defstruct;
 	WMPropList *name, *defname;
 	int len;
 	char *key;
-
-
-	(void) vscr;
 
 	key = NULL;
 	len = sizeof(char *) * (strlen(entry->key));
@@ -2104,7 +2087,7 @@ static int getTexture(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *va
 	return True;
 }
 
-static int getWSBackground(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
+static int getWSBackground(WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
 {
 	WMPropList *elem;
 	int changed = 0;
@@ -2112,7 +2095,6 @@ static int getWSBackground(virtual_screen *vscr, WDefaultEntry *entry, WMPropLis
 	int nelem;
 
 	/* Parameter not used, but tell the compiler that it is ok */
-	(void) vscr;
 	(void) addr;
 
  again:
@@ -2158,14 +2140,13 @@ static int getWSBackground(virtual_screen *vscr, WDefaultEntry *entry, WMPropLis
 }
 
 static int
-getWSSpecificBackground(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
+getWSSpecificBackground(WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
 {
 	WMPropList *elem;
 	int nelem;
 	int changed = 0;
 
 	/* Parameter not used, but tell the compiler that it is ok */
-	(void) vscr;
 	(void) addr;
 
  again:
@@ -2202,13 +2183,12 @@ getWSSpecificBackground(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *
 	return True;
 }
 
-static int getFont(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
+static int getFont(WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
 {
 	const char *val;
 	char *fontname;
 	int len;
 
-	(void) vscr;
 	(void) addr;
 
 	GET_STRING_OR_DEFAULT("Font", val);
@@ -2226,14 +2206,13 @@ static int getFont(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *value
 	return True;
 }
 
-static int getColor(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
+static int getColor(WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
 {
 	const char *val;
 	int len, def_len;
 	defstruct *color;
 	char *colorname, *def_colorname;
 
-	(void) vscr;
 	(void) addr;
 
 	/* Value */
@@ -2263,12 +2242,11 @@ static int getColor(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *valu
 	return True;
 }
 
-static int getKeybind(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
+static int getKeybind(WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
 {
 	const char *val;
 
 	/* Parameter not used, but tell the compiler that it is ok */
-	(void) vscr;
 	(void) addr;
 
 	GET_STRING_OR_DEFAULT("Key spec", val);
@@ -2282,13 +2260,10 @@ static int getKeybind(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *va
 	return True;
 }
 
-static int getModMask(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
+static int getModMask(WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
 {
 	static int mask;
 	const char *str;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) vscr;
 
 	GET_STRING_OR_DEFAULT("Modifier Key", str);
 
@@ -2530,12 +2505,10 @@ static int parse_cursor(virtual_screen *vscr, WMPropList *pl, Cursor *cursor)
 	return (status);
 }
 
-static int getCursor(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
+static int getCursor(WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
 {
 	defstructpl *defstruct;
 	WMPropList *cursorname, *defcursorname;
-
-	(void) vscr;
 
 	defstruct = NULL;
 	defcursorname = cursorname = NULL;
