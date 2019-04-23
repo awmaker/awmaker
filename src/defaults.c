@@ -106,6 +106,8 @@ static WDECallbackConvert getCursor;
 static WDECallbackUpdate setJustify;
 static WDECallbackUpdate setClearance;
 static WDECallbackUpdate setIfDockPresent;
+static WDECallbackUpdate setIfClipPresent;
+static WDECallbackUpdate setIfDrawerPresent;
 static WDECallbackUpdate setClipMergedInDock;
 static WDECallbackUpdate setWrapAppiconsInDock;
 static WDECallbackUpdate setStickyIcons;
@@ -340,12 +342,12 @@ WDefaultEntry staticOptionList[] = {
 	    &wPreferences.focus_mode, getEnum, NULL, NULL, NULL},	/* manual to sloppy without restart */
 	{"NewStyle", "new", seTitlebarModes,
 	    &wPreferences.new_style, getEnum, NULL, NULL, NULL},
-	{"DisableDock", "NO", (void *)WM_DOCK,
+	{"DisableDock", "NO", NULL,
 	    &wPreferences.flags.nodock, getBool, setIfDockPresent, NULL, NULL},
-	{"DisableClip", "NO", (void *)WM_CLIP,
-	    &wPreferences.flags.noclip, getBool, setIfDockPresent, NULL, NULL},
-	{"DisableDrawers", "NO", (void *)WM_DRAWER,
-	    &wPreferences.flags.nodrawer, getBool, setIfDockPresent, NULL, NULL},
+	{"DisableClip", "NO", NULL,
+	    &wPreferences.flags.noclip, getBool, setIfClipPresent, NULL, NULL},
+	{"DisableDrawers", "NO", NULL,
+	    &wPreferences.flags.nodrawer, getBool, setIfDrawerPresent, NULL, NULL},
 	{"ClipMergedInDock", "NO", NULL,
 	    &wPreferences.flags.clip_merged_in_dock, getBool, setClipMergedInDock, NULL, NULL},
 	{"DisableMiniwindows", "NO", NULL,
@@ -2533,22 +2535,29 @@ static int setClearance(virtual_screen *vscr, void *foo)
 
 static int setIfDockPresent(virtual_screen *vscr, void *extra_data)
 {
-	long which = (long) extra_data;
-
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) vscr;
+	(void) extra_data;
 
-	switch (which) {
-	case WM_DOCK:
-		wPreferences.flags.nodrawer = wPreferences.flags.nodrawer || wPreferences.flags.nodock;
-		break;
-	case WM_CLIP:
-		break;
-	case WM_DRAWER:
-		break;
-	default:
-		break;
-	}
+	wPreferences.flags.nodrawer = wPreferences.flags.nodrawer || wPreferences.flags.nodock;
+
+	return 0;
+}
+
+static int setIfClipPresent(virtual_screen *vscr, void *extra_data)
+{
+	/* Parameter not used, but tell the compiler that it is ok */
+	(void) vscr;
+	(void) extra_data;
+
+	return 0;
+}
+
+static int setIfDrawerPresent(virtual_screen *vscr, void *extra_data)
+{
+	/* Parameter not used, but tell the compiler that it is ok */
+	(void) vscr;
+	(void) extra_data;
 
 	return 0;
 }
