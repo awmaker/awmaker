@@ -2949,10 +2949,10 @@ static int setHightlight(virtual_screen *vscr, WDefaultEntry *entry, void *foo)
 	(void) foo;
 
 	if (!wGetColor(vscr->screen_ptr, wPreferences.color.highlight->value, color)) {
-		wwarning(_("could not get color for key \"%s\""), entry->key);
+		wwarning(_("could not get color for key HighlightColor"));
 		wwarning(_("using default \"%s\" instead"), wPreferences.color.highlight->defvalue);
 		if (!wGetColor(vscr->screen_ptr, wPreferences.color.highlight->defvalue, color)) {
-			wwarning(_("could not get color for key \"%s\""), entry->key);
+			wwarning(_("could not get color for key HighlightColor"));
 			return False;
 		}
 	}
@@ -2977,10 +2977,10 @@ static int setHightlightText(virtual_screen *vscr, WDefaultEntry *entry, void *f
 	(void) foo;
 
 	if (!wGetColor(vscr->screen_ptr, wPreferences.color.highlighttext->value, color)) {
-		wwarning(_("could not get color for key \"%s\""), entry->key);
+		wwarning(_("could not get color for key HighlightTextColor"));
 		wwarning(_("using default \"%s\" instead"), wPreferences.color.highlighttext->defvalue);
 		if (!wGetColor(vscr->screen_ptr, wPreferences.color.highlighttext->defvalue, color)) {
-			wwarning(_("could not get color for key \"%s\""), entry->key);
+			wwarning(_("could not get color for key HighlightTextColor"));
 			return False;
 		}
 	}
@@ -3005,10 +3005,10 @@ static int setClipTitleColor(virtual_screen *vscr, WDefaultEntry *entry, void *e
 	(void) extra_data;
 
 	if (!wGetColor(vscr->screen_ptr, wPreferences.color.cliptitle->value, color)) {
-		wwarning(_("could not get color for key \"%s\""), entry->key);
+		wwarning(_("could not get color for key ClipTitleColor"));
 		wwarning(_("using default \"%s\" instead"), wPreferences.color.cliptitle->defvalue);
 		if (!wGetColor(vscr->screen_ptr, wPreferences.color.cliptitle->defvalue, color)) {
-			wwarning(_("could not get color for key \"%s\""), entry->key);
+			wwarning(_("could not get color for key ClipTitleColor"));
 			return False;
 		}
 	}
@@ -3032,10 +3032,10 @@ static int setClipTitleColorCollapsed(virtual_screen *vscr, WDefaultEntry *entry
 	(void) extra_data;
 
 	if (!wGetColor(vscr->screen_ptr, wPreferences.color.cliptitlecollapsed->value, color)) {
-		wwarning(_("could not get color for key \"%s\""), entry->key);
+		wwarning(_("could not get color for key CClipTitleColor"));
 		wwarning(_("using default \"%s\" instead"), wPreferences.color.cliptitlecollapsed->defvalue);
 		if (!wGetColor(vscr->screen_ptr, wPreferences.color.cliptitlecollapsed->defvalue, color)) {
-			wwarning(_("could not get color for key \"%s\""), entry->key);
+			wwarning(_("could not get color for key CClipTitleColor"));
 			return False;
 		}
 	}
@@ -3059,10 +3059,10 @@ static int setWTitleColorFocused(virtual_screen *vscr, WDefaultEntry *entry, voi
 	(void) extra_data;
 
 	if (!wGetColor(vscr->screen_ptr, wPreferences.color.titlefocused->value, color)) {
-		wwarning(_("could not get color for key \"%s\""), entry->key);
+		wwarning(_("could not get color for key FTitleColor"));
 		wwarning(_("using default \"%s\" instead"), wPreferences.color.titlefocused->defvalue);
 		if (!wGetColor(vscr->screen_ptr, wPreferences.color.titlefocused->defvalue, color)) {
-			wwarning(_("could not get color for key \"%s\""), entry->key);
+			wwarning(_("could not get color for key FTitleColor"));
 			return False;
 		}
 	}
@@ -3088,10 +3088,10 @@ static int setWTitleColorOwner(virtual_screen *vscr, WDefaultEntry *entry, void 
 	(void) extra_data;
 
 	if (!wGetColor(vscr->screen_ptr, wPreferences.color.titleowner->value, color)) {
-		wwarning(_("could not get color for key \"%s\""), entry->key);
+		wwarning(_("could not get color for key PTitleColor"));
 		wwarning(_("using default \"%s\" instead"), wPreferences.color.titleowner->defvalue);
 		if (!wGetColor(vscr->screen_ptr, wPreferences.color.titleowner->defvalue, color)) {
-			wwarning(_("could not get color for key \"%s\""), entry->key);
+			wwarning(_("could not get color for key PTitleColor"));
 			return False;
 		}
 	}
@@ -3117,10 +3117,10 @@ static int setWTitleColorUnfocused(virtual_screen *vscr, WDefaultEntry *entry, v
 	(void) extra_data;
 
 	if (!wGetColor(vscr->screen_ptr, wPreferences.color.titleunfocused->value, color)) {
-		wwarning(_("could not get color for key \"%s\""), entry->key);
+		wwarning(_("could not get color for key UTitleColor"));
 		wwarning(_("using default \"%s\" instead"), wPreferences.color.titleunfocused->defvalue);
 		if (!wGetColor(vscr->screen_ptr, wPreferences.color.titleunfocused->defvalue, color)) {
-			wwarning(_("could not get color for key \"%s\""), entry->key);
+			wwarning(_("could not get color for key UTitleColor"));
 			return False;
 		}
 	}
@@ -3146,10 +3146,10 @@ static int setMenuTitleColor(virtual_screen *vscr, WDefaultEntry *entry, void *e
 	(void) extra_data;
 
 	if (!wGetColor(vscr->screen_ptr, wPreferences.color.menutitle->value, color)) {
-		wwarning(_("could not get color for key \"%s\""), entry->key);
+		wwarning(_("could not get color for key MenuTitleColor"));
 		wwarning(_("using default \"%s\" instead"), wPreferences.color.menutitle->defvalue);
 		if (!wGetColor(vscr->screen_ptr, wPreferences.color.menutitle->defvalue, color)) {
-			wwarning(_("could not get color for key \"%s\""), entry->key);
+			wwarning(_("could not get color for key MenuTitleColor"));
 			return False;
 		}
 	}
@@ -3174,10 +3174,10 @@ static int setMenuTextColor(virtual_screen *vscr, WDefaultEntry *entry, void *ex
 	(void) extra_data;
 
 	if (!wGetColor(vscr->screen_ptr, wPreferences.color.menutext->value, color)) {
-		wwarning(_("could not get color for key \"%s\""), entry->key);
+		wwarning(_("could not get color for key MenuTextColor"));
 		wwarning(_("using default \"%s\" instead"), wPreferences.color.menutext->defvalue);
 		if (!wGetColor(vscr->screen_ptr, wPreferences.color.menutext->defvalue, color)) {
-			wwarning(_("could not get color for key \"%s\""), entry->key);
+			wwarning(_("could not get color for key MenuTextColor"));
 			return False;
 		}
 	}
@@ -3207,10 +3207,10 @@ static int setMenuDisabledColor(virtual_screen *vscr, WDefaultEntry *entry, void
 	(void) extra_data;
 
 	if (!wGetColor(vscr->screen_ptr, wPreferences.color.menudisabled->value, color)) {
-		wwarning(_("could not get color for key \"%s\""), entry->key);
+		wwarning(_("could not get color for key MenuDisabledColor"));
 		wwarning(_("using default \"%s\" instead"), wPreferences.color.menudisabled->defvalue);
 		if (!wGetColor(vscr->screen_ptr, wPreferences.color.menudisabled->defvalue, color)) {
-			wwarning(_("could not get color for key \"%s\""), entry->key);
+			wwarning(_("could not get color for key MenuDisabledColor"));
 			return False;
 		}
 	}
@@ -3240,10 +3240,10 @@ static int setIconTitleColor(virtual_screen *vscr, WDefaultEntry *entry, void *e
 	(void) extra_data;
 
 	if (!wGetColor(vscr->screen_ptr, wPreferences.color.icontitle->value, color)) {
-		wwarning(_("could not get color for key \"%s\""), entry->key);
+		wwarning(_("could not get color for key IconTitleColor"));
 		wwarning(_("using default \"%s\" instead"), wPreferences.color.icontitle->defvalue);
 		if (!wGetColor(vscr->screen_ptr, wPreferences.color.icontitle->defvalue, color)) {
-			wwarning(_("could not get color for key \"%s\""), entry->key);
+			wwarning(_("could not get color for key IconTitleColor"));
 			return False;
 		}
 	}
@@ -3268,10 +3268,10 @@ static int setIconTitleBack(virtual_screen *vscr, WDefaultEntry *entry, void *ex
 	(void) extra_data;
 
 	if (!wGetColor(vscr->screen_ptr, wPreferences.color.icontitleback->value, color)) {
-		wwarning(_("could not get color for key \"%s\""), entry->key);
+		wwarning(_("could not get color for key IconTitleBack"));
 		wwarning(_("using default \"%s\" instead"), wPreferences.color.icontitleback->defvalue);
 		if (!wGetColor(vscr->screen_ptr, wPreferences.color.icontitleback->defvalue, color)) {
-			wwarning(_("could not get color for key \"%s\""), entry->key);
+			wwarning(_("could not get color for key IconTitleBack"));
 			return False;
 		}
 	}
@@ -3305,10 +3305,10 @@ static int setFrameBorderColor(virtual_screen *vscr, WDefaultEntry *entry, void 
 	(void) extra_data;
 
 	if (!wGetColor(vscr->screen_ptr, wPreferences.color.frameborder->value, color)) {
-		wwarning(_("could not get color for key \"%s\""), entry->key);
+		wwarning(_("could not get color for key FrameBorderColor"));
 		wwarning(_("using default \"%s\" instead"), wPreferences.color.frameborder->defvalue);
 		if (!wGetColor(vscr->screen_ptr, wPreferences.color.frameborder->defvalue, color)) {
-			wwarning(_("could not get color for key \"%s\""), entry->key);
+			wwarning(_("could not get color for key FrameBorderColor"));
 			return False;
 		}
 	}
@@ -3333,10 +3333,10 @@ static int setFrameFocusedBorderColor(virtual_screen *vscr, WDefaultEntry *entry
 	(void) extra_data;
 
 	if (!wGetColor(vscr->screen_ptr, wPreferences.color.frameborderfocused->value, color)) {
-		wwarning(_("could not get color for key \"%s\""), entry->key);
+		wwarning(_("could not get color for key FrameFocusedBorderColor"));
 		wwarning(_("using default \"%s\" instead"), wPreferences.color.frameborderfocused->defvalue);
 		if (!wGetColor(vscr->screen_ptr, wPreferences.color.frameborderfocused->defvalue, color)) {
-			wwarning(_("could not get color for key \"%s\""), entry->key);
+			wwarning(_("could not get color for key FrameFocusedBorderColor"));
 			return False;
 		}
 	}
@@ -3361,10 +3361,10 @@ static int setFrameSelectedBorderColor(virtual_screen *vscr, WDefaultEntry *entr
 	(void) extra_data;
 
 	if (!wGetColor(vscr->screen_ptr, wPreferences.color.frameborderselected->value, color)) {
-		wwarning(_("could not get color for key \"%s\""), entry->key);
+		wwarning(_("could not get color for key FrameSelectedBorderColor"));
 		wwarning(_("using default \"%s\" instead"), wPreferences.color.frameborderselected->defvalue);
 		if (!wGetColor(vscr->screen_ptr, wPreferences.color.frameborderselected->defvalue, color)) {
-			wwarning(_("could not get color for key \"%s\""), entry->key);
+			wwarning(_("could not get color for key FrameSelectedBorderColor"));
 			return False;
 		}
 	}
@@ -3831,7 +3831,7 @@ static int setKeyGrab(virtual_screen *vscr, WDefaultEntry *entry, void *extra_da
 			*k = 0;
 			mod = wXModifierFromKey(b);
 			if (mod < 0) {
-				wwarning(_("%s: invalid key modifier \"%s\""), entry->key, b);
+				wwarning(_("Invalid key modifier \"%s\""), b);
 				error = 1;
 			}
 			shortcut.modifier |= mod;
@@ -3844,14 +3844,14 @@ static int setKeyGrab(virtual_screen *vscr, WDefaultEntry *entry, void *extra_da
 			ksym = XStringToKeysym(b);
 
 			if (ksym == NoSymbol) {
-				wwarning(_("%s:invalid kbd shortcut specification \"%s\""), entry->key, value);
+				wwarning(_("Invalid kbd shortcut specification \"%s\""), value);
 				error = 1;
 			}
 
 			if (!error) {
 				shortcut.keycode = XKeysymToKeycode(dpy, ksym);
 				if (shortcut.keycode == 0) {
-					wwarning(_("%s:invalid key in shortcut \"%s\""), entry->key, value);
+					wwarning(_("Invalid key in shortcut \"%s\""), value);
 					error = 1;
 				}
 			}
@@ -3953,6 +3953,7 @@ static int setSwPOptions(virtual_screen *vscr, WDefaultEntry *entry, void *foo)
 	int cwidth, cheight;
 
 	(void) foo;
+	(void) entry;
 
 	array = wPreferences.sp_options;
 
@@ -3968,18 +3969,18 @@ static int setSwPOptions(virtual_screen *vscr, WDefaultEntry *entry, void *foo)
 	switch (WMGetPropListItemCount(array)) {
 	case 4:
 		if (!WMIsPLString(WMGetFromPLArray(array, 1))) {
-			wwarning(_("Invalid arguments for option \"%s\""), entry->key);
+			wwarning(_("Invalid arguments for option SwitchPanelImages"));
 			break;
 		} else
 			path = FindImage(wPreferences.pixmap_path, WMGetFromPLString(WMGetFromPLArray(array, 1)));
 
 		if (!path) {
-			wwarning(_("Could not find image \"%s\" for option \"%s\""),
-				 WMGetFromPLString(WMGetFromPLArray(array, 1)), entry->key);
+			wwarning(_("Could not find image \"%s\" for option SwitchPanelImages"),
+				 WMGetFromPLString(WMGetFromPLArray(array, 1)));
 		} else {
 			bgimage = RLoadImage(vscr->screen_ptr->rcontext, path, 0);
 			if (!bgimage) {
-				wwarning(_("Could not load image \"%s\" for option \"%s\""), path, entry->key);
+				wwarning(_("Could not load image \"%s\" for option SwitchPanelImages"), path);
 				wfree(path);
 			} else {
 				wfree(path);
@@ -4038,29 +4039,29 @@ static int setSwPOptions(virtual_screen *vscr, WDefaultEntry *entry, void *foo)
 		/* Falls through */
 	case 1:
 		if (!WMIsPLString(WMGetFromPLArray(array, 0))) {
-			wwarning(_("Invalid arguments for option \"%s\""), entry->key);
+			wwarning(_("Invalid arguments for option SwitchPanelImages"));
 			break;
 		} else {
 			path = FindImage(wPreferences.pixmap_path, WMGetFromPLString(WMGetFromPLArray(array, 0)));
 		}
 
 		if (!path) {
-			wwarning(_("Could not find image \"%s\" for option \"%s\""),
-				 WMGetFromPLString(WMGetFromPLArray(array, 0)), entry->key);
+			wwarning(_("Could not find image \"%s\" for option SwitchPanelImages"),
+				 WMGetFromPLString(WMGetFromPLArray(array, 0)));
 		} else {
 			if (wPreferences.swtileImage)
 				RReleaseImage(wPreferences.swtileImage);
 
 			wPreferences.swtileImage = RLoadImage(vscr->screen_ptr->rcontext, path, 0);
 			if (!wPreferences.swtileImage)
-				wwarning(_("Could not load image \"%s\" for option \"%s\""), path, entry->key);
+				wwarning(_("Could not load image \"%s\" for option SwitchPanelImages"), path);
 
 			wfree(path);
 		}
 		break;
 
 	default:
-		wwarning(_("Invalid number of arguments for option \"%s\""), entry->key);
+		wwarning(_("Invalid number of arguments for option SwitchPanelImages"));
 		break;
 	}
 
@@ -4075,11 +4076,12 @@ static int setModifierKeyLabels(virtual_screen *vscr, WDefaultEntry *entry, void
 	int i;
 
 	(void) foo;
+	(void) entry;
 
 	array = wPreferences.modifierkeylabels;
 
 	if (!WMIsPLArray(array) || WMGetPropListItemCount(array) != 7) {
-		wwarning(_("Value for option \"%s\" must be an array of 7 strings"), entry->key);
+		wwarning(_("Value for option SwitchPanelImages must be an array of 7 strings"));
 		WMReleasePropList(array);
 		return 0;
 	}
@@ -4095,7 +4097,7 @@ static int setModifierKeyLabels(virtual_screen *vscr, WDefaultEntry *entry, void
 		if (WMIsPLString(WMGetFromPLArray(array, i))) {
 			wPreferences.modifier_labels[i] = wstrdup(WMGetFromPLString(WMGetFromPLArray(array, i)));
 		} else {
-			wwarning(_("Invalid argument for option \"%s\" item %d"), entry->key, i);
+			wwarning(_("Invalid argument for option ModifierKeyLabels item %d"), i);
 			wPreferences.modifier_labels[i] = NULL;
 		}
 	}
