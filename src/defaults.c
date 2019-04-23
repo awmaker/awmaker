@@ -65,8 +65,8 @@
 #include "winmenu.h"
 
 typedef struct _WDefaultEntry  WDefaultEntry;
-typedef int (WDECallbackConvert) (WDefaultEntry *entry, WMPropList *plvalue, void *addr, void **tdata);
-typedef int (WDECallbackUpdate) (virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data);
+typedef int (WDECallbackConvert) (WDefaultEntry *entry, WMPropList *plvalue, void *addr);
+typedef int (WDECallbackUpdate) (virtual_screen *vscr, WDefaultEntry *entry, void *extra_data);
 
 struct _WDefaultEntry {
 	const char *key;
@@ -1172,7 +1172,6 @@ static void wReadStaticDefaults(WMPropList *dict)
 	WMPropList *plvalue;
 	WDefaultEntry *entry;
 	unsigned int i;
-	void *tdata;
 
 	for (i = 0; i < wlengthof(staticOptionList); i++) {
 		entry = &staticOptionList[i];
@@ -1188,9 +1187,9 @@ static void wReadStaticDefaults(WMPropList *dict)
 
 		if (plvalue) {
 			/* convert data */
-			(*entry->convert) (entry, plvalue, entry->addr, &tdata);
+			(*entry->convert) (entry, plvalue, entry->addr);
 			if (entry->update)
-				(*entry->update) (NULL, entry, tdata, entry->extra_data);
+				(*entry->update) (NULL, entry, entry->extra_data);
 		}
 	}
 }
@@ -1200,7 +1199,6 @@ static void read_defaults_noscreen(WMPropList *new_dict)
 	unsigned int i;
 	WMPropList *plvalue, *old_value, *old_dict = NULL;
 	WDefaultEntry *entry;
-	void *tdata;
 
 	if (w_global.domain.wmaker->dictionary != new_dict)
 		old_dict = w_global.domain.wmaker->dictionary;
@@ -1241,9 +1239,9 @@ static void read_defaults_noscreen(WMPropList *new_dict)
 		/* convert data */
 		if (plvalue) {
 			/* convert data */
-			if ((*entry->convert) (entry, plvalue, entry->addr, &tdata)) {
+			if ((*entry->convert) (entry, plvalue, entry->addr)) {
 				if (entry->update)
-					(*entry->update) (NULL, entry, tdata, entry->extra_data);
+					(*entry->update) (NULL, entry, entry->extra_data);
 			}
 		}
 	}
@@ -1255,7 +1253,6 @@ static unsigned int read_defaults_step1(virtual_screen *vscr, WMPropList *new_di
 	int update_workspace_back = 0;
 	WMPropList *plvalue, *old_value, *old_dict = NULL;
 	WDefaultEntry *entry;
-	void *tdata;
 
 	if (w_global.domain.wmaker->dictionary != new_dict)
 		old_dict = w_global.domain.wmaker->dictionary;
@@ -1299,7 +1296,7 @@ static unsigned int read_defaults_step1(virtual_screen *vscr, WMPropList *new_di
 
 		if (plvalue) {
 			/* convert data */
-			if ((*entry->convert) (entry, plvalue, entry->addr, &tdata)) {
+			if ((*entry->convert) (entry, plvalue, entry->addr)) {
 				/*
 				 * If the WorkspaceSpecificBack data has been changed
 				 * so that the helper will be launched now, we must be
@@ -1311,7 +1308,7 @@ static unsigned int read_defaults_step1(virtual_screen *vscr, WMPropList *new_di
 					update_workspace_back = 1;
 
 				if (entry->update)
-					needs_refresh |= (*entry->update) (vscr, entry, tdata, entry->extra_data);
+					needs_refresh |= (*entry->update) (vscr, entry, entry->extra_data);
 			}
 		}
 	}
@@ -1480,7 +1477,7 @@ static int string2index(WMPropList *key, WMPropList *val, const char *def, WOpti
  * ret - is the address to store a pointer to a temporary buffer. ret
  * 	must not be freed and is used by the set functions
  */
-static int getBool(WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
+static int getBool(WDefaultEntry *entry, WMPropList *value, void *addr)
 {
 	static char data;
 	const char *val;
@@ -1515,15 +1512,13 @@ static int getBool(WDefaultEntry *entry, WMPropList *value, void *addr, void **r
 		}
 	}
 
-	if (ret)
-		*ret = &data;
 	if (addr)
 		*(char *)addr = data;
 
 	return True;
 }
 
-static int getInt(WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
+static int getInt(WDefaultEntry *entry, WMPropList *value, void *addr)
 {
 	static int data;
 	const char *val;
@@ -1539,15 +1534,13 @@ static int getInt(WDefaultEntry *entry, WMPropList *value, void *addr, void **re
 		}
 	}
 
-	if (ret)
-		*ret = &data;
 	if (addr)
 		*(int *)addr = data;
 
 	return True;
 }
 
-static int getCoord(WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
+static int getCoord(WDefaultEntry *entry, WMPropList *value, void *addr)
 {
 	static WCoord data;
 	char *val_x, *val_y;
@@ -1606,16 +1599,13 @@ static int getCoord(WDefaultEntry *entry, WMPropList *value, void *addr, void **
 		return False;
 	}
 
-	if (ret)
-		*ret = &data;
-
 	if (addr)
 		*(WCoord *) addr = data;
 
 	return True;
 }
 
-static int getPropList(WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
+static int getPropList(WDefaultEntry *entry, WMPropList *value, void *addr)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
@@ -1623,22 +1613,18 @@ static int getPropList(WDefaultEntry *entry, WMPropList *value, void *addr, void
 
 	WMRetainPropList(value);
 
-	*ret = value;
 	*(WMPropList **) addr = value;
 
 	return True;
 }
 
-static int getPathList(WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
+static int getPathList(WDefaultEntry *entry, WMPropList *value, void *addr)
 {
 	static char *data;
 	int i, count, len;
 	char *ptr;
 	WMPropList *d;
 	int changed = 0;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) ret;
 
  again:
 	if (!WMIsPLArray(value)) {
@@ -1697,16 +1683,13 @@ static int getPathList(WDefaultEntry *entry, WMPropList *value, void *addr, void
 	return True;
 }
 
-static int getEnum(WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
+static int getEnum(WDefaultEntry *entry, WMPropList *value, void *addr)
 {
 	static signed char data;
 
 	data = string2index(entry->plkey, value, entry->default_value, (WOptionEnumeration *) entry->extra_data);
 	if (data < 0)
 		return False;
-
-	if (ret)
-		*ret = &data;
 
 	if (addr)
 		*(signed char *)addr = data;
@@ -2053,7 +2036,7 @@ static WTexture *parse_texture(virtual_screen *vscr, WMPropList *pl)
 	return texture;
 }
 
-static int getTexture(WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
+static int getTexture(WDefaultEntry *entry, WMPropList *value, void *addr)
 {
 	defstructpl *defstruct;
 	WMPropList *name, *defname;
@@ -2081,13 +2064,10 @@ static int getTexture(WDefaultEntry *entry, WMPropList *value, void *addr, void 
 	if (addr)
 		*(defstructpl **)addr = defstruct;
 
-	if (ret)
-		*ret = &defstruct;
-
 	return True;
 }
 
-static int getWSBackground(WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
+static int getWSBackground(WDefaultEntry *entry, WMPropList *value, void *addr)
 {
 	WMPropList *elem;
 	int changed = 0;
@@ -2133,14 +2113,13 @@ static int getWSBackground(WDefaultEntry *entry, WMPropList *value, void *addr, 
 
 	WMRetainPropList(value);
 
-	*ret = value;
 	*(WMPropList **) addr = value;
 
 	return True;
 }
 
 static int
-getWSSpecificBackground(WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
+getWSSpecificBackground(WDefaultEntry *entry, WMPropList *value, void *addr)
 {
 	WMPropList *elem;
 	int nelem;
@@ -2177,13 +2156,12 @@ getWSSpecificBackground(WDefaultEntry *entry, WMPropList *value, void *addr, voi
 
 	WMRetainPropList(value);
 
-	*ret = value;
 	*(WMPropList **) addr = value;
 
 	return True;
 }
 
-static int getFont(WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
+static int getFont(WDefaultEntry *entry, WMPropList *value, void *addr)
 {
 	const char *val;
 	char *fontname;
@@ -2200,13 +2178,10 @@ static int getFont(WDefaultEntry *entry, WMPropList *value, void *addr, void **r
 	if (addr)
 		*(char **)addr = fontname;
 
-	if (ret)
-		*ret = &fontname;
-
 	return True;
 }
 
-static int getColor(WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
+static int getColor(WDefaultEntry *entry, WMPropList *value, void *addr)
 {
 	const char *val;
 	int len, def_len;
@@ -2236,13 +2211,10 @@ static int getColor(WDefaultEntry *entry, WMPropList *value, void *addr, void **
 	if (addr)
 		*(defstruct **)addr = color;
 
-	if (ret)
-		*ret = &color;
-
 	return True;
 }
 
-static int getKeybind(WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
+static int getKeybind(WDefaultEntry *entry, WMPropList *value, void *addr)
 {
 	const char *val;
 
@@ -2254,13 +2226,10 @@ static int getKeybind(WDefaultEntry *entry, WMPropList *value, void *addr, void 
 	if (addr)
 		wstrlcpy(addr, val, MAX_SHORTCUT_LENGTH);
 
-	if (ret)
-		*ret = addr;
-
 	return True;
 }
 
-static int getModMask(WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
+static int getModMask(WDefaultEntry *entry, WMPropList *value, void *addr)
 {
 	static int mask;
 	const char *str;
@@ -2279,9 +2248,6 @@ static int getModMask(WDefaultEntry *entry, WMPropList *value, void *addr, void 
 
 	if (addr)
 		*(int *)addr = mask;
-
-	if (ret)
-		*ret = &mask;
 
 	return True;
 }
@@ -2505,7 +2471,7 @@ static int parse_cursor(virtual_screen *vscr, WMPropList *pl, Cursor *cursor)
 	return (status);
 }
 
-static int getCursor(WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
+static int getCursor(WDefaultEntry *entry, WMPropList *value, void *addr)
 {
 	defstructpl *defstruct;
 	WMPropList *cursorname, *defcursorname;
@@ -2541,45 +2507,39 @@ static int getCursor(WDefaultEntry *entry, WMPropList *value, void *addr, void *
 	if (addr)
 		*(defstructpl **)addr = defstruct;
 
-	if (ret)
-		*ret = &defstruct;
-
 	return True;
 }
 
 #undef CURSOR_ID_NONE
 
 /* ---------------- value setting functions --------------- */
-static int setJustify(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data)
+static int setJustify(virtual_screen *vscr, WDefaultEntry *entry, void *extra_data)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) vscr;
 	(void) entry;
-	(void) tdata;
 	(void) extra_data;
 
 	return REFRESH_WINDOW_TITLE_COLOR;
 }
 
-static int setClearance(virtual_screen *vscr, WDefaultEntry *entry, void *bar, void *foo)
+static int setClearance(virtual_screen *vscr, WDefaultEntry *entry, void *foo)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) vscr;
 	(void) entry;
-	(void) bar;
 	(void) foo;
 
 	return REFRESH_WINDOW_FONT | REFRESH_BUTTON_IMAGES | REFRESH_MENU_TITLE_FONT | REFRESH_MENU_FONT;
 }
 
-static int setIfDockPresent(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data)
+static int setIfDockPresent(virtual_screen *vscr, WDefaultEntry *entry, void *extra_data)
 {
 	long which = (long) extra_data;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) vscr;
 	(void) entry;
-	(void) tdata;
 
 	switch (which) {
 	case WM_DOCK:
@@ -2596,35 +2556,32 @@ static int setIfDockPresent(virtual_screen *vscr, WDefaultEntry *entry, void *td
 	return 0;
 }
 
-static int setClipMergedInDock(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setClipMergedInDock(virtual_screen *vscr, WDefaultEntry *entry, void *foo)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) vscr;
 	(void) entry;
 	(void) foo;
-	(void) tdata;
 
 	wPreferences.flags.noclip = wPreferences.flags.noclip || wPreferences.flags.clip_merged_in_dock;
 	return 0;
 }
 
-static int setWrapAppiconsInDock(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setWrapAppiconsInDock(virtual_screen *vscr, WDefaultEntry *entry, void *foo)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) vscr;
 	(void) entry;
 	(void) foo;
-	(void) tdata;
 
 	return 0;
 }
 
-static int setStickyIcons(virtual_screen *vscr, WDefaultEntry *entry, void *bar, void *foo)
+static int setStickyIcons(virtual_screen *vscr, WDefaultEntry *entry, void *foo)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) vscr;
 	(void) entry;
-	(void) bar;
 	(void) foo;
 
 	return REFRESH_STICKY_ICONS;
@@ -2685,7 +2642,7 @@ WTexture *get_texture_from_defstruct(virtual_screen *vscr, defstructpl *ds)
 	return texture;
 }
 
-static int setIconTile(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setIconTile(virtual_screen *vscr, WDefaultEntry *entry, void *foo)
 {
 	Pixmap pixmap;
 	RImage *img;
@@ -2694,7 +2651,6 @@ static int setIconTile(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, 
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) foo;
-	(void) tdata;
 
 	texture = get_texture_from_defstruct(vscr, wPreferences.texture.iconback);
 
@@ -2755,14 +2711,13 @@ static int setIconTile(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, 
 	return (reset ? REFRESH_ICON_TILE : 0);
 }
 
-static int setWinTitleFont(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setWinTitleFont(virtual_screen *vscr, WDefaultEntry *entry, void *foo)
 {
 	WMFont *font = NULL;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 	(void) foo;
-	(void) tdata;
 	int fixedlen = sizeof(char *) * 5;
 
 	/* We must have the font loaded, but... */
@@ -2794,14 +2749,13 @@ static int setWinTitleFont(virtual_screen *vscr, WDefaultEntry *entry, void *tda
 	return REFRESH_WINDOW_FONT | REFRESH_BUTTON_IMAGES;
 }
 
-static int setMenuTitleFont(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setMenuTitleFont(virtual_screen *vscr, WDefaultEntry *entry, void *foo)
 {
 	WMFont *font = NULL;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 	(void) foo;
-	(void) tdata;
 	int fixedlen = sizeof(char *) * 5;
 
 	/* We must have the font loaded, but... */
@@ -2833,14 +2787,13 @@ static int setMenuTitleFont(virtual_screen *vscr, WDefaultEntry *entry, void *td
 	return REFRESH_MENU_TITLE_FONT;
 }
 
-static int setMenuTextFont(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setMenuTextFont(virtual_screen *vscr, WDefaultEntry *entry, void *foo)
 {
 	WMFont *font = NULL;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 	(void) foo;
-	(void) tdata;
 	int fixedlen = sizeof(char *) * 5;
 
 	/* We must have the font loaded, but... */
@@ -2872,14 +2825,13 @@ static int setMenuTextFont(virtual_screen *vscr, WDefaultEntry *entry, void *tda
 	return REFRESH_MENU_FONT;
 }
 
-static int setIconTitleFont(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setIconTitleFont(virtual_screen *vscr, WDefaultEntry *entry, void *foo)
 {
 	WMFont *font = NULL;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 	(void) foo;
-	(void) tdata;
 	int fixedlen = sizeof(char *) * 5;
 
 	/* We must have the font loaded, but... */
@@ -2911,14 +2863,13 @@ static int setIconTitleFont(virtual_screen *vscr, WDefaultEntry *entry, void *td
 	return REFRESH_ICON_FONT;
 }
 
-static int setClipTitleFont(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setClipTitleFont(virtual_screen *vscr, WDefaultEntry *entry, void *foo)
 {
 	WMFont *font = NULL;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 	(void) foo;
-	(void) tdata;
 	int fixedlen = sizeof(char *) * 5;
 
 	/* We must have the font loaded, but... */
@@ -2950,14 +2901,13 @@ static int setClipTitleFont(virtual_screen *vscr, WDefaultEntry *entry, void *td
 	return REFRESH_ICON_FONT;
 }
 
-static int setLargeDisplayFont(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setLargeDisplayFont(virtual_screen *vscr, WDefaultEntry *entry, void *foo)
 {
 	WMFont *font = NULL;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 	(void) foo;
-	(void) tdata;
 	int fixedlen = sizeof(char *) * 5;
 
 	/* We must have the font loaded, but... */
@@ -2989,7 +2939,7 @@ static int setLargeDisplayFont(virtual_screen *vscr, WDefaultEntry *entry, void 
 	return 0;
 }
 
-static int setHightlight(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setHightlight(virtual_screen *vscr, WDefaultEntry *entry, void *foo)
 {
 	XColor clr, *color = NULL;
 	color = &clr;
@@ -2997,7 +2947,6 @@ static int setHightlight(virtual_screen *vscr, WDefaultEntry *entry, void *tdata
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 	(void) foo;
-	(void) tdata;
 
 	if (!wGetColor(vscr->screen_ptr, wPreferences.color.highlight->value, color)) {
 		wwarning(_("could not get color for key \"%s\""), entry->key);
@@ -3018,7 +2967,7 @@ static int setHightlight(virtual_screen *vscr, WDefaultEntry *entry, void *tdata
 	return REFRESH_MENU_COLOR;
 }
 
-static int setHightlightText(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setHightlightText(virtual_screen *vscr, WDefaultEntry *entry, void *foo)
 {
 	XColor clr, *color = NULL;
 	color = &clr;
@@ -3026,7 +2975,6 @@ static int setHightlightText(virtual_screen *vscr, WDefaultEntry *entry, void *t
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 	(void) foo;
-	(void) tdata;
 
 	if (!wGetColor(vscr->screen_ptr, wPreferences.color.highlighttext->value, color)) {
 		wwarning(_("could not get color for key \"%s\""), entry->key);
@@ -3047,14 +2995,13 @@ static int setHightlightText(virtual_screen *vscr, WDefaultEntry *entry, void *t
 	return REFRESH_MENU_COLOR;
 }
 
-static int setClipTitleColor(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data)
+static int setClipTitleColor(virtual_screen *vscr, WDefaultEntry *entry, void *extra_data)
 {
 	XColor clr, *color = NULL;
 	color = &clr;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
-	(void) tdata;
 	(void) extra_data;
 
 	if (!wGetColor(vscr->screen_ptr, wPreferences.color.cliptitle->value, color)) {
@@ -3075,14 +3022,13 @@ static int setClipTitleColor(virtual_screen *vscr, WDefaultEntry *entry, void *t
 	return REFRESH_ICON_TITLE_COLOR;
 }
 
-static int setClipTitleColorCollapsed(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data)
+static int setClipTitleColorCollapsed(virtual_screen *vscr, WDefaultEntry *entry, void *extra_data)
 {
 	XColor clr, *color = NULL;
 	color = &clr;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
-	(void) tdata;
 	(void) extra_data;
 
 	if (!wGetColor(vscr->screen_ptr, wPreferences.color.cliptitlecollapsed->value, color)) {
@@ -3103,14 +3049,13 @@ static int setClipTitleColorCollapsed(virtual_screen *vscr, WDefaultEntry *entry
 	return REFRESH_ICON_TITLE_COLOR;
 }
 
-static int setWTitleColorFocused(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data)
+static int setWTitleColorFocused(virtual_screen *vscr, WDefaultEntry *entry, void *extra_data)
 {
 	XColor clr, *color = NULL;
 	color = &clr;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
-	(void) tdata;
 	(void) extra_data;
 
 	if (!wGetColor(vscr->screen_ptr, wPreferences.color.titlefocused->value, color)) {
@@ -3133,14 +3078,13 @@ static int setWTitleColorFocused(virtual_screen *vscr, WDefaultEntry *entry, voi
 	return REFRESH_WINDOW_TITLE_COLOR;
 }
 
-static int setWTitleColorOwner(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data)
+static int setWTitleColorOwner(virtual_screen *vscr, WDefaultEntry *entry, void *extra_data)
 {
 	XColor clr, *color = NULL;
 	color = &clr;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
-	(void) tdata;
 	(void) extra_data;
 
 	if (!wGetColor(vscr->screen_ptr, wPreferences.color.titleowner->value, color)) {
@@ -3163,14 +3107,13 @@ static int setWTitleColorOwner(virtual_screen *vscr, WDefaultEntry *entry, void 
 	return REFRESH_WINDOW_TITLE_COLOR;
 }
 
-static int setWTitleColorUnfocused(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data)
+static int setWTitleColorUnfocused(virtual_screen *vscr, WDefaultEntry *entry, void *extra_data)
 {
 	XColor clr, *color = NULL;
 	color = &clr;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
-	(void) tdata;
 	(void) extra_data;
 
 	if (!wGetColor(vscr->screen_ptr, wPreferences.color.titleunfocused->value, color)) {
@@ -3193,14 +3136,13 @@ static int setWTitleColorUnfocused(virtual_screen *vscr, WDefaultEntry *entry, v
 	return REFRESH_WINDOW_TITLE_COLOR;
 }
 
-static int setMenuTitleColor(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data)
+static int setMenuTitleColor(virtual_screen *vscr, WDefaultEntry *entry, void *extra_data)
 {
 	XColor clr, *color = NULL;
 	color = &clr;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
-	(void) tdata;
 	(void) extra_data;
 
 	if (!wGetColor(vscr->screen_ptr, wPreferences.color.menutitle->value, color)) {
@@ -3222,14 +3164,13 @@ static int setMenuTitleColor(virtual_screen *vscr, WDefaultEntry *entry, void *t
 	return REFRESH_MENU_TITLE_COLOR;
 }
 
-static int setMenuTextColor(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data)
+static int setMenuTextColor(virtual_screen *vscr, WDefaultEntry *entry, void *extra_data)
 {
 	XColor clr, *color = NULL;
 	color = &clr;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
-	(void) tdata;
 	(void) extra_data;
 
 	if (!wGetColor(vscr->screen_ptr, wPreferences.color.menutext->value, color)) {
@@ -3256,14 +3197,13 @@ static int setMenuTextColor(virtual_screen *vscr, WDefaultEntry *entry, void *td
 	return REFRESH_MENU_COLOR;
 }
 
-static int setMenuDisabledColor(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data)
+static int setMenuDisabledColor(virtual_screen *vscr, WDefaultEntry *entry, void *extra_data)
 {
 	XColor clr, *color = NULL;
 	color = &clr;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
-	(void) tdata;
 	(void) extra_data;
 
 	if (!wGetColor(vscr->screen_ptr, wPreferences.color.menudisabled->value, color)) {
@@ -3290,14 +3230,13 @@ static int setMenuDisabledColor(virtual_screen *vscr, WDefaultEntry *entry, void
 	return REFRESH_MENU_COLOR;
 }
 
-static int setIconTitleColor(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data)
+static int setIconTitleColor(virtual_screen *vscr, WDefaultEntry *entry, void *extra_data)
 {
 	XColor clr, *color = NULL;
 	color = &clr;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
-	(void) tdata;
 	(void) extra_data;
 
 	if (!wGetColor(vscr->screen_ptr, wPreferences.color.icontitle->value, color)) {
@@ -3319,14 +3258,13 @@ static int setIconTitleColor(virtual_screen *vscr, WDefaultEntry *entry, void *t
 	return REFRESH_ICON_TITLE_COLOR;
 }
 
-static int setIconTitleBack(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data)
+static int setIconTitleBack(virtual_screen *vscr, WDefaultEntry *entry, void *extra_data)
 {
 	XColor clr, *color = NULL;
 	color = &clr;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
-	(void) tdata;
 	(void) extra_data;
 
 	if (!wGetColor(vscr->screen_ptr, wPreferences.color.icontitleback->value, color)) {
@@ -3346,26 +3284,24 @@ static int setIconTitleBack(virtual_screen *vscr, WDefaultEntry *entry, void *td
 	return REFRESH_ICON_TITLE_BACK;
 }
 
-static int setFrameBorderWidth(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data)
+static int setFrameBorderWidth(virtual_screen *vscr, WDefaultEntry *entry, void *extra_data)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 	(void) extra_data;
-	(void) tdata;
 
 	vscr->frame.border_width = wPreferences.border_width;
 
 	return REFRESH_FRAME_BORDER;
 }
 
-static int setFrameBorderColor(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data)
+static int setFrameBorderColor(virtual_screen *vscr, WDefaultEntry *entry, void *extra_data)
 {
 	XColor clr, *color = NULL;
 	color = &clr;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
-	(void) tdata;
 	(void) extra_data;
 
 	if (!wGetColor(vscr->screen_ptr, wPreferences.color.frameborder->value, color)) {
@@ -3387,14 +3323,13 @@ static int setFrameBorderColor(virtual_screen *vscr, WDefaultEntry *entry, void 
 	return REFRESH_FRAME_BORDER;
 }
 
-static int setFrameFocusedBorderColor(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data)
+static int setFrameFocusedBorderColor(virtual_screen *vscr, WDefaultEntry *entry, void *extra_data)
 {
 	XColor clr, *color = NULL;
 	color = &clr;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
-	(void) tdata;
 	(void) extra_data;
 
 	if (!wGetColor(vscr->screen_ptr, wPreferences.color.frameborderfocused->value, color)) {
@@ -3416,14 +3351,13 @@ static int setFrameFocusedBorderColor(virtual_screen *vscr, WDefaultEntry *entry
 	return REFRESH_FRAME_BORDER;
 }
 
-static int setFrameSelectedBorderColor(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data)
+static int setFrameSelectedBorderColor(virtual_screen *vscr, WDefaultEntry *entry, void *extra_data)
 {
 	XColor clr, *color = NULL;
 	color = &clr;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
-	(void) tdata;
 	(void) extra_data;
 
 	if (!wGetColor(vscr->screen_ptr, wPreferences.color.frameborderselected->value, color)) {
@@ -3445,7 +3379,7 @@ static int setFrameSelectedBorderColor(virtual_screen *vscr, WDefaultEntry *entr
 	return REFRESH_FRAME_BORDER;
 }
 
-static int setWorkspaceSpecificBack(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *bar)
+static int setWorkspaceSpecificBack(virtual_screen *vscr, WDefaultEntry *entry, void *foo)
 {
 	WMPropList *value;
 	WMPropList *val;
@@ -3454,8 +3388,7 @@ static int setWorkspaceSpecificBack(virtual_screen *vscr, WDefaultEntry *entry, 
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
-	(void) bar;
-	(void) tdata;
+	(void) foo;
 
 #ifdef notworking
 	/*
@@ -3519,14 +3452,13 @@ static int setWorkspaceSpecificBack(virtual_screen *vscr, WDefaultEntry *entry, 
 	return 0;
 }
 
-static int setWorkspaceBack(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *bar)
+static int setWorkspaceBack(virtual_screen *vscr, WDefaultEntry *entry, void *foo)
 {
 	WMPropList *value;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
-	(void) bar;
-	(void) tdata;
+	(void) foo;
 
 	value = wPreferences.workspacespecificback;
 
@@ -3575,14 +3507,13 @@ static int setWorkspaceBack(virtual_screen *vscr, WDefaultEntry *entry, void *td
 	return 0;
 }
 
-static int setWidgetColor(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setWidgetColor(virtual_screen *vscr, WDefaultEntry *entry, void *foo)
 {
 	WTexture *texture = NULL;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 	(void) foo;
-	(void) tdata;
 
 	texture = get_texture_from_defstruct(vscr, wPreferences.texture.widgetcolor);
 
@@ -3594,14 +3525,13 @@ static int setWidgetColor(virtual_screen *vscr, WDefaultEntry *entry, void *tdat
 	return 0;
 }
 
-static int setFTitleBack(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setFTitleBack(virtual_screen *vscr, WDefaultEntry *entry, void *foo)
 {
 	WTexture *texture = NULL;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 	(void) foo;
-	(void) tdata;
 
 	texture = get_texture_from_defstruct(vscr, wPreferences.texture.titlebackfocused);
 
@@ -3613,14 +3543,13 @@ static int setFTitleBack(virtual_screen *vscr, WDefaultEntry *entry, void *tdata
 	return REFRESH_WINDOW_TEXTURES;
 }
 
-static int setPTitleBack(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setPTitleBack(virtual_screen *vscr, WDefaultEntry *entry, void *foo)
 {
 	WTexture *texture = NULL;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 	(void) foo;
-	(void) tdata;
 
 	texture = get_texture_from_defstruct(vscr, wPreferences.texture.titlebackowner);
 
@@ -3632,14 +3561,13 @@ static int setPTitleBack(virtual_screen *vscr, WDefaultEntry *entry, void *tdata
 	return REFRESH_WINDOW_TEXTURES;
 }
 
-static int setUTitleBack(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setUTitleBack(virtual_screen *vscr, WDefaultEntry *entry, void *foo)
 {
 	WTexture *texture = NULL;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 	(void) foo;
-	(void) tdata;
 
 	texture = get_texture_from_defstruct(vscr, wPreferences.texture.titlebackunfocused);
 
@@ -3651,14 +3579,13 @@ static int setUTitleBack(virtual_screen *vscr, WDefaultEntry *entry, void *tdata
 	return REFRESH_WINDOW_TEXTURES;
 }
 
-static int setResizebarBack(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setResizebarBack(virtual_screen *vscr, WDefaultEntry *entry, void *foo)
 {
 	WTexture *texture = NULL;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 	(void) foo;
-	(void) tdata;
 
 	texture = get_texture_from_defstruct(vscr, wPreferences.texture.resizebarback);
 
@@ -3670,14 +3597,13 @@ static int setResizebarBack(virtual_screen *vscr, WDefaultEntry *entry, void *td
 	return REFRESH_WINDOW_TEXTURES;
 }
 
-static int setMenuTitleBack(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setMenuTitleBack(virtual_screen *vscr, WDefaultEntry *entry, void *foo)
 {
 	WTexture *texture = NULL;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 	(void) foo;
-	(void) tdata;
 
 	texture = get_texture_from_defstruct(vscr, wPreferences.texture.menutitleback);
 
@@ -3689,14 +3615,13 @@ static int setMenuTitleBack(virtual_screen *vscr, WDefaultEntry *entry, void *td
 	return REFRESH_MENU_TITLE_TEXTURE;
 }
 
-static int setMenuTextBack(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setMenuTextBack(virtual_screen *vscr, WDefaultEntry *entry, void *foo)
 {
 	WTexture *texture = NULL;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 	(void) foo;
-	(void) tdata;
 
 	texture = get_texture_from_defstruct(vscr, wPreferences.texture.menutextback);
 
@@ -3711,7 +3636,7 @@ static int setMenuTextBack(virtual_screen *vscr, WDefaultEntry *entry, void *tda
 	return REFRESH_MENU_TEXTURE;
 }
 
-static int setKeyGrab(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data)
+static int setKeyGrab(virtual_screen *vscr, WDefaultEntry *entry, void *extra_data)
 {
 	WShortKey shortcut;
 	WWindow *wwin;
@@ -3723,7 +3648,6 @@ static int setKeyGrab(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, v
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
-	(void) tdata;
 
 	/* TODO: make this as list/array... and remove this ugly if-else block */
 	if (widx == WKBD_ROOTMENU) { /* "RootMenuKey" */
@@ -3962,37 +3886,34 @@ static int setKeyGrab(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, v
 	return 0;
 }
 
-static int setIconPosition(virtual_screen *vscr, WDefaultEntry *entry, void *bar, void *foo)
+static int setIconPosition(virtual_screen *vscr, WDefaultEntry *entry, void *foo)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) vscr;
 	(void) entry;
-	(void) bar;
 	(void) foo;
 
 	return REFRESH_ARRANGE_ICONS;
 }
 
-static int updateUsableArea(virtual_screen *vscr, WDefaultEntry *entry, void *bar, void *foo)
+static int updateUsableArea(virtual_screen *vscr, WDefaultEntry *entry, void *foo)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) vscr;
 	(void) entry;
-	(void) bar;
 	(void) foo;
 
 	return REFRESH_USABLE_AREA;
 
 }
 
-static int setWorkspaceMapBackground(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setWorkspaceMapBackground(virtual_screen *vscr, WDefaultEntry *entry, void *foo)
 {
 	WTexture *texture = NULL;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 	(void) foo;
-	(void) tdata;
 
 	texture = get_texture_from_defstruct(vscr, wPreferences.texture.workspacemapback);
 
@@ -4005,12 +3926,11 @@ static int setWorkspaceMapBackground(virtual_screen *vscr, WDefaultEntry *entry,
 }
 
 
-static int setMenuStyle(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setMenuStyle(virtual_screen *vscr, WDefaultEntry *entry, void *foo)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) vscr;
 	(void) entry;
-	(void) tdata;
 	(void) foo;
 
 	return REFRESH_MENU_TEXTURE;
@@ -4025,7 +3945,7 @@ static RImage *chopOffImage(RImage *image, int x, int y, int w, int h)
 	return img;
 }
 
-static int setSwPOptions(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setSwPOptions(virtual_screen *vscr, WDefaultEntry *entry, void *foo)
 {
 	WMPropList *array;
 	char *path;
@@ -4033,7 +3953,6 @@ static int setSwPOptions(virtual_screen *vscr, WDefaultEntry *entry, void *tdata
 	int cwidth, cheight;
 
 	(void) foo;
-	(void) tdata;
 
 	array = wPreferences.sp_options;
 
@@ -4150,13 +4069,12 @@ static int setSwPOptions(virtual_screen *vscr, WDefaultEntry *entry, void *tdata
 	return 0;
 }
 
-static int setModifierKeyLabels(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setModifierKeyLabels(virtual_screen *vscr, WDefaultEntry *entry, void *foo)
 {
 	WMPropList *array;
 	int i;
 
 	(void) foo;
-	(void) tdata;
 
 	array = wPreferences.modifierkeylabels;
 
@@ -4187,12 +4105,11 @@ static int setModifierKeyLabels(virtual_screen *vscr, WDefaultEntry *entry, void
 	return 0;
 }
 
-static int setDoubleClick(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setDoubleClick(virtual_screen *vscr, WDefaultEntry *entry, void *foo)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 	(void) vscr;
-	(void) tdata;
 
 	if (wPreferences.dblclick_time <= 0)
 		*(int *)foo = 1;
@@ -4202,7 +4119,7 @@ static int setDoubleClick(virtual_screen *vscr, WDefaultEntry *entry, void *tdat
 	return 0;
 }
 
-static int setCursor(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data)
+static int setCursor(virtual_screen *vscr, WDefaultEntry *entry, void *extra_data)
 {
 	WMPropList *value = NULL;
 	Cursor cursor;
@@ -4211,7 +4128,6 @@ static int setCursor(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, vo
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
-	(void) tdata;
 
 	if (widx == WCUR_ROOT) {
 		value = wPreferences.cursors.root->value;
