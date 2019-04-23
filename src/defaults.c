@@ -555,12 +555,12 @@ WDefaultEntry optionList[] = {
 	{"WidgetColor", "(solid, gray)", NULL,
 	    &wPreferences.texture.widgetcolor, getTexture, setWidgetColor, NULL, NULL},
 	{"WorkspaceSpecificBack", "()", NULL,
-	    NULL, getWSSpecificBackground, setWorkspaceSpecificBack, NULL, NULL},
+	    &wPreferences.workspacespecificback, getWSSpecificBackground, setWorkspaceSpecificBack, NULL, NULL},
 	/* WorkspaceBack must come after WorkspaceSpecificBack or
 	 * WorkspaceBack won't know WorkspaceSpecificBack was also
 	 * specified and 2 copies of wmsetbg will be launched */
 	{"WorkspaceBack", "(solid, \"rgb:50/50/75\")", NULL,
-	    NULL, getWSBackground, setWorkspaceBack, NULL, NULL},
+	    &wPreferences.workspaceback, getWSBackground, setWorkspaceBack, NULL, NULL},
 	{"IconBack", "(dgradient, \"rgb:a6/a6/b6\", \"rgb:51/55/61\")", NULL,
 	    &wPreferences.texture.iconback, getTexture, setIconTile, NULL, NULL},
 	{"WindowTitleFont", DEF_TITLE_FONT, NULL,
@@ -2148,7 +2148,11 @@ static int getWSBackground(virtual_screen *vscr, WDefaultEntry *entry, WMPropLis
 		if (strcasecmp(val, "None") == 0)
 			return True;
 	}
-	*ret = WMRetainPropList(value);
+
+	WMRetainPropList(value);
+
+	*ret = value;
+	*(WMPropList **) addr = value;
 
 	return True;
 }
@@ -2190,7 +2194,10 @@ getWSSpecificBackground(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *
 		}
 	}
 
-	*ret = WMRetainPropList(value);
+	WMRetainPropList(value);
+
+	*ret = value;
+	*(WMPropList **) addr = value;
 
 #ifdef notworking
 	/*
@@ -3492,7 +3499,7 @@ static int setFrameSelectedBorderColor(virtual_screen *vscr, WDefaultEntry *entr
 
 static int setWorkspaceSpecificBack(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *bar)
 {
-	WMPropList *value = tdata;
+	WMPropList *value;
 	WMPropList *val;
 	char *str;
 	int i;
@@ -3500,6 +3507,9 @@ static int setWorkspaceSpecificBack(virtual_screen *vscr, WDefaultEntry *entry, 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 	(void) bar;
+	(void) tdata;
+
+	value = wPreferences.workspacespecificback;
 
 	if (vscr->screen_ptr->flags.backimage_helper_launched) {
 		if (WMGetPropListItemCount(value) == 0) {
@@ -3540,11 +3550,14 @@ static int setWorkspaceSpecificBack(virtual_screen *vscr, WDefaultEntry *entry, 
 
 static int setWorkspaceBack(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *bar)
 {
-	WMPropList *value = tdata;
+	WMPropList *value;
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 	(void) bar;
+	(void) tdata;
+
+	value = wPreferences.workspacespecificback;
 
 	if (vscr->screen_ptr->flags.backimage_helper_launched) {
 		char *str;

@@ -657,6 +657,10 @@ extern struct WPreferences {
 	RImage *swtileImage;
 	RImage *swbackImage[9];
 
+	/* Backgrounds */
+	WMPropList *workspaceback;
+	WMPropList *workspacespecificback;
+
 } wPreferences;
 
 /****** Global Variables  ******/
