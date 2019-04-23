@@ -4193,16 +4193,15 @@ static int setModifierKeyLabels(virtual_screen *vscr, WDefaultEntry *entry, void
 
 static int setDoubleClick(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
 {
-	int *value = tdata;
-
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 	(void) vscr;
+	(void) tdata;
 
-	if (*value <= 0)
+	if (wPreferences.dblclick_time <= 0)
 		*(int *)foo = 1;
 
-	W_setconf_doubleClickDelay(*value);
+	W_setconf_doubleClickDelay(wPreferences.dblclick_time);
 
 	return 0;
 }
