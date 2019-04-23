@@ -489,18 +489,18 @@ extern struct WPreferences {
 
 	struct {
 #ifdef USE_ICCCM_WMREPLACE
-		unsigned int replace:1;               /* replace existing window manager */
+		unsigned int replace;               /* replace existing window manager */
 #endif
-		unsigned int nodock:1;                /* don't display the dock */
-		unsigned int noclip:1;                /* don't display the clip */
-		unsigned int clip_merged_in_dock:1;   /* disable clip, dock gets its workspace switching functionality */
-		unsigned int nodrawer:1;              /* don't use drawers */
-		unsigned int wrap_appicons_in_dock:1; /* Whether to wrap appicons when Dock is moved up and down */
-		unsigned int noupdates:1;             /* don't require ~/GNUstep (-static) */
-		unsigned int noautolaunch:1;          /* don't autolaunch apps */
-		unsigned int norestore:1;             /* don't restore session */
-		unsigned int restarting:2;
-	} flags;                                      /* internal flags */
+		unsigned int nodock;                /* don't display the dock */
+		unsigned int noclip;                /* don't display the clip */
+		unsigned int clip_merged_in_dock;   /* disable clip, dock gets its workspace switching functionality */
+		unsigned int nodrawer;              /* don't use drawers */
+		unsigned int wrap_appicons_in_dock; /* Whether to wrap appicons when Dock is moved up and down */
+		unsigned int noupdates;             /* don't require ~/GNUstep (-static) */
+		unsigned int noautolaunch;          /* don't autolaunch apps */
+		unsigned int norestore;             /* don't restore session */
+		unsigned int restarting;
+	} flags;                                /* internal flags */
 
 	/* Map table between w_cursor and actual X id */
 	Cursor cursor[WCUR_LAST];
