@@ -274,8 +274,6 @@ struct WScreen {
 
     WMScreen *wmscreen;		       /* for widget library */
 
-    Pixmap icon_tile_pixmap;		/* For app supplied icons */
-
     struct RImage *def_icon_rimage;	/* Default RImage icon */
 
     struct WDialogData *dialog_data;

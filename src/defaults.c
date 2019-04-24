@@ -2359,7 +2359,6 @@ static int setIconTile(virtual_screen *vscr)
 	if (w_global.tile.icon) {
 		reset = 1;
 		RReleaseImage(w_global.tile.icon);
-		XFreePixmap(dpy, vscr->screen_ptr->icon_tile_pixmap);
 	}
 
 	w_global.tile.icon = img;
@@ -2380,8 +2379,6 @@ static int setIconTile(virtual_screen *vscr)
 
 		w_global.tile.drawer= wDrawerMakeTile(vscr, img);
 	}
-
-	vscr->screen_ptr->icon_tile_pixmap = pixmap;
 
 	if (vscr->screen_ptr->def_icon_rimage) {
 		RReleaseImage(vscr->screen_ptr->def_icon_rimage);
