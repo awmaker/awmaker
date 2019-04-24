@@ -3614,15 +3614,62 @@ static int setMenuTextBack(virtual_screen *vscr, void *foo)
 	return REFRESH_MENU_TEXTURE;
 }
 
+static void set_keygrab(WShortKey *shortcut, char *value)
+{
+	char buf[MAX_SHORTCUT_LENGTH];
+	KeySym ksym;
+	char *k, *b;
+	int mod, error = 0;
+
+	wstrlcpy(buf, value, MAX_SHORTCUT_LENGTH);
+
+	if ((strlen(value) == 0) || (strcasecmp(value, "NONE") == 0)) {
+		shortcut->keycode = 0;
+		shortcut->modifier = 0;
+	} else {
+
+		b = buf;
+
+		/* get modifiers */
+		shortcut->modifier = 0;
+		while ((!error) && ((k = strchr(b, '+')) != NULL)) {
+			*k = 0;
+			mod = wXModifierFromKey(b);
+			if (mod < 0) {
+				wwarning(_("Invalid key modifier \"%s\""), b);
+				error = 1;
+			}
+			shortcut->modifier |= mod;
+
+			b = k + 1;
+		}
+
+		if (!error) {
+			/* get key */
+			ksym = XStringToKeysym(b);
+
+			if (ksym == NoSymbol) {
+				wwarning(_("Invalid kbd shortcut specification \"%s\""), value);
+				error = 1;
+			}
+
+			if (!error) {
+				shortcut->keycode = XKeysymToKeycode(dpy, ksym);
+				if (shortcut->keycode == 0) {
+					wwarning(_("Invalid key in shortcut \"%s\""), value);
+					error = 1;
+				}
+			}
+		}
+	}
+}
+
 static int setKeyGrab(virtual_screen *vscr, void *extra_data)
 {
 	WShortKey shortcut;
 	WWindow *wwin;
-	char buf[MAX_SHORTCUT_LENGTH];
 	long widx = (long) extra_data;
-	KeySym ksym;
-	char *k, *b, *value;
-	int mod;
+	char *value;
 
 	/* TODO: make this as list/array... and remove this ugly if-else block */
 	if (widx == WKBD_ROOTMENU) { /* "RootMenuKey" */
@@ -3789,49 +3836,7 @@ static int setKeyGrab(virtual_screen *vscr, void *extra_data)
 #endif
 	}
 
-	wstrlcpy(buf, value, MAX_SHORTCUT_LENGTH);
-
-		int error = 0;
-
-	if ((strlen(value) == 0) || (strcasecmp(value, "NONE") == 0)) {
-		shortcut.keycode = 0;
-		shortcut.modifier = 0;
-	} else {
-
-		b = buf;
-
-		/* get modifiers */
-		shortcut.modifier = 0;
-		while ((!error) && ((k = strchr(b, '+')) != NULL)) {
-			*k = 0;
-			mod = wXModifierFromKey(b);
-			if (mod < 0) {
-				wwarning(_("Invalid key modifier \"%s\""), b);
-				error = 1;
-			}
-			shortcut.modifier |= mod;
-
-			b = k + 1;
-		}
-
-		if (!error) {
-			/* get key */
-			ksym = XStringToKeysym(b);
-
-			if (ksym == NoSymbol) {
-				wwarning(_("Invalid kbd shortcut specification \"%s\""), value);
-				error = 1;
-			}
-
-			if (!error) {
-				shortcut.keycode = XKeysymToKeycode(dpy, ksym);
-				if (shortcut.keycode == 0) {
-					wwarning(_("Invalid key in shortcut \"%s\""), value);
-					error = 1;
-				}
-			}
-		}
-	}
+	set_keygrab(&shortcut, value);
 
 	/* If no error, assign the keybind
 	 * TODO: else... what?
