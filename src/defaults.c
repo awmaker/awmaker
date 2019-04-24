@@ -2339,7 +2339,6 @@ static int setStickyIcons(virtual_screen *vscr)
 
 static int setIconTile(virtual_screen *vscr)
 {
-	Pixmap pixmap;
 	RImage *img;
 	WTexture *texture = NULL;
 	int reset = 0;
@@ -2353,8 +2352,6 @@ static int setIconTile(virtual_screen *vscr)
 		wwarning(_("could not render texture for icon background"));
 		return 0;
 	}
-
-	RConvertImage(vscr->screen_ptr->rcontext, img, &pixmap);
 
 	if (w_global.tile.icon) {
 		reset = 1;
