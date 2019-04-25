@@ -399,10 +399,6 @@ extern struct WPreferences {
 	char auto_focus;                   /* focus window when it's mapped */
 	char *icon_back_file;              /* background image for icons */
 
-	WCoord *root_menu_pos;             /* initial position of the root menu*/
-	WCoord *app_menu_pos;
-	WCoord *win_menu_pos;
-
 	signed char icon_yard;             /* aka iconbox */
 
 	int raise_delay;                   /* delay for autoraise. 0 is disabled */
