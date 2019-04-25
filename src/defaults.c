@@ -66,7 +66,7 @@
 
 typedef struct _WDefaultEntry  WDefaultEntry;
 typedef int (WDECallbackConvert) (WDefaultEntry *entry, WMPropList *plvalue, void *addr);
-typedef int (WDECallbackUpdate) (virtual_screen *vscr, void *extra_data);
+typedef int (WDECallbackUpdate) (virtual_screen *vscr);
 
 struct _WDefaultEntry {
 	const char *key;
@@ -140,7 +140,88 @@ static WDECallbackUpdate setMenuTitleBack;
 static WDECallbackUpdate setMenuTextBack;
 static WDECallbackUpdate setHightlight;
 static WDECallbackUpdate setHightlightText;
-static WDECallbackUpdate setKeyGrab;
+static WDECallbackUpdate setKeyGrab_rootmenu;
+static WDECallbackUpdate setKeyGrab_windowlist;
+static WDECallbackUpdate setKeyGrab_windowmenu;
+static WDECallbackUpdate setKeyGrab_dockraiselower;
+static WDECallbackUpdate setKeyGrab_clipraiselower;
+static WDECallbackUpdate setKeyGrab_miniaturize;
+static WDECallbackUpdate setKeyGrab_minimizeall;
+static WDECallbackUpdate setKeyGrab_hide;
+static WDECallbackUpdate setKeyGrab_hideothers;
+static WDECallbackUpdate setKeyGrab_moveresize;
+static WDECallbackUpdate setKeyGrab_close;
+static WDECallbackUpdate setKeyGrab_maximize;
+static WDECallbackUpdate setKeyGrab_maximizev;
+static WDECallbackUpdate setKeyGrab_maximizeh;
+static WDECallbackUpdate setKeyGrab_maximizelh;
+static WDECallbackUpdate setKeyGrab_maximizerh;
+static WDECallbackUpdate setKeyGrab_maximizeth;
+static WDECallbackUpdate setKeyGrab_maximizebh;
+static WDECallbackUpdate setKeyGrab_maximizeltc;
+static WDECallbackUpdate setKeyGrab_maximizertc;
+static WDECallbackUpdate setKeyGrab_maximizelbc;
+static WDECallbackUpdate setKeyGrab_maximizerbc;
+static WDECallbackUpdate setKeyGrab_maximus;
+static WDECallbackUpdate setKeyGrab_keepontop;
+static WDECallbackUpdate setKeyGrab_keepatbottom;
+static WDECallbackUpdate setKeyGrab_omnipresent;
+static WDECallbackUpdate setKeyGrab_raise;
+static WDECallbackUpdate setKeyGrab_lower;
+static WDECallbackUpdate setKeyGrab_raiselower;
+static WDECallbackUpdate setKeyGrab_shade;
+static WDECallbackUpdate setKeyGrab_select;
+static WDECallbackUpdate setKeyGrab_workspacemap;
+static WDECallbackUpdate setKeyGrab_focusnext;
+static WDECallbackUpdate setKeyGrab_focusprev;
+static WDECallbackUpdate setKeyGrab_groupnext;
+static WDECallbackUpdate setKeyGrab_groupprev;
+static WDECallbackUpdate setKeyGrab_workspacenext;
+static WDECallbackUpdate setKeyGrab_workspaceprev;
+static WDECallbackUpdate setKeyGrab_workspacelast;
+static WDECallbackUpdate setKeyGrab_workspacelayernext;
+static WDECallbackUpdate setKeyGrab_workspacelayerprev;
+static WDECallbackUpdate setKeyGrab_workspace1;
+static WDECallbackUpdate setKeyGrab_workspace2;
+static WDECallbackUpdate setKeyGrab_workspace3;
+static WDECallbackUpdate setKeyGrab_workspace4;
+static WDECallbackUpdate setKeyGrab_workspace5;
+static WDECallbackUpdate setKeyGrab_workspace6;
+static WDECallbackUpdate setKeyGrab_workspace7;
+static WDECallbackUpdate setKeyGrab_workspace8;
+static WDECallbackUpdate setKeyGrab_workspace9;
+static WDECallbackUpdate setKeyGrab_workspace10;
+static WDECallbackUpdate setKeyGrab_movetoworkspace1;
+static WDECallbackUpdate setKeyGrab_movetoworkspace2;
+static WDECallbackUpdate setKeyGrab_movetoworkspace3;
+static WDECallbackUpdate setKeyGrab_movetoworkspace4;
+static WDECallbackUpdate setKeyGrab_movetoworkspace5;
+static WDECallbackUpdate setKeyGrab_movetoworkspace6;
+static WDECallbackUpdate setKeyGrab_movetoworkspace7;
+static WDECallbackUpdate setKeyGrab_movetoworkspace8;
+static WDECallbackUpdate setKeyGrab_movetoworkspace9;
+static WDECallbackUpdate setKeyGrab_movetoworkspace10;
+static WDECallbackUpdate setKeyGrab_movetonextworkspace;
+static WDECallbackUpdate setKeyGrab_movetoprevworkspace;
+static WDECallbackUpdate setKeyGrab_movetolastworkspace;
+static WDECallbackUpdate setKeyGrab_movetonextworkspacelayer;
+static WDECallbackUpdate setKeyGrab_movetoprevworkspacelayer;
+static WDECallbackUpdate setKeyGrab_windowshortcut1;
+static WDECallbackUpdate setKeyGrab_windowshortcut2;
+static WDECallbackUpdate setKeyGrab_windowshortcut3;
+static WDECallbackUpdate setKeyGrab_windowshortcut4;
+static WDECallbackUpdate setKeyGrab_windowshortcut5;
+static WDECallbackUpdate setKeyGrab_windowshortcut6;
+static WDECallbackUpdate setKeyGrab_windowshortcut7;
+static WDECallbackUpdate setKeyGrab_windowshortcut8;
+static WDECallbackUpdate setKeyGrab_windowshortcut9;
+static WDECallbackUpdate setKeyGrab_windowshortcut10;
+static WDECallbackUpdate setKeyGrab_windowrelaunch;
+static WDECallbackUpdate setKeyGrab_screenswitch;
+static WDECallbackUpdate setKeyGrab_run;
+#ifdef KEEP_XKB_LOCK_STATUS
+static WDECallbackUpdate setKeyGrab_togglekbdmode;
+#endif
 static WDECallbackUpdate setDoubleClick;
 static WDECallbackUpdate setIconPosition;
 static WDECallbackUpdate setWorkspaceMapBackground;
@@ -643,168 +724,168 @@ WDefaultEntry optionList[] = {
 
 	/* keybindings */
 
-	{"RootMenuKey", "F12", (void *)WKBD_ROOTMENU,
-	    &wPreferences.key.rootmenu, getKeybind, setKeyGrab, NULL, NULL},
-	{"WindowListKey", "F11", (void *)WKBD_WINDOWLIST,
-	    &wPreferences.key.windowlist, getKeybind, setKeyGrab, NULL, NULL},
-	{"WindowMenuKey", "Control+Escape", (void *)WKBD_WINDOWMENU,
-	    &wPreferences.key.windowmenu, getKeybind, setKeyGrab, NULL, NULL},
-	{"DockRaiseLowerKey", "None", (void *)WKBD_DOCKRAISELOWER,
-	    &wPreferences.key.dockraiselower, getKeybind, setKeyGrab, NULL, NULL},
-	{"ClipRaiseLowerKey", "None", (void *)WKBD_CLIPRAISELOWER,
-	    &wPreferences.key.clipraiselower, getKeybind, setKeyGrab, NULL, NULL},
-	{"MiniaturizeKey", "Mod1+M", (void *)WKBD_MINIATURIZE,
-	    &wPreferences.key.miniaturize, getKeybind, setKeyGrab, NULL, NULL},
-	{"MinimizeAllKey", "None", (void *)WKBD_MINIMIZEALL,
-	    &wPreferences.key.minimizeall, getKeybind, setKeyGrab, NULL, NULL},
-	{"HideKey", "Mod1+H", (void *)WKBD_HIDE,
-	    &wPreferences.key.hide, getKeybind, setKeyGrab, NULL, NULL},
-	{"HideOthersKey", "None", (void *)WKBD_HIDE_OTHERS,
-	    &wPreferences.key.hideothers, getKeybind, setKeyGrab, NULL, NULL},
+	{"RootMenuKey", "F12", NULL,
+	    &wPreferences.key.rootmenu, getKeybind, setKeyGrab_rootmenu, NULL, NULL},
+	{"WindowListKey", "F11", NULL,
+	    &wPreferences.key.windowlist, getKeybind, setKeyGrab_windowlist, NULL, NULL},
+	{"WindowMenuKey", "Control+Escape", NULL,
+	    &wPreferences.key.windowmenu, getKeybind, setKeyGrab_windowmenu, NULL, NULL},
+	{"DockRaiseLowerKey", "None", NULL,
+	    &wPreferences.key.dockraiselower, getKeybind, setKeyGrab_dockraiselower, NULL, NULL},
+	{"ClipRaiseLowerKey", "None", NULL,
+	    &wPreferences.key.clipraiselower, getKeybind, setKeyGrab_clipraiselower, NULL, NULL},
+	{"MiniaturizeKey", "Mod1+M", NULL,
+	    &wPreferences.key.miniaturize, getKeybind, setKeyGrab_miniaturize, NULL, NULL},
+	{"MinimizeAllKey", "None", NULL,
+	    &wPreferences.key.minimizeall, getKeybind, setKeyGrab_minimizeall, NULL, NULL},
+	{"HideKey", "Mod1+H", NULL,
+	    &wPreferences.key.hide, getKeybind, setKeyGrab_hide, NULL, NULL},
+	{"HideOthersKey", "None", NULL,
+	    &wPreferences.key.hideothers, getKeybind, setKeyGrab_hideothers, NULL, NULL},
 	{"MoveResizeKey", "None", (void *)WKBD_MOVERESIZE,
-	    &wPreferences.key.moveresize, getKeybind, setKeyGrab, NULL, NULL},
-	{"CloseKey", "None", (void *)WKBD_CLOSE,
-	    &wPreferences.key.close, getKeybind, setKeyGrab, NULL, NULL},
-	{"MaximizeKey", "None", (void *)WKBD_MAXIMIZE,
-	    &wPreferences.key.maximize, getKeybind, setKeyGrab, NULL, NULL},
-	{"VMaximizeKey", "None", (void *)WKBD_VMAXIMIZE,
-	    &wPreferences.key.maximizev, getKeybind, setKeyGrab, NULL, NULL},
-	{"HMaximizeKey", "None", (void *)WKBD_HMAXIMIZE,
-	    &wPreferences.key.maximizeh, getKeybind, setKeyGrab, NULL, NULL},
-	{"LHMaximizeKey", "None", (void *)WKBD_LHMAXIMIZE,
-	    &wPreferences.key.maximizelh, getKeybind, setKeyGrab, NULL, NULL},
-	{"RHMaximizeKey", "None", (void *)WKBD_RHMAXIMIZE,
-	    &wPreferences.key.maximizerh, getKeybind, setKeyGrab, NULL, NULL},
-	{"THMaximizeKey", "None", (void *)WKBD_THMAXIMIZE,
-	    &wPreferences.key.maximizeth, getKeybind, setKeyGrab, NULL, NULL},
-	{"BHMaximizeKey", "None", (void *)WKBD_BHMAXIMIZE,
-	    &wPreferences.key.maximizebh, getKeybind, setKeyGrab, NULL, NULL},
-	{"LTCMaximizeKey", "None", (void *)WKBD_LTCMAXIMIZE,
-	    &wPreferences.key.maximizeltc, getKeybind, setKeyGrab, NULL, NULL},
-	{"RTCMaximizeKey", "None", (void *)WKBD_RTCMAXIMIZE,
-	    &wPreferences.key.maximizertc, getKeybind, setKeyGrab, NULL, NULL},
-	{"LBCMaximizeKey", "None", (void *)WKBD_LBCMAXIMIZE,
-	    &wPreferences.key.maximizelbc, getKeybind, setKeyGrab, NULL, NULL},
-	{"RBCMaximizeKey", "None", (void *)WKBD_RBCMAXIMIZE,
-	    &wPreferences.key.maximizerbc, getKeybind, setKeyGrab, NULL, NULL},
-	{"MaximusKey", "None", (void *)WKBD_MAXIMUS,
-	    &wPreferences.key.maximus, getKeybind, setKeyGrab, NULL, NULL},
-	{"KeepOnTopKey", "None", (void *)WKBD_KEEP_ON_TOP,
-	    &wPreferences.key.keepontop, getKeybind, setKeyGrab, NULL, NULL},
-	{"KeepAtBottomKey", "None", (void *)WKBD_KEEP_AT_BOTTOM,
-	    &wPreferences.key.keepatbottom, getKeybind, setKeyGrab, NULL, NULL},
-	{"OmnipresentKey", "None", (void *)WKBD_OMNIPRESENT,
-	    &wPreferences.key.omnipresent, getKeybind, setKeyGrab, NULL, NULL},
-	{"RaiseKey", "Mod1+Up", (void *)WKBD_RAISE,
-	    &wPreferences.key.raise, getKeybind, setKeyGrab, NULL, NULL},
-	{"LowerKey", "Mod1+Down", (void *)WKBD_LOWER,
-	    &wPreferences.key.lower, getKeybind, setKeyGrab, NULL, NULL},
-	{"RaiseLowerKey", "None", (void *)WKBD_RAISELOWER,
-	    &wPreferences.key.raiselower, getKeybind, setKeyGrab, NULL, NULL},
-	{"ShadeKey", "None", (void *)WKBD_SHADE,
-	    &wPreferences.key.shade, getKeybind, setKeyGrab, NULL, NULL},
-	{"SelectKey", "None", (void *)WKBD_SELECT,
-	    &wPreferences.key.select, getKeybind, setKeyGrab, NULL, NULL},
-	{"WorkspaceMapKey", "None", (void *)WKBD_WORKSPACEMAP,
-	    &wPreferences.key.workspacemap, getKeybind, setKeyGrab, NULL, NULL},
-	{"FocusNextKey", "Mod1+Tab", (void *)WKBD_FOCUSNEXT,
-	    &wPreferences.key.focusnext, getKeybind, setKeyGrab, NULL, NULL},
-	{"FocusPrevKey", "Mod1+Shift+Tab", (void *)WKBD_FOCUSPREV,
-	    &wPreferences.key.focusprev, getKeybind, setKeyGrab, NULL, NULL},
-	{"GroupNextKey", "None", (void *)WKBD_GROUPNEXT,
-	    &wPreferences.key.groupnext, getKeybind, setKeyGrab, NULL, NULL},
-	{"GroupPrevKey", "None", (void *)WKBD_GROUPPREV,
-	    &wPreferences.key.groupprev, getKeybind, setKeyGrab, NULL, NULL},
-	{"NextWorkspaceKey", "Mod1+Control+Right", (void *)WKBD_NEXTWORKSPACE,
-	    &wPreferences.key.workspacenext, getKeybind, setKeyGrab, NULL, NULL},
-	{"PrevWorkspaceKey", "Mod1+Control+Left", (void *)WKBD_PREVWORKSPACE,
-	    &wPreferences.key.workspaceprev, getKeybind, setKeyGrab, NULL, NULL},
-	{"LastWorkspaceKey", "None", (void *)WKBD_LASTWORKSPACE,
-	    &wPreferences.key.workspacelast, getKeybind, setKeyGrab, NULL, NULL},
-	{"NextWorkspaceLayerKey", "None", (void *)WKBD_NEXTWSLAYER,
-	    &wPreferences.key.workspacelayernext, getKeybind, setKeyGrab, NULL, NULL},
-	{"PrevWorkspaceLayerKey", "None", (void *)WKBD_PREVWSLAYER,
-	    &wPreferences.key.workspacelayerprev, getKeybind, setKeyGrab, NULL, NULL},
-	{"Workspace1Key", "Mod1+1", (void *)WKBD_WORKSPACE1,
-	    &wPreferences.key.workspace1, getKeybind, setKeyGrab, NULL, NULL},
-	{"Workspace2Key", "Mod1+2", (void *)WKBD_WORKSPACE2,
-	    &wPreferences.key.workspace2, getKeybind, setKeyGrab, NULL, NULL},
-	{"Workspace3Key", "Mod1+3", (void *)WKBD_WORKSPACE3,
-	    &wPreferences.key.workspace3, getKeybind, setKeyGrab, NULL, NULL},
-	{"Workspace4Key", "Mod1+4", (void *)WKBD_WORKSPACE4,
-	    &wPreferences.key.workspace4, getKeybind, setKeyGrab, NULL, NULL},
-	{"Workspace5Key", "Mod1+5", (void *)WKBD_WORKSPACE5,
-	    &wPreferences.key.workspace5, getKeybind, setKeyGrab, NULL, NULL},
-	{"Workspace6Key", "Mod1+6", (void *)WKBD_WORKSPACE6,
-	    &wPreferences.key.workspace6, getKeybind, setKeyGrab, NULL, NULL},
-	{"Workspace7Key", "Mod1+7", (void *)WKBD_WORKSPACE7,
-	    &wPreferences.key.workspace7, getKeybind, setKeyGrab, NULL, NULL},
-	{"Workspace8Key", "Mod1+8", (void *)WKBD_WORKSPACE8,
-	    &wPreferences.key.workspace8, getKeybind, setKeyGrab, NULL, NULL},
-	{"Workspace9Key", "Mod1+9", (void *)WKBD_WORKSPACE9,
-	    &wPreferences.key.workspace9, getKeybind, setKeyGrab, NULL, NULL},
-	{"Workspace10Key", "Mod1+0", (void *)WKBD_WORKSPACE10,
-	    &wPreferences.key.workspace10, getKeybind, setKeyGrab, NULL, NULL},
-	{"MoveToWorkspace1Key", "None", (void *)WKBD_MOVE_WORKSPACE1,
-	    &wPreferences.key.movetoworkspace1, getKeybind, setKeyGrab, NULL, NULL},
-	{"MoveToWorkspace2Key", "None", (void *)WKBD_MOVE_WORKSPACE2,
-	    &wPreferences.key.movetoworkspace2, getKeybind, setKeyGrab, NULL, NULL},
-	{"MoveToWorkspace3Key", "None", (void *)WKBD_MOVE_WORKSPACE3,
-	    &wPreferences.key.movetoworkspace3, getKeybind, setKeyGrab, NULL, NULL},
-	{"MoveToWorkspace4Key", "None", (void *)WKBD_MOVE_WORKSPACE4,
-	    &wPreferences.key.movetoworkspace4, getKeybind, setKeyGrab, NULL, NULL},
-	{"MoveToWorkspace5Key", "None", (void *)WKBD_MOVE_WORKSPACE5,
-	    &wPreferences.key.movetoworkspace5, getKeybind, setKeyGrab, NULL, NULL},
-	{"MoveToWorkspace6Key", "None", (void *)WKBD_MOVE_WORKSPACE6,
-	    &wPreferences.key.movetoworkspace6, getKeybind, setKeyGrab, NULL, NULL},
-	{"MoveToWorkspace7Key", "None", (void *)WKBD_MOVE_WORKSPACE7,
-	    &wPreferences.key.movetoworkspace7, getKeybind, setKeyGrab, NULL, NULL},
-	{"MoveToWorkspace8Key", "None", (void *)WKBD_MOVE_WORKSPACE8,
-	    &wPreferences.key.movetoworkspace8, getKeybind, setKeyGrab, NULL, NULL},
-	{"MoveToWorkspace9Key", "None", (void *)WKBD_MOVE_WORKSPACE9,
-	    &wPreferences.key.movetoworkspace9, getKeybind, setKeyGrab, NULL, NULL},
-	{"MoveToWorkspace10Key", "None", (void *)WKBD_MOVE_WORKSPACE10,
-	    &wPreferences.key.movetoworkspace10, getKeybind, setKeyGrab, NULL, NULL},
-	{"MoveToNextWorkspaceKey", "None", (void *)WKBD_MOVE_NEXTWORKSPACE,
-	    &wPreferences.key.movetonextworkspace, getKeybind, setKeyGrab, NULL, NULL},
-	{"MoveToPrevWorkspaceKey", "None", (void *)WKBD_MOVE_PREVWORKSPACE,
-	    &wPreferences.key.movetoprevworkspace, getKeybind, setKeyGrab, NULL, NULL},
-	{"MoveToLastWorkspaceKey", "None", (void *)WKBD_MOVE_LASTWORKSPACE,
-	    &wPreferences.key.movetolastworkspace, getKeybind, setKeyGrab, NULL, NULL},
-	{"MoveToNextWorkspaceLayerKey", "None", (void *)WKBD_MOVE_NEXTWSLAYER,
-	    &wPreferences.key.movetonextworkspace, getKeybind, setKeyGrab, NULL, NULL},
-	{"MoveToPrevWorkspaceLayerKey", "None", (void *)WKBD_MOVE_PREVWSLAYER,
-	    &wPreferences.key.movetoprevworkspace, getKeybind, setKeyGrab, NULL, NULL},
-	{"WindowShortcut1Key", "None", (void *)WKBD_WINDOW1,
-	    &wPreferences.key.windowshortcut1, getKeybind, setKeyGrab, NULL, NULL},
-	{"WindowShortcut2Key", "None", (void *)WKBD_WINDOW2,
-	    &wPreferences.key.windowshortcut2, getKeybind, setKeyGrab, NULL, NULL},
-	{"WindowShortcut3Key", "None", (void *)WKBD_WINDOW3,
-	    &wPreferences.key.windowshortcut3, getKeybind, setKeyGrab, NULL, NULL},
-	{"WindowShortcut4Key", "None", (void *)WKBD_WINDOW4,
-	    &wPreferences.key.windowshortcut4, getKeybind, setKeyGrab, NULL, NULL},
-	{"WindowShortcut5Key", "None", (void *)WKBD_WINDOW5,
-	    &wPreferences.key.windowshortcut5, getKeybind, setKeyGrab, NULL, NULL},
-	{"WindowShortcut6Key", "None", (void *)WKBD_WINDOW6,
-	    &wPreferences.key.windowshortcut6, getKeybind, setKeyGrab, NULL, NULL},
-	{"WindowShortcut7Key", "None", (void *)WKBD_WINDOW7,
-	    &wPreferences.key.windowshortcut7, getKeybind, setKeyGrab, NULL, NULL},
-	{"WindowShortcut8Key", "None", (void *)WKBD_WINDOW8,
-	    &wPreferences.key.windowshortcut8, getKeybind, setKeyGrab, NULL, NULL},
-	{"WindowShortcut9Key", "None", (void *)WKBD_WINDOW9,
-	    &wPreferences.key.windowshortcut9, getKeybind, setKeyGrab, NULL, NULL},
-	{"WindowShortcut10Key", "None", (void *)WKBD_WINDOW10,
-	    &wPreferences.key.windowshortcut10, getKeybind, setKeyGrab, NULL, NULL},
-	{"WindowRelaunchKey", "None", (void *)WKBD_RELAUNCH,
-	    &wPreferences.key.windowrelaunch, getKeybind, setKeyGrab, NULL, NULL},
-	{"ScreenSwitchKey", "None", (void *)WKBD_SWITCH_SCREEN,
-	    &wPreferences.key.screenswitch, getKeybind, setKeyGrab, NULL, NULL},
-	{"RunKey", "None", (void *)WKBD_RUN,
-	    &wPreferences.key.run, getKeybind, setKeyGrab, NULL, NULL},
+	    &wPreferences.key.moveresize, getKeybind, setKeyGrab_moveresize, NULL, NULL},
+	{"CloseKey", "None", NULL,
+	    &wPreferences.key.close, getKeybind, setKeyGrab_close, NULL, NULL},
+	{"MaximizeKey", "None", NULL,
+	    &wPreferences.key.maximize, getKeybind, setKeyGrab_maximize, NULL, NULL},
+	{"VMaximizeKey", "None", NULL,
+	    &wPreferences.key.maximizev, getKeybind, setKeyGrab_maximizev, NULL, NULL},
+	{"HMaximizeKey", "None", NULL,
+	    &wPreferences.key.maximizeh, getKeybind, setKeyGrab_maximizeh, NULL, NULL},
+	{"LHMaximizeKey", "None", NULL,
+	    &wPreferences.key.maximizelh, getKeybind, setKeyGrab_maximizelh, NULL, NULL},
+	{"RHMaximizeKey", "None", NULL,
+	    &wPreferences.key.maximizerh, getKeybind, setKeyGrab_maximizerh, NULL, NULL},
+	{"THMaximizeKey", "None", NULL,
+	    &wPreferences.key.maximizeth, getKeybind, setKeyGrab_maximizeth, NULL, NULL},
+	{"BHMaximizeKey", "None", NULL,
+	    &wPreferences.key.maximizebh, getKeybind, setKeyGrab_maximizebh, NULL, NULL},
+	{"LTCMaximizeKey", "None", NULL,
+	    &wPreferences.key.maximizeltc, getKeybind, setKeyGrab_maximizeltc, NULL, NULL},
+	{"RTCMaximizeKey", "None", NULL,
+	    &wPreferences.key.maximizertc, getKeybind, setKeyGrab_maximizertc, NULL, NULL},
+	{"LBCMaximizeKey", "None", NULL,
+	    &wPreferences.key.maximizelbc, getKeybind, setKeyGrab_maximizelbc, NULL, NULL},
+	{"RBCMaximizeKey", "None", NULL,
+	    &wPreferences.key.maximizerbc, getKeybind, setKeyGrab_maximizerbc, NULL, NULL},
+	{"MaximusKey", "None", NULL,
+	    &wPreferences.key.maximus, getKeybind, setKeyGrab_maximus, NULL, NULL},
+	{"KeepOnTopKey", "None", NULL,
+	    &wPreferences.key.keepontop, getKeybind, setKeyGrab_keepontop, NULL, NULL},
+	{"KeepAtBottomKey", "None", NULL,
+	    &wPreferences.key.keepatbottom, getKeybind, setKeyGrab_keepatbottom, NULL, NULL},
+	{"OmnipresentKey", "None", NULL,
+	    &wPreferences.key.omnipresent, getKeybind, setKeyGrab_omnipresent, NULL, NULL},
+	{"RaiseKey", "Mod1+Up", NULL,
+	    &wPreferences.key.raise, getKeybind, setKeyGrab_raise, NULL, NULL},
+	{"LowerKey", "Mod1+Down", NULL,
+	    &wPreferences.key.lower, getKeybind, setKeyGrab_lower, NULL, NULL},
+	{"RaiseLowerKey", "None", NULL,
+	    &wPreferences.key.raiselower, getKeybind, setKeyGrab_raiselower, NULL, NULL},
+	{"ShadeKey", "None", NULL,
+	    &wPreferences.key.shade, getKeybind, setKeyGrab_shade, NULL, NULL},
+	{"SelectKey", "None", NULL,
+	    &wPreferences.key.select, getKeybind, setKeyGrab_select, NULL, NULL},
+	{"WorkspaceMapKey", "None", NULL,
+	    &wPreferences.key.workspacemap, getKeybind, setKeyGrab_workspacemap, NULL, NULL},
+	{"FocusNextKey", "Mod1+Tab", NULL,
+	    &wPreferences.key.focusnext, getKeybind, setKeyGrab_focusnext, NULL, NULL},
+	{"FocusPrevKey", "Mod1+Shift+Tab", NULL,
+	    &wPreferences.key.focusprev, getKeybind, setKeyGrab_focusprev, NULL, NULL},
+	{"GroupNextKey", "None", NULL,
+	    &wPreferences.key.groupnext, getKeybind, setKeyGrab_groupnext, NULL, NULL},
+	{"GroupPrevKey", "None", NULL,
+	    &wPreferences.key.groupprev, getKeybind, setKeyGrab_groupprev, NULL, NULL},
+	{"NextWorkspaceKey", "Mod1+Control+Right", NULL,
+	    &wPreferences.key.workspacenext, getKeybind, setKeyGrab_workspacenext, NULL, NULL},
+	{"PrevWorkspaceKey", "Mod1+Control+Left", NULL,
+	    &wPreferences.key.workspaceprev, getKeybind, setKeyGrab_workspaceprev, NULL, NULL},
+	{"LastWorkspaceKey", "None", NULL,
+	    &wPreferences.key.workspacelast, getKeybind, setKeyGrab_workspacelast, NULL, NULL},
+	{"NextWorkspaceLayerKey", "None", NULL,
+	    &wPreferences.key.workspacelayernext, getKeybind, setKeyGrab_workspacelayernext, NULL, NULL},
+	{"PrevWorkspaceLayerKey", "None", NULL,
+	    &wPreferences.key.workspacelayerprev, getKeybind, setKeyGrab_workspacelayerprev, NULL, NULL},
+	{"Workspace1Key", "Mod1+1", NULL,
+	    &wPreferences.key.workspace1, getKeybind, setKeyGrab_workspace1, NULL, NULL},
+	{"Workspace2Key", "Mod1+2", NULL,
+	    &wPreferences.key.workspace2, getKeybind, setKeyGrab_workspace2, NULL, NULL},
+	{"Workspace3Key", "Mod1+3", NULL,
+	    &wPreferences.key.workspace3, getKeybind, setKeyGrab_workspace3, NULL, NULL},
+	{"Workspace4Key", "Mod1+4", NULL,
+	    &wPreferences.key.workspace4, getKeybind, setKeyGrab_workspace4, NULL, NULL},
+	{"Workspace5Key", "Mod1+5", NULL,
+	    &wPreferences.key.workspace5, getKeybind, setKeyGrab_workspace5, NULL, NULL},
+	{"Workspace6Key", "Mod1+6", NULL,
+	    &wPreferences.key.workspace6, getKeybind, setKeyGrab_workspace6, NULL, NULL},
+	{"Workspace7Key", "Mod1+7", NULL,
+	    &wPreferences.key.workspace7, getKeybind, setKeyGrab_workspace7, NULL, NULL},
+	{"Workspace8Key", "Mod1+8", NULL,
+	    &wPreferences.key.workspace8, getKeybind, setKeyGrab_workspace8, NULL, NULL},
+	{"Workspace9Key", "Mod1+9", NULL,
+	    &wPreferences.key.workspace9, getKeybind, setKeyGrab_workspace9, NULL, NULL},
+	{"Workspace10Key", "Mod1+0", NULL,
+	    &wPreferences.key.workspace10, getKeybind, setKeyGrab_workspace10, NULL, NULL},
+	{"MoveToWorkspace1Key", "None", NULL,
+	    &wPreferences.key.movetoworkspace1, getKeybind, setKeyGrab_movetoworkspace1, NULL, NULL},
+	{"MoveToWorkspace2Key", "None", NULL,
+	    &wPreferences.key.movetoworkspace2, getKeybind, setKeyGrab_movetoworkspace2, NULL, NULL},
+	{"MoveToWorkspace3Key", "None", NULL,
+	    &wPreferences.key.movetoworkspace3, getKeybind, setKeyGrab_movetoworkspace3, NULL, NULL},
+	{"MoveToWorkspace4Key", "None", NULL,
+	    &wPreferences.key.movetoworkspace4, getKeybind, setKeyGrab_movetoworkspace4, NULL, NULL},
+	{"MoveToWorkspace5Key", "None", NULL,
+	    &wPreferences.key.movetoworkspace5, getKeybind, setKeyGrab_movetoworkspace5, NULL, NULL},
+	{"MoveToWorkspace6Key", "None", NULL,
+	    &wPreferences.key.movetoworkspace6, getKeybind, setKeyGrab_movetoworkspace6, NULL, NULL},
+	{"MoveToWorkspace7Key", "None", NULL,
+	    &wPreferences.key.movetoworkspace7, getKeybind, setKeyGrab_movetoworkspace7, NULL, NULL},
+	{"MoveToWorkspace8Key", "None", NULL,
+	    &wPreferences.key.movetoworkspace8, getKeybind, setKeyGrab_movetoworkspace8, NULL, NULL},
+	{"MoveToWorkspace9Key", "None", NULL,
+	    &wPreferences.key.movetoworkspace9, getKeybind, setKeyGrab_movetoworkspace9, NULL, NULL},
+	{"MoveToWorkspace10Key", "None", NULL,
+	    &wPreferences.key.movetoworkspace10, getKeybind, setKeyGrab_movetoworkspace10, NULL, NULL},
+	{"MoveToNextWorkspaceKey", "None", NULL,
+	    &wPreferences.key.movetonextworkspace, getKeybind, setKeyGrab_movetonextworkspace, NULL, NULL},
+	{"MoveToPrevWorkspaceKey", "None", NULL,
+	    &wPreferences.key.movetoprevworkspace, getKeybind, setKeyGrab_movetoprevworkspace, NULL, NULL},
+	{"MoveToLastWorkspaceKey", "None", NULL,
+	    &wPreferences.key.movetolastworkspace, getKeybind, setKeyGrab_movetolastworkspace, NULL, NULL},
+	{"MoveToNextWorkspaceLayerKey", "None", NULL,
+	    &wPreferences.key.movetonextworkspace, getKeybind, setKeyGrab_movetonextworkspacelayer, NULL, NULL},
+	{"MoveToPrevWorkspaceLayerKey", "None", NULL,
+	    &wPreferences.key.movetoprevworkspace, getKeybind, setKeyGrab_movetoprevworkspacelayer, NULL, NULL},
+	{"WindowShortcut1Key", "None", NULL,
+	    &wPreferences.key.windowshortcut1, getKeybind, setKeyGrab_windowshortcut1, NULL, NULL},
+	{"WindowShortcut2Key", "None", NULL,
+	    &wPreferences.key.windowshortcut2, getKeybind, setKeyGrab_windowshortcut2, NULL, NULL},
+	{"WindowShortcut3Key", "None", NULL,
+	    &wPreferences.key.windowshortcut3, getKeybind, setKeyGrab_windowshortcut3, NULL, NULL},
+	{"WindowShortcut4Key", "None", NULL,
+	    &wPreferences.key.windowshortcut4, getKeybind, setKeyGrab_windowshortcut4, NULL, NULL},
+	{"WindowShortcut5Key", "None", NULL,
+	    &wPreferences.key.windowshortcut5, getKeybind, setKeyGrab_windowshortcut5, NULL, NULL},
+	{"WindowShortcut6Key", "None", NULL,
+	    &wPreferences.key.windowshortcut6, getKeybind, setKeyGrab_windowshortcut6, NULL, NULL},
+	{"WindowShortcut7Key", "None", NULL,
+	    &wPreferences.key.windowshortcut7, getKeybind, setKeyGrab_windowshortcut7, NULL, NULL},
+	{"WindowShortcut8Key", "None", NULL,
+	    &wPreferences.key.windowshortcut8, getKeybind, setKeyGrab_windowshortcut8, NULL, NULL},
+	{"WindowShortcut9Key", "None", NULL,
+	    &wPreferences.key.windowshortcut9, getKeybind, setKeyGrab_windowshortcut9, NULL, NULL},
+	{"WindowShortcut10Key", "None", NULL,
+	    &wPreferences.key.windowshortcut10, getKeybind, setKeyGrab_windowshortcut10, NULL, NULL},
+	{"WindowRelaunchKey", "None", NULL,
+	    &wPreferences.key.windowrelaunch, getKeybind, setKeyGrab_windowrelaunch, NULL, NULL},
+	{"ScreenSwitchKey", "None", NULL,
+	    &wPreferences.key.screenswitch, getKeybind, setKeyGrab_screenswitch, NULL, NULL},
+	{"RunKey", "None", NULL,
+	    &wPreferences.key.run, getKeybind, setKeyGrab_run, NULL, NULL},
 
 #ifdef KEEP_XKB_LOCK_STATUS
-	{"ToggleKbdModeKey", "None", (void *)WKBD_TOGGLE,
-	    &wPreferences.key.togglekbdmode, getKeybind, setKeyGrab, NULL, NULL},
+	{"ToggleKbdModeKey", "None", NULL,
+	    &wPreferences.key.togglekbdmode, getKeybind, setKeyGrab_toggle, NULL, NULL},
 	{"KbdModeLock", "NO", NULL,
 	    &wPreferences.modelock, getBool, NULL, NULL, NULL}, /* - */
 #endif				/* KEEP_XKB_LOCK_STATUS */
@@ -1204,7 +1285,7 @@ static void wReadStaticDefaults(WMPropList *dict)
 			/* convert data */
 			(*entry->convert) (entry, plvalue, entry->addr);
 			if (entry->update)
-				(*entry->update) (NULL, entry->extra_data);
+				(*entry->update) (NULL);
 		}
 	}
 }
@@ -1256,7 +1337,7 @@ static void read_defaults_noscreen(WMPropList *new_dict)
 			/* convert data */
 			if ((*entry->convert) (entry, plvalue, entry->addr)) {
 				if (entry->update)
-					(*entry->update) (NULL, entry->extra_data);
+					(*entry->update) (NULL);
 			}
 		}
 	}
@@ -1323,7 +1404,7 @@ static unsigned int read_defaults_step1(virtual_screen *vscr, WMPropList *new_di
 					update_workspace_back = 1;
 
 				if (entry->update)
-					needs_refresh |= (*entry->update) (vscr, entry->extra_data);
+					needs_refresh |= (*entry->update) (vscr);
 			}
 		}
 	}
@@ -2528,77 +2609,69 @@ static int getCursor(WDefaultEntry *entry, WMPropList *value, void *addr)
 #undef CURSOR_ID_NONE
 
 /* ---------------- value setting functions --------------- */
-static int setJustify(virtual_screen *vscr, void *extra_data)
+static int setJustify(virtual_screen *vscr)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) vscr;
-	(void) extra_data;
 
 	return REFRESH_WINDOW_TITLE_COLOR;
 }
 
-static int setClearance(virtual_screen *vscr, void *foo)
+static int setClearance(virtual_screen *vscr)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) vscr;
-	(void) foo;
 
 	return REFRESH_WINDOW_FONT | REFRESH_BUTTON_IMAGES | REFRESH_MENU_TITLE_FONT | REFRESH_MENU_FONT;
 }
 
-static int setIfDockPresent(virtual_screen *vscr, void *extra_data)
+static int setIfDockPresent(virtual_screen *vscr)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) vscr;
-	(void) extra_data;
 
 	wPreferences.flags.nodrawer = wPreferences.flags.nodrawer || wPreferences.flags.nodock;
 
 	return 0;
 }
 
-static int setIfClipPresent(virtual_screen *vscr, void *extra_data)
+static int setIfClipPresent(virtual_screen *vscr)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) vscr;
-	(void) extra_data;
 
 	return 0;
 }
 
-static int setIfDrawerPresent(virtual_screen *vscr, void *extra_data)
+static int setIfDrawerPresent(virtual_screen *vscr)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) vscr;
-	(void) extra_data;
 
 	return 0;
 }
 
-static int setClipMergedInDock(virtual_screen *vscr, void *foo)
+static int setClipMergedInDock(virtual_screen *vscr)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) vscr;
-	(void) foo;
 
 	wPreferences.flags.noclip = wPreferences.flags.noclip || wPreferences.flags.clip_merged_in_dock;
 	return 0;
 }
 
-static int setWrapAppiconsInDock(virtual_screen *vscr, void *foo)
+static int setWrapAppiconsInDock(virtual_screen *vscr)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) vscr;
-	(void) foo;
 
 	return 0;
 }
 
-static int setStickyIcons(virtual_screen *vscr, void *foo)
+static int setStickyIcons(virtual_screen *vscr)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) vscr;
-	(void) foo;
 
 	return REFRESH_STICKY_ICONS;
 }
@@ -2658,15 +2731,12 @@ WTexture *get_texture_from_defstruct(virtual_screen *vscr, defstructpl *ds)
 	return texture;
 }
 
-static int setIconTile(virtual_screen *vscr, void *foo)
+static int setIconTile(virtual_screen *vscr)
 {
 	Pixmap pixmap;
 	RImage *img;
 	WTexture *texture = NULL;
 	int reset = 0;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) foo;
 
 	texture = get_texture_from_defstruct(vscr, wPreferences.texture.iconback);
 
@@ -2720,12 +2790,9 @@ static int setIconTile(virtual_screen *vscr, void *foo)
 	return (reset ? REFRESH_ICON_TILE : 0);
 }
 
-static int setWinTitleFont(virtual_screen *vscr, void *foo)
+static int setWinTitleFont(virtual_screen *vscr)
 {
 	WMFont *font = NULL;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) foo;
 	int fixedlen = sizeof(char *) * 5;
 
 	/* We must have the font loaded, but... */
@@ -2757,12 +2824,9 @@ static int setWinTitleFont(virtual_screen *vscr, void *foo)
 	return REFRESH_WINDOW_FONT | REFRESH_BUTTON_IMAGES;
 }
 
-static int setMenuTitleFont(virtual_screen *vscr, void *foo)
+static int setMenuTitleFont(virtual_screen *vscr)
 {
 	WMFont *font = NULL;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) foo;
 	int fixedlen = sizeof(char *) * 5;
 
 	/* We must have the font loaded, but... */
@@ -2794,12 +2858,9 @@ static int setMenuTitleFont(virtual_screen *vscr, void *foo)
 	return REFRESH_MENU_TITLE_FONT;
 }
 
-static int setMenuTextFont(virtual_screen *vscr, void *foo)
+static int setMenuTextFont(virtual_screen *vscr)
 {
 	WMFont *font = NULL;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) foo;
 	int fixedlen = sizeof(char *) * 5;
 
 	/* We must have the font loaded, but... */
@@ -2831,12 +2892,9 @@ static int setMenuTextFont(virtual_screen *vscr, void *foo)
 	return REFRESH_MENU_FONT;
 }
 
-static int setIconTitleFont(virtual_screen *vscr, void *foo)
+static int setIconTitleFont(virtual_screen *vscr)
 {
 	WMFont *font = NULL;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) foo;
 	int fixedlen = sizeof(char *) * 5;
 
 	/* We must have the font loaded, but... */
@@ -2868,12 +2926,9 @@ static int setIconTitleFont(virtual_screen *vscr, void *foo)
 	return REFRESH_ICON_FONT;
 }
 
-static int setClipTitleFont(virtual_screen *vscr, void *foo)
+static int setClipTitleFont(virtual_screen *vscr)
 {
 	WMFont *font = NULL;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) foo;
 	int fixedlen = sizeof(char *) * 5;
 
 	/* We must have the font loaded, but... */
@@ -2905,12 +2960,9 @@ static int setClipTitleFont(virtual_screen *vscr, void *foo)
 	return REFRESH_ICON_FONT;
 }
 
-static int setLargeDisplayFont(virtual_screen *vscr, void *foo)
+static int setLargeDisplayFont(virtual_screen *vscr)
 {
 	WMFont *font = NULL;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) foo;
 	int fixedlen = sizeof(char *) * 5;
 
 	/* We must have the font loaded, but... */
@@ -2942,13 +2994,10 @@ static int setLargeDisplayFont(virtual_screen *vscr, void *foo)
 	return 0;
 }
 
-static int setHightlight(virtual_screen *vscr, void *foo)
+static int setHightlight(virtual_screen *vscr)
 {
 	XColor clr, *color = NULL;
 	color = &clr;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) foo;
 
 	if (!wGetColor(vscr->screen_ptr, wPreferences.color.highlight->value, color)) {
 		wwarning(_("could not get color for key HighlightColor"));
@@ -2969,13 +3018,10 @@ static int setHightlight(virtual_screen *vscr, void *foo)
 	return REFRESH_MENU_COLOR;
 }
 
-static int setHightlightText(virtual_screen *vscr, void *foo)
+static int setHightlightText(virtual_screen *vscr)
 {
 	XColor clr, *color = NULL;
 	color = &clr;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) foo;
 
 	if (!wGetColor(vscr->screen_ptr, wPreferences.color.highlighttext->value, color)) {
 		wwarning(_("could not get color for key HighlightTextColor"));
@@ -2996,13 +3042,10 @@ static int setHightlightText(virtual_screen *vscr, void *foo)
 	return REFRESH_MENU_COLOR;
 }
 
-static int setClipTitleColor(virtual_screen *vscr, void *extra_data)
+static int setClipTitleColor(virtual_screen *vscr)
 {
 	XColor clr, *color = NULL;
 	color = &clr;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) extra_data;
 
 	if (!wGetColor(vscr->screen_ptr, wPreferences.color.cliptitle->value, color)) {
 		wwarning(_("could not get color for key ClipTitleColor"));
@@ -3022,13 +3065,10 @@ static int setClipTitleColor(virtual_screen *vscr, void *extra_data)
 	return REFRESH_ICON_TITLE_COLOR;
 }
 
-static int setClipTitleColorCollapsed(virtual_screen *vscr, void *extra_data)
+static int setClipTitleColorCollapsed(virtual_screen *vscr)
 {
 	XColor clr, *color = NULL;
 	color = &clr;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) extra_data;
 
 	if (!wGetColor(vscr->screen_ptr, wPreferences.color.cliptitlecollapsed->value, color)) {
 		wwarning(_("could not get color for key CClipTitleColor"));
@@ -3048,13 +3088,10 @@ static int setClipTitleColorCollapsed(virtual_screen *vscr, void *extra_data)
 	return REFRESH_ICON_TITLE_COLOR;
 }
 
-static int setWTitleColorFocused(virtual_screen *vscr, void *extra_data)
+static int setWTitleColorFocused(virtual_screen *vscr)
 {
 	XColor clr, *color = NULL;
 	color = &clr;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) extra_data;
 
 	if (!wGetColor(vscr->screen_ptr, wPreferences.color.titlefocused->value, color)) {
 		wwarning(_("could not get color for key FTitleColor"));
@@ -3076,13 +3113,10 @@ static int setWTitleColorFocused(virtual_screen *vscr, void *extra_data)
 	return REFRESH_WINDOW_TITLE_COLOR;
 }
 
-static int setWTitleColorOwner(virtual_screen *vscr, void *extra_data)
+static int setWTitleColorOwner(virtual_screen *vscr)
 {
 	XColor clr, *color = NULL;
 	color = &clr;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) extra_data;
 
 	if (!wGetColor(vscr->screen_ptr, wPreferences.color.titleowner->value, color)) {
 		wwarning(_("could not get color for key PTitleColor"));
@@ -3104,13 +3138,10 @@ static int setWTitleColorOwner(virtual_screen *vscr, void *extra_data)
 	return REFRESH_WINDOW_TITLE_COLOR;
 }
 
-static int setWTitleColorUnfocused(virtual_screen *vscr, void *extra_data)
+static int setWTitleColorUnfocused(virtual_screen *vscr)
 {
 	XColor clr, *color = NULL;
 	color = &clr;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) extra_data;
 
 	if (!wGetColor(vscr->screen_ptr, wPreferences.color.titleunfocused->value, color)) {
 		wwarning(_("could not get color for key UTitleColor"));
@@ -3132,13 +3163,10 @@ static int setWTitleColorUnfocused(virtual_screen *vscr, void *extra_data)
 	return REFRESH_WINDOW_TITLE_COLOR;
 }
 
-static int setMenuTitleColor(virtual_screen *vscr, void *extra_data)
+static int setMenuTitleColor(virtual_screen *vscr)
 {
 	XColor clr, *color = NULL;
 	color = &clr;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) extra_data;
 
 	if (!wGetColor(vscr->screen_ptr, wPreferences.color.menutitle->value, color)) {
 		wwarning(_("could not get color for key MenuTitleColor"));
@@ -3159,13 +3187,10 @@ static int setMenuTitleColor(virtual_screen *vscr, void *extra_data)
 	return REFRESH_MENU_TITLE_COLOR;
 }
 
-static int setMenuTextColor(virtual_screen *vscr, void *extra_data)
+static int setMenuTextColor(virtual_screen *vscr)
 {
 	XColor clr, *color = NULL;
 	color = &clr;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) extra_data;
 
 	if (!wGetColor(vscr->screen_ptr, wPreferences.color.menutext->value, color)) {
 		wwarning(_("could not get color for key MenuTextColor"));
@@ -3191,13 +3216,10 @@ static int setMenuTextColor(virtual_screen *vscr, void *extra_data)
 	return REFRESH_MENU_COLOR;
 }
 
-static int setMenuDisabledColor(virtual_screen *vscr, void *extra_data)
+static int setMenuDisabledColor(virtual_screen *vscr)
 {
 	XColor clr, *color = NULL;
 	color = &clr;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) extra_data;
 
 	if (!wGetColor(vscr->screen_ptr, wPreferences.color.menudisabled->value, color)) {
 		wwarning(_("could not get color for key MenuDisabledColor"));
@@ -3223,13 +3245,10 @@ static int setMenuDisabledColor(virtual_screen *vscr, void *extra_data)
 	return REFRESH_MENU_COLOR;
 }
 
-static int setIconTitleColor(virtual_screen *vscr, void *extra_data)
+static int setIconTitleColor(virtual_screen *vscr)
 {
 	XColor clr, *color = NULL;
 	color = &clr;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) extra_data;
 
 	if (!wGetColor(vscr->screen_ptr, wPreferences.color.icontitle->value, color)) {
 		wwarning(_("could not get color for key IconTitleColor"));
@@ -3250,13 +3269,10 @@ static int setIconTitleColor(virtual_screen *vscr, void *extra_data)
 	return REFRESH_ICON_TITLE_COLOR;
 }
 
-static int setIconTitleBack(virtual_screen *vscr, void *extra_data)
+static int setIconTitleBack(virtual_screen *vscr)
 {
 	XColor clr, *color = NULL;
 	color = &clr;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) extra_data;
 
 	if (!wGetColor(vscr->screen_ptr, wPreferences.color.icontitleback->value, color)) {
 		wwarning(_("could not get color for key IconTitleBack"));
@@ -3275,23 +3291,17 @@ static int setIconTitleBack(virtual_screen *vscr, void *extra_data)
 	return REFRESH_ICON_TITLE_BACK;
 }
 
-static int setFrameBorderWidth(virtual_screen *vscr, void *extra_data)
+static int setFrameBorderWidth(virtual_screen *vscr)
 {
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) extra_data;
-
 	vscr->frame.border_width = wPreferences.border_width;
 
 	return REFRESH_FRAME_BORDER;
 }
 
-static int setFrameBorderColor(virtual_screen *vscr, void *extra_data)
+static int setFrameBorderColor(virtual_screen *vscr)
 {
 	XColor clr, *color = NULL;
 	color = &clr;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) extra_data;
 
 	if (!wGetColor(vscr->screen_ptr, wPreferences.color.frameborder->value, color)) {
 		wwarning(_("could not get color for key FrameBorderColor"));
@@ -3312,13 +3322,10 @@ static int setFrameBorderColor(virtual_screen *vscr, void *extra_data)
 	return REFRESH_FRAME_BORDER;
 }
 
-static int setFrameFocusedBorderColor(virtual_screen *vscr, void *extra_data)
+static int setFrameFocusedBorderColor(virtual_screen *vscr)
 {
 	XColor clr, *color = NULL;
 	color = &clr;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) extra_data;
 
 	if (!wGetColor(vscr->screen_ptr, wPreferences.color.frameborderfocused->value, color)) {
 		wwarning(_("could not get color for key FrameFocusedBorderColor"));
@@ -3339,13 +3346,10 @@ static int setFrameFocusedBorderColor(virtual_screen *vscr, void *extra_data)
 	return REFRESH_FRAME_BORDER;
 }
 
-static int setFrameSelectedBorderColor(virtual_screen *vscr, void *extra_data)
+static int setFrameSelectedBorderColor(virtual_screen *vscr)
 {
 	XColor clr, *color = NULL;
 	color = &clr;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) extra_data;
 
 	if (!wGetColor(vscr->screen_ptr, wPreferences.color.frameborderselected->value, color)) {
 		wwarning(_("could not get color for key FrameSelectedBorderColor"));
@@ -3366,15 +3370,12 @@ static int setFrameSelectedBorderColor(virtual_screen *vscr, void *extra_data)
 	return REFRESH_FRAME_BORDER;
 }
 
-static int setWorkspaceSpecificBack(virtual_screen *vscr, void *foo)
+static int setWorkspaceSpecificBack(virtual_screen *vscr)
 {
 	WMPropList *value;
 	WMPropList *val;
 	char *str;
 	int i;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) foo;
 
 #ifdef notworking
 	/*
@@ -3438,14 +3439,9 @@ static int setWorkspaceSpecificBack(virtual_screen *vscr, void *foo)
 	return 0;
 }
 
-static int setWorkspaceBack(virtual_screen *vscr, void *foo)
+static int setWorkspaceBack(virtual_screen *vscr)
 {
-	WMPropList *value;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) foo;
-
-	value = wPreferences.workspacespecificback;
+	WMPropList *value = wPreferences.workspacespecificback;
 
 	if (vscr->screen_ptr->flags.backimage_helper_launched) {
 		char *str;
@@ -3492,14 +3488,9 @@ static int setWorkspaceBack(virtual_screen *vscr, void *foo)
 	return 0;
 }
 
-static int setWidgetColor(virtual_screen *vscr, void *foo)
+static int setWidgetColor(virtual_screen *vscr)
 {
-	WTexture *texture = NULL;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) foo;
-
-	texture = get_texture_from_defstruct(vscr, wPreferences.texture.widgetcolor);
+	WTexture *texture = get_texture_from_defstruct(vscr, wPreferences.texture.widgetcolor);
 
 	if (vscr->screen_ptr->widget_texture)
 		wTextureDestroy(vscr, (WTexture *) vscr->screen_ptr->widget_texture);
@@ -3509,14 +3500,9 @@ static int setWidgetColor(virtual_screen *vscr, void *foo)
 	return 0;
 }
 
-static int setFTitleBack(virtual_screen *vscr, void *foo)
+static int setFTitleBack(virtual_screen *vscr)
 {
-	WTexture *texture = NULL;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) foo;
-
-	texture = get_texture_from_defstruct(vscr, wPreferences.texture.titlebackfocused);
+	WTexture *texture = get_texture_from_defstruct(vscr, wPreferences.texture.titlebackfocused);
 
 	if (vscr->screen_ptr->window_title_texture[WS_FOCUSED])
 		wTextureDestroy(vscr, vscr->screen_ptr->window_title_texture[WS_FOCUSED]);
@@ -3526,14 +3512,9 @@ static int setFTitleBack(virtual_screen *vscr, void *foo)
 	return REFRESH_WINDOW_TEXTURES;
 }
 
-static int setPTitleBack(virtual_screen *vscr, void *foo)
+static int setPTitleBack(virtual_screen *vscr)
 {
-	WTexture *texture = NULL;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) foo;
-
-	texture = get_texture_from_defstruct(vscr, wPreferences.texture.titlebackowner);
+	WTexture *texture = get_texture_from_defstruct(vscr, wPreferences.texture.titlebackowner);
 
 	if (vscr->screen_ptr->window_title_texture[WS_PFOCUSED])
 		wTextureDestroy(vscr, vscr->screen_ptr->window_title_texture[WS_PFOCUSED]);
@@ -3543,14 +3524,9 @@ static int setPTitleBack(virtual_screen *vscr, void *foo)
 	return REFRESH_WINDOW_TEXTURES;
 }
 
-static int setUTitleBack(virtual_screen *vscr, void *foo)
+static int setUTitleBack(virtual_screen *vscr)
 {
-	WTexture *texture = NULL;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) foo;
-
-	texture = get_texture_from_defstruct(vscr, wPreferences.texture.titlebackunfocused);
+	WTexture *texture = get_texture_from_defstruct(vscr, wPreferences.texture.titlebackunfocused);
 
 	if (vscr->screen_ptr->window_title_texture[WS_UNFOCUSED])
 		wTextureDestroy(vscr, vscr->screen_ptr->window_title_texture[WS_UNFOCUSED]);
@@ -3560,14 +3536,9 @@ static int setUTitleBack(virtual_screen *vscr, void *foo)
 	return REFRESH_WINDOW_TEXTURES;
 }
 
-static int setResizebarBack(virtual_screen *vscr, void *foo)
+static int setResizebarBack(virtual_screen *vscr)
 {
-	WTexture *texture = NULL;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) foo;
-
-	texture = get_texture_from_defstruct(vscr, wPreferences.texture.resizebarback);
+	WTexture *texture = get_texture_from_defstruct(vscr, wPreferences.texture.resizebarback);
 
 	if (vscr->screen_ptr->resizebar_texture[0])
 		wTextureDestroy(vscr, vscr->screen_ptr->resizebar_texture[0]);
@@ -3577,14 +3548,9 @@ static int setResizebarBack(virtual_screen *vscr, void *foo)
 	return REFRESH_WINDOW_TEXTURES;
 }
 
-static int setMenuTitleBack(virtual_screen *vscr, void *foo)
+static int setMenuTitleBack(virtual_screen *vscr)
 {
-	WTexture *texture = NULL;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) foo;
-
-	texture = get_texture_from_defstruct(vscr, wPreferences.texture.menutitleback);
+	WTexture *texture = get_texture_from_defstruct(vscr, wPreferences.texture.menutitleback);
 
 	if (vscr->screen_ptr->menu_title_texture[0])
 		wTextureDestroy(vscr, vscr->screen_ptr->menu_title_texture[0]);
@@ -3594,14 +3560,9 @@ static int setMenuTitleBack(virtual_screen *vscr, void *foo)
 	return REFRESH_MENU_TITLE_TEXTURE;
 }
 
-static int setMenuTextBack(virtual_screen *vscr, void *foo)
+static int setMenuTextBack(virtual_screen *vscr)
 {
-	WTexture *texture = NULL;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) foo;
-
-	texture = get_texture_from_defstruct(vscr, wPreferences.texture.menutextback);
+	WTexture *texture = get_texture_from_defstruct(vscr, wPreferences.texture.menutextback);
 
 	if (vscr->screen_ptr->menu_item_texture) {
 		wTextureDestroy(vscr, vscr->screen_ptr->menu_item_texture);
@@ -3664,235 +3625,1868 @@ static void set_keygrab(WShortKey *shortcut, char *value)
 	}
 }
 
-static int setKeyGrab(virtual_screen *vscr, void *extra_data)
+static int setKeyGrab_rootmenu(virtual_screen *vscr)
 {
 	WShortKey shortcut;
 	WWindow *wwin;
-	long widx = (long) extra_data;
 	char *value;
 
-	/* TODO: make this as list/array... and remove this ugly if-else block */
-	if (widx == WKBD_ROOTMENU) { /* "RootMenuKey" */
-		value = wPreferences.key.rootmenu;
-	} else if (widx == WKBD_WINDOWLIST) { /* "WindowListKey" */
-		value = wPreferences.key.windowlist;
-	} else if (widx == WKBD_WINDOWMENU) { /* "WindowMenuKey" */
-		value = wPreferences.key.windowmenu;
-	} else if (widx == WKBD_DOCKRAISELOWER) { /* "DockRaiseLowerKey" */
-		value = wPreferences.key.dockraiselower;
-	} else if (widx == WKBD_CLIPRAISELOWER) { /* "ClipRaiseLowerKey" */
-		value = wPreferences.key.clipraiselower;
-	} else if (widx == WKBD_MINIATURIZE) { /* "MiniaturizeKey" */
-		value = wPreferences.key.miniaturize;
-	} else if (widx == WKBD_MINIMIZEALL) { /* "MinimizeAllKey" */
-		value = wPreferences.key.minimizeall;
-	} else if (widx == WKBD_HIDE) { /* "HideKey" */
-		value = wPreferences.key.hide;
-	} else if (widx == WKBD_HIDE_OTHERS) { /* "HideOthersKey" */
-		value = wPreferences.key.hideothers;
-	} else if (widx == WKBD_MOVERESIZE) { /* "MoveResizeKey" */
-		value = wPreferences.key.moveresize;
-	} else if (widx == WKBD_CLOSE) { /* "CloseKey" */
-		value = wPreferences.key.close;
-	} else if (widx == WKBD_MAXIMIZE) { /* "MaximizeKey" */
-		value = wPreferences.key.maximize;
-	} else if (widx == WKBD_VMAXIMIZE) { /* "VMaximizeKey" */
-		value = wPreferences.key.maximizev;
-	} else if (widx == WKBD_HMAXIMIZE) { /* "HMaximizeKey" */
-		value = wPreferences.key.maximizeh;
-	} else if (widx == WKBD_LHMAXIMIZE) { /* "LHMaximizeKey" */
-		value = wPreferences.key.maximizelh;
-	} else if (widx == WKBD_RHMAXIMIZE) { /* "RHMaximizeKey" */
-		value = wPreferences.key.maximizerh;
-	} else if (widx == WKBD_THMAXIMIZE) { /* "THMaximizeKey" */
-		value = wPreferences.key.maximizeth;
-	} else if (widx == WKBD_BHMAXIMIZE) { /* "BHMaximizeKey" */
-		value = wPreferences.key.maximizebh;
-	} else if (widx == WKBD_LTCMAXIMIZE) { /* "LTCMaximizeKey" */
-		value = wPreferences.key.maximizeltc;
-	} else if (widx == WKBD_RTCMAXIMIZE) { /* "RTCMaximizeKey" */
-		value = wPreferences.key.maximizertc;
-	} else if (widx == WKBD_LBCMAXIMIZE) { /* "LBCMaximizeKey" */
-		value = wPreferences.key.maximizelbc;
-	} else if (widx == WKBD_RBCMAXIMIZE) { /* "RBCMaximizeKey" */
-		value = wPreferences.key.maximizerbc;
-	} else if (widx == WKBD_MAXIMUS) { /* "MaximusKey" */
-		value = wPreferences.key.maximus;
-	} else if (widx == WKBD_KEEP_ON_TOP) { /* "KeepOnTopKey" */
-		value = wPreferences.key.keepontop;
-	} else if (widx == WKBD_KEEP_AT_BOTTOM) { /* "KeepAtBottomKey" */
-		value = wPreferences.key.keepatbottom;
-	} else if (widx == WKBD_OMNIPRESENT) { /* "OmnipresentKey" */
-		value = wPreferences.key.omnipresent;
-	} else if (widx == WKBD_RAISE) { /* "RaiseKey" */
-		value = wPreferences.key.raise;
-	} else if (widx == WKBD_LOWER) { /* "LowerKey" */
-		value = wPreferences.key.lower;
-	} else if (widx == WKBD_RAISELOWER) { /* "RaiseLowerKey" */
-		value = wPreferences.key.raiselower;
-	} else if (widx == WKBD_SHADE) { /* "ShadeKey" */
-		value = wPreferences.key.shade;
-	} else if (widx == WKBD_SELECT) { /* "SelectKey" */
-		value = wPreferences.key.select;
-	} else if (widx == WKBD_WORKSPACEMAP) { /* "WorkspaceMapKey" */
-		value = wPreferences.key.workspacemap;
-	} else if (widx == WKBD_FOCUSNEXT) { /* "FocusNextKey" */
-		value = wPreferences.key.focusnext;
-	} else if (widx == WKBD_FOCUSPREV) { /* "FocusPrevKey" */
-		value = wPreferences.key.focusprev;
-	} else if (widx == WKBD_GROUPNEXT) { /* "GroupNextKey" */
-		value = wPreferences.key.groupnext;
-	} else if (widx == WKBD_GROUPPREV) { /* "GroupPrevKey" */
-		value = wPreferences.key.groupprev;
-	} else if (widx == WKBD_NEXTWORKSPACE) { /* "NextWorkspaceKey" */
-		value = wPreferences.key.workspacenext;
-	} else if (widx == WKBD_PREVWORKSPACE) { /* "PrevWorkspaceKey" */
-		value = wPreferences.key.workspaceprev;
-	} else if (widx == WKBD_LASTWORKSPACE) { /* "LastWorkspaceKey" */
-		value = wPreferences.key.workspacelast;
-	} else if (widx == WKBD_NEXTWSLAYER) { /* "NextWorkspaceLayerKey" */
-		value = wPreferences.key.workspacelayernext;
-	} else if (widx == WKBD_PREVWSLAYER) { /* "PrevWorkspaceLayerKey" */
-		value = wPreferences.key.workspacelayerprev;
-	} else if (widx == WKBD_WORKSPACE1) { /* "Workspace1Key" */
-		value = wPreferences.key.workspace1;
-	} else if (widx == WKBD_WORKSPACE2) { /* "Workspace2Key" */
-		value = wPreferences.key.workspace2;
-	} else if (widx == WKBD_WORKSPACE3) { /* "Workspace3Key" */
-		value = wPreferences.key.workspace3;
-	} else if (widx == WKBD_WORKSPACE4) { /* "Workspace4Key" */
-		value = wPreferences.key.workspace4;
-	} else if (widx == WKBD_WORKSPACE5) { /* "Workspace5Key" */
-		value = wPreferences.key.workspace5;
-	} else if (widx == WKBD_WORKSPACE6) { /* "Workspace6Key" */
-		value = wPreferences.key.workspace6;
-	} else if (widx == WKBD_WORKSPACE7) { /* "Workspace7Key" */
-		value = wPreferences.key.workspace7;
-	} else if (widx == WKBD_WORKSPACE8) { /* "Workspace8Key" */
-		value = wPreferences.key.workspace8;
-	} else if (widx == WKBD_WORKSPACE9) { /* "Workspace9Key" */
-		value = wPreferences.key.workspace9;
-	} else if (widx == WKBD_WORKSPACE10) { /* "Workspace10Key" */
-		value = wPreferences.key.workspace10;
-	} else if (widx == WKBD_MOVE_WORKSPACE1) { /* "MoveToWorkspace1Key" */
-		value = wPreferences.key.movetoworkspace1;
-	} else if (widx == WKBD_MOVE_WORKSPACE2) { /* "MoveToWorkspace2Key" */
-		value = wPreferences.key.movetoworkspace2;
-	} else if (widx == WKBD_MOVE_WORKSPACE3) { /* "MoveToWorkspace3Key" */
-		value = wPreferences.key.movetoworkspace3;
-	} else if (widx == WKBD_MOVE_WORKSPACE4) { /* "MoveToWorkspace4Key" */
-		value = wPreferences.key.movetoworkspace4;
-	} else if (widx == WKBD_MOVE_WORKSPACE5) { /* "MoveToWorkspace5Key" */
-		value = wPreferences.key.movetoworkspace5;
-	} else if (widx == WKBD_MOVE_WORKSPACE6) { /* "MoveToWorkspace6Key" */
-		value = wPreferences.key.movetoworkspace6;
-	} else if (widx == WKBD_MOVE_WORKSPACE7) { /* "MoveToWorkspace7Key" */
-		value = wPreferences.key.movetoworkspace7;
-	} else if (widx == WKBD_MOVE_WORKSPACE8) { /* "MoveToWorkspace8Key" */
-		value = wPreferences.key.movetoworkspace8;
-	} else if (widx == WKBD_MOVE_WORKSPACE9) { /* "MoveToWorkspace9Key" */
-		value = wPreferences.key.movetoworkspace9;
-	} else if (widx == WKBD_MOVE_WORKSPACE10) { /* "MoveToWorkspace10Key" */
-		value = wPreferences.key.movetoworkspace10;
-	} else if (widx == WKBD_MOVE_NEXTWORKSPACE) { /* "MoveToNextWorkspaceKey" */
-		value = wPreferences.key.movetonextworkspace;
-	} else if (widx == WKBD_MOVE_PREVWORKSPACE) { /* "MoveToPrevWorkspaceKey" */
-		value = wPreferences.key.movetoprevworkspace;
-	} else if (widx == WKBD_MOVE_LASTWORKSPACE) { /* "MoveToLastWorkspaceKey" */
-		value = wPreferences.key.movetolastworkspace;
-	} else if (widx == WKBD_MOVE_NEXTWSLAYER) { /* "MoveToNextWorkspaceLayerKey" */
-		value = wPreferences.key.movetonextworkspace;
-	} else if (widx == WKBD_MOVE_PREVWSLAYER) { /* "MoveToPrevWorkspaceLayerKey" */
-		value = wPreferences.key.movetoprevworkspace;
-	} else if (widx == WKBD_WINDOW1) { /* "WindowShortcut1Key" */
-		value = wPreferences.key.windowshortcut1;
-	} else if (widx == WKBD_WINDOW2) { /* "WindowShortcut2Key" */
-		value = wPreferences.key.windowshortcut2;
-	} else if (widx == WKBD_WINDOW3) { /* "WindowShortcut3Key" */
-		value = wPreferences.key.windowshortcut3;
-	} else if (widx == WKBD_WINDOW4) { /* "WindowShortcut4Key" */
-		value = wPreferences.key.windowshortcut4;
-	} else if (widx == WKBD_WINDOW5) { /* "WindowShortcut5Key" */
-		value = wPreferences.key.windowshortcut5;
-	} else if (widx == WKBD_WINDOW6) { /* "WindowShortcut6Key" */
-		value = wPreferences.key.windowshortcut6;
-	} else if (widx == WKBD_WINDOW7) { /* "WindowShortcut7Key" */
-		value = wPreferences.key.windowshortcut7;
-	} else if (widx == WKBD_WINDOW8) { /* "WindowShortcut8Key" */
-		value = wPreferences.key.windowshortcut8;
-	} else if (widx == WKBD_WINDOW9) { /* "WindowShortcut9Key" */
-		value = wPreferences.key.windowshortcut9;
-	} else if (widx == WKBD_WINDOW10) { /* "WindowShortcut10Key" */
-		value = wPreferences.key.windowshortcut10;
-	} else if (widx == WKBD_RELAUNCH) { /* "WindowRelaunchKey" */
-		value = wPreferences.key.windowrelaunch;
-	} else if (widx == WKBD_SWITCH_SCREEN) { /* "ScreenSwitchKey" */
-		value = wPreferences.key.screenswitch;
-	} else if (widx == WKBD_RUN) { /* "RunKey" */
-		value = wPreferences.key.run;
-#ifdef KEEP_XKB_LOCK_STATUS
-	} else if (widx == WKBD_TOGGLE) { /* "ToggleKbdModeKey" */
-		value = wPreferences.key.togglekbdmode;
-#endif
-	}
+	value = wPreferences.key.rootmenu;
 
 	set_keygrab(&shortcut, value);
-
-	/* If no error, assign the keybind
-	 * TODO: else... what?
-	 * Now assign shortcut with modifier=0 key=0
-	 */
-	wKeyBindings[widx] = shortcut;
-
+	wKeyBindings[WKBD_ROOTMENU] = shortcut;
 	wwin = vscr->window.focused;
 
 	while (wwin != NULL) {
 		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-
 		if (!WFLAGP(wwin, no_bind_keys))
 			wWindowSetKeyGrabs(wwin);
 
 		wwin = wwin->prev;
 	}
 
-	/* do we need to update window menus? */
-	if (widx >= WKBD_WORKSPACE1 && widx <= WKBD_WORKSPACE10)
-		return REFRESH_WORKSPACE_MENU;
-	if (widx == WKBD_LASTWORKSPACE)
-		return REFRESH_WORKSPACE_MENU;
-	if (widx >= WKBD_MOVE_WORKSPACE1 && widx <= WKBD_MOVE_WORKSPACE10)
-		return REFRESH_WORKSPACE_MENU;
+	return 0;
+}
+
+static int setKeyGrab_windowlist(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.windowlist;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_WINDOWLIST] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
 
 	return 0;
 }
 
-static int setIconPosition(virtual_screen *vscr, void *foo)
+static int setKeyGrab_windowmenu(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.windowmenu;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_WINDOWMENU] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_dockraiselower(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.dockraiselower;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_DOCKRAISELOWER] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_clipraiselower(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.clipraiselower;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_CLIPRAISELOWER] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_miniaturize(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.miniaturize;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_MINIATURIZE] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_minimizeall(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.minimizeall;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_MINIMIZEALL] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_hide(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.hide;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_HIDE] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_hideothers(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.hideothers;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_HIDE_OTHERS] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_moveresize(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.moveresize;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_MOVERESIZE] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_close(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.close;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_CLOSE] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_maximize(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.maximize;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_MAXIMIZE] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_maximizev(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.maximizev;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_VMAXIMIZE] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_maximizeh(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.maximizeh;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_HMAXIMIZE] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_maximizelh(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.maximizelh;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_LHMAXIMIZE] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_maximizerh(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.maximizerh;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_RHMAXIMIZE] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_maximizeth(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.maximizeth;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_THMAXIMIZE] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_maximizebh(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.maximizebh;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_BHMAXIMIZE] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_maximizeltc(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.maximizeltc;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_LTCMAXIMIZE] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_maximizertc(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.maximizertc;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_RTCMAXIMIZE] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_maximizelbc(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.maximizelbc;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_LBCMAXIMIZE] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_maximizerbc(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.maximizerbc;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_RBCMAXIMIZE] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_maximus(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.maximus;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_MAXIMUS] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_keepontop(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.keepontop;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_KEEP_ON_TOP] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_keepatbottom(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.keepatbottom;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_KEEP_AT_BOTTOM] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_omnipresent(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.omnipresent;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_OMNIPRESENT] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_raise(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.raise;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_RAISE] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_lower(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.lower;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_LOWER] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_raiselower(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.raiselower;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_RAISELOWER] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_shade(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.shade;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_SHADE] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_select(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.select;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_SELECT] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_workspacemap(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.workspacemap;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_WORKSPACEMAP] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_focusnext(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.focusnext;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_FOCUSNEXT] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_focusprev(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.focusprev;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_FOCUSPREV] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_groupnext(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.groupnext;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_GROUPNEXT] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_groupprev(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.groupprev;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_GROUPPREV] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_workspacenext(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.workspacenext;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_NEXTWORKSPACE] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_workspaceprev(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.workspaceprev;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_PREVWORKSPACE] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_workspacelast(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.workspacelast;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_LASTWORKSPACE] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	/* Refresh Workspace Menu, if opened */
+	return REFRESH_WORKSPACE_MENU;
+}
+
+static int setKeyGrab_workspacelayernext(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.workspacelayernext;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_NEXTWSLAYER] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_workspacelayerprev(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.workspacelayerprev;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_PREVWSLAYER] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_workspace1(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.workspace1;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_WORKSPACE1] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return REFRESH_WORKSPACE_MENU;
+}
+
+static int setKeyGrab_workspace2(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.workspace2;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_WORKSPACE2] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return REFRESH_WORKSPACE_MENU;
+}
+
+static int setKeyGrab_workspace3(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.workspace3;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_WORKSPACE3] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return REFRESH_WORKSPACE_MENU;
+}
+
+static int setKeyGrab_workspace4(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.workspace4;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_WORKSPACE4] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return REFRESH_WORKSPACE_MENU;
+}
+
+static int setKeyGrab_workspace5(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.workspace5;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_WORKSPACE5] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return REFRESH_WORKSPACE_MENU;
+}
+
+static int setKeyGrab_workspace6(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.workspace6;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_WORKSPACE6] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return REFRESH_WORKSPACE_MENU;
+}
+
+static int setKeyGrab_workspace7(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.workspace7;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_WORKSPACE7] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return REFRESH_WORKSPACE_MENU;
+}
+
+static int setKeyGrab_workspace8(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.workspace8;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_WORKSPACE8] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return REFRESH_WORKSPACE_MENU;
+}
+
+static int setKeyGrab_workspace9(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.workspace9;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_WORKSPACE9] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return REFRESH_WORKSPACE_MENU;
+}
+
+static int setKeyGrab_workspace10(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.workspace10;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_WORKSPACE10] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return REFRESH_WORKSPACE_MENU;
+}
+
+static int setKeyGrab_movetoworkspace1(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.movetoworkspace1;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_MOVE_WORKSPACE1] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return REFRESH_WORKSPACE_MENU;
+}
+
+static int setKeyGrab_movetoworkspace2(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.movetoworkspace2;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_MOVE_WORKSPACE2] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return REFRESH_WORKSPACE_MENU;
+}
+
+static int setKeyGrab_movetoworkspace3(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.movetoworkspace3;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_MOVE_WORKSPACE3] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return REFRESH_WORKSPACE_MENU;
+}
+
+static int setKeyGrab_movetoworkspace4(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.movetoworkspace4;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_MOVE_WORKSPACE4] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return REFRESH_WORKSPACE_MENU;
+}
+
+static int setKeyGrab_movetoworkspace5(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.movetoworkspace5;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_MOVE_WORKSPACE5] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return REFRESH_WORKSPACE_MENU;
+}
+
+static int setKeyGrab_movetoworkspace6(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.movetoworkspace6;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_MOVE_WORKSPACE6] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return REFRESH_WORKSPACE_MENU;
+}
+
+static int setKeyGrab_movetoworkspace7(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.movetoworkspace7;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_MOVE_WORKSPACE7] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return REFRESH_WORKSPACE_MENU;
+}
+
+static int setKeyGrab_movetoworkspace8(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.movetoworkspace8;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_MOVE_WORKSPACE8] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return REFRESH_WORKSPACE_MENU;
+}
+
+static int setKeyGrab_movetoworkspace9(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.movetoworkspace9;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_MOVE_WORKSPACE9] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return REFRESH_WORKSPACE_MENU;
+}
+
+static int setKeyGrab_movetoworkspace10(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.movetoworkspace10;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_MOVE_WORKSPACE10] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return REFRESH_WORKSPACE_MENU;
+}
+
+static int setKeyGrab_movetonextworkspace(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.movetonextworkspace;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_MOVE_NEXTWORKSPACE] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_movetoprevworkspace(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.movetoprevworkspace;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_MOVE_PREVWORKSPACE] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_movetolastworkspace(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.movetolastworkspace;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_MOVE_LASTWORKSPACE] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_movetonextworkspacelayer(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.movetonextworkspace;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_MOVE_NEXTWSLAYER] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_movetoprevworkspacelayer(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.movetoprevworkspace;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_MOVE_PREVWSLAYER] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_windowshortcut1(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.windowshortcut1;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_WINDOW1] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_windowshortcut2(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.windowshortcut2;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_WINDOW2] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_windowshortcut3(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.windowshortcut3;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_WINDOW3] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_windowshortcut4(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.windowshortcut4;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_WINDOW4] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_windowshortcut5(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.windowshortcut5;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_WINDOW5] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_windowshortcut6(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.windowshortcut6;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_WINDOW6] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_windowshortcut7(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.windowshortcut7;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_WINDOW7] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_windowshortcut8(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.windowshortcut8;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_WINDOW8] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_windowshortcut9(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.windowshortcut9;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_WINDOW9] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_windowshortcut10(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.windowshortcut10;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_WINDOW10] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_windowrelaunch(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.windowrelaunch;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_RELAUNCH] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_screenswitch(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.screenswitch;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_SWITCH_SCREEN] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_run(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.run;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_RUN] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+#ifdef KEEP_XKB_LOCK_STATUS
+static int setKeyGrab_togglekbdmode(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.togglekbdmode;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_TOGGLE] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+#endif
+
+static int setIconPosition(virtual_screen *vscr)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) vscr;
-	(void) foo;
 
 	return REFRESH_ARRANGE_ICONS;
 }
 
-static int updateUsableArea(virtual_screen *vscr, void *foo)
+static int updateUsableArea(virtual_screen *vscr)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) vscr;
-	(void) foo;
 
 	return REFRESH_USABLE_AREA;
-
 }
 
-static int setWorkspaceMapBackground(virtual_screen *vscr, void *foo)
+static int setWorkspaceMapBackground(virtual_screen *vscr)
 {
-	WTexture *texture = NULL;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) foo;
-
-	texture = get_texture_from_defstruct(vscr, wPreferences.texture.workspacemapback);
+	WTexture *texture = get_texture_from_defstruct(vscr, wPreferences.texture.workspacemapback);
 
 	if (wPreferences.wsmbackTexture)
 		wTextureDestroy(vscr, wPreferences.wsmbackTexture);
@@ -3903,11 +5497,10 @@ static int setWorkspaceMapBackground(virtual_screen *vscr, void *foo)
 }
 
 
-static int setMenuStyle(virtual_screen *vscr, void *foo)
+static int setMenuStyle(virtual_screen *vscr)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) vscr;
-	(void) foo;
 
 	return REFRESH_MENU_TEXTURE;
 }
@@ -3921,14 +5514,12 @@ static RImage *chopOffImage(RImage *image, int x, int y, int w, int h)
 	return img;
 }
 
-static int setSwPOptions(virtual_screen *vscr, void *foo)
+static int setSwPOptions(virtual_screen *vscr)
 {
 	WMPropList *array;
 	char *path;
 	RImage *bgimage;
 	int cwidth, cheight;
-
-	(void) foo;
 
 	array = wPreferences.sp_options;
 
@@ -4045,12 +5636,10 @@ static int setSwPOptions(virtual_screen *vscr, void *foo)
 	return 0;
 }
 
-static int setModifierKeyLabels(virtual_screen *vscr, void *foo)
+static int setModifierKeyLabels(virtual_screen *vscr)
 {
 	WMPropList *array;
 	int i;
-
-	(void) foo;
 
 	array = wPreferences.modifierkeylabels;
 
@@ -4081,26 +5670,23 @@ static int setModifierKeyLabels(virtual_screen *vscr, void *foo)
 	return 0;
 }
 
-static int setDoubleClick(virtual_screen *vscr, void *foo)
+static int setDoubleClick(virtual_screen *vscr)
 {
-	/* Parameter not used, but tell the compiler that it is ok */
 	(void) vscr;
 
 	if (wPreferences.dblclick_time <= 0)
-		*(int *)foo = 1;
+		wPreferences.dblclick_time = 1;
 
 	W_setconf_doubleClickDelay(wPreferences.dblclick_time);
 
 	return 0;
 }
 
-static int setCursor_root(virtual_screen *vscr, void *extra_data)
+static int setCursor_root(virtual_screen *vscr)
 {
 	WMPropList *value = NULL;
 	Cursor cursor;
 	int status;
-
-	(void) extra_data;
 
 	value = wPreferences.cursors.root->value;
 	status = parse_cursor(vscr, value, &cursor);
@@ -4121,13 +5707,11 @@ static int setCursor_root(virtual_screen *vscr, void *extra_data)
 	return 0;
 }
 
-static int setCursor_move(virtual_screen *vscr, void *extra_data)
+static int setCursor_move(virtual_screen *vscr)
 {
 	WMPropList *value = NULL;
 	Cursor cursor;
 	int status;
-
-	(void) extra_data;
 
 	value = wPreferences.cursors.move->value;
 	status = parse_cursor(vscr, value, &cursor);
@@ -4144,13 +5728,11 @@ static int setCursor_move(virtual_screen *vscr, void *extra_data)
 	return 0;
 }
 
-static int setCursor_resize(virtual_screen *vscr, void *extra_data)
+static int setCursor_resize(virtual_screen *vscr)
 {
 	WMPropList *value = NULL;
 	Cursor cursor;
 	int status;
-
-	(void) extra_data;
 
 	value = wPreferences.cursors.resize->value;
 	status = parse_cursor(vscr, value, &cursor);
@@ -4167,13 +5749,11 @@ static int setCursor_resize(virtual_screen *vscr, void *extra_data)
 	return 0;
 }
 
-static int setCursor_topleftresize(virtual_screen *vscr, void *extra_data)
+static int setCursor_topleftresize(virtual_screen *vscr)
 {
 	WMPropList *value = NULL;
 	Cursor cursor;
 	int status;
-
-	(void) extra_data;
 
 	value = wPreferences.cursors.resizetopleft->value;
 	status = parse_cursor(vscr, value, &cursor);
@@ -4190,13 +5770,11 @@ static int setCursor_topleftresize(virtual_screen *vscr, void *extra_data)
 	return 0;
 }
 
-static int setCursor_toprightresize(virtual_screen *vscr, void *extra_data)
+static int setCursor_toprightresize(virtual_screen *vscr)
 {
 	WMPropList *value = NULL;
 	Cursor cursor;
 	int status;
-
-	(void) extra_data;
 
 	value = wPreferences.cursors.resizetopright->value;
 	status = parse_cursor(vscr, value, &cursor);
@@ -4213,13 +5791,11 @@ static int setCursor_toprightresize(virtual_screen *vscr, void *extra_data)
 	return 0;
 }
 
-static int setCursor_bottomleftresize(virtual_screen *vscr, void *extra_data)
+static int setCursor_bottomleftresize(virtual_screen *vscr)
 {
 	WMPropList *value = NULL;
 	Cursor cursor;
 	int status;
-
-	(void) extra_data;
 
 	value = wPreferences.cursors.resizebottomleft->value;
 	status = parse_cursor(vscr, value, &cursor);
@@ -4236,13 +5812,11 @@ static int setCursor_bottomleftresize(virtual_screen *vscr, void *extra_data)
 	return 0;
 }
 
-static int setCursor_bottomrightresize(virtual_screen *vscr, void *extra_data)
+static int setCursor_bottomrightresize(virtual_screen *vscr)
 {
 	WMPropList *value = NULL;
 	Cursor cursor;
 	int status;
-
-	(void) extra_data;
 
 	value = wPreferences.cursors.resizebottomright->value;
 	status = parse_cursor(vscr, value, &cursor);
@@ -4259,13 +5833,11 @@ static int setCursor_bottomrightresize(virtual_screen *vscr, void *extra_data)
 	return 0;
 }
 
-static int setCursor_horizontalresize(virtual_screen *vscr, void *extra_data)
+static int setCursor_horizontalresize(virtual_screen *vscr)
 {
 	WMPropList *value = NULL;
 	Cursor cursor;
 	int status;
-
-	(void) extra_data;
 
 	value = wPreferences.cursors.resizehorizontal->value;
 	status = parse_cursor(vscr, value, &cursor);
@@ -4282,13 +5854,11 @@ static int setCursor_horizontalresize(virtual_screen *vscr, void *extra_data)
 	return 0;
 }
 
-static int setCursor_verticalresize(virtual_screen *vscr, void *extra_data)
+static int setCursor_verticalresize(virtual_screen *vscr)
 {
 	WMPropList *value = NULL;
 	Cursor cursor;
 	int status;
-
-	(void) extra_data;
 
 	value = wPreferences.cursors.resizevertical->value;
 	status = parse_cursor(vscr, value, &cursor);
@@ -4305,13 +5875,11 @@ static int setCursor_verticalresize(virtual_screen *vscr, void *extra_data)
 	return 0;
 }
 
-static int setCursor_wait(virtual_screen *vscr, void *extra_data)
+static int setCursor_wait(virtual_screen *vscr)
 {
 	WMPropList *value = NULL;
 	Cursor cursor;
 	int status;
-
-	(void) extra_data;
 
 	value = wPreferences.cursors.wait->value;
 	status = parse_cursor(vscr, value, &cursor);
@@ -4328,13 +5896,11 @@ static int setCursor_wait(virtual_screen *vscr, void *extra_data)
 	return 0;
 }
 
-static int setCursor_arrow(virtual_screen *vscr, void *extra_data)
+static int setCursor_arrow(virtual_screen *vscr)
 {
 	WMPropList *value = NULL;
 	Cursor cursor;
 	int status;
-
-	(void) extra_data;
 
 	value = wPreferences.cursors.arrow->value;
 	status = parse_cursor(vscr, value, &cursor);
@@ -4351,13 +5917,11 @@ static int setCursor_arrow(virtual_screen *vscr, void *extra_data)
 	return 0;
 }
 
-static int setCursor_question(virtual_screen *vscr, void *extra_data)
+static int setCursor_question(virtual_screen *vscr)
 {
 	WMPropList *value = NULL;
 	Cursor cursor;
 	int status;
-
-	(void) extra_data;
 
 	value = wPreferences.cursors.question->value;
 	status = parse_cursor(vscr, value, &cursor);
@@ -4374,13 +5938,11 @@ static int setCursor_question(virtual_screen *vscr, void *extra_data)
 	return 0;
 }
 
-static int setCursor_text(virtual_screen *vscr, void *extra_data)
+static int setCursor_text(virtual_screen *vscr)
 {
 	WMPropList *value = NULL;
 	Cursor cursor;
 	int status;
-
-	(void) extra_data;
 
 	value = wPreferences.cursors.text->value;
 	status = parse_cursor(vscr, value, &cursor);
@@ -4397,13 +5959,11 @@ static int setCursor_text(virtual_screen *vscr, void *extra_data)
 	return 0;
 }
 
-static int setCursor_select(virtual_screen *vscr, void *extra_data)
+static int setCursor_select(virtual_screen *vscr)
 {
 	WMPropList *value = NULL;
 	Cursor cursor;
 	int status;
-
-	(void) extra_data;
 
 	value = wPreferences.cursors.select->value;
 	status = parse_cursor(vscr, value, &cursor);
