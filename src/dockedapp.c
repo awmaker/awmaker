@@ -35,7 +35,7 @@
 #include "dockedapp.h"
 #include "dialog.h"
 #include "misc.h"
-#include "defaults.h"
+#include "wdefaults.h"
 #include "framewin.h"
 #include "xinerama.h"
 

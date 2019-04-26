@@ -30,7 +30,7 @@
 #include "framewin.h"
 #include "icon.h"
 #include "window.h"
-#include "defaults.h"
+#include "wdefaults.h"
 #include "switchpanel.h"
 #include "misc.h"
 #include "xinerama.h"

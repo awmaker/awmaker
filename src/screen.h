@@ -131,10 +131,16 @@ struct virtual_screen {
                                                   * another window entered fullscreen
                                                   */
 	} window;
+
+	struct {
+		int border_width;
+	} frame;
 };
 
 /* each WScreen is saved into a context associated with it's root window */
 struct WScreen {
+	virtual_screen *vscr;                    /* Virtual screen used by the WScreen */
+
     int	screen;			       /* screen number */
     Window info_window;		       /* for our window manager info stuff */
 #ifdef USE_ICCCM_WMREPLACE
@@ -147,7 +153,6 @@ struct WScreen {
     Window root_win;		       /* root window of screen */
     int  depth;			       /* depth of the default visual */
     Colormap colormap;		       /* root colormap */
-    int root_colormap_install_count;
     struct WWindow *original_cmap_window; /* colormap before installing
                                            * root colormap temporarily */
     struct WWindow *cmap_window;
@@ -219,7 +224,6 @@ struct WScreen {
     WMColor *mtext_color;	       /* menu item text */
     WMColor *dtext_color;	       /* disabled menu item text */
 
-    int frame_border_width;
     WMColor *frame_border_color;
     WMColor *frame_focused_border_color;
     WMColor *frame_selected_border_color;
@@ -269,8 +273,6 @@ struct WScreen {
     struct RContext *rcontext;	       /* wrlib context */
 
     WMScreen *wmscreen;		       /* for widget library */
-
-    Pixmap icon_tile_pixmap;		/* For app supplied icons */
 
     struct RImage *def_icon_rimage;	/* Default RImage icon */
 

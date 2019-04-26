@@ -51,7 +51,7 @@
 #include "colormap.h"
 #include "keybind.h"
 #include "stacking.h"
-#include "defaults.h"
+#include "wdefaults.h"
 #include "workspace.h"
 #include "xinerama.h"
 #include "appmenu.h"
@@ -2280,8 +2280,8 @@ void wWindowConfigure(WWindow *wwin, int req_x, int req_y, int req_width, int re
 	wwin->frame_x = req_x;
 	wwin->frame_y = req_y;
 	if (HAS_BORDER(wwin)) {
-		wwin->client.x += wwin->vscr->screen_ptr->frame_border_width;
-		wwin->client.y += wwin->vscr->screen_ptr->frame_border_width;
+		wwin->client.x += wwin->vscr->frame.border_width;
+		wwin->client.y += wwin->vscr->frame.border_width;
 	}
 
 #ifdef USE_XSHAPE
@@ -2318,8 +2318,8 @@ void wWindowMove(WWindow *wwin, int req_x, int req_y)
 	wwin->client.x = req_x;
 	wwin->client.y = req_y + wwin->frame->top_width;
 	if (HAS_BORDER(wwin)) {
-		wwin->client.x += wwin->vscr->screen_ptr->frame_border_width;
-		wwin->client.y += wwin->vscr->screen_ptr->frame_border_width;
+		wwin->client.x += wwin->vscr->frame.border_width;
+		wwin->client.y += wwin->vscr->frame.border_width;
 	}
 
 	XMoveWindow(dpy, wwin->frame->core->window, req_x, req_y);

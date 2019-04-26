@@ -35,7 +35,7 @@
 #include "properties.h"
 #include "workspace.h"
 #include "dock.h"
-#include "defaults.h"
+#include "wdefaults.h"
 
 
 /******** Local variables ********/

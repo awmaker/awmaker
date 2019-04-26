@@ -36,10 +36,10 @@
 
 #include "WindowMaker.h"
 #include "window.h"
+#include "wdefaults.h"
 #include "appicon.h"
 #include "screen.h"
 #include "workspace.h"
-#include "defaults.h"
 #include "icon.h"
 #include "misc.h"
 
@@ -86,6 +86,8 @@ static WMPropList *AIgnoreDecorationChanges;
 static WMPropList *AIcon;
 static WMPropList *AnyWindow;
 static WMPropList *No;
+
+static char *get_default_image_path(void);
 
 static void init_wdefaults(void)
 {

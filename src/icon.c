@@ -40,7 +40,7 @@
 #include "actions.h"
 #include "stacking.h"
 #include "application.h"
-#include "defaults.h"
+#include "wdefaults.h"
 #include "appicon.h"
 #include "wmspec.h"
 #include "misc.h"
@@ -729,7 +729,6 @@ static void get_rimage_icon_from_icon_win(WIcon *icon)
 static void set_dockapp_in_icon(WIcon *icon)
 {
 	XWindowAttributes attr;
-	WScreen *scr = icon->vscr->screen_ptr;
 	unsigned int w, h, d;
 
 	/* Reparent the dock application to the icon */
@@ -739,7 +738,7 @@ static void set_dockapp_in_icon(WIcon *icon)
 	getSize(icon->icon_win, &w, &h, &d);
 
 	/* Set the background pixmap */
-	XSetWindowBackgroundPixmap(dpy, icon->core->window, scr->icon_tile_pixmap);
+	XSetWindowBackgroundPixmap(dpy, icon->core->window, icon->pixmap);
 
 	/* Set the icon border */
 	XSetWindowBorderWidth(dpy, icon->icon_win, 0);

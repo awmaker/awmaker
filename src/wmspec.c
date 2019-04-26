@@ -1856,10 +1856,10 @@ void wNETFrameExtents(WWindow *wwin)
 	if (wwin->frame->resizebar)
 		extents[3] = wwin->frame->resizebar_height;
 	if (HAS_BORDER(wwin)) {
-		extents[0] += wwin->vscr->screen_ptr->frame_border_width;
-		extents[1] += wwin->vscr->screen_ptr->frame_border_width;
-		extents[2] += wwin->vscr->screen_ptr->frame_border_width;
-		extents[3] += wwin->vscr->screen_ptr->frame_border_width;
+		extents[0] += wwin->vscr->frame.border_width;
+		extents[1] += wwin->vscr->frame.border_width;
+		extents[2] += wwin->vscr->frame.border_width;
+		extents[3] += wwin->vscr->frame.border_width;
 	}
 
 	XChangeProperty(dpy, wwin->client_win, net_frame_extents, XA_CARDINAL, 32, PropModeReplace, (unsigned char *) extents, 4);

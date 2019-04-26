@@ -126,6 +126,8 @@ typedef enum {
 	WCUR_LAST
 } w_cursor;
 
+#define MAX_SHORTCUT_LENGTH 32
+
 /* geometry displays */
 #define WDIS_NEW		0	/* new style */
 #define WDIS_CENTER		1	/* center of screen */
@@ -324,6 +326,17 @@ typedef struct WCoord {
 	int x, y;
 } WCoord;
 
+typedef struct defstruct {
+	char *defvalue;                    /* Default value (color name) */
+	char *value;                       /* Color name value used */
+} defstruct;
+
+typedef struct defstructpl {
+	char *key;                         /* Entry key */
+	WMPropList *defvalue;              /* Default value (color name) */
+	WMPropList *value;                 /* Color name value used */
+} defstructpl;
+
 extern struct WPreferences {
 	char *pixmap_path;                 /* : separated list of paths to find pixmaps */
 	char *icon_path;                   /* : separated list of paths to find icons */
@@ -385,10 +398,6 @@ extern struct WPreferences {
 	char disable_root_mouse;           /* disable button events in root window */
 	char auto_focus;                   /* focus window when it's mapped */
 	char *icon_back_file;              /* background image for icons */
-
-	WCoord *root_menu_pos;             /* initial position of the root menu*/
-	WCoord *app_menu_pos;
-	WCoord *win_menu_pos;
 
 	signed char icon_yard;             /* aka iconbox */
 
@@ -470,30 +479,187 @@ extern struct WPreferences {
 	int clip_auto_expand_delay;         /* Delay after which the clip will expand when entered */
 	int clip_auto_collapse_delay;       /* Delay after which the clip will collapse when leaved */
 
-	RImage *swtileImage;
-	RImage *swbackImage[9];
-
 	union WTexture *wsmbackTexture;
 
 	char show_clip_title;
 
 	struct {
 #ifdef USE_ICCCM_WMREPLACE
-		unsigned int replace:1;               /* replace existing window manager */
+		unsigned int replace;               /* replace existing window manager */
 #endif
-		unsigned int nodock:1;                /* don't display the dock */
-		unsigned int noclip:1;                /* don't display the clip */
-		unsigned int clip_merged_in_dock:1;   /* disable clip, dock gets its workspace switching functionality */
-		unsigned int nodrawer:1;              /* don't use drawers */
-		unsigned int wrap_appicons_in_dock:1; /* Whether to wrap appicons when Dock is moved up and down */
-		unsigned int noupdates:1;             /* don't require ~/GNUstep (-static) */
-		unsigned int noautolaunch:1;          /* don't autolaunch apps */
-		unsigned int norestore:1;             /* don't restore session */
-		unsigned int restarting:2;
-	} flags;                                      /* internal flags */
+		unsigned int nodock;                /* don't display the dock */
+		unsigned int noclip;                /* don't display the clip */
+		unsigned int clip_merged_in_dock;   /* disable clip, dock gets its workspace switching functionality */
+		unsigned int nodrawer;              /* don't use drawers */
+		unsigned int wrap_appicons_in_dock; /* Whether to wrap appicons when Dock is moved up and down */
+		unsigned int noupdates;             /* don't require ~/GNUstep (-static) */
+		unsigned int noautolaunch;          /* don't autolaunch apps */
+		unsigned int norestore;             /* don't restore session */
+		unsigned int restarting;
+	} flags;                                /* internal flags */
 
 	/* Map table between w_cursor and actual X id */
 	Cursor cursor[WCUR_LAST];
+
+	/* Font names */
+	struct {
+		char *wintitle;
+		char *menutitle;
+		char *menutext;
+		char *icontitle;
+		char *cliptitle;
+		char *largedisplay;
+	} font;
+
+	/* Color names */
+	struct {
+		defstruct *widget;
+		defstruct *highlight;
+		defstruct *highlighttext;
+		defstruct *cliptitle;
+		defstruct *cliptitlecollapsed;
+		defstruct *titlefocused;
+		defstruct *titleowner;
+		defstruct *titleunfocused;
+		defstruct *menutitle;
+		defstruct *menutext;
+		defstruct *menudisabled;
+		defstruct *icontitle;
+		defstruct *icontitleback;
+		defstruct *frameborder;
+		defstruct *frameborderfocused;
+		defstruct *frameborderselected;
+	} color;
+
+	/* Cursors */
+	struct {
+		defstructpl *arrow;
+		defstructpl *move;
+		defstructpl *normal;
+		defstructpl *question;
+		defstructpl *resize;
+		defstructpl *resizebottomleft;
+		defstructpl *resizebottomright;
+		defstructpl *resizehorizontal;
+		defstructpl *resizetopleft;
+		defstructpl *resizetopright;
+		defstructpl *resizevertical;
+		defstructpl *select;
+		defstructpl *text;
+		defstructpl *wait;
+		defstructpl *root;
+	} cursors;	/* cursor name is used for Cursor 48 lines above */
+
+	/* Key binds */
+	WMPropList *modifierkeylabels;
+
+	struct {
+		char clipraiselower[MAX_SHORTCUT_LENGTH];
+		char close[MAX_SHORTCUT_LENGTH];
+		char dockraiselower[MAX_SHORTCUT_LENGTH];
+		char focusnext[MAX_SHORTCUT_LENGTH];
+		char focusprev[MAX_SHORTCUT_LENGTH];
+		char groupnext[MAX_SHORTCUT_LENGTH];
+		char groupprev[MAX_SHORTCUT_LENGTH];
+		char hide[MAX_SHORTCUT_LENGTH];
+		char hideothers[MAX_SHORTCUT_LENGTH];
+		char keepatbottom[MAX_SHORTCUT_LENGTH];
+		char keepontop[MAX_SHORTCUT_LENGTH];
+		char lower[MAX_SHORTCUT_LENGTH];
+		char maximize[MAX_SHORTCUT_LENGTH];
+		char maximizebh[MAX_SHORTCUT_LENGTH];
+		char maximizeh[MAX_SHORTCUT_LENGTH];
+		char maximizelbc[MAX_SHORTCUT_LENGTH];
+		char maximizelh[MAX_SHORTCUT_LENGTH];
+		char maximizeltc[MAX_SHORTCUT_LENGTH];
+		char maximizerbc[MAX_SHORTCUT_LENGTH];
+		char maximizerh[MAX_SHORTCUT_LENGTH];
+		char maximizertc[MAX_SHORTCUT_LENGTH];
+		char maximizeth[MAX_SHORTCUT_LENGTH];
+		char maximizev[MAX_SHORTCUT_LENGTH];
+		char maximus[MAX_SHORTCUT_LENGTH];
+		char miniaturize[MAX_SHORTCUT_LENGTH];
+		char minimizeall[MAX_SHORTCUT_LENGTH];
+		char moveresize[MAX_SHORTCUT_LENGTH];
+		char movetolastworkspace[MAX_SHORTCUT_LENGTH];
+		char movetonextworkspace[MAX_SHORTCUT_LENGTH];
+		char movetonextworkspacelayer[MAX_SHORTCUT_LENGTH];
+		char movetoprevworkspace[MAX_SHORTCUT_LENGTH];
+		char movetoprevworkspacelayer[MAX_SHORTCUT_LENGTH];
+		char movetoworkspace1[MAX_SHORTCUT_LENGTH];
+		char movetoworkspace2[MAX_SHORTCUT_LENGTH];
+		char movetoworkspace3[MAX_SHORTCUT_LENGTH];
+		char movetoworkspace4[MAX_SHORTCUT_LENGTH];
+		char movetoworkspace5[MAX_SHORTCUT_LENGTH];
+		char movetoworkspace6[MAX_SHORTCUT_LENGTH];
+		char movetoworkspace7[MAX_SHORTCUT_LENGTH];
+		char movetoworkspace8[MAX_SHORTCUT_LENGTH];
+		char movetoworkspace9[MAX_SHORTCUT_LENGTH];
+		char movetoworkspace10[MAX_SHORTCUT_LENGTH];
+		char omnipresent[MAX_SHORTCUT_LENGTH];
+		char raise[MAX_SHORTCUT_LENGTH];
+		char raiselower[MAX_SHORTCUT_LENGTH];
+		char rootmenu[MAX_SHORTCUT_LENGTH];
+		char run[MAX_SHORTCUT_LENGTH];
+		char screenswitch[MAX_SHORTCUT_LENGTH];
+		char select[MAX_SHORTCUT_LENGTH];
+		char shade[MAX_SHORTCUT_LENGTH];
+		char togglekbdmode[MAX_SHORTCUT_LENGTH];
+		char windowlist[MAX_SHORTCUT_LENGTH];
+		char windowmenu[MAX_SHORTCUT_LENGTH];
+		char windowrelaunch[MAX_SHORTCUT_LENGTH];
+		char windowshortcut1[MAX_SHORTCUT_LENGTH];
+		char windowshortcut2[MAX_SHORTCUT_LENGTH];
+		char windowshortcut3[MAX_SHORTCUT_LENGTH];
+		char windowshortcut4[MAX_SHORTCUT_LENGTH];
+		char windowshortcut5[MAX_SHORTCUT_LENGTH];
+		char windowshortcut6[MAX_SHORTCUT_LENGTH];
+		char windowshortcut7[MAX_SHORTCUT_LENGTH];
+		char windowshortcut8[MAX_SHORTCUT_LENGTH];
+		char windowshortcut9[MAX_SHORTCUT_LENGTH];
+		char windowshortcut10[MAX_SHORTCUT_LENGTH];
+		char workspace1[MAX_SHORTCUT_LENGTH];
+		char workspace2[MAX_SHORTCUT_LENGTH];
+		char workspace3[MAX_SHORTCUT_LENGTH];
+		char workspace4[MAX_SHORTCUT_LENGTH];
+		char workspace5[MAX_SHORTCUT_LENGTH];
+		char workspace6[MAX_SHORTCUT_LENGTH];
+		char workspace7[MAX_SHORTCUT_LENGTH];
+		char workspace8[MAX_SHORTCUT_LENGTH];
+		char workspace9[MAX_SHORTCUT_LENGTH];
+		char workspace10[MAX_SHORTCUT_LENGTH];
+		char workspacelast[MAX_SHORTCUT_LENGTH];
+		char workspacelayernext[MAX_SHORTCUT_LENGTH];
+		char workspacelayerprev[MAX_SHORTCUT_LENGTH];
+		char workspacemap[MAX_SHORTCUT_LENGTH];
+		char workspacenext[MAX_SHORTCUT_LENGTH];
+		char workspaceprev[MAX_SHORTCUT_LENGTH];
+	} key;
+
+	struct {
+		defstructpl *widgetcolor;
+		defstructpl *iconback;
+		defstructpl *titlebackfocused;
+		defstructpl *titlebackowner;
+		defstructpl *titlebackunfocused;
+		defstructpl *resizebarback;
+		defstructpl *menutitleback;
+		defstructpl *menutextback;
+		defstructpl *workspacemapback;
+	} texture;
+
+	/* Switch Panel */
+	WMPropList *sp_options;
+	RImage *swtileImage;
+	RImage *swbackImage[9];
+
+	/* Backgrounds */
+	WMPropList *workspaceback;
+	WMPropList *workspacespecificback;
+
+	/* Frame border */
+	int border_width;
+
 } wPreferences;
 
 /****** Global Variables  ******/

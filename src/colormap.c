@@ -41,11 +41,6 @@ void wColormapInstallForWindow(virtual_screen *vscr, WWindow *wwin)
 
 	vscr->screen_ptr->cmap_window = wwin;
 
-	if (vscr->screen_ptr->root_colormap_install_count > 0) {
-		vscr->screen_ptr->original_cmap_window = wwin;
-		return;
-	}
-
 	/* install colormap for all windows of the client */
 	if (wwin && wwin->cmap_window_no > 0 && wwin->cmap_windows) {
 		for (i = wwin->cmap_window_no - 1; i >= 0; i--) {

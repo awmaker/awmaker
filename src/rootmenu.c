@@ -74,6 +74,7 @@ static void menu_parser_register_macros(WMenuParser parser);
 static void observer(void *self, WMNotification *notif);
 static void wsobserver(void *self, WMNotification *notif);
 static void rootmenu_setup_switchmenu_notif(void);
+static void rootmenu_map(virtual_screen *vscr, int keyboard);
 
 typedef struct Shortcut {
 	struct Shortcut *next;
@@ -1726,7 +1727,7 @@ void OpenRootMenu(virtual_screen *vscr, int x, int y, int keyboard)
 		rebindKeygrabs(vscr);
 }
 
-void rootmenu_map(virtual_screen *vscr, int keyboard)
+static void rootmenu_map(virtual_screen *vscr, int keyboard)
 {
 	int x, y, newx, newy;
 

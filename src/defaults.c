@@ -64,11 +64,9 @@
 #include "misc.h"
 #include "winmenu.h"
 
-#define MAX_SHORTCUT_LENGTH 32
-
 typedef struct _WDefaultEntry  WDefaultEntry;
-typedef int (WDECallbackConvert) (virtual_screen *vscr, WDefaultEntry *entry, WMPropList *plvalue, void *addr, void **tdata);
-typedef int (WDECallbackUpdate) (virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data);
+typedef int (WDECallbackConvert) (WDefaultEntry *entry, WMPropList *plvalue, void *addr);
+typedef int (WDECallbackUpdate) (virtual_screen *vscr);
 
 struct _WDefaultEntry {
 	const char *key;
@@ -102,11 +100,14 @@ static WDECallbackConvert getColor;
 static WDECallbackConvert getKeybind;
 static WDECallbackConvert getModMask;
 static WDECallbackConvert getPropList;
+static WDECallbackConvert getCursor;
 
 /* value setting functions */
 static WDECallbackUpdate setJustify;
 static WDECallbackUpdate setClearance;
 static WDECallbackUpdate setIfDockPresent;
+static WDECallbackUpdate setIfClipPresent;
+static WDECallbackUpdate setIfDrawerPresent;
 static WDECallbackUpdate setClipMergedInDock;
 static WDECallbackUpdate setWrapAppiconsInDock;
 static WDECallbackUpdate setStickyIcons;
@@ -123,7 +124,9 @@ static WDECallbackUpdate setFrameBorderColor;
 static WDECallbackUpdate setFrameFocusedBorderColor;
 static WDECallbackUpdate setFrameSelectedBorderColor;
 static WDECallbackUpdate setLargeDisplayFont;
-static WDECallbackUpdate setWTitleColor;
+static WDECallbackUpdate setWTitleColorFocused;
+static WDECallbackUpdate setWTitleColorOwner;
+static WDECallbackUpdate setWTitleColorUnfocused;
 static WDECallbackUpdate setFTitleBack;
 static WDECallbackUpdate setPTitleBack;
 static WDECallbackUpdate setUTitleBack;
@@ -137,22 +140,112 @@ static WDECallbackUpdate setMenuTitleBack;
 static WDECallbackUpdate setMenuTextBack;
 static WDECallbackUpdate setHightlight;
 static WDECallbackUpdate setHightlightText;
-static WDECallbackUpdate setKeyGrab;
+static WDECallbackUpdate setKeyGrab_rootmenu;
+static WDECallbackUpdate setKeyGrab_windowlist;
+static WDECallbackUpdate setKeyGrab_windowmenu;
+static WDECallbackUpdate setKeyGrab_dockraiselower;
+static WDECallbackUpdate setKeyGrab_clipraiselower;
+static WDECallbackUpdate setKeyGrab_miniaturize;
+static WDECallbackUpdate setKeyGrab_minimizeall;
+static WDECallbackUpdate setKeyGrab_hide;
+static WDECallbackUpdate setKeyGrab_hideothers;
+static WDECallbackUpdate setKeyGrab_moveresize;
+static WDECallbackUpdate setKeyGrab_close;
+static WDECallbackUpdate setKeyGrab_maximize;
+static WDECallbackUpdate setKeyGrab_maximizev;
+static WDECallbackUpdate setKeyGrab_maximizeh;
+static WDECallbackUpdate setKeyGrab_maximizelh;
+static WDECallbackUpdate setKeyGrab_maximizerh;
+static WDECallbackUpdate setKeyGrab_maximizeth;
+static WDECallbackUpdate setKeyGrab_maximizebh;
+static WDECallbackUpdate setKeyGrab_maximizeltc;
+static WDECallbackUpdate setKeyGrab_maximizertc;
+static WDECallbackUpdate setKeyGrab_maximizelbc;
+static WDECallbackUpdate setKeyGrab_maximizerbc;
+static WDECallbackUpdate setKeyGrab_maximus;
+static WDECallbackUpdate setKeyGrab_keepontop;
+static WDECallbackUpdate setKeyGrab_keepatbottom;
+static WDECallbackUpdate setKeyGrab_omnipresent;
+static WDECallbackUpdate setKeyGrab_raise;
+static WDECallbackUpdate setKeyGrab_lower;
+static WDECallbackUpdate setKeyGrab_raiselower;
+static WDECallbackUpdate setKeyGrab_shade;
+static WDECallbackUpdate setKeyGrab_select;
+static WDECallbackUpdate setKeyGrab_workspacemap;
+static WDECallbackUpdate setKeyGrab_focusnext;
+static WDECallbackUpdate setKeyGrab_focusprev;
+static WDECallbackUpdate setKeyGrab_groupnext;
+static WDECallbackUpdate setKeyGrab_groupprev;
+static WDECallbackUpdate setKeyGrab_workspacenext;
+static WDECallbackUpdate setKeyGrab_workspaceprev;
+static WDECallbackUpdate setKeyGrab_workspacelast;
+static WDECallbackUpdate setKeyGrab_workspacelayernext;
+static WDECallbackUpdate setKeyGrab_workspacelayerprev;
+static WDECallbackUpdate setKeyGrab_workspace1;
+static WDECallbackUpdate setKeyGrab_workspace2;
+static WDECallbackUpdate setKeyGrab_workspace3;
+static WDECallbackUpdate setKeyGrab_workspace4;
+static WDECallbackUpdate setKeyGrab_workspace5;
+static WDECallbackUpdate setKeyGrab_workspace6;
+static WDECallbackUpdate setKeyGrab_workspace7;
+static WDECallbackUpdate setKeyGrab_workspace8;
+static WDECallbackUpdate setKeyGrab_workspace9;
+static WDECallbackUpdate setKeyGrab_workspace10;
+static WDECallbackUpdate setKeyGrab_movetoworkspace1;
+static WDECallbackUpdate setKeyGrab_movetoworkspace2;
+static WDECallbackUpdate setKeyGrab_movetoworkspace3;
+static WDECallbackUpdate setKeyGrab_movetoworkspace4;
+static WDECallbackUpdate setKeyGrab_movetoworkspace5;
+static WDECallbackUpdate setKeyGrab_movetoworkspace6;
+static WDECallbackUpdate setKeyGrab_movetoworkspace7;
+static WDECallbackUpdate setKeyGrab_movetoworkspace8;
+static WDECallbackUpdate setKeyGrab_movetoworkspace9;
+static WDECallbackUpdate setKeyGrab_movetoworkspace10;
+static WDECallbackUpdate setKeyGrab_movetonextworkspace;
+static WDECallbackUpdate setKeyGrab_movetoprevworkspace;
+static WDECallbackUpdate setKeyGrab_movetolastworkspace;
+static WDECallbackUpdate setKeyGrab_movetonextworkspacelayer;
+static WDECallbackUpdate setKeyGrab_movetoprevworkspacelayer;
+static WDECallbackUpdate setKeyGrab_windowshortcut1;
+static WDECallbackUpdate setKeyGrab_windowshortcut2;
+static WDECallbackUpdate setKeyGrab_windowshortcut3;
+static WDECallbackUpdate setKeyGrab_windowshortcut4;
+static WDECallbackUpdate setKeyGrab_windowshortcut5;
+static WDECallbackUpdate setKeyGrab_windowshortcut6;
+static WDECallbackUpdate setKeyGrab_windowshortcut7;
+static WDECallbackUpdate setKeyGrab_windowshortcut8;
+static WDECallbackUpdate setKeyGrab_windowshortcut9;
+static WDECallbackUpdate setKeyGrab_windowshortcut10;
+static WDECallbackUpdate setKeyGrab_windowrelaunch;
+static WDECallbackUpdate setKeyGrab_screenswitch;
+static WDECallbackUpdate setKeyGrab_run;
+#ifdef KEEP_XKB_LOCK_STATUS
+static WDECallbackUpdate setKeyGrab_togglekbdmode;
+#endif
 static WDECallbackUpdate setDoubleClick;
 static WDECallbackUpdate setIconPosition;
 static WDECallbackUpdate setWorkspaceMapBackground;
-
 static WDECallbackUpdate setClipTitleFont;
 static WDECallbackUpdate setClipTitleColor;
-
+static WDECallbackUpdate setClipTitleColorCollapsed;
 static WDECallbackUpdate setMenuStyle;
 static WDECallbackUpdate setSwPOptions;
 static WDECallbackUpdate updateUsableArea;
-
 static WDECallbackUpdate setModifierKeyLabels;
-
-static WDECallbackConvert getCursor;
-static WDECallbackUpdate setCursor;
+static WDECallbackUpdate setCursor_root;
+static WDECallbackUpdate setCursor_select;
+static WDECallbackUpdate setCursor_move;
+static WDECallbackUpdate setCursor_resize;
+static WDECallbackUpdate setCursor_topleftresize;
+static WDECallbackUpdate setCursor_toprightresize;
+static WDECallbackUpdate setCursor_bottomleftresize;
+static WDECallbackUpdate setCursor_bottomrightresize;
+static WDECallbackUpdate setCursor_horizontalresize;
+static WDECallbackUpdate setCursor_verticalresize;
+static WDECallbackUpdate setCursor_wait;
+static WDECallbackUpdate setCursor_arrow;
+static WDECallbackUpdate setCursor_question;
+static WDECallbackUpdate setCursor_text;
 
 /*
  * Tables to convert strings to enumeration values.
@@ -181,8 +274,14 @@ static WDECallbackUpdate setCursor;
 #define REFRESH_ICON_TITLE_BACK (1<<13)
 
 #define REFRESH_WORKSPACE_MENU	(1<<14)
+#define REFRESH_USABLE_AREA	(1<<15)
+#define REFRESH_ARRANGE_ICONS	(1<<16)
+#define REFRESH_STICKY_ICONS	(1<<17)
 
 #define REFRESH_FRAME_BORDER REFRESH_MENU_FONT|REFRESH_WINDOW_FONT
+
+#define NUM2STRING_(x) #x
+#define NUM2STRING(x) NUM2STRING_(x)
 
 static WOptionEnumeration seFocusModes[] = {
 	{"Manual", WKF_CLICK, 0}, {"ClickToFocus", WKF_CLICK, 1},
@@ -337,14 +436,14 @@ WDefaultEntry staticOptionList[] = {
 	    &wPreferences.focus_mode, getEnum, NULL, NULL, NULL},	/* manual to sloppy without restart */
 	{"NewStyle", "new", seTitlebarModes,
 	    &wPreferences.new_style, getEnum, NULL, NULL, NULL},
-	{"DisableDock", "NO", (void *)WM_DOCK,
-	    NULL, getBool, setIfDockPresent, NULL, NULL},
-	{"DisableClip", "NO", (void *)WM_CLIP,
-	    NULL, getBool, setIfDockPresent, NULL, NULL},
-	{"DisableDrawers", "NO", (void *)WM_DRAWER,
-	    NULL, getBool, setIfDockPresent, NULL, NULL},
+	{"DisableDock", "NO", NULL,
+	    &wPreferences.flags.nodock, getBool, setIfDockPresent, NULL, NULL},
+	{"DisableClip", "NO", NULL,
+	    &wPreferences.flags.noclip, getBool, setIfClipPresent, NULL, NULL},
+	{"DisableDrawers", "NO", NULL,
+	    &wPreferences.flags.nodrawer, getBool, setIfDrawerPresent, NULL, NULL},
 	{"ClipMergedInDock", "NO", NULL,
-	    NULL, getBool, setClipMergedInDock, NULL, NULL},
+	    &wPreferences.flags.clip_merged_in_dock, getBool, setClipMergedInDock, NULL, NULL},
 	{"DisableMiniwindows", "NO", NULL,
 	    &wPreferences.disable_miniwindows, getBool, NULL, NULL, NULL},
 	{"EnableWorkspacePager", "NO", NULL,
@@ -356,17 +455,6 @@ WDefaultEntry noscreenOptionList[] = {
 	    &wPreferences.pixmap_path, getPathList, NULL, NULL, NULL},
 	{"IconPath", DEF_ICON_PATHS, NULL,
 	    &wPreferences.icon_path, getPathList, NULL, NULL, NULL},
-};
-
-#define NUM2STRING_(x) #x
-#define NUM2STRING(x) NUM2STRING_(x)
-
-WDefaultEntry optionList[] = {
-
-	/* dynamic options */
-
-	{"IconPosition", "blh", seIconPositions,
-	    &wPreferences.icon_yard, getEnum, setIconPosition, NULL, NULL},
 	{"IconificationStyle", "Zoom", seIconificationStyles,
 	    &wPreferences.iconification_style, getEnum, NULL, NULL, NULL},
 	{"DisableWSMouseActions", "NO", NULL,
@@ -401,12 +489,6 @@ WDefaultEntry optionList[] = {
 	    &wPreferences.ws_cycle, getBool, NULL, NULL, NULL},
 	{"WorkspaceNameDisplayPosition", "center", seDisplayPositions,
 	    &wPreferences.workspace_name_display_position, getEnum, NULL, NULL, NULL},
-	{"WorkspaceBorder", "None", seWorkspaceBorder,
-	    &wPreferences.workspace_border_position, getEnum, updateUsableArea, NULL, NULL},
-	{"WorkspaceBorderSize", "0", NULL,
-	    &wPreferences.workspace_border_size, getInt, updateUsableArea, NULL, NULL},
-	{"StickyIcons", "NO", NULL,
-	    &wPreferences.sticky_icons, getBool, setStickyIcons, NULL, NULL},
 	{"SaveSessionOnExit", "NO", NULL,
 	    &wPreferences.save_session_on_exit, getBool, NULL, NULL, NULL},
 	{"WrapMenus", "NO", NULL,
@@ -425,7 +507,7 @@ WDefaultEntry optionList[] = {
 	    &wPreferences.raise_appicons_when_bouncing, getBool, NULL, NULL, NULL},
 	{"DoNotMakeAppIconsBounce", "NO", NULL,
 	    &wPreferences.do_not_make_appicons_bounce, getBool, NULL, NULL, NULL},
-	{"DoubleClickTime", "250", (void *)&wPreferences.dblclick_time,
+	{"DoubleClickTime", "250", (void *) &wPreferences.dblclick_time,
 	    &wPreferences.dblclick_time, getInt, setDoubleClick, NULL, NULL},
 	{"ClipAutoraiseDelay", "600", NULL,
 	     &wPreferences.clip_auto_raise_delay, getInt, NULL, NULL, NULL},
@@ -436,7 +518,7 @@ WDefaultEntry optionList[] = {
 	{"ClipAutocollapseDelay", "1000", NULL,
 	    &wPreferences.clip_auto_collapse_delay, getInt, NULL, NULL, NULL},
 	{"WrapAppiconsInDock", "YES", NULL,
-	    NULL, getBool, setWrapAppiconsInDock, NULL, NULL},
+	    &wPreferences.flags.wrap_appicons_in_dock, getBool, setWrapAppiconsInDock, NULL, NULL},
 	{"AlignSubmenus", "NO", NULL,
 	    &wPreferences.align_menus, getBool, NULL, NULL, NULL},
 	{"ViKeyMenus", "NO", NULL,
@@ -465,7 +547,7 @@ WDefaultEntry optionList[] = {
 	    &wPreferences.snap_edge_detect, getInt, NULL, NULL, NULL},
 	{"SnapCornerDetect", "10", NULL,
 	    &wPreferences.snap_corner_detect, getInt, NULL, NULL, NULL},
-	{"SnapToTopMaximezesFullscreen", "NO", NULL,
+	{"SnapToTopMaximizesFullscreen", "NO", NULL,
 	    &wPreferences.snap_to_top_maximizes_fullscreen, getBool, NULL, NULL, NULL},
 	{"DragMaximizedWindow", "Move", seDragMaximizedWindow,
 	    &wPreferences.drag_maximized_window, getEnum, NULL, NULL, NULL},
@@ -479,10 +561,6 @@ WDefaultEntry optionList[] = {
 	    &wPreferences.highlight_active_app, getBool, NULL, NULL, NULL},
 	{"AutoArrangeIcons", "NO", NULL,
 	    &wPreferences.auto_arrange_icons, getBool, NULL, NULL, NULL},
-	{"NoWindowOverDock", "NO", NULL,
-	    &wPreferences.no_window_over_dock, getBool, updateUsableArea, NULL, NULL},
-	{"NoWindowOverIcons", "NO", NULL,
-	    &wPreferences.no_window_over_icons, getBool, updateUsableArea, NULL, NULL},
 	{"WindowPlaceOrigin", "(64, 0)", NULL,
 	    &wPreferences.window_place_origin, getCoord, NULL, NULL, NULL},
 	{"ResizeDisplay", "center", seGeomDisplays,
@@ -521,26 +599,10 @@ WDefaultEntry optionList[] = {
 	    &wPreferences.ignore_gtk_decoration_hints, getBool, NULL, NULL, NULL},
 
 	/* style options */
-
-	{"MenuStyle", "normal", seMenuStyles,
-	    &wPreferences.menu_style, getEnum, setMenuStyle, NULL, NULL},
-	{"WidgetColor", "(solid, gray)", NULL,
-	    NULL, getTexture, setWidgetColor, NULL, NULL},
-	{"WorkspaceSpecificBack", "()", NULL,
-	    NULL, getWSSpecificBackground, setWorkspaceSpecificBack, NULL, NULL},
-	/* WorkspaceBack must come after WorkspaceSpecificBack or
-	 * WorkspaceBack won't know WorkspaceSpecificBack was also
-	 * specified and 2 copies of wmsetbg will be launched */
-	{"WorkspaceBack", "(solid, \"rgb:50/50/75\")", NULL,
-	    NULL, getWSBackground, setWorkspaceBack, NULL, NULL},
 	{"SmoothWorkspaceBack", "NO", NULL,
 	    NULL, getBool, NULL, NULL, NULL},
-	{"IconBack", "(dgradient, \"rgb:a6/a6/b6\", \"rgb:51/55/61\")", NULL,
-	    NULL, getTexture, setIconTile, NULL, NULL},
 	{"TitleJustify", "center", seJustifications,
 	    &wPreferences.title_justification, getEnum, setJustify, NULL, NULL},
-	{"WindowTitleFont", DEF_TITLE_FONT, NULL,
-	    NULL, getFont, setWinTitleFont, NULL, NULL},
 	{"WindowTitleExtendSpace", DEF_WINDOW_TITLE_EXTEND_SPACE, NULL,
 	    &wPreferences.window_title_clearance, getInt, setClearance, NULL, NULL},
 	{"WindowTitleMinHeight", "0", NULL,
@@ -555,265 +617,8 @@ WDefaultEntry optionList[] = {
 	    &wPreferences.menu_title_max_height, getInt, setClearance, NULL, NULL},
 	{"MenuTextExtendSpace", DEF_MENU_TEXT_EXTEND_SPACE, NULL,
 	    &wPreferences.menu_text_clearance, getInt, setClearance, NULL, NULL},
-	{"MenuTitleFont", DEF_MENU_TITLE_FONT, NULL,
-	    NULL, getFont, setMenuTitleFont, NULL, NULL},
-	{"MenuTextFont", DEF_MENU_ENTRY_FONT, NULL,
-	    NULL, getFont, setMenuTextFont, NULL, NULL},
-	{"IconTitleFont", DEF_ICON_TITLE_FONT, NULL,
-	    NULL, getFont, setIconTitleFont, NULL, NULL},
-	{"ClipTitleFont", DEF_CLIP_TITLE_FONT, NULL,
-	    NULL, getFont, setClipTitleFont, NULL, NULL},
 	{"ShowClipTitle", "YES", NULL,
-		&wPreferences.show_clip_title, getBool, NULL, NULL, NULL},
-	{"LargeDisplayFont", DEF_WORKSPACE_NAME_FONT, NULL,
-	    NULL, getFont, setLargeDisplayFont, NULL, NULL},
-	{"HighlightColor", "white", NULL,
-	    NULL, getColor, setHightlight, NULL, NULL},
-	{"HighlightTextColor", "black", NULL,
-	    NULL, getColor, setHightlightText, NULL, NULL},
-	{"ClipTitleColor", "black", (void *)CLIP_NORMAL,
-	    NULL, getColor, setClipTitleColor, NULL, NULL},
-	{"CClipTitleColor", "\"rgb:61/61/61\"", (void *)CLIP_COLLAPSED,
-	    NULL, getColor, setClipTitleColor, NULL, NULL},
-	{"FTitleColor", "white", (void *)WS_FOCUSED,
-	    NULL, getColor, setWTitleColor, NULL, NULL},
-	{"PTitleColor", "white", (void *)WS_PFOCUSED,
-	    NULL, getColor, setWTitleColor, NULL, NULL},
-	{"UTitleColor", "black", (void *)WS_UNFOCUSED,
-	    NULL, getColor, setWTitleColor, NULL, NULL},
-	{"FTitleBack", "(solid, black)", NULL,
-	    NULL, getTexture, setFTitleBack, NULL, NULL},
-	{"PTitleBack", "(solid, gray40)", NULL,
-	    NULL, getTexture, setPTitleBack, NULL, NULL},
-	{"UTitleBack", "(solid, \"rgb:aa/aa/aa\")", NULL,
-	    NULL, getTexture, setUTitleBack, NULL, NULL},
-	{"ResizebarBack", "(solid, \"rgb:aa/aa/aa\")", NULL,
-	    NULL, getTexture, setResizebarBack, NULL, NULL},
-	{"MenuTitleColor", "white", NULL,
-	    NULL, getColor, setMenuTitleColor, NULL, NULL},
-	{"MenuTextColor", "black", NULL,
-	    NULL, getColor, setMenuTextColor, NULL, NULL},
-	{"MenuDisabledColor", "gray50", NULL,
-	    NULL, getColor, setMenuDisabledColor, NULL, NULL},
-	{"MenuTitleBack", "(solid, black)", NULL,
-	    NULL, getTexture, setMenuTitleBack, NULL, NULL},
-	{"MenuTextBack", "(solid, \"rgb:aa/aa/aa\")", NULL,
-	    NULL, getTexture, setMenuTextBack, NULL, NULL},
-	{"IconTitleColor", "white", NULL,
-	    NULL, getColor, setIconTitleColor, NULL, NULL},
-	{"IconTitleBack", "black", NULL,
-	    NULL, getColor, setIconTitleBack, NULL, NULL},
-	{"SwitchPanelImages", "(swtile.png, swback.png, 30, 40)", &wPreferences,
-	    NULL, getPropList, setSwPOptions, NULL, NULL},
-	{"ModifierKeyLabels", "(\"Shift+\", \"Control+\", \"Mod1+\", \"Mod2+\", \"Mod3+\", \"Mod4+\", \"Mod5+\")", &wPreferences,
-	    NULL, getPropList, setModifierKeyLabels, NULL, NULL},
-	{"FrameBorderWidth", "1", NULL,
-	    NULL, getInt, setFrameBorderWidth, NULL, NULL},
-	{"FrameBorderColor", "black", NULL,
-	    NULL, getColor, setFrameBorderColor, NULL, NULL},
-	{"FrameFocusedBorderColor", "black", NULL,
-	    NULL, getColor, setFrameFocusedBorderColor, NULL, NULL},
-	{"FrameSelectedBorderColor", "white", NULL,
-	    NULL, getColor, setFrameSelectedBorderColor, NULL, NULL},
-	{"WorkspaceMapBack", "(solid, black)", NULL,
-	    NULL, getTexture, setWorkspaceMapBackground, NULL, NULL},
-
-	/* keybindings */
-
-	{"RootMenuKey", "F12", (void *)WKBD_ROOTMENU,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"WindowListKey", "F11", (void *)WKBD_WINDOWLIST,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"WindowMenuKey", "Control+Escape", (void *)WKBD_WINDOWMENU,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"DockRaiseLowerKey", "None", (void*)WKBD_DOCKRAISELOWER,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"ClipRaiseLowerKey", "None", (void *)WKBD_CLIPRAISELOWER,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"MiniaturizeKey", "Mod1+M", (void *)WKBD_MINIATURIZE,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"MinimizeAllKey", "None", (void *)WKBD_MINIMIZEALL,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL },
-	{"HideKey", "Mod1+H", (void *)WKBD_HIDE,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"HideOthersKey", "None", (void *)WKBD_HIDE_OTHERS,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"MoveResizeKey", "None", (void *)WKBD_MOVERESIZE,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"CloseKey", "None", (void *)WKBD_CLOSE,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"MaximizeKey", "None", (void *)WKBD_MAXIMIZE,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"VMaximizeKey", "None", (void *)WKBD_VMAXIMIZE,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"HMaximizeKey", "None", (void *)WKBD_HMAXIMIZE,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"LHMaximizeKey", "None", (void*)WKBD_LHMAXIMIZE,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"RHMaximizeKey", "None", (void*)WKBD_RHMAXIMIZE,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"THMaximizeKey", "None", (void*)WKBD_THMAXIMIZE,
-		NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"BHMaximizeKey", "None", (void*)WKBD_BHMAXIMIZE,
-		NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"LTCMaximizeKey", "None", (void*)WKBD_LTCMAXIMIZE,
-		NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"RTCMaximizeKey", "None", (void*)WKBD_RTCMAXIMIZE,
-		NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"LBCMaximizeKey", "None", (void*)WKBD_LBCMAXIMIZE,
-		NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"RBCMaximizeKey", "None", (void*)WKBD_RBCMAXIMIZE,
-		NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"MaximusKey", "None", (void*)WKBD_MAXIMUS,
-		NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"KeepOnTopKey", "None", (void *)WKBD_KEEP_ON_TOP,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"KeepAtBottomKey", "None", (void *)WKBD_KEEP_AT_BOTTOM,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"OmnipresentKey", "None", (void *)WKBD_OMNIPRESENT,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"RaiseKey", "Mod1+Up", (void *)WKBD_RAISE,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"LowerKey", "Mod1+Down", (void *)WKBD_LOWER,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"RaiseLowerKey", "None", (void *)WKBD_RAISELOWER,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"ShadeKey", "None", (void *)WKBD_SHADE,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"SelectKey", "None", (void *)WKBD_SELECT,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"WorkspaceMapKey", "None", (void *)WKBD_WORKSPACEMAP,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"FocusNextKey", "Mod1+Tab", (void *)WKBD_FOCUSNEXT,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"FocusPrevKey", "Mod1+Shift+Tab", (void *)WKBD_FOCUSPREV,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"GroupNextKey", "None", (void *)WKBD_GROUPNEXT,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"GroupPrevKey", "None", (void *)WKBD_GROUPPREV,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"NextWorkspaceKey", "Mod1+Control+Right", (void *)WKBD_NEXTWORKSPACE,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"PrevWorkspaceKey", "Mod1+Control+Left", (void *)WKBD_PREVWORKSPACE,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"LastWorkspaceKey", "None", (void *)WKBD_LASTWORKSPACE,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"NextWorkspaceLayerKey", "None", (void *)WKBD_NEXTWSLAYER,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"PrevWorkspaceLayerKey", "None", (void *)WKBD_PREVWSLAYER,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"Workspace1Key", "Mod1+1", (void *)WKBD_WORKSPACE1,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"Workspace2Key", "Mod1+2", (void *)WKBD_WORKSPACE2,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"Workspace3Key", "Mod1+3", (void *)WKBD_WORKSPACE3,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"Workspace4Key", "Mod1+4", (void *)WKBD_WORKSPACE4,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"Workspace5Key", "Mod1+5", (void *)WKBD_WORKSPACE5,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"Workspace6Key", "Mod1+6", (void *)WKBD_WORKSPACE6,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"Workspace7Key", "Mod1+7", (void *)WKBD_WORKSPACE7,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"Workspace8Key", "Mod1+8", (void *)WKBD_WORKSPACE8,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"Workspace9Key", "Mod1+9", (void *)WKBD_WORKSPACE9,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"Workspace10Key", "Mod1+0", (void *)WKBD_WORKSPACE10,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"MoveToWorkspace1Key", "None", (void *)WKBD_MOVE_WORKSPACE1,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"MoveToWorkspace2Key", "None", (void *)WKBD_MOVE_WORKSPACE2,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"MoveToWorkspace3Key", "None", (void *)WKBD_MOVE_WORKSPACE3,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"MoveToWorkspace4Key", "None", (void *)WKBD_MOVE_WORKSPACE4,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"MoveToWorkspace5Key", "None", (void *)WKBD_MOVE_WORKSPACE5,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"MoveToWorkspace6Key", "None", (void *)WKBD_MOVE_WORKSPACE6,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"MoveToWorkspace7Key", "None", (void *)WKBD_MOVE_WORKSPACE7,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"MoveToWorkspace8Key", "None", (void *)WKBD_MOVE_WORKSPACE8,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"MoveToWorkspace9Key", "None", (void *)WKBD_MOVE_WORKSPACE9,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"MoveToWorkspace10Key", "None", (void *)WKBD_MOVE_WORKSPACE10,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"MoveToNextWorkspaceKey", "None", (void *)WKBD_MOVE_NEXTWORKSPACE,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"MoveToPrevWorkspaceKey", "None", (void *)WKBD_MOVE_PREVWORKSPACE,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"MoveToLastWorkspaceKey", "None", (void *)WKBD_MOVE_LASTWORKSPACE,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"MoveToNextWorkspaceLayerKey", "None", (void *)WKBD_MOVE_NEXTWSLAYER,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"MoveToPrevWorkspaceLayerKey", "None", (void *)WKBD_MOVE_PREVWSLAYER,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"WindowShortcut1Key", "None", (void *)WKBD_WINDOW1,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"WindowShortcut2Key", "None", (void *)WKBD_WINDOW2,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"WindowShortcut3Key", "None", (void *)WKBD_WINDOW3,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"WindowShortcut4Key", "None", (void *)WKBD_WINDOW4,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"WindowShortcut5Key", "None", (void *)WKBD_WINDOW5,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"WindowShortcut6Key", "None", (void *)WKBD_WINDOW6,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"WindowShortcut7Key", "None", (void *)WKBD_WINDOW7,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"WindowShortcut8Key", "None", (void *)WKBD_WINDOW8,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"WindowShortcut9Key", "None", (void *)WKBD_WINDOW9,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"WindowShortcut10Key", "None", (void *)WKBD_WINDOW10,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"WindowRelaunchKey", "None", (void *)WKBD_RELAUNCH,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"ScreenSwitchKey", "None", (void *)WKBD_SWITCH_SCREEN,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"RunKey", "None", (void *)WKBD_RUN,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-
-#ifdef KEEP_XKB_LOCK_STATUS
-	{"ToggleKbdModeKey", "None", (void *)WKBD_TOGGLE,
-	    NULL, getKeybind, setKeyGrab, NULL, NULL},
-	{"KbdModeLock", "NO", NULL,
-	    &wPreferences.modelock, getBool, NULL, NULL, NULL},
-#endif				/* KEEP_XKB_LOCK_STATUS */
-
-	{"NormalCursor", "(builtin, left_ptr)", (void *)WCUR_ROOT,
-	    NULL, getCursor, setCursor, NULL, NULL},
-	{"ArrowCursor", "(builtin, top_left_arrow)", (void *)WCUR_ARROW,
-	    NULL, getCursor, setCursor, NULL, NULL},
-	{"MoveCursor", "(builtin, fleur)", (void *)WCUR_MOVE,
-	    NULL, getCursor, setCursor, NULL, NULL},
-	{"ResizeCursor", "(builtin, sizing)", (void *)WCUR_RESIZE,
-	    NULL, getCursor, setCursor, NULL, NULL},
-	{"TopLeftResizeCursor", "(builtin, top_left_corner)", (void *)WCUR_TOPLEFTRESIZE,
-	    NULL, getCursor, setCursor, NULL, NULL},
-	{"TopRightResizeCursor", "(builtin, top_right_corner)", (void *)WCUR_TOPRIGHTRESIZE,
-	    NULL, getCursor, setCursor, NULL, NULL},
-	{"BottomLeftResizeCursor", "(builtin, bottom_left_corner)", (void *)WCUR_BOTTOMLEFTRESIZE,
-	    NULL, getCursor, setCursor, NULL, NULL},
-	{"BottomRightResizeCursor", "(builtin, bottom_right_corner)", (void *)WCUR_BOTTOMRIGHTRESIZE,
-	    NULL, getCursor, setCursor, NULL, NULL},
-	{"VerticalResizeCursor", "(builtin, sb_v_double_arrow)", (void *)WCUR_VERTICALRESIZE,
-	    NULL, getCursor, setCursor, NULL, NULL},
-	{"HorizontalResizeCursor", "(builtin, sb_h_double_arrow)", (void *)WCUR_HORIZONRESIZE,
-	    NULL, getCursor, setCursor, NULL, NULL},
-	{"WaitCursor", "(builtin, watch)", (void *)WCUR_WAIT,
-	    NULL, getCursor, setCursor, NULL, NULL},
-	{"QuestionCursor", "(builtin, question_arrow)", (void *)WCUR_QUESTION,
-	    NULL, getCursor, setCursor, NULL, NULL},
-	{"TextCursor", "(builtin, xterm)", (void *)WCUR_TEXT,
-	    NULL, getCursor, setCursor, NULL, NULL},
-	{"SelectCursor", "(builtin, cross)", (void *)WCUR_SELECT,
-	    NULL, getCursor, setCursor, NULL, NULL},
+	    &wPreferences.show_clip_title, getBool, NULL, NULL, NULL},
 	{"DialogHistoryLines", "500", NULL,
 	    &wPreferences.history_lines, getInt, NULL, NULL, NULL},
 	{"CycleActiveHeadOnly", "NO", NULL,
@@ -822,13 +627,351 @@ WDefaultEntry optionList[] = {
 	    &wPreferences.cycle_ignore_minimized, getBool, NULL, NULL, NULL}
 };
 
-static void initDefaults(void)
+WDefaultEntry optionList[] = {
+
+	/* dynamic options */
+
+	{"NoWindowOverDock", "NO", NULL,
+	    &wPreferences.no_window_over_dock, getBool, updateUsableArea, NULL, NULL}, /* - */
+	{"NoWindowOverIcons", "NO", NULL,
+	    &wPreferences.no_window_over_icons, getBool, updateUsableArea, NULL, NULL}, /* - */
+	{"IconPosition", "blh", seIconPositions,
+	    &wPreferences.icon_yard, getEnum, setIconPosition, NULL, NULL}, /* - */
+	{"WorkspaceBorder", "None", seWorkspaceBorder,
+	    &wPreferences.workspace_border_position, getEnum, updateUsableArea, NULL, NULL}, /* - */
+	{"WorkspaceBorderSize", "0", NULL,
+	    &wPreferences.workspace_border_size, getInt, updateUsableArea, NULL, NULL}, /* - */
+	{"StickyIcons", "NO", NULL,
+	    &wPreferences.sticky_icons, getBool, setStickyIcons, NULL, NULL}, /* - */
+
+	/* style options */
+
+	{"MenuStyle", "normal", seMenuStyles,
+	    &wPreferences.menu_style, getEnum, setMenuStyle, NULL, NULL}, /* - */
+	{"WidgetColor", "(solid, gray)", NULL,
+	    &wPreferences.texture.widgetcolor, getTexture, setWidgetColor, NULL, NULL},
+	{"WorkspaceSpecificBack", "()", NULL,
+	    &wPreferences.workspacespecificback, getWSSpecificBackground, setWorkspaceSpecificBack, NULL, NULL},
+	/* WorkspaceBack must come after WorkspaceSpecificBack or
+	 * WorkspaceBack won't know WorkspaceSpecificBack was also
+	 * specified and 2 copies of wmsetbg will be launched */
+	{"WorkspaceBack", "(solid, \"rgb:50/50/75\")", NULL,
+	    &wPreferences.workspaceback, getWSBackground, setWorkspaceBack, NULL, NULL},
+	{"IconBack", "(dgradient, \"rgb:a6/a6/b6\", \"rgb:51/55/61\")", NULL,
+	    &wPreferences.texture.iconback, getTexture, setIconTile, NULL, NULL},
+	{"WindowTitleFont", DEF_TITLE_FONT, NULL,
+	    &wPreferences.font.wintitle, getFont, setWinTitleFont, NULL, NULL}, /* - */
+	{"MenuTitleFont", DEF_MENU_TITLE_FONT, NULL,
+	    &wPreferences.font.menutitle, getFont, setMenuTitleFont, NULL, NULL}, /* - */
+	{"MenuTextFont", DEF_MENU_ENTRY_FONT, NULL,
+	    &wPreferences.font.menutext, getFont, setMenuTextFont, NULL, NULL}, /* - */
+	{"IconTitleFont", DEF_ICON_TITLE_FONT, NULL,
+	    &wPreferences.font.icontitle, getFont, setIconTitleFont, NULL, NULL}, /* - */
+	{"ClipTitleFont", DEF_CLIP_TITLE_FONT, NULL,
+	    &wPreferences.font.cliptitle, getFont, setClipTitleFont, NULL, NULL}, /* - */
+	{"LargeDisplayFont", DEF_WORKSPACE_NAME_FONT, NULL,
+	    &wPreferences.font.largedisplay, getFont, setLargeDisplayFont, NULL, NULL}, /* - */
+	{"HighlightColor", "white", NULL,
+	    &wPreferences.color.highlight, getColor, setHightlight, NULL, NULL},
+	{"HighlightTextColor", "black", NULL,
+	    &wPreferences.color.highlighttext, getColor, setHightlightText, NULL, NULL},
+	{"ClipTitleColor", "black", NULL,
+	    &wPreferences.color.cliptitle, getColor, setClipTitleColor, NULL, NULL},
+	{"CClipTitleColor", "\"rgb:61/61/61\"", NULL,
+	    &wPreferences.color.cliptitlecollapsed, getColor, setClipTitleColorCollapsed, NULL, NULL},
+	{"FTitleColor", "white", NULL,
+	    &wPreferences.color.titlefocused, getColor, setWTitleColorFocused, NULL, NULL},
+	{"PTitleColor", "white", NULL,
+	    &wPreferences.color.titleowner, getColor, setWTitleColorOwner, NULL, NULL},
+	{"UTitleColor", "black", NULL,
+	    &wPreferences.color.titleunfocused, getColor, setWTitleColorUnfocused, NULL, NULL},
+	{"FTitleBack", "(solid, black)", NULL,
+	    &wPreferences.texture.titlebackfocused, getTexture, setFTitleBack, NULL, NULL},
+	{"PTitleBack", "(solid, gray40)", NULL,
+	    &wPreferences.texture.titlebackowner, getTexture, setPTitleBack, NULL, NULL},
+	{"UTitleBack", "(solid, \"rgb:aa/aa/aa\")", NULL,
+	    &wPreferences.texture.titlebackunfocused, getTexture, setUTitleBack, NULL, NULL},
+	{"ResizebarBack", "(solid, \"rgb:aa/aa/aa\")", NULL,
+	    &wPreferences.texture.resizebarback, getTexture, setResizebarBack, NULL, NULL},
+	{"MenuTitleColor", "white", NULL,
+	    &wPreferences.color.menutitle, getColor, setMenuTitleColor, NULL, NULL},
+	{"MenuTextColor", "black", NULL,
+	    &wPreferences.color.menutext, getColor, setMenuTextColor, NULL, NULL},
+	{"MenuDisabledColor", "gray50", NULL,
+	    &wPreferences.color.menudisabled, getColor, setMenuDisabledColor, NULL, NULL},
+	{"MenuTitleBack", "(solid, black)", NULL,
+	    &wPreferences.texture.menutitleback, getTexture, setMenuTitleBack, NULL, NULL},
+	{"MenuTextBack", "(solid, \"rgb:aa/aa/aa\")", NULL,
+	    &wPreferences.texture.menutextback, getTexture, setMenuTextBack, NULL, NULL},
+	{"IconTitleColor", "white", NULL,
+	    &wPreferences.color.icontitle, getColor, setIconTitleColor, NULL, NULL},
+	{"IconTitleBack", "black", NULL,
+	    &wPreferences.color.icontitleback, getColor, setIconTitleBack, NULL, NULL},
+	{"SwitchPanelImages", "(swtile.png, swback.png, 30, 40)", NULL,
+	    &wPreferences.sp_options, getPropList, setSwPOptions, NULL, NULL},
+	{"ModifierKeyLabels", "(\"Shift+\", \"Control+\", \"Mod1+\", \"Mod2+\", \"Mod3+\", \"Mod4+\", \"Mod5+\")", NULL,
+	    &wPreferences.modifierkeylabels, getPropList, setModifierKeyLabels, NULL, NULL},
+	{"FrameBorderWidth", "1", NULL,
+	    &wPreferences.border_width, getInt, setFrameBorderWidth, NULL, NULL}, /* - */
+	{"FrameBorderColor", "black", NULL,
+	    &wPreferences.color.frameborder, getColor, setFrameBorderColor, NULL, NULL},
+	{"FrameFocusedBorderColor", "black", NULL,
+	    &wPreferences.color.frameborderfocused, getColor, setFrameFocusedBorderColor, NULL, NULL},
+	{"FrameSelectedBorderColor", "white", NULL,
+	    &wPreferences.color.frameborderselected, getColor, setFrameSelectedBorderColor, NULL, NULL},
+	{"WorkspaceMapBack", "(solid, black)", NULL,
+	    &wPreferences.texture.workspacemapback, getTexture, setWorkspaceMapBackground, NULL, NULL},
+
+	/* keybindings */
+
+	{"RootMenuKey", "F12", NULL,
+	    &wPreferences.key.rootmenu, getKeybind, setKeyGrab_rootmenu, NULL, NULL},
+	{"WindowListKey", "F11", NULL,
+	    &wPreferences.key.windowlist, getKeybind, setKeyGrab_windowlist, NULL, NULL},
+	{"WindowMenuKey", "Control+Escape", NULL,
+	    &wPreferences.key.windowmenu, getKeybind, setKeyGrab_windowmenu, NULL, NULL},
+	{"DockRaiseLowerKey", "None", NULL,
+	    &wPreferences.key.dockraiselower, getKeybind, setKeyGrab_dockraiselower, NULL, NULL},
+	{"ClipRaiseLowerKey", "None", NULL,
+	    &wPreferences.key.clipraiselower, getKeybind, setKeyGrab_clipraiselower, NULL, NULL},
+	{"MiniaturizeKey", "Mod1+M", NULL,
+	    &wPreferences.key.miniaturize, getKeybind, setKeyGrab_miniaturize, NULL, NULL},
+	{"MinimizeAllKey", "None", NULL,
+	    &wPreferences.key.minimizeall, getKeybind, setKeyGrab_minimizeall, NULL, NULL},
+	{"HideKey", "Mod1+H", NULL,
+	    &wPreferences.key.hide, getKeybind, setKeyGrab_hide, NULL, NULL},
+	{"HideOthersKey", "None", NULL,
+	    &wPreferences.key.hideothers, getKeybind, setKeyGrab_hideothers, NULL, NULL},
+	{"MoveResizeKey", "None", (void *)WKBD_MOVERESIZE,
+	    &wPreferences.key.moveresize, getKeybind, setKeyGrab_moveresize, NULL, NULL},
+	{"CloseKey", "None", NULL,
+	    &wPreferences.key.close, getKeybind, setKeyGrab_close, NULL, NULL},
+	{"MaximizeKey", "None", NULL,
+	    &wPreferences.key.maximize, getKeybind, setKeyGrab_maximize, NULL, NULL},
+	{"VMaximizeKey", "None", NULL,
+	    &wPreferences.key.maximizev, getKeybind, setKeyGrab_maximizev, NULL, NULL},
+	{"HMaximizeKey", "None", NULL,
+	    &wPreferences.key.maximizeh, getKeybind, setKeyGrab_maximizeh, NULL, NULL},
+	{"LHMaximizeKey", "None", NULL,
+	    &wPreferences.key.maximizelh, getKeybind, setKeyGrab_maximizelh, NULL, NULL},
+	{"RHMaximizeKey", "None", NULL,
+	    &wPreferences.key.maximizerh, getKeybind, setKeyGrab_maximizerh, NULL, NULL},
+	{"THMaximizeKey", "None", NULL,
+	    &wPreferences.key.maximizeth, getKeybind, setKeyGrab_maximizeth, NULL, NULL},
+	{"BHMaximizeKey", "None", NULL,
+	    &wPreferences.key.maximizebh, getKeybind, setKeyGrab_maximizebh, NULL, NULL},
+	{"LTCMaximizeKey", "None", NULL,
+	    &wPreferences.key.maximizeltc, getKeybind, setKeyGrab_maximizeltc, NULL, NULL},
+	{"RTCMaximizeKey", "None", NULL,
+	    &wPreferences.key.maximizertc, getKeybind, setKeyGrab_maximizertc, NULL, NULL},
+	{"LBCMaximizeKey", "None", NULL,
+	    &wPreferences.key.maximizelbc, getKeybind, setKeyGrab_maximizelbc, NULL, NULL},
+	{"RBCMaximizeKey", "None", NULL,
+	    &wPreferences.key.maximizerbc, getKeybind, setKeyGrab_maximizerbc, NULL, NULL},
+	{"MaximusKey", "None", NULL,
+	    &wPreferences.key.maximus, getKeybind, setKeyGrab_maximus, NULL, NULL},
+	{"KeepOnTopKey", "None", NULL,
+	    &wPreferences.key.keepontop, getKeybind, setKeyGrab_keepontop, NULL, NULL},
+	{"KeepAtBottomKey", "None", NULL,
+	    &wPreferences.key.keepatbottom, getKeybind, setKeyGrab_keepatbottom, NULL, NULL},
+	{"OmnipresentKey", "None", NULL,
+	    &wPreferences.key.omnipresent, getKeybind, setKeyGrab_omnipresent, NULL, NULL},
+	{"RaiseKey", "Mod1+Up", NULL,
+	    &wPreferences.key.raise, getKeybind, setKeyGrab_raise, NULL, NULL},
+	{"LowerKey", "Mod1+Down", NULL,
+	    &wPreferences.key.lower, getKeybind, setKeyGrab_lower, NULL, NULL},
+	{"RaiseLowerKey", "None", NULL,
+	    &wPreferences.key.raiselower, getKeybind, setKeyGrab_raiselower, NULL, NULL},
+	{"ShadeKey", "None", NULL,
+	    &wPreferences.key.shade, getKeybind, setKeyGrab_shade, NULL, NULL},
+	{"SelectKey", "None", NULL,
+	    &wPreferences.key.select, getKeybind, setKeyGrab_select, NULL, NULL},
+	{"WorkspaceMapKey", "None", NULL,
+	    &wPreferences.key.workspacemap, getKeybind, setKeyGrab_workspacemap, NULL, NULL},
+	{"FocusNextKey", "Mod1+Tab", NULL,
+	    &wPreferences.key.focusnext, getKeybind, setKeyGrab_focusnext, NULL, NULL},
+	{"FocusPrevKey", "Mod1+Shift+Tab", NULL,
+	    &wPreferences.key.focusprev, getKeybind, setKeyGrab_focusprev, NULL, NULL},
+	{"GroupNextKey", "None", NULL,
+	    &wPreferences.key.groupnext, getKeybind, setKeyGrab_groupnext, NULL, NULL},
+	{"GroupPrevKey", "None", NULL,
+	    &wPreferences.key.groupprev, getKeybind, setKeyGrab_groupprev, NULL, NULL},
+	{"NextWorkspaceKey", "Mod1+Control+Right", NULL,
+	    &wPreferences.key.workspacenext, getKeybind, setKeyGrab_workspacenext, NULL, NULL},
+	{"PrevWorkspaceKey", "Mod1+Control+Left", NULL,
+	    &wPreferences.key.workspaceprev, getKeybind, setKeyGrab_workspaceprev, NULL, NULL},
+	{"LastWorkspaceKey", "None", NULL,
+	    &wPreferences.key.workspacelast, getKeybind, setKeyGrab_workspacelast, NULL, NULL},
+	{"NextWorkspaceLayerKey", "None", NULL,
+	    &wPreferences.key.workspacelayernext, getKeybind, setKeyGrab_workspacelayernext, NULL, NULL},
+	{"PrevWorkspaceLayerKey", "None", NULL,
+	    &wPreferences.key.workspacelayerprev, getKeybind, setKeyGrab_workspacelayerprev, NULL, NULL},
+	{"Workspace1Key", "Mod1+1", NULL,
+	    &wPreferences.key.workspace1, getKeybind, setKeyGrab_workspace1, NULL, NULL},
+	{"Workspace2Key", "Mod1+2", NULL,
+	    &wPreferences.key.workspace2, getKeybind, setKeyGrab_workspace2, NULL, NULL},
+	{"Workspace3Key", "Mod1+3", NULL,
+	    &wPreferences.key.workspace3, getKeybind, setKeyGrab_workspace3, NULL, NULL},
+	{"Workspace4Key", "Mod1+4", NULL,
+	    &wPreferences.key.workspace4, getKeybind, setKeyGrab_workspace4, NULL, NULL},
+	{"Workspace5Key", "Mod1+5", NULL,
+	    &wPreferences.key.workspace5, getKeybind, setKeyGrab_workspace5, NULL, NULL},
+	{"Workspace6Key", "Mod1+6", NULL,
+	    &wPreferences.key.workspace6, getKeybind, setKeyGrab_workspace6, NULL, NULL},
+	{"Workspace7Key", "Mod1+7", NULL,
+	    &wPreferences.key.workspace7, getKeybind, setKeyGrab_workspace7, NULL, NULL},
+	{"Workspace8Key", "Mod1+8", NULL,
+	    &wPreferences.key.workspace8, getKeybind, setKeyGrab_workspace8, NULL, NULL},
+	{"Workspace9Key", "Mod1+9", NULL,
+	    &wPreferences.key.workspace9, getKeybind, setKeyGrab_workspace9, NULL, NULL},
+	{"Workspace10Key", "Mod1+0", NULL,
+	    &wPreferences.key.workspace10, getKeybind, setKeyGrab_workspace10, NULL, NULL},
+	{"MoveToWorkspace1Key", "None", NULL,
+	    &wPreferences.key.movetoworkspace1, getKeybind, setKeyGrab_movetoworkspace1, NULL, NULL},
+	{"MoveToWorkspace2Key", "None", NULL,
+	    &wPreferences.key.movetoworkspace2, getKeybind, setKeyGrab_movetoworkspace2, NULL, NULL},
+	{"MoveToWorkspace3Key", "None", NULL,
+	    &wPreferences.key.movetoworkspace3, getKeybind, setKeyGrab_movetoworkspace3, NULL, NULL},
+	{"MoveToWorkspace4Key", "None", NULL,
+	    &wPreferences.key.movetoworkspace4, getKeybind, setKeyGrab_movetoworkspace4, NULL, NULL},
+	{"MoveToWorkspace5Key", "None", NULL,
+	    &wPreferences.key.movetoworkspace5, getKeybind, setKeyGrab_movetoworkspace5, NULL, NULL},
+	{"MoveToWorkspace6Key", "None", NULL,
+	    &wPreferences.key.movetoworkspace6, getKeybind, setKeyGrab_movetoworkspace6, NULL, NULL},
+	{"MoveToWorkspace7Key", "None", NULL,
+	    &wPreferences.key.movetoworkspace7, getKeybind, setKeyGrab_movetoworkspace7, NULL, NULL},
+	{"MoveToWorkspace8Key", "None", NULL,
+	    &wPreferences.key.movetoworkspace8, getKeybind, setKeyGrab_movetoworkspace8, NULL, NULL},
+	{"MoveToWorkspace9Key", "None", NULL,
+	    &wPreferences.key.movetoworkspace9, getKeybind, setKeyGrab_movetoworkspace9, NULL, NULL},
+	{"MoveToWorkspace10Key", "None", NULL,
+	    &wPreferences.key.movetoworkspace10, getKeybind, setKeyGrab_movetoworkspace10, NULL, NULL},
+	{"MoveToNextWorkspaceKey", "None", NULL,
+	    &wPreferences.key.movetonextworkspace, getKeybind, setKeyGrab_movetonextworkspace, NULL, NULL},
+	{"MoveToPrevWorkspaceKey", "None", NULL,
+	    &wPreferences.key.movetoprevworkspace, getKeybind, setKeyGrab_movetoprevworkspace, NULL, NULL},
+	{"MoveToLastWorkspaceKey", "None", NULL,
+	    &wPreferences.key.movetolastworkspace, getKeybind, setKeyGrab_movetolastworkspace, NULL, NULL},
+	{"MoveToNextWorkspaceLayerKey", "None", NULL,
+	    &wPreferences.key.movetonextworkspace, getKeybind, setKeyGrab_movetonextworkspacelayer, NULL, NULL},
+	{"MoveToPrevWorkspaceLayerKey", "None", NULL,
+	    &wPreferences.key.movetoprevworkspace, getKeybind, setKeyGrab_movetoprevworkspacelayer, NULL, NULL},
+	{"WindowShortcut1Key", "None", NULL,
+	    &wPreferences.key.windowshortcut1, getKeybind, setKeyGrab_windowshortcut1, NULL, NULL},
+	{"WindowShortcut2Key", "None", NULL,
+	    &wPreferences.key.windowshortcut2, getKeybind, setKeyGrab_windowshortcut2, NULL, NULL},
+	{"WindowShortcut3Key", "None", NULL,
+	    &wPreferences.key.windowshortcut3, getKeybind, setKeyGrab_windowshortcut3, NULL, NULL},
+	{"WindowShortcut4Key", "None", NULL,
+	    &wPreferences.key.windowshortcut4, getKeybind, setKeyGrab_windowshortcut4, NULL, NULL},
+	{"WindowShortcut5Key", "None", NULL,
+	    &wPreferences.key.windowshortcut5, getKeybind, setKeyGrab_windowshortcut5, NULL, NULL},
+	{"WindowShortcut6Key", "None", NULL,
+	    &wPreferences.key.windowshortcut6, getKeybind, setKeyGrab_windowshortcut6, NULL, NULL},
+	{"WindowShortcut7Key", "None", NULL,
+	    &wPreferences.key.windowshortcut7, getKeybind, setKeyGrab_windowshortcut7, NULL, NULL},
+	{"WindowShortcut8Key", "None", NULL,
+	    &wPreferences.key.windowshortcut8, getKeybind, setKeyGrab_windowshortcut8, NULL, NULL},
+	{"WindowShortcut9Key", "None", NULL,
+	    &wPreferences.key.windowshortcut9, getKeybind, setKeyGrab_windowshortcut9, NULL, NULL},
+	{"WindowShortcut10Key", "None", NULL,
+	    &wPreferences.key.windowshortcut10, getKeybind, setKeyGrab_windowshortcut10, NULL, NULL},
+	{"WindowRelaunchKey", "None", NULL,
+	    &wPreferences.key.windowrelaunch, getKeybind, setKeyGrab_windowrelaunch, NULL, NULL},
+	{"ScreenSwitchKey", "None", NULL,
+	    &wPreferences.key.screenswitch, getKeybind, setKeyGrab_screenswitch, NULL, NULL},
+	{"RunKey", "None", NULL,
+	    &wPreferences.key.run, getKeybind, setKeyGrab_run, NULL, NULL},
+
+#ifdef KEEP_XKB_LOCK_STATUS
+	{"ToggleKbdModeKey", "None", NULL,
+	    &wPreferences.key.togglekbdmode, getKeybind, setKeyGrab_toggle, NULL, NULL},
+	{"KbdModeLock", "NO", NULL,
+	    &wPreferences.modelock, getBool, NULL, NULL, NULL}, /* - */
+#endif				/* KEEP_XKB_LOCK_STATUS */
+
+	{"NormalCursor", "(builtin, left_ptr)", NULL,
+	    &wPreferences.cursors.root, getCursor, setCursor_root, NULL, NULL},
+	{"ArrowCursor", "(builtin, top_left_arrow)", NULL,
+	    &wPreferences.cursors.arrow, getCursor, setCursor_arrow, NULL, NULL},
+	{"MoveCursor", "(builtin, fleur)", NULL,
+	    &wPreferences.cursors.move, getCursor, setCursor_move, NULL, NULL},
+	{"ResizeCursor", "(builtin, sizing)", NULL,
+	    &wPreferences.cursors.resize, getCursor, setCursor_resize, NULL, NULL},
+	{"TopLeftResizeCursor", "(builtin, top_left_corner)", NULL,
+	    &wPreferences.cursors.resizetopleft, getCursor, setCursor_topleftresize, NULL, NULL},
+	{"TopRightResizeCursor", "(builtin, top_right_corner)", NULL,
+	    &wPreferences.cursors.resizetopright, getCursor, setCursor_toprightresize, NULL, NULL},
+	{"BottomLeftResizeCursor", "(builtin, bottom_left_corner)", NULL,
+	    &wPreferences.cursors.resizebottomleft, getCursor, setCursor_bottomleftresize, NULL, NULL},
+	{"BottomRightResizeCursor", "(builtin, bottom_right_corner)", NULL,
+	    &wPreferences.cursors.resizebottomright, getCursor, setCursor_bottomrightresize, NULL, NULL},
+	{"VerticalResizeCursor", "(builtin, sb_v_double_arrow)", NULL,
+	    &wPreferences.cursors.resizevertical, getCursor, setCursor_verticalresize, NULL, NULL},
+	{"HorizontalResizeCursor", "(builtin, sb_h_double_arrow)", NULL,
+	    &wPreferences.cursors.resizehorizontal, getCursor, setCursor_horizontalresize, NULL, NULL},
+	{"WaitCursor", "(builtin, watch)", NULL,
+	    &wPreferences.cursors.wait, getCursor, setCursor_wait, NULL, NULL},
+	{"QuestionCursor", "(builtin, question_arrow)", NULL,
+	    &wPreferences.cursors.question, getCursor, setCursor_question, NULL, NULL},
+	{"TextCursor", "(builtin, xterm)", NULL,
+	    &wPreferences.cursors.text, getCursor, setCursor_text, NULL, NULL},
+	{"SelectCursor", "(builtin, cross)", NULL,
+	    &wPreferences.cursors.select, getCursor, setCursor_select, NULL, NULL}
+};
+
+static void init_defaults(void);
+static void read_defaults_noscreen(WMPropList *new_dict);
+static void wReadStaticDefaults(WMPropList *dict);
+static void wDefaultsMergeGlobalMenus(WDDomain *menuDomain);
+static void wDefaultUpdateIcons(virtual_screen *vscr);
+static WDDomain *wDefaultsInitDomain(const char *domain, Bool requireDictionary);
+
+void startup_set_defaults_virtual(void)
+{
+	/* Initialize the defaults variables */
+	init_defaults();
+
+	/* initialize defaults stuff */
+	w_global.domain.wmaker = wDefaultsInitDomain("WindowMaker", True);
+	if (!w_global.domain.wmaker->dictionary)
+		wwarning(_("could not read domain \"%s\" from defaults database"), "WindowMaker");
+
+	/* read defaults that don't change until a restart and are
+	 * screen independent */
+	wReadStaticDefaults(w_global.domain.wmaker ? w_global.domain.wmaker->dictionary : NULL);
+
+	/* check sanity of some values */
+	if (wPreferences.icon_size < 16) {
+		wwarning(_("icon size is configured to %i, but it's too small. Using 16 instead"),
+			 wPreferences.icon_size);
+
+		wPreferences.icon_size = 16;
+	}
+
+	/* init other domains */
+	w_global.domain.root_menu = wDefaultsInitDomain("WMRootMenu", False);
+	if (!w_global.domain.root_menu->dictionary)
+		wwarning(_("could not read domain \"%s\" from defaults database"), "WMRootMenu");
+
+	wDefaultsMergeGlobalMenus(w_global.domain.root_menu);
+
+	w_global.domain.window_attr = wDefaultsInitDomain("WMWindowAttributes", True);
+	if (!w_global.domain.window_attr->dictionary)
+		wwarning(_("could not read domain \"%s\" from defaults database"), "WMWindowAttributes");
+
+	read_defaults_noscreen(w_global.domain.wmaker->dictionary);
+}
+
+/* This function sets the default values for all lists */
+static void init_defaults(void)
 {
 	unsigned int i;
 	WDefaultEntry *entry;
 
 	WMPLSetCaseSensitive(False);
 
+	/* Set the default values for the option list */
 	for (i = 0; i < wlengthof(optionList); i++) {
 		entry = &optionList[i];
 
@@ -839,6 +982,7 @@ static void initDefaults(void)
 			entry->plvalue = NULL;
 	}
 
+	/* Set the default values for the noscren option list */
 	for (i = 0; i < wlengthof(noscreenOptionList); i++) {
 		entry = &noscreenOptionList[i];
 
@@ -849,6 +993,7 @@ static void initDefaults(void)
 			entry->plvalue = NULL;
 	}
 
+	/* Set the default values for the static option list */
 	for (i = 0; i < wlengthof(staticOptionList); i++) {
 		entry = &staticOptionList[i];
 
@@ -907,7 +1052,7 @@ static void appendMenu(WMPropList *destarr, WMPropList *array)
 }
 #endif
 
-void wDefaultsMergeGlobalMenus(WDDomain *menuDomain)
+static void wDefaultsMergeGlobalMenus(WDDomain *menuDomain)
 {
 	WMPropList *menu = menuDomain->dictionary;
 	WMPropList *submenu;
@@ -946,17 +1091,11 @@ void wDefaultsMergeGlobalMenus(WDDomain *menuDomain)
 	menuDomain->dictionary = menu;
 }
 
-WDDomain *wDefaultsInitDomain(const char *domain, Bool requireDictionary)
+static WDDomain *wDefaultsInitDomain(const char *domain, Bool requireDictionary)
 {
 	WDDomain *db;
 	struct stat stbuf;
-	static int inited = 0;
 	WMPropList *shared_dict = NULL;
-
-	if (!inited) {
-		inited = 1;
-		initDefaults();
-	}
 
 	db = wmalloc(sizeof(WDDomain));
 	db->domain_name = domain;
@@ -993,34 +1132,6 @@ WDDomain *wDefaultsInitDomain(const char *domain, Bool requireDictionary)
 	}
 
 	return db;
-}
-
-void wReadStaticDefaults(WMPropList *dict)
-{
-	WMPropList *plvalue;
-	WDefaultEntry *entry;
-	unsigned int i;
-	void *tdata;
-
-	for (i = 0; i < wlengthof(staticOptionList); i++) {
-		entry = &staticOptionList[i];
-
-		if (dict)
-			plvalue = WMGetFromPLDictionary(dict, entry->plkey);
-		else
-			plvalue = NULL;
-
-		/* no default in the DB. Use builtin default */
-		if (!plvalue)
-			plvalue = entry->plvalue;
-
-		if (plvalue) {
-			/* convert data */
-			(*entry->convert) (NULL, entry, plvalue, entry->addr, &tdata);
-			if (entry->update)
-				(*entry->update) (NULL, entry, tdata, entry->extra_data);
-		}
-	}
 }
 
 void wDefaultsCheckDomains(void *arg)
@@ -1147,13 +1258,43 @@ void wDefaultsCheckDomains(void *arg)
 #endif
 }
 
-void read_defaults_noscreen(virtual_screen *vscr, WMPropList *new_dict)
+/* This function read the static list values
+ * All these values uses only the WPreferences and
+ * the callbacks updates the WPreferences.
+ * X11 Calls are not used in this list
+ */
+static void wReadStaticDefaults(WMPropList *dict)
+{
+	WMPropList *plvalue;
+	WDefaultEntry *entry;
+	unsigned int i;
+
+	for (i = 0; i < wlengthof(staticOptionList); i++) {
+		entry = &staticOptionList[i];
+
+		if (dict)
+			plvalue = WMGetFromPLDictionary(dict, entry->plkey);
+		else
+			plvalue = NULL;
+
+		/* no default in the DB. Use builtin default */
+		if (!plvalue)
+			plvalue = entry->plvalue;
+
+		if (plvalue) {
+			/* convert data */
+			(*entry->convert) (entry, plvalue, entry->addr);
+			if (entry->update)
+				(*entry->update) (NULL);
+		}
+	}
+}
+
+static void read_defaults_noscreen(WMPropList *new_dict)
 {
 	unsigned int i;
-	int update_workspace_back = 0;
 	WMPropList *plvalue, *old_value, *old_dict = NULL;
 	WDefaultEntry *entry;
-	void *tdata;
 
 	if (w_global.domain.wmaker->dictionary != new_dict)
 		old_dict = w_global.domain.wmaker->dictionary;
@@ -1189,24 +1330,14 @@ void read_defaults_noscreen(virtual_screen *vscr, WMPropList *new_dict)
 			 * We must continue, except if WorkspaceSpecificBack
 			 * was updated previously
 			 */
-			if (!(strcmp(entry->key, "WorkspaceBack") == 0 &&
-			    update_workspace_back &&
-			    vscr->screen_ptr->flags.backimage_helper_launched))
-				continue;
 		}
 
+		/* convert data */
 		if (plvalue) {
 			/* convert data */
-			if ((*entry->convert) (vscr, entry, plvalue, entry->addr, &tdata)) {
-				/*
-				 * If the WorkspaceSpecificBack data has been changed
-				 * so that the helper will be launched now, we must be
-				 * sure to send the default background texture config
-				 * to the helper.
-				 */
-				if (strcmp(entry->key, "WorkspaceSpecificBack") == 0 &&
-				    !vscr->screen_ptr->flags.backimage_helper_launched)
-					update_workspace_back = 1;
+			if ((*entry->convert) (entry, plvalue, entry->addr)) {
+				if (entry->update)
+					(*entry->update) (NULL);
 			}
 		}
 	}
@@ -1218,7 +1349,6 @@ static unsigned int read_defaults_step1(virtual_screen *vscr, WMPropList *new_di
 	int update_workspace_back = 0;
 	WMPropList *plvalue, *old_value, *old_dict = NULL;
 	WDefaultEntry *entry;
-	void *tdata;
 
 	if (w_global.domain.wmaker->dictionary != new_dict)
 		old_dict = w_global.domain.wmaker->dictionary;
@@ -1262,7 +1392,7 @@ static unsigned int read_defaults_step1(virtual_screen *vscr, WMPropList *new_di
 
 		if (plvalue) {
 			/* convert data */
-			if ((*entry->convert) (vscr, entry, plvalue, entry->addr, &tdata)) {
+			if ((*entry->convert) (entry, plvalue, entry->addr)) {
 				/*
 				 * If the WorkspaceSpecificBack data has been changed
 				 * so that the helper will be launched now, we must be
@@ -1274,7 +1404,7 @@ static unsigned int read_defaults_step1(virtual_screen *vscr, WMPropList *new_di
 					update_workspace_back = 1;
 
 				if (entry->update)
-					needs_refresh |= (*entry->update) (vscr, entry, tdata, entry->extra_data);
+					needs_refresh |= (*entry->update) (vscr);
 			}
 		}
 	}
@@ -1340,6 +1470,20 @@ static void refresh_defaults(virtual_screen *vscr, unsigned int needs_refresh)
 		if (vscr->workspace.submenu)
 			vscr->workspace.submenu->flags.realized = 0;
 	}
+
+	if (needs_refresh & REFRESH_ARRANGE_ICONS) {
+		wScreenUpdateUsableArea(vscr);
+		wArrangeIcons(vscr, True);
+	}
+
+	/* Do not refresh if we already did it with the REFRESH_ARRANGE_ICONS */
+	if (needs_refresh & REFRESH_USABLE_AREA && !(needs_refresh & REFRESH_ARRANGE_ICONS))
+		wScreenUpdateUsableArea(vscr);
+
+	if (needs_refresh & REFRESH_STICKY_ICONS && vscr->workspace.array) {
+		wWorkspaceForceChange(vscr, vscr->workspace.current);
+		wArrangeIcons(vscr, False);
+	}
 }
 
 void wReadDefaults(virtual_screen *vscr, WMPropList *new_dict)
@@ -1347,13 +1491,12 @@ void wReadDefaults(virtual_screen *vscr, WMPropList *new_dict)
 	unsigned int needs_refresh;
 
 	needs_refresh = read_defaults_step1(vscr, new_dict);
-	read_defaults_noscreen(vscr, new_dict);
 
 	if (needs_refresh != 0 && !w_global.startup.phase1)
 		refresh_defaults(vscr, needs_refresh);
 }
 
-void wDefaultUpdateIcons(virtual_screen *vscr)
+static void wDefaultUpdateIcons(virtual_screen *vscr)
 {
 	WAppIcon *aicon = w_global.app_icon_list;
 	WDrawerChain *dc;
@@ -1430,14 +1573,11 @@ static int string2index(WMPropList *key, WMPropList *val, const char *def, WOpti
  * ret - is the address to store a pointer to a temporary buffer. ret
  * 	must not be freed and is used by the set functions
  */
-static int getBool(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
+static int getBool(WDefaultEntry *entry, WMPropList *value, void *addr)
 {
 	static char data;
 	const char *val;
 	int second_pass = 0;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) vscr;
 
 	GET_STRING_OR_DEFAULT("Boolean", val);
 
@@ -1468,21 +1608,16 @@ static int getBool(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *value
 		}
 	}
 
-	if (ret)
-		*ret = &data;
 	if (addr)
 		*(char *)addr = data;
 
 	return True;
 }
 
-static int getInt(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
+static int getInt(WDefaultEntry *entry, WMPropList *value, void *addr)
 {
 	static int data;
 	const char *val;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) vscr;
 
 	GET_STRING_OR_DEFAULT("Integer", val);
 
@@ -1495,15 +1630,13 @@ static int getInt(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *value,
 		}
 	}
 
-	if (ret)
-		*ret = &data;
 	if (addr)
 		*(int *)addr = data;
 
 	return True;
 }
 
-static int getCoord(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
+static int getCoord(WDefaultEntry *entry, WMPropList *value, void *addr)
 {
 	static WCoord data;
 	char *val_x, *val_y;
@@ -1562,49 +1695,32 @@ static int getCoord(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *valu
 		return False;
 	}
 
-	if (data.x < 0)
-		data.x = 0;
-	else if (data.x > vscr->screen_ptr->scr_width / 3)
-		data.x = vscr->screen_ptr->scr_width / 3;
-	if (data.y < 0)
-		data.y = 0;
-	else if (data.y > vscr->screen_ptr->scr_height / 3)
-		data.y = vscr->screen_ptr->scr_height / 3;
-
-	if (ret)
-		*ret = &data;
-
 	if (addr)
 		*(WCoord *) addr = data;
 
 	return True;
 }
 
-static int getPropList(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
+static int getPropList(WDefaultEntry *entry, WMPropList *value, void *addr)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
-	(void) vscr;
 	(void) entry;
 	(void) addr;
 
 	WMRetainPropList(value);
 
-	*ret = value;
+	*(WMPropList **) addr = value;
 
 	return True;
 }
 
-static int getPathList(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
+static int getPathList(WDefaultEntry *entry, WMPropList *value, void *addr)
 {
 	static char *data;
 	int i, count, len;
 	char *ptr;
 	WMPropList *d;
 	int changed = 0;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) vscr;
-	(void) ret;
 
  again:
 	if (!WMIsPLArray(value)) {
@@ -1663,19 +1779,13 @@ static int getPathList(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *v
 	return True;
 }
 
-static int getEnum(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
+static int getEnum(WDefaultEntry *entry, WMPropList *value, void *addr)
 {
 	static signed char data;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) vscr;
 
 	data = string2index(entry->plkey, value, entry->default_value, (WOptionEnumeration *) entry->extra_data);
 	if (data < 0)
 		return False;
-
-	if (ret)
-		*ret = &data;
 
 	if (addr)
 		*(signed char *)addr = data;
@@ -1683,401 +1793,38 @@ static int getEnum(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *value
 	return True;
 }
 
-/*
- * (solid <color>)
- * (hgradient <color> <color>)
- * (vgradient <color> <color>)
- * (dgradient <color> <color>)
- * (mhgradient <color> <color> ...)
- * (mvgradient <color> <color> ...)
- * (mdgradient <color> <color> ...)
- * (igradient <color1> <color1> <thickness1> <color2> <color2> <thickness2>)
- * (tpixmap <file> <color>)
- * (spixmap <file> <color>)
- * (cpixmap <file> <color>)
- * (thgradient <file> <opaqueness> <color> <color>)
- * (tvgradient <file> <opaqueness> <color> <color>)
- * (tdgradient <file> <opaqueness> <color> <color>)
- * (function <lib> <function> ...)
- */
-
-static WTexture *parse_texture(virtual_screen *vscr, WMPropList *pl)
+static int getTexture(WDefaultEntry *entry, WMPropList *value, void *addr)
 {
-	WMPropList *elem;
-	char *val;
-	int nelem;
-	WTexture *texture = NULL;
+	defstructpl *defstruct;
+	WMPropList *name, *defname;
+	int len;
+	char *key;
 
-	nelem = WMGetPropListItemCount(pl);
-	if (nelem < 1)
-		return NULL;
+	key = NULL;
+	len = sizeof(char *) * (strlen(entry->key));
+	key = wmalloc(len + sizeof(char *));
+	snprintf(key, len, "%s", entry->key);
 
-	elem = WMGetFromPLArray(pl, 0);
-	if (!elem || !WMIsPLString(elem))
-		return NULL;
-	val = WMGetFromPLString(elem);
+	defstruct = NULL;
+	defname = name = NULL;
 
-	if (strcasecmp(val, "solid") == 0) {
-		XColor color;
+	name = WMDeepCopyPropList(value);
+	defname = WMDeepCopyPropList(entry->plvalue);
 
-		if (nelem != 2)
-			return NULL;
+	defstruct = wmalloc(sizeof(struct defstruct));
 
-		/* get color */
+	defstruct->key = key;
+	defstruct->value = name;
+	defstruct->defvalue = defname;
 
-		elem = WMGetFromPLArray(pl, 1);
-		if (!elem || !WMIsPLString(elem))
-			return NULL;
-		val = WMGetFromPLString(elem);
-
-		if (!XParseColor(dpy, vscr->screen_ptr->w_colormap, val, &color)) {
-			wwarning(_("\"%s\" is not a valid color name"), val);
-			return NULL;
-		}
-
-		texture = (WTexture *) wTextureMakeSolid(vscr, &color);
-	} else if (strcasecmp(val, "dgradient") == 0
-		   || strcasecmp(val, "vgradient") == 0 || strcasecmp(val, "hgradient") == 0) {
-		RColor color1, color2;
-		XColor xcolor;
-		int type;
-
-		if (nelem != 3) {
-			wwarning(_("bad number of arguments in gradient specification"));
-			return NULL;
-		}
-
-		if (val[0] == 'd' || val[0] == 'D')
-			type = WTEX_DGRADIENT;
-		else if (val[0] == 'h' || val[0] == 'H')
-			type = WTEX_HGRADIENT;
-		else
-			type = WTEX_VGRADIENT;
-
-		/* get from color */
-		elem = WMGetFromPLArray(pl, 1);
-		if (!elem || !WMIsPLString(elem))
-			return NULL;
-		val = WMGetFromPLString(elem);
-
-		if (!XParseColor(dpy, vscr->screen_ptr->w_colormap, val, &xcolor)) {
-			wwarning(_("\"%s\" is not a valid color name"), val);
-			return NULL;
-		}
-
-		color1.alpha = 255;
-		color1.red = xcolor.red >> 8;
-		color1.green = xcolor.green >> 8;
-		color1.blue = xcolor.blue >> 8;
-
-		/* get to color */
-		elem = WMGetFromPLArray(pl, 2);
-		if (!elem || !WMIsPLString(elem))
-			return NULL;
-
-		val = WMGetFromPLString(elem);
-
-		if (!XParseColor(dpy, vscr->screen_ptr->w_colormap, val, &xcolor)) {
-			wwarning(_("\"%s\" is not a valid color name"), val);
-			return NULL;
-		}
-
-		color2.alpha = 255;
-		color2.red = xcolor.red >> 8;
-		color2.green = xcolor.green >> 8;
-		color2.blue = xcolor.blue >> 8;
-
-		texture = (WTexture *) wTextureMakeGradient(vscr, type, &color1, &color2);
-	} else if (strcasecmp(val, "igradient") == 0) {
-		RColor colors1[2], colors2[2];
-		int th1, th2;
-		XColor xcolor;
-		int i;
-
-		if (nelem != 7) {
-			wwarning(_("bad number of arguments in gradient specification"));
-			return NULL;
-		}
-
-		/* get from color */
-		for (i = 0; i < 2; i++) {
-			elem = WMGetFromPLArray(pl, 1 + i);
-			if (!elem || !WMIsPLString(elem))
-				return NULL;
-			val = WMGetFromPLString(elem);
-
-			if (!XParseColor(dpy, vscr->screen_ptr->w_colormap, val, &xcolor)) {
-				wwarning(_("\"%s\" is not a valid color name"), val);
-				return NULL;
-			}
-
-			colors1[i].alpha = 255;
-			colors1[i].red = xcolor.red >> 8;
-			colors1[i].green = xcolor.green >> 8;
-			colors1[i].blue = xcolor.blue >> 8;
-		}
-
-		elem = WMGetFromPLArray(pl, 3);
-		if (!elem || !WMIsPLString(elem))
-			return NULL;
-
-		val = WMGetFromPLString(elem);
-		th1 = atoi(val);
-
-		/* get from color */
-		for (i = 0; i < 2; i++) {
-			elem = WMGetFromPLArray(pl, 4 + i);
-			if (!elem || !WMIsPLString(elem))
-				return NULL;
-
-			val = WMGetFromPLString(elem);
-
-			if (!XParseColor(dpy, vscr->screen_ptr->w_colormap, val, &xcolor)) {
-				wwarning(_("\"%s\" is not a valid color name"), val);
-				return NULL;
-			}
-
-			colors2[i].alpha = 255;
-			colors2[i].red = xcolor.red >> 8;
-			colors2[i].green = xcolor.green >> 8;
-			colors2[i].blue = xcolor.blue >> 8;
-		}
-
-		elem = WMGetFromPLArray(pl, 6);
-		if (!elem || !WMIsPLString(elem))
-			return NULL;
-
-		val = WMGetFromPLString(elem);
-		th2 = atoi(val);
-		texture = (WTexture *) wTextureMakeIGradient(vscr, th1, colors1, th2, colors2);
-	} else if (strcasecmp(val, "mhgradient") == 0
-		   || strcasecmp(val, "mvgradient") == 0 || strcasecmp(val, "mdgradient") == 0) {
-		XColor color;
-		RColor **colors;
-		int i, count;
-		int type;
-
-		if (nelem < 3) {
-			wwarning(_("too few arguments in multicolor gradient specification"));
-			return NULL;
-		}
-
-		if (val[1] == 'h' || val[1] == 'H')
-			type = WTEX_MHGRADIENT;
-		else if (val[1] == 'v' || val[1] == 'V')
-			type = WTEX_MVGRADIENT;
-		else
-			type = WTEX_MDGRADIENT;
-
-		count = nelem - 1;
-
-		colors = wmalloc(sizeof(RColor *) * (count + 1));
-
-		for (i = 0; i < count; i++) {
-			elem = WMGetFromPLArray(pl, i + 1);
-			if (!elem || !WMIsPLString(elem)) {
-				for (--i; i >= 0; --i)
-					wfree(colors[i]);
-
-				wfree(colors);
-				return NULL;
-			}
-
-			val = WMGetFromPLString(elem);
-
-			if (!XParseColor(dpy, vscr->screen_ptr->w_colormap, val, &color)) {
-				wwarning(_("\"%s\" is not a valid color name"), val);
-				for (--i; i >= 0; --i)
-					wfree(colors[i]);
-
-				wfree(colors);
-				return NULL;
-			} else {
-				colors[i] = wmalloc(sizeof(RColor));
-				colors[i]->red = color.red >> 8;
-				colors[i]->green = color.green >> 8;
-				colors[i]->blue = color.blue >> 8;
-			}
-		}
-
-		colors[i] = NULL;
-		texture = (WTexture *) wTextureMakeMGradient(vscr, type, colors);
-	} else if (strcasecmp(val, "spixmap") == 0 ||
-		   strcasecmp(val, "cpixmap") == 0 || strcasecmp(val, "tpixmap") == 0) {
-		XColor color;
-		int type;
-
-		if (nelem != 3)
-			return NULL;
-
-		if (val[0] == 's' || val[0] == 'S')
-			type = WTP_SCALE;
-		else if (val[0] == 'c' || val[0] == 'C')
-			type = WTP_CENTER;
-		else
-			type = WTP_TILE;
-
-		/* get color */
-		elem = WMGetFromPLArray(pl, 2);
-		if (!elem || !WMIsPLString(elem))
-			return NULL;
-
-		val = WMGetFromPLString(elem);
-
-		if (!XParseColor(dpy, vscr->screen_ptr->w_colormap, val, &color)) {
-			wwarning(_("\"%s\" is not a valid color name"), val);
-			return NULL;
-		}
-
-		/* file name */
-		elem = WMGetFromPLArray(pl, 1);
-		if (!elem || !WMIsPLString(elem))
-			return NULL;
-
-		val = WMGetFromPLString(elem);
-
-		texture = (WTexture *) wTextureMakePixmap(vscr, type, val, &color);
-	} else if (strcasecmp(val, "thgradient") == 0
-		   || strcasecmp(val, "tvgradient") == 0 || strcasecmp(val, "tdgradient") == 0) {
-		RColor color1, color2;
-		XColor xcolor;
-		int opacity;
-		int style;
-
-		if (val[1] == 'h' || val[1] == 'H')
-			style = WTEX_THGRADIENT;
-		else if (val[1] == 'v' || val[1] == 'V')
-			style = WTEX_TVGRADIENT;
-		else
-			style = WTEX_TDGRADIENT;
-
-		if (nelem != 5) {
-			wwarning(_("bad number of arguments in textured gradient specification"));
-			return NULL;
-		}
-
-		/* get from color */
-		elem = WMGetFromPLArray(pl, 3);
-		if (!elem || !WMIsPLString(elem))
-			return NULL;
-		val = WMGetFromPLString(elem);
-
-		if (!XParseColor(dpy, vscr->screen_ptr->w_colormap, val, &xcolor)) {
-			wwarning(_("\"%s\" is not a valid color name"), val);
-			return NULL;
-		}
-
-		color1.alpha = 255;
-		color1.red = xcolor.red >> 8;
-		color1.green = xcolor.green >> 8;
-		color1.blue = xcolor.blue >> 8;
-
-		/* get to color */
-		elem = WMGetFromPLArray(pl, 4);
-		if (!elem || !WMIsPLString(elem))
-			return NULL;
-
-		val = WMGetFromPLString(elem);
-
-		if (!XParseColor(dpy, vscr->screen_ptr->w_colormap, val, &xcolor)) {
-			wwarning(_("\"%s\" is not a valid color name"), val);
-			return NULL;
-		}
-
-		color2.alpha = 255;
-		color2.red = xcolor.red >> 8;
-		color2.green = xcolor.green >> 8;
-		color2.blue = xcolor.blue >> 8;
-
-		/* get opacity */
-		elem = WMGetFromPLArray(pl, 2);
-		if (!elem || !WMIsPLString(elem))
-			opacity = 128;
-		else
-			val = WMGetFromPLString(elem);
-
-		if (!val || (opacity = atoi(val)) < 0 || opacity > 255) {
-			wwarning(_("bad opacity value for tgradient texture \"%s\". Should be [0..255]"), val);
-			opacity = 128;
-		}
-
-		/* get file name */
-		elem = WMGetFromPLArray(pl, 1);
-		if (!elem || !WMIsPLString(elem))
-			return NULL;
-
-		val = WMGetFromPLString(elem);
-
-		texture = (WTexture *) wTextureMakeTGradient(vscr, style, &color1, &color2, val, opacity);
-	} else if (strcasecmp(val, "function") == 0) {
-		/* Leave this in to handle the unlikely case of
-		 * someone actually having function textures configured */
-		wwarning("function texture support has been removed");
-		return NULL;
-	} else {
-		wwarning(_("invalid texture type %s"), val);
-		return NULL;
-	}
-
-	return texture;
-}
-
-static int getTexture(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
-{
-	static WTexture *texture;
-	int changed = 0;
-
- again:
-	if (!WMIsPLArray(value)) {
-		wwarning(_("Wrong option format for key \"%s\". Should be %s."), entry->key, "Texture");
-		if (changed == 0) {
-			value = entry->plvalue;
-			changed = 1;
-			wwarning(_("using default \"%s\" instead"), entry->default_value);
-			goto again;
-		}
-		return False;
-	}
-
-	if (strcmp(entry->key, "WidgetColor") == 0 && !changed) {
-		WMPropList *pl;
-
-		pl = WMGetFromPLArray(value, 0);
-		if (!pl || !WMIsPLString(pl) || !WMGetFromPLString(pl)
-		    || strcasecmp(WMGetFromPLString(pl), "solid") != 0) {
-			wwarning(_("Wrong option format for key \"%s\". Should be %s."),
-				 entry->key, "Solid Texture");
-
-			value = entry->plvalue;
-			changed = 1;
-			wwarning(_("using default \"%s\" instead"), entry->default_value);
-			goto again;
-		}
-	}
-
-	texture = parse_texture(vscr, value);
-
-	if (!texture) {
-		wwarning(_("Error in texture specification for key \"%s\""), entry->key);
-		if (changed == 0) {
-			value = entry->plvalue;
-			changed = 1;
-			wwarning(_("using default \"%s\" instead"), entry->default_value);
-			goto again;
-		}
-		return False;
-	}
-
-	if (ret)
-		*ret = &texture;
-
+	/* TODO: We need free the previous memory, if used */
 	if (addr)
-		*(WTexture **) addr = texture;
+		*(defstructpl **)addr = defstruct;
 
 	return True;
 }
 
-static int getWSBackground(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
+static int getWSBackground(WDefaultEntry *entry, WMPropList *value, void *addr)
 {
 	WMPropList *elem;
 	int changed = 0;
@@ -2085,7 +1832,6 @@ static int getWSBackground(virtual_screen *vscr, WDefaultEntry *entry, WMPropLis
 	int nelem;
 
 	/* Parameter not used, but tell the compiler that it is ok */
-	(void) vscr;
 	(void) addr;
 
  again:
@@ -2121,20 +1867,22 @@ static int getWSBackground(virtual_screen *vscr, WDefaultEntry *entry, WMPropLis
 		if (strcasecmp(val, "None") == 0)
 			return True;
 	}
-	*ret = WMRetainPropList(value);
+
+	WMRetainPropList(value);
+
+	*(WMPropList **) addr = value;
 
 	return True;
 }
 
 static int
-getWSSpecificBackground(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
+getWSSpecificBackground(WDefaultEntry *entry, WMPropList *value, void *addr)
 {
 	WMPropList *elem;
 	int nelem;
 	int changed = 0;
 
 	/* Parameter not used, but tell the compiler that it is ok */
-	(void) vscr;
 	(void) addr;
 
  again:
@@ -2163,153 +1911,85 @@ getWSSpecificBackground(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *
 		}
 	}
 
-	*ret = WMRetainPropList(value);
+	WMRetainPropList(value);
 
-#ifdef notworking
-	/*
-	 * Kluge to force wmsetbg helper to set the default background.
-	 * If the WorkspaceSpecificBack is changed once wmaker has started,
-	 * the WorkspaceBack won't be sent to the helper, unless the user
-	 * changes it's value too. So, we must force this by removing the
-	 * value from the defaults DB.
-	 */
-	if (!scr->flags.backimage_helper_launched && !scr->flags.startup) {
-		WMPropList *key = WMCreatePLString("WorkspaceBack");
+	*(WMPropList **) addr = value;
 
-		WMRemoveFromPLDictionary(w_global.domain.wmaker->dictionary, key);
-
-		WMReleasePropList(key);
-	}
-#endif
 	return True;
 }
 
-static int getFont(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
+static int getFont(WDefaultEntry *entry, WMPropList *value, void *addr)
 {
-	static WMFont *font;
 	const char *val;
+	char *fontname;
+	int len;
 
 	(void) addr;
 
 	GET_STRING_OR_DEFAULT("Font", val);
+	len = sizeof(char *) * (strlen(val));
 
-	font = WMCreateFont(vscr->screen_ptr->wmscreen, val);
-	if (!font)
-		font = WMCreateFont(vscr->screen_ptr->wmscreen, "fixed");
+	fontname = wmalloc(len + sizeof(char *));
+	snprintf(fontname, len, "%s", val);
 
-	if (!font) {
-		wfatal(_("could not load any usable font!!!"));
-		exit(1);
-	}
-
-	if (ret)
-		*ret = font;
-
-	/* can't assign font value outside update function */
-	wassertrv(addr == NULL, True);
+	if (addr)
+		*(char **)addr = fontname;
 
 	return True;
 }
 
-static int getColor(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
+static int getColor(WDefaultEntry *entry, WMPropList *value, void *addr)
 {
-	static XColor color;
 	const char *val;
-	int second_pass = 0;
+	int len, def_len;
+	defstruct *color;
+	char *colorname, *def_colorname;
 
 	(void) addr;
 
+	/* Value */
 	GET_STRING_OR_DEFAULT("Color", val);
+	len = sizeof(char *) * (strlen(val));
+	colorname = wmalloc(len + sizeof(char *));
+	snprintf(colorname, len, "%s", val);
 
- again:
-	if (!wGetColor(vscr->screen_ptr, val, &color)) {
-		wwarning(_("could not get color for key \"%s\""), entry->key);
-		if (second_pass == 0) {
-			val = WMGetFromPLString(entry->plvalue);
-			second_pass = 1;
-			wwarning(_("using default \"%s\" instead"), val);
-			goto again;
-		}
-		return False;
-	}
+	/* Save the default value */
+	val = WMGetFromPLString(entry->plvalue);
+	def_len = sizeof(char *) * (strlen(val));
+	def_colorname = wmalloc(def_len + sizeof(char *));
+	snprintf(def_colorname, def_len, "%s", val);
 
-	if (ret)
-		*ret = &color;
+	color = wmalloc(sizeof(struct defstruct));
 
-	assert(addr == NULL);
+	color->value = colorname;
+	color->defvalue = def_colorname;
+
+	/* TODO: We need free the previous memory, if used */
+	if (addr)
+		*(defstruct **)addr = color;
 
 	return True;
 }
 
-static int getKeybind(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
+static int getKeybind(WDefaultEntry *entry, WMPropList *value, void *addr)
 {
-	static WShortKey shortcut;
-	KeySym ksym;
 	const char *val;
-	char *k;
-	char buf[MAX_SHORTCUT_LENGTH], *b;
 
 	/* Parameter not used, but tell the compiler that it is ok */
-	(void) vscr;
 	(void) addr;
 
 	GET_STRING_OR_DEFAULT("Key spec", val);
 
-	if (!val || strcasecmp(val, "NONE") == 0) {
-		shortcut.keycode = 0;
-		shortcut.modifier = 0;
-		if (ret)
-			*ret = &shortcut;
-		return True;
-	}
-
-	wstrlcpy(buf, val, MAX_SHORTCUT_LENGTH);
-
-	b = (char *)buf;
-
-	/* get modifiers */
-	shortcut.modifier = 0;
-	while ((k = strchr(b, '+')) != NULL) {
-		int mod;
-
-		*k = 0;
-		mod = wXModifierFromKey(b);
-		if (mod < 0) {
-			wwarning(_("%s: invalid key modifier \"%s\""), entry->key, b);
-			return False;
-		}
-		shortcut.modifier |= mod;
-
-		b = k + 1;
-	}
-
-	/* get key */
-	ksym = XStringToKeysym(b);
-
-	if (ksym == NoSymbol) {
-		wwarning(_("%s:invalid kbd shortcut specification \"%s\""), entry->key, val);
-		return False;
-	}
-
-	shortcut.keycode = XKeysymToKeycode(dpy, ksym);
-	if (shortcut.keycode == 0) {
-		wwarning(_("%s:invalid key in shortcut \"%s\""), entry->key, val);
-		return False;
-	}
-
-	if (ret)
-		*ret = &shortcut;
+	if (addr)
+		wstrlcpy(addr, val, MAX_SHORTCUT_LENGTH);
 
 	return True;
 }
 
-static int getModMask(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
+static int getModMask(WDefaultEntry *entry, WMPropList *value, void *addr)
 {
 	static int mask;
 	const char *str;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) vscr;
 
 	GET_STRING_OR_DEFAULT("Modifier Key", str);
 
@@ -2325,9 +2005,6 @@ static int getModMask(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *va
 
 	if (addr)
 		*(int *)addr = mask;
-
-	if (ret)
-		*ret = &mask;
 
 	return True;
 }
@@ -2551,168 +2228,134 @@ static int parse_cursor(virtual_screen *vscr, WMPropList *pl, Cursor *cursor)
 	return (status);
 }
 
-static int getCursor(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *value, void *addr, void **ret)
+static int getCursor(WDefaultEntry *entry, WMPropList *value, void *addr)
 {
-	static Cursor cursor;
-	int status;
-	int changed = 0;
+	defstructpl *defstruct;
+	WMPropList *cursorname, *defcursorname;
 
- again:
-	if (!WMIsPLArray(value)) {
+	defstruct = NULL;
+	defcursorname = cursorname = NULL;
+
+	if (WMIsPLArray(value)) {
+		cursorname = WMDeepCopyPropList(value);
+	} else {
 		wwarning(_("Wrong option format for key \"%s\". Should be %s."),
 			 entry->key, "cursor specification");
-		if (!changed) {
-			value = entry->plvalue;
-			changed = 1;
-			wwarning(_("using default \"%s\" instead"), entry->default_value);
-			goto again;
-		}
-		return (False);
+		wwarning(_("using default \"%s\" instead"), entry->default_value);
+		if (WMIsPLArray(entry->plvalue))
+			cursorname = WMDeepCopyPropList(entry->plvalue);
+		else
+			/* This should not happend */
+			return (False);
 	}
 
-	status = parse_cursor(vscr, value, &cursor);
-	if (!status) {
-		wwarning(_("Error in cursor specification for key \"%s\""), entry->key);
-		if (!changed) {
-			value = entry->plvalue;
-			changed = 1;
-			wwarning(_("using default \"%s\" instead"), entry->default_value);
-			goto again;
-		}
+	if (WMIsPLArray(entry->plvalue))
+		defcursorname = WMDeepCopyPropList(entry->plvalue);
+	else
+		/* If no default, use the provided... it should never happends */
+		defcursorname = WMDeepCopyPropList(cursorname);
 
-		return (False);
-	}
+	defstruct = wmalloc(sizeof(struct defstruct));
 
-	if (ret)
-		*ret = &cursor;
+	defstruct->value = cursorname;
+	defstruct->defvalue = defcursorname;
 
+	/* TODO: We need free the previous memory, if used */
 	if (addr)
-		*(Cursor *) addr = cursor;
+		*(defstructpl **)addr = defstruct;
 
-	return (True);
+	return True;
 }
 
 #undef CURSOR_ID_NONE
 
 /* ---------------- value setting functions --------------- */
-static int setJustify(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data)
+static int setJustify(virtual_screen *vscr)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) vscr;
-	(void) entry;
-	(void) tdata;
-	(void) extra_data;
 
 	return REFRESH_WINDOW_TITLE_COLOR;
 }
 
-static int setClearance(virtual_screen *vscr, WDefaultEntry *entry, void *bar, void *foo)
+static int setClearance(virtual_screen *vscr)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) vscr;
-	(void) entry;
-	(void) bar;
-	(void) foo;
 
 	return REFRESH_WINDOW_FONT | REFRESH_BUTTON_IMAGES | REFRESH_MENU_TITLE_FONT | REFRESH_MENU_FONT;
 }
 
-static int setIfDockPresent(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data)
+static int setIfDockPresent(virtual_screen *vscr)
 {
-	char *flag = tdata;
-	long which = (long) extra_data;
-
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) vscr;
-	(void) entry;
 
-	switch (which) {
-	case WM_DOCK:
-		wPreferences.flags.nodock = wPreferences.flags.nodock || *flag;
-		// Drawers require the dock
-		wPreferences.flags.nodrawer = wPreferences.flags.nodrawer || wPreferences.flags.nodock;
-		break;
-	case WM_CLIP:
-		wPreferences.flags.noclip = wPreferences.flags.noclip || *flag;
-		break;
-	case WM_DRAWER:
-		wPreferences.flags.nodrawer = wPreferences.flags.nodrawer || *flag;
-		break;
-	default:
-		break;
-	}
+	wPreferences.flags.nodrawer = wPreferences.flags.nodrawer || wPreferences.flags.nodock;
+
 	return 0;
 }
 
-static int setClipMergedInDock(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setIfClipPresent(virtual_screen *vscr)
 {
-	char *flag = tdata;
-
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) vscr;
-	(void) entry;
-	(void) foo;
 
-	wPreferences.flags.clip_merged_in_dock = *flag;
-	wPreferences.flags.noclip = wPreferences.flags.noclip || *flag;
 	return 0;
 }
 
-static int setWrapAppiconsInDock(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setIfDrawerPresent(virtual_screen *vscr)
 {
-	char *flag = tdata;
-
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) vscr;
-	(void) entry;
-	(void) foo;
 
-	wPreferences.flags.wrap_appicons_in_dock = *flag;
 	return 0;
 }
 
-static int setStickyIcons(virtual_screen *vscr, WDefaultEntry *entry, void *bar, void *foo)
+static int setClipMergedInDock(virtual_screen *vscr)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
-	(void) entry;
-	(void) bar;
-	(void) foo;
+	(void) vscr;
 
-	if (vscr->workspace.array) {
-		wWorkspaceForceChange(vscr, vscr->workspace.current);
-		wArrangeIcons(vscr, False);
-	}
+	wPreferences.flags.noclip = wPreferences.flags.noclip || wPreferences.flags.clip_merged_in_dock;
+	return 0;
+}
+
+static int setWrapAppiconsInDock(virtual_screen *vscr)
+{
+	/* Parameter not used, but tell the compiler that it is ok */
+	(void) vscr;
 
 	return 0;
 }
 
-static int setIconTile(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setStickyIcons(virtual_screen *vscr)
 {
-	Pixmap pixmap;
+	/* Parameter not used, but tell the compiler that it is ok */
+	(void) vscr;
+
+	return REFRESH_STICKY_ICONS;
+}
+
+static int setIconTile(virtual_screen *vscr)
+{
 	RImage *img;
-	WTexture ** texture = tdata;
+	WTexture *texture = NULL;
 	int reset = 0;
 
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) foo;
+	texture = get_texture_from_defstruct(vscr, wPreferences.texture.iconback);
 
-	img = wTextureRenderImage(*texture, wPreferences.icon_size,
-				  wPreferences.icon_size, ((*texture)->any.type & WREL_BORDER_MASK)
+	img = wTextureRenderImage(texture, wPreferences.icon_size,
+				  wPreferences.icon_size, (texture->any.type & WREL_BORDER_MASK)
 				  ? WREL_ICON : WREL_FLAT);
 	if (!img) {
 		wwarning(_("could not render texture for icon background"));
-		if (!entry->addr)
-			wTextureDestroy(vscr, *texture);
-
 		return 0;
 	}
-
-	RConvertImage(vscr->screen_ptr->rcontext, img, &pixmap);
 
 	if (w_global.tile.icon) {
 		reset = 1;
 		RReleaseImage(w_global.tile.icon);
-		XFreePixmap(dpy, vscr->screen_ptr->icon_tile_pixmap);
 	}
 
 	w_global.tile.icon = img;
@@ -2734,8 +2377,6 @@ static int setIconTile(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, 
 		w_global.tile.drawer= wDrawerMakeTile(vscr, img);
 	}
 
-	vscr->screen_ptr->icon_tile_pixmap = pixmap;
-
 	if (vscr->screen_ptr->def_icon_rimage) {
 		RReleaseImage(vscr->screen_ptr->def_icon_rimage);
 		vscr->screen_ptr->def_icon_rimage = NULL;
@@ -2744,22 +2385,36 @@ static int setIconTile(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, 
 	if (vscr->screen_ptr->icon_back_texture)
 		wTextureDestroy(vscr, (WTexture *) vscr->screen_ptr->icon_back_texture);
 
-	vscr->screen_ptr->icon_back_texture = wTextureMakeSolid(vscr, &((*texture)->any.color));
-
-	/* Free the texture as nobody else will use it, nor refer to it.  */
-	if (!entry->addr)
-		wTextureDestroy(vscr, *texture);
+	vscr->screen_ptr->icon_back_texture = wTextureMakeSolid(vscr, &(texture->any.color));
 
 	return (reset ? REFRESH_ICON_TILE : 0);
 }
 
-static int setWinTitleFont(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setWinTitleFont(virtual_screen *vscr)
 {
-	WMFont *font = tdata;
+	WMFont *font = NULL;
+	int fixedlen = sizeof(char *) * 5;
 
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) entry;
-	(void) foo;
+	/* We must have the font loaded, but... */
+	if (!wPreferences.font.wintitle) {
+		wPreferences.font.wintitle = wmalloc(fixedlen + sizeof(char *));
+		snprintf(wPreferences.font.wintitle, fixedlen, "fixed");
+	}
+
+	font = WMCreateFont(vscr->screen_ptr->wmscreen, wPreferences.font.wintitle);
+	if (!font) {
+		if (wPreferences.font.wintitle)
+			free(wPreferences.font.wintitle);
+
+		wPreferences.font.wintitle = wmalloc(fixedlen + sizeof(char *));
+		snprintf(wPreferences.font.wintitle, fixedlen, "fixed");
+		font = WMCreateFont(vscr->screen_ptr->wmscreen, wPreferences.font.wintitle);
+	}
+
+	if (!font) {
+		wfatal(_("could not load any usable font!!!"));
+		exit(1);
+	}
 
 	if (vscr->screen_ptr->title_font)
 		WMReleaseFont(vscr->screen_ptr->title_font);
@@ -2769,13 +2424,31 @@ static int setWinTitleFont(virtual_screen *vscr, WDefaultEntry *entry, void *tda
 	return REFRESH_WINDOW_FONT | REFRESH_BUTTON_IMAGES;
 }
 
-static int setMenuTitleFont(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setMenuTitleFont(virtual_screen *vscr)
 {
-	WMFont *font = tdata;
+	WMFont *font = NULL;
+	int fixedlen = sizeof(char *) * 5;
 
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) entry;
-	(void) foo;
+	/* We must have the font loaded, but... */
+	if (!wPreferences.font.menutitle) {
+		wPreferences.font.menutitle = wmalloc(fixedlen + sizeof(char *));
+		snprintf(wPreferences.font.menutitle, fixedlen, "fixed");
+	}
+
+	font = WMCreateFont(vscr->screen_ptr->wmscreen, wPreferences.font.menutitle);
+	if (!font) {
+		if (wPreferences.font.menutitle)
+			free(wPreferences.font.menutitle);
+
+		wPreferences.font.menutitle = wmalloc(fixedlen + sizeof(char *));
+		snprintf(wPreferences.font.menutitle, fixedlen, "fixed");
+		font = WMCreateFont(vscr->screen_ptr->wmscreen, wPreferences.font.menutitle);
+	}
+
+	if (!font) {
+		wfatal(_("could not load any usable font!!!"));
+		exit(1);
+	}
 
 	if (vscr->screen_ptr->menu_title_font)
 		WMReleaseFont(vscr->screen_ptr->menu_title_font);
@@ -2785,13 +2458,31 @@ static int setMenuTitleFont(virtual_screen *vscr, WDefaultEntry *entry, void *td
 	return REFRESH_MENU_TITLE_FONT;
 }
 
-static int setMenuTextFont(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setMenuTextFont(virtual_screen *vscr)
 {
-	WMFont *font = tdata;
+	WMFont *font = NULL;
+	int fixedlen = sizeof(char *) * 5;
 
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) entry;
-	(void) foo;
+	/* We must have the font loaded, but... */
+	if (!wPreferences.font.menutext) {
+		wPreferences.font.menutext = wmalloc(fixedlen + sizeof(char *));
+		snprintf(wPreferences.font.menutext, fixedlen, "fixed");
+	}
+
+	font = WMCreateFont(vscr->screen_ptr->wmscreen, wPreferences.font.menutext);
+	if (!font) {
+		if (wPreferences.font.menutext)
+			free(wPreferences.font.menutext);
+
+		wPreferences.font.menutext = wmalloc(fixedlen + sizeof(char *));
+		snprintf(wPreferences.font.menutext, fixedlen, "fixed");
+		font = WMCreateFont(vscr->screen_ptr->wmscreen, wPreferences.font.menutext);
+	}
+
+	if (!font) {
+		wfatal(_("could not load any usable font!!!"));
+		exit(1);
+	}
 
 	if (vscr->screen_ptr->menu_entry_font)
 		WMReleaseFont(vscr->screen_ptr->menu_entry_font);
@@ -2801,13 +2492,31 @@ static int setMenuTextFont(virtual_screen *vscr, WDefaultEntry *entry, void *tda
 	return REFRESH_MENU_FONT;
 }
 
-static int setIconTitleFont(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setIconTitleFont(virtual_screen *vscr)
 {
-	WMFont *font = tdata;
+	WMFont *font = NULL;
+	int fixedlen = sizeof(char *) * 5;
 
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) entry;
-	(void) foo;
+	/* We must have the font loaded, but... */
+	if (!wPreferences.font.icontitle) {
+		wPreferences.font.icontitle = wmalloc(fixedlen + sizeof(char *));
+		snprintf(wPreferences.font.icontitle, fixedlen, "fixed");
+	}
+
+	font = WMCreateFont(vscr->screen_ptr->wmscreen, wPreferences.font.icontitle);
+	if (!font) {
+		if (wPreferences.font.icontitle)
+			free(wPreferences.font.icontitle);
+
+		wPreferences.font.icontitle = wmalloc(fixedlen + sizeof(char *));
+		snprintf(wPreferences.font.icontitle, fixedlen, "fixed");
+		font = WMCreateFont(vscr->screen_ptr->wmscreen, wPreferences.font.icontitle);
+	}
+
+	if (!font) {
+		wfatal(_("could not load any usable font!!!"));
+		exit(1);
+	}
 
 	if (vscr->screen_ptr->icon_title_font)
 		WMReleaseFont(vscr->screen_ptr->icon_title_font);
@@ -2817,13 +2526,31 @@ static int setIconTitleFont(virtual_screen *vscr, WDefaultEntry *entry, void *td
 	return REFRESH_ICON_FONT;
 }
 
-static int setClipTitleFont(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setClipTitleFont(virtual_screen *vscr)
 {
-	WMFont *font = tdata;
+	WMFont *font = NULL;
+	int fixedlen = sizeof(char *) * 5;
 
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) entry;
-	(void) foo;
+	/* We must have the font loaded, but... */
+	if (!wPreferences.font.cliptitle) {
+		wPreferences.font.cliptitle = wmalloc(fixedlen + sizeof(char *));
+		snprintf(wPreferences.font.cliptitle, fixedlen, "fixed");
+	}
+
+	font = WMCreateFont(vscr->screen_ptr->wmscreen, wPreferences.font.cliptitle);
+	if (!font) {
+		if (wPreferences.font.cliptitle)
+			free(wPreferences.font.cliptitle);
+
+		wPreferences.font.cliptitle = wmalloc(fixedlen + sizeof(char *));
+		snprintf(wPreferences.font.cliptitle, fixedlen, "fixed");
+		font = WMCreateFont(vscr->screen_ptr->wmscreen, wPreferences.font.cliptitle);
+	}
+
+	if (!font) {
+		wfatal(_("could not load any usable font!!!"));
+		exit(1);
+	}
 
 	if (vscr->screen_ptr->clip_title_font)
 		WMReleaseFont(vscr->screen_ptr->clip_title_font);
@@ -2833,13 +2560,31 @@ static int setClipTitleFont(virtual_screen *vscr, WDefaultEntry *entry, void *td
 	return REFRESH_ICON_FONT;
 }
 
-static int setLargeDisplayFont(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setLargeDisplayFont(virtual_screen *vscr)
 {
-	WMFont *font = tdata;
+	WMFont *font = NULL;
+	int fixedlen = sizeof(char *) * 5;
 
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) entry;
-	(void) foo;
+	/* We must have the font loaded, but... */
+	if (!wPreferences.font.largedisplay) {
+		wPreferences.font.largedisplay = wmalloc(fixedlen + sizeof(char *));
+		snprintf(wPreferences.font.largedisplay, fixedlen, "fixed");
+	}
+
+	font = WMCreateFont(vscr->screen_ptr->wmscreen, wPreferences.font.largedisplay);
+	if (!font) {
+		if (wPreferences.font.largedisplay)
+			free(wPreferences.font.largedisplay);
+
+		wPreferences.font.largedisplay = wmalloc(fixedlen + sizeof(char *));
+		snprintf(wPreferences.font.largedisplay, fixedlen, "fixed");
+		font = WMCreateFont(vscr->screen_ptr->wmscreen, wPreferences.font.largedisplay);
+	}
+
+	if (!font) {
+		wfatal(_("could not load any usable font!!!"));
+		exit(1);
+	}
 
 	if (vscr->workspace.font_for_name)
 		WMReleaseFont(vscr->workspace.font_for_name);
@@ -2849,13 +2594,19 @@ static int setLargeDisplayFont(virtual_screen *vscr, WDefaultEntry *entry, void 
 	return 0;
 }
 
-static int setHightlight(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setHightlight(virtual_screen *vscr)
 {
-	XColor *color = tdata;
+	XColor clr, *color = NULL;
+	color = &clr;
 
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) entry;
-	(void) foo;
+	if (!wGetColor(vscr->screen_ptr, wPreferences.color.highlight->value, color)) {
+		wwarning(_("could not get color for key HighlightColor"));
+		wwarning(_("using default \"%s\" instead"), wPreferences.color.highlight->defvalue);
+		if (!wGetColor(vscr->screen_ptr, wPreferences.color.highlight->defvalue, color)) {
+			wwarning(_("could not get color for key HighlightColor"));
+			return False;
+		}
+	}
 
 	if (vscr->screen_ptr->select_color)
 		WMReleaseColor(vscr->screen_ptr->select_color);
@@ -2867,13 +2618,19 @@ static int setHightlight(virtual_screen *vscr, WDefaultEntry *entry, void *tdata
 	return REFRESH_MENU_COLOR;
 }
 
-static int setHightlightText(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setHightlightText(virtual_screen *vscr)
 {
-	XColor *color = tdata;
+	XColor clr, *color = NULL;
+	color = &clr;
 
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) entry;
-	(void) foo;
+	if (!wGetColor(vscr->screen_ptr, wPreferences.color.highlighttext->value, color)) {
+		wwarning(_("could not get color for key HighlightTextColor"));
+		wwarning(_("using default \"%s\" instead"), wPreferences.color.highlighttext->defvalue);
+		if (!wGetColor(vscr->screen_ptr, wPreferences.color.highlighttext->defvalue, color)) {
+			wwarning(_("could not get color for key HighlightTextColor"));
+			return False;
+		}
+	}
 
 	if (vscr->screen_ptr->select_text_color)
 		WMReleaseColor(vscr->screen_ptr->select_text_color);
@@ -2885,35 +2642,70 @@ static int setHightlightText(virtual_screen *vscr, WDefaultEntry *entry, void *t
 	return REFRESH_MENU_COLOR;
 }
 
-static int setClipTitleColor(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data)
+static int setClipTitleColor(virtual_screen *vscr)
 {
-	XColor *color = tdata;
-	long widx = (long) extra_data;
+	XColor clr, *color = NULL;
+	color = &clr;
 
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) entry;
+	if (!wGetColor(vscr->screen_ptr, wPreferences.color.cliptitle->value, color)) {
+		wwarning(_("could not get color for key ClipTitleColor"));
+		wwarning(_("using default \"%s\" instead"), wPreferences.color.cliptitle->defvalue);
+		if (!wGetColor(vscr->screen_ptr, wPreferences.color.cliptitle->defvalue, color)) {
+			wwarning(_("could not get color for key ClipTitleColor"));
+			return False;
+		}
+	}
 
-	if (vscr->screen_ptr->clip_title_color[widx])
-		WMReleaseColor(vscr->screen_ptr->clip_title_color[widx]);
+	if (vscr->screen_ptr->clip_title_color[CLIP_NORMAL])
+		WMReleaseColor(vscr->screen_ptr->clip_title_color[CLIP_NORMAL]);
 
-	vscr->screen_ptr->clip_title_color[widx] = WMCreateRGBColor(vscr->screen_ptr->wmscreen, color->red, color->green, color->blue, True);
+	vscr->screen_ptr->clip_title_color[CLIP_NORMAL] = WMCreateRGBColor(vscr->screen_ptr->wmscreen, color->red, color->green, color->blue, True);
 	wFreeColor(vscr->screen_ptr, color->pixel);
 
 	return REFRESH_ICON_TITLE_COLOR;
 }
 
-static int setWTitleColor(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data)
+static int setClipTitleColorCollapsed(virtual_screen *vscr)
 {
-	XColor *color = tdata;
-	long widx = (long) extra_data;
+	XColor clr, *color = NULL;
+	color = &clr;
 
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) entry;
+	if (!wGetColor(vscr->screen_ptr, wPreferences.color.cliptitlecollapsed->value, color)) {
+		wwarning(_("could not get color for key CClipTitleColor"));
+		wwarning(_("using default \"%s\" instead"), wPreferences.color.cliptitlecollapsed->defvalue);
+		if (!wGetColor(vscr->screen_ptr, wPreferences.color.cliptitlecollapsed->defvalue, color)) {
+			wwarning(_("could not get color for key CClipTitleColor"));
+			return False;
+		}
+	}
 
-	if (vscr->screen_ptr->window_title_color[widx])
-		WMReleaseColor(vscr->screen_ptr->window_title_color[widx]);
+	if (vscr->screen_ptr->clip_title_color[CLIP_COLLAPSED])
+		WMReleaseColor(vscr->screen_ptr->clip_title_color[CLIP_COLLAPSED]);
 
-	vscr->screen_ptr->window_title_color[widx] =
+	vscr->screen_ptr->clip_title_color[CLIP_COLLAPSED] = WMCreateRGBColor(vscr->screen_ptr->wmscreen, color->red, color->green, color->blue, True);
+	wFreeColor(vscr->screen_ptr, color->pixel);
+
+	return REFRESH_ICON_TITLE_COLOR;
+}
+
+static int setWTitleColorFocused(virtual_screen *vscr)
+{
+	XColor clr, *color = NULL;
+	color = &clr;
+
+	if (!wGetColor(vscr->screen_ptr, wPreferences.color.titlefocused->value, color)) {
+		wwarning(_("could not get color for key FTitleColor"));
+		wwarning(_("using default \"%s\" instead"), wPreferences.color.titlefocused->defvalue);
+		if (!wGetColor(vscr->screen_ptr, wPreferences.color.titlefocused->defvalue, color)) {
+			wwarning(_("could not get color for key FTitleColor"));
+			return False;
+		}
+	}
+
+	if (vscr->screen_ptr->window_title_color[WS_FOCUSED])
+		WMReleaseColor(vscr->screen_ptr->window_title_color[WS_FOCUSED]);
+
+	vscr->screen_ptr->window_title_color[WS_FOCUSED] =
 	    WMCreateRGBColor(vscr->screen_ptr->wmscreen, color->red, color->green, color->blue, True);
 
 	wFreeColor(vscr->screen_ptr, color->pixel);
@@ -2921,13 +2713,69 @@ static int setWTitleColor(virtual_screen *vscr, WDefaultEntry *entry, void *tdat
 	return REFRESH_WINDOW_TITLE_COLOR;
 }
 
-static int setMenuTitleColor(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data)
+static int setWTitleColorOwner(virtual_screen *vscr)
 {
-	XColor *color = tdata;
+	XColor clr, *color = NULL;
+	color = &clr;
 
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) entry;
-	(void) extra_data;
+	if (!wGetColor(vscr->screen_ptr, wPreferences.color.titleowner->value, color)) {
+		wwarning(_("could not get color for key PTitleColor"));
+		wwarning(_("using default \"%s\" instead"), wPreferences.color.titleowner->defvalue);
+		if (!wGetColor(vscr->screen_ptr, wPreferences.color.titleowner->defvalue, color)) {
+			wwarning(_("could not get color for key PTitleColor"));
+			return False;
+		}
+	}
+
+	if (vscr->screen_ptr->window_title_color[WS_PFOCUSED])
+		WMReleaseColor(vscr->screen_ptr->window_title_color[WS_PFOCUSED]);
+
+	vscr->screen_ptr->window_title_color[WS_PFOCUSED] =
+	    WMCreateRGBColor(vscr->screen_ptr->wmscreen, color->red, color->green, color->blue, True);
+
+	wFreeColor(vscr->screen_ptr, color->pixel);
+
+	return REFRESH_WINDOW_TITLE_COLOR;
+}
+
+static int setWTitleColorUnfocused(virtual_screen *vscr)
+{
+	XColor clr, *color = NULL;
+	color = &clr;
+
+	if (!wGetColor(vscr->screen_ptr, wPreferences.color.titleunfocused->value, color)) {
+		wwarning(_("could not get color for key UTitleColor"));
+		wwarning(_("using default \"%s\" instead"), wPreferences.color.titleunfocused->defvalue);
+		if (!wGetColor(vscr->screen_ptr, wPreferences.color.titleunfocused->defvalue, color)) {
+			wwarning(_("could not get color for key UTitleColor"));
+			return False;
+		}
+	}
+
+	if (vscr->screen_ptr->window_title_color[WS_UNFOCUSED])
+		WMReleaseColor(vscr->screen_ptr->window_title_color[WS_UNFOCUSED]);
+
+	vscr->screen_ptr->window_title_color[WS_UNFOCUSED] =
+	    WMCreateRGBColor(vscr->screen_ptr->wmscreen, color->red, color->green, color->blue, True);
+
+	wFreeColor(vscr->screen_ptr, color->pixel);
+
+	return REFRESH_WINDOW_TITLE_COLOR;
+}
+
+static int setMenuTitleColor(virtual_screen *vscr)
+{
+	XColor clr, *color = NULL;
+	color = &clr;
+
+	if (!wGetColor(vscr->screen_ptr, wPreferences.color.menutitle->value, color)) {
+		wwarning(_("could not get color for key MenuTitleColor"));
+		wwarning(_("using default \"%s\" instead"), wPreferences.color.menutitle->defvalue);
+		if (!wGetColor(vscr->screen_ptr, wPreferences.color.menutitle->defvalue, color)) {
+			wwarning(_("could not get color for key MenuTitleColor"));
+			return False;
+		}
+	}
 
 	if (vscr->screen_ptr->menu_title_color[0])
 		WMReleaseColor(vscr->screen_ptr->menu_title_color[0]);
@@ -2939,13 +2787,19 @@ static int setMenuTitleColor(virtual_screen *vscr, WDefaultEntry *entry, void *t
 	return REFRESH_MENU_TITLE_COLOR;
 }
 
-static int setMenuTextColor(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setMenuTextColor(virtual_screen *vscr)
 {
-	XColor *color = tdata;
+	XColor clr, *color = NULL;
+	color = &clr;
 
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) entry;
-	(void) foo;
+	if (!wGetColor(vscr->screen_ptr, wPreferences.color.menutext->value, color)) {
+		wwarning(_("could not get color for key MenuTextColor"));
+		wwarning(_("using default \"%s\" instead"), wPreferences.color.menutext->defvalue);
+		if (!wGetColor(vscr->screen_ptr, wPreferences.color.menutext->defvalue, color)) {
+			wwarning(_("could not get color for key MenuTextColor"));
+			return False;
+		}
+	}
 
 	if (vscr->screen_ptr->mtext_color)
 		WMReleaseColor(vscr->screen_ptr->mtext_color);
@@ -2962,13 +2816,19 @@ static int setMenuTextColor(virtual_screen *vscr, WDefaultEntry *entry, void *td
 	return REFRESH_MENU_COLOR;
 }
 
-static int setMenuDisabledColor(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setMenuDisabledColor(virtual_screen *vscr)
 {
-	XColor *color = tdata;
+	XColor clr, *color = NULL;
+	color = &clr;
 
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) entry;
-	(void) foo;
+	if (!wGetColor(vscr->screen_ptr, wPreferences.color.menudisabled->value, color)) {
+		wwarning(_("could not get color for key MenuDisabledColor"));
+		wwarning(_("using default \"%s\" instead"), wPreferences.color.menudisabled->defvalue);
+		if (!wGetColor(vscr->screen_ptr, wPreferences.color.menudisabled->defvalue, color)) {
+			wwarning(_("could not get color for key MenuDisabledColor"));
+			return False;
+		}
+	}
 
 	if (vscr->screen_ptr->dtext_color)
 		WMReleaseColor(vscr->screen_ptr->dtext_color);
@@ -2985,13 +2845,19 @@ static int setMenuDisabledColor(virtual_screen *vscr, WDefaultEntry *entry, void
 	return REFRESH_MENU_COLOR;
 }
 
-static int setIconTitleColor(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setIconTitleColor(virtual_screen *vscr)
 {
-	XColor *color = tdata;
+	XColor clr, *color = NULL;
+	color = &clr;
 
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) entry;
-	(void) foo;
+	if (!wGetColor(vscr->screen_ptr, wPreferences.color.icontitle->value, color)) {
+		wwarning(_("could not get color for key IconTitleColor"));
+		wwarning(_("using default \"%s\" instead"), wPreferences.color.icontitle->defvalue);
+		if (!wGetColor(vscr->screen_ptr, wPreferences.color.icontitle->defvalue, color)) {
+			wwarning(_("could not get color for key IconTitleColor"));
+			return False;
+		}
+	}
 
 	if (vscr->screen_ptr->icon_title_color)
 		WMReleaseColor(vscr->screen_ptr->icon_title_color);
@@ -3003,13 +2869,19 @@ static int setIconTitleColor(virtual_screen *vscr, WDefaultEntry *entry, void *t
 	return REFRESH_ICON_TITLE_COLOR;
 }
 
-static int setIconTitleBack(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setIconTitleBack(virtual_screen *vscr)
 {
-	XColor *color = tdata;
+	XColor clr, *color = NULL;
+	color = &clr;
 
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) entry;
-	(void) foo;
+	if (!wGetColor(vscr->screen_ptr, wPreferences.color.icontitleback->value, color)) {
+		wwarning(_("could not get color for key IconTitleBack"));
+		wwarning(_("using default \"%s\" instead"), wPreferences.color.icontitleback->defvalue);
+		if (!wGetColor(vscr->screen_ptr, wPreferences.color.icontitleback->defvalue, color)) {
+			wwarning(_("could not get color for key IconTitleBack"));
+			return False;
+		}
+	}
 
 	if (vscr->screen_ptr->icon_title_texture)
 		wTextureDestroy(vscr, (WTexture *) vscr->screen_ptr->icon_title_texture);
@@ -3019,26 +2891,26 @@ static int setIconTitleBack(virtual_screen *vscr, WDefaultEntry *entry, void *td
 	return REFRESH_ICON_TITLE_BACK;
 }
 
-static int setFrameBorderWidth(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setFrameBorderWidth(virtual_screen *vscr)
 {
-	int *value = tdata;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) entry;
-	(void) foo;
-
-	vscr->screen_ptr->frame_border_width = *value;
+	vscr->frame.border_width = wPreferences.border_width;
 
 	return REFRESH_FRAME_BORDER;
 }
 
-static int setFrameBorderColor(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setFrameBorderColor(virtual_screen *vscr)
 {
-	XColor *color = tdata;
+	XColor clr, *color = NULL;
+	color = &clr;
 
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) entry;
-	(void) foo;
+	if (!wGetColor(vscr->screen_ptr, wPreferences.color.frameborder->value, color)) {
+		wwarning(_("could not get color for key FrameBorderColor"));
+		wwarning(_("using default \"%s\" instead"), wPreferences.color.frameborder->defvalue);
+		if (!wGetColor(vscr->screen_ptr, wPreferences.color.frameborder->defvalue, color)) {
+			wwarning(_("could not get color for key FrameBorderColor"));
+			return False;
+		}
+	}
 
 	if (vscr->screen_ptr->frame_border_color)
 		WMReleaseColor(vscr->screen_ptr->frame_border_color);
@@ -3050,13 +2922,19 @@ static int setFrameBorderColor(virtual_screen *vscr, WDefaultEntry *entry, void 
 	return REFRESH_FRAME_BORDER;
 }
 
-static int setFrameFocusedBorderColor(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setFrameFocusedBorderColor(virtual_screen *vscr)
 {
-	XColor *color = tdata;
+	XColor clr, *color = NULL;
+	color = &clr;
 
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) entry;
-	(void) foo;
+	if (!wGetColor(vscr->screen_ptr, wPreferences.color.frameborderfocused->value, color)) {
+		wwarning(_("could not get color for key FrameFocusedBorderColor"));
+		wwarning(_("using default \"%s\" instead"), wPreferences.color.frameborderfocused->defvalue);
+		if (!wGetColor(vscr->screen_ptr, wPreferences.color.frameborderfocused->defvalue, color)) {
+			wwarning(_("could not get color for key FrameFocusedBorderColor"));
+			return False;
+		}
+	}
 
 	if (vscr->screen_ptr->frame_focused_border_color)
 		WMReleaseColor(vscr->screen_ptr->frame_focused_border_color);
@@ -3068,13 +2946,19 @@ static int setFrameFocusedBorderColor(virtual_screen *vscr, WDefaultEntry *entry
 	return REFRESH_FRAME_BORDER;
 }
 
-static int setFrameSelectedBorderColor(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setFrameSelectedBorderColor(virtual_screen *vscr)
 {
-	XColor *color = tdata;
+	XColor clr, *color = NULL;
+	color = &clr;
 
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) entry;
-	(void) foo;
+	if (!wGetColor(vscr->screen_ptr, wPreferences.color.frameborderselected->value, color)) {
+		wwarning(_("could not get color for key FrameSelectedBorderColor"));
+		wwarning(_("using default \"%s\" instead"), wPreferences.color.frameborderselected->defvalue);
+		if (!wGetColor(vscr->screen_ptr, wPreferences.color.frameborderselected->defvalue, color)) {
+			wwarning(_("could not get color for key FrameSelectedBorderColor"));
+			return False;
+		}
+	}
 
 	if (vscr->screen_ptr->frame_selected_border_color)
 		WMReleaseColor(vscr->screen_ptr->frame_selected_border_color);
@@ -3086,16 +2970,37 @@ static int setFrameSelectedBorderColor(virtual_screen *vscr, WDefaultEntry *entr
 	return REFRESH_FRAME_BORDER;
 }
 
-static int setWorkspaceSpecificBack(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *bar)
+static int setWorkspaceSpecificBack(virtual_screen *vscr)
 {
-	WMPropList *value = tdata;
+	WMPropList *value;
 	WMPropList *val;
 	char *str;
 	int i;
 
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) entry;
-	(void) bar;
+#ifdef notworking
+	/*
+	 * I moved this code here to update these functions, probably holding
+	 * the default value in the wPreferences struct, changing the WMPropList
+	 * workspacespecificback to a defstructpl, with the value and the default
+	 * value. TODO. kix.
+	 */
+	/*
+	 * Kluge to force wmsetbg helper to set the default background.
+	 * If the WorkspaceSpecificBack is changed once wmaker has started,
+	 * the WorkspaceBack won't be sent to the helper, unless the user
+	 * changes it's value too. So, we must force this by removing the
+	 * value from the defaults DB.
+	 */
+	if (!scr->flags.backimage_helper_launched && !scr->flags.startup) {
+		WMPropList *key = WMCreatePLString("WorkspaceBack");
+
+		WMRemoveFromPLDictionary(w_global.domain.wmaker->dictionary, key);
+
+		WMReleasePropList(key);
+	}
+#endif
+
+	value = wPreferences.workspacespecificback;
 
 	if (vscr->screen_ptr->flags.backimage_helper_launched) {
 		if (WMGetPropListItemCount(value) == 0) {
@@ -3134,13 +3039,9 @@ static int setWorkspaceSpecificBack(virtual_screen *vscr, WDefaultEntry *entry, 
 	return 0;
 }
 
-static int setWorkspaceBack(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *bar)
+static int setWorkspaceBack(virtual_screen *vscr)
 {
-	WMPropList *value = tdata;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) entry;
-	(void) bar;
+	WMPropList *value = wPreferences.workspacespecificback;
 
 	if (vscr->screen_ptr->flags.backimage_helper_launched) {
 		char *str;
@@ -3187,13 +3088,9 @@ static int setWorkspaceBack(virtual_screen *vscr, WDefaultEntry *entry, void *td
 	return 0;
 }
 
-static int setWidgetColor(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setWidgetColor(virtual_screen *vscr)
 {
-	WTexture **texture = tdata;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) entry;
-	(void) foo;
+	WTexture *texture = get_texture_from_defstruct(vscr, wPreferences.texture.widgetcolor);
 
 	if (vscr->screen_ptr->widget_texture)
 		wTextureDestroy(vscr, (WTexture *) vscr->screen_ptr->widget_texture);
@@ -3203,187 +3100,2007 @@ static int setWidgetColor(virtual_screen *vscr, WDefaultEntry *entry, void *tdat
 	return 0;
 }
 
-static int setFTitleBack(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setFTitleBack(virtual_screen *vscr)
 {
-	WTexture **texture = tdata;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) entry;
-	(void) foo;
+	WTexture *texture = get_texture_from_defstruct(vscr, wPreferences.texture.titlebackfocused);
 
 	if (vscr->screen_ptr->window_title_texture[WS_FOCUSED])
 		wTextureDestroy(vscr, vscr->screen_ptr->window_title_texture[WS_FOCUSED]);
 
-	vscr->screen_ptr->window_title_texture[WS_FOCUSED] = *texture;
+	vscr->screen_ptr->window_title_texture[WS_FOCUSED] = texture;
 
 	return REFRESH_WINDOW_TEXTURES;
 }
 
-static int setPTitleBack(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setPTitleBack(virtual_screen *vscr)
 {
-	WTexture **texture = tdata;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) entry;
-	(void) foo;
+	WTexture *texture = get_texture_from_defstruct(vscr, wPreferences.texture.titlebackowner);
 
 	if (vscr->screen_ptr->window_title_texture[WS_PFOCUSED])
 		wTextureDestroy(vscr, vscr->screen_ptr->window_title_texture[WS_PFOCUSED]);
 
-	vscr->screen_ptr->window_title_texture[WS_PFOCUSED] = *texture;
+	vscr->screen_ptr->window_title_texture[WS_PFOCUSED] = texture;
 
 	return REFRESH_WINDOW_TEXTURES;
 }
 
-static int setUTitleBack(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setUTitleBack(virtual_screen *vscr)
 {
-	WTexture **texture = tdata;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) entry;
-	(void) foo;
+	WTexture *texture = get_texture_from_defstruct(vscr, wPreferences.texture.titlebackunfocused);
 
 	if (vscr->screen_ptr->window_title_texture[WS_UNFOCUSED])
 		wTextureDestroy(vscr, vscr->screen_ptr->window_title_texture[WS_UNFOCUSED]);
 
-	vscr->screen_ptr->window_title_texture[WS_UNFOCUSED] = *texture;
+	vscr->screen_ptr->window_title_texture[WS_UNFOCUSED] = texture;
 
 	return REFRESH_WINDOW_TEXTURES;
 }
 
-static int setResizebarBack(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setResizebarBack(virtual_screen *vscr)
 {
-	WTexture **texture = tdata;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) entry;
-	(void) foo;
+	WTexture *texture = get_texture_from_defstruct(vscr, wPreferences.texture.resizebarback);
 
 	if (vscr->screen_ptr->resizebar_texture[0])
 		wTextureDestroy(vscr, vscr->screen_ptr->resizebar_texture[0]);
 
-	vscr->screen_ptr->resizebar_texture[0] = *texture;
+	vscr->screen_ptr->resizebar_texture[0] = texture;
 
 	return REFRESH_WINDOW_TEXTURES;
 }
 
-static int setMenuTitleBack(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setMenuTitleBack(virtual_screen *vscr)
 {
-	WTexture **texture = tdata;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) entry;
-	(void) foo;
+	WTexture *texture = get_texture_from_defstruct(vscr, wPreferences.texture.menutitleback);
 
 	if (vscr->screen_ptr->menu_title_texture[0])
 		wTextureDestroy(vscr, vscr->screen_ptr->menu_title_texture[0]);
 
-	vscr->screen_ptr->menu_title_texture[0] = *texture;
+	vscr->screen_ptr->menu_title_texture[0] = texture;
 
 	return REFRESH_MENU_TITLE_TEXTURE;
 }
 
-static int setMenuTextBack(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setMenuTextBack(virtual_screen *vscr)
 {
-	WTexture **texture = tdata;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) entry;
-	(void) foo;
+	WTexture *texture = get_texture_from_defstruct(vscr, wPreferences.texture.menutextback);
 
 	if (vscr->screen_ptr->menu_item_texture) {
 		wTextureDestroy(vscr, vscr->screen_ptr->menu_item_texture);
 		wTextureDestroy(vscr, (WTexture *) vscr->screen_ptr->menu_item_auxtexture);
 	}
 
-	vscr->screen_ptr->menu_item_texture = *texture;
+	vscr->screen_ptr->menu_item_texture = texture;
 	vscr->screen_ptr->menu_item_auxtexture = wTextureMakeSolid(vscr, &vscr->screen_ptr->menu_item_texture->any.color);
 
 	return REFRESH_MENU_TEXTURE;
 }
 
-static int setKeyGrab(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data)
+static void set_keygrab(WShortKey *shortcut, char *value)
 {
-	WShortKey *shortcut = tdata;
+	char buf[MAX_SHORTCUT_LENGTH];
+	KeySym ksym;
+	char *k, *b;
+	int mod, error = 0;
+
+	wstrlcpy(buf, value, MAX_SHORTCUT_LENGTH);
+
+	if ((strlen(value) == 0) || (strcasecmp(value, "NONE") == 0)) {
+		shortcut->keycode = 0;
+		shortcut->modifier = 0;
+	} else {
+
+		b = buf;
+
+		/* get modifiers */
+		shortcut->modifier = 0;
+		while ((!error) && ((k = strchr(b, '+')) != NULL)) {
+			*k = 0;
+			mod = wXModifierFromKey(b);
+			if (mod < 0) {
+				wwarning(_("Invalid key modifier \"%s\""), b);
+				error = 1;
+			}
+			shortcut->modifier |= mod;
+
+			b = k + 1;
+		}
+
+		if (!error) {
+			/* get key */
+			ksym = XStringToKeysym(b);
+
+			if (ksym == NoSymbol) {
+				wwarning(_("Invalid kbd shortcut specification \"%s\""), value);
+				error = 1;
+			}
+
+			if (!error) {
+				shortcut->keycode = XKeysymToKeycode(dpy, ksym);
+				if (shortcut->keycode == 0) {
+					wwarning(_("Invalid key in shortcut \"%s\""), value);
+					error = 1;
+				}
+			}
+		}
+	}
+}
+
+static int setKeyGrab_rootmenu(virtual_screen *vscr)
+{
+	WShortKey shortcut;
 	WWindow *wwin;
-	long widx = (long) extra_data;
+	char *value;
 
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) entry;
+	value = wPreferences.key.rootmenu;
 
-	wKeyBindings[widx] = *shortcut;
-
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_ROOTMENU] = shortcut;
 	wwin = vscr->window.focused;
 
 	while (wwin != NULL) {
 		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-
 		if (!WFLAGP(wwin, no_bind_keys))
 			wWindowSetKeyGrabs(wwin);
 
 		wwin = wwin->prev;
 	}
 
-	/* do we need to update window menus? */
-	if (widx >= WKBD_WORKSPACE1 && widx <= WKBD_WORKSPACE10)
-		return REFRESH_WORKSPACE_MENU;
-	if (widx == WKBD_LASTWORKSPACE)
-		return REFRESH_WORKSPACE_MENU;
-	if (widx >= WKBD_MOVE_WORKSPACE1 && widx <= WKBD_MOVE_WORKSPACE10)
-		return REFRESH_WORKSPACE_MENU;
+	return 0;
+}
+
+static int setKeyGrab_windowlist(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.windowlist;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_WINDOWLIST] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
 
 	return 0;
 }
 
-static int setIconPosition(virtual_screen *vscr, WDefaultEntry *entry, void *bar, void *foo)
+static int setKeyGrab_windowmenu(virtual_screen *vscr)
 {
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) entry;
-	(void) bar;
-	(void) foo;
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
 
-	wScreenUpdateUsableArea(vscr);
-	wArrangeIcons(vscr, True);
+	value = wPreferences.key.windowmenu;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_WINDOWMENU] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
 
 	return 0;
 }
 
-static int updateUsableArea(virtual_screen *vscr, WDefaultEntry *entry, void *bar, void *foo)
+static int setKeyGrab_dockraiselower(virtual_screen *vscr)
 {
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) entry;
-	(void) bar;
-	(void) foo;
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
 
-	wScreenUpdateUsableArea(vscr);
+	value = wPreferences.key.dockraiselower;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_DOCKRAISELOWER] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
 
 	return 0;
 }
 
-static int setWorkspaceMapBackground(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setKeyGrab_clipraiselower(virtual_screen *vscr)
 {
-	WTexture **texture = tdata;
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
 
+	value = wPreferences.key.clipraiselower;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_CLIPRAISELOWER] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_miniaturize(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.miniaturize;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_MINIATURIZE] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_minimizeall(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.minimizeall;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_MINIMIZEALL] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_hide(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.hide;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_HIDE] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_hideothers(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.hideothers;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_HIDE_OTHERS] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_moveresize(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.moveresize;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_MOVERESIZE] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_close(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.close;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_CLOSE] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_maximize(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.maximize;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_MAXIMIZE] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_maximizev(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.maximizev;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_VMAXIMIZE] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_maximizeh(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.maximizeh;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_HMAXIMIZE] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_maximizelh(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.maximizelh;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_LHMAXIMIZE] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_maximizerh(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.maximizerh;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_RHMAXIMIZE] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_maximizeth(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.maximizeth;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_THMAXIMIZE] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_maximizebh(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.maximizebh;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_BHMAXIMIZE] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_maximizeltc(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.maximizeltc;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_LTCMAXIMIZE] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_maximizertc(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.maximizertc;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_RTCMAXIMIZE] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_maximizelbc(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.maximizelbc;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_LBCMAXIMIZE] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_maximizerbc(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.maximizerbc;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_RBCMAXIMIZE] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_maximus(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.maximus;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_MAXIMUS] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_keepontop(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.keepontop;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_KEEP_ON_TOP] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_keepatbottom(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.keepatbottom;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_KEEP_AT_BOTTOM] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_omnipresent(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.omnipresent;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_OMNIPRESENT] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_raise(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.raise;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_RAISE] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_lower(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.lower;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_LOWER] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_raiselower(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.raiselower;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_RAISELOWER] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_shade(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.shade;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_SHADE] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_select(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.select;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_SELECT] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_workspacemap(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.workspacemap;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_WORKSPACEMAP] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_focusnext(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.focusnext;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_FOCUSNEXT] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_focusprev(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.focusprev;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_FOCUSPREV] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_groupnext(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.groupnext;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_GROUPNEXT] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_groupprev(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.groupprev;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_GROUPPREV] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_workspacenext(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.workspacenext;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_NEXTWORKSPACE] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_workspaceprev(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.workspaceprev;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_PREVWORKSPACE] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_workspacelast(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.workspacelast;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_LASTWORKSPACE] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	/* Refresh Workspace Menu, if opened */
+	return REFRESH_WORKSPACE_MENU;
+}
+
+static int setKeyGrab_workspacelayernext(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.workspacelayernext;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_NEXTWSLAYER] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_workspacelayerprev(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.workspacelayerprev;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_PREVWSLAYER] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_workspace1(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.workspace1;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_WORKSPACE1] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return REFRESH_WORKSPACE_MENU;
+}
+
+static int setKeyGrab_workspace2(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.workspace2;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_WORKSPACE2] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return REFRESH_WORKSPACE_MENU;
+}
+
+static int setKeyGrab_workspace3(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.workspace3;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_WORKSPACE3] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return REFRESH_WORKSPACE_MENU;
+}
+
+static int setKeyGrab_workspace4(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.workspace4;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_WORKSPACE4] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return REFRESH_WORKSPACE_MENU;
+}
+
+static int setKeyGrab_workspace5(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.workspace5;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_WORKSPACE5] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return REFRESH_WORKSPACE_MENU;
+}
+
+static int setKeyGrab_workspace6(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.workspace6;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_WORKSPACE6] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return REFRESH_WORKSPACE_MENU;
+}
+
+static int setKeyGrab_workspace7(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.workspace7;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_WORKSPACE7] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return REFRESH_WORKSPACE_MENU;
+}
+
+static int setKeyGrab_workspace8(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.workspace8;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_WORKSPACE8] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return REFRESH_WORKSPACE_MENU;
+}
+
+static int setKeyGrab_workspace9(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.workspace9;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_WORKSPACE9] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return REFRESH_WORKSPACE_MENU;
+}
+
+static int setKeyGrab_workspace10(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.workspace10;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_WORKSPACE10] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return REFRESH_WORKSPACE_MENU;
+}
+
+static int setKeyGrab_movetoworkspace1(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.movetoworkspace1;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_MOVE_WORKSPACE1] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return REFRESH_WORKSPACE_MENU;
+}
+
+static int setKeyGrab_movetoworkspace2(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.movetoworkspace2;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_MOVE_WORKSPACE2] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return REFRESH_WORKSPACE_MENU;
+}
+
+static int setKeyGrab_movetoworkspace3(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.movetoworkspace3;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_MOVE_WORKSPACE3] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return REFRESH_WORKSPACE_MENU;
+}
+
+static int setKeyGrab_movetoworkspace4(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.movetoworkspace4;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_MOVE_WORKSPACE4] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return REFRESH_WORKSPACE_MENU;
+}
+
+static int setKeyGrab_movetoworkspace5(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.movetoworkspace5;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_MOVE_WORKSPACE5] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return REFRESH_WORKSPACE_MENU;
+}
+
+static int setKeyGrab_movetoworkspace6(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.movetoworkspace6;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_MOVE_WORKSPACE6] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return REFRESH_WORKSPACE_MENU;
+}
+
+static int setKeyGrab_movetoworkspace7(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.movetoworkspace7;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_MOVE_WORKSPACE7] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return REFRESH_WORKSPACE_MENU;
+}
+
+static int setKeyGrab_movetoworkspace8(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.movetoworkspace8;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_MOVE_WORKSPACE8] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return REFRESH_WORKSPACE_MENU;
+}
+
+static int setKeyGrab_movetoworkspace9(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.movetoworkspace9;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_MOVE_WORKSPACE9] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return REFRESH_WORKSPACE_MENU;
+}
+
+static int setKeyGrab_movetoworkspace10(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.movetoworkspace10;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_MOVE_WORKSPACE10] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return REFRESH_WORKSPACE_MENU;
+}
+
+static int setKeyGrab_movetonextworkspace(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.movetonextworkspace;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_MOVE_NEXTWORKSPACE] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_movetoprevworkspace(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.movetoprevworkspace;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_MOVE_PREVWORKSPACE] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_movetolastworkspace(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.movetolastworkspace;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_MOVE_LASTWORKSPACE] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_movetonextworkspacelayer(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.movetonextworkspace;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_MOVE_NEXTWSLAYER] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_movetoprevworkspacelayer(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.movetoprevworkspace;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_MOVE_PREVWSLAYER] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_windowshortcut1(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.windowshortcut1;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_WINDOW1] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_windowshortcut2(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.windowshortcut2;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_WINDOW2] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_windowshortcut3(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.windowshortcut3;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_WINDOW3] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_windowshortcut4(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.windowshortcut4;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_WINDOW4] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_windowshortcut5(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.windowshortcut5;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_WINDOW5] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_windowshortcut6(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.windowshortcut6;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_WINDOW6] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_windowshortcut7(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.windowshortcut7;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_WINDOW7] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_windowshortcut8(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.windowshortcut8;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_WINDOW8] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_windowshortcut9(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.windowshortcut9;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_WINDOW9] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_windowshortcut10(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.windowshortcut10;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_WINDOW10] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_windowrelaunch(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.windowrelaunch;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_RELAUNCH] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_screenswitch(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.screenswitch;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_SWITCH_SCREEN] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_run(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.run;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_RUN] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+#ifdef KEEP_XKB_LOCK_STATUS
+static int setKeyGrab_togglekbdmode(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.togglekbdmode;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_TOGGLE] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+#endif
+
+static int setIconPosition(virtual_screen *vscr)
+{
 	/* Parameter not used, but tell the compiler that it is ok */
-	(void) entry;
-	(void) foo;
+	(void) vscr;
+
+	return REFRESH_ARRANGE_ICONS;
+}
+
+static int updateUsableArea(virtual_screen *vscr)
+{
+	/* Parameter not used, but tell the compiler that it is ok */
+	(void) vscr;
+
+	return REFRESH_USABLE_AREA;
+}
+
+static int setWorkspaceMapBackground(virtual_screen *vscr)
+{
+	WTexture *texture = get_texture_from_defstruct(vscr, wPreferences.texture.workspacemapback);
 
 	if (wPreferences.wsmbackTexture)
 		wTextureDestroy(vscr, wPreferences.wsmbackTexture);
 
-	wPreferences.wsmbackTexture = *texture;
+	wPreferences.wsmbackTexture = texture;
 
 	return REFRESH_WINDOW_TEXTURES;
 }
 
 
-static int setMenuStyle(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setMenuStyle(virtual_screen *vscr)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) vscr;
-	(void) entry;
-	(void) tdata;
-	(void) foo;
 
 	return REFRESH_MENU_TEXTURE;
 }
@@ -3397,18 +5114,19 @@ static RImage *chopOffImage(RImage *image, int x, int y, int w, int h)
 	return img;
 }
 
-static int setSwPOptions(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setSwPOptions(virtual_screen *vscr)
 {
-	WMPropList *array = tdata;
+	WMPropList *array;
 	char *path;
 	RImage *bgimage;
 	int cwidth, cheight;
-	struct WPreferences *prefs = foo;
+
+	array = wPreferences.sp_options;
 
 	if (!WMIsPLArray(array) || WMGetPropListItemCount(array) == 0) {
-		if (prefs->swtileImage)
-			RReleaseImage(prefs->swtileImage);
-		prefs->swtileImage = NULL;
+		if (wPreferences.swtileImage)
+			RReleaseImage(wPreferences.swtileImage);
+		wPreferences.swtileImage = NULL;
 
 		WMReleasePropList(array);
 		return 0;
@@ -3417,18 +5135,18 @@ static int setSwPOptions(virtual_screen *vscr, WDefaultEntry *entry, void *tdata
 	switch (WMGetPropListItemCount(array)) {
 	case 4:
 		if (!WMIsPLString(WMGetFromPLArray(array, 1))) {
-			wwarning(_("Invalid arguments for option \"%s\""), entry->key);
+			wwarning(_("Invalid arguments for option SwitchPanelImages"));
 			break;
 		} else
 			path = FindImage(wPreferences.pixmap_path, WMGetFromPLString(WMGetFromPLArray(array, 1)));
 
 		if (!path) {
-			wwarning(_("Could not find image \"%s\" for option \"%s\""),
-				 WMGetFromPLString(WMGetFromPLArray(array, 1)), entry->key);
+			wwarning(_("Could not find image \"%s\" for option SwitchPanelImages"),
+				 WMGetFromPLString(WMGetFromPLArray(array, 1)));
 		} else {
 			bgimage = RLoadImage(vscr->screen_ptr->rcontext, path, 0);
 			if (!bgimage) {
-				wwarning(_("Could not load image \"%s\" for option \"%s\""), path, entry->key);
+				wwarning(_("Could not load image \"%s\" for option SwitchPanelImages"), path);
 				wfree(path);
 			} else {
 				wfree(path);
@@ -3443,38 +5161,39 @@ static int setSwPOptions(virtual_screen *vscr, WDefaultEntry *entry, void *tdata
 					int i;
 					int swidth, theight;
 					for (i = 0; i < 9; i++) {
-						if (prefs->swbackImage[i])
-							RReleaseImage(prefs->swbackImage[i]);
-						prefs->swbackImage[i] = NULL;
+						if (wPreferences.swbackImage[i])
+							RReleaseImage(wPreferences.swbackImage[i]);
+
+						wPreferences.swbackImage[i] = NULL;
 					}
 					swidth = (bgimage->width - cwidth) / 2;
 					theight = (bgimage->height - cheight) / 2;
 
-					prefs->swbackImage[0] = chopOffImage(bgimage, 0, 0, swidth, theight);
-					prefs->swbackImage[1] = chopOffImage(bgimage, swidth, 0, cwidth, theight);
-					prefs->swbackImage[2] = chopOffImage(bgimage, swidth + cwidth, 0,
+					wPreferences.swbackImage[0] = chopOffImage(bgimage, 0, 0, swidth, theight);
+					wPreferences.swbackImage[1] = chopOffImage(bgimage, swidth, 0, cwidth, theight);
+					wPreferences.swbackImage[2] = chopOffImage(bgimage, swidth + cwidth, 0,
 									     swidth, theight);
 
-					prefs->swbackImage[3] = chopOffImage(bgimage, 0, theight, swidth, cheight);
-					prefs->swbackImage[4] = chopOffImage(bgimage, swidth, theight,
+					wPreferences.swbackImage[3] = chopOffImage(bgimage, 0, theight, swidth, cheight);
+					wPreferences.swbackImage[4] = chopOffImage(bgimage, swidth, theight,
 									     cwidth, cheight);
-					prefs->swbackImage[5] = chopOffImage(bgimage, swidth + cwidth, theight,
+					wPreferences.swbackImage[5] = chopOffImage(bgimage, swidth + cwidth, theight,
 									     swidth, cheight);
 
-					prefs->swbackImage[6] = chopOffImage(bgimage, 0, theight + cheight,
+					wPreferences.swbackImage[6] = chopOffImage(bgimage, 0, theight + cheight,
 									     swidth, theight);
-					prefs->swbackImage[7] = chopOffImage(bgimage, swidth, theight + cheight,
+					wPreferences.swbackImage[7] = chopOffImage(bgimage, swidth, theight + cheight,
 									     cwidth, theight);
-					prefs->swbackImage[8] =
+					wPreferences.swbackImage[8] =
 					    chopOffImage(bgimage, swidth + cwidth, theight + cheight, swidth,
 							 theight);
 
 					// check if anything failed
 					for (i = 0; i < 9; i++) {
-						if (!prefs->swbackImage[i]) {
+						if (!wPreferences.swbackImage[i]) {
 							for (; i >= 0; --i) {
-								RReleaseImage(prefs->swbackImage[i]);
-								prefs->swbackImage[i] = NULL;
+								RReleaseImage(wPreferences.swbackImage[i]);
+								wPreferences.swbackImage[i] = NULL;
 							}
 							break;
 						}
@@ -3486,29 +5205,29 @@ static int setSwPOptions(virtual_screen *vscr, WDefaultEntry *entry, void *tdata
 		/* Falls through */
 	case 1:
 		if (!WMIsPLString(WMGetFromPLArray(array, 0))) {
-			wwarning(_("Invalid arguments for option \"%s\""), entry->key);
+			wwarning(_("Invalid arguments for option SwitchPanelImages"));
 			break;
 		} else {
 			path = FindImage(wPreferences.pixmap_path, WMGetFromPLString(WMGetFromPLArray(array, 0)));
 		}
 
 		if (!path) {
-			wwarning(_("Could not find image \"%s\" for option \"%s\""),
-				 WMGetFromPLString(WMGetFromPLArray(array, 0)), entry->key);
+			wwarning(_("Could not find image \"%s\" for option SwitchPanelImages"),
+				 WMGetFromPLString(WMGetFromPLArray(array, 0)));
 		} else {
-			if (prefs->swtileImage)
-				RReleaseImage(prefs->swtileImage);
+			if (wPreferences.swtileImage)
+				RReleaseImage(wPreferences.swtileImage);
 
-			prefs->swtileImage = RLoadImage(vscr->screen_ptr->rcontext, path, 0);
-			if (!prefs->swtileImage)
-				wwarning(_("Could not load image \"%s\" for option \"%s\""), path, entry->key);
+			wPreferences.swtileImage = RLoadImage(vscr->screen_ptr->rcontext, path, 0);
+			if (!wPreferences.swtileImage)
+				wwarning(_("Could not load image \"%s\" for option SwitchPanelImages"), path);
 
 			wfree(path);
 		}
 		break;
 
 	default:
-		wwarning(_("Invalid number of arguments for option \"%s\""), entry->key);
+		wwarning(_("Invalid number of arguments for option SwitchPanelImages"));
 		break;
 	}
 
@@ -3517,14 +5236,15 @@ static int setSwPOptions(virtual_screen *vscr, WDefaultEntry *entry, void *tdata
 	return 0;
 }
 
-static int setModifierKeyLabels(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setModifierKeyLabels(virtual_screen *vscr)
 {
-	WMPropList *array = tdata;
+	WMPropList *array;
 	int i;
-	struct WPreferences *prefs = foo;
+
+	array = wPreferences.modifierkeylabels;
 
 	if (!WMIsPLArray(array) || WMGetPropListItemCount(array) != 7) {
-		wwarning(_("Value for option \"%s\" must be an array of 7 strings"), entry->key);
+		wwarning(_("Value for option SwitchPanelImages must be an array of 7 strings"));
 		WMReleasePropList(array);
 		return 0;
 	}
@@ -3532,14 +5252,16 @@ static int setModifierKeyLabels(virtual_screen *vscr, WDefaultEntry *entry, void
 	DestroyWindowMenu(vscr);
 
 	for (i = 0; i < 7; i++) {
-		if (prefs->modifier_labels[i])
-			wfree(prefs->modifier_labels[i]);
+		if (wPreferences.modifier_labels[i]) {
+			wfree(wPreferences.modifier_labels[i]);
+			wPreferences.modifier_labels[i] = NULL;
+		}
 
 		if (WMIsPLString(WMGetFromPLArray(array, i))) {
-			prefs->modifier_labels[i] = wstrdup(WMGetFromPLString(WMGetFromPLArray(array, i)));
+			wPreferences.modifier_labels[i] = wstrdup(WMGetFromPLString(WMGetFromPLArray(array, i)));
 		} else {
-			wwarning(_("Invalid argument for option \"%s\" item %d"), entry->key, i);
-			prefs->modifier_labels[i] = NULL;
+			wwarning(_("Invalid argument for option ModifierKeyLabels item %d"), i);
+			wPreferences.modifier_labels[i] = NULL;
 		}
 	}
 
@@ -3548,38 +5270,313 @@ static int setModifierKeyLabels(virtual_screen *vscr, WDefaultEntry *entry, void
 	return 0;
 }
 
-static int setDoubleClick(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *foo)
+static int setDoubleClick(virtual_screen *vscr)
 {
-	int *value = tdata;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) entry;
 	(void) vscr;
 
-	if (*value <= 0)
-		*(int *)foo = 1;
+	if (wPreferences.dblclick_time <= 0)
+		wPreferences.dblclick_time = 1;
 
-	W_setconf_doubleClickDelay(*value);
+	W_setconf_doubleClickDelay(wPreferences.dblclick_time);
 
 	return 0;
 }
 
-static int setCursor(virtual_screen *vscr, WDefaultEntry *entry, void *tdata, void *extra_data)
+static int setCursor_root(virtual_screen *vscr)
 {
-	Cursor *cursor = tdata;
-	long widx = (long) extra_data;
+	WMPropList *value = NULL;
+	Cursor cursor;
+	int status;
 
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) entry;
+	value = wPreferences.cursors.root->value;
+	status = parse_cursor(vscr, value, &cursor);
+	if (!status) {
+		wwarning(_("Error in cursor specification. using default instead"));
+		value = wPreferences.cursors.root->defvalue;
+		status = parse_cursor(vscr, value, &cursor);
+	}
 
-	if (wPreferences.cursor[widx] != None)
-		XFreeCursor(dpy, wPreferences.cursor[widx]);
+	if (wPreferences.cursor[WCUR_ROOT] != None)
+		XFreeCursor(dpy, wPreferences.cursor[WCUR_ROOT]);
 
-	wPreferences.cursor[widx] = *cursor;
+	wPreferences.cursor[WCUR_ROOT] = cursor;
 
-	if (widx == WCUR_ROOT && *cursor != None)
-		XDefineCursor(dpy, vscr->screen_ptr->root_win, *cursor);
+	if (cursor != None)
+		XDefineCursor(dpy, vscr->screen_ptr->root_win, cursor);
 
+	return 0;
+}
+
+static int setCursor_move(virtual_screen *vscr)
+{
+	WMPropList *value = NULL;
+	Cursor cursor;
+	int status;
+
+	value = wPreferences.cursors.move->value;
+	status = parse_cursor(vscr, value, &cursor);
+	if (!status) {
+		wwarning(_("Error in cursor specification. using default instead"));
+		value = wPreferences.cursors.move->defvalue;
+		status = parse_cursor(vscr, value, &cursor);
+	}
+
+	if (wPreferences.cursor[WCUR_MOVE] != None)
+		XFreeCursor(dpy, wPreferences.cursor[WCUR_MOVE]);
+
+	wPreferences.cursor[WCUR_MOVE] = cursor;
+	return 0;
+}
+
+static int setCursor_resize(virtual_screen *vscr)
+{
+	WMPropList *value = NULL;
+	Cursor cursor;
+	int status;
+
+	value = wPreferences.cursors.resize->value;
+	status = parse_cursor(vscr, value, &cursor);
+	if (!status) {
+		wwarning(_("Error in cursor specification. using default instead"));
+		value = wPreferences.cursors.resize->defvalue;
+		status = parse_cursor(vscr, value, &cursor);
+	}
+
+	if (wPreferences.cursor[WCUR_RESIZE] != None)
+		XFreeCursor(dpy, wPreferences.cursor[WCUR_RESIZE]);
+
+	wPreferences.cursor[WCUR_RESIZE] = cursor;
+	return 0;
+}
+
+static int setCursor_topleftresize(virtual_screen *vscr)
+{
+	WMPropList *value = NULL;
+	Cursor cursor;
+	int status;
+
+	value = wPreferences.cursors.resizetopleft->value;
+	status = parse_cursor(vscr, value, &cursor);
+	if (!status) {
+		wwarning(_("Error in cursor specification. using default instead"));
+		value = wPreferences.cursors.resizetopleft->defvalue;
+		status = parse_cursor(vscr, value, &cursor);
+	}
+
+	if (wPreferences.cursor[WCUR_TOPLEFTRESIZE] != None)
+		XFreeCursor(dpy, wPreferences.cursor[WCUR_TOPLEFTRESIZE]);
+
+	wPreferences.cursor[WCUR_TOPLEFTRESIZE] = cursor;
+	return 0;
+}
+
+static int setCursor_toprightresize(virtual_screen *vscr)
+{
+	WMPropList *value = NULL;
+	Cursor cursor;
+	int status;
+
+	value = wPreferences.cursors.resizetopright->value;
+	status = parse_cursor(vscr, value, &cursor);
+	if (!status) {
+		wwarning(_("Error in cursor specification. using default instead"));
+		value = wPreferences.cursors.resizetopright->defvalue;
+		status = parse_cursor(vscr, value, &cursor);
+	}
+
+	if (wPreferences.cursor[WCUR_TOPRIGHTRESIZE] != None)
+		XFreeCursor(dpy, wPreferences.cursor[WCUR_TOPRIGHTRESIZE]);
+
+	wPreferences.cursor[WCUR_TOPRIGHTRESIZE] = cursor;
+	return 0;
+}
+
+static int setCursor_bottomleftresize(virtual_screen *vscr)
+{
+	WMPropList *value = NULL;
+	Cursor cursor;
+	int status;
+
+	value = wPreferences.cursors.resizebottomleft->value;
+	status = parse_cursor(vscr, value, &cursor);
+	if (!status) {
+		wwarning(_("Error in cursor specification. using default instead"));
+		value = wPreferences.cursors.resizebottomleft->defvalue;
+		status = parse_cursor(vscr, value, &cursor);
+	}
+
+	if (wPreferences.cursor[WCUR_BOTTOMLEFTRESIZE] != None)
+		XFreeCursor(dpy, wPreferences.cursor[WCUR_BOTTOMLEFTRESIZE]);
+
+	wPreferences.cursor[WCUR_BOTTOMLEFTRESIZE] = cursor;
+	return 0;
+}
+
+static int setCursor_bottomrightresize(virtual_screen *vscr)
+{
+	WMPropList *value = NULL;
+	Cursor cursor;
+	int status;
+
+	value = wPreferences.cursors.resizebottomright->value;
+	status = parse_cursor(vscr, value, &cursor);
+	if (!status) {
+		wwarning(_("Error in cursor specification. using default instead"));
+		value = wPreferences.cursors.resizebottomright->defvalue;
+		status = parse_cursor(vscr, value, &cursor);
+	}
+
+	if (wPreferences.cursor[WCUR_BOTTOMRIGHTRESIZE] != None)
+		XFreeCursor(dpy, wPreferences.cursor[WCUR_BOTTOMRIGHTRESIZE]);
+
+	wPreferences.cursor[WCUR_BOTTOMRIGHTRESIZE] = cursor;
+	return 0;
+}
+
+static int setCursor_horizontalresize(virtual_screen *vscr)
+{
+	WMPropList *value = NULL;
+	Cursor cursor;
+	int status;
+
+	value = wPreferences.cursors.resizehorizontal->value;
+	status = parse_cursor(vscr, value, &cursor);
+	if (!status) {
+		wwarning(_("Error in cursor specification. using default instead"));
+		value = wPreferences.cursors.resizehorizontal->defvalue;
+		status = parse_cursor(vscr, value, &cursor);
+	}
+
+	if (wPreferences.cursor[WCUR_HORIZONRESIZE] != None)
+		XFreeCursor(dpy, wPreferences.cursor[WCUR_HORIZONRESIZE]);
+
+	wPreferences.cursor[WCUR_HORIZONRESIZE] = cursor;
+	return 0;
+}
+
+static int setCursor_verticalresize(virtual_screen *vscr)
+{
+	WMPropList *value = NULL;
+	Cursor cursor;
+	int status;
+
+	value = wPreferences.cursors.resizevertical->value;
+	status = parse_cursor(vscr, value, &cursor);
+	if (!status) {
+		wwarning(_("Error in cursor specification. using default instead"));
+		value = wPreferences.cursors.resizevertical->defvalue;
+		status = parse_cursor(vscr, value, &cursor);
+	}
+
+	if (wPreferences.cursor[WCUR_VERTICALRESIZE] != None)
+		XFreeCursor(dpy, wPreferences.cursor[WCUR_VERTICALRESIZE]);
+
+	wPreferences.cursor[WCUR_VERTICALRESIZE] = cursor;
+	return 0;
+}
+
+static int setCursor_wait(virtual_screen *vscr)
+{
+	WMPropList *value = NULL;
+	Cursor cursor;
+	int status;
+
+	value = wPreferences.cursors.wait->value;
+	status = parse_cursor(vscr, value, &cursor);
+	if (!status) {
+		wwarning(_("Error in cursor specification. using default instead"));
+		value = wPreferences.cursors.wait->defvalue;
+		status = parse_cursor(vscr, value, &cursor);
+	}
+
+	if (wPreferences.cursor[WCUR_WAIT] != None)
+		XFreeCursor(dpy, wPreferences.cursor[WCUR_WAIT]);
+
+	wPreferences.cursor[WCUR_WAIT] = cursor;
+	return 0;
+}
+
+static int setCursor_arrow(virtual_screen *vscr)
+{
+	WMPropList *value = NULL;
+	Cursor cursor;
+	int status;
+
+	value = wPreferences.cursors.arrow->value;
+	status = parse_cursor(vscr, value, &cursor);
+	if (!status) {
+		wwarning(_("Error in cursor specification. using default instead"));
+		value = wPreferences.cursors.arrow->defvalue;
+		status = parse_cursor(vscr, value, &cursor);
+	}
+
+	if (wPreferences.cursor[WCUR_ARROW] != None)
+		XFreeCursor(dpy, wPreferences.cursor[WCUR_ARROW]);
+
+	wPreferences.cursor[WCUR_ARROW] = cursor;
+	return 0;
+}
+
+static int setCursor_question(virtual_screen *vscr)
+{
+	WMPropList *value = NULL;
+	Cursor cursor;
+	int status;
+
+	value = wPreferences.cursors.question->value;
+	status = parse_cursor(vscr, value, &cursor);
+	if (!status) {
+		wwarning(_("Error in cursor specification. using default instead"));
+		value = wPreferences.cursors.question->defvalue;
+		status = parse_cursor(vscr, value, &cursor);
+	}
+
+	if (wPreferences.cursor[WCUR_QUESTION] != None)
+		XFreeCursor(dpy, wPreferences.cursor[WCUR_QUESTION]);
+
+	wPreferences.cursor[WCUR_QUESTION] = cursor;
+	return 0;
+}
+
+static int setCursor_text(virtual_screen *vscr)
+{
+	WMPropList *value = NULL;
+	Cursor cursor;
+	int status;
+
+	value = wPreferences.cursors.text->value;
+	status = parse_cursor(vscr, value, &cursor);
+	if (!status) {
+		wwarning(_("Error in cursor specification. using default instead"));
+		value = wPreferences.cursors.text->defvalue;
+		status = parse_cursor(vscr, value, &cursor);
+	}
+
+	if (wPreferences.cursor[WCUR_TEXT] != None)
+		XFreeCursor(dpy, wPreferences.cursor[WCUR_TEXT]);
+
+	wPreferences.cursor[WCUR_TEXT] = cursor;
+	return 0;
+}
+
+static int setCursor_select(virtual_screen *vscr)
+{
+	WMPropList *value = NULL;
+	Cursor cursor;
+	int status;
+
+	value = wPreferences.cursors.select->value;
+	status = parse_cursor(vscr, value, &cursor);
+	if (!status) {
+		wwarning(_("Error in cursor specification. using default instead"));
+		value = wPreferences.cursors.select->defvalue;
+		status = parse_cursor(vscr, value, &cursor);
+	}
+
+	if (wPreferences.cursor[WCUR_SELECT] != None)
+		XFreeCursor(dpy, wPreferences.cursor[WCUR_SELECT]);
+
+	wPreferences.cursor[WCUR_SELECT] = cursor;
 	return 0;
 }
 
@@ -3596,4 +5593,24 @@ char *get_wmstate_file(virtual_screen *vscr)
 	}
 
 	return str;
+}
+
+static void convert_window_place_origin(WScreen *scr)
+{
+	if (wPreferences.window_place_origin.x < 0)
+		wPreferences.window_place_origin.x = 0;
+	else if (wPreferences.window_place_origin.x > scr->scr_width / 3)
+		wPreferences.window_place_origin.x = scr->scr_width / 3;
+	if (wPreferences.window_place_origin.y < 0)
+		wPreferences.window_place_origin.y = 0;
+	else if (wPreferences.window_place_origin.y > scr->scr_height / 3)
+		wPreferences.window_place_origin.y = scr->scr_height / 3;
+}
+
+void apply_defaults_to_screen(virtual_screen *vscr, WScreen *scr)
+{
+	/* Parameter not used, but tell the compiler that it is ok */
+	(void) vscr;
+
+	convert_window_place_origin(scr);
 }

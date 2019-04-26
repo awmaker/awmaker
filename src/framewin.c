@@ -195,7 +195,7 @@ void wframewindow_map(WFrameWindow *fwin, virtual_screen *vscr, int wlevel,
 	fwin->colormap = colormap;
 
 	wcore_map_toplevel(wcore, vscr, x, y, fwin->width, fwin->height,
-			   (fwin->flags.border) ? scr->frame_border_width : 0,
+			   (fwin->flags.border) ? vscr->frame.border_width : 0,
 			   fwin->depth, fwin->visual,
 			   fwin->colormap, scr->frame_border_pixel);
 
@@ -808,7 +808,7 @@ void wframewin_set_borders(WFrameWindow *fwin, int flags)
 		wFrameWindowResize(fwin, width, height + fwin->top_width + fwin->bottom_width);
 
 	if (fwin->flags.border)
-		XSetWindowBorderWidth(dpy, fwin->core->window, scr->frame_border_width);
+		XSetWindowBorderWidth(dpy, fwin->core->window, vscr->frame.border_width);
 	else
 		XSetWindowBorderWidth(dpy, fwin->core->window, 0);
 

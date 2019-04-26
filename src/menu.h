@@ -62,7 +62,6 @@ typedef struct WMenu {
 	struct WFrameWindow *frame;
 	WCoreWindow *core;			/* the window menu */
 	Pixmap menu_texture_data;
-	int frame_x, frame_y;			/* position of the frame in root*/
 
 	WMenuEntry **entries;			/* array of entries */
 	short alloced_entries;			/* number of entries allocated in
@@ -121,7 +120,7 @@ void wMenuRemoveItem(WMenu *menu, int index);
 void wMenuMapAt(virtual_screen *vscr, WMenu *menu, int keyboard);
 void wMenuUnmap(WMenu *menu);
 void wMenuSetEnabled(WMenu *menu, int index, int enable);
-void wMenuMove(WMenu *menu, int x, int y, int submenus);
+void wMenuMove(WMenu *menu, int submenus);
 void wMenuEntryRemoveCascade(WMenu *menu, WMenuEntry *entry);
 void wMenuScroll(WMenu *menu);
 WMenu *wMenuUnderPointer(virtual_screen *vscr);
@@ -131,7 +130,6 @@ void menus_restore_map(virtual_screen *vscr);
 
 WMenu *menu_create(virtual_screen *vscr, const char *title);
 void menu_map(WMenu *menu);
-void menu_map_pos(WMenu *menu, int x, int y);
 void menu_unmap(WMenu *menu);
 
 void wMenuEntrySetCascade_create(WMenu *menu, WMenuEntry *entry, WMenu *cascade);

@@ -123,8 +123,7 @@ static void set_clip_in_workspace(virtual_screen *vscr, WWorkspace *wspace, WMPr
 	if (wks_state)
 		clip_state = WMGetFromPLDictionary(wks_state, dClip);
 
-	if (!wPreferences.flags.noclip)
-		wspace->clip = clip_create(vscr, clip_state);
+	wspace->clip = clip_create(vscr, clip_state);
 }
 
 static void set_clip_in_workspace_map(virtual_screen *vscr, WWorkspace *wspace, int wksno, WMPropList *wks_state)
@@ -943,21 +942,11 @@ void workspaces_set_menu_enabled_items(virtual_screen *vscr, WMenu *menu)
 
 void wWorkspaceMenuUpdate_map(virtual_screen *vscr)
 {
-	WMenu *menu = vscr->workspace.menu;
-	int tmp;
-
-	if (!menu)
+	if (!vscr->workspace.menu)
 		return;
 
-	wMenuRealize(menu);
-	workspaces_set_menu_enabled_items(vscr, menu);
-
-	tmp = menu->frame->top_width + 5;
-	/* if menu got unreachable, bring it to a visible place */
-	if (menu->frame_x < tmp - (int) menu->frame->width)
-		wMenuMove(menu, tmp - (int) menu->frame->width, menu->frame_y, False);
-
-	wMenuPaint(menu);
+	workspaces_set_menu_enabled_items(vscr, vscr->workspace.menu);
+	menu_move_visible(vscr->workspace.menu);
 }
 
 void wWorkspaceMenuUpdate(virtual_screen *vscr, WMenu *menu)

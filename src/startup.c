@@ -89,6 +89,7 @@ static WScreen **wScreen = NULL;
 static void manageAllWindows(virtual_screen *scr, int crashed);
 static void hide_all_applications(virtual_screen *vscr);
 static void remove_icon_windows(Window *children, unsigned int nchildren);
+static void bind(virtual_screen *vscr, WScreen *scr);
 
 static int catchXError(Display *dpy, XErrorEvent *error)
 {
@@ -408,37 +409,6 @@ static void startup_set_signals(void)
 	WMHookEventHandler(DispatchEvent);
 }
 
-static void startup_set_defaults_virtual(void)
-{
-	/* initialize defaults stuff */
-	w_global.domain.wmaker = wDefaultsInitDomain("WindowMaker", True);
-	if (!w_global.domain.wmaker->dictionary)
-		wwarning(_("could not read domain \"%s\" from defaults database"), "WindowMaker");
-
-	/* read defaults that don't change until a restart and are
-	 * screen independent */
-	wReadStaticDefaults(w_global.domain.wmaker ? w_global.domain.wmaker->dictionary : NULL);
-
-	/* check sanity of some values */
-	if (wPreferences.icon_size < 16) {
-		wwarning(_("icon size is configured to %i, but it's too small. Using 16 instead"),
-			 wPreferences.icon_size);
-
-		wPreferences.icon_size = 16;
-	}
-
-	/* init other domains */
-	w_global.domain.root_menu = wDefaultsInitDomain("WMRootMenu", False);
-	if (!w_global.domain.root_menu->dictionary)
-		wwarning(_("could not read domain \"%s\" from defaults database"), "WMRootMenu");
-
-	wDefaultsMergeGlobalMenus(w_global.domain.root_menu);
-
-	w_global.domain.window_attr = wDefaultsInitDomain("WMWindowAttributes", True);
-	if (!w_global.domain.window_attr->dictionary)
-		wwarning(_("could not read domain \"%s\" from defaults database"), "WMWindowAttributes");
-}
-
 static void startup_set_defaults(void)
 {
 	char **formats;
@@ -515,10 +485,17 @@ void startup_virtual(void)
 		w_global.vscreens[j] = vscr;
 		w_global.vscreen_count++;
 
-		read_defaults_noscreen(vscr, w_global.domain.wmaker->dictionary);
-
 		vscr->clip.icon = clip_icon_create(vscr);
 	}
+}
+
+static void bind(virtual_screen *vscr, WScreen *scr)
+{
+	vscr->screen_ptr = scr;
+	scr->vscr = vscr;
+
+	/* Apply the defaults config */
+	apply_defaults_to_screen(vscr, scr);
 }
 
 /*
@@ -535,6 +512,7 @@ void StartUp(Bool defaultScreenOnly)
 {
 	int j, max, lastDesktop;
 	virtual_screen *vscr;
+	WScreen *scr;
 
 	startup_set_atoms();
 	startup_set_cursors();
@@ -576,7 +554,9 @@ void StartUp(Bool defaultScreenOnly)
 	/* Bind the Virtual Screens and the Real Screens */
 	for (j = 0; j < w_global.screen_count; j++) {
 		vscr = w_global.vscreens[j];
-		vscr->screen_ptr = wScreen[j];
+
+		scr = wScreen[j];
+		bind(vscr, scr);
 
 		/* read defaults for this screen */
 		wReadDefaults(vscr, w_global.domain.wmaker->dictionary);
@@ -744,7 +724,7 @@ static void manageAllWindows(virtual_screen *vscr, int crashRecovery)
 			}
 
 			if (crashRecovery) {
-				border = (!HAS_BORDER(wwin) ? 0 : scr->frame_border_width);
+				border = (!HAS_BORDER(wwin) ? 0 : vscr->frame.border_width);
 
 				wWindowMove(wwin, wwin->frame_x - border,
 					    wwin->frame_y - border -

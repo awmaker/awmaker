@@ -158,6 +158,7 @@ typedef union WTexture {
 } WTexture;
 
 
+WTexture *get_texture_from_defstruct(virtual_screen *vscr, defstructpl *ds);
 WTexSolid *wTextureMakeSolid(virtual_screen *vscr, XColor *color);
 WTexGradient *wTextureMakeGradient(virtual_screen *vscr, int, const RColor *from, const RColor *to);
 WTexMGradient *wTextureMakeMGradient(virtual_screen *vscr, int style, RColor **colors);
