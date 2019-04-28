@@ -3041,7 +3041,7 @@ static int setWorkspaceSpecificBack(virtual_screen *vscr)
 
 static int setWorkspaceBack(virtual_screen *vscr)
 {
-	WMPropList *value = wPreferences.workspacespecificback;
+	WMPropList *value = wPreferences.workspaceback;
 
 	if (vscr->screen_ptr->flags.backimage_helper_launched) {
 		char *str;
