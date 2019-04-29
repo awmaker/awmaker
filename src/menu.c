@@ -96,7 +96,7 @@ static void callback_leaving(void *user_param);
 static void changeMenuLevels(WMenu *menu, int lower);
 static void delaySelection(void *data);
 static void dragScrollMenuCallback(void *data);
-static void drawFrame(virtual_screen *vscr, Drawable win, int y, int w, int h, int type);
+static void drawFrame(WMenu *menu, Drawable win, int y, int w, int h, int type);
 static void getPointerPosition(virtual_screen *vscr, int *x, int *y);
 static void getScrollAmount(WMenu *menu, int *hamount, int *vamount);
 static void insertEntry(WMenu *menu, WMenuEntry *entry, int index);
@@ -672,8 +672,9 @@ void wMenuDestroy(WMenu *menu)
 	menu_destroy(menu);
 }
 
-static void drawFrame(virtual_screen *vscr, Drawable win, int y, int w, int h, int type)
+static void drawFrame(WMenu *menu, Drawable win, int y, int w, int h, int type)
 {
+	virtual_screen *vscr = menu->vscr;
 	XSegment segs[2];
 	int i;
 
@@ -745,12 +746,12 @@ static void paintEntry(WMenu *menu, int index, int selected)
 	if (selected) {
 		XFillRectangle(dpy, win, WMColorGC(scr->select_color), 1, y + 1, w - 2, h - 3);
 		if (scr->menu_item_texture->any.type == WTEX_SOLID)
-			drawFrame(vscr, win, y, w, h, type);
+			drawFrame(menu, win, y, w, h, type);
 	} else {
 		if (scr->menu_item_texture->any.type == WTEX_SOLID) {
 			XClearArea(dpy, win, 0, y + 1, w - 1, h - 3, False);
 			/* draw the frame */
-			drawFrame(vscr, win, y, w, h, type);
+			drawFrame(menu, win, y, w, h, type);
 		} else {
 			XClearArea(dpy, win, 0, y, w, h, False);
 		}
