@@ -2985,29 +2985,6 @@ static int setWorkspaceSpecificBack(virtual_screen *vscr)
 	char *str;
 	int i;
 
-#ifdef notworking
-	/*
-	 * I moved this code here to update these functions, probably holding
-	 * the default value in the wPreferences struct, changing the WMPropList
-	 * workspacespecificback to a defstructpl, with the value and the default
-	 * value. TODO. kix.
-	 */
-	/*
-	 * Kluge to force wmsetbg helper to set the default background.
-	 * If the WorkspaceSpecificBack is changed once wmaker has started,
-	 * the WorkspaceBack won't be sent to the helper, unless the user
-	 * changes it's value too. So, we must force this by removing the
-	 * value from the defaults DB.
-	 */
-	if (!scr->flags.backimage_helper_launched && !scr->flags.startup) {
-		WMPropList *key = WMCreatePLString("WorkspaceBack");
-
-		WMRemoveFromPLDictionary(w_global.domain.wmaker->dictionary, key);
-
-		WMReleasePropList(key);
-	}
-#endif
-
 	value = wPreferences.workspacespecificback;
 
 	if (vscr->screen_ptr->flags.backimage_helper_launched) {
