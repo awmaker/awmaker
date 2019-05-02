@@ -1351,6 +1351,43 @@ static void read_defaults_noscreen(WMPropList *new_dict)
 	}
 }
 
+void set_defaults_global(WMPropList *new_dict)
+{
+	unsigned int i;
+	WMPropList *plvalue;
+	WDefaultEntry *entry;
+
+	for (i = 0; i < wlengthof(optionList); i++) {
+		entry = &optionList[i];
+
+		plvalue = WMGetFromPLDictionary(new_dict, entry->plkey);
+		if (!plvalue) {
+			/* no default in  the DB. Use builtin default */
+			plvalue = entry->plvalue;
+			if (plvalue && new_dict)
+				WMPutInPLDictionary(new_dict, entry->plkey, plvalue);
+		}
+
+		/* convert data */
+		(*entry->convert) (entry, plvalue, entry->addr);
+	}
+}
+
+unsigned int set_defaults_virtual_screen(virtual_screen *vscr)
+{
+	unsigned int i, needs_refresh = 0;
+	WDefaultEntry *entry;
+
+	for (i = 0; i < wlengthof(optionList); i++) {
+		entry = &optionList[i];
+
+		if (entry->update)
+			needs_refresh |= (*entry->update) (vscr);
+	}
+
+	return needs_refresh;
+}
+
 static unsigned int read_defaults_step1(virtual_screen *vscr, WMPropList *new_dict)
 {
 	unsigned int i, needs_refresh = 0;
