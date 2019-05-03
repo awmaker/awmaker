@@ -559,8 +559,9 @@ void StartUp(Bool defaultScreenOnly)
 		bind(vscr, scr);
 
 		/* read defaults for this screen */
-		wReadDefaults(vscr, w_global.domain.wmaker->dictionary);
-		set_session_state(vscr); /* kix: This function needs the physical screens :-( */
+		set_defaults_global(w_global.domain.wmaker->dictionary);
+		set_defaults_virtual_screen(vscr);
+		set_session_state(vscr);
 
 		set_screen_options(w_global.vscreens[j]);
 
