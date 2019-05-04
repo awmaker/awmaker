@@ -484,8 +484,6 @@ void startup_virtual(void)
 		vscr->id = w_global.vscreen_count;
 		w_global.vscreens[j] = vscr;
 		w_global.vscreen_count++;
-
-		vscr->clip.icon = clip_icon_create(vscr);
 	}
 }
 
@@ -562,6 +560,7 @@ void StartUp(Bool defaultScreenOnly)
 		set_defaults_global(w_global.domain.wmaker->dictionary);
 		set_defaults_virtual_screen(vscr);
 		set_session_state(vscr);
+		vscr->clip.icon = clip_icon_create(vscr);
 
 		set_screen_options(w_global.vscreens[j]);
 
