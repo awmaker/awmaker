@@ -83,9 +83,6 @@
 	"Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA"\
 	"02110-1301 USA."
 
-#define ALERT_WIDTH 400
-#define ALERT_HEIGHT 180
-
 #define INPUT_WIDTH 320
 #define INPUT_HEIGHT 160
 
@@ -148,8 +145,8 @@ static int alert_panel(WMAlertPanel *panel, virtual_screen *vscr, const char *ti
 	WScreen *scr = vscr->screen_ptr;
 	Window parent;
 	WWindow *wwin;
-	const int win_width = ALERT_WIDTH;
-	const int win_height = ALERT_HEIGHT;
+	const int win_width = WMWidgetWidth(panel->win);
+	const int win_height = WMWidgetHeight(panel->win);
 	int result, wframeflags;
 	WMPoint center;
 
@@ -194,13 +191,15 @@ int wExitDialog(virtual_screen *vscr, const char *title, const char *message, co
 {
 	WMAlertPanel *panel;
 	WMButton *saveSessionBtn;
+	int pwidth;
 
 	panel = WMCreateAlertPanel(vscr->screen_ptr->wmscreen, NULL, title, message, defBtn, altBtn, othBtn);
+	pwidth = WMWidgetWidth(panel->win);
 
 	/* add save session button */
 	saveSessionBtn = WMCreateSwitchButton(panel->hbox);
 	WMSetButtonAction(saveSessionBtn, toggleSaveSession, NULL);
-	WMAddBoxSubview(panel->hbox, WMWidgetView(saveSessionBtn), False, True, 200, 0, 0);
+	WMAddBoxSubview(panel->hbox, WMWidgetView(saveSessionBtn), False, True, pwidth / 2, 0, 0);
 	WMSetButtonText(saveSessionBtn, _("Save workspace state"));
 	WMSetButtonSelected(saveSessionBtn, wPreferences.save_session_on_exit);
 	WMRealizeWidget(saveSessionBtn);
