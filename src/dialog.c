@@ -83,9 +83,6 @@
 	"Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA"\
 	"02110-1301 USA."
 
-#define INPUT_WIDTH 320
-#define INPUT_HEIGHT 160
-
 #define ICONDLG_WIDTH 450
 #define ICONDLG_HEIGHT 280
 
@@ -461,8 +458,8 @@ static char *create_input_panel(virtual_screen *vscr, WMInputPanel *panel)
 {
 	WScreen *scr = vscr->screen_ptr;
 	WWindow *wwin;
-	const int win_width = INPUT_WIDTH;
-	const int win_height = INPUT_HEIGHT;
+	const int win_width = WMWidgetWidth(panel->win);
+	const int win_height = WMWidgetHeight(panel->win);
 	char *result = NULL;
 	Window parent;
 	WMPoint center;
