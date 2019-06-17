@@ -618,6 +618,8 @@ extern struct WPreferences {
 		char windowshortcut8[MAX_SHORTCUT_LENGTH];
 		char windowshortcut9[MAX_SHORTCUT_LENGTH];
 		char windowshortcut10[MAX_SHORTCUT_LENGTH];
+		char moveto12to6head[MAX_SHORTCUT_LENGTH];
+		char moveto6to12head[MAX_SHORTCUT_LENGTH];
 		char workspace1[MAX_SHORTCUT_LENGTH];
 		char workspace2[MAX_SHORTCUT_LENGTH];
 		char workspace3[MAX_SHORTCUT_LENGTH];
