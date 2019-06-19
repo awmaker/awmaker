@@ -67,7 +67,7 @@
 	"Copyright \xc2\xa9 1997-2006 Alfredo K. Kojima\n"\
 	"Copyright \xc2\xa9 1998-2006 Dan Pascu\n"\
 	"Copyright \xc2\xa9 2013-2014 Window Maker Developers Team\n" \
-	"Copyright \xc2\xa9 2015-2018 Rodolfo García (kix)"
+	"Copyright \xc2\xa9 2015-2019 Rodolfo García (kix)"
 
 #define LEGAL_TEXT \
 	"    Window Maker is free software; you can redistribute it and/or "\
@@ -86,12 +86,12 @@
 #define ICONDLG_WIDTH 450
 #define ICONDLG_HEIGHT 280
 
-#define INFOPANEL_WIDTH 382
-#define INFOPANEL_HEIGHT 250
+#define INFOPANEL_WIDTH 402
+#define INFOPANEL_HEIGHT 290
 
 #define LEGALPANEL_WIDTH 420
 #define LEGALPANEL_HEIGHT 250
-#define LEGALPANEL_MARGIN 10
+#define MARGIN 10
 
 #define CRASHING_WIDTH 295
 #define CRASHING_HEIGHT 345
@@ -124,8 +124,8 @@ static WMPixmap *getWindowMakerIconImage(WMScreen *scr);
 static WMPoint getCenter(virtual_screen *vscr, int width, int height);
 static void destroy_panel(int type);
 
-static void create_legal_widgets(virtual_screen *vscr, Panel *panel, int win_width, int win_height);
-static void create_info_widgets(virtual_screen *vscr, Panel *panel, int win_width, int win_height);
+static void create_legal_widgets(virtual_screen *vscr, Panel *panel, int win_width, int win_height, int fw, int fh);
+static void create_info_widgets(virtual_screen *vscr, Panel *panel, int win_width, int win_height, int fw, int fh);
 
 static int alert_panel(WMAlertPanel *panel, virtual_screen *vscr, const char *title);
 
@@ -1160,27 +1160,29 @@ static void destroy_legal_panel(WCoreWindow *foo, void *data, XEvent *event)
 	destroy_panel(PANEL_LEGAL);
 }
 
-static void create_legal_widgets(virtual_screen *vscr, Panel *panel, int win_width, int win_height)
+static void create_legal_widgets(virtual_screen *vscr, Panel *panel, int win_width, int win_height, int fw, int fh)
 {
-	int margin = LEGALPANEL_MARGIN;
-
 	panel->win = WMCreateWindow(vscr->screen_ptr->wmscreen, "legal");
 	WMResizeWidget(panel->win, win_width, win_height);
 
-	panel->lbl_license = WMCreateLabel(panel->win);
+	panel->frame = WMCreateFrame(panel->win);
+	WMResizeWidget(panel->frame, win_width - (2 * ScaleX(MARGIN)), win_height - (2 * ScaleY(MARGIN)));
+	WMMoveWidget(panel->frame, ScaleX(MARGIN), ScaleY(MARGIN));
+	WMSetFrameTitle(panel->frame, NULL);
+
+	panel->lbl_license = WMCreateLabel(panel->frame);
 	WMSetLabelWraps(panel->lbl_license, True);
-	WMResizeWidget(panel->lbl_license, win_width - (2 * margin), win_height - (2 * margin));
-	WMMoveWidget(panel->lbl_license, margin, margin);
+	WMResizeWidget(panel->lbl_license, win_width - (4 * ScaleX(10)), win_height - (4 * ScaleY(10)));
+	WMMoveWidget(panel->lbl_license, ScaleX(8), ScaleY(8));
 	WMSetLabelTextAlignment(panel->lbl_license, WALeft);
 	WMSetLabelText(panel->lbl_license, LEGAL_TEXT);
-	WMSetLabelRelief(panel->lbl_license, WRGroove);
 }
 
-static void create_info_widgets(virtual_screen *vscr, Panel *panel, int win_width, int win_height)
+static void create_info_widgets(virtual_screen *vscr, Panel *panel, int win_width, int win_height, int fw, int fh)
 {
 	WMPixmap *logo;
 	WMFont *font;
-	char *name, *strbuf = NULL;
+	char *strbuf = NULL;
 	const char *separator;
 	char buffer[256];
 #ifdef USE_XINERAMA
@@ -1201,28 +1203,37 @@ static void create_info_widgets(virtual_screen *vscr, Panel *panel, int win_widt
 	};
 
 	panel->win = WMCreateWindow(vscr->screen_ptr->wmscreen, "info");
+	WMGetScaleBaseFromSystemFont(vscr->screen_ptr->wmscreen, &fw, &fh);
 	WMResizeWidget(panel->win, win_width, win_height);
+
+	panel->frame = WMCreateFrame(panel->win);
+	WMResizeWidget(panel->frame, win_width - (2 * ScaleX(MARGIN)), win_height - (2 * ScaleY(MARGIN)));
+	WMMoveWidget(panel->frame, ScaleX(MARGIN), ScaleY(MARGIN));
+	WMSetFrameTitle(panel->frame, NULL);
 
 	logo = WMCreateApplicationIconBlendedPixmap(vscr->screen_ptr->wmscreen, (RColor *) NULL);
 	if (!logo)
 		logo = WMRetainPixmap(WMGetApplicationIconPixmap(vscr->screen_ptr->wmscreen));
 
 	if (logo) {
-		panel->lbl_logo = WMCreateLabel(panel->win);
-		WMResizeWidget(panel->lbl_logo, 64, 64);
-		WMMoveWidget(panel->lbl_logo, 30, 20);
+		panel->lbl_logo = WMCreateLabel(panel->frame);
+		WMResizeWidget(panel->lbl_logo, ScaleX(64), ScaleY(64));
+		WMMoveWidget(panel->lbl_logo, ScaleX(30), ScaleY(20));
 		WMSetLabelImagePosition(panel->lbl_logo, WIPImageOnly);
 		WMSetLabelImage(panel->lbl_logo, logo);
 		WMReleasePixmap(logo);
 	}
 
-	sepHeight = 3;
-	panel->lbl_name1 = WMCreateLabel(panel->win);
-	WMResizeWidget(panel->lbl_name1, 240, 30 + 2);
-	WMMoveWidget(panel->lbl_name1, 100, 30 - 2 - sepHeight);
+	sepHeight = ScaleY(3);
+	panel->lbl_name1 = WMCreateLabel(panel->frame);
 
-	name = "Lucida Sans,Comic Sans MS,URW Gothic L,Trebuchet MS" ":italic:pixelsize=28:antialias=true";
-	font = WMCreateFont(vscr->screen_ptr->wmscreen, name);
+	WMResizeWidget(panel->lbl_name1, ScaleX(240), ScaleY(30) + ScaleY(2));
+	WMMoveWidget(panel->lbl_name1, ScaleX(100), ScaleY(30) - ScaleY(2) - sepHeight);
+
+	snprintf(buffer, sizeof(buffer),
+		"Lucida Sans,Comic Sans MS,URW Gothic L,Trebuchet MS:italic:pixelsize=%d:antialias=true",
+		ScaleY(24));
+	font = WMCreateFont(vscr->screen_ptr->wmscreen, buffer);
 	strbuf = "AW Maker";
 	if (font) {
 		width = WMWidthOfString(font, strbuf, strlen(strbuf));
@@ -1233,17 +1244,17 @@ static void create_info_widgets(virtual_screen *vscr, Panel *panel, int win_widt
 	WMSetLabelTextAlignment(panel->lbl_name1, WACenter);
 	WMSetLabelText(panel->lbl_name1, strbuf);
 
-	panel->frm_line = WMCreateFrame(panel->win);
+	panel->frm_line = WMCreateFrame(panel->frame);
 	WMResizeWidget(panel->frm_line, width, sepHeight);
-	WMMoveWidget(panel->frm_line, 100 + (240 - width) / 2, 60 - sepHeight);
+	WMMoveWidget(panel->frm_line, ScaleX(100) + (ScaleX(240) - width) / 2, ScaleY(60) - sepHeight);
 	WMSetFrameRelief(panel->frm_line, WRSimple);
 	WMSetWidgetBackgroundColor(panel->frm_line, vscr->screen_ptr->black);
 
-	panel->lbl_name2 = WMCreateLabel(panel->win);
-	WMResizeWidget(panel->lbl_name2, 240, 24);
-	WMMoveWidget(panel->lbl_name2, 100, 60);
-	name = "URW Gothic L,Nimbus Sans L:pixelsize=16:antialias=true";
-	font = WMCreateFont(vscr->screen_ptr->wmscreen, name);
+	panel->lbl_name2 = WMCreateLabel(panel->frame);
+	WMResizeWidget(panel->lbl_name2, ScaleX(240), ScaleY(24));
+	WMMoveWidget(panel->lbl_name2, ScaleX(100), ScaleY(60));
+	snprintf(buffer, sizeof(buffer), "URW Gothic L,Nimbus Sans L:pixelsize=%d:antialias=true", ScaleY(16));
+	font = WMCreateFont(vscr->screen_ptr->wmscreen, buffer);
 	if (font) {
 		WMSetLabelFont(panel->lbl_name2, font);
 		WMReleaseFont(font);
@@ -1254,19 +1265,19 @@ static void create_info_widgets(virtual_screen *vscr, Panel *panel, int win_widt
 	WMSetLabelText(panel->lbl_name2, _("Abstracting Window Maker"));
 
 	snprintf(buffer, sizeof(buffer), _("Version %s"), VERSION);
-	panel->lbl_version = WMCreateLabel(panel->win);
-	WMResizeWidget(panel->lbl_version, 310, 16);
-	WMMoveWidget(panel->lbl_version, 30, 95);
+	panel->lbl_version = WMCreateLabel(panel->frame);
+	WMResizeWidget(panel->lbl_version, ScaleX(310), ScaleY(16));
+	WMMoveWidget(panel->lbl_version, ScaleX(30), ScaleY(95));
 	WMSetLabelTextAlignment(panel->lbl_version, WARight);
 	WMSetLabelText(panel->lbl_version, buffer);
 	WMSetLabelWraps(panel->lbl_version, False);
 
-	panel->lbl_copyr = WMCreateLabel(panel->win);
-	WMResizeWidget(panel->lbl_copyr, 360, 60);
-	WMMoveWidget(panel->lbl_copyr, 15, 190);
+	panel->lbl_copyr = WMCreateLabel(panel->frame);
+	WMResizeWidget(panel->lbl_copyr, ScaleX(360), ScaleY(60));
+	WMMoveWidget(panel->lbl_copyr, ScaleX(15), ScaleY(190));
 	WMSetLabelTextAlignment(panel->lbl_copyr, WALeft);
 	WMSetLabelText(panel->lbl_copyr, COPYRIGHT_TEXT);
-	font = WMSystemFontOfSize(vscr->screen_ptr->wmscreen, 11);
+	font = WMSystemFontOfSize(vscr->screen_ptr->wmscreen, ScaleY(11));
 	if (font) {
 		WMSetLabelFont(panel->lbl_copyr, font);
 		WMReleaseFont(font);
@@ -1365,11 +1376,11 @@ static void create_info_widgets(virtual_screen *vscr, Panel *panel, int win_widt
 	strbuf = wstrappend(strbuf, ".");
 #endif
 
-	panel->lbl_info = WMCreateLabel(panel->win);
-	WMResizeWidget(panel->lbl_info, 350, 80);
-	WMMoveWidget(panel->lbl_info, 15, 115);
+	panel->lbl_info = WMCreateLabel(panel->frame);
+	WMResizeWidget(panel->lbl_info, ScaleX(350), ScaleY(80));
+	WMMoveWidget(panel->lbl_info, ScaleX(15), ScaleY(115));
 	WMSetLabelText(panel->lbl_info, strbuf);
-	font = WMSystemFontOfSize(vscr->screen_ptr->wmscreen, 11);
+	font = WMSystemFontOfSize(vscr->screen_ptr->wmscreen, ScaleY(11));
 	if (font) {
 		WMSetLabelFont(panel->lbl_info, font);
 		WMReleaseFont(font);
@@ -1386,14 +1397,17 @@ void panel_show(virtual_screen *vscr, int type)
 	Window parent;
 	WWindow *wwin;
 	WMPoint center;
+	int fw, fh;
 	int win_width = 0, win_height = 0;
 	char title[256];
 	int wframeflags;
 
+	WMGetScaleBaseFromSystemFont(vscr->screen_ptr->wmscreen, &fw, &fh);
+
 	switch (type) {
 	case PANEL_LEGAL:
-		win_width = LEGALPANEL_WIDTH;
-		win_height = LEGALPANEL_HEIGHT;
+		win_width = ScaleX(LEGALPANEL_WIDTH);
+		win_height = ScaleY(LEGALPANEL_HEIGHT);
 		sprintf(title, "Legal");
 
 		if (legalPanel) {
@@ -1408,12 +1422,12 @@ void panel_show(virtual_screen *vscr, int type)
 		panel = wmalloc(sizeof(Panel));
 		panel->vscr = vscr;
 		panel->type = PANEL_LEGAL;
-		create_legal_widgets(vscr, panel, win_width, win_height);
+		create_legal_widgets(vscr, panel, win_width, win_height, fw, fh);
 		legalPanel = panel;
 		break;
 	case PANEL_INFO:
-		win_width = INFOPANEL_WIDTH;
-		win_height = INFOPANEL_HEIGHT;
+		win_width = ScaleX(INFOPANEL_WIDTH);
+		win_height = ScaleX(INFOPANEL_HEIGHT);
 		sprintf(title, "Info");
 
 		if (infoPanel) {
@@ -1428,13 +1442,14 @@ void panel_show(virtual_screen *vscr, int type)
 		panel = wmalloc(sizeof(Panel));
 		panel->vscr = vscr;
 		panel->type = PANEL_INFO;
-		create_info_widgets(vscr, panel, win_width, win_height);
+		create_info_widgets(vscr, panel, win_width, win_height, fw, fh);
 		infoPanel = panel;
 		break;
 	}
 
 	WMRealizeWidget(panel->win);
 	WMMapSubwidgets(panel->win);
+	WMMapSubwidgets(panel->frame);
 
 	parent = XCreateSimpleWindow(dpy, vscr->screen_ptr->root_win, 0, 0, win_width, win_height, 0, 0, 0);
 	XReparentWindow(dpy, WMWidgetXID(panel->win), parent, 0, 0);
