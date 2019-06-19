@@ -695,7 +695,6 @@ void moveBetweenHeads(WWindow *wwin, int direction)
 {
 	int head = wGetHeadForWindow(wwin);
 	int destHead = -1;
-
 	unsigned int new_width, new_height;
 	int offsetX, newX = 0;
 	int offsetY, newY = 0;
@@ -714,43 +713,42 @@ void moveBetweenHeads(WWindow *wwin, int direction)
 					head, try_movements[direction][try_movement_idx]);
 	}
 
-	if (destHead != -1) {
-		totalArea.x1 = 0;
-		totalArea.y1 = 0;
-		totalArea.x2 = scr->scr_width;
-		totalArea.y2 = scr->scr_height;
+	if (destHead == -1)
+		return;
 
-		oldHeadArea = wGetUsableAreaForHead(wwin->vscr, head, &totalArea, True);
-		destHeadArea = wGetUsableAreaForHead(wwin->vscr, destHead, &totalArea, True);
+	totalArea.x1 = 0;
+	totalArea.y1 = 0;
+	totalArea.x2 = scr->scr_width;
+	totalArea.y2 = scr->scr_height;
 
-		offsetX = wwin->frame_x - oldHeadArea.x1;
-		offsetY = wwin->frame_y - oldHeadArea.y1;
+	oldHeadArea = wGetUsableAreaForHead(wwin->vscr, head, &totalArea, True);
+	destHeadArea = wGetUsableAreaForHead(wwin->vscr, destHead, &totalArea, True);
 
-		newX = destHeadArea.x1 + offsetX;
-		newY = destHeadArea.y1 + offsetY;
+	offsetX = wwin->frame_x - oldHeadArea.x1;
+	offsetY = wwin->frame_y - oldHeadArea.y1;
 
-		new_width = wwin->width;
-		new_height = wwin->height;
+	newX = destHeadArea.x1 + offsetX;
+	newY = destHeadArea.y1 + offsetY;
 
-		/* try to brind window inside head coordinates */
-		if (newX > destHeadArea.x2)
-			newX = destHeadArea.x2 - wwin->width;
+	new_width = wwin->width;
+	new_height = wwin->height;
 
-		if (newX < destHeadArea.x1)
-			newX = destHeadArea.x1;
+	/* try to brind window inside head coordinates */
+	if (newX > destHeadArea.x2)
+		newX = destHeadArea.x2 - wwin->width;
 
-		if (newY > destHeadArea.y2)
-			newY = destHeadArea.y2 - wwin->height;
+	if (newX < destHeadArea.x1)
+		newX = destHeadArea.x1;
 
-		if (newY < destHeadArea.y1)
-			newY = destHeadArea.y1;
+	if (newY > destHeadArea.y2)
+		newY = destHeadArea.y2 - wwin->height;
 
-		/* unset maximization state */
-		wwin->flags.maximized = 0;
-		wWindowConfigure(wwin, newX, newY, new_width, new_height);
-	}
+	if (newY < destHeadArea.y1)
+		newY = destHeadArea.y1;
 
-	return;
+	/* unset maximization state */
+	wwin->flags.maximized = 0;
+	wWindowConfigure(wwin, newX, newY, new_width, new_height);
 }
 
 /* the window boundary coordinates */
