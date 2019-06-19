@@ -256,6 +256,7 @@ static void updateCurrentWorkspace(virtual_screen *vscr);
 static void updateWorkspaceCount(virtual_screen *vscr);
 static void wNETWMShowingDesktop(virtual_screen *vscr, Bool show);
 static RImage *makeRImageFromARGBData(unsigned long *data);
+static RImage *findBestIcon(unsigned long *data, unsigned long items);
 
 typedef struct NetData {
 	WScreen *scr;
@@ -395,42 +396,36 @@ static RImage *findBestIcon(unsigned long *data, unsigned long items)
 	int wanted;
 	int dx, dy, d;
 	int sx, sy, size;
-	int best_d, largest;
-	unsigned long i;
-	unsigned long *icon;
+	int best_d, largest = 0;
+	unsigned long i, *icon;
 	RImage *src_image, *ret_image;
 	double f;
 
 	if (wPreferences.enforce_icon_margin) {
-
 		/* better use only 75% of icon_size. For 64x64 this means 48x48
 		 * This leaves room around the icon for the miniwindow title and
 		 * results in better overall aesthetics -Dan */
-		wanted = (int)((double)wPreferences.icon_size * 0.75 + 0.5);
+		wanted = (int) ((double) wPreferences.icon_size * 0.75 + 0.5);
 
 		/* the size should be a multiple of 4 */
 		wanted = (wanted >> 2) << 2;
-
 	} else {
-
 		/* This is the "old" approach, which tries to find the largest
 		 * icon that still fits into icon_size. */
 		wanted = wPreferences.icon_size;
-
 	}
 
 	/* try to find an icon which is close to the wanted size, but not larger */
 	icon = NULL;
 	best_d = wanted * wanted * 2;
 	for (i = 0L; i < items - 1;) {
-
 		/* get the current icon's size */
-		sx = (int)data[i];
-		sy = (int)data[i + 1];
+		sx = (int) data[i];
+		sy = (int) data[i + 1];
 		if ((sx < 1) || (sy < 1))
 			break;
-		size = sx * sy + 2;
 
+		size = sx * sy + 2;
 		/* check the size difference if it's not too large */
 		if ((sx <= wanted) && (sy <= wanted)) {
 			dx = wanted - sx;
@@ -448,18 +443,20 @@ static RImage *findBestIcon(unsigned long *data, unsigned long items)
 	/* if an icon has been found, no transformation is needed */
 	if (icon)
 		return makeRImageFromARGBData(icon);
+
 	/* We need to scale down an icon. Find the largest one, for it usually
 	 * looks better to scale down a large image by a large scale than a
 	 * small image by a small scale. */
-	largest = 0;
 	for (i = 0L; i < items - 1;) {
-		size = (int)data[i] * (int)data[i + 1];
+		size = (int) data[i] * (int) data[i + 1];
 		if (size == 0)
 			break;
+
 		if (size > largest) {
 			icon = &data[i];
 			largest = size;
 		}
+
 		i += size + 2;
 	}
 
@@ -470,12 +467,13 @@ static RImage *findBestIcon(unsigned long *data, unsigned long items)
 	/* create a scaled down version of the icon */
 	src_image = makeRImageFromARGBData(icon);
 	if (src_image->width > src_image->height) {
-		f = (double)wanted / (double)src_image->width;
-		ret_image = RScaleImage(src_image, wanted, (int)(f * (double)(src_image->height)));
+		f = (double) wanted / (double) src_image->width;
+		ret_image = RScaleImage(src_image, wanted, (int) (f * (double) (src_image->height)));
 	} else {
-		f = (double)wanted / (double)src_image->height;
-		ret_image = RScaleImage(src_image, (int)(f * (double)src_image->width), wanted);
+		f = (double) wanted / (double) src_image->height;
+		ret_image = RScaleImage(src_image, (int) (f * (double) src_image->width), wanted);
 	}
+
 	RReleaseImage(src_image);
 	return ret_image;
 }
