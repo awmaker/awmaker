@@ -694,24 +694,21 @@ void handleMaximize(WWindow *wwin, int directions)
 void moveBetweenHeads(WWindow *wwin, int direction)
 {
 	int head = wGetHeadForWindow(wwin);
-	int destHead = -1;
+	int try_movement_idx, destHead = -1;
 	unsigned int new_width, new_height;
 	int offsetX, newX = 0;
 	int offsetY, newY = 0;
 	WArea totalArea, oldHeadArea, destHeadArea;
 	WScreen *scr = wwin->vscr->screen_ptr;
-
 	int try_movements[2][4] = {
 		{DIRECTION_RIGHT, DIRECTION_DOWN, DIRECTION_LEFT, DIRECTION_UP},
 		{DIRECTION_LEFT, DIRECTION_UP, DIRECTION_RIGHT, DIRECTION_DOWN}
 	};
 
 	/* loop through directions array and try movements until one works */
-	for (int try_movement_idx = 0;
-			destHead == -1 && try_movement_idx < 4; try_movement_idx++) {
-			destHead = wGetHeadRelativeToCurrentHead(wwin->vscr,
-					head, try_movements[direction][try_movement_idx]);
-	}
+	for (try_movement_idx = 0; destHead == -1 && try_movement_idx < 4; try_movement_idx++)
+		destHead = wGetHeadRelativeToCurrentHead(wwin->vscr, head,
+			   try_movements[direction][try_movement_idx]);
 
 	if (destHead == -1)
 		return;
