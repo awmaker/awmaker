@@ -67,7 +67,7 @@
 	"Copyright \xc2\xa9 1997-2006 Alfredo K. Kojima\n"\
 	"Copyright \xc2\xa9 1998-2006 Dan Pascu\n"\
 	"Copyright \xc2\xa9 2013-2014 Window Maker Developers Team\n" \
-	"Copyright \xc2\xa9 2015-2018 Rodolfo García (kix)"
+	"Copyright \xc2\xa9 2015-2019 Rodolfo García (kix)"
 
 #define LEGAL_TEXT \
 	"    Window Maker is free software; you can redistribute it and/or "\
@@ -83,21 +83,15 @@
 	"Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA"\
 	"02110-1301 USA."
 
-#define ALERT_WIDTH 400
-#define ALERT_HEIGHT 180
-
-#define INPUT_WIDTH 320
-#define INPUT_HEIGHT 160
-
 #define ICONDLG_WIDTH 450
 #define ICONDLG_HEIGHT 280
 
-#define INFOPANEL_WIDTH 382
-#define INFOPANEL_HEIGHT 250
+#define INFOPANEL_WIDTH 402
+#define INFOPANEL_HEIGHT 290
 
 #define LEGALPANEL_WIDTH 420
 #define LEGALPANEL_HEIGHT 250
-#define LEGALPANEL_MARGIN 10
+#define MARGIN 10
 
 #define CRASHING_WIDTH 295
 #define CRASHING_HEIGHT 345
@@ -118,7 +112,7 @@ static void SaveHistory(WMArray *history, const char *filename);
 static void setCrashAction(void *self, void *clientData);
 static void setViewedImage(IconPanel *panel, const char *file);
 static void toggleSaveSession(WMWidget *w, void *data);
-static void create_dialog_iconchooser_widgets(IconPanel *panel, const int win_width, const int win_height);
+static void create_dialog_iconchooser_widgets(IconPanel *panel, const int win_width, const int win_height, int wmScaleWidth, int wmScaleHeight);
 static void destroy_dialog_iconchooser(IconPanel *panel, Window parent);
 static void destroy_info_panel(WCoreWindow *foo, void *data, XEvent *event);
 static void destroy_legal_panel(WCoreWindow *foo, void *data, XEvent *event);
@@ -130,8 +124,8 @@ static WMPixmap *getWindowMakerIconImage(WMScreen *scr);
 static WMPoint getCenter(virtual_screen *vscr, int width, int height);
 static void destroy_panel(int type);
 
-static void create_legal_widgets(virtual_screen *vscr, Panel *panel, int win_width, int win_height);
-static void create_info_widgets(virtual_screen *vscr, Panel *panel, int win_width, int win_height);
+static void create_legal_widgets(virtual_screen *vscr, Panel *panel, int win_width, int win_height, int wmScaleWidth, int wmScaleHeight);
+static void create_info_widgets(virtual_screen *vscr, Panel *panel, int win_width, int win_height, int wmScaleWidth, int wmScaleHeight);
 
 static int alert_panel(WMAlertPanel *panel, virtual_screen *vscr, const char *title);
 
@@ -148,8 +142,8 @@ static int alert_panel(WMAlertPanel *panel, virtual_screen *vscr, const char *ti
 	WScreen *scr = vscr->screen_ptr;
 	Window parent;
 	WWindow *wwin;
-	const int win_width = ALERT_WIDTH;
-	const int win_height = ALERT_HEIGHT;
+	const int win_width = WMWidgetWidth(panel->win);
+	const int win_height = WMWidgetHeight(panel->win);
 	int result, wframeflags;
 	WMPoint center;
 
@@ -178,7 +172,7 @@ int wMessageDialog(virtual_screen *vscr, const char *title, const char *message,
 {
 	WMAlertPanel *panel;
 
-	panel = WMCreateAlertPanel(vscr->screen_ptr->wmscreen, NULL, title, message, defBtn, altBtn, othBtn);
+	panel = WMCreateScaledAlertPanel(vscr->screen_ptr->wmscreen, NULL, title, message, defBtn, altBtn, othBtn);
 	return alert_panel(panel, vscr, title);
 }
 
@@ -194,13 +188,15 @@ int wExitDialog(virtual_screen *vscr, const char *title, const char *message, co
 {
 	WMAlertPanel *panel;
 	WMButton *saveSessionBtn;
+	int pwidth;
 
-	panel = WMCreateAlertPanel(vscr->screen_ptr->wmscreen, NULL, title, message, defBtn, altBtn, othBtn);
+	panel = WMCreateScaledAlertPanel(vscr->screen_ptr->wmscreen, NULL, title, message, defBtn, altBtn, othBtn);
+	pwidth = WMWidgetWidth(panel->win);
 
 	/* add save session button */
 	saveSessionBtn = WMCreateSwitchButton(panel->hbox);
 	WMSetButtonAction(saveSessionBtn, toggleSaveSession, NULL);
-	WMAddBoxSubview(panel->hbox, WMWidgetView(saveSessionBtn), False, True, 200, 0, 0);
+	WMAddBoxSubview(panel->hbox, WMWidgetView(saveSessionBtn), False, True, pwidth / 2, 0, 0);
 	WMSetButtonText(saveSessionBtn, _("Save workspace state"));
 	WMSetButtonSelected(saveSessionBtn, wPreferences.save_session_on_exit);
 	WMRealizeWidget(saveSessionBtn);
@@ -462,8 +458,8 @@ static char *create_input_panel(virtual_screen *vscr, WMInputPanel *panel)
 {
 	WScreen *scr = vscr->screen_ptr;
 	WWindow *wwin;
-	const int win_width = INPUT_WIDTH;
-	const int win_height = INPUT_HEIGHT;
+	const int win_width = WMWidgetWidth(panel->win);
+	const int win_height = WMWidgetHeight(panel->win);
 	char *result = NULL;
 	Window parent;
 	WMPoint center;
@@ -506,7 +502,7 @@ int wAdvancedInputDialog(virtual_screen *vscr, const char *title,
 
 	filename = HistoryFileName(name);
 	p = wmalloc(sizeof(WMInputPanelWithHistory));
-	p->panel = WMCreateInputPanel(scr->wmscreen, NULL, title, message, *text, _("OK"), _("Cancel"));
+	p->panel = WMCreateScaledInputPanel(scr->wmscreen, NULL, title, message, *text, _("OK"), _("Cancel"));
 	p->history = LoadHistory(filename, wPreferences.history_lines);
 	p->histpos = 0;
 	p->prefix = NULL;
@@ -543,7 +539,7 @@ int wInputDialog(virtual_screen *vscr, const char *title, const char *message, c
 	WMInputPanel *panel;
 	char *result;
 
-	panel = WMCreateInputPanel(scr->wmscreen, NULL, title, message, *text, _("OK"), _("Cancel"));
+	panel = WMCreateScaledInputPanel(scr->wmscreen, NULL, title, message, *text, _("OK"), _("Cancel"));
 	result = create_input_panel(vscr, panel);
 
 	if (!result)
@@ -617,12 +613,15 @@ static void setViewedImage(IconPanel *panel, const char *file)
 {
 	WMPixmap *pixmap;
 	RColor color;
+	int iwidth, iheight;
 
 	color.red = 0xae;
 	color.green = 0xaa;
 	color.blue = 0xae;
 	color.alpha = 0;
-	pixmap = WMCreateScaledBlendedPixmapFromFile(WMWidgetScreen(panel->win), file, &color, 75, 75);
+	iwidth = WMWidgetWidth(panel->iconView);
+	iheight = WMWidgetHeight(panel->iconView);
+	pixmap = WMCreateScaledBlendedPixmapFromFile(WMWidgetScreen(panel->win), file, &color, iwidth, iheight);
 	if (!pixmap) {
 		WMSetButtonEnabled(panel->okButton, False);
 		WMSetLabelText(panel->iconView, _("Could not load image file "));
@@ -865,7 +864,7 @@ static void keyPressHandler(XEvent *event, void *data)
 	}
 }
 
-static void create_dialog_iconchooser_widgets(IconPanel *panel, const int win_width, const int win_height)
+static void create_dialog_iconchooser_widgets(IconPanel *panel, const int win_width, const int win_height, int wmScaleWidth, int wmScaleHeight)
 {
 	WScreen *scr = panel->vscr->screen_ptr;
 	WMFont *boldFont;
@@ -876,12 +875,12 @@ static void create_dialog_iconchooser_widgets(IconPanel *panel, const int win_wi
 
 	WMCreateEventHandler(WMWidgetView(panel->win), KeyPressMask | KeyReleaseMask, keyPressHandler, panel);
 
-	boldFont = WMBoldSystemFontOfSize(scr->wmscreen, 12);
-	panel->normalfont = WMSystemFontOfSize(WMWidgetScreen(panel->win), 12);
+	boldFont = WMBoldSystemFontOfSize(scr->wmscreen, WMScaleY(12));
+	panel->normalfont = WMSystemFontOfSize(WMWidgetScreen(panel->win), WMScaleY(12));
 
 	panel->dirLabel = WMCreateLabel(panel->win);
-	WMResizeWidget(panel->dirLabel, 200, 20);
-	WMMoveWidget(panel->dirLabel, 10, 7);
+	WMResizeWidget(panel->dirLabel, WMScaleX(200), WMScaleY(20));
+	WMMoveWidget(panel->dirLabel, WMScaleX(10), WMScaleY(7));
 	WMSetLabelText(panel->dirLabel, _("Directories"));
 	WMSetLabelFont(panel->dirLabel, boldFont);
 	WMSetLabelTextAlignment(panel->dirLabel, WACenter);
@@ -889,8 +888,8 @@ static void create_dialog_iconchooser_widgets(IconPanel *panel, const int win_wi
 	WMSetLabelRelief(panel->dirLabel, WRSunken);
 
 	panel->iconLabel = WMCreateLabel(panel->win);
-	WMResizeWidget(panel->iconLabel, 140, 20);
-	WMMoveWidget(panel->iconLabel, 215, 7);
+	WMResizeWidget(panel->iconLabel, WMScaleX(140), WMScaleY(20));
+	WMMoveWidget(panel->iconLabel, WMScaleX(215), WMScaleY(7));
 	WMSetLabelText(panel->iconLabel, _("Icons"));
 	WMSetLabelFont(panel->iconLabel, boldFont);
 	WMSetLabelTextAlignment(panel->iconLabel, WACenter);
@@ -910,51 +909,51 @@ static void create_dialog_iconchooser_widgets(IconPanel *panel, const int win_wi
 	WMSetLabelRelief(panel->iconLabel, WRSunken);
 
 	panel->dirList = WMCreateList(panel->win);
-	WMResizeWidget(panel->dirList, 200, 170);
-	WMMoveWidget(panel->dirList, 10, 30);
+	WMResizeWidget(panel->dirList, WMScaleX(200), WMScaleY(170));
+	WMMoveWidget(panel->dirList, WMScaleX(10), WMScaleY(30));
 	WMSetListAction(panel->dirList, listCallback, panel);
 
 	panel->iconList = WMCreateList(panel->win);
-	WMResizeWidget(panel->iconList, 140, 170);
-	WMMoveWidget(panel->iconList, 215, 30);
+	WMResizeWidget(panel->iconList, WMScaleX(140), WMScaleY(170));
+	WMMoveWidget(panel->iconList, WMScaleX(215), WMScaleY(30));
 	WMSetListAction(panel->iconList, listCallback, panel);
 
 	WMHangData(panel->iconList, panel);
 
 	panel->previewButton = WMCreateCommandButton(panel->win);
-	WMResizeWidget(panel->previewButton, 75, 26);
-	WMMoveWidget(panel->previewButton, 365, 130);
+	WMResizeWidget(panel->previewButton, WMScaleX(75), WMScaleY(26));
+	WMMoveWidget(panel->previewButton, WMScaleX(365), WMScaleY(130));
 	WMSetButtonText(panel->previewButton, _("Preview"));
 	WMSetButtonAction(panel->previewButton, buttonCallback, panel);
 
 	panel->iconView = WMCreateLabel(panel->win);
-	WMResizeWidget(panel->iconView, 75, 75);
-	WMMoveWidget(panel->iconView, 365, 40);
+	WMResizeWidget(panel->iconView, WMScaleX(75), WMScaleY(75));
+	WMMoveWidget(panel->iconView, WMScaleX(365), WMScaleY(40));
 	WMSetLabelImagePosition(panel->iconView, WIPOverlaps);
 	WMSetLabelRelief(panel->iconView, WRSunken);
 	WMSetLabelTextAlignment(panel->iconView, WACenter);
 
 	panel->fileLabel = WMCreateLabel(panel->win);
-	WMResizeWidget(panel->fileLabel, 80, 20);
-	WMMoveWidget(panel->fileLabel, 10, 210);
+	WMResizeWidget(panel->fileLabel, WMScaleX(80), WMScaleY(20));
+	WMMoveWidget(panel->fileLabel, WMScaleX(10), WMScaleY(210));
 	WMSetLabelText(panel->fileLabel, _("File Name:"));
 
 	panel->fileField = WMCreateTextField(panel->win);
 	WMSetViewNextResponder(WMWidgetView(panel->fileField), WMWidgetView(panel->win));
-	WMResizeWidget(panel->fileField, 345, 20);
-	WMMoveWidget(panel->fileField, 95, 210);
+	WMResizeWidget(panel->fileField, WMScaleX(345), WMScaleY(20));
+	WMMoveWidget(panel->fileField, WMScaleX(95), WMScaleY(210));
 	WMSetTextFieldEditable(panel->fileField, False);
 
 	panel->okButton = WMCreateCommandButton(panel->win);
-	WMResizeWidget(panel->okButton, 80, 26);
-	WMMoveWidget(panel->okButton, 360, 240);
+	WMResizeWidget(panel->okButton, WMScaleX(80), WMScaleY(26));
+	WMMoveWidget(panel->okButton, WMScaleX(360), WMScaleY(242));
 	WMSetButtonText(panel->okButton, _("OK"));
 	WMSetButtonEnabled(panel->okButton, False);
 	WMSetButtonAction(panel->okButton, buttonCallback, panel);
 
 	panel->cancelButton = WMCreateCommandButton(panel->win);
-	WMResizeWidget(panel->cancelButton, 80, 26);
-	WMMoveWidget(panel->cancelButton, 270, 240);
+	WMResizeWidget(panel->cancelButton, WMScaleX(80), WMScaleY(26));
+	WMMoveWidget(panel->cancelButton, WMScaleX(270), WMScaleY(242));
 	WMSetButtonText(panel->cancelButton, _("Cancel"));
 	WMSetButtonAction(panel->cancelButton, buttonCallback, panel);
 
@@ -1015,8 +1014,7 @@ Bool wIconChooserDialog(AppSettingsPanel *app_panel, InspectorPanel *ins_panel, 
 	WScreen *scr;
 	char *defaultPath, *wantedPath, *title;
 	const char *instance, *class;
-	const int win_width = ICONDLG_WIDTH;
-	const int win_height = ICONDLG_HEIGHT;
+	int win_width, win_height, wmScaleWidth, wmScaleHeight;
 	Window parent;
 	IconPanel *panel;
 	Bool result;
@@ -1046,7 +1044,10 @@ Bool wIconChooserDialog(AppSettingsPanel *app_panel, InspectorPanel *ins_panel, 
 	scr = vscr->screen_ptr;
 	panel->vscr = vscr;
 
-	create_dialog_iconchooser_widgets(panel, win_width, win_height);
+	WMGetScaleBaseFromSystemFont(scr->wmscreen, &wmScaleWidth, &wmScaleHeight);
+	win_width = WMScaleX(ICONDLG_WIDTH);
+	win_height = WMScaleY(ICONDLG_HEIGHT);
+	create_dialog_iconchooser_widgets(panel, win_width, win_height, wmScaleWidth, wmScaleHeight);
 	parent = XCreateSimpleWindow(dpy, scr->root_win, 0, 0, win_width, win_height, 0, 0, 0);
 	XReparentWindow(dpy, WMWidgetXID(panel->win), parent, 0, 0);
 	title = create_dialog_iconchooser_title(instance, class);
@@ -1159,27 +1160,29 @@ static void destroy_legal_panel(WCoreWindow *foo, void *data, XEvent *event)
 	destroy_panel(PANEL_LEGAL);
 }
 
-static void create_legal_widgets(virtual_screen *vscr, Panel *panel, int win_width, int win_height)
+static void create_legal_widgets(virtual_screen *vscr, Panel *panel, int win_width, int win_height, int wmScaleWidth, int wmScaleHeight)
 {
-	int margin = LEGALPANEL_MARGIN;
-
 	panel->win = WMCreateWindow(vscr->screen_ptr->wmscreen, "legal");
 	WMResizeWidget(panel->win, win_width, win_height);
 
-	panel->lbl_license = WMCreateLabel(panel->win);
+	panel->frame = WMCreateFrame(panel->win);
+	WMResizeWidget(panel->frame, win_width - (2 * WMScaleX(MARGIN)), win_height - (2 * WMScaleY(MARGIN)));
+	WMMoveWidget(panel->frame, WMScaleX(MARGIN), WMScaleY(MARGIN));
+	WMSetFrameTitle(panel->frame, NULL);
+
+	panel->lbl_license = WMCreateLabel(panel->frame);
 	WMSetLabelWraps(panel->lbl_license, True);
-	WMResizeWidget(panel->lbl_license, win_width - (2 * margin), win_height - (2 * margin));
-	WMMoveWidget(panel->lbl_license, margin, margin);
+	WMResizeWidget(panel->lbl_license, win_width - (4 * WMScaleX(10)), win_height - (4 * WMScaleY(10)));
+	WMMoveWidget(panel->lbl_license, WMScaleX(8), WMScaleY(8));
 	WMSetLabelTextAlignment(panel->lbl_license, WALeft);
 	WMSetLabelText(panel->lbl_license, LEGAL_TEXT);
-	WMSetLabelRelief(panel->lbl_license, WRGroove);
 }
 
-static void create_info_widgets(virtual_screen *vscr, Panel *panel, int win_width, int win_height)
+static void create_info_widgets(virtual_screen *vscr, Panel *panel, int win_width, int win_height, int wmScaleWidth, int wmScaleHeight)
 {
 	WMPixmap *logo;
 	WMFont *font;
-	char *name, *strbuf = NULL;
+	char *strbuf = NULL;
 	const char *separator;
 	char buffer[256];
 #ifdef USE_XINERAMA
@@ -1200,28 +1203,37 @@ static void create_info_widgets(virtual_screen *vscr, Panel *panel, int win_widt
 	};
 
 	panel->win = WMCreateWindow(vscr->screen_ptr->wmscreen, "info");
+	WMGetScaleBaseFromSystemFont(vscr->screen_ptr->wmscreen, &wmScaleWidth, &wmScaleHeight);
 	WMResizeWidget(panel->win, win_width, win_height);
+
+	panel->frame = WMCreateFrame(panel->win);
+	WMResizeWidget(panel->frame, win_width - (2 * WMScaleX(MARGIN)), win_height - (2 * WMScaleY(MARGIN)));
+	WMMoveWidget(panel->frame, WMScaleX(MARGIN), WMScaleY(MARGIN));
+	WMSetFrameTitle(panel->frame, NULL);
 
 	logo = WMCreateApplicationIconBlendedPixmap(vscr->screen_ptr->wmscreen, (RColor *) NULL);
 	if (!logo)
 		logo = WMRetainPixmap(WMGetApplicationIconPixmap(vscr->screen_ptr->wmscreen));
 
 	if (logo) {
-		panel->lbl_logo = WMCreateLabel(panel->win);
-		WMResizeWidget(panel->lbl_logo, 64, 64);
-		WMMoveWidget(panel->lbl_logo, 30, 20);
+		panel->lbl_logo = WMCreateLabel(panel->frame);
+		WMResizeWidget(panel->lbl_logo, WMScaleX(64), WMScaleY(64));
+		WMMoveWidget(panel->lbl_logo, WMScaleX(30), WMScaleY(20));
 		WMSetLabelImagePosition(panel->lbl_logo, WIPImageOnly);
 		WMSetLabelImage(panel->lbl_logo, logo);
 		WMReleasePixmap(logo);
 	}
 
-	sepHeight = 3;
-	panel->lbl_name1 = WMCreateLabel(panel->win);
-	WMResizeWidget(panel->lbl_name1, 240, 30 + 2);
-	WMMoveWidget(panel->lbl_name1, 100, 30 - 2 - sepHeight);
+	sepHeight = WMScaleY(3);
+	panel->lbl_name1 = WMCreateLabel(panel->frame);
 
-	name = "Lucida Sans,Comic Sans MS,URW Gothic L,Trebuchet MS" ":italic:pixelsize=28:antialias=true";
-	font = WMCreateFont(vscr->screen_ptr->wmscreen, name);
+	WMResizeWidget(panel->lbl_name1, WMScaleX(240), WMScaleY(30) + WMScaleY(2));
+	WMMoveWidget(panel->lbl_name1, WMScaleX(100), WMScaleY(30) - WMScaleY(2) - sepHeight);
+
+	snprintf(buffer, sizeof(buffer),
+		"Lucida Sans,Comic Sans MS,URW Gothic L,Trebuchet MS:italic:pixelsize=%d:antialias=true",
+		WMScaleY(24));
+	font = WMCreateFont(vscr->screen_ptr->wmscreen, buffer);
 	strbuf = "AW Maker";
 	if (font) {
 		width = WMWidthOfString(font, strbuf, strlen(strbuf));
@@ -1232,17 +1244,17 @@ static void create_info_widgets(virtual_screen *vscr, Panel *panel, int win_widt
 	WMSetLabelTextAlignment(panel->lbl_name1, WACenter);
 	WMSetLabelText(panel->lbl_name1, strbuf);
 
-	panel->frm_line = WMCreateFrame(panel->win);
+	panel->frm_line = WMCreateFrame(panel->frame);
 	WMResizeWidget(panel->frm_line, width, sepHeight);
-	WMMoveWidget(panel->frm_line, 100 + (240 - width) / 2, 60 - sepHeight);
+	WMMoveWidget(panel->frm_line, WMScaleX(100) + (WMScaleX(240) - width) / 2, WMScaleY(60) - sepHeight);
 	WMSetFrameRelief(panel->frm_line, WRSimple);
 	WMSetWidgetBackgroundColor(panel->frm_line, vscr->screen_ptr->black);
 
-	panel->lbl_name2 = WMCreateLabel(panel->win);
-	WMResizeWidget(panel->lbl_name2, 240, 24);
-	WMMoveWidget(panel->lbl_name2, 100, 60);
-	name = "URW Gothic L,Nimbus Sans L:pixelsize=16:antialias=true";
-	font = WMCreateFont(vscr->screen_ptr->wmscreen, name);
+	panel->lbl_name2 = WMCreateLabel(panel->frame);
+	WMResizeWidget(panel->lbl_name2, WMScaleX(240), WMScaleY(24));
+	WMMoveWidget(panel->lbl_name2, WMScaleX(100), WMScaleY(60));
+	snprintf(buffer, sizeof(buffer), "URW Gothic L,Nimbus Sans L:pixelsize=%d:antialias=true", WMScaleY(16));
+	font = WMCreateFont(vscr->screen_ptr->wmscreen, buffer);
 	if (font) {
 		WMSetLabelFont(panel->lbl_name2, font);
 		WMReleaseFont(font);
@@ -1253,19 +1265,19 @@ static void create_info_widgets(virtual_screen *vscr, Panel *panel, int win_widt
 	WMSetLabelText(panel->lbl_name2, _("Abstracting Window Maker"));
 
 	snprintf(buffer, sizeof(buffer), _("Version %s"), VERSION);
-	panel->lbl_version = WMCreateLabel(panel->win);
-	WMResizeWidget(panel->lbl_version, 310, 16);
-	WMMoveWidget(panel->lbl_version, 30, 95);
+	panel->lbl_version = WMCreateLabel(panel->frame);
+	WMResizeWidget(panel->lbl_version, WMScaleX(310), WMScaleY(16));
+	WMMoveWidget(panel->lbl_version, WMScaleX(30), WMScaleY(95));
 	WMSetLabelTextAlignment(panel->lbl_version, WARight);
 	WMSetLabelText(panel->lbl_version, buffer);
 	WMSetLabelWraps(panel->lbl_version, False);
 
-	panel->lbl_copyr = WMCreateLabel(panel->win);
-	WMResizeWidget(panel->lbl_copyr, 360, 60);
-	WMMoveWidget(panel->lbl_copyr, 15, 190);
+	panel->lbl_copyr = WMCreateLabel(panel->frame);
+	WMResizeWidget(panel->lbl_copyr, WMScaleX(360), WMScaleY(60));
+	WMMoveWidget(panel->lbl_copyr, WMScaleX(15), WMScaleY(190));
 	WMSetLabelTextAlignment(panel->lbl_copyr, WALeft);
 	WMSetLabelText(panel->lbl_copyr, COPYRIGHT_TEXT);
-	font = WMSystemFontOfSize(vscr->screen_ptr->wmscreen, 11);
+	font = WMSystemFontOfSize(vscr->screen_ptr->wmscreen, WMScaleY(11));
 	if (font) {
 		WMSetLabelFont(panel->lbl_copyr, font);
 		WMReleaseFont(font);
@@ -1364,11 +1376,11 @@ static void create_info_widgets(virtual_screen *vscr, Panel *panel, int win_widt
 	strbuf = wstrappend(strbuf, ".");
 #endif
 
-	panel->lbl_info = WMCreateLabel(panel->win);
-	WMResizeWidget(panel->lbl_info, 350, 80);
-	WMMoveWidget(panel->lbl_info, 15, 115);
+	panel->lbl_info = WMCreateLabel(panel->frame);
+	WMResizeWidget(panel->lbl_info, WMScaleX(350), WMScaleY(80));
+	WMMoveWidget(panel->lbl_info, WMScaleX(15), WMScaleY(115));
 	WMSetLabelText(panel->lbl_info, strbuf);
-	font = WMSystemFontOfSize(vscr->screen_ptr->wmscreen, 11);
+	font = WMSystemFontOfSize(vscr->screen_ptr->wmscreen, WMScaleY(11));
 	if (font) {
 		WMSetLabelFont(panel->lbl_info, font);
 		WMReleaseFont(font);
@@ -1385,14 +1397,17 @@ void panel_show(virtual_screen *vscr, int type)
 	Window parent;
 	WWindow *wwin;
 	WMPoint center;
+	int wmScaleWidth, wmScaleHeight;
 	int win_width = 0, win_height = 0;
 	char title[256];
 	int wframeflags;
 
+	WMGetScaleBaseFromSystemFont(vscr->screen_ptr->wmscreen, &wmScaleWidth, &wmScaleHeight);
+
 	switch (type) {
 	case PANEL_LEGAL:
-		win_width = LEGALPANEL_WIDTH;
-		win_height = LEGALPANEL_HEIGHT;
+		win_width = WMScaleX(LEGALPANEL_WIDTH);
+		win_height = WMScaleY(LEGALPANEL_HEIGHT);
 		sprintf(title, "Legal");
 
 		if (legalPanel) {
@@ -1407,12 +1422,12 @@ void panel_show(virtual_screen *vscr, int type)
 		panel = wmalloc(sizeof(Panel));
 		panel->vscr = vscr;
 		panel->type = PANEL_LEGAL;
-		create_legal_widgets(vscr, panel, win_width, win_height);
+		create_legal_widgets(vscr, panel, win_width, win_height, wmScaleWidth, wmScaleHeight);
 		legalPanel = panel;
 		break;
 	case PANEL_INFO:
-		win_width = INFOPANEL_WIDTH;
-		win_height = INFOPANEL_HEIGHT;
+		win_width = WMScaleX(INFOPANEL_WIDTH);
+		win_height = WMScaleX(INFOPANEL_HEIGHT);
 		sprintf(title, "Info");
 
 		if (infoPanel) {
@@ -1427,13 +1442,14 @@ void panel_show(virtual_screen *vscr, int type)
 		panel = wmalloc(sizeof(Panel));
 		panel->vscr = vscr;
 		panel->type = PANEL_INFO;
-		create_info_widgets(vscr, panel, win_width, win_height);
+		create_info_widgets(vscr, panel, win_width, win_height, wmScaleWidth, wmScaleHeight);
 		infoPanel = panel;
 		break;
 	}
 
 	WMRealizeWidget(panel->win);
 	WMMapSubwidgets(panel->win);
+	WMMapSubwidgets(panel->frame);
 
 	parent = XCreateSimpleWindow(dpy, vscr->screen_ptr->root_win, 0, 0, win_width, win_height, 0, 0, 0);
 	XReparentWindow(dpy, WMWidgetXID(panel->win), parent, 0, 0);

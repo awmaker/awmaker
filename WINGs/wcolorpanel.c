@@ -2385,6 +2385,8 @@ void rgbIntToChar(W_ColorPanel *panel, int *value)
 	case RGBhex:
 		format = "%0X";
 		break;
+	default:
+		format = "";
 	}
 
 	sprintf(tmp, format, value[0]);
@@ -3396,6 +3398,9 @@ static void rgbInit(W_ColorPanel * panel)
 	case RGBhex:
 		format = "%0X";
 		break;
+	default:
+		/* Avoid compiler warning */
+		format = "";
 	}
 
 	sprintf(tmp, format, panel->color.rgb.red);
@@ -3448,7 +3453,7 @@ static void hsbInit(W_ColorPanel * panel)
 	WMSetSliderValue(panel->hsbSaturationS, value[1]);
 	WMSetSliderValue(panel->hsbBrightnessS, value[2]);
 
-	sprintf(tmp, "%d", value[0]);
+	sprintf(tmp, "%hu", value[0]);
 	WMSetTextFieldText(panel->hsbHueT, tmp);
 	sprintf(tmp, "%d", value[1]);
 	WMSetTextFieldText(panel->hsbSaturationT, tmp);

@@ -1436,12 +1436,12 @@ static WEditMenu *buildSubmenu(_Panel * panel, WMPropList * pl)
 					WSetEditMenuItemImage(item, panel->markerPix[data->type]);
 				WSetEditMenuItemData(item, data, (WMCallback *) freeItemData);
 			} else {
-				char *buf = wmalloc(1024);
-				snprintf(buf, 1024, _("Invalid menu command \"%s\" with label \"%s\" cleared"),
+				char buf[256];
+
+				snprintf(buf, sizeof(buf), _("Invalid menu command \"%s\" with label \"%s\" cleared"),
 					WMGetFromPLString(WMGetFromPLArray(pi, 1)),
 					WMGetFromPLString(WMGetFromPLArray(pi, 0)));
 				WMRunAlertPanel(scr, panel->parent, _("Warning"), buf, _("OK"), NULL, NULL);
-				wfree(buf);
 			}
 
 		}
@@ -1512,7 +1512,7 @@ static void showData(_Panel * panel)
 			break;
 
 		if (access(path, W_OK) < 0) {
-			snprintf(buf, 1024,
+			snprintf(buf, sizeof(buf),
 				 _("The menu file \"%s\" referenced by "
 				   "WMRootMenu is read-only.\n"
 				   "You cannot use WPrefs to modify it."),
@@ -1554,7 +1554,7 @@ static void showData(_Panel * panel)
 
 	panel->menuPath = menuPath;
 
-	snprintf(buf, 1024,
+	snprintf(buf, sizeof(buf),
 		 _("\n\nWhen saved, the menu will be written to the file\n\"%s\"."),
 		 menuPath);
 	labelText = WMGetLabelText(panel->sections[NoInfo][0]);
@@ -1602,15 +1602,12 @@ static WMPropList *processData(const char *title, ItemData * data)
 	case ExecInfo:
 		if (data->param.exec.command == NULL)
 			goto return_null;
-#if 1
+
 		if (strpbrk(data->param.exec.command, "&$*|><?`=;")) {
 			s1 = "SHEXEC";
 		} else {
 			s1 = "EXEC";
 		}
-#else
-		s1 = "SHEXEC";
-#endif
 
 		if (notblank(data->param.exec.shortcut)) {
 			WMAddToPLArray(item, pscut);

@@ -70,6 +70,7 @@ struct Panel {
 	virtual_screen *vscr;
 	WWindow *wwin;
 	WMWindow *win;
+	WMFrame *frame;
 	int type;
 
 	/* Legal Panel */

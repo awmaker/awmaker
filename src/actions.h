@@ -82,6 +82,6 @@ void animateResize(virtual_screen *vscr, int x, int y, int w, int h, int fx, int
 void update_saved_geometry(WWindow *wwin);
 
 void movePionterToWindowCenter(WWindow *wwin);
-
+void moveBetweenHeads(WWindow *wwin, int direction);
 #endif
 

@@ -193,6 +193,16 @@ typedef void WMNotificationObserverAction(void *observerData,
 		sizeof(array) / sizeof(array[0]);   \
 	})
 
+/* These macros can be used to adjust the location and size pixel values in
+ * the panel layouts so that they match the configured size of the system
+ * font (useful with high DPI screens, where you have to increase this size).
+ * The macros require two local variables to be set:
+ *    wmScaleWidth:  the width of the alphabet in the current system font
+ *    wmScaleHeight: the height of the current system font
+ * Use the WMGetScaleBaseFromSystemFont function to set these values.
+ */
+#define WMScaleX(value) ((int)((double)value / 177.0 * (double)wmScaleWidth + 0.5))
+#define WMScaleY(value) ((int)((double)value / 15.0 * (double)wmScaleHeight + 0.5))
 
 /* ---[ WINGs/memory.c ]-------------------------------------------------- */
 

@@ -216,6 +216,8 @@ static WDECallbackUpdate setKeyGrab_windowshortcut7;
 static WDECallbackUpdate setKeyGrab_windowshortcut8;
 static WDECallbackUpdate setKeyGrab_windowshortcut9;
 static WDECallbackUpdate setKeyGrab_windowshortcut10;
+static WDECallbackUpdate setKeyGrab_moveto12to6head;
+static WDECallbackUpdate setKeyGrab_moveto6to12head;
 static WDECallbackUpdate setKeyGrab_windowrelaunch;
 static WDECallbackUpdate setKeyGrab_screenswitch;
 static WDECallbackUpdate setKeyGrab_run;
@@ -457,6 +459,8 @@ WDefaultEntry noscreenOptionList[] = {
 	    &wPreferences.icon_path, getPathList, NULL, NULL, NULL},
 	{"IconificationStyle", "Zoom", seIconificationStyles,
 	    &wPreferences.iconification_style, getEnum, NULL, NULL, NULL},
+	{"EnforceIconMargin", "NO", NULL,
+	    &wPreferences.enforce_icon_margin, getBool, NULL, NULL, NULL},
 	{"DisableWSMouseActions", "NO", NULL,
 	    &wPreferences.disable_root_mouse, getBool, NULL, NULL, NULL},
 	{"MouseLeftButtonAction", "SelectWindows", seMouseButtonActions,
@@ -876,6 +880,10 @@ WDefaultEntry optionList[] = {
 	    &wPreferences.key.windowshortcut9, getKeybind, setKeyGrab_windowshortcut9, NULL, NULL},
 	{"WindowShortcut10Key", "None", NULL,
 	    &wPreferences.key.windowshortcut10, getKeybind, setKeyGrab_windowshortcut10, NULL, NULL},
+	{"MoveTo12to6Head", "None", NULL,
+	    &wPreferences.key.moveto12to6head, getKeybind, setKeyGrab_moveto12to6head, NULL, NULL},
+	{"MoveTo6to12Head", "None", NULL,
+	    &wPreferences.key.moveto6to12head, getKeybind, setKeyGrab_moveto6to12head, NULL, NULL},
 	{"WindowRelaunchKey", "None", NULL,
 	    &wPreferences.key.windowrelaunch, getKeybind, setKeyGrab_windowrelaunch, NULL, NULL},
 	{"ScreenSwitchKey", "None", NULL,
@@ -3041,7 +3049,7 @@ static int setWorkspaceSpecificBack(virtual_screen *vscr)
 
 static int setWorkspaceBack(virtual_screen *vscr)
 {
-	WMPropList *value = wPreferences.workspacespecificback;
+	WMPropList *value = wPreferences.workspaceback;
 
 	if (vscr->screen_ptr->flags.backimage_helper_launched) {
 		char *str;
@@ -4961,6 +4969,52 @@ static int setKeyGrab_windowshortcut10(virtual_screen *vscr)
 
 	set_keygrab(&shortcut, value);
 	wKeyBindings[WKBD_WINDOW10] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_moveto12to6head(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.windowshortcut10;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_MOVE_12_TO_6_HEAD] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_moveto6to12head(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.windowshortcut10;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_MOVE_6_TO_12_HEAD] = shortcut;
 	wwin = vscr->window.focused;
 
 	while (wwin != NULL) {

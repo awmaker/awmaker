@@ -795,6 +795,8 @@ char* WMGetFontName(WMFont *font);
 
 unsigned int WMFontHeight(WMFont *font);
 
+void WMGetScaleBaseFromSystemFont(WMScreen *scrPtr, int *alphabetWidth, int *fontHeight);
+
 void WMSetWidgetDefaultFont(WMScreen *scr, WMFont *font);
 
 void WMSetWidgetDefaultBoldFont(WMScreen *scr, WMFont *font);
@@ -1839,10 +1841,17 @@ WMAlertPanel* WMCreateAlertPanel(WMScreen *app, WMWindow *owner, const char *tit
                                  const char *msg, const char *defaultButton,
                                  const char *alternateButton, const char *otherButton);
 
+WMAlertPanel* WMCreateScaledAlertPanel(WMScreen *app, WMWindow *owner, const char *title,
+                                       const char *msg, const char *defaultButton,
+                                       const char *alternateButton, const char *otherButton);
+
 WMInputPanel* WMCreateInputPanel(WMScreen *app, WMWindow *owner, const char *title,
                                  const char *msg, const char *defaultText, const char *okButton,
                                  const char *cancelButton);
 
+WMInputPanel* WMCreateScaledInputPanel(WMScreen *app, WMWindow *owner, const char *title,
+                                       const char *msg, const char *defaultText, const char *okButton,
+                                       const char *cancelButton);
 
 WMGenericPanel* WMCreateGenericPanel(WMScreen *scrPtr, WMWindow *owner,
                                      const char *title, const char *defaultButton,

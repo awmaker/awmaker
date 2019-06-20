@@ -75,9 +75,10 @@ static void  getLocalizedStringValue(char **target, const char *line, int *match
 static int   getBooleanValue(const char *line);
 static void  getMenuHierarchyFor(char **xdgmenuspec);
 static int   compare_matchlevel(int *current_level, const char *found_locale);
-static Bool  xdg_to_wm(XDGMenuEntry **xdg, WMMenuEntry **wmentry);
-static void init_xdg_storage(XDGMenuEntry **xdg);
-static void init_wm_storage(WMMenuEntry **wm);
+static Bool  xdg_to_wm(XDGMenuEntry *xdg, WMMenuEntry *wmentry);
+static char *parse_xdg_exec(char *exec);
+static void  init_xdg_storage(XDGMenuEntry *xdg);
+static void  init_wm_storage(WMMenuEntry *wm);
 
 
 void parse_xdg(const char *file, cb_add_menu_entry *addWMMenuEntryCallback)
@@ -123,11 +124,11 @@ void parse_xdg(const char *file, cb_add_menu_entry *addWMMenuEntryCallback)
 			/* if currently processing a group, we've just hit the
 			 * end of its definition, try processing it
 			 */
-			if (InGroup && xdg_to_wm(&xdg, &wm)) {
+			if (InGroup && xdg_to_wm(xdg, wm)) {
 				(*addWMMenuEntryCallback)(wm);
 			}
-			init_xdg_storage(&xdg);
-			init_wm_storage(&wm);
+			init_xdg_storage(xdg);
+			init_wm_storage(wm);
 			InGroup = 1;
 			/* start processing group */
 			memset(buf, 0, sizeof(buf));
@@ -190,7 +191,7 @@ void parse_xdg(const char *file, cb_add_menu_entry *addWMMenuEntryCallback)
 	/* at the end of the file, might as well try to menuize what we have
 	 * unless there was no group at all or it was marked as hidden
 	 */
-	if (InGroup && xdg_to_wm(&xdg, &wm))
+	if (InGroup && xdg_to_wm(xdg, wm))
 		(*addWMMenuEntryCallback)(wm);
 
 }
@@ -198,72 +199,140 @@ void parse_xdg(const char *file, cb_add_menu_entry *addWMMenuEntryCallback)
 
 /* coerce an xdg entry type into a wm entry type
  */
-static Bool xdg_to_wm(XDGMenuEntry **xdg, WMMenuEntry **wm)
+static Bool xdg_to_wm(XDGMenuEntry *xdg, WMMenuEntry *wm)
 {
 	char *p;
 
 	/* Exec or TryExec is mandatory */
-	if (!((*xdg)->Exec || (*xdg)->TryExec))
+	if (!(xdg->Exec || xdg->TryExec))
 		return False;
 
 	/* if there's no Name, use the first word of Exec or TryExec
 	 */
-	if ((*xdg)->Name) {
-		(*wm)->Name = (*xdg)->Name;
+	if (xdg->Name) {
+		wm->Name = xdg->Name;
 	} else  {
-		if ((*xdg)->Exec)
-			(*wm)->Name = wstrdup((*xdg)->Exec);
-		else /* (*xdg)->TryExec */
-			(*wm)->Name = wstrdup((*xdg)->TryExec);
+		if (xdg->TryExec)
+			wm->Name = wstrdup(xdg->TryExec);
+		else /* xdg->Exec */
+			wm->Name = wstrdup(xdg->Exec);
 
-		p = strchr((*wm)->Name, ' ');
+		p = strchr(wm->Name, ' ');
 		if (p)
 			*p = '\0';
 	}
 
-	if ((*xdg)->Exec)
-		(*wm)->CmdLine = (*xdg)->Exec;
-	else					/* (*xdg)->TryExec */
-		(*wm)->CmdLine = (*xdg)->TryExec;
+	if (xdg->TryExec)
+		wm->CmdLine = xdg->TryExec;
+	else { /* xdg->Exec */
+		wm->CmdLine = parse_xdg_exec(xdg->Exec);
+		if (!wm->CmdLine)
+			return False;
+	}
 
-	(*wm)->SubMenu = (*xdg)->Category;
-	(*wm)->Flags = (*xdg)->Flags;
+	wm->SubMenu = xdg->Category;
+	wm->Flags = xdg->Flags;
+	if (wm->CmdLine != xdg->TryExec)
+		wm->Flags |= F_FREE_CMD_LINE;
 
 	return True;
 }
 
+static char *parse_xdg_exec(char *exec)
+{
+	char *cmd_line, *dst, *src;
+	Bool quoted = False;
+
+	cmd_line = wstrdup(exec);
+
+	for (dst = src = cmd_line; *src; src++) {
+		if (quoted) {
+			if (*src == '"')
+				quoted = False;
+			else if (*src == '\\')
+				switch (*++src) {
+				case '"':
+				case '`':
+				case '$':
+				case '\\':
+					*dst++ = *src;
+					break;
+				default:
+					goto err_out;
+				}
+			else
+				*dst++ = *src;
+		} else {
+			if (*src == '"')
+				quoted = True;
+			else if (*src == '%') {
+				src++;
+				if (*src == '%')
+					*dst++ = *src;
+				else if (strchr ("fFuUdDnNickvm", *src))
+					/*
+					 * Skip valid field-code.
+					 */
+					;
+				else
+					/*
+					 * Invalid field-code.
+					 */
+					goto err_out;
+			} else
+				*dst++ = *src;
+		}
+	}
+
+	if (quoted)
+		goto err_out;
+
+	do
+		*dst = '\0';
+	while (dst > cmd_line && isspace(*--dst));
+
+	return cmd_line;
+
+err_out:
+	wfree(cmd_line);
+	return NULL;
+}
+
 /* (re-)initialize a XDGMenuEntry storage
  */
-static void init_xdg_storage(XDGMenuEntry **xdg)
+static void init_xdg_storage(XDGMenuEntry *xdg)
 {
 
-	if ((*xdg)->Name)
-		wfree((*xdg)->Name);
-	if ((*xdg)->TryExec)
-		wfree((*xdg)->TryExec);
-	if ((*xdg)->Exec)
-		wfree((*xdg)->Exec);
-	if ((*xdg)->Category)
-		wfree((*xdg)->Category);
-	if ((*xdg)->Path)
-		wfree((*xdg)->Path);
+	if (xdg->Name)
+		wfree(xdg->Name);
+	if (xdg->TryExec)
+		wfree(xdg->TryExec);
+	if (xdg->Exec)
+		wfree(xdg->Exec);
+	if (xdg->Category)
+		wfree(xdg->Category);
+	if (xdg->Path)
+		wfree(xdg->Path);
 
-	(*xdg)->Name = NULL;
-	(*xdg)->TryExec = NULL;
-	(*xdg)->Exec = NULL;
-	(*xdg)->Category = NULL;
-	(*xdg)->Path = NULL;
-	(*xdg)->Flags = 0;
-	(*xdg)->MatchLevel = -1;
+	xdg->Name = NULL;
+	xdg->TryExec = NULL;
+	xdg->Exec = NULL;
+	xdg->Category = NULL;
+	xdg->Path = NULL;
+	xdg->Flags = 0;
+	xdg->MatchLevel = -1;
 }
 
 /* (re-)initialize a WMMenuEntry storage
  */
-static void init_wm_storage(WMMenuEntry **wm)
+static void init_wm_storage(WMMenuEntry *wm)
 {
-	(*wm)->Name = NULL;
-	(*wm)->CmdLine = NULL;
-	(*wm)->Flags = 0;
+	if (wm->Flags & F_FREE_CMD_LINE)
+		wfree(wm->CmdLine);
+
+	wm->Name = NULL;
+	wm->CmdLine = NULL;
+	wm->Flags = 0;
 }
 
 /* get a key from line. allocates target, which must be wfreed later */
@@ -297,6 +366,7 @@ static void getKey(char **target, const char *line)
 static void getStringValue(char **target, const char *line)
 {
 	const char *p;
+	char *q;
 	int kstart;
 
 	p = line;
@@ -312,6 +382,26 @@ static void getStringValue(char **target, const char *line)
 		kstart++;
 
 	*target = wstrdup(p + kstart);
+
+	for (p = q = *target; *p; p++) {
+		if (*p != '\\') {
+			*q++ = *p;
+		} else {
+			switch (*++p) {
+			case 's':  *q++ = ' ';  break;
+			case 'n':  *q++ = '\n'; break;
+			case 't':  *q++ = '\t'; break;
+			case 'r':  *q++ = '\r'; break;
+			case '\\': *q++ = '\\'; break;
+			default:
+				/*
+				 * Skip invalid escape.
+				 */
+				break;
+			}
+		}
+	}
+	*q = '\0';
 }
 
 /* get a localized string value from line. allocates target, which must be wfreed later.
