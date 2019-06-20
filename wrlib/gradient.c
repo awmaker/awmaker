@@ -142,12 +142,15 @@ static inline unsigned char *renderGradientWidth(unsigned char *ptr, unsigned wi
 		*ptr++ = r;
 		*ptr++ = g;
 		*ptr++ = b;
+
 		*ptr++ = r;
 		*ptr++ = g;
 		*ptr++ = b;
+
 		*ptr++ = r;
 		*ptr++ = g;
 		*ptr++ = b;
+
 		*ptr++ = r;
 		*ptr++ = g;
 		*ptr++ = b;
