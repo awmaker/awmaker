@@ -26,7 +26,6 @@
 #include "appicon.h"
 
 Bool wFetchName(Display *dpy, Window win, char **winname);
-Bool wGetIconName(Display *dpy, Window win, char **iconname);
 Bool UpdateDomainFile(WDDomain *domain);
 
 void move_window(Window win, int from_x, int from_y, int to_x, int to_y);

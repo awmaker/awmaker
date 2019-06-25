@@ -98,35 +98,6 @@ Bool wFetchName(Display *dpy, Window win, char **winname)
 	}
 }
 
-/* XGetIconName Wrapper */
-Bool wGetIconName(Display *dpy, Window win, char **iconname)
-{
-	XTextProperty text_prop;
-	char **list;
-	int num;
-
-	if (XGetWMIconName(dpy, win, &text_prop) != 0 && text_prop.value && text_prop.nitems > 0) {
-		if (text_prop.encoding == XA_STRING) {
-			*iconname = (char *) text_prop.value;
-		} else {
-			text_prop.nitems = strlen((char *) text_prop.value);
-			if (XmbTextPropertyToTextList(dpy, &text_prop, &list, &num) >= Success && num > 0 && *list) {
-				XFree(text_prop.value);
-				*iconname = wstrdup(*list);
-				XFreeStringList(list);
-			} else {
-				*iconname = (char *) text_prop.value;
-			}
-		}
-
-		return True;
-	}
-
-	*iconname = NULL;
-
-	return False;
-}
-
 static void eatExpose(void)
 {
 	XEvent event, foo;
