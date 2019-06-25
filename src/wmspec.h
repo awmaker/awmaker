@@ -42,7 +42,6 @@ void wNETWMUpdateDesktop(virtual_screen *vscr);
 void wNETWMPositionSplash(WWindow *wwin, int *x, int *y, int width, int height);
 int wNETWMGetPidForWindow(Window window);
 int wNETWMGetCurrentDesktopFromHint(WScreen *scr);
-char *wNETWMGetIconName(Window window);
 char *wNETWMGetWindowName(Window window);
 void wNETFrameExtents(WWindow *wwin);
 void wNETCleanupFrameExtents(WWindow *wwin);

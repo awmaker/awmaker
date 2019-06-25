@@ -1804,23 +1804,6 @@ char *wNETWMGetWindowName(Window window)
 	return ret;
 }
 
-char *wNETWMGetIconName(Window window)
-{
-	char *name;
-	char *ret;
-	int size;
-
-	name = (char *)PropGetCheckProperty(window, net_wm_title, utf8_string, 0, 0, &size);
-	if (name) {
-		ret = wstrndup(name, size);
-		XFree(name);
-	} else {
-		ret = NULL;
-	}
-
-	return ret;
-}
-
 static void observer(void *self, WMNotification *notif)
 {
 	WWindow *wwin = (WWindow *) WMGetNotificationObject(notif);
