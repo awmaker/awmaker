@@ -1385,23 +1385,6 @@ static void remove_from_appicon_list(WAppIcon *appicon)
 	appicon->next = NULL;
 }
 
-/* Return the AppIcon associated with a given (Xlib) Window. */
-WAppIcon *wAppIconFor(Window window)
-{
-	WObjDescriptor *desc;
-
-	if (window == None)
-		return NULL;
-
-	if (XFindContext(dpy, window, w_global.context.client_win, (XPointer *) & desc) == XCNOENT)
-		return NULL;
-
-	if (desc->parent_type == WCLASS_APPICON || desc->parent_type == WCLASS_DOCK_ICON)
-		return desc->parent;
-
-	return NULL;
-}
-
 void move_appicon_to_dock(virtual_screen *vscr, WAppIcon *icon, char *wm_class, char *wm_instance)
 {
 	WAppIcon *aicon;

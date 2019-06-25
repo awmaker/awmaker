@@ -81,7 +81,6 @@ void paint_app_icon(WApplication *wapp);
 void unpaint_app_icon(WApplication *wapp);
 void wApplicationExtractDirPackIcon(const char *path, const char *wm_instance,
 				    const char *wm_class);
-WAppIcon *wAppIconFor(Window window);
 WAppIcon *dock_icon_create(virtual_screen *vscr, char *command, char *wm_class, char *wm_instance);
 WAppIcon *create_appicon(virtual_screen *vscr, char *command, char *wm_class, char *wm_instance);
 
