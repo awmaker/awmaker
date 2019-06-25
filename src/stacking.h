@@ -24,7 +24,6 @@ void wRaiseFrame(virtual_screen *vscr, WCoreWindow *frame);
 void wLowerFrame(virtual_screen *vscr, WCoreWindow *frame);
 void wRaiseLowerFrame(virtual_screen *vscr, WCoreWindow *frame);
 void AddToStackList(virtual_screen *vscr, WCoreWindow *frame);
-void MoveInStackListAbove(virtual_screen *vscr, WCoreWindow *next, WCoreWindow *frame);
 void MoveInStackListUnder(virtual_screen *vscr, WCoreWindow *prev, WCoreWindow *frame);
 void RemoveFromStackList(virtual_screen *vscr, WCoreWindow *frame);
 void ChangeStackingLevel(virtual_screen *vscr, WCoreWindow *frame, int new_level);
