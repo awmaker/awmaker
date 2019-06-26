@@ -928,6 +928,7 @@ static void wReadStaticDefaults_update(void);
 static void wDefaultsMergeGlobalMenus(WDDomain *menuDomain);
 static void wDefaultUpdateIcons(virtual_screen *vscr);
 static WDDomain *wDefaultsInitDomain(const char *domain, Bool requireDictionary);
+static unsigned int default_update(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *plvalue);
 
 void startup_set_defaults_virtual(void)
 {
@@ -1379,26 +1380,35 @@ static unsigned int read_defaults_step1(virtual_screen *vscr, WMPropList *new_di
 				continue;
 		}
 
-		if (plvalue) {
-			/* convert data */
-			if ((*entry->convert) (entry, plvalue, entry->addr)) {
-				/*
-				 * If the WorkspaceSpecificBack data has been changed
-				 * so that the helper will be launched now, we must be
-				 * sure to send the default background texture config
-				 * to the helper.
-				 */
-				if (strcmp(entry->key, "WorkspaceSpecificBack") == 0 &&
-				    !vscr->screen_ptr->flags.backimage_helper_launched)
-					vscr->screen_ptr->flags.update_workspace_back = 1;
-
-				if (entry->update)
-					needs_refresh |= (*entry->update) (vscr);
-			}
-		}
+		needs_refresh |= default_update(vscr, entry, plvalue);
 	}
 
 	vscr->screen_ptr->flags.update_workspace_back = 0;
+	return needs_refresh;
+}
+
+static unsigned int default_update(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *plvalue)
+{
+	unsigned int needs_refresh = 0;
+
+	if (plvalue) {
+		/* convert data */
+		if ((*entry->convert) (entry, plvalue, entry->addr)) {
+			/*
+			 * If the WorkspaceSpecificBack data has been changed
+			 * so that the helper will be launched now, we must be
+			 * sure to send the default background texture config
+			 * to the helper.
+			 */
+			if (strcmp(entry->key, "WorkspaceSpecificBack") == 0 &&
+			    !vscr->screen_ptr->flags.backimage_helper_launched)
+				vscr->screen_ptr->flags.update_workspace_back = 1;
+
+			if (entry->update)
+				needs_refresh = (*entry->update) (vscr);
+		}
+	}
+
 	return needs_refresh;
 }
 
