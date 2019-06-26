@@ -1317,9 +1317,10 @@ unsigned int set_defaults_virtual_screen(virtual_screen *vscr)
 static unsigned int read_defaults_step1(virtual_screen *vscr, WMPropList *new_dict)
 {
 	unsigned int i, needs_refresh = 0;
-	int update_workspace_back = 0;
 	WMPropList *plvalue, *old_value, *old_dict = NULL;
 	WDefaultEntry *entry;
+
+	vscr->screen_ptr->flags.update_workspace_back = 0;
 
 	if (w_global.domain.wmaker->dictionary != new_dict)
 		old_dict = w_global.domain.wmaker->dictionary;
@@ -1356,7 +1357,7 @@ static unsigned int read_defaults_step1(virtual_screen *vscr, WMPropList *new_di
 			 * was updated previously
 			 */
 			if (!(strcmp(entry->key, "WorkspaceBack") == 0 &&
-			    update_workspace_back &&
+			    vscr->screen_ptr->flags.update_workspace_back &&
 			    vscr->screen_ptr->flags.backimage_helper_launched))
 				continue;
 		}
@@ -1372,7 +1373,7 @@ static unsigned int read_defaults_step1(virtual_screen *vscr, WMPropList *new_di
 				 */
 				if (strcmp(entry->key, "WorkspaceSpecificBack") == 0 &&
 				    !vscr->screen_ptr->flags.backimage_helper_launched)
-					update_workspace_back = 1;
+					vscr->screen_ptr->flags.update_workspace_back = 1;
 
 				if (entry->update)
 					needs_refresh |= (*entry->update) (vscr);
@@ -1380,6 +1381,7 @@ static unsigned int read_defaults_step1(virtual_screen *vscr, WMPropList *new_di
 		}
 	}
 
+	vscr->screen_ptr->flags.update_workspace_back = 0;
 	return needs_refresh;
 }
 
