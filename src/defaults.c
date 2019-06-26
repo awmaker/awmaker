@@ -1362,13 +1362,15 @@ static unsigned int read_defaults_step1(virtual_screen *vscr, WMPropList *new_di
 			if (plvalue && new_dict)
 				WMPutInPLDictionary(new_dict, entry->plkey, plvalue);
 
+			needs_refresh |= default_update(vscr, entry, plvalue);
 		} else if (!plvalue) {
 			/* value was deleted from DB. Keep current value */
-			continue;
 		} else if (!old_value) {
 			/* set value for the 1st time */
+			needs_refresh |= default_update(vscr, entry, plvalue);
 		} else if (!WMIsPropListEqualTo(plvalue, old_value)) {
 			/* value has changed */
+			needs_refresh |= default_update(vscr, entry, plvalue);
 		} else {
 			/* Value was not changed since last time.
 			 * We must continue, except if WorkspaceSpecificBack
@@ -1376,11 +1378,11 @@ static unsigned int read_defaults_step1(virtual_screen *vscr, WMPropList *new_di
 			 */
 			if (!(strcmp(entry->key, "WorkspaceBack") == 0 &&
 			    vscr->screen_ptr->flags.update_workspace_back &&
-			    vscr->screen_ptr->flags.backimage_helper_launched))
-				continue;
+			    vscr->screen_ptr->flags.backimage_helper_launched)) {
+			} else {
+				needs_refresh |= default_update(vscr, entry, plvalue);
+			}
 		}
-
-		needs_refresh |= default_update(vscr, entry, plvalue);
 	}
 
 	vscr->screen_ptr->flags.update_workspace_back = 0;
