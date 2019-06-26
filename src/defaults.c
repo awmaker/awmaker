@@ -452,7 +452,7 @@ WDefaultEntry staticOptionList[] = {
 	    &wPreferences.enable_workspace_pager, getBool, NULL, NULL, NULL}
 };
 
-WDefaultEntry noscreenOptionList[] = {
+WDefaultEntry optionList[] = {
 	{"PixmapPath", DEF_PIXMAP_PATHS, NULL,
 	    &wPreferences.pixmap_path, getPathList, NULL, NULL, NULL},
 	{"IconPath", DEF_ICON_PATHS, NULL,
@@ -628,10 +628,7 @@ WDefaultEntry noscreenOptionList[] = {
 	{"CycleActiveHeadOnly", "NO", NULL,
 	    &wPreferences.cycle_active_head_only, getBool, NULL, NULL, NULL},
 	{"CycleIgnoreMinimized", "NO", NULL,
-	    &wPreferences.cycle_ignore_minimized, getBool, NULL, NULL, NULL}
-};
-
-WDefaultEntry optionList[] = {
+	    &wPreferences.cycle_ignore_minimized, getBool, NULL, NULL, NULL},
 
 	/* dynamic options */
 
@@ -929,7 +926,6 @@ WDefaultEntry optionList[] = {
 };
 
 static void init_defaults(void);
-static void read_defaults_noscreen(WMPropList *new_dict);
 static void wReadStaticDefaults(WMPropList *dict);
 static void wDefaultsMergeGlobalMenus(WDDomain *menuDomain);
 static void wDefaultUpdateIcons(virtual_screen *vscr);
@@ -967,8 +963,6 @@ void startup_set_defaults_virtual(void)
 	w_global.domain.window_attr = wDefaultsInitDomain("WMWindowAttributes", True);
 	if (!w_global.domain.window_attr->dictionary)
 		wwarning(_("could not read domain \"%s\" from defaults database"), "WMWindowAttributes");
-
-	read_defaults_noscreen(w_global.domain.wmaker->dictionary);
 }
 
 /* This function sets the default values for all lists */
@@ -982,17 +976,6 @@ static void init_defaults(void)
 	/* Set the default values for the option list */
 	for (i = 0; i < wlengthof(optionList); i++) {
 		entry = &optionList[i];
-
-		entry->plkey = WMCreatePLString(entry->key);
-		if (entry->default_value)
-			entry->plvalue = WMCreatePropListFromDescription(entry->default_value);
-		else
-			entry->plvalue = NULL;
-	}
-
-	/* Set the default values for the noscren option list */
-	for (i = 0; i < wlengthof(noscreenOptionList); i++) {
-		entry = &noscreenOptionList[i];
 
 		entry->plkey = WMCreatePLString(entry->key);
 		if (entry->default_value)
@@ -1294,59 +1277,6 @@ static void wReadStaticDefaults(WMPropList *dict)
 			(*entry->convert) (entry, plvalue, entry->addr);
 			if (entry->update)
 				(*entry->update) (NULL);
-		}
-	}
-}
-
-static void read_defaults_noscreen(WMPropList *new_dict)
-{
-	unsigned int i;
-	WMPropList *plvalue, *old_value, *old_dict = NULL;
-	WDefaultEntry *entry;
-
-	if (w_global.domain.wmaker->dictionary != new_dict)
-		old_dict = w_global.domain.wmaker->dictionary;
-
-	for (i = 0; i < wlengthof(noscreenOptionList); i++) {
-		entry = &noscreenOptionList[i];
-
-		if (new_dict)
-			plvalue = WMGetFromPLDictionary(new_dict, entry->plkey);
-		else
-			plvalue = NULL;
-
-		if (!old_dict)
-			old_value = NULL;
-		else
-			old_value = WMGetFromPLDictionary(old_dict, entry->plkey);
-
-		if (!plvalue && !old_value) {
-			/* no default in  the DB. Use builtin default */
-			plvalue = entry->plvalue;
-			if (plvalue && new_dict)
-				WMPutInPLDictionary(new_dict, entry->plkey, plvalue);
-
-		} else if (!plvalue) {
-			/* value was deleted from DB. Keep current value */
-			continue;
-		} else if (!old_value) {
-			/* set value for the 1st time */
-		} else if (!WMIsPropListEqualTo(plvalue, old_value)) {
-			/* value has changed */
-		} else {
-			/* Value was not changed since last time.
-			 * We must continue, except if WorkspaceSpecificBack
-			 * was updated previously
-			 */
-		}
-
-		/* convert data */
-		if (plvalue) {
-			/* convert data */
-			if ((*entry->convert) (entry, plvalue, entry->addr)) {
-				if (entry->update)
-					(*entry->update) (NULL);
-			}
 		}
 	}
 }
