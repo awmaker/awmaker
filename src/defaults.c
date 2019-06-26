@@ -453,10 +453,10 @@ WDefaultEntry staticOptionList[] = {
 };
 
 WDefaultEntry optionList[] = {
-	{"PixmapPath", DEF_PIXMAP_PATHS, NULL,
-	    &wPreferences.pixmap_path, getPathList, NULL, NULL, NULL},
-	{"IconPath", DEF_ICON_PATHS, NULL,
-	    &wPreferences.icon_path, getPathList, NULL, NULL, NULL},
+	/* dynamic options */
+
+	{"IconPosition", "blh", seIconPositions,
+	    &wPreferences.icon_yard, getEnum, setIconPosition, NULL, NULL},
 	{"IconificationStyle", "Zoom", seIconificationStyles,
 	    &wPreferences.iconification_style, getEnum, NULL, NULL, NULL},
 	{"EnforceIconMargin", "NO", NULL,
@@ -477,6 +477,10 @@ WDefaultEntry optionList[] = {
 	    &wPreferences.mouse_wheel_scroll, getEnum, NULL, NULL, NULL},
 	{"MouseWheelTiltAction", "None", seMouseWheelActions,
 	    &wPreferences.mouse_wheel_tilt, getEnum, NULL, NULL, NULL},
+	{"PixmapPath", DEF_PIXMAP_PATHS, NULL,
+	    &wPreferences.pixmap_path, getPathList, NULL, NULL, NULL},
+	{"IconPath", DEF_ICON_PATHS, NULL,
+	    &wPreferences.icon_path, getPathList, NULL, NULL, NULL},
 	{"ColormapMode", "auto", seColormapModes,
 	    &wPreferences.colormap_mode, getEnum, NULL, NULL, NULL},
 	{"AutoFocus", "YES", NULL,
@@ -493,6 +497,12 @@ WDefaultEntry optionList[] = {
 	    &wPreferences.ws_cycle, getBool, NULL, NULL, NULL},
 	{"WorkspaceNameDisplayPosition", "center", seDisplayPositions,
 	    &wPreferences.workspace_name_display_position, getEnum, NULL, NULL, NULL},
+	{"WorkspaceBorder", "None", seWorkspaceBorder,
+	    &wPreferences.workspace_border_position, getEnum, updateUsableArea, NULL, NULL},
+	{"WorkspaceBorderSize", "0", NULL,
+	    &wPreferences.workspace_border_size, getInt, updateUsableArea, NULL, NULL},
+	{"StickyIcons", "NO", NULL,
+	    &wPreferences.sticky_icons, getBool, setStickyIcons, NULL, NULL},
 	{"SaveSessionOnExit", "NO", NULL,
 	    &wPreferences.save_session_on_exit, getBool, NULL, NULL, NULL},
 	{"WrapMenus", "NO", NULL,
@@ -565,6 +575,10 @@ WDefaultEntry optionList[] = {
 	    &wPreferences.highlight_active_app, getBool, NULL, NULL, NULL},
 	{"AutoArrangeIcons", "NO", NULL,
 	    &wPreferences.auto_arrange_icons, getBool, NULL, NULL, NULL},
+	{"NoWindowOverDock", "NO", NULL,
+	    &wPreferences.no_window_over_dock, getBool, updateUsableArea, NULL, NULL},
+	{"NoWindowOverIcons", "NO", NULL,
+	    &wPreferences.no_window_over_icons, getBool, updateUsableArea, NULL, NULL},
 	{"WindowPlaceOrigin", "(64, 0)", NULL,
 	    &wPreferences.window_place_origin, getCoord, NULL, NULL, NULL},
 	{"ResizeDisplay", "center", seGeomDisplays,
@@ -603,10 +617,25 @@ WDefaultEntry optionList[] = {
 	    &wPreferences.ignore_gtk_decoration_hints, getBool, NULL, NULL, NULL},
 
 	/* style options */
+	{"MenuStyle", "normal", seMenuStyles,
+	    &wPreferences.menu_style, getEnum, setMenuStyle, NULL, NULL},
+	{"WidgetColor", "(solid, gray)", NULL,
+	    &wPreferences.texture.widgetcolor, getTexture, setWidgetColor, NULL, NULL},
+	{"WorkspaceSpecificBack", "()", NULL,
+	    &wPreferences.workspacespecificback, getWSSpecificBackground, setWorkspaceSpecificBack, NULL, NULL},
+	/* WorkspaceBack must come after WorkspaceSpecificBack or
+	 * WorkspaceBack won't know WorkspaceSpecificBack was also
+	 * specified and 2 copies of wmsetbg will be launched */
+	{"WorkspaceBack", "(solid, \"rgb:50/50/75\")", NULL,
+	    &wPreferences.workspaceback, getWSBackground, setWorkspaceBack, NULL, NULL},
 	{"SmoothWorkspaceBack", "NO", NULL,
 	    NULL, getBool, NULL, NULL, NULL},
+	{"IconBack", "(dgradient, \"rgb:a6/a6/b6\", \"rgb:51/55/61\")", NULL,
+	    &wPreferences.texture.iconback, getTexture, setIconTile, NULL, NULL},
 	{"TitleJustify", "center", seJustifications,
 	    &wPreferences.title_justification, getEnum, setJustify, NULL, NULL},
+	{"WindowTitleFont", DEF_TITLE_FONT, NULL,
+	    &wPreferences.font.wintitle, getFont, setWinTitleFont, NULL, NULL},
 	{"WindowTitleExtendSpace", DEF_WINDOW_TITLE_EXTEND_SPACE, NULL,
 	    &wPreferences.window_title_clearance, getInt, setClearance, NULL, NULL},
 	{"WindowTitleMinHeight", "0", NULL,
@@ -621,57 +650,18 @@ WDefaultEntry optionList[] = {
 	    &wPreferences.menu_title_max_height, getInt, setClearance, NULL, NULL},
 	{"MenuTextExtendSpace", DEF_MENU_TEXT_EXTEND_SPACE, NULL,
 	    &wPreferences.menu_text_clearance, getInt, setClearance, NULL, NULL},
+	{"MenuTitleFont", DEF_MENU_TITLE_FONT, NULL,
+	    &wPreferences.font.menutitle, getFont, setMenuTitleFont, NULL, NULL},
+	{"MenuTextFont", DEF_MENU_ENTRY_FONT, NULL,
+	    &wPreferences.font.menutext, getFont, setMenuTextFont, NULL, NULL},
+	{"IconTitleFont", DEF_ICON_TITLE_FONT, NULL,
+	    &wPreferences.font.icontitle, getFont, setIconTitleFont, NULL, NULL},
+	{"ClipTitleFont", DEF_CLIP_TITLE_FONT, NULL,
+	    &wPreferences.font.cliptitle, getFont, setClipTitleFont, NULL, NULL},
 	{"ShowClipTitle", "YES", NULL,
 	    &wPreferences.show_clip_title, getBool, NULL, NULL, NULL},
-	{"DialogHistoryLines", "500", NULL,
-	    &wPreferences.history_lines, getInt, NULL, NULL, NULL},
-	{"CycleActiveHeadOnly", "NO", NULL,
-	    &wPreferences.cycle_active_head_only, getBool, NULL, NULL, NULL},
-	{"CycleIgnoreMinimized", "NO", NULL,
-	    &wPreferences.cycle_ignore_minimized, getBool, NULL, NULL, NULL},
-
-	/* dynamic options */
-
-	{"NoWindowOverDock", "NO", NULL,
-	    &wPreferences.no_window_over_dock, getBool, updateUsableArea, NULL, NULL}, /* - */
-	{"NoWindowOverIcons", "NO", NULL,
-	    &wPreferences.no_window_over_icons, getBool, updateUsableArea, NULL, NULL}, /* - */
-	{"IconPosition", "blh", seIconPositions,
-	    &wPreferences.icon_yard, getEnum, setIconPosition, NULL, NULL}, /* - */
-	{"WorkspaceBorder", "None", seWorkspaceBorder,
-	    &wPreferences.workspace_border_position, getEnum, updateUsableArea, NULL, NULL}, /* - */
-	{"WorkspaceBorderSize", "0", NULL,
-	    &wPreferences.workspace_border_size, getInt, updateUsableArea, NULL, NULL}, /* - */
-	{"StickyIcons", "NO", NULL,
-	    &wPreferences.sticky_icons, getBool, setStickyIcons, NULL, NULL}, /* - */
-
-	/* style options */
-
-	{"MenuStyle", "normal", seMenuStyles,
-	    &wPreferences.menu_style, getEnum, setMenuStyle, NULL, NULL}, /* - */
-	{"WidgetColor", "(solid, gray)", NULL,
-	    &wPreferences.texture.widgetcolor, getTexture, setWidgetColor, NULL, NULL},
-	{"WorkspaceSpecificBack", "()", NULL,
-	    &wPreferences.workspacespecificback, getWSSpecificBackground, setWorkspaceSpecificBack, NULL, NULL},
-	/* WorkspaceBack must come after WorkspaceSpecificBack or
-	 * WorkspaceBack won't know WorkspaceSpecificBack was also
-	 * specified and 2 copies of wmsetbg will be launched */
-	{"WorkspaceBack", "(solid, \"rgb:50/50/75\")", NULL,
-	    &wPreferences.workspaceback, getWSBackground, setWorkspaceBack, NULL, NULL},
-	{"IconBack", "(dgradient, \"rgb:a6/a6/b6\", \"rgb:51/55/61\")", NULL,
-	    &wPreferences.texture.iconback, getTexture, setIconTile, NULL, NULL},
-	{"WindowTitleFont", DEF_TITLE_FONT, NULL,
-	    &wPreferences.font.wintitle, getFont, setWinTitleFont, NULL, NULL}, /* - */
-	{"MenuTitleFont", DEF_MENU_TITLE_FONT, NULL,
-	    &wPreferences.font.menutitle, getFont, setMenuTitleFont, NULL, NULL}, /* - */
-	{"MenuTextFont", DEF_MENU_ENTRY_FONT, NULL,
-	    &wPreferences.font.menutext, getFont, setMenuTextFont, NULL, NULL}, /* - */
-	{"IconTitleFont", DEF_ICON_TITLE_FONT, NULL,
-	    &wPreferences.font.icontitle, getFont, setIconTitleFont, NULL, NULL}, /* - */
-	{"ClipTitleFont", DEF_CLIP_TITLE_FONT, NULL,
-	    &wPreferences.font.cliptitle, getFont, setClipTitleFont, NULL, NULL}, /* - */
 	{"LargeDisplayFont", DEF_WORKSPACE_NAME_FONT, NULL,
-	    &wPreferences.font.largedisplay, getFont, setLargeDisplayFont, NULL, NULL}, /* - */
+	    &wPreferences.font.largedisplay, getFont, setLargeDisplayFont, NULL, NULL},
 	{"HighlightColor", "white", NULL,
 	    &wPreferences.color.highlight, getColor, setHightlight, NULL, NULL},
 	{"HighlightTextColor", "black", NULL,
@@ -713,7 +703,7 @@ WDefaultEntry optionList[] = {
 	{"ModifierKeyLabels", "(\"Shift+\", \"Control+\", \"Mod1+\", \"Mod2+\", \"Mod3+\", \"Mod4+\", \"Mod5+\")", NULL,
 	    &wPreferences.modifierkeylabels, getPropList, setModifierKeyLabels, NULL, NULL},
 	{"FrameBorderWidth", "1", NULL,
-	    &wPreferences.border_width, getInt, setFrameBorderWidth, NULL, NULL}, /* - */
+	    &wPreferences.border_width, getInt, setFrameBorderWidth, NULL, NULL},
 	{"FrameBorderColor", "black", NULL,
 	    &wPreferences.color.frameborder, getColor, setFrameBorderColor, NULL, NULL},
 	{"FrameFocusedBorderColor", "black", NULL,
@@ -892,7 +882,7 @@ WDefaultEntry optionList[] = {
 	{"ToggleKbdModeKey", "None", NULL,
 	    &wPreferences.key.togglekbdmode, getKeybind, setKeyGrab_toggle, NULL, NULL},
 	{"KbdModeLock", "NO", NULL,
-	    &wPreferences.modelock, getBool, NULL, NULL, NULL}, /* - */
+	    &wPreferences.modelock, getBool, NULL, NULL, NULL},
 #endif				/* KEEP_XKB_LOCK_STATUS */
 
 	{"NormalCursor", "(builtin, left_ptr)", NULL,
@@ -922,7 +912,13 @@ WDefaultEntry optionList[] = {
 	{"TextCursor", "(builtin, xterm)", NULL,
 	    &wPreferences.cursors.text, getCursor, setCursor_text, NULL, NULL},
 	{"SelectCursor", "(builtin, cross)", NULL,
-	    &wPreferences.cursors.select, getCursor, setCursor_select, NULL, NULL}
+	    &wPreferences.cursors.select, getCursor, setCursor_select, NULL, NULL},
+	{"DialogHistoryLines", "500", NULL,
+	    &wPreferences.history_lines, getInt, NULL, NULL, NULL},
+	{"CycleActiveHeadOnly", "NO", NULL,
+	    &wPreferences.cycle_active_head_only, getBool, NULL, NULL, NULL},
+	{"CycleIgnoreMinimized", "NO", NULL,
+	    &wPreferences.cycle_ignore_minimized, getBool, NULL, NULL, NULL}
 };
 
 static void init_defaults(void);
