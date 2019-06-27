@@ -1175,7 +1175,7 @@ static void wDefaultsMergeGlobalMenus(WDDomain *menuDomain);
 static void wDefaultUpdateIcons(virtual_screen *vscr);
 static WDDomain *wDefaultsInitDomain(const char *domain, Bool requireDictionary);
 static void backimage_launch_helper(virtual_screen *vscr, WMPropList *value);
-static unsigned int default_update(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *plvalue);
+static unsigned int default_update(WDefaultEntry *entry, WMPropList *plvalue);
 
 void startup_set_defaults_virtual(void)
 {
@@ -1579,9 +1579,9 @@ unsigned int set_defaults_virtual_screen(virtual_screen *vscr)
 	return needs_refresh;
 }
 
-static unsigned int read_defaults_step1(virtual_screen *vscr, WMPropList *new_dict)
+static void read_defaults_step1(virtual_screen *vscr, WMPropList *new_dict)
 {
-	unsigned int i, needs_refresh = 0;
+	unsigned int i;
 	WMPropList *plvalue, *old_value, *old_dict = NULL;
 	WDefaultEntry *entry;
 
@@ -1609,33 +1609,42 @@ static unsigned int read_defaults_step1(virtual_screen *vscr, WMPropList *new_di
 			if (plvalue && new_dict)
 				WMPutInPLDictionary(new_dict, entry->plkey, plvalue);
 
-			needs_refresh |= default_update(vscr, entry, plvalue);
+			default_update(entry, plvalue);
 		} else if (!plvalue) {
 			/* value was deleted from DB. Keep current value */
 		} else if (!old_value) {
 			/* set value for the 1st time */
-			needs_refresh |= default_update(vscr, entry, plvalue);
+			default_update(entry, plvalue);
 		} else if (!WMIsPropListEqualTo(plvalue, old_value)) {
 			/* value has changed */
-			needs_refresh |= default_update(vscr, entry, plvalue);
+			default_update(entry, plvalue);
 		} else {
-			/* Value was not changed since last time.
-			 * We must continue, except if WorkspaceSpecificBack
-			 * was updated previously
-			 */
-			if (strcmp(entry->key, "WorkspaceBack") == 0 &&
-			    vscr->screen_ptr->flags.update_workspace_back &&
-			    vscr->screen_ptr->flags.backimage_helper_launched) {
-				needs_refresh |= default_update(vscr, entry, plvalue);
-			}
+			/* Value was not changed since last time.*/
 		}
 	}
 
 	vscr->screen_ptr->flags.update_workspace_back = 0;
+}
+
+
+static unsigned int read_defaults_step1_update(virtual_screen *vscr)
+{
+	unsigned int i, needs_refresh = 0;
+	WDefaultEntry *entry;
+
+	for (i = 0; i < wlengthof(optionList); i++) {
+		entry = &optionList[i];
+
+		if (entry->refresh && entry->update) {
+			needs_refresh = (*entry->update) (vscr);
+			entry->refresh = 0;
+		}
+	}
+
 	return needs_refresh;
 }
 
-static unsigned int default_update(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *plvalue)
+static unsigned int default_update(WDefaultEntry *entry, WMPropList *plvalue)
 {
 	unsigned int needs_refresh = 0;
 	int ret;
@@ -1648,21 +1657,6 @@ static unsigned int default_update(virtual_screen *vscr, WDefaultEntry *entry, W
 	entry->refresh = ret;
 	if (!ret)
 		return 0;
-
-	/*
-	 * If the WorkspaceSpecificBack data has been changed
-	 * so that the helper will be launched now, we must be
-	 * sure to send the default background texture config
-	 * to the helper.
-	 */
-	if (strcmp(entry->key, "WorkspaceSpecificBack") == 0 &&
-	    !vscr->screen_ptr->flags.backimage_helper_launched)
-		vscr->screen_ptr->flags.update_workspace_back = 1;
-
-	if (entry->refresh && entry->update) {
-		needs_refresh = (*entry->update) (vscr);
-		entry->refresh = 0;
-	}
 
 	return needs_refresh;
 }
@@ -1745,7 +1739,8 @@ void wReadDefaults(virtual_screen *vscr, WMPropList *new_dict)
 {
 	unsigned int needs_refresh;
 
-	needs_refresh = read_defaults_step1(vscr, new_dict);
+	read_defaults_step1(vscr, new_dict);
+	needs_refresh = read_defaults_step1_update(vscr);
 
 	if (needs_refresh != 0 && !w_global.startup.phase1)
 		refresh_defaults(vscr, needs_refresh);
@@ -3225,15 +3220,32 @@ static int setFrameSelectedBorderColor(virtual_screen *vscr)
 	return REFRESH_FRAME_BORDER;
 }
 
-static int set_workspace_back(virtual_screen *vscr, int opt)
+static int set_workspace_back(virtual_screen *vscr)
 {
-	WMPropList *value;
-	WMPropList *val;
+	WMPropList *value, *val;
 	char *str;
-	int i;
+	int i, cont = 0;
 
-	if (opt == 0) {
+	/*
+	 * Now, I will move the logic between updateing workspace back and
+	 * workspace specific back here.
+	 *
+	 * First we work with WorkspaceSpecificBack.
+	 * If the WorkspaceSpecificBack data has been changed
+	 * so that the helper will be launched now, we must be
+	 * sure to send the default background texture config
+	 * to the helper.
+	 *
+	 * All was done using flags. If we read all values first, we can
+	 * play with them. I will use the refresh flag to do it.
+	 */
+
+	/* setWorkspaceSpecificBack */
+	if (optionList[OL_WORKSPACESPECIFICBACK].refresh) {
 		value = wPreferences.workspacespecificback;
+
+		/* Enable the flag to set the default background */
+		cont = 1;
 
 		if (vscr->screen_ptr->flags.backimage_helper_launched) {
 			if (WMGetPropListItemCount(value) == 0) {
@@ -3271,7 +3283,8 @@ static int set_workspace_back(virtual_screen *vscr, int opt)
 		WMReleasePropList(value);
 	}
 
-	if (opt == 1) {
+	/* setWorkspaceBack */
+	if (optionList[OL_WORKSPACEBACK].refresh || cont) {
 		value = wPreferences.workspaceback;
 
 		if (vscr->screen_ptr->flags.backimage_helper_launched) {
@@ -3301,7 +3314,7 @@ static int set_workspace_back(virtual_screen *vscr, int opt)
 
 static int setWorkspaceSpecificBack(virtual_screen *vscr)
 {
-	return set_workspace_back(vscr, 0);
+	return set_workspace_back(vscr);
 }
 
 static void backimage_launch_helper(virtual_screen *vscr, WMPropList *value)
@@ -3331,7 +3344,7 @@ static void backimage_launch_helper(virtual_screen *vscr, WMPropList *value)
 
 static int setWorkspaceBack(virtual_screen *vscr)
 {
-	return set_workspace_back(vscr, 1);
+	return set_workspace_back(vscr);
 }
 
 static int setWidgetColor(virtual_screen *vscr)
