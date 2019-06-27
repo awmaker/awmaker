@@ -3271,6 +3271,30 @@ static int set_workspace_back(virtual_screen *vscr, int opt)
 		WMReleasePropList(value);
 	}
 
+	if (opt == 1) {
+		value = wPreferences.workspaceback;
+
+		if (vscr->screen_ptr->flags.backimage_helper_launched) {
+			if (WMGetPropListItemCount(value) == 0) {
+				SendHelperMessage(vscr, 'U', 0, NULL);
+			} else {
+				/* set the default workspace background to this one */
+				str = WMGetPropListDescription(value, False);
+				if (str) {
+					SendHelperMessage(vscr, 'S', 0, str);
+					wfree(str);
+					SendHelperMessage(vscr, 'C', vscr->workspace.current + 1, NULL);
+				} else {
+					SendHelperMessage(vscr, 'U', 0, NULL);
+				}
+			}
+		} else if (WMGetPropListItemCount(value) > 0) {
+			backimage_launch_helper(vscr, value);
+		}
+
+		WMReleasePropList(value);
+	}
+
 	return 0;
 }
 
@@ -3307,31 +3331,7 @@ static void backimage_launch_helper(virtual_screen *vscr, WMPropList *value)
 
 static int setWorkspaceBack(virtual_screen *vscr)
 {
-	WMPropList *value = wPreferences.workspaceback;
-
-	if (vscr->screen_ptr->flags.backimage_helper_launched) {
-		char *str;
-
-		if (WMGetPropListItemCount(value) == 0) {
-			SendHelperMessage(vscr, 'U', 0, NULL);
-		} else {
-			/* set the default workspace background to this one */
-			str = WMGetPropListDescription(value, False);
-			if (str) {
-				SendHelperMessage(vscr, 'S', 0, str);
-				wfree(str);
-				SendHelperMessage(vscr, 'C', vscr->workspace.current + 1, NULL);
-			} else {
-				SendHelperMessage(vscr, 'U', 0, NULL);
-			}
-		}
-	} else if (WMGetPropListItemCount(value) > 0) {
-		backimage_launch_helper(vscr, value);
-	}
-
-	WMReleasePropList(value);
-
-	return 0;
+	return set_workspace_back(vscr, 1);
 }
 
 static int setWidgetColor(virtual_screen *vscr)
