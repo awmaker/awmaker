@@ -132,8 +132,7 @@ static WDECallbackUpdate setFTitleBack;
 static WDECallbackUpdate setPTitleBack;
 static WDECallbackUpdate setUTitleBack;
 static WDECallbackUpdate setResizebarBack;
-static WDECallbackUpdate setWorkspaceBack;
-static WDECallbackUpdate setWorkspaceSpecificBack;
+static WDECallbackUpdate set_workspace_back;
 static WDECallbackUpdate setMenuTitleColor;
 static WDECallbackUpdate setMenuTextColor;
 static WDECallbackUpdate setMenuDisabledColor;
@@ -869,12 +868,12 @@ WDefaultEntry optionList[] = {
 	{"WidgetColor", "(solid, gray)", NULL,
 	    &wPreferences.texture.widgetcolor, getTexture, setWidgetColor, NULL, NULL, 0},
 	{"WorkspaceSpecificBack", "()", NULL,
-	    &wPreferences.workspacespecificback, getWSSpecificBackground, setWorkspaceSpecificBack, NULL, NULL, 0},
+	    &wPreferences.workspacespecificback, getWSSpecificBackground, set_workspace_back, NULL, NULL, 0},
 	/* WorkspaceBack must come after WorkspaceSpecificBack or
 	 * WorkspaceBack won't know WorkspaceSpecificBack was also
 	 * specified and 2 copies of wmsetbg will be launched */
 	{"WorkspaceBack", "(solid, \"rgb:50/50/75\")", NULL,
-	    &wPreferences.workspaceback, getWSBackground, setWorkspaceBack, NULL, NULL, 0},
+	    &wPreferences.workspaceback, getWSBackground, set_workspace_back, NULL, NULL, 0},
 	{"SmoothWorkspaceBack", "NO", NULL,
 	    NULL, getBool, NULL, NULL, NULL, 0},
 	{"IconBack", "(dgradient, \"rgb:a6/a6/b6\", \"rgb:51/55/61\")", NULL,
@@ -3311,12 +3310,6 @@ static int set_workspace_back(virtual_screen *vscr)
 	return 0;
 }
 
-
-static int setWorkspaceSpecificBack(virtual_screen *vscr)
-{
-	return set_workspace_back(vscr);
-}
-
 static void backimage_launch_helper(virtual_screen *vscr, WMPropList *value)
 {
 	char *text;
@@ -3340,11 +3333,6 @@ static void backimage_launch_helper(virtual_screen *vscr, WMPropList *value)
 	}
 
 	wfree(text);
-}
-
-static int setWorkspaceBack(virtual_screen *vscr)
-{
-	return set_workspace_back(vscr);
 }
 
 static int setWidgetColor(virtual_screen *vscr)
