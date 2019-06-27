@@ -1637,12 +1637,15 @@ static unsigned int read_defaults_step1(virtual_screen *vscr, WMPropList *new_di
 static unsigned int default_update(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *plvalue)
 {
 	unsigned int needs_refresh = 0;
+	int ret;
 
 	if (!plvalue)
 		return 0;
 
 	/* convert data */
-	if (!(*entry->convert) (entry, plvalue, entry->addr))
+	ret = (*entry->convert) (entry, plvalue, entry->addr);
+	entry->refresh = ret;
+	if (!ret)
 		return 0;
 
 	/*
@@ -1655,8 +1658,10 @@ static unsigned int default_update(virtual_screen *vscr, WDefaultEntry *entry, W
 	    !vscr->screen_ptr->flags.backimage_helper_launched)
 		vscr->screen_ptr->flags.update_workspace_back = 1;
 
-	if (entry->update)
+	if (entry->refresh && entry->update) {
 		needs_refresh = (*entry->update) (vscr);
+		entry->refresh = 0;
+	}
 
 	return needs_refresh;
 }
