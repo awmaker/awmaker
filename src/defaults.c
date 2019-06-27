@@ -1376,10 +1376,9 @@ static unsigned int read_defaults_step1(virtual_screen *vscr, WMPropList *new_di
 			 * We must continue, except if WorkspaceSpecificBack
 			 * was updated previously
 			 */
-			if (!(strcmp(entry->key, "WorkspaceBack") == 0 &&
+			if (strcmp(entry->key, "WorkspaceBack") == 0 &&
 			    vscr->screen_ptr->flags.update_workspace_back &&
-			    vscr->screen_ptr->flags.backimage_helper_launched)) {
-			} else {
+			    vscr->screen_ptr->flags.backimage_helper_launched) {
 				needs_refresh |= default_update(vscr, entry, plvalue);
 			}
 		}
