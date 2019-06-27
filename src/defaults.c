@@ -3225,50 +3225,59 @@ static int setFrameSelectedBorderColor(virtual_screen *vscr)
 	return REFRESH_FRAME_BORDER;
 }
 
-static int setWorkspaceSpecificBack(virtual_screen *vscr)
+static int set_workspace_back(virtual_screen *vscr, int opt)
 {
 	WMPropList *value;
 	WMPropList *val;
 	char *str;
 	int i;
 
-	value = wPreferences.workspacespecificback;
+	if (opt == 0) {
+		value = wPreferences.workspacespecificback;
 
-	if (vscr->screen_ptr->flags.backimage_helper_launched) {
-		if (WMGetPropListItemCount(value) == 0) {
-			SendHelperMessage(vscr, 'C', 0, NULL);
-			SendHelperMessage(vscr, 'K', 0, NULL);
+		if (vscr->screen_ptr->flags.backimage_helper_launched) {
+			if (WMGetPropListItemCount(value) == 0) {
+				SendHelperMessage(vscr, 'C', 0, NULL);
+				SendHelperMessage(vscr, 'K', 0, NULL);
 
-			WMReleasePropList(value);
-			return 0;
-		}
-	} else {
-		if (WMGetPropListItemCount(value) == 0)
-			return 0;
-
-		if (!start_bg_helper(vscr)) {
-			WMReleasePropList(value);
-			return 0;
-		}
-
-		SendHelperMessage(vscr, 'P', -1, wPreferences.pixmap_path);
-	}
-
-	for (i = 0; i < WMGetPropListItemCount(value); i++) {
-		val = WMGetFromPLArray(value, i);
-		if (val && WMIsPLArray(val) && WMGetPropListItemCount(val) > 0) {
-			str = WMGetPropListDescription(val, False);
-			SendHelperMessage(vscr, 'S', i + 1, str);
-			wfree(str);
+				WMReleasePropList(value);
+				return 0;
+			}
 		} else {
-			SendHelperMessage(vscr, 'U', i + 1, NULL);
+			if (WMGetPropListItemCount(value) == 0)
+				return 0;
+
+			if (!start_bg_helper(vscr)) {
+				WMReleasePropList(value);
+				return 0;
+			}
+
+			SendHelperMessage(vscr, 'P', -1, wPreferences.pixmap_path);
 		}
+
+		for (i = 0; i < WMGetPropListItemCount(value); i++) {
+			val = WMGetFromPLArray(value, i);
+			if (val && WMIsPLArray(val) && WMGetPropListItemCount(val) > 0) {
+				str = WMGetPropListDescription(val, False);
+				SendHelperMessage(vscr, 'S', i + 1, str);
+				wfree(str);
+			} else {
+				SendHelperMessage(vscr, 'U', i + 1, NULL);
+			}
+		}
+
+		sleep(1);
+
+		WMReleasePropList(value);
 	}
 
-	sleep(1);
-
-	WMReleasePropList(value);
 	return 0;
+}
+
+
+static int setWorkspaceSpecificBack(virtual_screen *vscr)
+{
+	return set_workspace_back(vscr, 0);
 }
 
 static void backimage_launch_helper(virtual_screen *vscr, WMPropList *value)
