@@ -1571,8 +1571,15 @@ unsigned int set_defaults_virtual_screen(virtual_screen *vscr)
 	for (i = 0; i < wlengthof(optionList); i++) {
 		entry = &optionList[i];
 
-		if (entry->update)
-			needs_refresh |= (*entry->update) (vscr);
+		/* Check if refresh it (always true at the starting */
+		if (entry->refresh) {
+			/* Run the update function if exists */
+			if (entry->update)
+				needs_refresh |= (*entry->update) (vscr);
+
+			/* Change the flag */
+			entry->refresh = 0;
+		}
 	}
 
 	return needs_refresh;
@@ -1619,23 +1626,6 @@ static void read_defaults_step1(WMPropList *new_dict)
 			/* Value was not changed since last time.*/
 		}
 	}
-}
-
-static unsigned int read_defaults_step1_update(virtual_screen *vscr)
-{
-	unsigned int i, needs_refresh = 0;
-	WDefaultEntry *entry;
-
-	for (i = 0; i < wlengthof(optionList); i++) {
-		entry = &optionList[i];
-
-		if (entry->refresh && entry->update) {
-			needs_refresh = (*entry->update) (vscr);
-			entry->refresh = 0;
-		}
-	}
-
-	return needs_refresh;
 }
 
 static unsigned int default_update(WDefaultEntry *entry, WMPropList *plvalue)
@@ -1734,7 +1724,7 @@ void wReadDefaults(virtual_screen *vscr, WMPropList *new_dict)
 	unsigned int needs_refresh;
 
 	read_defaults_step1(new_dict);
-	needs_refresh = read_defaults_step1_update(vscr);
+	needs_refresh = set_defaults_virtual_screen(vscr);
 
 	if (needs_refresh != 0 && !w_global.startup.phase1)
 		refresh_defaults(vscr, needs_refresh);
