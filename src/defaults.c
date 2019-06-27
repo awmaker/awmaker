@@ -1578,13 +1578,11 @@ unsigned int set_defaults_virtual_screen(virtual_screen *vscr)
 	return needs_refresh;
 }
 
-static void read_defaults_step1(virtual_screen *vscr, WMPropList *new_dict)
+static void read_defaults_step1(WMPropList *new_dict)
 {
 	unsigned int i;
 	WMPropList *plvalue, *old_value, *old_dict = NULL;
 	WDefaultEntry *entry;
-
-	vscr->screen_ptr->flags.update_workspace_back = 0;
 
 	if (w_global.domain.wmaker->dictionary != new_dict)
 		old_dict = w_global.domain.wmaker->dictionary;
@@ -1621,10 +1619,7 @@ static void read_defaults_step1(virtual_screen *vscr, WMPropList *new_dict)
 			/* Value was not changed since last time.*/
 		}
 	}
-
-	vscr->screen_ptr->flags.update_workspace_back = 0;
 }
-
 
 static unsigned int read_defaults_step1_update(virtual_screen *vscr)
 {
@@ -1738,7 +1733,7 @@ void wReadDefaults(virtual_screen *vscr, WMPropList *new_dict)
 {
 	unsigned int needs_refresh;
 
-	read_defaults_step1(vscr, new_dict);
+	read_defaults_step1(new_dict);
 	needs_refresh = read_defaults_step1_update(vscr);
 
 	if (needs_refresh != 0 && !w_global.startup.phase1)

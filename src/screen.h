@@ -313,7 +313,6 @@ struct WScreen {
         unsigned int dnd_data_convertion_status:1;
         unsigned int next_click_is_not_double:1;
         unsigned int backimage_helper_launched:1;
-        unsigned int update_workspace_back:1;
         /* some client has issued a WM_COLORMAP_NOTIFY */
         unsigned int colormap_stuff_blocked:1;
         unsigned int doing_alt_tab:1;
