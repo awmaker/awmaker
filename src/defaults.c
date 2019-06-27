@@ -1174,6 +1174,7 @@ static void wReadStaticDefaults_update(void);
 static void wDefaultsMergeGlobalMenus(WDDomain *menuDomain);
 static void wDefaultUpdateIcons(virtual_screen *vscr);
 static WDDomain *wDefaultsInitDomain(const char *domain, Bool requireDictionary);
+static void backimage_launch_helper(virtual_screen *vscr, WMPropList *value);
 static unsigned int default_update(virtual_screen *vscr, WDefaultEntry *entry, WMPropList *plvalue);
 
 void startup_set_defaults_virtual(void)
@@ -3270,6 +3271,31 @@ static int setWorkspaceSpecificBack(virtual_screen *vscr)
 	return 0;
 }
 
+static void backimage_launch_helper(virtual_screen *vscr, WMPropList *value)
+{
+	char *text;
+	char *dither;
+	int len;
+
+	text = WMGetPropListDescription(value, False);
+	len = strlen(text) + 40;
+	dither = wPreferences.no_dithering ? "-m" : "-d";
+	if (!strchr(text, '\'') && !strchr(text, '\\')) {
+		char command[len];
+
+		if (wPreferences.smooth_workspace_back)
+			snprintf(command, len, "wmsetbg %s -S -p '%s' &", dither, text);
+		else
+			snprintf(command, len, "wmsetbg %s -p '%s' &", dither, text);
+
+		ExecuteShellCommand(vscr, command);
+	} else {
+		wwarning(_("Invalid arguments for background \"%s\""), text);
+	}
+
+	wfree(text);
+}
+
 static int setWorkspaceBack(virtual_screen *vscr)
 {
 	WMPropList *value = wPreferences.workspaceback;
@@ -3291,27 +3317,7 @@ static int setWorkspaceBack(virtual_screen *vscr)
 			}
 		}
 	} else if (WMGetPropListItemCount(value) > 0) {
-		char *text;
-		char *dither;
-		int len;
-
-		text = WMGetPropListDescription(value, False);
-		len = strlen(text) + 40;
-		dither = wPreferences.no_dithering ? "-m" : "-d";
-		if (!strchr(text, '\'') && !strchr(text, '\\')) {
-			char command[len];
-
-			if (wPreferences.smooth_workspace_back)
-				snprintf(command, len, "wmsetbg %s -S -p '%s' &", dither, text);
-			else
-				snprintf(command, len, "wmsetbg %s -p '%s' &", dither, text);
-
-			ExecuteShellCommand(vscr, command);
-		} else {
-			wwarning(_("Invalid arguments for background \"%s\""), text);
-		}
-
-		wfree(text);
+		backimage_launch_helper(vscr, value);
 	}
 
 	WMReleasePropList(value);
