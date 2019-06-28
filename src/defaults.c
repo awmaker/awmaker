@@ -1176,6 +1176,7 @@ static WDDomain *wDefaultsInitDomain(const char *domain, Bool requireDictionary)
 static void backimage_launch_helper(virtual_screen *vscr, WMPropList *value);
 static unsigned int default_update(WDefaultEntry *entry, WMPropList *plvalue);
 static void read_defaults(WMPropList *new_dict);
+static void wReadDefaults(virtual_screen *vscr, WMPropList *new_dict);
 
 void startup_set_defaults_virtual(void)
 {
@@ -1720,7 +1721,7 @@ static void refresh_defaults(virtual_screen *vscr, unsigned int needs_refresh)
 	}
 }
 
-void wReadDefaults(virtual_screen *vscr, WMPropList *new_dict)
+static void wReadDefaults(virtual_screen *vscr, WMPropList *new_dict)
 {
 	unsigned int needs_refresh;
 

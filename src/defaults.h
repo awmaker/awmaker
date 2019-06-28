@@ -29,7 +29,6 @@ typedef struct WDDomain {
 } WDDomain;
 
 char *get_wmstate_file(virtual_screen *vscr);
-void wReadDefaults(virtual_screen *vscr, WMPropList *new_dict);
 void wDefaultsCheckDomains(void *arg);
 void apply_defaults_to_screen(virtual_screen *vscr, WScreen *scr);
 void startup_set_defaults_virtual(void);
