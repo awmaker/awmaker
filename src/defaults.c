@@ -3228,9 +3228,6 @@ static int set_workspace_back(virtual_screen *vscr)
 	if (optionList[OL_WORKSPACESPECIFICBACK].refresh) {
 		value = wPreferences.workspacespecificback;
 
-		/* Enable the flag to set the default background */
-		cont = 1;
-
 		if (vscr->screen_ptr->flags.backimage_helper_launched) {
 			if (WMGetPropListItemCount(value) == 0) {
 				SendHelperMessage(vscr, 'C', 0, NULL);
@@ -3246,6 +3243,9 @@ static int set_workspace_back(virtual_screen *vscr)
 			if (!start_bg_helper(vscr)) {
 				WMReleasePropList(value);
 				return 0;
+			} else {
+				/* Enable the flag to set the default background */
+				cont = 1;
 			}
 
 			SendHelperMessage(vscr, 'P', -1, wPreferences.pixmap_path);
