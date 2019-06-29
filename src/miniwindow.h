@@ -25,5 +25,6 @@
 #include "icon.h"
 
 WIcon *miniwindow_create_icon(WWindow *wwin);
+void miniwindow_create_minipreview(WWindow *wwin);
 
 #endif /* WMMINIWINDOW_H */

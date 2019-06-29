@@ -1328,7 +1328,7 @@ void wIconifyWindow(WWindow *wwin)
 
 		/* extract the window screenshot every time, as the option can be enable anytime */
 		if (wwin->client_win && wwin->flags.mapped)
-			(void) create_icon_minipreview(wwin);
+			miniwindow_create_minipreview(wwin);
 	}
 
 	wwin->flags.miniaturized = 1;

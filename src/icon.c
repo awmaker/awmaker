@@ -68,8 +68,6 @@ static void get_rimage_icon_from_x11(WIcon *icon);
 static void icon_update_pixmap(WIcon *icon, RImage *image);
 static void unset_icon_image(WIcon *icon);
 
-static void create_minipreview_showerror(WWindow *wwin);
-
 /****** Notification Observers ******/
 
 void icon_appearanceObserver(void *self, WMNotification *notif)
@@ -975,38 +973,4 @@ void unmap_icon_image(WIcon *icon)
 		XFreePixmap(dpy, icon->pixmap);
 
 	unset_icon_file_image(icon);
-}
-
-int create_icon_minipreview(WWindow *wwin)
-{
-	Pixmap pixmap;
-	int ret;
-
-	ret = create_minipixmap_for_wwindow(wwin->vscr, wwin, &pixmap);
-	if (ret) {
-		create_minipreview_showerror(wwin);
-		return -1;
-	}
-
-	if (wwin->icon->mini_preview != None)
-		XFreePixmap(dpy, wwin->icon->mini_preview);
-
-	wwin->icon->mini_preview = pixmap;
-
-	return 0;
-}
-
-static void create_minipreview_showerror(WWindow *wwin)
-{
-	const char *title;
-	char title_buf[32];
-
-	if (wwin->title) {
-		title = wwin->title;
-	} else {
-		snprintf(title_buf, sizeof(title_buf), "(id=0x%lx)", wwin->client_win);
-		title = title_buf;
-	}
-
-	wwarning(_("creation of mini-preview failed for window \"%s\""), title);
 }

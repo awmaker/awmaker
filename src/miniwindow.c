@@ -32,6 +32,9 @@
 
 #include "WindowMaker.h"
 #include "miniwindow.h"
+#include "misc.h"
+
+static void miniwindow_create_minipreview_showerror(WWindow *wwin);
 
 WIcon *miniwindow_create_icon(WWindow *wwin)
 {
@@ -49,4 +52,36 @@ WIcon *miniwindow_create_icon(WWindow *wwin)
 #endif
 
 	return icon;
+}
+
+void miniwindow_create_minipreview(WWindow *wwin)
+{
+	Pixmap pixmap;
+	int ret;
+
+	ret = create_minipixmap_for_wwindow(wwin->vscr, wwin, &pixmap);
+	if (ret) {
+		miniwindow_create_minipreview_showerror(wwin);
+		return;
+	}
+
+	if (wwin->icon->mini_preview != None)
+		XFreePixmap(dpy, wwin->icon->mini_preview);
+
+	wwin->icon->mini_preview = pixmap;
+}
+
+static void miniwindow_create_minipreview_showerror(WWindow *wwin)
+{
+	const char *title;
+	char title_buf[32];
+
+	if (wwin->title) {
+		title = wwin->title;
+	} else {
+		snprintf(title_buf, sizeof(title_buf), "(id=0x%lx)", wwin->client_win);
+		title = title_buf;
+	}
+
+	wwarning(_("creation of mini-preview failed for window \"%s\""), title);
 }
