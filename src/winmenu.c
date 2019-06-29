@@ -171,7 +171,7 @@ static void execWindowOptionCommand(WMenu *menu, WMenuEntry *entry)
 static void execMaximizeCommand(WMenu *menu, WMenuEntry *entry)
 {
 	WWindow *wwin = (WWindow *) entry->clientdata;
-	
+
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) menu;
 
