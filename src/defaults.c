@@ -107,10 +107,7 @@ static WDECallbackConvert getCursor;
 static WDECallbackUpdate setJustify;
 static WDECallbackUpdate setClearance;
 static WDECallbackUpdate setIfDockPresent;
-static WDECallbackUpdate setIfClipPresent;
-static WDECallbackUpdate setIfDrawerPresent;
 static WDECallbackUpdate setClipMergedInDock;
-static WDECallbackUpdate setWrapAppiconsInDock;
 static WDECallbackUpdate setStickyIcons;
 static WDECallbackUpdate setWidgetColor;
 static WDECallbackUpdate setIconTile;
@@ -456,9 +453,9 @@ WDefaultEntry staticOptionList[] = {
 	{"DisableDock", "NO", NULL,
 	    &wPreferences.flags.nodock, getBool, setIfDockPresent, NULL, NULL, 0},
 	{"DisableClip", "NO", NULL,
-	    &wPreferences.flags.noclip, getBool, setIfClipPresent, NULL, NULL, 0},
+	    &wPreferences.flags.noclip, getBool, NULL, NULL, NULL, 0},
 	{"DisableDrawers", "NO", NULL,
-	    &wPreferences.flags.nodrawer, getBool, setIfDrawerPresent, NULL, NULL, 0},
+	    &wPreferences.flags.nodrawer, getBool, NULL, NULL, NULL, 0},
 	{"ClipMergedInDock", "NO", NULL,
 	    &wPreferences.flags.clip_merged_in_dock, getBool, setClipMergedInDock, NULL, NULL, 0},
 	{"DisableMiniwindows", "NO", NULL,
@@ -778,7 +775,7 @@ WDefaultEntry optionList[] = {
 	{"ClipAutocollapseDelay", "1000", NULL,
 	    &wPreferences.clip_auto_collapse_delay, getInt, NULL, NULL, NULL, 1},
 	{"WrapAppiconsInDock", "YES", NULL,
-	    &wPreferences.flags.wrap_appicons_in_dock, getBool, setWrapAppiconsInDock, NULL, NULL, 1},
+	    &wPreferences.flags.wrap_appicons_in_dock, getBool, NULL, NULL, NULL, 1},
 	{"AlignSubmenus", "NO", NULL,
 	    &wPreferences.align_menus, getBool, NULL, NULL, NULL, 1},
 	{"ViKeyMenus", "NO", NULL,
@@ -2532,36 +2529,12 @@ static int setIfDockPresent(virtual_screen *vscr)
 	return 0;
 }
 
-static int setIfClipPresent(virtual_screen *vscr)
-{
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) vscr;
-
-	return 0;
-}
-
-static int setIfDrawerPresent(virtual_screen *vscr)
-{
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) vscr;
-
-	return 0;
-}
-
 static int setClipMergedInDock(virtual_screen *vscr)
 {
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) vscr;
 
 	wPreferences.flags.noclip = wPreferences.flags.noclip || wPreferences.flags.clip_merged_in_dock;
-	return 0;
-}
-
-static int setWrapAppiconsInDock(virtual_screen *vscr)
-{
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) vscr;
-
 	return 0;
 }
 
