@@ -36,6 +36,7 @@
 #include "window.h"
 #include "client.h"
 #include "icon.h"
+#include "miniwindow.h"
 #include "colormap.h"
 #include "application.h"
 #include "actions.h"
@@ -1321,16 +1322,7 @@ void wIconifyWindow(WWindow *wwin)
 		if (!wwin->flags.icon_moved)
 			PlaceIcon(wwin->vscr, &wwin->icon_x, &wwin->icon_y, wGetHeadForWindow(wwin));
 
-		wwin->icon = icon_create_core(wwin->vscr);
-		wwin->icon->owner = wwin;
-		wwin->icon->tile_type = TILE_NORMAL;
-		set_icon_image_from_database(wwin->icon, wwin->wm_instance, wwin->wm_class, NULL);
-
-#ifdef NO_MINIWINDOW_TITLES
-		wwin->icon->show_title = 0;
-#else
-		wwin->icon->show_title = 1;
-#endif
+		wwin->icon = miniwindow_create_icon(wwin);
 		icon_for_wwindow_map(wwin->icon);
 		wwin->icon->mapped = 1;
 

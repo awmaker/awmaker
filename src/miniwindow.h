@@ -22,5 +22,8 @@
 #define WMMINIWINDOW_H
 
 #include "window.h"
+#include "icon.h"
+
+WIcon *miniwindow_create_icon(WWindow *wwin);
 
 #endif /* WMMINIWINDOW_H */

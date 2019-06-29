@@ -33,3 +33,20 @@
 #include "WindowMaker.h"
 #include "miniwindow.h"
 
+WIcon *miniwindow_create_icon(WWindow *wwin)
+{
+	WIcon *icon = NULL;
+
+	icon = icon_create_core(wwin->vscr);
+	icon->owner = wwin;
+	icon->tile_type = TILE_NORMAL;
+	set_icon_image_from_database(icon, wwin->wm_instance, wwin->wm_class, NULL);
+
+#ifdef NO_MINIWINDOW_TITLES
+	icon->show_title = 0;
+#else
+	icon->show_title = 1;
+#endif
+
+	return icon;
+}
