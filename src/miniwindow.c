@@ -151,6 +151,15 @@ void miniwindow_destroy(WWindow *wwin)
 	wwin->icon = NULL;
 }
 
+void miniwindow_updatetitle(WWindow *wwin)
+{
+	if (!wwin->icon)
+		return;
+
+	wIconChangeTitle(wwin->icon, wwin);
+	wIconPaint(wwin->icon);
+}
+
 /* Callbacks */
 
 void miniwindow_Expose(WObjDescriptor *desc, XEvent *event)

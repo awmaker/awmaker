@@ -40,6 +40,7 @@
 #include "colormap.h"
 #include "stacking.h"
 #include "appicon.h"
+#include "miniwindow.h"
 #include "appmenu.h"
 #include "wmspec.h"
 #include "misc.h"
@@ -280,10 +281,7 @@ void wClientCheckProperty(WWindow *wwin, XPropertyEvent *event)
 
 	case XA_WM_ICON_NAME:
 		/* Title has changed, update the icon title */
-		if (wwin->icon) {
-			wIconChangeTitle(wwin->icon, wwin);
-			wIconPaint(wwin->icon);
-		}
+		miniwindow_updatetitle(wwin);
 		break;
 
 	case XA_WM_COMMAND:
