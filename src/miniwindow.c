@@ -33,10 +33,13 @@
 #include "WindowMaker.h"
 #include "miniwindow.h"
 #include "actions.h"
+#include "event.h"
 #include "misc.h"
 #include "stacking.h"
+#include "winmenu.h"
 
 static void miniwindow_create_minipreview_showerror(WWindow *wwin);
+static void miniwindow_DblClick(WObjDescriptor *desc, XEvent *event);
 
 WIcon *miniwindow_create_icon(WWindow *wwin)
 {
@@ -146,4 +149,125 @@ void miniwindow_destroy(WWindow *wwin)
 	RemoveFromStackList(wwin->icon->vscr, wwin->icon->core);
 	wIconDestroy(wwin->icon);
 	wwin->icon = NULL;
+}
+
+/* Callbacks */
+
+void miniwindow_Expose(WObjDescriptor *desc, XEvent *event)
+{
+	/* Parameter not used, but tell the compiler that it is ok */
+	(void) event;
+
+	wIconPaint(desc->parent);
+}
+
+static void miniwindow_DblClick(WObjDescriptor *desc, XEvent *event)
+{
+	WIcon *icon = desc->parent;
+
+	/* Parameter not used, but tell the compiler that it is ok */
+	(void) event;
+
+	assert(icon->owner != NULL);
+
+	wDeiconifyWindow(icon->owner);
+}
+
+void miniwindow_MouseDown(WObjDescriptor *desc, XEvent *event)
+{
+	WIcon *icon = desc->parent;
+	WWindow *wwin = icon->owner;
+	XEvent ev;
+	int x = wwin->icon_x, y = wwin->icon_y;
+	int dx = event->xbutton.x, dy = event->xbutton.y;
+	int grabbed = 0;
+	int clickButton = event->xbutton.button;
+	Bool hasMoved = False;
+
+	if (WCHECK_STATE(WSTATE_MODAL))
+		return;
+
+	if (IsDoubleClick(icon->vscr, event)) {
+		miniwindow_DblClick(desc, event);
+		return;
+	}
+
+	if (event->xbutton.button == Button1) {
+		if (event->xbutton.state & wPreferences.modifier_mask)
+			wLowerFrame(icon->vscr, icon->core);
+		else
+			wRaiseFrame(icon->vscr, icon->core);
+		if (event->xbutton.state & ShiftMask) {
+			wIconSelect(icon);
+			wSelectWindow(icon->owner, !wwin->flags.selected);
+		}
+	} else if (event->xbutton.button == Button3) {
+		WObjDescriptor *desc;
+
+		OpenWindowMenu(wwin, event->xbutton.x_root, event->xbutton.y_root, False);
+
+		/* allow drag select of menu */
+		desc = &wwin->vscr->menu.window_menu->core->descriptor;
+		event->xbutton.send_event = True;
+		(*desc->handle_mousedown) (desc, event);
+
+		return;
+	}
+
+	if (XGrabPointer(dpy, icon->core->window, False, ButtonMotionMask
+			 | ButtonReleaseMask | ButtonPressMask, GrabModeAsync,
+			 GrabModeAsync, None, None, CurrentTime) != GrabSuccess) {
+	}
+
+	while (1) {
+		WMMaskEvent(dpy, PointerMotionMask | ButtonReleaseMask | ButtonPressMask
+			    | ButtonMotionMask | ExposureMask, &ev);
+		switch (ev.type) {
+		case Expose:
+			WMHandleEvent(&ev);
+			break;
+
+		case MotionNotify:
+			hasMoved = True;
+			if (!grabbed) {
+				if (abs(dx - ev.xmotion.x) >= MOVE_THRESHOLD ||
+				    abs(dy - ev.xmotion.y) >= MOVE_THRESHOLD) {
+					XChangeActivePointerGrab(dpy, ButtonMotionMask
+								 | ButtonReleaseMask | ButtonPressMask,
+								 wPreferences.cursor[WCUR_MOVE], CurrentTime);
+					grabbed = 1;
+				} else {
+					break;
+				}
+			}
+			x = ev.xmotion.x_root - dx;
+			y = ev.xmotion.y_root - dy;
+			XMoveWindow(dpy, icon->core->window, x, y);
+			break;
+
+		case ButtonPress:
+			break;
+
+		case ButtonRelease:
+			if (ev.xbutton.button != clickButton)
+				break;
+
+			if (wwin->icon_x != x || wwin->icon_y != y)
+				wwin->flags.icon_moved = 1;
+
+			XMoveWindow(dpy, icon->core->window, x, y);
+			wwin->icon_x = x;
+			wwin->icon_y = y;
+			XUngrabPointer(dpy, CurrentTime);
+
+			if (wPreferences.auto_arrange_icons)
+				wArrangeIcons(wwin->vscr, True);
+
+			if (wPreferences.single_click && !hasMoved)
+				miniwindow_DblClick(desc, event);
+
+			return;
+
+		}
+	}
 }
