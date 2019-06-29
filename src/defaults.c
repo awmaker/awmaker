@@ -1168,7 +1168,6 @@ WDefaultEntry optionList[] = {
 
 static void init_defaults(void);
 static void wReadStaticDefaults(WMPropList *dict);
-static void wReadStaticDefaults_update(void);
 static void wDefaultsMergeGlobalMenus(WDDomain *menuDomain);
 static void wDefaultUpdateIcons(virtual_screen *vscr);
 static WDDomain *wDefaultsInitDomain(const char *domain, Bool requireDictionary);
@@ -1187,10 +1186,8 @@ void startup_set_defaults_virtual(void)
 	if (!w_global.domain.wmaker->dictionary)
 		wwarning(_("could not read domain \"%s\" from defaults database"), "WindowMaker");
 
-	/* read defaults that don't change until a restart and are
-	 * screen independent */
+	/* Read defaults that don't change until a restart. Screen independent */
 	wReadStaticDefaults(w_global.domain.wmaker ? w_global.domain.wmaker->dictionary : NULL);
-	wReadStaticDefaults_update();
 
 	/* check sanity of some values */
 	if (wPreferences.icon_size < 16) {
@@ -1524,21 +1521,6 @@ static void wReadStaticDefaults(WMPropList *dict)
 			(*entry->convert) (entry, plvalue, entry->addr);
 			entry->refresh = 1;
 		}
-	}
-}
-
-static void wReadStaticDefaults_update(void)
-{
-	WDefaultEntry *entry;
-	unsigned int i;
-
-	for (i = 0; i < wlengthof(staticOptionList); i++) {
-		entry = &staticOptionList[i];
-
-		if (entry->update && entry->refresh)
-			(*entry->update) (NULL);
-
-		entry->refresh = 0;
 	}
 }
 
