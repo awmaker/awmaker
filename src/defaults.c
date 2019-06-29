@@ -1516,11 +1516,9 @@ static void wReadStaticDefaults(WMPropList *dict)
 		if (!plvalue)
 			plvalue = entry->plvalue;
 
-		if (plvalue) {
+		if (plvalue)
 			/* convert data */
 			(*entry->convert) (entry, plvalue, entry->addr);
-			entry->refresh = 1;
-		}
 	}
 }
 
