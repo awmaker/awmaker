@@ -60,8 +60,6 @@ typedef struct WIcon {
 					 * color */
 } WIcon;
 
-void icon_for_wwindow_map(WIcon *icon);
-void icon_for_wwindow_miniwindow_map(WIcon *icon);
 WIcon *icon_create_core(virtual_screen *vscr);
 
 void set_icon_image_from_database(WIcon *icon, const char *wm_instance, const char *wm_class, const char *command);

@@ -35,6 +35,7 @@
 #include "WindowMaker.h"
 #include "window.h"
 #include "icon.h"
+#include "miniwindow.h"
 #include "application.h"
 #include "appicon.h"
 #include "actions.h"
@@ -333,7 +334,7 @@ static void wAppIcon_create(WApplication *wapp)
 
 static void wAppIcon_map(WAppIcon *aicon)
 {
-	icon_for_wwindow_miniwindow_map(aicon->icon);
+	miniwindow_icon_map2(aicon->icon);
 
 #ifdef USE_DOCK_XDND
 	wXDNDMakeAwareness(aicon->icon->core->window);

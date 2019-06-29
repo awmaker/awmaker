@@ -85,3 +85,53 @@ static void miniwindow_create_minipreview_showerror(WWindow *wwin)
 
 	wwarning(_("creation of mini-preview failed for window \"%s\""), title);
 }
+
+void miniwindow_icon_map1(WIcon *icon)
+{
+	WWindow *wwin = icon->owner;
+	virtual_screen *vscr = wwin->vscr;
+	WScreen *scr = vscr->screen_ptr;
+
+	wcore_map_toplevel(icon->core, vscr, wwin->icon_x, wwin->icon_y,
+			   icon->width, icon->height, 0, scr->w_depth,
+			   scr->w_visual, scr->w_colormap, scr->white_pixel);
+
+	if (wwin->wm_hints && (wwin->wm_hints->flags & IconWindowHint)) {
+		if (wwin->client_win == wwin->main_window) {
+			WApplication *wapp;
+			/* do not let miniwindow steal app-icon's icon window */
+			wapp = wApplicationOf(wwin->client_win);
+			if (!wapp || wapp->app_icon == NULL)
+				icon->icon_win = wwin->wm_hints->icon_window;
+		} else {
+			icon->icon_win = wwin->wm_hints->icon_window;
+		}
+	}
+
+	wIconChangeTitle(icon, wwin);
+
+	map_icon_image(icon);
+
+	WMAddNotificationObserver(icon_appearanceObserver, icon, WNIconAppearanceSettingsChanged, icon);
+	WMAddNotificationObserver(icon_tileObserver, icon, WNIconTileSettingsChanged, icon);
+}
+
+void miniwindow_icon_map2(WIcon *icon)
+{
+	WWindow *wwin = icon->owner;
+	virtual_screen *vscr = wwin->vscr;
+	WScreen *scr = vscr->screen_ptr;
+
+	wcore_map_toplevel(icon->core, vscr, wwin->icon_x, wwin->icon_y,
+			   icon->width, icon->height, 0,
+			   scr->w_depth, scr->w_visual, scr->w_colormap,
+			   scr->white_pixel);
+
+	if (wwin->wm_hints && (wwin->wm_hints->flags & IconWindowHint))
+		icon->icon_win = wwin->wm_hints->icon_window;
+
+	map_icon_image(icon);
+
+	WMAddNotificationObserver(icon_appearanceObserver, icon, WNIconAppearanceSettingsChanged, icon);
+	WMAddNotificationObserver(icon_tileObserver, icon, WNIconTileSettingsChanged, icon);
+}
