@@ -51,6 +51,8 @@ awmaker_SOURCES = 	\
 	main.h \
 	menu.c \
 	menu.h \
+	miniwindow.c \
+	miniwindow.h \
 	misc.h \
 	monitor.c \
 	monitor.h \
