@@ -102,12 +102,12 @@ static WDECallbackConvert getKeybind;
 static WDECallbackConvert getModMask;
 static WDECallbackConvert getPropList;
 static WDECallbackConvert getCursor;
+static WDECallbackConvert getClipMergedInDock;
 
 /* value setting functions */
 static WDECallbackUpdate setJustify;
 static WDECallbackUpdate setClearance;
 static WDECallbackUpdate setIfDockPresent;
-static WDECallbackUpdate setClipMergedInDock;
 static WDECallbackUpdate setStickyIcons;
 static WDECallbackUpdate setWidgetColor;
 static WDECallbackUpdate setIconTile;
@@ -456,8 +456,9 @@ WDefaultEntry staticOptionList[] = {
 	    &wPreferences.flags.noclip, getBool, NULL, NULL, NULL, 0},
 	{"DisableDrawers", "NO", NULL,
 	    &wPreferences.flags.nodrawer, getBool, NULL, NULL, NULL, 0},
+	/* getClipMergedInDock modifies noclip flag, so must be used after set that flag */
 	{"ClipMergedInDock", "NO", NULL,
-	    &wPreferences.flags.clip_merged_in_dock, getBool, setClipMergedInDock, NULL, NULL, 0},
+	    &wPreferences.flags.clip_merged_in_dock, getClipMergedInDock, NULL, NULL, NULL, 0},
 	{"DisableMiniwindows", "NO", NULL,
 	    &wPreferences.disable_miniwindows, getBool, NULL, NULL, NULL, 0},
 	{"EnableWorkspacePager", "NO", NULL,
@@ -2502,6 +2503,13 @@ static int getCursor(WDefaultEntry *entry, WMPropList *value, void *addr)
 
 #undef CURSOR_ID_NONE
 
+static int getClipMergedInDock(WDefaultEntry *entry, WMPropList *value, void *addr)
+{
+	int ret = getBool(entry, value, addr);
+	wPreferences.flags.noclip = wPreferences.flags.noclip || wPreferences.flags.clip_merged_in_dock;
+	return ret;
+}
+
 /* ---------------- value setting functions --------------- */
 static int setJustify(virtual_screen *vscr)
 {
@@ -2526,15 +2534,6 @@ static int setIfDockPresent(virtual_screen *vscr)
 
 	wPreferences.flags.nodrawer = wPreferences.flags.nodrawer || wPreferences.flags.nodock;
 
-	return 0;
-}
-
-static int setClipMergedInDock(virtual_screen *vscr)
-{
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) vscr;
-
-	wPreferences.flags.noclip = wPreferences.flags.noclip || wPreferences.flags.clip_merged_in_dock;
 	return 0;
 }
 
