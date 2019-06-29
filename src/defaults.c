@@ -103,11 +103,11 @@ static WDECallbackConvert getModMask;
 static WDECallbackConvert getPropList;
 static WDECallbackConvert getCursor;
 static WDECallbackConvert getClipMergedInDock;
+static WDECallbackConvert getIfDockPresent;
 
 /* value setting functions */
 static WDECallbackUpdate setJustify;
 static WDECallbackUpdate setClearance;
-static WDECallbackUpdate setIfDockPresent;
 static WDECallbackUpdate setStickyIcons;
 static WDECallbackUpdate setWidgetColor;
 static WDECallbackUpdate setIconTile;
@@ -428,9 +428,9 @@ enum {
 	SOL_MODIFIERKEY,
 	SOL_FOCUSMODE,
 	SOL_NEWSTYLE,
+	SOL_DISABLEDRAWERS,
 	SOL_DISABLEDOCK,
 	SOL_DISABLECLIP,
-	SOL_DISABLEDRAWERS,
 	SOL_CLIPMERGEDINDOCK,
 	SOL_DISABLEMINIWINDOWS,
 	SOL_ENABLEWORKSPACEPAGER
@@ -450,12 +450,13 @@ WDefaultEntry staticOptionList[] = {
 	    &wPreferences.focus_mode, getEnum, NULL, NULL, NULL, 0},	/* manual to sloppy without restart */
 	{"NewStyle", "new", seTitlebarModes,
 	    &wPreferences.new_style, getEnum, NULL, NULL, NULL, 0},
-	{"DisableDock", "NO", NULL,
-	    &wPreferences.flags.nodock, getBool, setIfDockPresent, NULL, NULL, 0},
-	{"DisableClip", "NO", NULL,
-	    &wPreferences.flags.noclip, getBool, NULL, NULL, NULL, 0},
 	{"DisableDrawers", "NO", NULL,
 	    &wPreferences.flags.nodrawer, getBool, NULL, NULL, NULL, 0},
+	/* getIfDockPresent modifies noclip flag, so must be used after set that flag */
+	{"DisableDock", "NO", NULL,
+	    &wPreferences.flags.nodock, getIfDockPresent, NULL, NULL, NULL, 0},
+	{"DisableClip", "NO", NULL,
+	    &wPreferences.flags.noclip, getBool, NULL, NULL, NULL, 0},
 	/* getClipMergedInDock modifies noclip flag, so must be used after set that flag */
 	{"ClipMergedInDock", "NO", NULL,
 	    &wPreferences.flags.clip_merged_in_dock, getClipMergedInDock, NULL, NULL, NULL, 0},
@@ -2503,6 +2504,13 @@ static int getCursor(WDefaultEntry *entry, WMPropList *value, void *addr)
 
 #undef CURSOR_ID_NONE
 
+static int getIfDockPresent(WDefaultEntry *entry, WMPropList *value, void *addr)
+{
+	int ret = getBool(entry, value, addr);
+	wPreferences.flags.nodrawer = wPreferences.flags.nodrawer || wPreferences.flags.nodock;
+	return ret;
+}
+
 static int getClipMergedInDock(WDefaultEntry *entry, WMPropList *value, void *addr)
 {
 	int ret = getBool(entry, value, addr);
@@ -2525,16 +2533,6 @@ static int setClearance(virtual_screen *vscr)
 	(void) vscr;
 
 	return REFRESH_WINDOW_FONT | REFRESH_BUTTON_IMAGES | REFRESH_MENU_TITLE_FONT | REFRESH_MENU_FONT;
-}
-
-static int setIfDockPresent(virtual_screen *vscr)
-{
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) vscr;
-
-	wPreferences.flags.nodrawer = wPreferences.flags.nodrawer || wPreferences.flags.nodock;
-
-	return 0;
 }
 
 static int setStickyIcons(virtual_screen *vscr)
