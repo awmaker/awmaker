@@ -752,7 +752,7 @@ static void toggleAutoAttractCallback(WMenu *menu, WMenuEntry *entry)
 
 	if (dock->attract_icons) {
 		if (dock->type == WM_DRAWER) {
-			/* The newly auto-attracting dock is a drawer: disable any clip and 
+			/* The newly auto-attracting dock is a drawer: disable any clip and
 			 * previously attracting drawer */
 			if (!wPreferences.flags.noclip) {
 				for (i = 0; i < vscr->workspace.count; i++)
@@ -6073,7 +6073,7 @@ static int addADrawer(virtual_screen *vscr)
 			}
 		}
 	}
-    
+
 	if (!found_y)
 		/* This can happen even when dock->icon_count + scr->drawer_count
 		 * < dock->max_icons when the dock is not aligned on an
