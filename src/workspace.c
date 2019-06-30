@@ -51,6 +51,7 @@
 #include "event.h"
 #include "wsmap.h"
 #include "dialog.h"
+#include "miniwindow.h"
 
 #define MC_DESTROY_LAST 1
 #define MC_LAST_USED    2
@@ -621,9 +622,9 @@ void wWorkspaceForceChange(virtual_screen *vscr, int workspace)
 				}
 				/* also unmap miniwindows not on this workspace */
 				if (!wPreferences.sticky_icons && tmp->flags.miniaturized &&
-				    tmp->icon && !IS_OMNIPRESENT(tmp)) {
-					XUnmapWindow(dpy, tmp->icon->core->window);
-					tmp->icon->mapped = 0;
+				    tmp->miniwindow->icon && !IS_OMNIPRESENT(tmp)) {
+					XUnmapWindow(dpy, tmp->miniwindow->icon->core->window);
+					tmp->miniwindow->icon->mapped = 0;
 				}
 
 				/* update current workspace of omnipresent windows */
@@ -655,9 +656,9 @@ void wWorkspaceForceChange(virtual_screen *vscr, int workspace)
 						}
 						/* Also map miniwindow if not omnipresent */
 						if (!wPreferences.sticky_icons &&
-						    tmp->flags.miniaturized && !IS_OMNIPRESENT(tmp) && tmp->icon) {
-							tmp->icon->mapped = 1;
-							XMapWindow(dpy, tmp->icon->core->window);
+						    tmp->flags.miniaturized && !IS_OMNIPRESENT(tmp) && tmp->miniwindow->icon) {
+							tmp->miniwindow->icon->mapped = 1;
+							XMapWindow(dpy, tmp->miniwindow->icon->core->window);
 						}
 					}
 				}

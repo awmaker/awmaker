@@ -1223,7 +1223,7 @@ static void mapTransientsFor(WWindow *wwin)
 	while (tmp) {
 		/* recursively map the transients for this transient */
 		if (tmp != wwin && tmp->transient_for == wwin->client_win && /*!tmp->flags.mapped */ tmp->flags.miniaturized
-		    && tmp->icon == NULL) {
+		    && tmp->miniwindow->icon == NULL) {
 			mapTransientsFor(tmp);
 			tmp->flags.miniaturized = 0;
 			if (!tmp->flags.shaded)
@@ -1266,14 +1266,14 @@ static WWindow *recursiveTransientFor(WWindow *wwin)
 static int getAnimationGeometry(WWindow *wwin, int *ix, int *iy, int *iw, int *ih)
 {
 	if (w_global.startup.phase1 || wPreferences.no_animations
-		|| wwin->flags.skip_next_animation || wwin->icon == NULL)
+		|| wwin->flags.skip_next_animation || wwin->miniwindow->icon == NULL)
 		return 0;
 
 	if (!wPreferences.disable_miniwindows && !wwin->flags.net_handle_icon) {
 		*ix = wwin->miniwindow->icon_x;
 		*iy = wwin->miniwindow->icon_y;
-		*iw = wwin->icon->width;
-		*ih = wwin->icon->height;
+		*iw = wwin->miniwindow->icon->width;
+		*ih = wwin->miniwindow->icon->height;
 	} else {
 		if (wwin->flags.net_handle_icon) {
 			*ix = wwin->miniwindow->icon_x;
@@ -1322,9 +1322,9 @@ void wIconifyWindow(WWindow *wwin)
 		if (!wwin->flags.icon_moved)
 			PlaceIcon(wwin->vscr, &wwin->miniwindow->icon_x, &wwin->miniwindow->icon_y, wGetHeadForWindow(wwin));
 
-		wwin->icon = miniwindow_create_icon(wwin);
-		miniwindow_icon_map1(wwin->icon);
-		wwin->icon->mapped = 1;
+		wwin->miniwindow->icon = miniwindow_create_icon(wwin);
+		miniwindow_icon_map1(wwin->miniwindow->icon);
+		wwin->miniwindow->icon->mapped = 1;
 
 		/* extract the window screenshot every time, as the option can be enable anytime */
 		if (wwin->client_win && wwin->flags.mapped)
@@ -1350,7 +1350,7 @@ void wIconifyWindow(WWindow *wwin)
 		if (wPreferences.disable_miniwindows || wwin->flags.net_handle_icon)
 			wClientSetState(wwin, IconicState, None);
 		else
-			wClientSetState(wwin, IconicState, wwin->icon->icon_win);
+			wClientSetState(wwin, IconicState, wwin->miniwindow->icon->icon_win);
 
 		flushExpose();
 #ifdef USE_ANIMATIONS
@@ -1365,10 +1365,10 @@ void wIconifyWindow(WWindow *wwin)
 	if (!wPreferences.disable_miniwindows && !wwin->flags.net_handle_icon) {
 		if (wwin->vscr->workspace.current == wwin->frame->workspace ||
 		    IS_OMNIPRESENT(wwin) || wPreferences.sticky_icons)
-			XMapWindow(dpy, wwin->icon->core->window);
+			XMapWindow(dpy, wwin->miniwindow->icon->core->window);
 
-		AddToStackList(wwin->icon->vscr, wwin->icon->core);
-		wLowerFrame(wwin->icon->vscr, wwin->icon->core);
+		AddToStackList(wwin->miniwindow->icon->vscr, wwin->miniwindow->icon->core);
+		wLowerFrame(wwin->miniwindow->icon->vscr, wwin->miniwindow->icon->core);
 	}
 
 	if (present) {
@@ -1410,7 +1410,7 @@ void wIconifyWindow(WWindow *wwin)
 	 */
 	if (wwin->flags.selected && !wPreferences.disable_miniwindows
 	    && !wwin->flags.net_handle_icon)
-		wIconSelect(wwin->icon);
+		wIconSelect(wwin->miniwindow->icon);
 
 	WMPostNotificationName(WMNChangedState, wwin, "iconify");
 
@@ -1457,11 +1457,11 @@ void wDeiconifyWindow(WWindow *wwin)
 		 * it seems to me we might break behaviour this way.
 		 */
 		if (!wPreferences.disable_miniwindows && !wwin->flags.net_handle_icon
-		    && wwin->icon != NULL) {
-			if (wwin->icon->selected)
-				wIconSelect(wwin->icon);
+		    && wwin->miniwindow->icon != NULL) {
+			if (wwin->miniwindow->icon->selected)
+				wIconSelect(wwin->miniwindow->icon);
 
-			XUnmapWindow(dpy, wwin->icon->core->window);
+			XUnmapWindow(dpy, wwin->miniwindow->icon->core->window);
 		}
 	}
 
@@ -1487,7 +1487,7 @@ void wDeiconifyWindow(WWindow *wwin)
 		mapTransientsFor(wwin);
 	}
 
-	if (!wPreferences.disable_miniwindows && wwin->icon != NULL
+	if (!wPreferences.disable_miniwindows && wwin->miniwindow->icon != NULL
 	    && !wwin->flags.net_handle_icon) {
 		wSetFocusTo(wwin->vscr, wwin);
 		miniwindow_destroy(wwin);
@@ -1760,21 +1760,21 @@ void wUnhideApplication(WApplication *wapp, Bool miniwindows, Bool bringToCurren
 
 			if (wlist->flags.miniaturized) {
 				if ((bringToCurrentWS || wPreferences.sticky_icons ||
-				     wlist->frame->workspace == vscr->workspace.current) && wlist->icon) {
-					if (!wlist->icon->mapped) {
+				     wlist->frame->workspace == vscr->workspace.current) && wlist->miniwindow->icon) {
+					if (!wlist->miniwindow->icon->mapped) {
 						int x, y;
 
 						PlaceIcon(vscr, &x, &y, wGetHeadForWindow(wlist));
 						if (wlist->miniwindow->icon_x != x || wlist->miniwindow->icon_y != y)
-							XMoveWindow(dpy, wlist->icon->core->window, x, y);
+							XMoveWindow(dpy, wlist->miniwindow->icon->core->window, x, y);
 
 						wlist->miniwindow->icon_x = x;
 						wlist->miniwindow->icon_y = y;
-						XMapWindow(dpy, wlist->icon->core->window);
-						wlist->icon->mapped = 1;
+						XMapWindow(dpy, wlist->miniwindow->icon->core->window);
+						wlist->miniwindow->icon->mapped = 1;
 					}
 
-					wRaiseFrame(wlist->icon->vscr, wlist->icon->core);
+					wRaiseFrame(wlist->miniwindow->icon->vscr, wlist->miniwindow->icon->core);
 				}
 
 				if (bringToCurrentWS)
@@ -1995,7 +1995,7 @@ void wArrangeIcons(virtual_screen *vscr, Bool arrangeAll)
 		wwin = wwin->prev;
 
 	while (wwin) {
-		if (wwin->icon && wwin->flags.miniaturized && !wwin->flags.hidden &&
+		if (wwin->miniwindow->icon && wwin->flags.miniaturized && !wwin->flags.hidden &&
 		    (wwin->frame->workspace == vscr->workspace.current ||
 		     IS_OMNIPRESENT(wwin) || wPreferences.sticky_icons)) {
 
@@ -2003,7 +2003,7 @@ void wArrangeIcons(virtual_screen *vscr, Bool arrangeAll)
 
 			if (arrangeAll || !wwin->flags.icon_moved) {
 				if (wwin->miniwindow->icon_x != X || wwin->miniwindow->icon_y != Y)
-					move_window(wwin->icon->core->window, wwin->miniwindow->icon_x, wwin->miniwindow->icon_y, X, Y);
+					move_window(wwin->miniwindow->icon->core->window, wwin->miniwindow->icon_x, wwin->miniwindow->icon_y, X, Y);
 
 				wwin->miniwindow->icon_x = X;
 				wwin->miniwindow->icon_y = Y;

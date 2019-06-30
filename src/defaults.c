@@ -63,6 +63,7 @@
 #include "properties.h"
 #include "misc.h"
 #include "winmenu.h"
+#include "miniwindow.h"
 
 typedef struct _WDefaultEntry  WDefaultEntry;
 typedef int (WDECallbackConvert) (WDefaultEntry *entry, WMPropList *plvalue, void *addr);
@@ -1731,8 +1732,8 @@ static void wDefaultUpdateIcons(virtual_screen *vscr)
 		wDrawerIconPaint(dc->adrawer->icon_array[0]);
 
 	while (wwin) {
-		if (wwin->icon && wwin->flags.miniaturized)
-			wIconChangeImageFile(wwin->icon, NULL);
+		if (wwin->miniwindow->icon && wwin->flags.miniaturized)
+			wIconChangeImageFile(wwin->miniwindow->icon, NULL);
 
 		wwin = wwin->prev;
 	}

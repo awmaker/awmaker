@@ -84,10 +84,10 @@ void miniwindow_create_minipreview(WWindow *wwin)
 		return;
 	}
 
-	if (wwin->icon->mini_preview != None)
-		XFreePixmap(dpy, wwin->icon->mini_preview);
+	if (wwin->miniwindow->icon->mini_preview != None)
+		XFreePixmap(dpy, wwin->miniwindow->icon->mini_preview);
 
-	wwin->icon->mini_preview = pixmap;
+	wwin->miniwindow->icon->mini_preview = pixmap;
 }
 
 static void miniwindow_create_minipreview_showerror(WWindow *wwin)
@@ -157,56 +157,56 @@ void miniwindow_icon_map2(WIcon *icon)
 
 void miniwindow_destroy(WWindow *wwin)
 {
-	if (!wwin->icon)
+	if (!wwin->miniwindow->icon)
 		return;
 
-	RemoveFromStackList(wwin->icon->vscr, wwin->icon->core);
-	wIconDestroy(wwin->icon);
-	wwin->icon = NULL;
+	RemoveFromStackList(wwin->miniwindow->icon->vscr, wwin->miniwindow->icon->core);
+	wIconDestroy(wwin->miniwindow->icon);
+	wwin->miniwindow->icon = NULL;
 }
 
 void miniwindow_removeIcon(WWindow *wwin)
 {
-	if (wwin->icon == NULL)
+	if (wwin->miniwindow->icon == NULL)
 		return;
 
-	if (wwin->flags.miniaturized && wwin->icon->mapped) {
-		XUnmapWindow(dpy, wwin->icon->core->window);
+	if (wwin->flags.miniaturized && wwin->miniwindow->icon->mapped) {
+		XUnmapWindow(dpy, wwin->miniwindow->icon->core->window);
 		miniwindow_destroy(wwin);
 	}
 }
 
 void miniwindow_updatetitle(WWindow *wwin)
 {
-	if (!wwin->icon)
+	if (!wwin->miniwindow->icon)
 		return;
 
-	wIconChangeTitle(wwin->icon, wwin);
-	wIconPaint(wwin->icon);
+	wIconChangeTitle(wwin->miniwindow->icon, wwin);
+	wIconPaint(wwin->miniwindow->icon);
 }
 
 void miniwindow_map(WWindow *wwin)
 {
-	if (!wwin->icon)
+	if (!wwin->miniwindow->icon)
 		return;
 
-	XMapWindow(dpy, wwin->icon->core->window);
-	wwin->icon->mapped = 1;
+	XMapWindow(dpy, wwin->miniwindow->icon->core->window);
+	wwin->miniwindow->icon->mapped = 1;
 }
 
 void miniwindow_unmap(WWindow *wwin)
 {
-	if (!wwin->icon)
+	if (!wwin->miniwindow->icon)
 		return;
 
-	XUnmapWindow(dpy, wwin->icon->core->window);
-	wwin->icon->mapped = 0;
+	XUnmapWindow(dpy, wwin->miniwindow->icon->core->window);
+	wwin->miniwindow->icon->mapped = 0;
 }
 
 void miniwindow_iconupdate(WWindow *wwin)
 {
-	if (wwin->icon)
-		wIconUpdate(wwin->icon);
+	if (wwin->miniwindow->icon)
+		wIconUpdate(wwin->miniwindow->icon);
 }
 
 /* Callbacks */

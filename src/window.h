@@ -288,8 +288,6 @@ typedef struct WWindow {
 	} flags;				/* state of the window */
 
 	struct WMiniWindow *miniwindow;
-	struct WIcon *icon;			/* Window icon when miminized
-						 * else is NULL! */
 	char *title;				/* Window title */
 	Atom type;
 } WWindow;

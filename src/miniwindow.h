@@ -25,9 +25,10 @@
 #include "icon.h"
 
 typedef struct WMiniWindow {
-	int icon_x, icon_y;            /* Position of the icon */
+	struct WIcon *icon;        /* Window icon when miminized else is NULL! */
+	int icon_x, icon_y;        /* Position of the icon */
 	int icon_w, icon_h;
-	RImage *net_icon_image;        /* Window Image */
+	RImage *net_icon_image;    /* Window Image */
 } WMiniWindow;
 
 WMiniWindow *miniwindow_create(void);

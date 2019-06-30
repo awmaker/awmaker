@@ -48,6 +48,7 @@
 #include "wmspec.h"
 #include "misc.h"
 #include "switchmenu.h"
+#include "miniwindow.h"
 
 #include <WINGs/WUtil.h>
 
@@ -823,13 +824,13 @@ static void applySettings(WMWidget *button, void *client_data)
 
 			/* Change icon image if the app is minimized,
 			 * using the icon provided by the client */
-			if (wwin_inspected->icon) {
-				RImage *image = get_rimage_icon_from_wm_hints(wwin_inspected->icon);
+			if (wwin_inspected->miniwindow->icon) {
+				RImage *image = get_rimage_icon_from_wm_hints(wwin_inspected->miniwindow->icon);
 				if (image) {
-					set_icon_image_from_image(wwin_inspected->icon, image);
-					update_icon_pixmap(wwin_inspected->icon);
+					set_icon_image_from_image(wwin_inspected->miniwindow->icon, image);
+					update_icon_pixmap(wwin_inspected->miniwindow->icon);
 				} else {
-					wIconUpdate(wwin_inspected->icon);
+					wIconUpdate(wwin_inspected->miniwindow->icon);
 				}
 			}
 		} else {
@@ -838,8 +839,8 @@ static void applySettings(WMWidget *button, void *client_data)
 				wIconChangeImageFile(wapp->app_icon->icon, file);
 
 			/* Change icon image if the app is minimized */
-			if (wwin_inspected->icon)
-				wIconChangeImageFile(wwin_inspected->icon, file);
+			if (wwin_inspected->miniwindow->icon)
+				wIconChangeImageFile(wwin_inspected->miniwindow->icon, file);
 		}
 
 		if (file)
