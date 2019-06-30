@@ -1529,12 +1529,8 @@ void wDeiconifyWindow(WWindow *wwin)
 static void hideWindow(WIcon *icon, int icon_x, int icon_y, WWindow *wwin, int animate)
 {
 	if (wwin->flags.miniaturized) {
-		if (wwin->icon) {
-			XUnmapWindow(dpy, wwin->icon->core->window);
-			wwin->icon->mapped = 0;
-		}
+		miniwindow_unmap(wwin);
 		wwin->flags.hidden = 1;
-
 		WMPostNotificationName(WMNChangedState, wwin, "hide");
 		return;
 	}
