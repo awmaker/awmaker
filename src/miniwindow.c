@@ -158,9 +158,7 @@ void miniwindow_removeIcon(WWindow *wwin)
 
 	if (wwin->flags.miniaturized && wwin->icon->mapped) {
 		XUnmapWindow(dpy, wwin->icon->core->window);
-		RemoveFromStackList(wwin->icon->vscr, wwin->icon->core);
-		wIconDestroy(wwin->icon);
-		wwin->icon = NULL;
+		miniwindow_destroy(wwin);
 	}
 }
 
