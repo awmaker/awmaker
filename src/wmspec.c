@@ -1246,18 +1246,6 @@ static void doStateAtom(WWindow *wwin, Atom state, int set, Bool init)
 	}
 }
 
-static void removeIcon(WWindow *wwin)
-{
-	if (wwin->icon == NULL)
-		return;
-	if (wwin->flags.miniaturized && wwin->icon->mapped) {
-		XUnmapWindow(dpy, wwin->icon->core->window);
-		RemoveFromStackList(wwin->icon->vscr, wwin->icon->core);
-		wIconDestroy(wwin->icon);
-		wwin->icon = NULL;
-	}
-}
-
 static Bool handleWindowType(WWindow *wwin, Atom type, int *layer)
 {
 	Bool ret = True;
@@ -1537,7 +1525,7 @@ static Bool updateNetIconInfo(WWindow *wwin)
 
 	if (wwin->flags.miniaturized && old_state != wwin->flags.net_handle_icon) {
 		if (wwin->flags.net_handle_icon) {
-			removeIcon(wwin);
+			miniwindow_removeIcon(wwin);
 		} else {
 			wwin->flags.miniaturized = False;
 			wwin->flags.skip_next_animation = True;
