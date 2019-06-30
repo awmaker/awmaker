@@ -540,11 +540,11 @@ RImage *get_window_image_from_x11(Window window)
 static void updateIconImage(WWindow *wwin)
 {
 	/* Remove the icon image from X11 */
-	if (wwin->net_icon_image)
-		RReleaseImage(wwin->net_icon_image);
+	if (wwin->miniwindow->net_icon_image)
+		RReleaseImage(wwin->miniwindow->net_icon_image);
 
 	/* Save the icon in the X11 icon */
-	wwin->net_icon_image = get_window_image_from_x11(wwin->client_win);
+	wwin->miniwindow->net_icon_image = get_window_image_from_x11(wwin->client_win);
 
 	/* Refresh the Window Icon */
 	miniwindow_iconupdate(wwin);

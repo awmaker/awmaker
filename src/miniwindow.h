@@ -25,6 +25,7 @@
 #include "icon.h"
 
 typedef struct WMiniWindow {
+	RImage *net_icon_image;        /* Window Image */
 } WMiniWindow;
 
 WMiniWindow *miniwindow_create(void);

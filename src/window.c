@@ -272,8 +272,8 @@ void wWindowDestroy(WWindow *wwin)
 	if (wwin->title)
 		wfree(wwin->title);
 
-	if (wwin->net_icon_image)
-		RReleaseImage(wwin->net_icon_image);
+	if (wwin->miniwindow->net_icon_image)
+		RReleaseImage(wwin->miniwindow->net_icon_image);
 
 	miniwindow_destroy(wwin);
 

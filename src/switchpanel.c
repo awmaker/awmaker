@@ -34,6 +34,7 @@
 #include "switchpanel.h"
 #include "misc.h"
 #include "xinerama.h"
+#include "miniwindow.h"
 
 
 #ifdef USE_XSHAPE
@@ -187,8 +188,8 @@ static void addIconForWindow(WSwitchPanel *panel, WMWidget *parent, WWindow *wwi
 	WMResizeWidget(icon, ICON_TILE_SIZE, ICON_TILE_SIZE);
 	WMMoveWidget(icon, x, y);
 
-	if (!WFLAGP(wwin, always_user_icon) && wwin->net_icon_image)
-		image = RRetainImage(wwin->net_icon_image);
+	if (!WFLAGP(wwin, always_user_icon) && wwin->miniwindow->net_icon_image)
+		image = RRetainImage(wwin->miniwindow->net_icon_image);
 
 	/* get_icon_image() includes the default icon image */
 	if (!image)

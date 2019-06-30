@@ -450,8 +450,8 @@ char *wIconStore(WIcon *icon)
 		return filename;
 	}
 
-	if (wwin->net_icon_image)
-		image = RRetainImage(wwin->net_icon_image);
+	if (wwin->miniwindow->net_icon_image)
+		image = RRetainImage(wwin->miniwindow->net_icon_image);
 	else
 		image = get_wwindow_image_from_wmhints(wwin, icon);
 
@@ -579,7 +579,7 @@ void wIconUpdate(WIcon *icon)
 	} else if (icon->icon_win != None) {
 		/* Get the Pixmap from the WIcon */
 		get_rimage_icon_from_icon_win(icon);
-	} else if (wwin && wwin->net_icon_image) {
+	} else if (wwin && wwin->miniwindow->net_icon_image) {
 		/* Use _NET_WM_ICON icon */
 		get_rimage_icon_from_x11(icon);
 	} else if (wwin && wwin->wm_hints && (wwin->wm_hints->flags & IconPixmapHint)) {
@@ -628,7 +628,7 @@ static void get_rimage_icon_from_x11(WIcon *icon)
 	unset_icon_image(icon);
 
 	/* Set the new icon image */
-	icon->file_image = RRetainImage(icon->owner->net_icon_image);
+	icon->file_image = RRetainImage(icon->owner->miniwindow->net_icon_image);
 }
 
 static void get_rimage_icon_from_user_icon(WIcon *icon)
