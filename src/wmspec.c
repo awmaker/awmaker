@@ -48,6 +48,7 @@
 #include "stacking.h"
 #include "xinerama.h"
 #include "properties.h"
+#include "miniwindow.h"
 
 
 /* Root Window Properties */
@@ -1756,10 +1757,7 @@ void wNETWMCheckClientHintChange(WWindow *wwin, XPropertyEvent *event)
 		if (name)
 			wfree(name);
 	} else if (event->atom == net_wm_title) {
-		if (wwin->icon) {
-			wIconChangeTitle(wwin->icon, wwin);
-			wIconPaint(wwin->icon);
-		}
+		miniwindow_updatetitle(wwin);
 	} else if (event->atom == net_wm_icon) {
 		updateIconImage(wwin);
 	} else if (event->atom == net_wm_window_opacity) {
