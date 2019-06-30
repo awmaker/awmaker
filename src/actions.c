@@ -1270,16 +1270,16 @@ static int getAnimationGeometry(WWindow *wwin, int *ix, int *iy, int *iw, int *i
 		return 0;
 
 	if (!wPreferences.disable_miniwindows && !wwin->flags.net_handle_icon) {
-		*ix = wwin->icon_x;
-		*iy = wwin->icon_y;
+		*ix = wwin->miniwindow->icon_x;
+		*iy = wwin->miniwindow->icon_y;
 		*iw = wwin->icon->width;
 		*ih = wwin->icon->height;
 	} else {
 		if (wwin->flags.net_handle_icon) {
-			*ix = wwin->icon_x;
-			*iy = wwin->icon_y;
-			*iw = wwin->icon_w;
-			*ih = wwin->icon_h;
+			*ix = wwin->miniwindow->icon_x;
+			*iy = wwin->miniwindow->icon_y;
+			*iw = wwin->miniwindow->icon_w;
+			*ih = wwin->miniwindow->icon_h;
 		} else {
 			*ix = 0;
 			*iy = 0;
@@ -1320,7 +1320,7 @@ void wIconifyWindow(WWindow *wwin)
 
 	if (!wPreferences.disable_miniwindows && !wwin->flags.net_handle_icon) {
 		if (!wwin->flags.icon_moved)
-			PlaceIcon(wwin->vscr, &wwin->icon_x, &wwin->icon_y, wGetHeadForWindow(wwin));
+			PlaceIcon(wwin->vscr, &wwin->miniwindow->icon_x, &wwin->miniwindow->icon_y, wGetHeadForWindow(wwin));
 
 		wwin->icon = miniwindow_create_icon(wwin);
 		miniwindow_icon_map1(wwin->icon);
@@ -1765,11 +1765,11 @@ void wUnhideApplication(WApplication *wapp, Bool miniwindows, Bool bringToCurren
 						int x, y;
 
 						PlaceIcon(vscr, &x, &y, wGetHeadForWindow(wlist));
-						if (wlist->icon_x != x || wlist->icon_y != y)
+						if (wlist->miniwindow->icon_x != x || wlist->miniwindow->icon_y != y)
 							XMoveWindow(dpy, wlist->icon->core->window, x, y);
 
-						wlist->icon_x = x;
-						wlist->icon_y = y;
+						wlist->miniwindow->icon_x = x;
+						wlist->miniwindow->icon_y = y;
 						XMapWindow(dpy, wlist->icon->core->window);
 						wlist->icon->mapped = 1;
 					}
@@ -2002,11 +2002,11 @@ void wArrangeIcons(virtual_screen *vscr, Bool arrangeAll)
 			head = wGetHeadForWindow(wwin);
 
 			if (arrangeAll || !wwin->flags.icon_moved) {
-				if (wwin->icon_x != X || wwin->icon_y != Y)
-					move_window(wwin->icon->core->window, wwin->icon_x, wwin->icon_y, X, Y);
+				if (wwin->miniwindow->icon_x != X || wwin->miniwindow->icon_y != Y)
+					move_window(wwin->icon->core->window, wwin->miniwindow->icon_x, wwin->miniwindow->icon_y, X, Y);
 
-				wwin->icon_x = X;
-				wwin->icon_y = Y;
+				wwin->miniwindow->icon_x = X;
+				wwin->miniwindow->icon_y = Y;
 
 				vars[head].pi++;
 				if (vars[head].pi >= vars[head].pf) {

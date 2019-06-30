@@ -163,8 +163,8 @@ void wIconDestroy(WIcon *icon)
 		int x = 0, y = 0;
 
 		if (icon->owner) {
-			x = icon->owner->icon_x;
-			y = icon->owner->icon_y;
+			x = icon->owner->miniwindow->icon_x;
+			y = icon->owner->miniwindow->icon_y;
 		}
 
 		XUnmapWindow(dpy, icon->icon_win);

@@ -111,7 +111,7 @@ void miniwindow_icon_map1(WIcon *icon)
 	virtual_screen *vscr = wwin->vscr;
 	WScreen *scr = vscr->screen_ptr;
 
-	wcore_map_toplevel(icon->core, vscr, wwin->icon_x, wwin->icon_y,
+	wcore_map_toplevel(icon->core, vscr, wwin->miniwindow->icon_x, wwin->miniwindow->icon_y,
 			   icon->width, icon->height, 0, scr->w_depth,
 			   scr->w_visual, scr->w_colormap, scr->white_pixel);
 
@@ -141,7 +141,7 @@ void miniwindow_icon_map2(WIcon *icon)
 	virtual_screen *vscr = wwin->vscr;
 	WScreen *scr = vscr->screen_ptr;
 
-	wcore_map_toplevel(icon->core, vscr, wwin->icon_x, wwin->icon_y,
+	wcore_map_toplevel(icon->core, vscr, wwin->miniwindow->icon_x, wwin->miniwindow->icon_y,
 			   icon->width, icon->height, 0,
 			   scr->w_depth, scr->w_visual, scr->w_colormap,
 			   scr->white_pixel);
@@ -234,7 +234,7 @@ void miniwindow_MouseDown(WObjDescriptor *desc, XEvent *event)
 	WIcon *icon = desc->parent;
 	WWindow *wwin = icon->owner;
 	XEvent ev;
-	int x = wwin->icon_x, y = wwin->icon_y;
+	int x = wwin->miniwindow->icon_x, y = wwin->miniwindow->icon_y;
 	int dx = event->xbutton.x, dy = event->xbutton.y;
 	int grabbed = 0;
 	int clickButton = event->xbutton.button;
@@ -308,12 +308,12 @@ void miniwindow_MouseDown(WObjDescriptor *desc, XEvent *event)
 			if (ev.xbutton.button != clickButton)
 				break;
 
-			if (wwin->icon_x != x || wwin->icon_y != y)
+			if (wwin->miniwindow->icon_x != x || wwin->miniwindow->icon_y != y)
 				wwin->flags.icon_moved = 1;
 
 			XMoveWindow(dpy, icon->core->window, x, y);
-			wwin->icon_x = x;
-			wwin->icon_y = y;
+			wwin->miniwindow->icon_x = x;
+			wwin->miniwindow->icon_y = y;
 			XUngrabPointer(dpy, CurrentTime);
 
 			if (wPreferences.auto_arrange_icons)

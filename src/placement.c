@@ -38,6 +38,7 @@
 #include "dock.h"
 #include "xinerama.h"
 #include "placement.h"
+#include "miniwindow.h"
 
 static int get_y_origin(WArea usableArea);
 static int get_x_origin(WArea usableArea);
@@ -79,16 +80,16 @@ iconPosition(WCoreWindow *wcore, int sx1, int sy1, int sx2, int sy2,
 		    || wPreferences.sticky_icons)
 		   && ((WIcon *) parent)->mapped) {
 
-		*retX = ((WIcon *) parent)->owner->icon_x;
-		*retY = ((WIcon *) parent)->owner->icon_y;
+		*retX = ((WIcon *) parent)->owner->miniwindow->icon_x;
+		*retY = ((WIcon *) parent)->owner->miniwindow->icon_y;
 
 		ok = 1;
 	} else if (wcore->descriptor.parent_type == WCLASS_WINDOW
 		   && ((WWindow *) parent)->flags.icon_moved
 		   && (((WWindow *) parent)->frame->workspace == workspace || IS_OMNIPRESENT((WWindow *) parent)
 		       || wPreferences.sticky_icons)) {
-		*retX = ((WWindow *) parent)->icon_x;
-		*retY = ((WWindow *) parent)->icon_y;
+		*retX = ((WWindow *) parent)->miniwindow->icon_x;
+		*retY = ((WWindow *) parent)->miniwindow->icon_y;
 
 		ok = 1;
 	}

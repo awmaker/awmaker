@@ -1509,10 +1509,10 @@ static Bool updateNetIconInfo(WWindow *wwin)
 		wwin->flags.net_handle_icon = True;
 #endif
 		{
-			wwin->icon_x = data[0];
-			wwin->icon_y = data[1];
-			wwin->icon_w = data[2];
-			wwin->icon_h = data[3];
+			wwin->miniwindow->icon_x = data[0];
+			wwin->miniwindow->icon_y = data[1];
+			wwin->miniwindow->icon_w = data[2];
+			wwin->miniwindow->icon_h = data[3];
 		}
 
 		XFree(data);
