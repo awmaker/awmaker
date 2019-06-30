@@ -1489,10 +1489,8 @@ void wDeiconifyWindow(WWindow *wwin)
 
 	if (!wPreferences.disable_miniwindows && wwin->icon != NULL
 	    && !wwin->flags.net_handle_icon) {
-		RemoveFromStackList(wwin->icon->vscr, wwin->icon->core);
 		wSetFocusTo(wwin->vscr, wwin);
-		wIconDestroy(wwin->icon);
-		wwin->icon = NULL;
+		miniwindow_destroy(wwin);
 	}
 
 	if (!netwm_hidden) {

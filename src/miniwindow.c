@@ -32,7 +32,9 @@
 
 #include "WindowMaker.h"
 #include "miniwindow.h"
+#include "actions.h"
 #include "misc.h"
+#include "stacking.h"
 
 static void miniwindow_create_minipreview_showerror(WWindow *wwin);
 
@@ -134,4 +136,14 @@ void miniwindow_icon_map2(WIcon *icon)
 
 	WMAddNotificationObserver(icon_appearanceObserver, icon, WNIconAppearanceSettingsChanged, icon);
 	WMAddNotificationObserver(icon_tileObserver, icon, WNIconTileSettingsChanged, icon);
+}
+
+void miniwindow_destroy(WWindow *wwin)
+{
+	if (!wwin->icon)
+		return;
+
+	RemoveFromStackList(wwin->icon->vscr, wwin->icon->core);
+	wIconDestroy(wwin->icon);
+	wwin->icon = NULL;
 }
