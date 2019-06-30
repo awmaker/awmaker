@@ -262,8 +262,7 @@ void wWindowDestroy(WWindow *wwin)
 	}
 
 	if (wwin->icon) {
-		RemoveFromStackList(wwin->icon->vscr, wwin->icon->core);
-		wIconDestroy(wwin->icon);
+		miniwindow_destroy(wwin);
 		if (wPreferences.auto_arrange_icons)
 			wArrangeIcons(wwin->vscr, True);
 	}
