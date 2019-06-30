@@ -287,6 +287,7 @@ typedef struct WWindow {
 		unsigned int net_has_title:1;	/* use netwm version of WM_NAME */
 	} flags;				/* state of the window */
 
+	struct WMiniWindow *miniwindow;
 	struct WIcon *icon;			/* Window icon when miminized
 						 * else is NULL! */
 	int icon_x, icon_y;			/* position of the icon */

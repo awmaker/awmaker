@@ -41,6 +41,20 @@
 static void miniwindow_create_minipreview_showerror(WWindow *wwin);
 static void miniwindow_DblClick(WObjDescriptor *desc, XEvent *event);
 
+WMiniWindow *miniwindow_create(void)
+{
+	WMiniWindow *miniwindow = NULL;
+
+	miniwindow = wmalloc(sizeof(WMiniWindow));
+	return miniwindow;
+}
+
+void miniWindow_destroy(WWindow *wwin)
+{
+	wfree(wwin->miniwindow);
+	wwin->miniwindow = NULL;
+}
+
 WIcon *miniwindow_create_icon(WWindow *wwin)
 {
 	WIcon *icon = NULL;

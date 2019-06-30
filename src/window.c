@@ -193,6 +193,8 @@ WWindow *wWindowCreate(void)
 	wwin = wmalloc(sizeof(WWindow));
 	wretain(wwin);
 
+	wwin->miniwindow = miniwindow_create();
+
 	wwin->client_descriptor.handle_mousedown = frameMouseDown;
 	wwin->client_descriptor.parent = wwin;
 	wwin->client_descriptor.self = wwin;
@@ -272,6 +274,8 @@ void wWindowDestroy(WWindow *wwin)
 
 	if (wwin->net_icon_image)
 		RReleaseImage(wwin->net_icon_image);
+
+	miniwindow_destroy(wwin);
 
 	wrelease(wwin);
 }

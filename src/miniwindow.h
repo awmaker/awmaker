@@ -24,6 +24,11 @@
 #include "window.h"
 #include "icon.h"
 
+typedef struct WMiniWindow {
+} WMiniWindow;
+
+WMiniWindow *miniwindow_create(void);
+void miniwindow_destroy(WWindow *wwin);
 WIcon *miniwindow_create_icon(WWindow *wwin);
 void miniwindow_create_minipreview(WWindow *wwin);
 void miniwindow_icon_map1(WIcon *icon);
