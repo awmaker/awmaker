@@ -45,6 +45,7 @@
 #include "window.h"
 #include "winspector.h"
 #include "icon.h"
+#include "miniwindow.h"
 #include "properties.h"
 #include "actions.h"
 #include "client.h"
@@ -2096,10 +2097,7 @@ void wWindowChangeWorkspace(WWindow *wwin, int workspace)
 				wapp->last_workspace = workspace;
 
 			if (wwin->flags.miniaturized) {
-				if (wwin->icon) {
-					XUnmapWindow(dpy, wwin->icon->core->window);
-					wwin->icon->mapped = 0;
-				}
+				miniwindow_unmap(wwin);
 			} else {
 				unmap = 1;
 				wSetFocusTo(vscr, NULL);
@@ -2107,14 +2105,10 @@ void wWindowChangeWorkspace(WWindow *wwin, int workspace)
 		}
 	} else {
 		/* brought to current workspace. Map window */
-		if (wwin->flags.miniaturized && !wPreferences.sticky_icons) {
-			if (wwin->icon) {
-				XMapWindow(dpy, wwin->icon->core->window);
-				wwin->icon->mapped = 1;
-			}
-		} else if (!wwin->flags.mapped && !(wwin->flags.miniaturized || wwin->flags.hidden)) {
+		if (wwin->flags.miniaturized && !wPreferences.sticky_icons)
+			miniwindow_map(wwin);
+		else if (!wwin->flags.mapped && !(wwin->flags.miniaturized || wwin->flags.hidden))
 			wWindowMap(wwin);
-		}
 	}
 	if (!IS_OMNIPRESENT(wwin)) {
 		int oldWorkspace = wwin->frame->workspace;

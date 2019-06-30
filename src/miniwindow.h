@@ -31,6 +31,8 @@ void miniwindow_icon_map2(WIcon *icon);
 void miniwindow_destroy(WWindow *wwin);
 void miniwindow_updatetitle(WWindow *wwin);
 void miniwindow_removeIcon(WWindow *wwin);
+void miniwindow_map(WWindow *wwin);
+void miniwindow_unmap(WWindow *wwin);
 
 void miniwindow_Expose(WObjDescriptor *desc, XEvent *event);
 void miniwindow_MouseDown(WObjDescriptor *desc, XEvent *event);

@@ -171,6 +171,24 @@ void miniwindow_updatetitle(WWindow *wwin)
 	wIconPaint(wwin->icon);
 }
 
+void miniwindow_map(WWindow *wwin)
+{
+	if (!wwin->icon)
+		return;
+
+	XMapWindow(dpy, wwin->icon->core->window);
+	wwin->icon->mapped = 1;
+}
+
+void miniwindow_unmap(WWindow *wwin)
+{
+	if (!wwin->icon)
+		return;
+
+	XUnmapWindow(dpy, wwin->icon->core->window);
+	wwin->icon->mapped = 0;
+}
+
 /* Callbacks */
 
 void miniwindow_Expose(WObjDescriptor *desc, XEvent *event)
