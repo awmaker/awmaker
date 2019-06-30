@@ -547,8 +547,7 @@ static void updateIconImage(WWindow *wwin)
 	wwin->net_icon_image = get_window_image_from_x11(wwin->client_win);
 
 	/* Refresh the Window Icon */
-	if (wwin->icon)
-		wIconUpdate(wwin->icon);
+	miniwindow_iconupdate(wwin);
 
 	/* Refresh the application icon */
 	WApplication *app = wApplicationOf(wwin->main_window);

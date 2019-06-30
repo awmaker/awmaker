@@ -189,6 +189,12 @@ void miniwindow_unmap(WWindow *wwin)
 	wwin->icon->mapped = 0;
 }
 
+void miniwindow_iconupdate(WWindow *wwin)
+{
+	if (wwin->icon)
+		wIconUpdate(wwin->icon);
+}
+
 /* Callbacks */
 
 void miniwindow_Expose(WObjDescriptor *desc, XEvent *event)

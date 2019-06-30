@@ -44,6 +44,7 @@
 #include "appmenu.h"
 #include "wmspec.h"
 #include "misc.h"
+#include "miniwindow.h"
 #ifdef USER_MENU
 #include "usermenu.h"
 #endif
@@ -420,9 +421,8 @@ void wClientCheckProperty(WWindow *wwin, XPropertyEvent *event)
 			if ((wwin->wm_hints->flags & IconPixmapHint)
 			    || (wwin->wm_hints->flags & IconWindowHint)) {
 				WApplication *wapp;
-
-				if (wwin->flags.miniaturized && wwin->icon)
-					wIconUpdate(wwin->icon);
+				if (wwin->flags.miniaturized)
+					miniwindow_iconupdate(wwin);
 
 				wapp = wApplicationOf(wwin->main_window);
 				if (wapp && wapp->app_icon) {
