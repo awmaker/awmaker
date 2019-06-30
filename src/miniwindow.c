@@ -168,8 +168,6 @@ static void miniwindow_DblClick(WObjDescriptor *desc, XEvent *event)
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) event;
 
-	assert(icon->owner != NULL);
-
 	wDeiconifyWindow(icon->owner);
 }
 
