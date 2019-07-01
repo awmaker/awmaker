@@ -47,4 +47,7 @@ void miniwindow_iconupdate(WWindow *wwin);
 void miniwindow_Expose(WObjDescriptor *desc, XEvent *event);
 void miniwindow_MouseDown(WObjDescriptor *desc, XEvent *event);
 
+int miniwindow_get_xpos(WWindow *wwin);
+int miniwindow_get_ypos(WWindow *wwin);
+
 #endif /* WMMINIWINDOW_H */

@@ -327,3 +327,19 @@ void miniwindow_MouseDown(WObjDescriptor *desc, XEvent *event)
 		}
 	}
 }
+
+int miniwindow_get_xpos(WWindow *wwin)
+{
+	if (!wwin)
+		return 0;
+
+	return wwin->miniwindow->icon_x;
+}
+
+int miniwindow_get_ypos(WWindow *wwin)
+{
+	if (!wwin)
+		return 0;
+
+	return wwin->miniwindow->icon_y;
+}
