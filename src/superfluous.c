@@ -41,6 +41,7 @@
 #include "appicon.h"
 #include "stacking.h"
 #include "misc.h"
+#include "animations.h"
 
 #define PIECES ((64/ICON_KABOOM_PIECE_SIZE)*(64/ICON_KABOOM_PIECE_SIZE))
 #define KAB_PRECISION		4

@@ -28,5 +28,6 @@
 
 void animation_shade(WWindow *wwin, Bool what);
 void animation_catchevents(void);
+void animateResize(virtual_screen *vscr, int x, int y, int w, int h, int fx, int fy, int fw, int fh);
 
 #endif /* WMANIMATIONS_H */
