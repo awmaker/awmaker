@@ -1270,14 +1270,14 @@ static int getAnimationGeometry(WWindow *wwin, int *ix, int *iy, int *iw, int *i
 		return 0;
 
 	if (!wPreferences.disable_miniwindows && !wwin->flags.net_handle_icon) {
-		*ix = wwin->miniwindow->icon_x;
-		*iy = wwin->miniwindow->icon_y;
+		*ix = miniwindow_get_xpos(wwin);
+		*iy = miniwindow_get_ypos(wwin);
 		*iw = wwin->miniwindow->icon->width;
 		*ih = wwin->miniwindow->icon->height;
 	} else {
 		if (wwin->flags.net_handle_icon) {
-			*ix = wwin->miniwindow->icon_x;
-			*iy = wwin->miniwindow->icon_y;
+			*ix = miniwindow_get_xpos(wwin);
+			*iy = miniwindow_get_ypos(wwin);
 			*iw = wwin->miniwindow->icon_w;
 			*ih = wwin->miniwindow->icon_h;
 		} else {
