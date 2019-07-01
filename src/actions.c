@@ -1245,13 +1245,9 @@ static void hideWindow(WIcon *icon, int icon_x, int icon_y, WWindow *wwin, int a
 	wClientSetState(wwin, IconicState, icon->icon_win);
 	flushExpose();
 
-#ifdef USE_ANIMATIONS
-	if (!w_global.startup.phase1 && !wPreferences.no_animations &&
-	    !wwin->flags.skip_next_animation && animate)
-		animateResize(wwin->vscr, wwin->frame_x, wwin->frame_y,
-			      wwin->frame->width, wwin->frame->height,
-			      icon_x, icon_y, icon->width, icon->height);
-#endif
+	if (animate)
+		animation_hide(wwin, icon_x, icon_y, icon->width, icon->height);
+
 	wwin->flags.skip_next_animation = 0;
 
 	WMPostNotificationName(WMNChangedState, wwin, "hide");
@@ -1407,13 +1403,9 @@ static void unhideWindow(WIcon *icon, int icon_x, int icon_y, WWindow *wwin, int
 
 	wwin->flags.hidden = 0;
 
-#ifdef USE_ANIMATIONS
-	if (!w_global.startup.phase1 && !wPreferences.no_animations && animate)
-		animateResize(wwin->vscr, icon_x, icon_y,
-			      icon->width, icon->height,
-			      wwin->frame_x, wwin->frame_y,
-			      wwin->frame->width, wwin->frame->height);
-#endif
+	if (animate)
+		animation_unhide(wwin, icon_x, icon_y, icon->width, icon->height);
+
 	wwin->flags.skip_next_animation = 0;
 	if (wwin->vscr->workspace.current == wwin->frame->workspace) {
 		XMapWindow(dpy, wwin->client_win);

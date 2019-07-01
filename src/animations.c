@@ -404,6 +404,25 @@ static int getAnimationGeometry(WWindow *wwin, int *ix, int *iy, int *iw, int *i
 	return 1;
 }
 
+void animation_hide(WWindow *wwin, int icon_x, int icon_y, int width, int height)
+{
+
+	if (!w_global.startup.phase1 && !wPreferences.no_animations &&
+	    !wwin->flags.skip_next_animation)
+		animateResize(wwin->vscr, wwin->frame_x, wwin->frame_y,
+			      wwin->frame->width, wwin->frame->height,
+			      icon_x, icon_y, width, height);
+}
+
+void animation_unhide(WWindow *wwin, int icon_x, int icon_y, int width, int height)
+{
+	if (!w_global.startup.phase1 && !wPreferences.no_animations)
+		animateResize(wwin->vscr, icon_x, icon_y,
+				      width, height,
+				      wwin->frame_x, wwin->frame_y,
+				      wwin->frame->width, wwin->frame->height);
+}
+
 #else
 void animation_shade(WWindow *wwin, Bool what)
 {
@@ -436,5 +455,23 @@ void animation_maximize(WWindow *wwin)
 void animation_minimize(WWindow *wwin)
 {
 	(void) wwin;
+}
+
+void animation_hide(WWindow *wwin, int icon_x, int icon_y, int width, int height)
+{
+	(void) wwin;
+	(void) icon_x;
+	(void) icon_y;
+	(void) width;
+	(void) height;
+}
+
+void animation_unhide(WWindow *wwin, int icon_x, int icon_y, int width, int height)
+{
+	(void) wwin;
+	(void) icon_x;
+	(void) icon_y;
+	(void) width;
+	(void) height;
 }
 #endif

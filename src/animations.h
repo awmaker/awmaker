@@ -31,5 +31,7 @@ void animation_catchevents(void);
 void animateResize(virtual_screen *vscr, int x, int y, int w, int h, int fx, int fy, int fw, int fh);
 void animation_maximize(WWindow *wwin);
 void animation_minimize(WWindow *wwin);
+void animation_hide(WWindow *wwin, int icon_x, int icon_y, int width, int height);
+void animation_unhide(WWindow *wwin, int icon_x, int icon_y, int width, int height);
 
 #endif /* WMANIMATIONS_H */
