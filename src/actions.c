@@ -51,6 +51,7 @@
 #include "placement.h"
 #include "misc.h"
 #include "event.h"
+#include "animations.h"
 
 
 #ifndef HAVE_FLOAT_MATHFUNC
@@ -64,21 +65,6 @@ static void find_Maximus_geometry(WWindow *wwin, WArea usableArea, int *new_x, i
 				  unsigned int *new_width, unsigned int *new_height);
 static void save_old_geometry(WWindow *wwin, int directions);
 /******* Local Variables *******/
-static struct {
-	int steps;
-	int delay;
-} shadePars[5] = {
-	{ SHADE_STEPS_UF, SHADE_DELAY_UF },
-	{ SHADE_STEPS_F, SHADE_DELAY_F },
-	{ SHADE_STEPS_M, SHADE_DELAY_M },
-	{ SHADE_STEPS_S, SHADE_DELAY_S },
-	{ SHADE_STEPS_US, SHADE_DELAY_US }
-};
-
-#define UNSHADE         0
-#define SHADE           1
-#define SHADE_STEPS	shadePars[(int)wPreferences.shade_speed].steps
-#define SHADE_DELAY	shadePars[(int)wPreferences.shade_speed].delay
 
 static int compareTimes(Time t1, Time t2)
 {
@@ -88,20 +74,6 @@ static int compareTimes(Time t1, Time t2)
 	diff = t1 - t2;
 	return (diff < 60000) ? 1 : -1;
 }
-
-#ifdef USE_ANIMATIONS
-static void shade_animate(WWindow *wwin, Bool what);
-#else
-static inline void shade_animate(WWindow *wwin, Bool what)
-{
-	/*
-	 * This function is empty on purpose, so tell the compiler
-	 * to not warn about parameters being not used
-	 */
-	(void) wwin;
-	(void) what;
-}
-#endif
 
 /*
  *----------------------------------------------------------------------
@@ -2104,81 +2076,3 @@ void movePionterToWindowCenter(WWindow *wwin)
 			wwin->frame_y + wwin->height / 2);
 	XFlush(dpy);
 }
-
-/*
- * Do the animation while shading (called with what = SHADE)
- * or unshading (what = UNSHADE).
- */
-#ifdef USE_ANIMATIONS
-static void shade_animate(WWindow *wwin, Bool what)
-{
-	int y, s, w, h;
-	time_t time0 = time(NULL);
-
-	if (wwin->flags.skip_next_animation || wPreferences.no_animations)
-		return;
-
-	switch (what) {
-	case SHADE:
-		if (!w_global.startup.phase1) {
-			/* do the shading animation */
-			h = wwin->frame->height;
-			s = h / SHADE_STEPS;
-			if (s < 1)
-				s = 1;
-
-			w = wwin->frame->width;
-			y = wwin->frame->top_width;
-			while (h > wwin->frame->top_width + 1) {
-				XMoveWindow(dpy, wwin->client_win, 0, y);
-				XResizeWindow(dpy, wwin->frame->core->window, w, h);
-				XFlush(dpy);
-
-				if (time(NULL) - time0 > MAX_ANIMATION_TIME)
-					break;
-
-				if (SHADE_DELAY > 0)
-					wusleep(SHADE_DELAY * 1000L);
-				else
-					wusleep(10);
-
-				h -= s;
-				y -= s;
-			}
-
-			XMoveWindow(dpy, wwin->client_win, 0, wwin->frame->top_width);
-		}
-		break;
-
-	case UNSHADE:
-		h = wwin->frame->top_width + wwin->frame->bottom_width;
-		y = wwin->frame->top_width - wwin->height;
-		s = abs(y) / SHADE_STEPS;
-		if (s < 1)
-			s = 1;
-
-		w = wwin->frame->width;
-		XMoveWindow(dpy, wwin->client_win, 0, y);
-		if (s > 0) {
-			while (h < wwin->height + wwin->frame->top_width + wwin->frame->bottom_width) {
-				XResizeWindow(dpy, wwin->frame->core->window, w, h);
-				XMoveWindow(dpy, wwin->client_win, 0, y);
-				XFlush(dpy);
-				if (SHADE_DELAY > 0)
-					wusleep(SHADE_DELAY * 2000L / 3);
-				else
-					wusleep(10);
-
-				h += s;
-				y += s;
-
-				if (time(NULL) - time0 > MAX_ANIMATION_TIME)
-					break;
-			}
-		}
-
-		XMoveWindow(dpy, wwin->client_win, 0, wwin->frame->top_width);
-		break;
-	}
-}
-#endif

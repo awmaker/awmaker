@@ -21,5 +21,11 @@
 #ifndef WMANIMATIONS_H
 #define WMANIMATIONS_H
 
+#include "window.h"
+
+#define UNSHADE   0
+#define SHADE     1
+
+void shade_animate(WWindow *wwin, Bool what);
 
 #endif /* WMANIMATIONS_H */
