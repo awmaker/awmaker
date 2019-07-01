@@ -54,7 +54,7 @@ static struct {
  * or unshading (what = UNSHADE).
  */
 #ifdef USE_ANIMATIONS
-void shade_animate(WWindow *wwin, Bool what)
+void animation_shade(WWindow *wwin, Bool what)
 {
 	int y, s, w, h;
 	time_t time0 = time(NULL);
@@ -126,7 +126,7 @@ void shade_animate(WWindow *wwin, Bool what)
 	}
 }
 #else
-void shade_animate(WWindow *wwin, Bool what)
+void animation_shade(WWindow *wwin, Bool what)
 {
 	(void) wwin;
 	(void) what;

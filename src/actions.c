@@ -222,7 +222,7 @@ void wShadeWindow(WWindow *wwin)
 		return;
 
 	XLowerWindow(dpy, wwin->client_win);
-	shade_animate(wwin, SHADE);
+	animation_shade(wwin, SHADE);
 
 	wwin->flags.skip_next_animation = 0;
 	wwin->flags.shaded = 1;
@@ -261,7 +261,7 @@ void wUnshadeWindow(WWindow *wwin)
 	wwin->flags.mapped = 1;
 	XMapWindow(dpy, wwin->client_win);
 
-	shade_animate(wwin, UNSHADE);
+	animation_shade(wwin, UNSHADE);
 
 	wwin->flags.skip_next_animation = 0;
 	wFrameWindowResize(wwin->frame, wwin->frame->width,

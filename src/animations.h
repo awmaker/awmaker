@@ -26,6 +26,6 @@
 #define UNSHADE   0
 #define SHADE     1
 
-void shade_animate(WWindow *wwin, Bool what);
+void animation_shade(WWindow *wwin, Bool what);
 
 #endif /* WMANIMATIONS_H */
