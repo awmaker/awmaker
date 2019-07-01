@@ -623,8 +623,7 @@ void wWorkspaceForceChange(virtual_screen *vscr, int workspace)
 				/* also unmap miniwindows not on this workspace */
 				if (!wPreferences.sticky_icons && tmp->flags.miniaturized &&
 				    tmp->miniwindow->icon && !IS_OMNIPRESENT(tmp)) {
-					XUnmapWindow(dpy, tmp->miniwindow->icon->core->window);
-					tmp->miniwindow->icon->mapped = 0;
+					miniwindow_unmap(tmp);
 				}
 
 				/* update current workspace of omnipresent windows */
@@ -657,8 +656,7 @@ void wWorkspaceForceChange(virtual_screen *vscr, int workspace)
 						/* Also map miniwindow if not omnipresent */
 						if (!wPreferences.sticky_icons &&
 						    tmp->flags.miniaturized && !IS_OMNIPRESENT(tmp) && tmp->miniwindow->icon) {
-							tmp->miniwindow->icon->mapped = 1;
-							XMapWindow(dpy, tmp->miniwindow->icon->core->window);
+							miniwindow_map(tmp);
 						}
 					}
 				}
