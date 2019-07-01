@@ -1665,12 +1665,9 @@ void wArrangeIcons(virtual_screen *vscr, Bool arrangeAll)
 			 * contains most of the applications _main_ window. */
 			head = wGetHeadForWindow(aicon->icon->owner);
 
-			if (aicon->x_pos != X || aicon->y_pos != Y) {
-#ifdef USE_ANIMATIONS
-				if (!wPreferences.no_animations)
-					slide_window(aicon->icon->core->window, aicon->x_pos, aicon->y_pos, X, Y);
-#endif	/* USE_ANIMATIONS */
-			}
+			if (aicon->x_pos != X || aicon->y_pos != Y)
+				animation_slide_window(aicon->icon->core->window, aicon->x_pos, aicon->y_pos, X, Y);
+
 			wAppIconMove(aicon, X, Y);
 			vars[head].pi++;
 			if (vars[head].pi >= vars[head].pf) {

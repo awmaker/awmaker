@@ -33,5 +33,6 @@ void animation_maximize(WWindow *wwin);
 void animation_minimize(WWindow *wwin);
 void animation_hide(WWindow *wwin, int icon_x, int icon_y, int width, int height);
 void animation_unhide(WWindow *wwin, int icon_x, int icon_y, int width, int height);
+void animation_slide_window(Window win, int icon_x, int icon_y, int x, int y);
 
 #endif /* WMANIMATIONS_H */

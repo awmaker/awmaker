@@ -37,6 +37,7 @@
 #include "framewin.h"
 #include "event.h"
 #include "miniwindow.h"
+#include "misc.h"
 
 static struct {
 	int steps;
@@ -423,6 +424,12 @@ void animation_unhide(WWindow *wwin, int icon_x, int icon_y, int width, int heig
 				      wwin->frame->width, wwin->frame->height);
 }
 
+void animation_slide_window(Window win, int icon_x, int icon_y, int x, int y)
+{
+	if (!wPreferences.no_animations)
+		slide_window(win, icon_x, icon_y, x, y);
+}
+
 #else
 void animation_shade(WWindow *wwin, Bool what)
 {
@@ -473,5 +480,14 @@ void animation_unhide(WWindow *wwin, int icon_x, int icon_y, int width, int heig
 	(void) icon_y;
 	(void) width;
 	(void) height;
+}
+
+void animation_slide_window(Window win, int icon_x, int icon_y, int x, int y)
+{
+	(void) win;
+	(void) icon_x;
+	(void) icon_y;
+	(void) x;
+	(void) y;
 }
 #endif
