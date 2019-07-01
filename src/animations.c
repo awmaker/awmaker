@@ -36,6 +36,7 @@
 #include "animations.h"
 #include "framewin.h"
 #include "event.h"
+#include "miniwindow.h"
 
 static struct {
 	int steps;
@@ -63,6 +64,8 @@ static struct {
  * or unshading (what = UNSHADE).
  */
 #ifdef USE_ANIMATIONS
+static int getAnimationGeometry(WWindow *wwin, int *ix, int *iy, int *iw, int *ih);
+
 void animation_shade(WWindow *wwin, Bool what)
 {
 	int y, s, w, h;
@@ -353,6 +356,54 @@ void animateResize(virtual_screen *vscr, int x, int y, int w, int h, int fx, int
 		break;
 	}
 }
+
+void animation_maximize(WWindow *wwin)
+{
+	int ix, iy, iw, ih;
+
+	if (getAnimationGeometry(wwin, &ix, &iy, &iw, &ih))
+		animateResize(wwin->vscr, ix, iy, iw, ih,
+					  wwin->frame_x, wwin->frame_y,
+				      wwin->frame->width, wwin->frame->height);
+}
+
+void animation_minimize(WWindow *wwin)
+{
+	int ix, iy, iw, ih;
+
+	if (getAnimationGeometry(wwin, &ix, &iy, &iw, &ih))
+		animateResize(wwin->vscr, wwin->frame_x, wwin->frame_y,
+				      wwin->frame->width, wwin->frame->height, ix, iy, iw, ih);
+}
+
+static int getAnimationGeometry(WWindow *wwin, int *ix, int *iy, int *iw, int *ih)
+{
+	if (w_global.startup.phase1 || wPreferences.no_animations
+		|| wwin->flags.skip_next_animation || wwin->miniwindow->icon == NULL)
+		return 0;
+
+	if (!wPreferences.disable_miniwindows && !wwin->flags.net_handle_icon) {
+		*ix = miniwindow_get_xpos(wwin);
+		*iy = miniwindow_get_ypos(wwin);
+		*iw = wwin->miniwindow->icon->width;
+		*ih = wwin->miniwindow->icon->height;
+	} else {
+		if (wwin->flags.net_handle_icon) {
+			*ix = miniwindow_get_xpos(wwin);
+			*iy = miniwindow_get_ypos(wwin);
+			*iw = wwin->miniwindow->icon_w;
+			*ih = wwin->miniwindow->icon_h;
+		} else {
+			*ix = 0;
+			*iy = 0;
+			*iw = wwin->vscr->screen_ptr->scr_width;
+			*ih = wwin->vscr->screen_ptr->scr_height;
+		}
+	}
+
+	return 1;
+}
+
 #else
 void animation_shade(WWindow *wwin, Bool what)
 {
@@ -375,5 +426,15 @@ void animateResize(virtual_screen *vscr, int x, int y, int w, int h, int fx, int
 	(void) fy;
 	(void) fw;
 	(void) fh;
+}
+
+void animation_maximize(WWindow *wwin)
+{
+	(void) wwin;
+}
+
+void animation_minimize(WWindow *wwin)
+{
+	(void) wwin;
 }
 #endif

@@ -53,14 +53,6 @@
 #include "event.h"
 #include "animations.h"
 
-
-#ifndef HAVE_FLOAT_MATHFUNC
-#define sinf(x) ((float)sin((double)(x)))
-#define cosf(x) ((float)cos((double)(x)))
-#define sqrtf(x) ((float)sqrt((double)(x)))
-#define atan2f(y, x) ((float)atan((double)(y) / (double)(x)))
-#endif
-
 static void find_Maximus_geometry(WWindow *wwin, WArea usableArea, int *new_x, int *new_y,
 				  unsigned int *new_width, unsigned int *new_height);
 static void save_old_geometry(WWindow *wwin, int directions);
@@ -1013,34 +1005,6 @@ static WWindow *recursiveTransientFor(WWindow *wwin)
 	return wwin;
 }
 
-static int getAnimationGeometry(WWindow *wwin, int *ix, int *iy, int *iw, int *ih)
-{
-	if (w_global.startup.phase1 || wPreferences.no_animations
-		|| wwin->flags.skip_next_animation || wwin->miniwindow->icon == NULL)
-		return 0;
-
-	if (!wPreferences.disable_miniwindows && !wwin->flags.net_handle_icon) {
-		*ix = miniwindow_get_xpos(wwin);
-		*iy = miniwindow_get_ypos(wwin);
-		*iw = wwin->miniwindow->icon->width;
-		*ih = wwin->miniwindow->icon->height;
-	} else {
-		if (wwin->flags.net_handle_icon) {
-			*ix = miniwindow_get_xpos(wwin);
-			*iy = miniwindow_get_ypos(wwin);
-			*iw = wwin->miniwindow->icon_w;
-			*ih = wwin->miniwindow->icon_h;
-		} else {
-			*ix = 0;
-			*iy = 0;
-			*iw = wwin->vscr->screen_ptr->scr_width;
-			*ih = wwin->vscr->screen_ptr->scr_height;
-		}
-	}
-
-	return 1;
-}
-
 void wIconifyWindow(WWindow *wwin)
 {
 	XWindowAttributes attribs;
@@ -1088,9 +1052,6 @@ void wIconifyWindow(WWindow *wwin)
 	unmapTransientsFor(wwin);
 
 	if (present) {
-#ifdef USE_ANIMATIONS
-		int ix, iy, iw, ih;
-#endif
 		XUngrabPointer(dpy, CurrentTime);
 		wWindowUnmap(wwin);
 		/* let all Expose events arrive so that we can repaint
@@ -1103,11 +1064,7 @@ void wIconifyWindow(WWindow *wwin)
 			wClientSetState(wwin, IconicState, wwin->miniwindow->icon->icon_win);
 
 		flushExpose();
-#ifdef USE_ANIMATIONS
-		if (getAnimationGeometry(wwin, &ix, &iy, &iw, &ih))
-			animateResize(wwin->vscr, wwin->frame_x, wwin->frame_y,
-				      wwin->frame->width, wwin->frame->height, ix, iy, iw, ih);
-#endif
+		animation_minimize(wwin);
 	}
 
 	wwin->flags.skip_next_animation = 0;
@@ -1217,13 +1174,7 @@ void wDeiconifyWindow(WWindow *wwin)
 
 	/* if the window is in another workspace, do it silently */
 	if (!netwm_hidden) {
-#ifdef USE_ANIMATIONS
-		int ix, iy, iw, ih;
-		if (getAnimationGeometry(wwin, &ix, &iy, &iw, &ih))
-			animateResize(wwin->vscr, ix, iy, iw, ih,
-				      wwin->frame_x, wwin->frame_y,
-				      wwin->frame->width, wwin->frame->height);
-#endif
+		animation_maximize(wwin);
 		wwin->flags.skip_next_animation = 0;
 		XGrabServer(dpy);
 		if (!wwin->flags.shaded)
