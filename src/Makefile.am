@@ -11,6 +11,8 @@ awmaker_SOURCES = 	\
 	WindowMaker.h \
 	actions.c \
 	actions.h \
+	animations.c \
+	animations.h \
 	appicon.c \
 	appicon.h \
 	application.c \
