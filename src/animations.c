@@ -34,6 +34,7 @@
 #include "WindowMaker.h"
 #include "animations.h"
 #include "framewin.h"
+#include "event.h"
 
 static struct {
 	int steps;
@@ -125,10 +126,21 @@ void animation_shade(WWindow *wwin, Bool what)
 		break;
 	}
 }
+
+void animation_catchevents(void)
+{
+	if (!w_global.startup.phase1)
+		/* Catch up with events not processed while animation was running */
+		ProcessPendingEvents();
+}
 #else
 void animation_shade(WWindow *wwin, Bool what)
 {
 	(void) wwin;
 	(void) what;
+}
+
+void animation_catchevents(void)
+{
 }
 #endif

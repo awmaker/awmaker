@@ -238,17 +238,9 @@ void wShadeWindow(WWindow *wwin)
 	wwin->client.y = wwin->frame_y - wwin->height + wwin->frame->top_width;
 	wWindowSynthConfigureNotify(wwin);
 
-	/*
-	   wClientSetState(wwin, IconicState, None);
-	 */
-
+	/* wClientSetState(wwin, IconicState, None); */
 	WMPostNotificationName(WMNChangedState, wwin, "shade");
-
-#ifdef USE_ANIMATIONS
-	if (!w_global.startup.phase1)
-		/* Catch up with events not processed while animation was running */
-		ProcessPendingEvents();
-#endif
+	animation_catchevents();
 }
 
 void wUnshadeWindow(WWindow *wwin)

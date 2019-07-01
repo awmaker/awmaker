@@ -27,5 +27,6 @@
 #define SHADE     1
 
 void animation_shade(WWindow *wwin, Bool what);
+void animation_catchevents(void);
 
 #endif /* WMANIMATIONS_H */
