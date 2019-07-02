@@ -1438,19 +1438,17 @@ void wUnhideApplication(WApplication *wapp, Bool miniwindows, Bool bringToCurren
 				     wlist->frame->workspace == vscr->workspace.current) && wlist->miniwindow->icon) {
 					if (!wlist->miniwindow->icon->mapped) {
 						WCoord *coord;
-						int x, y;
 
 						coord = PlaceIcon(vscr, wGetHeadForWindow(wlist));
-						x = coord->x;
-						y = coord->y;
-						wfree(coord);
-						if (wlist->miniwindow->icon_x != x || wlist->miniwindow->icon_y != y)
-							XMoveWindow(dpy, wlist->miniwindow->icon->core->window, x, y);
+						if (wlist->miniwindow->icon_x != coord->x ||
+							wlist->miniwindow->icon_y != coord->y)
+							XMoveWindow(dpy, wlist->miniwindow->icon->core->window, coord->x, coord->y);
 
-						wlist->miniwindow->icon_x = x;
-						wlist->miniwindow->icon_y = y;
+						wlist->miniwindow->icon_x = coord->x;
+						wlist->miniwindow->icon_y = coord->y;
 						XMapWindow(dpy, wlist->miniwindow->icon->core->window);
 						wlist->miniwindow->icon->mapped = 1;
+						wfree(coord);
 					}
 
 					wRaiseFrame(wlist->miniwindow->icon->vscr, wlist->miniwindow->icon->core);

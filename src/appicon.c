@@ -1394,7 +1394,6 @@ void move_appicon_to_dock(virtual_screen *vscr, WAppIcon *icon, char *wm_class, 
 {
 	WAppIcon *aicon;
 	WCoord *coord;
-	int x0, y0;
 
 	/* Create appicon's icon */
 	aicon = create_appicon(vscr, NULL, wm_class, wm_instance);
@@ -1404,16 +1403,14 @@ void move_appicon_to_dock(virtual_screen *vscr, WAppIcon *icon, char *wm_class, 
 
 	/* Map it on the screen, in the right possition */
 	coord = PlaceIcon(vscr, wGetHeadForWindow(aicon->icon->owner));
-	x0 = coord->x;
-	y0 = coord->y;
-	wfree(coord);
-	wAppIconMove(aicon, x0, y0);
+	wAppIconMove(aicon, coord->x, coord->y);
 	XMapWindow(dpy, aicon->icon->core->window);
 	aicon->launching = 1;
 	wAppIconPaint(aicon);
 
 	/* Move to the docked icon and destroy it */
-	slide_window(aicon->icon->core->window, x0, y0, icon->x_pos, icon->y_pos);
+	slide_window(aicon->icon->core->window, coord->x, coord->y, icon->x_pos, icon->y_pos);
 	XUnmapWindow(dpy, aicon->icon->core->window);
 	wAppIconDestroy(aicon);
+	wfree(coord);
 }
