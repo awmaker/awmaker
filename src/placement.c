@@ -108,7 +108,7 @@ iconPosition(WCoreWindow *wcore, int sx1, int sy1, int sx2, int sy2,
 	return ok;
 }
 
-void PlaceIcon(virtual_screen *vscr, int *x_ret, int *y_ret, int head)
+WCoord *PlaceIcon(virtual_screen *vscr, int *x_ret, int *y_ret, int head)
 {
 	int pf;			/* primary axis */
 	int sf;			/* secondary axis */
@@ -121,6 +121,9 @@ void PlaceIcon(virtual_screen *vscr, int *x_ret, int *y_ret, int head)
 	int done = 0;
 	WMBagIterator iter;
 	WArea area = wGetUsableAreaForHead(vscr, head, NULL, False);
+	WCoord *coord;
+
+	coord = wmalloc(sizeof(WCoord));
 
 	/* Do not place icons under the dock. */
 	if (vscr->dock.dock) {
@@ -204,8 +207,8 @@ void PlaceIcon(virtual_screen *vscr, int *x_ret, int *y_ret, int head)
 		}
 	}
 	/* Default position */
-	*x_ret = 0;
-	*y_ret = 0;
+	coord->x = 0;
+	coord->y = 0;
 
 	/* Look for an empty slot */
 	for (si = 0; si < sf; si++) {
@@ -218,8 +221,8 @@ void PlaceIcon(virtual_screen *vscr, int *x_ret, int *y_ret, int head)
 				y = yo + ys * (si * isize);
 			}
 			if (!map[INDEX(x / isize, y / isize)]) {
-				*x_ret = x;
-				*y_ret = y;
+				coord->x = x;
+				coord->y = y;
 				done = 1;
 				break;
 			}
@@ -230,6 +233,11 @@ void PlaceIcon(virtual_screen *vscr, int *x_ret, int *y_ret, int head)
 	}
 
 	wfree(map);
+
+	*x_ret = coord->x;
+	*y_ret = coord->y;
+
+	return coord;
 }
 
 /* Computes the intersecting length of two line sections */
