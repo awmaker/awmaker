@@ -1035,7 +1035,7 @@ void wIconifyWindow(WWindow *wwin)
 
 	if (!wPreferences.disable_miniwindows && !wwin->flags.net_handle_icon) {
 		if (!wwin->flags.icon_moved) {
-			coord = PlaceIcon(wwin->vscr, &wwin->miniwindow->icon_x, &wwin->miniwindow->icon_y, wGetHeadForWindow(wwin));
+			coord = PlaceIcon(wwin->vscr, wGetHeadForWindow(wwin));
 			wwin->miniwindow->icon_x = coord->x;
 			wwin->miniwindow->icon_y = coord->y;
 			wfree(coord);
@@ -1440,7 +1440,7 @@ void wUnhideApplication(WApplication *wapp, Bool miniwindows, Bool bringToCurren
 						WCoord *coord;
 						int x, y;
 
-						coord = PlaceIcon(vscr, &x, &y, wGetHeadForWindow(wlist));
+						coord = PlaceIcon(vscr, wGetHeadForWindow(wlist));
 						x = coord->x;
 						y = coord->y;
 						wfree(coord);

@@ -23,7 +23,7 @@
 #ifndef PLACEMENT_H
 #define PLACEMENT_H
 
-WCoord *PlaceIcon(virtual_screen *vscr, int *x_ret, int *y_ret, int head);
+WCoord *PlaceIcon(virtual_screen *vscr, int head);
 
 /* Computes the intersecting length of two line sections */
 int calcIntersectionLength(int p1, int l1, int p2, int l2);

@@ -108,7 +108,7 @@ iconPosition(WCoreWindow *wcore, int sx1, int sy1, int sx2, int sy2,
 	return ok;
 }
 
-WCoord *PlaceIcon(virtual_screen *vscr, int *x_ret, int *y_ret, int head)
+WCoord *PlaceIcon(virtual_screen *vscr, int head)
 {
 	int pf;			/* primary axis */
 	int sf;			/* secondary axis */
@@ -233,9 +233,6 @@ WCoord *PlaceIcon(virtual_screen *vscr, int *x_ret, int *y_ret, int head)
 	}
 
 	wfree(map);
-
-	*x_ret = coord->x;
-	*y_ret = coord->y;
 
 	return coord;
 }

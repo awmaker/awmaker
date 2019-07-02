@@ -224,7 +224,7 @@ void paint_app_icon(WApplication *wapp)
 		 * space on the screen, and the icon will move */
 		if (wapp->app_icon->next == NULL && wapp->app_icon->prev == NULL) {
 			WCoord *coord;
-			coord = PlaceIcon(vscr, &x, &y, wGetHeadForWindow(wapp->main_window_desc));
+			coord = PlaceIcon(vscr, wGetHeadForWindow(wapp->main_window_desc));
 			x = coord->x;
 			y = coord->y;
 			wfree(coord);
@@ -1403,7 +1403,7 @@ void move_appicon_to_dock(virtual_screen *vscr, WAppIcon *icon, char *wm_class, 
 	appicon_map(aicon);
 
 	/* Map it on the screen, in the right possition */
-	coord = PlaceIcon(vscr, &x0, &y0, wGetHeadForWindow(aicon->icon->owner));
+	coord = PlaceIcon(vscr, wGetHeadForWindow(aicon->icon->owner));
 	x0 = coord->x;
 	y0 = coord->y;
 	wfree(coord);

@@ -580,8 +580,7 @@ static void removeIcons(WMArray *icons, WDock *dock)
 		keepit = aicon->running && wApplicationOf(aicon->main_window);
 		wDockDetach(dock, aicon);
 		if (keepit) {
-			coord = PlaceIcon(dock->vscr, &aicon->x_pos, &aicon->y_pos,
-				wGetHeadForWindow(aicon->icon->owner));
+			coord = PlaceIcon(dock->vscr, wGetHeadForWindow(aicon->icon->owner));
 			aicon->x_pos = coord->x;
 			aicon->y_pos = coord->y;
 			wfree(coord);
@@ -1681,8 +1680,7 @@ void clip_destroy(WDock *dock)
 			keepit = aicon->running && wApplicationOf(aicon->main_window);
 			wDockDetach(dock, aicon);
 			if (keepit) {
-				coord = PlaceIcon(dock->vscr, &aicon->x_pos, &aicon->y_pos,
-					  wGetHeadForWindow(aicon->icon->owner));
+				coord = PlaceIcon(dock->vscr, wGetHeadForWindow(aicon->icon->owner));
 				aicon->x_pos = coord->x;
 				aicon->y_pos = coord->y;
 				wfree(coord);
