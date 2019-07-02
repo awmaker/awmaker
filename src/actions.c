@@ -1009,6 +1009,7 @@ void wIconifyWindow(WWindow *wwin)
 {
 	XWindowAttributes attribs;
 	int present;
+	WCoord *coord;
 
 	if (!XGetWindowAttributes(dpy, wwin->client_win, &attribs))
 		return; /* the window doesn't exist anymore */
@@ -1033,8 +1034,12 @@ void wIconifyWindow(WWindow *wwin)
 			     GrabModeAsync, None, None, CurrentTime);
 
 	if (!wPreferences.disable_miniwindows && !wwin->flags.net_handle_icon) {
-		if (!wwin->flags.icon_moved)
-			PlaceIcon(wwin->vscr, &wwin->miniwindow->icon_x, &wwin->miniwindow->icon_y, wGetHeadForWindow(wwin));
+		if (!wwin->flags.icon_moved) {
+			coord = PlaceIcon(wwin->vscr, &wwin->miniwindow->icon_x, &wwin->miniwindow->icon_y, wGetHeadForWindow(wwin));
+			wwin->miniwindow->icon_x = coord->x;
+			wwin->miniwindow->icon_y = coord->y;
+			wfree(coord);
+		}
 
 		wwin->miniwindow->icon = miniwindow_create_icon(wwin);
 		miniwindow_icon_map1(wwin->miniwindow->icon);
@@ -1432,9 +1437,13 @@ void wUnhideApplication(WApplication *wapp, Bool miniwindows, Bool bringToCurren
 				if ((bringToCurrentWS || wPreferences.sticky_icons ||
 				     wlist->frame->workspace == vscr->workspace.current) && wlist->miniwindow->icon) {
 					if (!wlist->miniwindow->icon->mapped) {
+						WCoord *coord;
 						int x, y;
 
-						PlaceIcon(vscr, &x, &y, wGetHeadForWindow(wlist));
+						coord = PlaceIcon(vscr, &x, &y, wGetHeadForWindow(wlist));
+						x = coord->x;
+						y = coord->y;
+						wfree(coord);
 						if (wlist->miniwindow->icon_x != x || wlist->miniwindow->icon_y != y)
 							XMoveWindow(dpy, wlist->miniwindow->icon->core->window, x, y);
 

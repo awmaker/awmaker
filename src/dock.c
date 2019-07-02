@@ -572,6 +572,7 @@ static void omnipresentCallback(WMenu *menu, WMenuEntry *entry)
 static void removeIcons(WMArray *icons, WDock *dock)
 {
 	WAppIcon *aicon;
+	WCoord *coord;
 	int keepit;
 	WMArrayIterator it;
 
@@ -579,8 +580,11 @@ static void removeIcons(WMArray *icons, WDock *dock)
 		keepit = aicon->running && wApplicationOf(aicon->main_window);
 		wDockDetach(dock, aicon);
 		if (keepit) {
-			PlaceIcon(dock->vscr, &aicon->x_pos, &aicon->y_pos,
+			coord = PlaceIcon(dock->vscr, &aicon->x_pos, &aicon->y_pos,
 				wGetHeadForWindow(aicon->icon->owner));
+			aicon->x_pos = coord->x;
+			aicon->y_pos = coord->y;
+			wfree(coord);
 			XMoveWindow(dpy, aicon->icon->core->window, aicon->x_pos, aicon->y_pos);
 			if (!dock->mapped || dock->collapsed)
 				XMapWindow(dpy, aicon->icon->core->window);
@@ -1669,6 +1673,7 @@ void clip_destroy(WDock *dock)
 {
 	int i, keepit;
 	WAppIcon *aicon;
+	WCoord *coord;
 
 	for (i = 1; i < dock->max_icons; i++) {
 		aicon = dock->icon_array[i];
@@ -1676,8 +1681,11 @@ void clip_destroy(WDock *dock)
 			keepit = aicon->running && wApplicationOf(aicon->main_window);
 			wDockDetach(dock, aicon);
 			if (keepit) {
-				PlaceIcon(dock->vscr, &aicon->x_pos, &aicon->y_pos,
+				coord = PlaceIcon(dock->vscr, &aicon->x_pos, &aicon->y_pos,
 					  wGetHeadForWindow(aicon->icon->owner));
+				aicon->x_pos = coord->x;
+				aicon->y_pos = coord->y;
+				wfree(coord);
 				XMoveWindow(dpy, aicon->icon->core->window, aicon->x_pos, aicon->y_pos);
 
 				if (!dock->mapped || dock->collapsed)
