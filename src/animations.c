@@ -432,33 +432,37 @@ void animation_slide_window(Window win, int icon_x, int icon_y, int x, int y)
 
 int animation_iconify_window(WWindow *wwin)
 {
-	if (!w_global.startup.phase1) {
-		/* Catch up with events not processed while animation was running */
-		Window clientwin = wwin->client_win;
+	Window clientwin;
 
-		ProcessPendingEvents();
+	if (w_global.startup.phase1)
+		return 0;
 
-		/* the window can disappear while ProcessPendingEvents() runs */
-		if (!wWindowFor(clientwin))
-			return 1;
-	}
+	/* Catch up with events not processed while animation was running */
+	clientwin = wwin->client_win;
+	ProcessPendingEvents();
+
+	/* the window can disappear while ProcessPendingEvents() runs */
+	if (!wWindowFor(clientwin))
+		return 1;
 
 	return 0;
 }
 
 int animation_deiconify_window(WWindow *wwin)
 {
-	if (!w_global.startup.phase1) {
-		/* Catch up with events not processed while animation was running */
-		Window clientwin = wwin->client_win;
+	Window clientwin;
 
-		ProcessPendingEvents();
+	if (w_global.startup.phase1)
+		return 0;
 
-		/* the window can disappear while ProcessPendingEvents() runs */
-		if (!wWindowFor(clientwin)) {
-			wwin->vscr->workspace.ignore_change = False;
-			return 1;
-		}
+	/* Catch up with events not processed while animation was running */
+	clientwin = wwin->client_win;
+	ProcessPendingEvents();
+
+	/* the window can disappear while ProcessPendingEvents() runs */
+	if (!wWindowFor(clientwin)) {
+		wwin->vscr->workspace.ignore_change = False;
+		return 1;
 	}
 
 	return 0;
