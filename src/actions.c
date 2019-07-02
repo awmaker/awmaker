@@ -1098,18 +1098,9 @@ void wIconifyWindow(WWindow *wwin)
 		} else if (wPreferences.focus_mode != WKF_CLICK) {
 			wSetFocusTo(wwin->vscr, NULL);
 		}
-#ifdef USE_ANIMATIONS
-		if (!w_global.startup.phase1) {
-			/* Catch up with events not processed while animation was running */
-			Window clientwin = wwin->client_win;
 
-			ProcessPendingEvents();
-
-			/* the window can disappear while ProcessPendingEvents() runs */
-			if (!wWindowFor(clientwin))
-				return;
-		}
-#endif
+		if (animation_iconify_window(wwin))
+			return;
 	}
 
 	/* maybe we want to do this regardless of net_handle_icon
@@ -1196,23 +1187,9 @@ void wDeiconifyWindow(WWindow *wwin)
 
 	if (!netwm_hidden) {
 		XUngrabServer(dpy);
-
 		wSetFocusTo(wwin->vscr, wwin);
-
-#ifdef USE_ANIMATIONS
-		if (!w_global.startup.phase1) {
-			/* Catch up with events not processed while animation was running */
-			Window clientwin = wwin->client_win;
-
-			ProcessPendingEvents();
-
-			/* the window can disappear while ProcessPendingEvents() runs */
-			if (!wWindowFor(clientwin)) {
-				wwin->vscr->workspace.ignore_change = False;
-				return;
-			}
-		}
-#endif
+		if (animation_deiconify_window(wwin))
+			return;
 	}
 
 	if (wPreferences.auto_arrange_icons)
