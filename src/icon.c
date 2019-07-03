@@ -272,7 +272,7 @@ static void icon_update_pixmap(WIcon *icon, RImage *image)
 
 void wIconChangeTitle(WIcon *icon, WWindow *wwin)
 {
-	if (!icon || !wwin)
+	if (!icon || !wwin || !wwin->title)
 		return;
 
 	if (icon->title)
