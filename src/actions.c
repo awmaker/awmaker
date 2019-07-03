@@ -1076,8 +1076,10 @@ void wIconifyWindow(WWindow *wwin)
 
 	if (!wPreferences.disable_miniwindows && !wwin->flags.net_handle_icon) {
 		if (wwin->vscr->workspace.current == wwin->frame->workspace ||
-		    IS_OMNIPRESENT(wwin) || wPreferences.sticky_icons)
+		    IS_OMNIPRESENT(wwin) || wPreferences.sticky_icons) {
 			XMapWindow(dpy, wwin->miniwindow->icon->core->window);
+			wwin->miniwindow->icon->mapped = 1;
+		}
 
 		AddToStackList(wwin->miniwindow->icon->vscr, wwin->miniwindow->icon->core);
 		wLowerFrame(wwin->miniwindow->icon->vscr, wwin->miniwindow->icon->core);
@@ -1165,6 +1167,7 @@ void wDeiconifyWindow(WWindow *wwin)
 				wIconSelect(wwin->miniwindow->icon);
 
 			XUnmapWindow(dpy, wwin->miniwindow->icon->core->window);
+			wwin->miniwindow->icon->mapped = 0;
 		}
 	}
 
