@@ -1478,13 +1478,12 @@ void wNETWMCheckClientHints(WWindow *wwin, int *layer, int *workspace)
 	wScreenUpdateUsableArea(wwin->vscr);
 }
 
-static Bool updateNetIconInfo(WWindow *wwin)
+static void updateNetIconInfo(WWindow *wwin)
 {
 	Atom type_ret;
 	int fmt_ret;
 	unsigned long nitems_ret, bytes_after_ret;
 	long *data = NULL;
-	Bool hasState = False;
 	Bool old_state = wwin->flags.net_handle_icon;
 
 	if (XGetWindowProperty(dpy, wwin->client_win, net_wm_handled_icons, 0, 1, False,
@@ -1493,8 +1492,6 @@ static Bool updateNetIconInfo(WWindow *wwin)
 		long handled = *data;
 		wwin->flags.net_handle_icon = (handled != 0);
 		XFree(data);
-		hasState = True;
-
 	} else {
 		wwin->flags.net_handle_icon = False;
 	}
@@ -1508,9 +1505,7 @@ static Bool updateNetIconInfo(WWindow *wwin)
 		wwin->miniwindow->icon_y = data[1];
 		wwin->miniwindow->icon_w = data[2];
 		wwin->miniwindow->icon_h = data[3];
-
 		XFree(data);
-		hasState = True;
 	} else {
 		wwin->flags.net_handle_icon = False;
 	}
@@ -1524,8 +1519,6 @@ static Bool updateNetIconInfo(WWindow *wwin)
 			wIconifyWindow(wwin);
 		}
 	}
-
-	return hasState;
 }
 
 void wNETWMCheckInitialClientState(WWindow *wwin)
