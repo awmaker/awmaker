@@ -37,6 +37,8 @@
 #include "misc.h"
 #include "stacking.h"
 #include "winmenu.h"
+#include "placement.h"
+#include "xinerama.h"
 
 static void miniwindow_create_minipreview_showerror(WWindow *wwin);
 static void miniwindow_DblClick(WObjDescriptor *desc, XEvent *event);
@@ -322,4 +324,24 @@ int miniwindow_get_ypos(WWindow *wwin)
 		return 0;
 
 	return wwin->miniwindow->icon_y;
+}
+
+void miniwindow_icon_show(WWindow *wwin)
+{
+	WCoord *coord;
+
+	if (!wwin->flags.icon_moved) {
+		coord = PlaceIcon(wwin->vscr, wGetHeadForWindow(wwin));
+		wwin->miniwindow->icon_x = coord->x;
+		wwin->miniwindow->icon_y = coord->y;
+		wfree(coord);
+	}
+
+	wwin->miniwindow->icon = miniwindow_create_icon(wwin);
+	miniwindow_icon_map(wwin->miniwindow->icon);
+	wwin->miniwindow->icon->mapped = 1;
+
+	/* extract the window screenshot every time, as the option can be enable anytime */
+	if (wwin->client_win && wwin->flags.mapped)
+		miniwindow_create_minipreview(wwin);
 }

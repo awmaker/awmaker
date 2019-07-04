@@ -1009,7 +1009,6 @@ void wIconifyWindow(WWindow *wwin)
 {
 	XWindowAttributes attribs;
 	int present;
-	WCoord *coord;
 
 	if (!XGetWindowAttributes(dpy, wwin->client_win, &attribs))
 		return; /* the window doesn't exist anymore */
@@ -1033,22 +1032,8 @@ void wIconifyWindow(WWindow *wwin)
 			     ButtonMotionMask | ButtonReleaseMask, GrabModeAsync,
 			     GrabModeAsync, None, None, CurrentTime);
 
-	if (!wPreferences.disable_miniwindows && !wwin->flags.net_handle_icon) {
-		if (!wwin->flags.icon_moved) {
-			coord = PlaceIcon(wwin->vscr, wGetHeadForWindow(wwin));
-			wwin->miniwindow->icon_x = coord->x;
-			wwin->miniwindow->icon_y = coord->y;
-			wfree(coord);
-		}
-
-		wwin->miniwindow->icon = miniwindow_create_icon(wwin);
-		miniwindow_icon_map(wwin->miniwindow->icon);
-		wwin->miniwindow->icon->mapped = 1;
-
-		/* extract the window screenshot every time, as the option can be enable anytime */
-		if (wwin->client_win && wwin->flags.mapped)
-			miniwindow_create_minipreview(wwin);
-	}
+	if (!wPreferences.disable_miniwindows && !wwin->flags.net_handle_icon)
+		miniwindow_icon_show(wwin);
 
 	wwin->flags.miniaturized = 1;
 	wwin->flags.mapped = 0;
