@@ -264,7 +264,7 @@ void wWindowDestroy(WWindow *wwin)
 	}
 
 	if (wwin->miniwindow->icon) {
-		miniwindow_destroy(wwin);
+		miniwindow_destroy_icon(wwin);
 		if (wPreferences.auto_arrange_icons)
 			wArrangeIcons(wwin->vscr, True);
 	}

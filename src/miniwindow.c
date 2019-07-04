@@ -54,7 +54,7 @@ WMiniWindow *miniwindow_create(void)
 	return miniwindow;
 }
 
-void miniWindow_destroy(WWindow *wwin)
+void miniwindow_destroy(WWindow *wwin)
 {
 	wfree(wwin->miniwindow);
 	wwin->miniwindow = NULL;
@@ -140,7 +140,7 @@ static void miniwindow_icon_map(WIcon *icon)
 	WMAddNotificationObserver(icon_tileObserver, icon, WNIconTileSettingsChanged, icon);
 }
 
-void miniwindow_destroy(WWindow *wwin)
+void miniwindow_destroy_icon(WWindow *wwin)
 {
 	if (!wwin->miniwindow->icon)
 		return;
@@ -157,7 +157,7 @@ void miniwindow_removeIcon(WWindow *wwin)
 
 	if (wwin->flags.miniaturized && wwin->miniwindow->icon->mapped) {
 		miniwindow_unmap(wwin);
-		miniwindow_destroy(wwin);
+		miniwindow_destroy_icon(wwin);
 	}
 }
 

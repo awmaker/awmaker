@@ -33,6 +33,7 @@ typedef struct WMiniWindow {
 
 WMiniWindow *miniwindow_create(void);
 void miniwindow_destroy(WWindow *wwin);
+void miniwindow_destroy_icon(WWindow *wwin);
 void miniwindow_updatetitle(WWindow *wwin);
 void miniwindow_removeIcon(WWindow *wwin);
 void miniwindow_map(WWindow *wwin);
