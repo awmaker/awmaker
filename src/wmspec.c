@@ -1503,21 +1503,14 @@ static Bool updateNetIconInfo(WWindow *wwin)
 			       XA_CARDINAL, &type_ret, &fmt_ret, &nitems_ret,
 			       &bytes_after_ret, (unsigned char **)&data) == Success && data) {
 
-#ifdef NETWM_PROPER
-		if (wwin->flags.net_handle_icon)
-#else
 		wwin->flags.net_handle_icon = True;
-#endif
-		{
-			wwin->miniwindow->icon_x = data[0];
-			wwin->miniwindow->icon_y = data[1];
-			wwin->miniwindow->icon_w = data[2];
-			wwin->miniwindow->icon_h = data[3];
-		}
+		wwin->miniwindow->icon_x = data[0];
+		wwin->miniwindow->icon_y = data[1];
+		wwin->miniwindow->icon_w = data[2];
+		wwin->miniwindow->icon_h = data[3];
 
 		XFree(data);
 		hasState = True;
-
 	} else {
 		wwin->flags.net_handle_icon = False;
 	}
