@@ -36,7 +36,6 @@ void miniwindow_destroy(WWindow *wwin);
 WIcon *miniwindow_create_icon(WWindow *wwin);
 void miniwindow_create_minipreview(WWindow *wwin);
 void miniwindow_icon_map1(WIcon *icon);
-void miniwindow_icon_map2(WIcon *icon);
 void miniwindow_destroy(WWindow *wwin);
 void miniwindow_updatetitle(WWindow *wwin);
 void miniwindow_removeIcon(WWindow *wwin);

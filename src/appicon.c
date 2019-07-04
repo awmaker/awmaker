@@ -336,9 +336,32 @@ static void wAppIcon_create(WApplication *wapp)
 	wapp->app_icon = aicon;
 }
 
+/*
+ * The function wAppIcon_map maps the icon used in the
+ * appicon. This function is like the miniwindow_map
+ * function, but it does not include title and the stuff
+ * to create the used icon is a little bit different.
+ * It incluces DND code too
+ */
 static void wAppIcon_map(WAppIcon *aicon)
 {
-	miniwindow_icon_map2(aicon->icon);
+	WIcon *icon = aicon->icon;
+	WWindow *wwin = icon->owner;
+	virtual_screen *vscr = wwin->vscr;
+	WScreen *scr = vscr->screen_ptr;
+
+	wcore_map_toplevel(icon->core, vscr, wwin->miniwindow->icon_x, wwin->miniwindow->icon_y,
+			   icon->width, icon->height, 0,
+			   scr->w_depth, scr->w_visual, scr->w_colormap,
+			   scr->white_pixel);
+
+	if (wwin->wm_hints && (wwin->wm_hints->flags & IconWindowHint))
+		icon->icon_win = wwin->wm_hints->icon_window;
+
+	map_icon_image(icon);
+
+	WMAddNotificationObserver(icon_appearanceObserver, icon, WNIconAppearanceSettingsChanged, icon);
+	WMAddNotificationObserver(icon_tileObserver, icon, WNIconTileSettingsChanged, icon);
 
 #ifdef USE_DOCK_XDND
 	wXDNDMakeAwareness(aicon->icon->core->window);
@@ -1414,3 +1437,5 @@ void move_appicon_to_dock(virtual_screen *vscr, WAppIcon *icon, char *wm_class, 
 	wAppIconDestroy(aicon);
 	wfree(coord);
 }
+
+
