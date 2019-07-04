@@ -42,6 +42,9 @@
 
 static void miniwindow_create_minipreview_showerror(WWindow *wwin);
 static void miniwindow_DblClick(WObjDescriptor *desc, XEvent *event);
+static WIcon *miniwindow_create_icon(WWindow *wwin);
+static void miniwindow_create_minipreview(WWindow *wwin);
+static void miniwindow_icon_map(WIcon *icon);
 
 WMiniWindow *miniwindow_create(void)
 {
@@ -57,7 +60,7 @@ void miniWindow_destroy(WWindow *wwin)
 	wwin->miniwindow = NULL;
 }
 
-WIcon *miniwindow_create_icon(WWindow *wwin)
+static WIcon *miniwindow_create_icon(WWindow *wwin)
 {
 	WIcon *icon = NULL;
 
@@ -75,7 +78,7 @@ WIcon *miniwindow_create_icon(WWindow *wwin)
 	return icon;
 }
 
-void miniwindow_create_minipreview(WWindow *wwin)
+static void miniwindow_create_minipreview(WWindow *wwin)
 {
 	Pixmap pixmap;
 	int ret;
@@ -107,7 +110,7 @@ static void miniwindow_create_minipreview_showerror(WWindow *wwin)
 	wwarning(_("creation of mini-preview failed for window \"%s\""), title);
 }
 
-void miniwindow_icon_map(WIcon *icon)
+static void miniwindow_icon_map(WIcon *icon)
 {
 	WWindow *wwin = icon->owner;
 	virtual_screen *vscr = wwin->vscr;
