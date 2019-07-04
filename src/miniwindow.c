@@ -105,7 +105,7 @@ static void miniwindow_create_minipreview_showerror(WWindow *wwin)
 	wwarning(_("creation of mini-preview failed for window \"%s\""), title);
 }
 
-void miniwindow_icon_map1(WIcon *icon)
+void miniwindow_icon_map(WIcon *icon)
 {
 	WWindow *wwin = icon->owner;
 	virtual_screen *vscr = wwin->vscr;

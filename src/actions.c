@@ -1042,7 +1042,7 @@ void wIconifyWindow(WWindow *wwin)
 		}
 
 		wwin->miniwindow->icon = miniwindow_create_icon(wwin);
-		miniwindow_icon_map1(wwin->miniwindow->icon);
+		miniwindow_icon_map(wwin->miniwindow->icon);
 		wwin->miniwindow->icon->mapped = 1;
 
 		/* extract the window screenshot every time, as the option can be enable anytime */
