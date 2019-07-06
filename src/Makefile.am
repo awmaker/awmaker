@@ -23,6 +23,7 @@ awmaker_SOURCES = 	\
 	balloon.h \
 	client.c \
 	client.h \
+	clip.c \
 	colormap.c \
 	colormap.h \
 	cycling.c \
@@ -33,9 +34,11 @@ awmaker_SOURCES = 	\
 	dialog.c \
 	dialog.h \
 	dock.c \
+	dock-core.c \
 	dockedapp.c \
 	dockedapp.h \
 	dock.h \
+	drawer.c \
 	event.c \
 	event.h \
 	extend_pixmaps.h \

@@ -1,4 +1,4 @@
-/* dock.c- Dock module for WindowMaker - Dock
+/* dock.c- Dock module for WindowMaker - Drawer
  *
  *  Window Maker window manager
  *
