@@ -1528,31 +1528,6 @@ void clip_icon_unmap(virtual_screen *vscr)
 	wcore_unmap(vscr->clip.icon->icon->core);
 }
 
-WDock *clip_create(virtual_screen *vscr, WMPropList *state)
-{
-	WDock *dock;
-	WAppIcon *btn;
-
-	dock = dock_create_core(vscr);
-	restore_clip_position(dock, state);
-
-	btn = vscr->clip.icon;
-	btn->dock = dock;
-
-	dock->type = WM_CLIP;
-	dock->on_right_side = 1;
-	dock->icon_array[0] = btn;
-	dock->menu = NULL;
-
-	restore_state_lowered(dock, state);
-	restore_state_collapsed(dock, state);
-	(void) restore_state_autocollapsed(dock, state);
-	restore_state_autoraise(dock, state);
-	(void) restore_state_autoattracticons(dock, state);
-
-	return dock;
-}
-
 void clip_map(WDock *dock, WMPropList *state)
 {
 	virtual_screen *vscr = dock->vscr;
