@@ -202,19 +202,13 @@ static void moveDock(WDock *dock, int new_x, int new_y);
 static void save_application_list(WMPropList *state, WMPropList *list, virtual_screen *vscr);
 
 static void restore_dock_position(WDock *dock, WMPropList *state);
-static void restore_clip_position(WDock *dock, WMPropList *state);
 static void restore_drawer_position(WDock *drawer, WMPropList *state);
 static void restore_clip_position_map(WDock *dock);
-static void restore_state_lowered(WDock *dock, WMPropList *state);
-static void restore_state_collapsed(WDock *dock, WMPropList *state);
-static void restore_state_autoraise(WDock *dock, WMPropList *state);
 static void dock_set_attacheddocks(WDock *dock, WMPropList *state);
 static int dock_set_attacheddocks_do(WDock *dock, WMPropList *apps);
 static int drawer_set_attacheddocks_do(WDock *dock, WMPropList *apps);
 static void clip_set_attacheddocks(WDock *dock, WMPropList *state);
 static void dock_unset_attacheddocks(WDock *dock);
-static int restore_state_autocollapsed(WDock *dock, WMPropList *state);
-static int restore_state_autoattracticons(WDock *dock, WMPropList *state);
 
 static void wDockDoAutoLaunch(WDock *dock, int workspace);
 
@@ -1342,7 +1336,7 @@ static WMenu *makeDockPositionMenu(virtual_screen *vscr)
 	return menu;
 }
 
-static WDock *dock_create_core(virtual_screen *vscr)
+WDock *dock_create_core(virtual_screen *vscr)
 {
 	WDock *dock;
 
@@ -2324,7 +2318,7 @@ static WAppIcon *restore_drawer_icon_state(virtual_screen *vscr, WMPropList *inf
 #define COMPLAIN(key) wwarning(_("bad value in dock/drawer state info:%s"), key)
 
 /* restore lowered/raised state */
-static void restore_state_lowered(WDock *dock, WMPropList *state)
+void restore_state_lowered(WDock *dock, WMPropList *state)
 {
 	WMPropList *value;
 
@@ -2345,7 +2339,7 @@ static void restore_state_lowered(WDock *dock, WMPropList *state)
 }
 
 /* restore collapsed state */
-static void restore_state_collapsed(WDock *dock, WMPropList *state)
+void restore_state_collapsed(WDock *dock, WMPropList *state)
 {
 	WMPropList *value;
 
@@ -2366,7 +2360,7 @@ static void restore_state_collapsed(WDock *dock, WMPropList *state)
 }
 
 /* restore auto-collapsed state */
-static int restore_state_autocollapsed(WDock *dock, WMPropList *state)
+int restore_state_autocollapsed(WDock *dock, WMPropList *state)
 {
 	WMPropList *value;
 	int ret = 0;
@@ -2392,7 +2386,7 @@ static int restore_state_autocollapsed(WDock *dock, WMPropList *state)
 }
 
 /* restore auto-raise/lower state */
-static void restore_state_autoraise(WDock *dock, WMPropList *state)
+void restore_state_autoraise(WDock *dock, WMPropList *state)
 {
 	WMPropList *value;
 
@@ -2412,7 +2406,7 @@ static void restore_state_autoraise(WDock *dock, WMPropList *state)
 }
 
 /* restore attract icons state */
-static int restore_state_autoattracticons(WDock *dock, WMPropList *state)
+int restore_state_autoattracticons(WDock *dock, WMPropList *state)
 {
 	WMPropList *value;
 	int ret = 0;
@@ -2752,7 +2746,7 @@ static void restore_dock_position(WDock *dock, WMPropList *state)
 	}
 }
 
-static void restore_clip_position(WDock *dock, WMPropList *state)
+void restore_clip_position(WDock *dock, WMPropList *state)
 {
 	virtual_screen *vscr = dock->vscr;
 	WMPropList *value;

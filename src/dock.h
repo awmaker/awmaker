@@ -127,4 +127,13 @@ typedef enum
 } dockPosition;
 
 int wClipMakeIconOmnipresent(WAppIcon *aicon, int omnipresent);
+
+void restore_clip_position(WDock *dock, WMPropList *state);
+void restore_state_lowered(WDock *dock, WMPropList *state);
+void restore_state_collapsed(WDock *dock, WMPropList *state);
+void restore_state_autoraise(WDock *dock, WMPropList *state);
+int restore_state_autocollapsed(WDock *dock, WMPropList *state);
+int restore_state_autoattracticons(WDock *dock, WMPropList *state);
+
+WDock *dock_create_core(virtual_screen *vscr);
 #endif
