@@ -145,17 +145,12 @@ static void dockIconPaint(WAppIcon *btn);
 
 static void dock_icon_mouse_down(WObjDescriptor *desc, XEvent *event);
 static void clip_icon_mouse_down(WObjDescriptor *desc, XEvent *event);
-static void drawer_icon_mouse_down(WObjDescriptor *desc, XEvent *event);
 
 static pid_t execCommand(WAppIcon *btn, const char *command, WSavedState *state);
 
 static void trackDeadProcess(pid_t pid, unsigned int status, WDock *dock);
 
 static int getClipButton(int px, int py);
-
-static void toggleLowered(WDock *dock);
-
-static void toggleCollapsed(WDock *dock);
 
 static void dock_icon_expose(WObjDescriptor *desc, XEvent *event);
 static void clip_icon_expose(WObjDescriptor *desc, XEvent *event);
@@ -179,8 +174,6 @@ static void clip_autocollapse(void *cdata);
 static void drawer_autocollapse(void *cdata);
 
 static void clipAutoExpand(void *cdata);
-static void launchDockedApplication(WAppIcon *btn, Bool withSelection);
-
 static void clipAutoLower(void *cdata);
 static void clipAutoRaise(void *cdata);
 
@@ -990,7 +983,7 @@ static void switchWSCommand(WMenu *menu, WMenuEntry *entry)
 	WMFreeArray(selectedIcons);
 }
 
-static void launchDockedApplication(WAppIcon *btn, Bool withSelection)
+void launchDockedApplication(WAppIcon *btn, Bool withSelection)
 {
 	virtual_screen *vscr = btn->icon->vscr;
 
@@ -4525,7 +4518,7 @@ static void trackDeadProcess(pid_t pid, unsigned int status, WDock *client_data)
  * "normal" (including auto-raise/lower) and "keep on top". It is
  * therefore clearly distinct from wDockLower/Raise, which are called
  * each time a not-kept-on-top dock is lowered/raised. */
-static void toggleLowered(WDock *dock)
+void toggleLowered(WDock *dock)
 {
 	WAppIcon *tmp;
 	WDrawerChain *dc;
@@ -4561,7 +4554,7 @@ static void toggleLowered(WDock *dock)
 	}
 }
 
-static void toggleCollapsed(WDock *dock)
+void toggleCollapsed(WDock *dock)
 {
 	if (dock->collapsed) {
 		dock->collapsed = 0;
@@ -4626,7 +4619,7 @@ static void iconDblClick(WObjDescriptor *desc, XEvent *event)
 	}
 }
 
-static void handleDockMove(WDock *dock, WAppIcon *aicon, XEvent *event)
+void handleDockMove(WDock *dock, WAppIcon *aicon, XEvent *event)
 {
 	virtual_screen *vscr = dock->vscr;
 	WScreen *scr = vscr->screen_ptr;
@@ -5058,7 +5051,7 @@ static void dock_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 	dock->menu = NULL;
 }
 
-static void drawer_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
+void drawer_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 {
 	virtual_screen *vscr = aicon->icon->vscr;
 	WScreen *scr = vscr->screen_ptr;
@@ -5363,72 +5356,6 @@ static void clip_icon_mouse_down(WObjDescriptor *desc, XEvent *event)
 		break;
 	case Button5:
 		wWorkspaceRelativeChange(vscr, -1);
-	}
-}
-
-static void drawer_icon_mouse_down(WObjDescriptor *desc, XEvent *event)
-{
-	WAppIcon *aicon = desc->parent;
-	WDock *dock = aicon->dock;
-	virtual_screen *vscr = aicon->icon->vscr;
-	WAppIcon *btn;
-
-	if (aicon->editing || WCHECK_STATE(WSTATE_MODAL))
-		return;
-
-	vscr->last_dock = dock;
-
-	if (dock->menu && dock->menu->flags.mapped)
-		wMenuUnmap(dock->menu);
-
-	if (IsDoubleClick(vscr, event)) {
-		/* double-click was not in the main clip icon */
-		iconDblClick(desc, event);
-		return;
-	}
-
-	switch (event->xbutton.button) {
-	case Button1:
-		if (event->xbutton.state & MOD_MASK)
-			wDockLower(dock);
-		else
-			wDockRaise(dock);
-
-		if ((event->xbutton.state & ShiftMask) && aicon != vscr->clip.icon && dock->type != WM_DOCK) {
-			wIconSelect(aicon->icon);
-			return;
-		}
-
-		if (aicon->yindex == 0 && aicon->xindex == 0) {
-			handleDockMove(dock, aicon, event);
-		} else {
-			Bool hasMoved = wHandleAppIconMove(aicon, event);
-			if (wPreferences.single_click && !hasMoved)
-				iconDblClick(desc, event);
-		}
-		break;
-	case Button2:
-		btn = desc->parent;
-
-		if (!btn->launching && (!btn->running || (event->xbutton.state & ControlMask)))
-			launchDockedApplication(btn, True);
-
-		break;
-	case Button3:
-		if (event->xbutton.send_event &&
-		    XGrabPointer(dpy, aicon->icon->core->window, True, ButtonMotionMask
-				 | ButtonReleaseMask | ButtonPressMask, GrabModeAsync,
-				 GrabModeAsync, None, None, CurrentTime) != GrabSuccess) {
-			wwarning("pointer grab failed for dockicon menu");
-			return;
-		}
-
-		drawer_menu(dock, aicon, event);
-		break;
-	case Button4:
-		break;
-	case Button5:
-		break;
 	}
 }
 

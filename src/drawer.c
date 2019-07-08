@@ -74,6 +74,7 @@ static WMPropList *dDrawers = NULL;
 
 static char *findUniqueName(virtual_screen *vscr, const char *instance_basename);
 static void drawerAppendToChain(WDock *drawer);
+static void iconDblClick(WObjDescriptor *desc, XEvent *event);
 static void make_keys(void);
 
 
@@ -188,3 +189,108 @@ static void drawerAppendToChain(WDock *drawer)
 	(*where_to_add)->next = NULL;
 	vscr->drawer.drawer_count++;
 }
+
+void drawer_icon_mouse_down(WObjDescriptor *desc, XEvent *event)
+{
+	WAppIcon *aicon = desc->parent;
+	WDock *dock = aicon->dock;
+	virtual_screen *vscr = aicon->icon->vscr;
+	WAppIcon *btn;
+
+	if (aicon->editing || WCHECK_STATE(WSTATE_MODAL))
+		return;
+
+	vscr->last_dock = dock;
+
+	if (dock->menu && dock->menu->flags.mapped)
+		wMenuUnmap(dock->menu);
+
+	if (IsDoubleClick(vscr, event)) {
+		/* double-click was not in the main clip icon */
+		iconDblClick(desc, event);
+		return;
+	}
+
+	switch (event->xbutton.button) {
+	case Button1:
+		if (event->xbutton.state & wPreferences.modifier_mask)
+			wDockLower(dock);
+		else
+			wDockRaise(dock);
+
+		if ((event->xbutton.state & ShiftMask) && aicon != vscr->clip.icon && dock->type != WM_DOCK) {
+			wIconSelect(aicon->icon);
+			return;
+		}
+
+		if (aicon->yindex == 0 && aicon->xindex == 0) {
+			handleDockMove(dock, aicon, event);
+		} else {
+			Bool hasMoved = wHandleAppIconMove(aicon, event);
+			if (wPreferences.single_click && !hasMoved)
+				iconDblClick(desc, event);
+		}
+		break;
+	case Button2:
+		btn = desc->parent;
+
+		if (!btn->launching && (!btn->running || (event->xbutton.state & ControlMask)))
+			launchDockedApplication(btn, True);
+
+		break;
+	case Button3:
+		if (event->xbutton.send_event &&
+		    XGrabPointer(dpy, aicon->icon->core->window, True, ButtonMotionMask
+				 | ButtonReleaseMask | ButtonPressMask, GrabModeAsync,
+				 GrabModeAsync, None, None, CurrentTime) != GrabSuccess) {
+			wwarning("pointer grab failed for dockicon menu");
+			return;
+		}
+
+		drawer_menu(dock, aicon, event);
+		break;
+	case Button4:
+		break;
+	case Button5:
+		break;
+	}
+}
+static void iconDblClick(WObjDescriptor *desc, XEvent *event)
+{
+	WAppIcon *btn = desc->parent;
+	WDock *dock = btn->dock;
+	WApplication *wapp = NULL;
+	int unhideHere = 0;
+
+	if (btn->icon->owner && !(event->xbutton.state & ControlMask)) {
+		wapp = wApplicationOf(btn->icon->owner->main_window);
+
+		assert(wapp != NULL);
+
+		unhideHere = (event->xbutton.state & ShiftMask);
+
+		/* go to the last workspace that the user worked on the app */
+		if (wapp->last_workspace != dock->vscr->workspace.current && !unhideHere)
+			wWorkspaceChange(dock->vscr, wapp->last_workspace);
+
+		wUnhideApplication(wapp, event->xbutton.button == Button2, unhideHere);
+
+		if (event->xbutton.state & wPreferences.modifier_mask)
+			wHideOtherApplications(btn->icon->owner);
+	} else {
+		if (event->xbutton.button == Button1) {
+			if (event->xbutton.state & wPreferences.modifier_mask) {
+				/* raise/lower dock */
+				toggleLowered(dock);
+			} else if (wIsADrawer(btn)) {
+				toggleCollapsed(dock);
+			} else if (btn->command) {
+				if (!btn->launching && (!btn->running || (event->xbutton.state & ControlMask)))
+					launchDockedApplication(btn, False);
+			} else if (btn->xindex == 0 && btn->yindex == 0 && btn->dock->type == WM_DOCK) {
+				panel_show(dock->vscr, PANEL_INFO);
+			}
+		}
+	}
+}
+

@@ -138,6 +138,16 @@ void restore_state_autoraise(WDock *dock, WMPropList *state);
 int restore_state_autocollapsed(WDock *dock, WMPropList *state);
 int restore_state_autoattracticons(WDock *dock, WMPropList *state);
 
+void drawer_menu(WDock *dock, WAppIcon *aicon, XEvent *event);
+
+void handleDockMove(WDock *dock, WAppIcon *aicon, XEvent *event);
+void launchDockedApplication(WAppIcon *btn, Bool withSelection);
+
+void toggleLowered(WDock *dock);
+void toggleCollapsed(WDock *dock);
+
 WDock *dock_create_core(virtual_screen *vscr);
 WDock *drawer_create(virtual_screen *vscr, const char *name);
+
+void drawer_icon_mouse_down(WObjDescriptor *desc, XEvent *event);
 #endif
