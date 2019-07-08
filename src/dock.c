@@ -58,3 +58,36 @@
 #include "xdnd.h"
 #endif
 
+
+WDock *dock_create(virtual_screen *vscr)
+{
+	WDock *dock;
+	WAppIcon *btn;
+
+	dock = dock_create_core(vscr);
+
+	/* Set basic variables */
+	dock->type = WM_DOCK;
+	dock->menu = NULL;
+
+	btn = dock_icon_create(vscr, NULL, "WMDock", "Logo");
+
+	btn->xindex = 0;
+	btn->yindex = 0;
+	btn->docked = 1;
+	btn->dock = dock;
+	dock->on_right_side = 1;
+	dock->icon_array[0] = btn;
+
+	btn->icon->core->descriptor.parent_type = WCLASS_DOCK_ICON;
+	btn->icon->core->descriptor.parent = btn;
+
+	if (wPreferences.flags.clip_merged_in_dock) {
+		btn->icon->tile_type = TILE_CLIP;
+		vscr->clip.icon = btn;
+	} else {
+		btn->icon->tile_type = TILE_NORMAL;
+	}
+
+	return dock;
+}

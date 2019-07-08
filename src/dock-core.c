@@ -186,8 +186,6 @@ static void clipAutoRaise(void *cdata);
 
 static void drawerIconExpose(WObjDescriptor *desc, XEvent *event);
 static void removeDrawerCallback(WMenu *menu, WMenuEntry *entry);
-static void drawerAppendToChain(WDock *drawer);
-static char *findUniqueName(virtual_screen *vscr, const char *instance_basename);
 static void addADrawerCallback(WMenu *menu, WMenuEntry *entry);
 static void swapDrawers(virtual_screen *vscr, int new_x);
 static WDock *getDrawer(virtual_screen *vscr, int y_index);
@@ -201,8 +199,6 @@ static void moveDock(WDock *dock, int new_x, int new_y);
 
 static void save_application_list(WMPropList *state, WMPropList *list, virtual_screen *vscr);
 
-static void restore_dock_position(WDock *dock, WMPropList *state);
-static void restore_drawer_position(WDock *drawer, WMPropList *state);
 static void restore_clip_position_map(WDock *dock);
 static void dock_set_attacheddocks(WDock *dock, WMPropList *state);
 static int dock_set_attacheddocks_do(WDock *dock, WMPropList *apps);
@@ -1361,39 +1357,6 @@ WDock *dock_create_core(virtual_screen *vscr)
 	return dock;
 }
 
-WDock *dock_create(virtual_screen *vscr)
-{
-	WDock *dock;
-	WAppIcon *btn;
-
-	dock = dock_create_core(vscr);
-
-	/* Set basic variables */
-	dock->type = WM_DOCK;
-	dock->menu = NULL;
-
-	btn = dock_icon_create(vscr, NULL, "WMDock", "Logo");
-
-	btn->xindex = 0;
-	btn->yindex = 0;
-	btn->docked = 1;
-	btn->dock = dock;
-	dock->on_right_side = 1;
-	dock->icon_array[0] = btn;
-
-	btn->icon->core->descriptor.parent_type = WCLASS_DOCK_ICON;
-	btn->icon->core->descriptor.parent = btn;
-
-	if (wPreferences.flags.clip_merged_in_dock) {
-		btn->icon->tile_type = TILE_CLIP;
-		vscr->clip.icon = btn;
-	} else {
-		btn->icon->tile_type = TILE_NORMAL;
-	}
-
-	return dock;
-}
-
 void dock_map(WDock *dock, WMPropList *state)
 {
 	WAppIcon *btn = dock->icon_array[0];
@@ -1553,41 +1516,6 @@ void clip_map(WDock *dock, WMPropList *state)
 void clip_unmap(WDock *dock)
 {
 	dock_unset_attacheddocks(dock);
-}
-
-WDock *drawer_create(virtual_screen *vscr, const char *name)
-{
-	WDock *dock;
-	WAppIcon *btn;
-
-	make_keys();
-
-	dock = dock_create_core(vscr);
-
-	/* Set basic variables */
-	dock->type = WM_DRAWER;
-	dock->auto_collapse = 1;
-
-	if (!name)
-		name = findUniqueName(vscr, "Drawer");
-
-	btn = dock_icon_create(vscr, NULL, "WMDrawer", (char *) name);
-
-	/* Create appicon's icon */
-	btn->xindex = 0;
-	btn->yindex = 0;
-	btn->docked = 1;
-	btn->dock = dock;
-	dock->on_right_side = vscr->dock.dock->on_right_side;
-	dock->icon_array[0] = btn;
-
-	btn->icon->core->descriptor.parent_type = WCLASS_DOCK_ICON;
-	btn->icon->core->descriptor.parent = btn;
-	btn->icon->tile_type = TILE_DRAWER;
-	dock->menu = NULL;
-	drawerAppendToChain(dock);
-
-	return dock;
 }
 
 void drawer_map(WDock *dock, virtual_screen *vscr)
@@ -2689,7 +2617,7 @@ static void dock_unset_attacheddocks(WDock *dock)
 	set_attacheddocks_unmap(dock);
 }
 
-static void restore_dock_position(WDock *dock, WMPropList *state)
+void restore_dock_position(WDock *dock, WMPropList *state)
 {
 	WMPropList *value;
 	virtual_screen *vscr = dock->vscr;
@@ -5912,21 +5840,6 @@ int wClipMakeIconOmnipresent(WAppIcon *aicon, int omnipresent)
 	return status;
 }
 
-static void drawerAppendToChain(WDock *drawer)
-{
-	virtual_screen *vscr = drawer->vscr;
-	WDrawerChain **where_to_add;
-
-	where_to_add = &vscr->drawer.drawers;
-	while ((*where_to_add) != NULL)
-		where_to_add = &(*where_to_add)->next;
-
-	*where_to_add = wmalloc(sizeof(WDrawerChain));
-	(*where_to_add)->adrawer = drawer;
-	(*where_to_add)->next = NULL;
-	vscr->drawer.drawer_count++;
-}
-
 
 static void drawerRemoveFromChain(WDock *drawer)
 {
@@ -5952,36 +5865,6 @@ static void drawerRemoveFromChain(WDock *drawer)
 	vscr->drawer.drawer_count--;
 }
 
-
-/* Don't free the returned string. Duplicate it. */
-static char *findUniqueName(virtual_screen *vscr, const char *instance_basename)
-{
-	static char buffer[128];
-	WDrawerChain *dc;
-	int i;
-	Bool already_in_use = True;
-
-#define UNIQUE_NAME_WATCHDOG 128
-	for (i = 0; already_in_use && i < UNIQUE_NAME_WATCHDOG; i++) {
-		snprintf(buffer, sizeof buffer, "%s%d", instance_basename, i);
-
-		already_in_use = False;
-
-		for (dc = vscr->drawer.drawers; dc != NULL; dc = dc->next) {
-			if (!strncmp(dc->adrawer->icon_array[0]->wm_instance, buffer,
-					sizeof buffer)) {
-				already_in_use = True;
-				break;
-			}
-		}
-	}
-
-	if (i == UNIQUE_NAME_WATCHDOG)
-		wwarning("Couldn't find a unique name for drawer in %d attempts.", i);
-#undef UNIQUE_NAME_WATCHDOG
-
-	return buffer;
-}
 
 static void dock_icon_expose(WObjDescriptor *desc, XEvent *event)
 {
