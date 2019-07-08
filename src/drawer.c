@@ -255,6 +255,7 @@ void drawer_icon_mouse_down(WObjDescriptor *desc, XEvent *event)
 		break;
 	}
 }
+
 static void iconDblClick(WObjDescriptor *desc, XEvent *event)
 {
 	WAppIcon *btn = desc->parent;
@@ -264,9 +265,6 @@ static void iconDblClick(WObjDescriptor *desc, XEvent *event)
 
 	if (btn->icon->owner && !(event->xbutton.state & ControlMask)) {
 		wapp = wApplicationOf(btn->icon->owner->main_window);
-
-		assert(wapp != NULL);
-
 		unhideHere = (event->xbutton.state & ShiftMask);
 
 		/* go to the last workspace that the user worked on the app */
@@ -274,7 +272,6 @@ static void iconDblClick(WObjDescriptor *desc, XEvent *event)
 			wWorkspaceChange(dock->vscr, wapp->last_workspace);
 
 		wUnhideApplication(wapp, event->xbutton.button == Button2, unhideHere);
-
 		if (event->xbutton.state & wPreferences.modifier_mask)
 			wHideOtherApplications(btn->icon->owner);
 	} else {
@@ -287,10 +284,7 @@ static void iconDblClick(WObjDescriptor *desc, XEvent *event)
 			} else if (btn->command) {
 				if (!btn->launching && (!btn->running || (event->xbutton.state & ControlMask)))
 					launchDockedApplication(btn, False);
-			} else if (btn->xindex == 0 && btn->yindex == 0 && btn->dock->type == WM_DOCK) {
-				panel_show(dock->vscr, PANEL_INFO);
 			}
 		}
 	}
 }
-
