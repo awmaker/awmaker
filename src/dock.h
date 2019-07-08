@@ -142,9 +142,29 @@ void drawer_menu(WDock *dock, WAppIcon *aicon, XEvent *event);
 
 void handleDockMove(WDock *dock, WAppIcon *aicon, XEvent *event);
 void launchDockedApplication(WAppIcon *btn, Bool withSelection);
+void selectCallback(WMenu *menu, WMenuEntry *entry);
+void selectIconsCallback(WMenu *menu, WMenuEntry *entry);
+void keepIconsCallback(WMenu *menu, WMenuEntry *entry);
+void attractIconsCallback(WMenu *menu, WMenuEntry *entry);
+void launchCallback(WMenu *menu, WMenuEntry *entry);
+void dockHideHereCallback(WMenu *menu, WMenuEntry *entry);
+void dockUnhideHereCallback(WMenu *menu, WMenuEntry *entry);
+void toggleLoweredCallback(WMenu *menu, WMenuEntry *entry);
+void toggleCollapsedCallback(WMenu *menu, WMenuEntry *entry);
+void toggleAutoCollapseCallback(WMenu *menu, WMenuEntry *entry);
+void settingsCallback(WMenu *menu, WMenuEntry *entry);
+void toggleAutoRaiseLowerCallback(WMenu *menu, WMenuEntry *entry);
+void toggleAutoAttractCallback(WMenu *menu, WMenuEntry *entry);
+void dockHideCallback(WMenu *menu, WMenuEntry *entry);
+void removeDrawerCallback(WMenu *menu, WMenuEntry *entry);
+void dockKillCallback(WMenu *menu, WMenuEntry *entry);
+void dockUpdateOptionsMenu(WDock *dock, WMenu *menu);
 
+void removeIcons(WMArray *icons, WDock *dock);
 void toggleLowered(WDock *dock);
 void toggleCollapsed(WDock *dock);
+int numberOfSelectedIcons(WDock *dock);
+WMArray *getSelected(WDock *dock);
 
 WDock *dock_create_core(virtual_screen *vscr);
 WDock *drawer_create(virtual_screen *vscr, const char *name);
