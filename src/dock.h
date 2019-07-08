@@ -159,15 +159,26 @@ void dockHideCallback(WMenu *menu, WMenuEntry *entry);
 void removeDrawerCallback(WMenu *menu, WMenuEntry *entry);
 void dockKillCallback(WMenu *menu, WMenuEntry *entry);
 void dockUpdateOptionsMenu(WDock *dock, WMenu *menu);
+void handleClipChangeWorkspace(virtual_screen *vscr, XEvent *event);
 
 void removeIcons(WMArray *icons, WDock *dock);
 void toggleLowered(WDock *dock);
 void toggleCollapsed(WDock *dock);
 int numberOfSelectedIcons(WDock *dock);
+int getClipButton(int px, int py);
 WMArray *getSelected(WDock *dock);
 
 WDock *dock_create_core(virtual_screen *vscr);
 WDock *drawer_create(virtual_screen *vscr, const char *name);
 
+void clip_icon_mouse_down(WObjDescriptor *desc, XEvent *event);
 void drawer_icon_mouse_down(WObjDescriptor *desc, XEvent *event);
+
+#define CLIP_REWIND       1
+#define CLIP_IDLE         0
+#define CLIP_FORWARD      2
+
+#define MOD_MASK wPreferences.modifier_mask
+#define ICON_SIZE wPreferences.icon_size
+
 #endif
