@@ -1054,11 +1054,6 @@ int wScreenKeepInside(virtual_screen *vscr, int *x, int *y, int width, int heigh
 	return moved;
 }
 
-virtual_screen *wScreenWithNumber(int i)
-{
-	return w_global.vscreens[i];
-}
-
 virtual_screen *wScreenForRootWindow(Window window)
 {
 	int i;

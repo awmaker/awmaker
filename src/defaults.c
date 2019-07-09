@@ -1405,7 +1405,7 @@ void wDefaultsCheckDomains(void *arg)
 				}
 
 				for (i = 0; i < w_global.screen_count; i++) {
-					vscr = wScreenWithNumber(i);
+					vscr = w_global.vscreens[i];
 					if (vscr->screen_ptr)
 						wReadDefaults(vscr, dict);
 				}
@@ -1448,7 +1448,7 @@ void wDefaultsCheckDomains(void *arg)
 
 				w_global.domain.window_attr->dictionary = dict;
 				for (i = 0; i < w_global.screen_count; i++) {
-					vscr = wScreenWithNumber(i);
+					vscr = w_global.vscreens[i];
 					if (vscr->screen_ptr) {
 						wDefaultUpdateIcons(vscr);
 

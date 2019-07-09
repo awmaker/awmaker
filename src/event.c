@@ -1244,7 +1244,7 @@ static void handleXkbIndicatorStateNotify(XkbEvent *event)
 	(void) event;
 
 	for (i = 0; i < w_global.screen_count; i++) {
-		vscr = wScreenWithNumber(i);
+		vscr = w_global.vscreens[i];
 		wwin = vscr->window.focused;
 		if (wwin && wwin->flags.focused) {
 			XkbGetState(dpy, XkbUseCoreKbd, &staterec);
@@ -1768,7 +1768,7 @@ static void handleKeyPress(XEvent *event)
 
 			/* find index of this screen */
 			for (i = 0; i < w_global.screen_count; i++) {
-				vscr1 = wScreenWithNumber(i);
+				vscr1 = w_global.vscreens[i];
 				if (vscr1->screen_ptr == vscr->screen_ptr)
 					break;
 			}
@@ -1777,7 +1777,7 @@ static void handleKeyPress(XEvent *event)
 			if (i >= w_global.screen_count)
 				i = 0;
 
-			vscr2 = wScreenWithNumber(i);
+			vscr2 = w_global.vscreens[i];
 			if (vscr2->screen_ptr)
 				XWarpPointer(dpy, vscr->screen_ptr->root_win, vscr2->screen_ptr->root_win, 0, 0, 0, 0,
 					     vscr2->screen_ptr->scr_width / 2, vscr2->screen_ptr->scr_height / 2);
