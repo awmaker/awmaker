@@ -727,3 +727,162 @@ static void omnipresentCallback(WMenu *menu, WMenuEntry *entry)
 					 "some workspace."), _("OK"), NULL, NULL);
 	}
 }
+
+static void paintClipButtons(WAppIcon *clipIcon, Bool lpushed, Bool rpushed)
+{
+	Window win = clipIcon->icon->core->window;
+	WScreen *scr = clipIcon->icon->vscr->screen_ptr;
+	XPoint p[4];
+	int pt = CLIP_BUTTON_SIZE * ICON_SIZE / 64;
+	int tp = ICON_SIZE - pt;
+	int as = pt - 15;	/* 15 = 5+5+5 */
+	GC gc = scr->draw_gc;	/* maybe use WMColorGC() instead here? */
+	WMColor *color;
+
+	color = scr->clip_title_color[CLIP_NORMAL];
+
+	XSetForeground(dpy, gc, WMColorPixel(color));
+
+	if (rpushed) {
+		p[0].x = tp + 1;
+		p[0].y = 1;
+		p[1].x = ICON_SIZE - 2;
+		p[1].y = 1;
+		p[2].x = ICON_SIZE - 2;
+		p[2].y = pt - 1;
+	} else if (lpushed) {
+		p[0].x = 1;
+		p[0].y = tp;
+		p[1].x = pt;
+		p[1].y = ICON_SIZE - 2;
+		p[2].x = 1;
+		p[2].y = ICON_SIZE - 2;
+	}
+	if (lpushed || rpushed) {
+		XSetForeground(dpy, scr->draw_gc, scr->white_pixel);
+		XFillPolygon(dpy, win, scr->draw_gc, p, 3, Convex, CoordModeOrigin);
+		XSetForeground(dpy, scr->draw_gc, scr->black_pixel);
+	}
+
+	/* top right arrow */
+	p[0].x = p[3].x = ICON_SIZE - 5 - as;
+	p[0].y = p[3].y = 5;
+	p[1].x = ICON_SIZE - 6;
+	p[1].y = 5;
+	p[2].x = ICON_SIZE - 6;
+	p[2].y = 4 + as;
+	if (rpushed) {
+		XFillPolygon(dpy, win, scr->draw_gc, p, 3, Convex, CoordModeOrigin);
+		XDrawLines(dpy, win, scr->draw_gc, p, 4, CoordModeOrigin);
+	} else {
+		XFillPolygon(dpy, win, gc, p, 3, Convex, CoordModeOrigin);
+		XDrawLines(dpy, win, gc, p, 4, CoordModeOrigin);
+	}
+
+	/* bottom left arrow */
+	p[0].x = p[3].x = 5;
+	p[0].y = p[3].y = ICON_SIZE - 5 - as;
+	p[1].x = 5;
+	p[1].y = ICON_SIZE - 6;
+	p[2].x = 4 + as;
+	p[2].y = ICON_SIZE - 6;
+	if (lpushed) {
+		XFillPolygon(dpy, win, scr->draw_gc, p, 3, Convex, CoordModeOrigin);
+		XDrawLines(dpy, win, scr->draw_gc, p, 4, CoordModeOrigin);
+	} else {
+		XFillPolygon(dpy, win, gc, p, 3, Convex, CoordModeOrigin);
+		XDrawLines(dpy, win, gc, p, 4, CoordModeOrigin);
+	}
+}
+
+RImage *wClipMakeTile(RImage *normalTile)
+{
+	RImage *tile = RCloneImage(normalTile);
+	RColor black;
+	RColor dark;
+	RColor light;
+	int pt, tp;
+	int as;
+
+	pt = CLIP_BUTTON_SIZE * wPreferences.icon_size / 64;
+	tp = wPreferences.icon_size - 1 - pt;
+	as = pt - 15;
+
+	black.alpha = 255;
+	black.red = black.green = black.blue = 0;
+
+	dark.alpha = 0;
+	dark.red = dark.green = dark.blue = 60;
+
+	light.alpha = 0;
+	light.red = light.green = light.blue = 80;
+
+	/* top right */
+	ROperateLine(tile, RSubtractOperation, tp, 0, wPreferences.icon_size - 2, pt - 1, &dark);
+	RDrawLine(tile, tp - 1, 0, wPreferences.icon_size - 1, pt + 1, &black);
+	ROperateLine(tile, RAddOperation, tp, 2, wPreferences.icon_size - 3, pt, &light);
+
+	/* arrow bevel */
+	ROperateLine(tile, RSubtractOperation, ICON_SIZE - 7 - as, 4, ICON_SIZE - 5, 4, &dark);
+	ROperateLine(tile, RSubtractOperation, ICON_SIZE - 6 - as, 5, ICON_SIZE - 5, 6 + as, &dark);
+	ROperateLine(tile, RAddOperation, ICON_SIZE - 5, 4, ICON_SIZE - 5, 6 + as, &light);
+
+	/* bottom left */
+	ROperateLine(tile, RAddOperation, 2, tp + 2, pt - 2, wPreferences.icon_size - 3, &dark);
+	RDrawLine(tile, 0, tp - 1, pt + 1, wPreferences.icon_size - 1, &black);
+	ROperateLine(tile, RSubtractOperation, 0, tp - 2, pt + 1, wPreferences.icon_size - 2, &light);
+
+	/* arrow bevel */
+	ROperateLine(tile, RSubtractOperation, 4, ICON_SIZE - 7 - as, 4, ICON_SIZE - 5, &dark);
+	ROperateLine(tile, RSubtractOperation, 5, ICON_SIZE - 6 - as, 6 + as, ICON_SIZE - 5, &dark);
+	ROperateLine(tile, RAddOperation, 4, ICON_SIZE - 5, 6 + as, ICON_SIZE - 5, &light);
+
+	return tile;
+}
+
+void wClipIconPaint(WAppIcon *aicon)
+{
+	virtual_screen *vscr = aicon->icon->vscr;
+	WScreen *scr = vscr->screen_ptr;
+	WWorkspace *workspace = vscr->workspace.array[vscr->workspace.current];
+	WMColor *color;
+	Window win = aicon->icon->core->window;
+	int length, nlength;
+	char *ws_name, ws_number[10];
+	int ty, tx;
+
+	wIconPaint(aicon->icon);
+
+	length = strlen(workspace->name);
+	ws_name = wmalloc(length + 1);
+	snprintf(ws_name, length + 1, "%s", workspace->name);
+
+	if (snprintf(ws_number, sizeof(ws_number), "%d", vscr->workspace.current + 1) == sizeof(ws_number))
+		snprintf(ws_number, sizeof(ws_number), "-");
+
+	nlength = strlen(ws_number);
+
+	if (wPreferences.flags.noclip || !workspace->clip->collapsed)
+		color = scr->clip_title_color[CLIP_NORMAL];
+	else
+		color = scr->clip_title_color[CLIP_COLLAPSED];
+
+	ty = ICON_SIZE - WMFontHeight(scr->clip_title_font) - 3;
+
+	tx = CLIP_BUTTON_SIZE * ICON_SIZE / 64;
+
+	if(wPreferences.show_clip_title)
+		WMDrawString(scr->wmscreen, win, color, scr->clip_title_font, tx, ty, ws_name, length);
+
+	tx = (ICON_SIZE / 2 - WMWidthOfString(scr->clip_title_font, ws_number, nlength)) / 2;
+
+	WMDrawString(scr->wmscreen, win, color, scr->clip_title_font, tx, 2, ws_number, nlength);
+
+	wfree(ws_name);
+
+	if (aicon->launching)
+		XFillRectangle(dpy, aicon->icon->core->window, scr->stipple_gc,
+			       0, 0, wPreferences.icon_size, wPreferences.icon_size);
+
+	paintClipButtons(aicon, aicon->dock->lclip_button_pushed, aicon->dock->rclip_button_pushed);
+}
