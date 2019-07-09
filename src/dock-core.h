@@ -20,8 +20,8 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef WMDOCK_H_
-#define WMDOCK_H_
+#ifndef WMDOCKCORE_H_
+#define WMDOCKCORE_H_
 
 #include "appicon.h"
 
@@ -60,9 +60,6 @@ typedef struct WDock {
     struct WDDomain *defaults;
 } WDock;
 
-WDock *dock_create(virtual_screen *vscr);
-void dock_map(WDock *dock, WMPropList *dock_state);
-void dock_unmap(WDock *dock);
 
 
 void wDockHideIcons(WDock *dock);
@@ -93,9 +90,6 @@ void dockedapps_autolaunch(int vscrno);
 int wDockReceiveDNDDrop(virtual_screen *vscr, XEvent *event);
 #endif
 
-
-
-
 #define WO_FAILED          0
 #define WO_NOT_APPLICABLE  1
 #define WO_SUCCESS         2
@@ -107,15 +101,11 @@ typedef enum
 	P_KEEP_ON_TOP,
 } dockPosition;
 
-
-void restore_dock_position(WDock *dock, WMPropList *state);
-
 void restore_state_lowered(WDock *dock, WMPropList *state);
 void restore_state_collapsed(WDock *dock, WMPropList *state);
 void restore_state_autoraise(WDock *dock, WMPropList *state);
 int restore_state_autocollapsed(WDock *dock, WMPropList *state);
 int restore_state_autoattracticons(WDock *dock, WMPropList *state);
-
 
 void handleDockMove(WDock *dock, WAppIcon *aicon, XEvent *event);
 void launchDockedApplication(WAppIcon *btn, Bool withSelection);
@@ -159,7 +149,6 @@ void dock_unset_attacheddocks(WDock *dock);
 #define CLIP_IDLE         0
 #define CLIP_FORWARD      2
 
-#define MOD_MASK wPreferences.modifier_mask
 #define ICON_SIZE wPreferences.icon_size
 
 #endif

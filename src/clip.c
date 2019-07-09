@@ -193,7 +193,7 @@ void clip_icon_mouse_down(WObjDescriptor *desc, XEvent *event)
 
 	switch (event->xbutton.button) {
 	case Button1:
-		if (event->xbutton.state & MOD_MASK)
+		if (event->xbutton.state & wPreferences.modifier_mask)
 			wDockLower(dock);
 		else
 			wDockRaise(dock);
@@ -511,11 +511,11 @@ static void iconDblClick(WObjDescriptor *desc, XEvent *event)
 
 		wUnhideApplication(wapp, event->xbutton.button == Button2, unhideHere);
 
-		if (event->xbutton.state & MOD_MASK)
+		if (event->xbutton.state & wPreferences.modifier_mask)
 			wHideOtherApplications(btn->icon->owner);
 	} else {
 		if (event->xbutton.button == Button1) {
-			if (event->xbutton.state & MOD_MASK) {
+			if (event->xbutton.state & wPreferences.modifier_mask) {
 				/* raise/lower dock */
 				toggleLowered(dock);
 			} else if (btn == dock->vscr->clip.icon) {

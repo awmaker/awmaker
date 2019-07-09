@@ -33,6 +33,7 @@
 #include "window.h"
 #include "client.h"
 #include "icon.h"
+#include "dock-core.h"
 #include "dock.h"
 #include "actions.h"
 #include "workspace.h"

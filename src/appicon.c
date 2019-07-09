@@ -1048,7 +1048,7 @@ static void appicon_move_motion(virtual_screen *vscr, WScreen *scr, XEvent ev,
 	*x = ev.xmotion.x_root - *ofs_x;
 	*y = ev.xmotion.y_root - *ofs_y;
 	wAppIconMove(aicon, *x, *y);
-	if (!(ev.xmotion.state & MOD_MASK) || aicon->launching || aicon->lock || *originalDock == NULL) {
+	if (!(ev.xmotion.state & wPreferences.modifier_mask) || aicon->launching || aicon->lock || *originalDock == NULL) {
 		for (i = 0; *dockable && i < vscr->drawer.drawer_count + 2; i++) {
 			WDock *theDock = allDocks[i];
 			if (theDock == NULL)
@@ -1150,7 +1150,7 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 	if (wPreferences.flags.noupdates && originalDock != NULL)
 		return False;
 
-	if (event->xbutton.state & MOD_MASK) {
+	if (event->xbutton.state & wPreferences.modifier_mask) {
 		/*
 		 * If Mod is pressed for an docked appicon,
 		 * assume it is to undock it,so don't lower it

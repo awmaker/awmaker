@@ -43,6 +43,7 @@
 #include "appicon.h"
 #include "actions.h"
 #include "winspector.h"
+#include "dock-core.h"
 #include "dock.h"
 #include "client.h"
 #include "wmspec.h"
