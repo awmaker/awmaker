@@ -80,12 +80,14 @@ void wDockRaiseLower(WDock *dock);
 void wDockSaveState(virtual_screen *vscr, WMPropList *old_state);
 
 Bool wDockAttachIcon(WDock *dock, WAppIcon *icon, int x, int y, Bool update_icon);
+Bool clip_attach_icon(WDock *dock, WAppIcon *icon, int x, int y, Bool update_icon);
 Bool wDockSnapIcon(WDock *dock, WAppIcon *icon, int req_x, int req_y,
                    int *ret_x, int *ret_y, int redocking);
 Bool wDockFindFreeSlot(WDock *dock, int *req_x, int *req_y);
 void wDockDetach(WDock *dock, WAppIcon *icon);
 Bool wDockMoveIconBetweenDocks(WDock *src, WDock *dest, WAppIcon *icon, int x, int y);
 void wDockReattachIcon(WDock *dock, WAppIcon *icon, int x, int y);
+Bool clip_snap_icon(WDock *dock, WAppIcon *icon, int req_x, int req_y, int *ret_x, int *ret_y, int redocking);
 
 void wSlideAppicons(WAppIcon **appicons, int n, int to_the_left);
 void wDrawerFillTheGap(WDock *drawer, WAppIcon *aicon, Bool redocking);
@@ -96,6 +98,7 @@ WAppIcon *wDockFindIconForWindow(WDock *dock, Window window);
 void wDockLaunchWithState(WAppIcon *btn, WSavedState *state);
 
 void dockedapps_autolaunch(int vscrno);
+void clip_autolaunch(int vscrno);
 
 #ifdef USE_DOCK_XDND
 int wDockReceiveDNDDrop(virtual_screen *vscr, XEvent *event);
@@ -191,7 +194,13 @@ int indexOfHole(WDock *drawer, WAppIcon *moving_aicon, int redocking);
 void clipAutoRaise(void *cdata);
 void clipAutoExpand(void *cdata);
 void clipAutoLower(void *cdata);
+void dock_icon_expose(WObjDescriptor *desc, XEvent *event);
+WMPropList *get_application_list(WMPropList *dock_state, virtual_screen *vscr);
+void clip_icon_expose(WObjDescriptor *desc, XEvent *event);
 
+void clip_enter_notify(WObjDescriptor *desc, XEvent *event);
+void clip_leave_notify(WObjDescriptor *desc, XEvent *event);
+void clip_leave(WDock *dock);
 void dock_icon_mouse_down(WObjDescriptor *desc, XEvent *event);
 void clip_icon_mouse_down(WObjDescriptor *desc, XEvent *event);
 void drawer_icon_mouse_down(WObjDescriptor *desc, XEvent *event);

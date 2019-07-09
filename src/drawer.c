@@ -145,7 +145,6 @@ WDock *drawer_create(virtual_screen *vscr, const char *name)
 	WAppIcon *btn;
 
 	make_keys();
-
 	dock = dock_create_core(vscr);
 
 	/* Set basic variables */

@@ -70,10 +70,58 @@ enum
 	DM_KILL
 };
 
+/***** Local variables ****/
+static WMPropList *dCommand = NULL;
+static WMPropList *dPasteCommand = NULL;
+#ifdef USE_DOCK_XDND			/* XXX was OFFIX */
+static WMPropList *dDropCommand = NULL;
+#endif
+static WMPropList *dAutoLaunch, *dLock;
+static WMPropList *dName, *dForced, *dBuggyApplication, *dYes, *dNo;
+static WMPropList *dHost, *dDock;
+static WMPropList *dAutoAttractIcons;
+static WMPropList *dPosition, *dApplications, *dLowered, *dCollapsed;
+static WMPropList *dAutoCollapse, *dAutoRaiseLower, *dOmnipresent;
+static WMPropList *dDrawers = NULL;
+
 static void iconDblClick(WObjDescriptor *desc, XEvent *event);
 static void dock_menu(WDock *dock, WAppIcon *aicon, XEvent *event);
 static WMenu *makeDockPositionMenu(virtual_screen *vscr);
 static void updateDockPositionMenu(WDock *dock, WMenu *pos_menu);
+static void make_keys(void);
+
+static void make_keys(void)
+{
+	if (dCommand != NULL)
+		return;
+
+	dCommand = WMRetainPropList(WMCreatePLString("Command"));
+	dPasteCommand = WMRetainPropList(WMCreatePLString("PasteCommand"));
+#ifdef USE_DOCK_XDND
+	dDropCommand = WMRetainPropList(WMCreatePLString("DropCommand"));
+#endif
+	dLock = WMRetainPropList(WMCreatePLString("Lock"));
+	dAutoLaunch = WMRetainPropList(WMCreatePLString("AutoLaunch"));
+	dName = WMRetainPropList(WMCreatePLString("Name"));
+	dForced = WMRetainPropList(WMCreatePLString("Forced"));
+	dBuggyApplication = WMRetainPropList(WMCreatePLString("BuggyApplication"));
+	dYes = WMRetainPropList(WMCreatePLString("Yes"));
+	dNo = WMRetainPropList(WMCreatePLString("No"));
+	dHost = WMRetainPropList(WMCreatePLString("Host"));
+
+	dPosition = WMCreatePLString("Position");
+	dApplications = WMCreatePLString("Applications");
+	dLowered = WMCreatePLString("Lowered");
+	dCollapsed = WMCreatePLString("Collapsed");
+	dAutoCollapse = WMCreatePLString("AutoCollapse");
+	dAutoRaiseLower = WMCreatePLString("AutoRaiseLower");
+	dAutoAttractIcons = WMCreatePLString("AutoAttractIcons");
+
+	dOmnipresent = WMCreatePLString("Omnipresent");
+
+	dDock = WMCreatePLString("Dock");
+	dDrawers = WMCreatePLString("Drawers");
+}
 static void setDockPositionKeepOnTopCallback(WMenu *menu, WMenuEntry *entry);
 static void setDockPositionAutoRaiseLowerCallback(WMenu *menu, WMenuEntry *entry);
 static void setDockPositionNormalCallback(WMenu *menu, WMenuEntry *entry);
@@ -83,6 +131,7 @@ WDock *dock_create(virtual_screen *vscr)
 	WDock *dock;
 	WAppIcon *btn;
 
+	make_keys();
 	dock = dock_create_core(vscr);
 
 	/* Set basic variables */
