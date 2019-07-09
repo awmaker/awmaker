@@ -28,6 +28,7 @@
 #include "window.h"
 #include "framewin.h"
 #include "placement.h"
+#include "dock-core.h"
 #include "dock.h"
 
 #ifdef USE_XINERAMA

@@ -40,6 +40,7 @@
 #include "appicon.h"
 #include "actions.h"
 #include "stacking.h"
+#include "dock-core.h"
 #include "dock.h"
 #include "drawer.h"
 #include "wdefaults.h"

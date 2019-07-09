@@ -39,6 +39,7 @@
 #include "appicon.h"
 #include "actions.h"
 #include "stacking.h"
+#include "dock-core.h"
 #include "dock.h"
 #include "clip.h"
 #include "drawer.h"

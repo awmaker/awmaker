@@ -42,6 +42,7 @@
 #include "misc.h"
 #include "menu.h"
 #include "application.h"
+#include "dock-core.h"
 #include "dock.h"
 #include "clip.h"
 #include "actions.h"

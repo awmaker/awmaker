@@ -58,6 +58,7 @@
 #include "icon.h"
 #include "shell.h"
 #include "actions.h"
+#include "dock-core.h"
 #include "dock.h"
 #include "clip.h"
 #include "drawer.h"

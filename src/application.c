@@ -34,6 +34,7 @@
 #include "appmenu.h"
 #include "properties.h"
 #include "workspace.h"
+#include "dock-core.h"
 #include "dock.h"
 #include "wdefaults.h"
 #include "miniwindow.h"

@@ -65,7 +65,7 @@
 #include "stacking.h"
 #include "defaults.h"
 #include "workspace.h"
-#include "dock.h"
+#include "dock-core.h"
 #include "framewin.h"
 #include "properties.h"
 #include "balloon.h"

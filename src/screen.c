@@ -47,6 +47,7 @@
 #include "main.h"
 #include "actions.h"
 #include "properties.h"
+#include "dock-core.h"
 #include "dock.h"
 #include "drawer.h"
 #include "resources.h"

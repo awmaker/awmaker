@@ -31,6 +31,7 @@
 #include "window.h"
 #include "icon.h"
 #include "appicon.h"
+#include "dock-core.h"
 #include "dock.h"
 #include "clip.h"
 #include "drawer.h"

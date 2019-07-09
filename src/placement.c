@@ -35,7 +35,7 @@
 #include "appicon.h"
 #include "actions.h"
 #include "application.h"
-#include "dock.h"
+#include "dock-core.h"
 #include "xinerama.h"
 #include "placement.h"
 #include "miniwindow.h"

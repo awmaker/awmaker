@@ -80,6 +80,7 @@
 #include "properties.h"
 #include "application.h"
 #include "appicon.h"
+#include "dock-core.h"
 #include "dock.h"
 #include "misc.h"
 

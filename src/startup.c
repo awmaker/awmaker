@@ -55,6 +55,7 @@
 #include "client.h"
 #include "main.h"
 #include "startup.h"
+#include "dock-core.h"
 #include "dock.h"
 #include "clip.h"
 #include "drawer.h"

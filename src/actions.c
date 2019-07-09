@@ -42,6 +42,7 @@
 #include "actions.h"
 #include "stacking.h"
 #include "appicon.h"
+#include "dock-core.h"
 #include "dock.h"
 #include "appmenu.h"
 #include "winspector.h"
