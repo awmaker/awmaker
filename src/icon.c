@@ -52,7 +52,6 @@
 
 /**** Global varianebles ****/
 
-#define MOD_MASK wPreferences.modifier_mask
 #define CACHE_ICON_PATH "/Library/WindowMaker/CachedPixmaps"
 #define ICON_BORDER 3
 
@@ -700,7 +699,7 @@ static void set_dockapp_in_icon(WIcon *icon)
 	/* Needed to move the icon clicking on the application part */
 	if ((XGetWindowAttributes(dpy, icon->icon_win, &attr)) &&
 	    (attr.all_event_masks & ButtonPressMask))
-		wHackedGrabButton(dpy, Button1, MOD_MASK, icon->core->window, True,
+		wHackedGrabButton(dpy, Button1, wPreferences.modifier_mask, icon->core->window, True,
 				  ButtonPressMask, GrabModeSync, GrabModeAsync,
 				  None, wPreferences.cursor[WCUR_ARROW]);
 }

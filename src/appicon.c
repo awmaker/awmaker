@@ -63,9 +63,6 @@
  * using the classname/instancename
  */
 
-#define MOD_MASK       wPreferences.modifier_mask
-#define ICON_SIZE      wPreferences.icon_size
-
 static void iconDblClick(WObjDescriptor *desc, XEvent *event);
 static void appicon_handle_menubutton(WAppIcon *aicon, XEvent *event);
 static void iconExpose(WObjDescriptor *desc, XEvent *event);
@@ -774,7 +771,7 @@ static void iconDblClick(WObjDescriptor *desc, XEvent *event)
 
 	wUnhideApplication(wapp, event->xbutton.button == Button2, unhideHere);
 
-	if (event->xbutton.state & MOD_MASK)
+	if (event->xbutton.state & wPreferences.modifier_mask)
 		wHideOtherApplications(aicon->icon->owner);
 }
 
@@ -1208,7 +1205,7 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 	wins[0] = icon->core->window;
 	wins[1] = scr->dock_shadow;
 	XRestackWindows(dpy, wins, 2);
-	XMoveResizeWindow(dpy, scr->dock_shadow, aicon->x_pos, aicon->y_pos, ICON_SIZE, ICON_SIZE);
+	XMoveResizeWindow(dpy, scr->dock_shadow, aicon->x_pos, aicon->y_pos, wPreferences.icon_size, wPreferences.icon_size);
 
 	if (superfluous) {
 		if (icon->pixmap != None)

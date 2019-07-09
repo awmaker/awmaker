@@ -75,9 +75,6 @@
 #endif
 #include "wmspec.h"
 
-#define MOD_MASK wPreferences.modifier_mask
-
-
 /***** Local Stuff *****/
 static WWindowState *windowState = NULL;
 static void setFocusMode(WWindow *wwin);
@@ -2704,7 +2701,7 @@ void wWindowResetMouseGrabs(WWindow * wwin)
 
 	if (!WFLAGP(wwin, no_bind_mouse)) {
 		/* grabs for Meta+drag */
-		wHackedGrabButton(dpy, AnyButton, MOD_MASK, wwin->client_win,
+		wHackedGrabButton(dpy, AnyButton, wPreferences.modifier_mask, wwin->client_win,
 				  True, ButtonPressMask | ButtonReleaseMask,
 				  GrabModeSync, GrabModeAsync, None, None);
 
@@ -2720,10 +2717,10 @@ void wWindowResetMouseGrabs(WWindow * wwin)
 							  True, ButtonPressMask | ButtonReleaseMask,
 							  GrabModeSync, GrabModeAsync, None, None);
 
-			wHackedGrabButton(dpy, Button4, MOD_MASK | ControlMask, wwin->client_win,
+			wHackedGrabButton(dpy, Button4, wPreferences.modifier_mask | ControlMask, wwin->client_win,
 							  True, ButtonPressMask | ButtonReleaseMask,
 							  GrabModeSync, GrabModeAsync, None, None);
-			wHackedGrabButton(dpy, Button5, MOD_MASK | ControlMask, wwin->client_win,
+			wHackedGrabButton(dpy, Button5, wPreferences.modifier_mask | ControlMask, wwin->client_win,
 							  True, ButtonPressMask | ButtonReleaseMask,
 							  GrabModeSync, GrabModeAsync, None, None);
 		}
@@ -2925,7 +2922,7 @@ static void resizebarMouseDown(WCoreWindow *sender, void *data, XEvent *event)
 				 GrabModeAsync, GrabModeAsync, None, None, CurrentTime) != GrabSuccess)
 			return;
 
-	if (event->xbutton.state & MOD_MASK)
+	if (event->xbutton.state & wPreferences.modifier_mask)
 		wMouseMoveWindow(wwin, event);
 	else
 		wMouseResizeWindow(wwin, event);
@@ -2974,7 +2971,7 @@ static void titlebarDblClick(WCoreWindow *sender, void *data, XEvent *event)
 			}
 		}
 	} else if (event->xbutton.button == Button3) {
-		if (event->xbutton.state & MOD_MASK)
+		if (event->xbutton.state & wPreferences.modifier_mask)
 			wHideOtherApplications(wwin);
 	} else if (event->xbutton.button == Button2) {
 		wSelectWindow(wwin, !wwin->flags.selected);
@@ -3029,7 +3026,7 @@ static void frameMouseDown(WObjDescriptor *desc, XEvent *event)
 		}
 	}
 
-	if (event->xbutton.state & MOD_MASK) {
+	if (event->xbutton.state & wPreferences.modifier_mask) {
 		/* move the window */
 		if (XGrabPointer(dpy, wwin->client_win, False,
 				 ButtonMotionMask | ButtonReleaseMask | ButtonPressMask,
@@ -3075,7 +3072,7 @@ static void titlebarMouseDown(WCoreWindow *sender, void *data, XEvent *event)
 
 	if (event->xbutton.button == Button1 || event->xbutton.button == Button2) {
 		if (event->xbutton.button == Button1) {
-			if (event->xbutton.state & MOD_MASK)
+			if (event->xbutton.state & wPreferences.modifier_mask)
 				wLowerFrame(wwin->frame->vscr, wwin->frame->core);
 			else
 				wRaiseFrame(wwin->frame->vscr, wwin->frame->core);

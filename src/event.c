@@ -81,11 +81,7 @@
 #include "switchmenu.h"
 #include "wsmap.h"
 
-
-#define MOD_MASK wPreferences.modifier_mask
-
 /************ Local stuff ***********/
-
 static void saveTimestamp(XEvent *event);
 static void handleColormapNotify(XEvent *event);
 static void handleMapNotify(XEvent *event);
@@ -827,7 +823,7 @@ static void handleButtonPress(XEvent *event)
 	if (desc->parent_type == WCLASS_WINDOW) {
 		XSync(dpy, 0);
 
-		if (event->xbutton.state & ( MOD_MASK | ControlMask )) {
+		if (event->xbutton.state & (wPreferences.modifier_mask | ControlMask )) {
 			XAllowEvents(dpy, AsyncPointer, CurrentTime);
 		} else {
 			if (wPreferences.ignore_focus_click)
@@ -839,7 +835,7 @@ static void handleButtonPress(XEvent *event)
 		XSync(dpy, 0);
 	} else if (desc->parent_type == WCLASS_APPICON
 		   || desc->parent_type == WCLASS_MINIWINDOW || desc->parent_type == WCLASS_DOCK_ICON) {
-		if (event->xbutton.state & MOD_MASK) {
+		if (event->xbutton.state & wPreferences.modifier_mask) {
 			XSync(dpy, 0);
 			XAllowEvents(dpy, AsyncPointer, CurrentTime);
 			XSync(dpy, 0);
