@@ -41,6 +41,7 @@
 #include "actions.h"
 #include "stacking.h"
 #include "dock.h"
+#include "drawer.h"
 #include "wdefaults.h"
 #include "workspace.h"
 #include "superfluous.h"

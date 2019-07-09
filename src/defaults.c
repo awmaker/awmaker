@@ -60,6 +60,7 @@
 #include "actions.h"
 #include "dock.h"
 #include "clip.h"
+#include "drawer.h"
 #include "workspace.h"
 #include "properties.h"
 #include "misc.h"

@@ -48,6 +48,7 @@
 #include "actions.h"
 #include "properties.h"
 #include "dock.h"
+#include "drawer.h"
 #include "resources.h"
 #include "workspace.h"
 #include "session.h"

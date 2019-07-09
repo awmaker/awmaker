@@ -41,6 +41,7 @@
 #include "stacking.h"
 #include "dock.h"
 #include "clip.h"
+#include "drawer.h"
 #include "dockedapp.h"
 #include "dialog.h"
 #include "shell.h"
