@@ -43,6 +43,7 @@
 #include "menu.h"
 #include "application.h"
 #include "dock.h"
+#include "clip.h"
 #include "actions.h"
 #include "workspace.h"
 #include "appicon.h"

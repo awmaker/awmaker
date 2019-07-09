@@ -60,18 +60,11 @@ typedef struct WDock {
     struct WDDomain *defaults;
 } WDock;
 
-WDock *clip_create(virtual_screen *vscr, WMPropList *state);
 WDock *dock_create(virtual_screen *vscr);
-void clip_map(WDock *dock, WMPropList *state);
-void clip_unmap(WDock *dock);
 void dock_map(WDock *dock, WMPropList *dock_state);
 void dock_unmap(WDock *dock);
 
-WAppIcon *clip_icon_create(virtual_screen *vscr);
-void clip_icon_map(virtual_screen *vscr);
-void clip_icon_unmap(virtual_screen *vscr);
 
-void clip_destroy(WDock *dock);
 void wDockHideIcons(WDock *dock);
 void wDockShowIcons(WDock *dock);
 void wDockLower(WDock *dock);
@@ -80,14 +73,12 @@ void wDockRaiseLower(WDock *dock);
 void wDockSaveState(virtual_screen *vscr, WMPropList *old_state);
 
 Bool wDockAttachIcon(WDock *dock, WAppIcon *icon, int x, int y, Bool update_icon);
-Bool clip_attach_icon(WDock *dock, WAppIcon *icon, int x, int y, Bool update_icon);
 Bool wDockSnapIcon(WDock *dock, WAppIcon *icon, int req_x, int req_y,
                    int *ret_x, int *ret_y, int redocking);
 Bool wDockFindFreeSlot(WDock *dock, int *req_x, int *req_y);
 void wDockDetach(WDock *dock, WAppIcon *icon);
 Bool wDockMoveIconBetweenDocks(WDock *src, WDock *dest, WAppIcon *icon, int x, int y);
 void wDockReattachIcon(WDock *dock, WAppIcon *icon, int x, int y);
-Bool clip_snap_icon(WDock *dock, WAppIcon *icon, int req_x, int req_y, int *ret_x, int *ret_y, int redocking);
 
 void wSlideAppicons(WAppIcon **appicons, int n, int to_the_left);
 void wDrawerFillTheGap(WDock *drawer, WAppIcon *aicon, Bool redocking);
@@ -98,14 +89,11 @@ WAppIcon *wDockFindIconForWindow(WDock *dock, Window window);
 void wDockLaunchWithState(WAppIcon *btn, WSavedState *state);
 
 void dockedapps_autolaunch(int vscrno);
-void clip_autolaunch(int vscrno);
 
 #ifdef USE_DOCK_XDND
 int wDockReceiveDNDDrop(virtual_screen *vscr, XEvent *event);
 #endif
 
-void wClipIconPaint(WAppIcon *aicon);
-WMPropList *wClipSaveWorkspaceState(virtual_screen *vscr, int workspace);
 
 void wDrawerIconPaint(WAppIcon *dicon);
 void wDrawersSaveState(virtual_screen *vscr);
@@ -115,7 +103,6 @@ int wIsADrawer(WAppIcon *aicon);
 
 void wClipUpdateForWorkspaceChange(virtual_screen *vscr, int workspace);
 
-RImage *wClipMakeTile(RImage *normalTile);
 RImage *wDrawerMakeTile(virtual_screen *vscr, RImage *normalTile);
 
 #define WO_FAILED          0
@@ -129,9 +116,7 @@ typedef enum
 	P_KEEP_ON_TOP,
 } dockPosition;
 
-int wClipMakeIconOmnipresent(WAppIcon *aicon, int omnipresent);
 
-void restore_clip_position(WDock *dock, WMPropList *state);
 void restore_dock_position(WDock *dock, WMPropList *state);
 void restore_drawer_position(WDock *drawer, WMPropList *state);
 
@@ -162,14 +147,12 @@ void dockHideCallback(WMenu *menu, WMenuEntry *entry);
 void removeDrawerCallback(WMenu *menu, WMenuEntry *entry);
 void dockKillCallback(WMenu *menu, WMenuEntry *entry);
 void dockUpdateOptionsMenu(WDock *dock, WMenu *menu);
-void handleClipChangeWorkspace(virtual_screen *vscr, XEvent *event);
 void addADrawerCallback(WMenu *menu, WMenuEntry *entry);
 
 void removeIcons(WMArray *icons, WDock *dock);
 void toggleLowered(WDock *dock);
 void toggleCollapsed(WDock *dock);
 int numberOfSelectedIcons(WDock *dock);
-int getClipButton(int px, int py);
 WMArray *getSelected(WDock *dock);
 
 WDock *dock_create_core(virtual_screen *vscr);
@@ -191,18 +174,10 @@ WMPropList *make_icon_state(WAppIcon *btn);
 void drawers_autolaunch(int vscrno);
 void wDockDoAutoLaunch(WDock *dock, int workspace);
 int indexOfHole(WDock *drawer, WAppIcon *moving_aicon, int redocking);
-void clipAutoRaise(void *cdata);
-void clipAutoExpand(void *cdata);
-void clipAutoLower(void *cdata);
 void dock_icon_expose(WObjDescriptor *desc, XEvent *event);
 WMPropList *get_application_list(WMPropList *dock_state, virtual_screen *vscr);
-void clip_icon_expose(WObjDescriptor *desc, XEvent *event);
 
-void clip_enter_notify(WObjDescriptor *desc, XEvent *event);
-void clip_leave_notify(WObjDescriptor *desc, XEvent *event);
-void clip_leave(WDock *dock);
 void dock_icon_mouse_down(WObjDescriptor *desc, XEvent *event);
-void clip_icon_mouse_down(WObjDescriptor *desc, XEvent *event);
 void drawer_icon_mouse_down(WObjDescriptor *desc, XEvent *event);
 int onScreen(virtual_screen *vscr, int x, int y);
 void dock_unset_attacheddocks(WDock *dock);

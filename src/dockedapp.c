@@ -32,6 +32,7 @@
 #include "icon.h"
 #include "appicon.h"
 #include "dock.h"
+#include "clip.h"
 #include "dockedapp.h"
 #include "dialog.h"
 #include "misc.h"

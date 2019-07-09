@@ -56,6 +56,8 @@
 #include "main.h"
 #include "startup.h"
 #include "dock.h"
+#include "clip.h"
+#include "drawer.h"
 #include "workspace.h"
 #include "keybind.h"
 #include "framewin.h"

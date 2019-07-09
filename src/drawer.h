@@ -22,6 +22,4 @@
 #ifndef WMDRAWER_H_
 #define WMDRAWER_H_
 
-#include "dock.h"
-
 #endif
