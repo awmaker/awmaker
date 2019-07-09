@@ -636,8 +636,6 @@ static void renameCallback(WMenu *menu, WMenuEntry *entry)
 	if (!dock->vscr->screen_ptr)
 		return;
 
-	assert(entry->clientdata != NULL);
-
 	wspace = dock->vscr->workspace.current;
 	name = wstrdup(dock->vscr->workspace.array[wspace]->name);
 
@@ -695,7 +693,6 @@ static void clip_remove_icons_callback(WMenu *menu, WMenuEntry *entry)
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) menu;
 
-	assert(clickedIcon != NULL);
 	dock = clickedIcon->dock;
 
 	/* This is only for security, to avoid crash in PlaceIcon
@@ -737,12 +734,8 @@ static void omnipresentCallback(WMenu *menu, WMenuEntry *entry)
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) menu;
 
-	assert(entry->clientdata != NULL);
-
 	dock = clickedIcon->dock;
-
 	selectedIcons = getSelected(dock);
-
 	if (!WMGetArrayItemCount(selectedIcons))
 		WMAddToArray(selectedIcons, clickedIcon);
 
@@ -1426,8 +1419,6 @@ Bool clip_attach_icon(WDock *dock, WAppIcon *icon, int x, int y, Bool update_ico
 		if (dock->icon_array[index] == NULL)
 			break;
 
-	assert(index < dock->max_icons);
-
 	dock->icon_array[index] = icon;
 	icon->yindex = y;
 	icon->xindex = x;
@@ -1655,8 +1646,6 @@ void clip_enter_notify(WObjDescriptor *desc, XEvent *event)
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) event;
 
-	assert(event->type == EnterNotify);
-
 	if (desc->parent_type != WCLASS_DOCK_ICON)
 		return;
 
@@ -1699,8 +1688,6 @@ void clip_leave_notify(WObjDescriptor *desc, XEvent *event)
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) event;
-
-	assert(event->type == LeaveNotify);
 
 	if (desc->parent_type != WCLASS_DOCK_ICON)
 		return;

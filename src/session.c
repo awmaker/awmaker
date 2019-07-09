@@ -252,7 +252,6 @@ static WMPropList *makeWindowState(WWindow *wwin, WApplication *wapp)
 					if (dc->adrawer == wapp->app_icon->dock)
 						break;
 
-				assert(dc != NULL);
 				name = dc->adrawer->icon_array[0]->wm_instance;
 			}
 

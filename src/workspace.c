@@ -1027,10 +1027,6 @@ int set_clip_omnipresent(virtual_screen *vscr, int wksno)
 		vscr->workspace.array[wksno]->clip->icon_count--;
 		added_omnipresent_icons++;
 
-		/* If there are too many omnipresent appicons, we are in trouble */
-		assert(vscr->workspace.array[0]->clip->icon_count + added_omnipresent_icons
-		       <= vscr->workspace.array[0]->clip->max_icons);
-
 		/* Find first free spot on workspace 0 */
 		for (k = 0; k < vscr->workspace.array[0]->clip->max_icons; k++)
 			if (vscr->workspace.array[0]->clip->icon_array[k] == NULL)

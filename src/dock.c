@@ -234,9 +234,6 @@ static void iconDblClick(WObjDescriptor *desc, XEvent *event)
 
 	if (btn->icon->owner && !(event->xbutton.state & ControlMask)) {
 		wapp = wApplicationOf(btn->icon->owner->main_window);
-
-		assert(wapp != NULL);
-
 		unhideHere = (event->xbutton.state & ShiftMask);
 
 		/* go to the last workspace that the user worked on the app */

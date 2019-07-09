@@ -439,8 +439,6 @@ static void allocGCs(WScreen *scr)
 	gcm = GCGraphicsExposures;
 	scr->draw_gc = XCreateGC(dpy, scr->w_win, gcm, &gcv);
 
-	assert(scr->stipple_bitmap != None);
-
 	/* mono GC */
 	scr->mono_gc = XCreateGC(dpy, scr->stipple_bitmap, gcm, &gcv);
 }
@@ -1058,8 +1056,6 @@ int wScreenKeepInside(virtual_screen *vscr, int *x, int *y, int width, int heigh
 
 virtual_screen *wScreenWithNumber(int i)
 {
-	assert(i < w_global.vscreen_count);
-
 	return w_global.vscreens[i];
 }
 

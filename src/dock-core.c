@@ -134,12 +134,8 @@ static void make_keys(void)
 
 void toggleLoweredCallback(WMenu *menu, WMenuEntry *entry)
 {
-	assert(entry->clientdata != NULL);
-
 	toggleLowered(entry->clientdata);
-
 	entry->flags.indicator_on = !(((WDock *) entry->clientdata)->lowered);
-
 	wMenuPaint(menu);
 }
 
@@ -160,12 +156,8 @@ void dockKillCallback(WMenu *menu, WMenuEntry *entry)
 	if (!WCHECK_STATE(WSTATE_NORMAL))
 		return;
 
-	assert(entry->clientdata != NULL);
-
 	icon = (WAppIcon *) entry->clientdata;
-
 	icon->editing = 1;
-
 	WCHANGE_STATE(WSTATE_MODAL);
 
 	/* strip away dir names */
@@ -288,11 +280,8 @@ void keepIconsCallback(WMenu *menu, WMenuEntry *entry)
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) menu;
 
-	assert(clickedIcon != NULL);
 	dock = clickedIcon->dock;
-
 	selectedIcons = getSelected(dock);
-
 	if (!WMGetArrayItemCount(selectedIcons) &&
 	    clickedIcon != dock->vscr->clip.icon) {
 		char *command = NULL;
@@ -349,8 +338,6 @@ void toggleAutoAttractCallback(WMenu *menu, WMenuEntry *entry)
 	virtual_screen *vscr = dock->vscr;
 	int i;
 
-	assert(entry->clientdata != NULL);
-
 	dock->attract_icons = !dock->attract_icons;
 	entry->flags.indicator_on = dock->attract_icons;
 	wMenuPaint(menu);
@@ -384,11 +371,7 @@ void toggleAutoAttractCallback(WMenu *menu, WMenuEntry *entry)
 void selectCallback(WMenu *menu, WMenuEntry *entry)
 {
 	WAppIcon *icon = (WAppIcon *) entry->clientdata;
-
-	assert(icon != NULL);
-
 	wIconSelect(icon->icon);
-
 	wMenuPaint(menu);
 }
 
@@ -403,9 +386,7 @@ void attractIconsCallback(WMenu *menu, WMenuEntry *entry)
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) menu;
 
-	assert(entry->clientdata != NULL);
 	clip = clickedIcon->dock;
-
 	aicon = w_global.app_icon_list;
 
 	while (aicon) {
@@ -437,9 +418,7 @@ void selectIconsCallback(WMenu *menu, WMenuEntry *entry)
 	WAppIcon *btn;
 	int i;
 
-	assert(clickedIcon != NULL);
 	dock = clickedIcon->dock;
-
 	selectedIcons = getSelected(dock);
 
 	if (!WMGetArrayItemCount(selectedIcons)) {
@@ -460,24 +439,17 @@ void selectIconsCallback(WMenu *menu, WMenuEntry *entry)
 
 void toggleCollapsedCallback(WMenu *menu, WMenuEntry *entry)
 {
-	assert(entry->clientdata != NULL);
-
 	toggleCollapsed(entry->clientdata);
-
 	entry->flags.indicator_on = ((WDock *) entry->clientdata)->collapsed;
-
 	wMenuPaint(menu);
 }
 
 void toggleAutoCollapseCallback(WMenu *menu, WMenuEntry *entry)
 {
 	WDock *dock;
-	assert(entry->clientdata != NULL);
 
 	dock = (WDock *) entry->clientdata;
-
 	dock->auto_collapse = !dock->auto_collapse;
-
 	entry->flags.indicator_on = ((WDock *) entry->clientdata)->auto_collapse;
 
 	wMenuPaint(menu);
@@ -500,14 +472,9 @@ void toggleAutoRaiseLowerCallback(WMenu *menu, WMenuEntry *entry)
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) menu;
 
-	assert(entry->clientdata != NULL);
-
 	dock = (WDock *) entry->clientdata;
-
 	toggleAutoRaiseLower(dock);
-
 	entry->flags.indicator_on = ((WDock *) entry->clientdata)->auto_raise_lower;
-
 	wMenuPaint(menu);
 }
 
@@ -1539,8 +1506,6 @@ Bool dock_attach_icon(WDock *dock, WAppIcon *icon, int x, int y, Bool update_ico
 		if (dock->icon_array[index] == NULL)
 			break;
 
-	assert(index < dock->max_icons);
-
 	dock->icon_array[index] = icon;
 	icon->yindex = y;
 	icon->xindex = x;
@@ -1623,11 +1588,9 @@ void wDockReattachIcon(WDock *dock, WAppIcon *icon, int x, int y)
 		if (dock->icon_array[index] == icon)
 			break;
 	}
-	assert(index < dock->max_icons);
 
 	icon->yindex = y;
 	icon->xindex = x;
-
 	icon->x_pos = dock->x_pos + x * ICON_SIZE;
 	icon->y_pos = dock->y_pos + y * ICON_SIZE;
 }
@@ -1694,16 +1657,12 @@ Bool wDockMoveIconBetweenDocks(WDock *src, WDock *dest, WAppIcon *icon, int x, i
 		if (src->icon_array[index] == icon)
 			break;
 
-	assert(index < src->max_icons);
-
 	src->icon_array[index] = NULL;
 	src->icon_count--;
 
 	for (index = 1; index < dest->max_icons; index++)
 		if (dest->icon_array[index] == NULL)
 			break;
-
-	assert(index < dest->max_icons);
 
 	dest->icon_array[index] = icon;
 	icon->dock = dest;
@@ -1836,7 +1795,6 @@ void wDockDetach(WDock *dock, WAppIcon *icon)
 		if (dock->icon_array[index] == icon)
 			break;
 
-	assert(index < dock->max_icons);
 	dock->icon_array[index] = NULL;
 	icon->yindex = -1;
 	icon->xindex = -1;
@@ -3026,8 +2984,6 @@ static void dock_enter_notify(WObjDescriptor *desc, XEvent *event)
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) event;
 
-	assert(event->type == EnterNotify);
-
 	if (desc->parent_type != WCLASS_DOCK_ICON)
 		return;
 
@@ -3091,8 +3047,6 @@ static void dock_leave_notify(WObjDescriptor *desc, XEvent *event)
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) event;
-
-	assert(event->type == LeaveNotify);
 
 	if (desc->parent_type != WCLASS_DOCK_ICON)
 		return;

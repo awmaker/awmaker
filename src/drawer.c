@@ -526,7 +526,6 @@ static void drawer_remove_icons_callback(WMenu *menu, WMenuEntry *entry)
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) menu;
 
-	assert(clickedIcon != NULL);
 	dock = clickedIcon->dock;
 
 	/* This is only for security, to avoid crash in PlaceIcon
@@ -590,14 +589,14 @@ static void drawerConsolidateIcons(WDock *drawer)
 			if (!foundAppIconThere)
 				break;
 		}
-		assert(maxDeleted > 0); // would mean while test is wrong
+
 		n = 0;
 		for (i = 0; i < drawer->max_icons; i++) {
 			ai = drawer->icon_array[i];
 			if (ai != NULL && abs(ai->xindex) > maxDeleted)
 				aicons_to_shift[n++] = ai;
 		}
-		assert(n == maxRemaining - maxDeleted); // for the code review ;-)
+
 		wSlideAppicons(aicons_to_shift, n, !drawer->on_right_side);
 		// Efficient beancounting
 		maxRemaining -= 1;
@@ -630,7 +629,6 @@ void addADrawerCallback(WMenu *menu, WMenuEntry *entry)
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) menu;
 
-	assert(entry->clientdata!=NULL);
 	addADrawer(((WAppIcon *) entry->clientdata)->dock->vscr);
 }
 
@@ -1220,8 +1218,6 @@ Bool drawer_attach_icon(WDock *dock, WAppIcon *icon, int x, int y, Bool update_i
 		if (dock->icon_array[index] == NULL)
 			break;
 
-	assert(index < dock->max_icons);
-
 	dock->icon_array[index] = icon;
 	icon->yindex = y;
 	icon->xindex = x;
@@ -1295,8 +1291,6 @@ void removeDrawerCallback(WMenu *menu, WMenuEntry *entry)
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) menu;
-
-	assert(dock != NULL);
 
 	if (dock->icon_count > 2) {
 		if (wMessageDialog(dock->vscr, _("Drawer"),
@@ -1535,8 +1529,6 @@ Bool drawer_snap_icon(WDock *dock, WAppIcon *icon, int req_x, int req_y, int *re
 			aicons_to_shift[j++] = aicon;
 	}
 
-	assert(j == abs(ex_x - index_of_hole));
-
 	wSlideAppicons(aicons_to_shift, j, (index_of_hole < ex_x));
 
 	*ret_x = ex_x;
@@ -1553,8 +1545,6 @@ void drawer_enter_notify(WObjDescriptor *desc, XEvent *event)
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) event;
-
-	assert(event->type == EnterNotify);
 
 	if (desc->parent_type != WCLASS_DOCK_ICON)
 		return;
@@ -1646,8 +1636,6 @@ void drawer_leave_notify(WObjDescriptor *desc, XEvent *event)
 
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) event;
-
-	assert(event->type == LeaveNotify);
 
 	if (desc->parent_type != WCLASS_DOCK_ICON)
 		return;

@@ -1291,7 +1291,6 @@ WWindow *wGetWindowOfInspectorForWindow(WWindow *wwin_inspected)
 	if (!wwin_inspected->inspector)
 		return NULL;
 
-	assert(wwin_inspected->flags.inspector_open != 0);
 	return wwin_inspected->inspector->wwin;
 }
 

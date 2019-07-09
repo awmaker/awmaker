@@ -592,8 +592,6 @@ static void setIconCallback(WMenu *menu, WMenuEntry *entry)
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) menu;
 
-	assert(icon != NULL);
-
 	if (icon->editing)
 		return;
 
@@ -635,10 +633,7 @@ static void killCallback(WMenu *menu, WMenuEntry *entry)
 
 	WCHANGE_STATE(WSTATE_MODAL);
 
-	assert(entry->clientdata != NULL);
-
 	shortname = basename(wapp->app_icon->wm_instance);
-
 	buffer = wstrconcat(wapp->app_icon ? shortname : NULL,
 			    _(" will be forcibly closed.\n"
 			      "Any unsaved changes will be lost.\n" "Please confirm."));
@@ -764,10 +759,7 @@ static void iconDblClick(WObjDescriptor *desc, XEvent *event)
 	virtual_screen *vscr = aicon->icon->vscr;
 	int unhideHere;
 
-	assert(aicon->icon->owner != NULL);
-
 	wapp = wApplicationOf(aicon->icon->owner->main_window);
-
 	if (event->xbutton.state & ControlMask) {
 		relaunchApplication(wapp);
 		return;

@@ -13,8 +13,6 @@
 #endif
 #include <sys/sysctl.h>
 
-#include <assert.h>
-
 #if defined( OPENBSD )
 #   include <kvm.h>
 #   include <limits.h>	/* _POSIX2_LINE_MAX */
@@ -92,9 +90,6 @@ Bool GetCommandForPid(int pid, char ***argv, int *argc)
 		if (sysctl(mib, 2, &argmax, &count, NULL, 0) == -1)
 			return False;
 	}
-
-	/* if argmax is still 0, something went very seriously wrong */
-	assert( argmax > 0);
 
 	/* space for args; no need to free before returning even on errors */
 	if (args == NULL)
