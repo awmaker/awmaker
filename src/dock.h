@@ -160,6 +160,7 @@ void removeDrawerCallback(WMenu *menu, WMenuEntry *entry);
 void dockKillCallback(WMenu *menu, WMenuEntry *entry);
 void dockUpdateOptionsMenu(WDock *dock, WMenu *menu);
 void handleClipChangeWorkspace(virtual_screen *vscr, XEvent *event);
+void addADrawerCallback(WMenu *menu, WMenuEntry *entry);
 
 void removeIcons(WMArray *icons, WDock *dock);
 void toggleLowered(WDock *dock);
@@ -170,9 +171,30 @@ WMArray *getSelected(WDock *dock);
 
 WDock *dock_create_core(virtual_screen *vscr);
 WDock *drawer_create(virtual_screen *vscr, const char *name);
+WDock *drawerRestoreState(virtual_screen *vscr, WMPropList *drawer_state);
+int addADrawer(virtual_screen *vscr);
+void drawerDestroy(WDock *drawer);
+void set_attacheddocks_map(WDock *dock);
+void set_attacheddocks_unmap(WDock *dock);
+Bool drawer_attach_icon(WDock *dock, WAppIcon *icon, int x, int y, Bool update_icon);
+void swapDrawers(virtual_screen *vscr, int new_x);
+WDock *getDrawer(virtual_screen *vscr, int y_index);
+Bool getBooleanDockValue(WMPropList *value, WMPropList *key);
+Bool drawer_snap_icon(WDock *dock, WAppIcon *icon, int req_x, int req_y, int *ret_x, int *ret_y, int redocking);
+void drawer_leave_notify(WObjDescriptor *desc, XEvent *event);
+void drawer_leave(WDock *dock);
+void drawer_enter_notify(WObjDescriptor *desc, XEvent *event);
+WMPropList *make_icon_state(WAppIcon *btn);
+int indexOfHole(WDock *drawer, WAppIcon *moving_aicon, int redocking);
+void clipAutoRaise(void *cdata);
+void clipAutoExpand(void *cdata);
+void clipAutoLower(void *cdata);
 
+void dock_icon_mouse_down(WObjDescriptor *desc, XEvent *event);
 void clip_icon_mouse_down(WObjDescriptor *desc, XEvent *event);
 void drawer_icon_mouse_down(WObjDescriptor *desc, XEvent *event);
+int onScreen(virtual_screen *vscr, int x, int y);
+void dock_unset_attacheddocks(WDock *dock);
 
 #define CLIP_REWIND       1
 #define CLIP_IDLE         0
