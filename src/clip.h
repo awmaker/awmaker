@@ -47,4 +47,5 @@ void clip_icon_expose(WObjDescriptor *desc, XEvent *event);
 void handleClipChangeWorkspace(virtual_screen *vscr, XEvent *event);
 int getClipButton(int px, int py);
 WMPropList *wClipSaveWorkspaceState(virtual_screen *vscr, int workspace);
+void wClipUpdateForWorkspaceChange(virtual_screen *vscr, int workspace);
 #endif

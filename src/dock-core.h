@@ -94,7 +94,6 @@ int wDockReceiveDNDDrop(virtual_screen *vscr, XEvent *event);
 #endif
 
 
-void wClipUpdateForWorkspaceChange(virtual_screen *vscr, int workspace);
 
 
 #define WO_FAILED          0

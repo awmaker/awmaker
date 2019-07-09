@@ -1861,3 +1861,50 @@ void clip_leave(WDock *dock)
 	if (dock->auto_collapse && !dock->auto_collapse_magic)
 		dock->auto_collapse_magic = WMAddTimerHandler(wPreferences.clip_auto_collapse_delay, clip_autocollapse, (void *)dock);
 }
+
+void wClipUpdateForWorkspaceChange(virtual_screen *vscr, int workspace)
+{
+	WDock *old_clip;
+	WAppIconChain *chain;
+
+	if (wPreferences.flags.noclip)
+		return;
+
+	vscr->clip.icon->dock = vscr->workspace.array[workspace]->clip;
+	if (vscr->workspace.current != workspace) {
+		old_clip = vscr->workspace.array[vscr->workspace.current]->clip;
+		chain = vscr->clip.global_icons;
+
+		while (chain) {
+			wDockMoveIconBetweenDocks(chain->aicon->dock,
+					     vscr->workspace.array[workspace]->clip,
+					     chain->aicon, chain->aicon->xindex, chain->aicon->yindex);
+
+			if (vscr->workspace.array[workspace]->clip->collapsed)
+				XUnmapWindow(dpy, chain->aicon->icon->core->window);
+
+			chain = chain->next;
+		}
+
+		wDockHideIcons(old_clip);
+		if (old_clip->auto_raise_lower) {
+			if (old_clip->auto_raise_magic) {
+				WMDeleteTimerHandler(old_clip->auto_raise_magic);
+				old_clip->auto_raise_magic = NULL;
+			}
+
+			wDockLower(old_clip);
+		}
+
+		if (old_clip->auto_collapse) {
+			if (old_clip->auto_expand_magic) {
+				WMDeleteTimerHandler(old_clip->auto_expand_magic);
+				old_clip->auto_expand_magic = NULL;
+			}
+
+			old_clip->collapsed = 1;
+		}
+
+		wDockShowIcons(vscr->workspace.array[workspace]->clip);
+	}
+}
