@@ -29,7 +29,6 @@ Bool drawer_snap_icon(WDock *dock, WAppIcon *icon, int req_x, int req_y, int *re
 void drawers_autolaunch(int vscrno);
 void wDrawerIconPaint(WAppIcon *aicon);
 RImage *wDrawerMakeTile(virtual_screen *vscr, RImage *normalTile);
-void restore_drawer_position(WDock *drawer, WMPropList *state);
 void drawer_enter_notify(WObjDescriptor *desc, XEvent *event);
 void drawer_leave_notify(WObjDescriptor *desc, XEvent *event);
 void drawer_leave(WDock *dock);
@@ -41,7 +40,6 @@ void wDrawerFillTheGap(WDock *drawer, WAppIcon *aicon, Bool redocking);
 void wDrawersSaveState(virtual_screen *vscr);
 void wDrawersRestoreState(virtual_screen *vscr);
 void wDrawersRestoreState_map(virtual_screen *vscr);
-void drawer_menu(WDock *dock, WAppIcon *aicon, XEvent *event);
 int addADrawer(virtual_screen *vscr);
 void removeDrawerCallback(WMenu *menu, WMenuEntry *entry);
 void addADrawerCallback(WMenu *menu, WMenuEntry *entry);

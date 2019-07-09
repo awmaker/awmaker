@@ -23,13 +23,11 @@
 #define WMCLIP_H_
 
 WDock *clip_create(virtual_screen *vscr, WMPropList *state);
-void clip_destroy(WDock *dock);
 Bool clip_attach_icon(WDock *dock, WAppIcon *icon, int x, int y, Bool update_icon);
 Bool clip_snap_icon(WDock *dock, WAppIcon *icon, int req_x, int req_y, int *ret_x, int *ret_y, int redocking);
 void clip_autolaunch(int vscrno);
 void wClipIconPaint(WAppIcon *aicon);
 RImage *wClipMakeTile(RImage *normalTile);
-void restore_clip_position(WDock *dock, WMPropList *state);
 void clip_enter_notify(WObjDescriptor *desc, XEvent *event);
 void clip_leave_notify(WObjDescriptor *desc, XEvent *event);
 void clip_leave(WDock *dock);
@@ -48,4 +46,5 @@ void handleClipChangeWorkspace(virtual_screen *vscr, XEvent *event);
 int getClipButton(int px, int py);
 WMPropList *wClipSaveWorkspaceState(virtual_screen *vscr, int workspace);
 void wClipUpdateForWorkspaceChange(virtual_screen *vscr, int workspace);
+void clip_destroy(WDock *dock);
 #endif

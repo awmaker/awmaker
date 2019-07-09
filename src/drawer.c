@@ -93,6 +93,7 @@ static void drawerRemoveFromChain(WDock *drawer);
 static WAppIcon *restore_drawer_icon_state(virtual_screen *vscr, WMPropList *info, int index);
 static void drawer_map(WDock *dock, virtual_screen *vscr);
 static void drawer_unmap(WDock *dock);
+static void drawer_menu(WDock *dock, WAppIcon *aicon, XEvent *event);
 
 static char *findUniqueName(virtual_screen *vscr, const char *instance_basename);
 static void drawer_icon_expose(WObjDescriptor *desc, XEvent *event);
@@ -106,6 +107,7 @@ static void drawer_remove_icons_callback(WMenu *menu, WMenuEntry *entry);
 static void drawerRestoreState_map(WDock *drawer);
 static int drawer_set_attacheddocks_do(WDock *dock, WMPropList *apps);
 static void drawer_autocollapse(void *cdata);
+static void restore_drawer_position(WDock *drawer, WMPropList *state);
 static void make_keys(void);
 
 #define COMPLAIN(key) wwarning(_("bad value in dock/drawer state info:%s"), key)
@@ -320,7 +322,7 @@ static void iconDblClick(WObjDescriptor *desc, XEvent *event)
 	}
 }
 
-void drawer_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
+static void drawer_menu(WDock *dock, WAppIcon *aicon, XEvent *event)
 {
 	virtual_screen *vscr = aicon->icon->vscr;
 	WScreen *scr = vscr->screen_ptr;
@@ -1435,7 +1437,7 @@ WDock *getDrawer(virtual_screen *vscr, int y_index)
 	return NULL;
 }
 
-void restore_drawer_position(WDock *drawer, WMPropList *state)
+static void restore_drawer_position(WDock *drawer, WMPropList *state)
 {
 	virtual_screen *vscr = drawer->vscr;
 	WMPropList *value;

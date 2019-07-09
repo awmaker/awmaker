@@ -138,10 +138,9 @@ void set_attacheddocks_unmap(WDock *dock);
 Bool getBooleanDockValue(WMPropList *value, WMPropList *key);
 WMPropList *make_icon_state(WAppIcon *btn);
 void wDockDoAutoLaunch(WDock *dock, int workspace);
-void dock_icon_expose(WObjDescriptor *desc, XEvent *event);
 WMPropList *get_application_list(WMPropList *dock_state, virtual_screen *vscr);
+WMPropList *get_applications_string(virtual_screen *vscr);
 
-void dock_icon_mouse_down(WObjDescriptor *desc, XEvent *event);
 int onScreen(virtual_screen *vscr, int x, int y);
 void dock_unset_attacheddocks(WDock *dock);
 

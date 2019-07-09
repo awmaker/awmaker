@@ -98,6 +98,7 @@ static void clip_button3_menu(WObjDescriptor *desc, XEvent *event);
 static void updateWorkspaceMenu(WMenu *menu, WAppIcon *icon);
 static void clip_autocollapse(void *cdata);
 static void clip_set_attacheddocks(WDock *dock, WMPropList *state);
+static void restore_clip_position(WDock *dock, WMPropList *state);
 static void restore_clip_position_map(WDock *dock);
 static void omnipresentCallback(WMenu *menu, WMenuEntry *entry);
 static void renameCallback(WMenu *menu, WMenuEntry *entry);

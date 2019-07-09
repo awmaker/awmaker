@@ -96,6 +96,8 @@ static void restore_dock_position(WDock *dock, WMPropList *state);
 static int dock_set_attacheddocks_do(WDock *dock, WMPropList *apps);
 static void dock_set_attacheddocks(WDock *dock, WMPropList *state);
 static WAppIcon *restore_dock_icon_state(virtual_screen *vscr, WMPropList *info, int index);
+static WMPropList *dock_save_state(WDock *dock);
+static void save_application_list(WMPropList *state, WMPropList *list, virtual_screen *vscr);
 static void make_keys(void);
 
 static void make_keys(void)
@@ -1023,4 +1025,249 @@ Bool dock_attach_icon(WDock *dock, WAppIcon *icon, int x, int y, Bool update_ico
 	}
 
 	return True;
+}
+
+/*
+ * returns the closest Dock slot index for the passed
+ * coordinates.
+ *
+ * Returns False if icon can't be docked.
+ *
+ * Note: this function should NEVER alter ret_x or ret_y, unless it will
+ * return True. -Dan
+ */
+/* Redocking == true means either icon->dock == dock (normal case)
+ * or we are called from handleDockMove for a drawer */
+Bool dock_snap_icon(WDock *dock, WAppIcon *icon, int req_x, int req_y, int *ret_x, int *ret_y, int redocking)
+{
+	virtual_screen *vscr = dock->vscr;
+	int dx, dy;
+	int ex_x, ex_y;
+	int i, offset = ICON_SIZE / 2;
+	WAppIcon *aicon = NULL;
+	WAppIcon *nicon = NULL;
+
+	if (wPreferences.flags.noupdates)
+		return False;
+
+	dx = dock->x_pos;
+	dy = dock->y_pos;
+
+	/* if the dock is full */
+	if (!redocking && (dock->icon_count >= dock->max_icons))
+		return False;
+
+	/* exact position */
+	if (req_y < dy)
+		ex_y = (req_y - offset - dy) / ICON_SIZE;
+	else
+		ex_y = (req_y + offset - dy) / ICON_SIZE;
+
+	if (req_x < dx)
+		ex_x = (req_x - offset - dx) / ICON_SIZE;
+	else
+		ex_x = (req_x + offset - dx) / ICON_SIZE;
+
+	/* check if the icon is outside the screen boundaries */
+	if (!onScreen(vscr, dx + ex_x * ICON_SIZE, dy + ex_y * ICON_SIZE))
+		return False;
+
+	/* We can return False right away if
+	 * - we do not come from this dock (which is a WM_DOCK),
+	 * - we are not right over it, and
+	 * - we are not the main tile of a drawer.
+	 * In the latter case, we are called from handleDockMove. */
+	if (icon->dock != dock && ex_x != 0 &&
+		!(icon->dock && icon->dock->type == WM_DRAWER && icon == icon->dock->icon_array[0]))
+		return False;
+
+	if (!redocking && ex_x != 0)
+		return False;
+
+	if (getDrawer(vscr, ex_y)) /* Return false so that the drawer gets it. */
+		return False;
+
+	aicon = NULL;
+	for (i = 0; i < dock->max_icons; i++) {
+		nicon = dock->icon_array[i];
+		if (nicon && nicon->yindex == ex_y) {
+			aicon = nicon;
+			break;
+		}
+	}
+
+	if (redocking) {
+		int sig, done, closest;
+
+		/* Possible cases when redocking:
+		 *
+		 * icon dragged out of range of any slot -> false
+		 * icon dragged on a drawer -> false (to open the drawer)
+		 * icon dragged to range of free slot
+		 * icon dragged to range of same slot
+		 * icon dragged to range of different icon
+		 */
+		if (abs(ex_x) > DOCK_DETTACH_THRESHOLD)
+			return False;
+
+		if (aicon == icon || !aicon) {
+			*ret_x = 0;
+			*ret_y = ex_y;
+			return True;
+		}
+
+		/* start looking at the upper slot or lower? */
+		if (ex_y * ICON_SIZE < (req_y + offset - dy))
+			sig = 1;
+		else
+			sig = -1;
+
+		done = 0;
+		/* look for closest free slot */
+		for (i = 0; i < (DOCK_DETTACH_THRESHOLD + 1) * 2 && !done; i++) {
+			int j;
+
+			done = 1;
+			closest = sig * (i / 2) + ex_y;
+			/* check if this slot is fully on the screen and not used */
+			if (onScreen(vscr, dx, dy + closest * ICON_SIZE)) {
+				for (j = 0; j < dock->max_icons; j++) {
+					if (dock->icon_array[j]
+						&& dock->icon_array[j]->yindex == closest) {
+						/* slot is used by someone else */
+						if (dock->icon_array[j] != icon)
+							done = 0;
+						break;
+					}
+				}
+				/* slot is used by a drawer */
+				done = done && !getDrawer(vscr, closest);
+			} else {
+				/* !onScreen */
+				done = 0;
+			}
+
+			sig = -sig;
+		}
+
+		if (done &&
+		    ((ex_y >= closest && ex_y - closest < DOCK_DETTACH_THRESHOLD + 1) ||
+		     (ex_y < closest && closest - ex_y <= DOCK_DETTACH_THRESHOLD + 1))) {
+			*ret_x = 0;
+			*ret_y = closest;
+			return True;
+		}
+	} else {	/* !redocking */
+		/* if slot is free and the icon is close enough, return it */
+		if (!aicon && ex_x == 0) {
+			*ret_x = 0;
+			*ret_y = ex_y;
+			return True;
+		}
+	}
+
+	return False;
+}
+
+void dock_autolaunch(int vscrno)
+{
+	/* auto-launch apps */
+	if (!wPreferences.flags.nodock && w_global.vscreens[vscrno]->dock.dock) {
+		w_global.vscreens[vscrno]->last_dock = w_global.vscreens[vscrno]->dock.dock;
+		wDockDoAutoLaunch(w_global.vscreens[vscrno]->dock.dock, 0);
+	}
+}
+
+void dockIconPaint(WAppIcon *btn)
+{
+	virtual_screen *vscr = btn->icon->vscr;
+
+	if (btn == vscr->clip.icon) {
+		wClipIconPaint(btn);
+	} else if (wIsADrawer(btn)) {
+		wDrawerIconPaint(btn);
+	} else {
+		wAppIconPaint(btn);
+		save_appicon(btn);
+	}
+}
+
+void wDockSaveState(virtual_screen *vscr, WMPropList *old_state)
+{
+	WMPropList *dock_state;
+	WMPropList *keys;
+
+	dock_state = dock_save_state(vscr->dock.dock);
+
+	/* Copy saved states of docks with different sizes. */
+	if (old_state) {
+		int i;
+		WMPropList *tmp;
+
+		keys = WMGetPLDictionaryKeys(old_state);
+		for (i = 0; i < WMGetPropListItemCount(keys); i++) {
+			tmp = WMGetFromPLArray(keys, i);
+			if (strncasecmp(WMGetFromPLString(tmp), "applications", 12) == 0
+			    && !WMGetFromPLDictionary(dock_state, tmp))
+				WMPutInPLDictionary(dock_state, tmp, WMGetFromPLDictionary(old_state, tmp));
+		}
+
+		WMReleasePropList(keys);
+	}
+
+	WMPutInPLDictionary(w_global.session_state, dDock, dock_state);
+	WMReleasePropList(dock_state);
+}
+
+static WMPropList *dock_save_state(WDock *dock)
+{
+	virtual_screen *vscr = dock->vscr;
+	int i;
+	WMPropList *icon_info;
+	WMPropList *list = NULL, *dock_state = NULL;
+	WMPropList *value;
+	char buffer[256];
+
+	list = WMCreatePLArray(NULL);
+
+	for (i = 0; i < dock->max_icons; i++) {
+		WAppIcon *btn = dock->icon_array[i];
+
+		if (!btn || btn->attracted)
+			continue;
+
+		icon_info = make_icon_state(dock->icon_array[i]);
+		if (icon_info != NULL) {
+			WMAddToPLArray(list, icon_info);
+			WMReleasePropList(icon_info);
+		}
+	}
+
+	dock_state = WMCreatePLDictionary(dApplications, list, NULL);
+
+	/* Save with the same screen_id. See get_application_list() */
+	save_application_list(dock_state, list, vscr);
+
+	snprintf(buffer, sizeof(buffer), "%i,%i", (dock->on_right_side ? -ICON_SIZE : 0), dock->y_pos);
+	value = WMCreatePLString(buffer);
+	WMPutInPLDictionary(dock_state, dPosition, value);
+	WMReleasePropList(value);
+	WMReleasePropList(list);
+
+	value = (dock->lowered ? dYes : dNo);
+	WMPutInPLDictionary(dock_state, dLowered, value);
+
+	value = (dock->auto_raise_lower ? dYes : dNo);
+	WMPutInPLDictionary(dock_state, dAutoRaiseLower, value);
+
+	return dock_state;
+}
+
+static void save_application_list(WMPropList *state, WMPropList *list, virtual_screen *vscr)
+{
+	WMPropList *key;
+
+	key = get_applications_string(vscr);
+	WMPutInPLDictionary(state, key, list);
+	WMReleasePropList(key);
 }
