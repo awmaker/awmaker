@@ -185,6 +185,8 @@ void drawer_leave_notify(WObjDescriptor *desc, XEvent *event);
 void drawer_leave(WDock *dock);
 void drawer_enter_notify(WObjDescriptor *desc, XEvent *event);
 WMPropList *make_icon_state(WAppIcon *btn);
+void drawers_autolaunch(int vscrno);
+void wDockDoAutoLaunch(WDock *dock, int workspace);
 int indexOfHole(WDock *drawer, WAppIcon *moving_aicon, int redocking);
 void clipAutoRaise(void *cdata);
 void clipAutoExpand(void *cdata);

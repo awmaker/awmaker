@@ -104,10 +104,8 @@ static void restore_clip_position_map(WDock *dock);
 static void dock_set_attacheddocks(WDock *dock, WMPropList *state);
 static int dock_set_attacheddocks_do(WDock *dock, WMPropList *apps);
 static void clip_set_attacheddocks(WDock *dock, WMPropList *state);
-static void wDockDoAutoLaunch(WDock *dock, int workspace);
 static void dock_autolaunch(int vscrno);
 static void clip_autolaunch(int vscrno);
-static void drawers_autolaunch(int vscrno);
 
 static void make_keys(void)
 {
@@ -1974,18 +1972,6 @@ static void clip_autolaunch(int vscrno)
 	}
 }
 
-static void drawers_autolaunch(int vscrno)
-{
-	/* auto-launch apps in drawers */
-	if (!wPreferences.flags.nodrawer) {
-		WDrawerChain *dc;
-		for (dc = w_global.vscreens[vscrno]->drawer.drawers; dc; dc = dc->next) {
-			w_global.vscreens[vscrno]->last_dock = dc->adrawer;
-			wDockDoAutoLaunch(dc->adrawer, 0);
-		}
-	}
-}
-
 void dockedapps_autolaunch(int vscrno)
 {
 	dock_autolaunch(vscrno);
@@ -1993,7 +1979,7 @@ void dockedapps_autolaunch(int vscrno)
 	drawers_autolaunch(vscrno);
 }
 
-static void wDockDoAutoLaunch(WDock *dock, int workspace)
+void wDockDoAutoLaunch(WDock *dock, int workspace)
 {
 	WAppIcon *btn;
 	WSavedState *state;
@@ -4216,46 +4202,6 @@ static void clip_icon_expose(WObjDescriptor *desc, XEvent *event)
 
 
 
-/* Find the "hole" a moving appicon created when snapped into the
- * drawer. redocking is a boolean. If the moving appicon comes from the
- * drawer, drawer->icon_count is correct. If not, redocking is then false and
- * there are now drawer->icon_count plus one appicons in the drawer. */
-int indexOfHole(WDock *drawer, WAppIcon *moving_aicon, int redocking)
-{
-	int index_of_hole, i;
-
-	/* Classic interview question...
-	 *
-	 * We have n-1 (n = drawer->icon_count-1 or drawer->icon_count, see
-	 * redocking) appicons, whose xindex are unique in [1..n]. One is missing:
-	 * that's where the ghost of the moving appicon is, that's what the
-	 * function should return.
-	 *
-	 * We compute 1+2+...+n (this sum is equal to n*(n+1)/2), we subtract to
-	 * this sum the xindex of each of the n-1 appicons, and we get the correct
-	 * index! */
-
-	if (redocking) {
-		index_of_hole = (drawer->icon_count - 1) * drawer->icon_count / 2;
-	} else {
-		index_of_hole = drawer->icon_count * (drawer->icon_count + 1) / 2;
-	}
-	index_of_hole *= (drawer->on_right_side ? -1 : 1);
-
-	for (i = 1; i < drawer->max_icons; i++) {
-		if (drawer->icon_array[i] && drawer->icon_array[i] != moving_aicon)
-			index_of_hole -= drawer->icon_array[i]->xindex;
-	}
-	/* wmessage(" Index of the moving appicon is %d (%sredocking)", index_of_hole, (redocking ? "" : "not ")); */
-	if (abs(index_of_hole) > abs(drawer->icon_count) - (redocking ? 1 : 0))
-		wwarning(" index_of_hole is too large ! (%d greater than %d)",
-			index_of_hole, abs(drawer->icon_count) - (redocking ? 1 : 0));
-	if (index_of_hole == 0)
-		wwarning(" index_of_hole == 0 (%sredocking, icon_count == %d)", (redocking ? "" : "not "), drawer->icon_count);
-
-	return index_of_hole;
-}
-
 
 void wSlideAppicons(WAppIcon **appicons, int n, int to_the_left)
 {
@@ -4287,24 +4233,4 @@ void wSlideAppicons(WAppIcon **appicons, int n, int to_the_left)
 	slide_windows(wins, n, from_x, aicon->y_pos, aicon->x_pos, aicon->y_pos);
 }
 
-
-void wDrawerFillTheGap(WDock *drawer, WAppIcon *aicon, Bool redocking)
-{
-	int i, j;
-	int index_of_hole = indexOfHole(drawer, aicon, redocking);
-	WAppIcon *aicons_to_shift[drawer->icon_count];
-
-	j = 0;
-	for (i = 0; i < drawer->max_icons; i++) {
-		WAppIcon *ai = drawer->icon_array[i];
-		if (ai && ai != aicon &&
-			abs(ai->xindex) > abs(index_of_hole))
-			aicons_to_shift[j++] = ai;
-	}
-	if (j != drawer->icon_count - abs(index_of_hole) - (redocking ? 1 : 0))
-		wwarning("Removing aicon at index %d from %s: j=%d but should be %d",
-			index_of_hole, drawer->icon_array[0]->wm_instance,
-			j, drawer->icon_count - abs(index_of_hole) - (redocking ? 1 : 0));
-	wSlideAppicons(aicons_to_shift, j, !drawer->on_right_side);
-}
 
