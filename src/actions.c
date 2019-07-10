@@ -1214,7 +1214,7 @@ static void hideWindow(WIcon *icon, int icon_x, int icon_y, WWindow *wwin, int a
 	flushExpose();
 
 	if (animate)
-		animation_hide(wwin, icon_x, icon_y, wPreferences.icon_size, wPreferences.icon_size);
+		animation_hide(wwin, icon_x, icon_y);
 
 	wwin->flags.skip_next_animation = 0;
 	WMPostNotificationName(WMNChangedState, wwin, "hide");
@@ -1371,7 +1371,7 @@ static void unhideWindow(int icon_x, int icon_y, WWindow *wwin, int animate, int
 	wwin->flags.hidden = 0;
 
 	if (animate)
-		animation_unhide(wwin, icon_x, icon_y, wPreferences.icon_size, wPreferences.icon_size);
+		animation_unhide(wwin, icon_x, icon_y);
 
 	wwin->flags.skip_next_animation = 0;
 	if (wwin->vscr->workspace.current == wwin->frame->workspace) {

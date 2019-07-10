@@ -405,21 +405,21 @@ static int getAnimationGeometry(WWindow *wwin, int *ix, int *iy, int *iw, int *i
 	return 1;
 }
 
-void animation_hide(WWindow *wwin, int icon_x, int icon_y, int width, int height)
+void animation_hide(WWindow *wwin, int icon_x, int icon_y)
 {
 
 	if (!w_global.startup.phase1 && !wPreferences.no_animations &&
 	    !wwin->flags.skip_next_animation)
 		animateResize(wwin->vscr, wwin->frame_x, wwin->frame_y,
 			      wwin->frame->width, wwin->frame->height,
-			      icon_x, icon_y, width, height);
+			      icon_x, icon_y, wPreferences.icon_size, wPreferences.icon_size);
 }
 
-void animation_unhide(WWindow *wwin, int icon_x, int icon_y, int width, int height)
+void animation_unhide(WWindow *wwin, int icon_x, int icon_y)
 {
 	if (!w_global.startup.phase1 && !wPreferences.no_animations)
 		animateResize(wwin->vscr, icon_x, icon_y,
-				      width, height,
+				      wPreferences.icon_size, wPreferences.icon_size,
 				      wwin->frame_x, wwin->frame_y,
 				      wwin->frame->width, wwin->frame->height);
 }
