@@ -96,8 +96,6 @@ static int drawer_set_attacheddocks_do(WDock *dock, WMPropList *apps);
 static void drawer_autocollapse(void *cdata);
 static void restore_drawer_position(WDock *drawer, WMPropList *state);
 
-#define COMPLAIN(key) wwarning(_("bad value in dock/drawer state info:%s"), key)
-
 WDock *drawer_create(virtual_screen *vscr, const char *name)
 {
 	WDock *dock;
@@ -1424,10 +1422,10 @@ static void restore_drawer_position(WDock *drawer, WMPropList *state)
 	dPosition = WMCreatePLString("Position");
 	value = WMGetFromPLDictionary(state, dPosition);
 	if (!value || !WMIsPLString(value)) {
-		COMPLAIN("Position");
+		wwarning(_("bad value in drawer state info: Position"));
 	} else {
 		if (sscanf(WMGetFromPLString(value), "%i,%i", &drawer->x_pos, &drawer->y_pos) != 2)
-			COMPLAIN("Position");
+			wwarning(_("bad value in drawer state info: Position"));
 
 		/* check position sanity */
 		if (drawer->x_pos != vscr->dock.dock->x_pos)

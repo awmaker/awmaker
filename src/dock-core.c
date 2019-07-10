@@ -680,10 +680,6 @@ Bool getBooleanDockValue(WMPropList *value, WMPropList *key)
 	return False;
 }
 
-
-
-#define COMPLAIN(key) wwarning(_("bad value in dock/drawer state info:%s"), key)
-
 /* restore lowered/raised state */
 void restore_state_lowered(WDock *dock, WMPropList *state)
 {
@@ -698,7 +694,7 @@ void restore_state_lowered(WDock *dock, WMPropList *state)
 	value = WMGetFromPLDictionary(state, dLowered);
 	if (value) {
 		if (!WMIsPLString(value)) {
-			COMPLAIN("Lowered");
+			wwarning(_("bad value in dock/drawer state info: Lowered"));
 		} else {
 			if (strcasecmp(WMGetFromPLString(value), "YES") == 0)
 				dock->lowered = 1;
@@ -720,7 +716,7 @@ void restore_state_collapsed(WDock *dock, WMPropList *state)
 	value = WMGetFromPLDictionary(state, dCollapsed);
 	if (value) {
 		if (!WMIsPLString(value)) {
-			COMPLAIN("Collapsed");
+			wwarning(_("bad value in dock/drawer state info: Collapsed"));
 		} else {
 			if (strcasecmp(WMGetFromPLString(value), "YES") == 0)
 				dock->collapsed = 1;
@@ -743,7 +739,7 @@ int restore_state_autocollapsed(WDock *dock, WMPropList *state)
 		return 0;
 
 	if (!WMIsPLString(value)) {
-		COMPLAIN("AutoCollapse");
+			wwarning(_("bad value in dock/drawer state info: AutoCollapse"));
 	} else {
 		if (strcasecmp(WMGetFromPLString(value), "YES") == 0) {
 			dock->auto_collapse = 1;
@@ -769,7 +765,7 @@ void restore_state_autoraise(WDock *dock, WMPropList *state)
 		return;
 
 	if (!WMIsPLString(value)) {
-		COMPLAIN("AutoRaiseLower");
+			wwarning(_("bad value in dock/drawer state info: AutoRaiseLower"));
 	} else {
 		if (strcasecmp(WMGetFromPLString(value), "YES") == 0)
 			dock->auto_raise_lower = 1;
@@ -793,7 +789,7 @@ int restore_state_autoattracticons(WDock *dock, WMPropList *state)
 		return 0;
 
 	if (!WMIsPLString(value)) {
-		COMPLAIN("AutoAttractIcons");
+			wwarning(_("bad value in dock/drawer state info: AutoAttractIcons"));
 	} else {
 		if (strcasecmp(WMGetFromPLString(value), "YES") == 0) {
 			dock->attract_icons = 1;

@@ -61,8 +61,6 @@
 #include "xdnd.h"
 #endif
 
-#define COMPLAIN(key) wwarning(_("bad value in dock/drawer state info:%s"), key)
-
 enum
 {
 	DM_DOCKPOSSUBMENU,
@@ -613,10 +611,10 @@ static void restore_dock_position(WDock *dock, WMPropList *state)
 	value = WMGetFromPLDictionary(state, dPosition);
 	if (value) {
 		if (!WMIsPLString(value)) {
-			COMPLAIN("Position");
+				wwarning(_("bad value in dock state info: Position"));
 		} else {
 			if (sscanf(WMGetFromPLString(value), "%i,%i", &dock->x_pos, &dock->y_pos) != 2)
-				COMPLAIN("Position");
+				wwarning(_("bad value in dock state info: Position"));
 
 			/* check position sanity */
 			if (!onScreen(vscr, dock->x_pos, dock->y_pos)) {
