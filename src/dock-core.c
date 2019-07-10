@@ -75,57 +75,9 @@ enum
 	OM_AUTOATTRACT
 };
 
-/***** Local variables ****/
-static WMPropList *dCommand = NULL;
-static WMPropList *dPasteCommand = NULL;
-#ifdef USE_DOCK_XDND			/* XXX was OFFIX */
-static WMPropList *dDropCommand = NULL;
-#endif
-static WMPropList *dAutoLaunch, *dLock;
-static WMPropList *dName, *dForced, *dBuggyApplication, *dYes, *dNo;
-static WMPropList *dHost, *dDock;
-static WMPropList *dAutoAttractIcons;
-static WMPropList *dPosition, *dApplications, *dLowered, *dCollapsed;
-static WMPropList *dAutoCollapse, *dAutoRaiseLower, *dOmnipresent;
-static WMPropList *dDrawers = NULL;
-
 static pid_t execCommand(WAppIcon *btn, const char *command, WSavedState *state);
 static void trackDeadProcess(pid_t pid, unsigned int status, WDock *dock);
 static void moveDock(WDock *dock, int new_x, int new_y);
-static void make_keys(void);
-
-static void make_keys(void)
-{
-	if (dCommand != NULL)
-		return;
-
-	dCommand = WMRetainPropList(WMCreatePLString("Command"));
-	dPasteCommand = WMRetainPropList(WMCreatePLString("PasteCommand"));
-#ifdef USE_DOCK_XDND
-	dDropCommand = WMRetainPropList(WMCreatePLString("DropCommand"));
-#endif
-	dLock = WMRetainPropList(WMCreatePLString("Lock"));
-	dAutoLaunch = WMRetainPropList(WMCreatePLString("AutoLaunch"));
-	dName = WMRetainPropList(WMCreatePLString("Name"));
-	dForced = WMRetainPropList(WMCreatePLString("Forced"));
-	dBuggyApplication = WMRetainPropList(WMCreatePLString("BuggyApplication"));
-	dYes = WMRetainPropList(WMCreatePLString("Yes"));
-	dNo = WMRetainPropList(WMCreatePLString("No"));
-	dHost = WMRetainPropList(WMCreatePLString("Host"));
-
-	dPosition = WMCreatePLString("Position");
-	dApplications = WMCreatePLString("Applications");
-	dLowered = WMCreatePLString("Lowered");
-	dCollapsed = WMCreatePLString("Collapsed");
-	dAutoCollapse = WMCreatePLString("AutoCollapse");
-	dAutoRaiseLower = WMCreatePLString("AutoRaiseLower");
-	dAutoAttractIcons = WMCreatePLString("AutoAttractIcons");
-
-	dOmnipresent = WMCreatePLString("Omnipresent");
-
-	dDock = WMCreatePLString("Dock");
-	dDrawers = WMCreatePLString("Drawers");
-}
 
 void toggleLoweredCallback(WMenu *menu, WMenuEntry *entry)
 {
@@ -642,12 +594,12 @@ WMPropList *make_icon_state(WAppIcon *btn)
 {
 	virtual_screen *vscr = btn->icon->vscr;
 	WMPropList *node = NULL;
-	WMPropList *command, *autolaunch, *lock, *name, *forced;
+	WMPropList *dCommand, *dName, *dAutoLaunch, *dLock, *dForced, *dYes, *dNo;
+	WMPropList *dBuggyApplication, *dPosition, *dOmnipresent, *dPasteCommand;
+	WMPropList *command, *name, *autolaunch, *lock, *forced;
 	WMPropList *position, *buggy, *omnipresent;
 	char *tmp;
 	char buffer[64];
-
-	make_keys();
 
 	if (btn) {
 		if (!btn->command)
@@ -655,26 +607,30 @@ WMPropList *make_icon_state(WAppIcon *btn)
 		else
 			command = WMCreatePLString(btn->command);
 
+		dYes = WMRetainPropList(WMCreatePLString("Yes"));
+		dNo = WMRetainPropList(WMCreatePLString("No"));
 		autolaunch = btn->auto_launch ? dYes : dNo;
-
 		lock = btn->lock ? dYes : dNo;
 
 		tmp = EscapeWM_CLASS(btn->wm_instance, btn->wm_class);
-
 		name = WMCreatePLString(tmp);
-
 		wfree(tmp);
 
 		forced = btn->forced_dock ? dYes : dNo;
-
 		buggy = btn->buggy_app ? dYes : dNo;
-
 		if (!wPreferences.flags.clip_merged_in_dock && btn == vscr->clip.icon)
 			snprintf(buffer, sizeof(buffer), "%i,%i", btn->x_pos, btn->y_pos);
 		else
 			snprintf(buffer, sizeof(buffer), "%hi,%hi", btn->xindex, btn->yindex);
-		position = WMCreatePLString(buffer);
 
+		position = WMCreatePLString(buffer);
+		dCommand = WMRetainPropList(WMCreatePLString("Command"));
+		dName = WMRetainPropList(WMCreatePLString("Name"));
+		dAutoLaunch = WMRetainPropList(WMCreatePLString("AutoLaunch"));
+		dLock = WMRetainPropList(WMCreatePLString("Lock"));
+		dForced = WMRetainPropList(WMCreatePLString("Forced"));
+		dBuggyApplication = WMRetainPropList(WMCreatePLString("BuggyApplication"));
+		dPosition = WMCreatePLString("Position");
 		node = WMCreatePLDictionary(dCommand, command,
 					    dName, name,
 					    dAutoLaunch, autolaunch,
@@ -684,11 +640,14 @@ WMPropList *make_icon_state(WAppIcon *btn)
 		WMReleasePropList(name);
 		WMReleasePropList(position);
 
+		dOmnipresent = WMCreatePLString("Omnipresent");
 		omnipresent = btn->omnipresent ? dYes : dNo;
 		if (btn->dock != vscr->dock.dock && (btn->xindex != 0 || btn->yindex != 0))
 			WMPutInPLDictionary(node, dOmnipresent, omnipresent);
 
-#ifdef USE_DOCK_XDND			/* was OFFIX */
+#ifdef USE_DOCK_XDND
+		WMPropList *dDropCommand;
+		dDropCommand = WMRetainPropList(WMCreatePLString("DropCommand"));
 		if (btn->dnd_command) {
 			command = WMCreatePLString(btn->dnd_command);
 			WMPutInPLDictionary(node, dDropCommand, command);
@@ -697,6 +656,7 @@ WMPropList *make_icon_state(WAppIcon *btn)
 #endif
 
 		if (btn->paste_command) {
+			dPasteCommand = WMRetainPropList(WMCreatePLString("PasteCommand"));
 			command = WMCreatePLString(btn->paste_command);
 			WMPutInPLDictionary(node, dPasteCommand, command);
 			WMReleasePropList(command);
@@ -727,13 +687,14 @@ Bool getBooleanDockValue(WMPropList *value, WMPropList *key)
 /* restore lowered/raised state */
 void restore_state_lowered(WDock *dock, WMPropList *state)
 {
-	WMPropList *value;
+	WMPropList *value, *dLowered;
 
 	dock->lowered = 0;
 
 	if (!state)
 		return;
 
+	dLowered = WMCreatePLString("Lowered");
 	value = WMGetFromPLDictionary(state, dLowered);
 	if (value) {
 		if (!WMIsPLString(value)) {
@@ -748,15 +709,14 @@ void restore_state_lowered(WDock *dock, WMPropList *state)
 /* restore collapsed state */
 void restore_state_collapsed(WDock *dock, WMPropList *state)
 {
-	WMPropList *value;
-
-	make_keys();
+	WMPropList *value, *dCollapsed;
 
 	dock->collapsed = 0;
 
 	if (!state)
 		return;
 
+	dCollapsed = WMCreatePLString("Collapsed");
 	value = WMGetFromPLDictionary(state, dCollapsed);
 	if (value) {
 		if (!WMIsPLString(value)) {
@@ -771,12 +731,13 @@ void restore_state_collapsed(WDock *dock, WMPropList *state)
 /* restore auto-collapsed state */
 int restore_state_autocollapsed(WDock *dock, WMPropList *state)
 {
-	WMPropList *value;
+	WMPropList *value, *dAutoCollapse;
 	int ret = 0;
 
 	if (!state)
 		return 0;
 
+	dAutoCollapse = WMCreatePLString("AutoCollapse");
 	value = WMGetFromPLDictionary(state, dAutoCollapse);
 	if (!value)
 		return 0;
@@ -797,11 +758,12 @@ int restore_state_autocollapsed(WDock *dock, WMPropList *state)
 /* restore auto-raise/lower state */
 void restore_state_autoraise(WDock *dock, WMPropList *state)
 {
-	WMPropList *value;
+	WMPropList *value, *dAutoRaiseLower;
 
 	if (!state)
 		return;
 
+	dAutoRaiseLower = WMCreatePLString("AutoRaiseLower");
 	value = WMGetFromPLDictionary(state, dAutoRaiseLower);
 	if (!value)
 		return;
@@ -817,7 +779,7 @@ void restore_state_autoraise(WDock *dock, WMPropList *state)
 /* restore attract icons state */
 int restore_state_autoattracticons(WDock *dock, WMPropList *state)
 {
-	WMPropList *value;
+	WMPropList *value, *dAutoAttractIcons;
 	int ret = 0;
 
 	dock->attract_icons = 0;
@@ -825,6 +787,7 @@ int restore_state_autoattracticons(WDock *dock, WMPropList *state)
 	if (!state)
 		return 0;
 
+	dAutoAttractIcons = WMCreatePLString("AutoAttractIcons");
 	value = WMGetFromPLDictionary(state, dAutoAttractIcons);
 	if (!value)
 		return 0;
@@ -854,7 +817,7 @@ WMPropList *get_applications_string(virtual_screen *vscr)
 
 WMPropList *get_application_list(WMPropList *dock_state, virtual_screen *vscr)
 {
-	WMPropList *key, *apps;
+	WMPropList *key, *apps, *dApplications;
 
 	/*
 	 * When saving, it saves the dock state in
@@ -867,8 +830,10 @@ WMPropList *get_application_list(WMPropList *dock_state, virtual_screen *vscr)
 	apps = WMGetFromPLDictionary(dock_state, key);
 	WMReleasePropList(key);
 
-	if (!apps)
+	if (!apps) {
+		dApplications = WMCreatePLString("Applications");
 		apps = WMGetFromPLDictionary(dock_state, dApplications);
+	}
 
 	return apps;
 }
