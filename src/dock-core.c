@@ -601,71 +601,71 @@ WMPropList *make_icon_state(WAppIcon *btn)
 	char *tmp;
 	char buffer[64];
 
-	if (btn) {
-		if (!btn->command)
-			command = WMCreatePLString("-");
-		else
-			command = WMCreatePLString(btn->command);
+	if (!btn)
+		return NULL;
 
-		dYes = WMRetainPropList(WMCreatePLString("Yes"));
-		dNo = WMRetainPropList(WMCreatePLString("No"));
-		autolaunch = btn->auto_launch ? dYes : dNo;
-		lock = btn->lock ? dYes : dNo;
+	if (!btn->command)
+		command = WMCreatePLString("-");
+	else
+		command = WMCreatePLString(btn->command);
 
-		tmp = EscapeWM_CLASS(btn->wm_instance, btn->wm_class);
-		name = WMCreatePLString(tmp);
-		wfree(tmp);
+	dYes = WMRetainPropList(WMCreatePLString("Yes"));
+	dNo = WMRetainPropList(WMCreatePLString("No"));
+	autolaunch = btn->auto_launch ? dYes : dNo;
+	lock = btn->lock ? dYes : dNo;
 
-		forced = btn->forced_dock ? dYes : dNo;
-		buggy = btn->buggy_app ? dYes : dNo;
-		if (!wPreferences.flags.clip_merged_in_dock && btn == vscr->clip.icon)
-			snprintf(buffer, sizeof(buffer), "%i,%i", btn->x_pos, btn->y_pos);
-		else
-			snprintf(buffer, sizeof(buffer), "%hi,%hi", btn->xindex, btn->yindex);
+	tmp = EscapeWM_CLASS(btn->wm_instance, btn->wm_class);
+	name = WMCreatePLString(tmp);
+	wfree(tmp);
 
-		position = WMCreatePLString(buffer);
-		dCommand = WMRetainPropList(WMCreatePLString("Command"));
-		dName = WMRetainPropList(WMCreatePLString("Name"));
-		dAutoLaunch = WMRetainPropList(WMCreatePLString("AutoLaunch"));
-		dLock = WMRetainPropList(WMCreatePLString("Lock"));
-		dForced = WMRetainPropList(WMCreatePLString("Forced"));
-		dBuggyApplication = WMRetainPropList(WMCreatePLString("BuggyApplication"));
-		dPosition = WMCreatePLString("Position");
-		node = WMCreatePLDictionary(dCommand, command,
-					    dName, name,
-					    dAutoLaunch, autolaunch,
-					    dLock, lock,
-					    dForced, forced, dBuggyApplication, buggy, dPosition, position, NULL);
-		WMReleasePropList(command);
-		WMReleasePropList(name);
-		WMReleasePropList(position);
+	forced = btn->forced_dock ? dYes : dNo;
+	buggy = btn->buggy_app ? dYes : dNo;
+	if (!wPreferences.flags.clip_merged_in_dock && btn == vscr->clip.icon)
+		snprintf(buffer, sizeof(buffer), "%i,%i", btn->x_pos, btn->y_pos);
+	else
+		snprintf(buffer, sizeof(buffer), "%hi,%hi", btn->xindex, btn->yindex);
 
-		dOmnipresent = WMCreatePLString("Omnipresent");
-		omnipresent = btn->omnipresent ? dYes : dNo;
-		if (btn->dock != vscr->dock.dock && (btn->xindex != 0 || btn->yindex != 0))
-			WMPutInPLDictionary(node, dOmnipresent, omnipresent);
+	position = WMCreatePLString(buffer);
+	dCommand = WMRetainPropList(WMCreatePLString("Command"));
+	dName = WMRetainPropList(WMCreatePLString("Name"));
+	dAutoLaunch = WMRetainPropList(WMCreatePLString("AutoLaunch"));
+	dLock = WMRetainPropList(WMCreatePLString("Lock"));
+	dForced = WMRetainPropList(WMCreatePLString("Forced"));
+	dBuggyApplication = WMRetainPropList(WMCreatePLString("BuggyApplication"));
+	dPosition = WMCreatePLString("Position");
+	node = WMCreatePLDictionary(dCommand, command,
+				    dName, name,
+				    dAutoLaunch, autolaunch,
+				    dLock, lock,
+				    dForced, forced, dBuggyApplication, buggy, dPosition, position, NULL);
+	WMReleasePropList(command);
+	WMReleasePropList(name);
+	WMReleasePropList(position);
+
+	dOmnipresent = WMCreatePLString("Omnipresent");
+	omnipresent = btn->omnipresent ? dYes : dNo;
+	if (btn->dock != vscr->dock.dock && (btn->xindex != 0 || btn->yindex != 0))
+		WMPutInPLDictionary(node, dOmnipresent, omnipresent);
 
 #ifdef USE_DOCK_XDND
-		WMPropList *dDropCommand;
-		dDropCommand = WMRetainPropList(WMCreatePLString("DropCommand"));
-		if (btn->dnd_command) {
-			command = WMCreatePLString(btn->dnd_command);
-			WMPutInPLDictionary(node, dDropCommand, command);
-			WMReleasePropList(command);
-		}
+	WMPropList *dDropCommand;
+	dDropCommand = WMRetainPropList(WMCreatePLString("DropCommand"));
+	if (btn->dnd_command) {
+		command = WMCreatePLString(btn->dnd_command);
+		WMPutInPLDictionary(node, dDropCommand, command);
+		WMReleasePropList(command);
+	}
 #endif
 
-		if (btn->paste_command) {
-			dPasteCommand = WMRetainPropList(WMCreatePLString("PasteCommand"));
-			command = WMCreatePLString(btn->paste_command);
-			WMPutInPLDictionary(node, dPasteCommand, command);
-			WMReleasePropList(command);
-		}
+	if (btn->paste_command) {
+		dPasteCommand = WMRetainPropList(WMCreatePLString("PasteCommand"));
+		command = WMCreatePLString(btn->paste_command);
+		WMPutInPLDictionary(node, dPasteCommand, command);
+		WMReleasePropList(command);
 	}
 
 	return node;
 }
-
 
 Bool getBooleanDockValue(WMPropList *value, WMPropList *key)
 {
