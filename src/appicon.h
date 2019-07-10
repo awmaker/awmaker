@@ -58,7 +58,6 @@ typedef struct WAppIcon {
 	unsigned int relaunching:1;	 /* launching 2nd instance */
 	unsigned int forced_dock:1;
 	unsigned int auto_launch:1;	 /* launch app on startup */
-	unsigned int remote_start:1;
 	unsigned int updated:1;
 	unsigned int editing:1;		 /* editing docked icon */
 	unsigned int drop_launch:1;	 /* launching from drop action */
