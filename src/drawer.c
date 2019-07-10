@@ -76,19 +76,6 @@ enum
 	RM_KILL
 };
 
-/***** Local variables ****/
-static WMPropList *dCommand = NULL;
-static WMPropList *dPasteCommand = NULL;
-#ifdef USE_DOCK_XDND			/* XXX was OFFIX */
-static WMPropList *dDropCommand = NULL;
-#endif
-static WMPropList *dAutoLaunch, *dLock;
-static WMPropList *dName, *dForced, *dBuggyApplication, *dYes, *dNo;
-static WMPropList *dHost, *dDock;
-static WMPropList *dAutoAttractIcons;
-static WMPropList *dPosition, *dApplications, *dLowered, *dCollapsed;
-static WMPropList *dAutoCollapse, *dAutoRaiseLower, *dOmnipresent;
-static WMPropList *dDrawers = NULL;
 static void drawerRemoveFromChain(WDock *drawer);
 static WAppIcon *restore_drawer_icon_state(virtual_screen *vscr, WMPropList *info, int index);
 static void drawer_map(WDock *dock, virtual_screen *vscr);
@@ -108,48 +95,14 @@ static void drawerRestoreState_map(WDock *drawer);
 static int drawer_set_attacheddocks_do(WDock *dock, WMPropList *apps);
 static void drawer_autocollapse(void *cdata);
 static void restore_drawer_position(WDock *drawer, WMPropList *state);
-static void make_keys(void);
 
 #define COMPLAIN(key) wwarning(_("bad value in dock/drawer state info:%s"), key)
 
-static void make_keys(void)
-{
-	if (dCommand != NULL)
-		return;
-
-	dCommand = WMRetainPropList(WMCreatePLString("Command"));
-	dPasteCommand = WMRetainPropList(WMCreatePLString("PasteCommand"));
-#ifdef USE_DOCK_XDND
-	dDropCommand = WMRetainPropList(WMCreatePLString("DropCommand"));
-#endif
-	dLock = WMRetainPropList(WMCreatePLString("Lock"));
-	dAutoLaunch = WMRetainPropList(WMCreatePLString("AutoLaunch"));
-	dName = WMRetainPropList(WMCreatePLString("Name"));
-	dForced = WMRetainPropList(WMCreatePLString("Forced"));
-	dBuggyApplication = WMRetainPropList(WMCreatePLString("BuggyApplication"));
-	dYes = WMRetainPropList(WMCreatePLString("Yes"));
-	dNo = WMRetainPropList(WMCreatePLString("No"));
-	dHost = WMRetainPropList(WMCreatePLString("Host"));
-
-	dPosition = WMCreatePLString("Position");
-	dApplications = WMCreatePLString("Applications");
-	dLowered = WMCreatePLString("Lowered");
-	dCollapsed = WMCreatePLString("Collapsed");
-	dAutoCollapse = WMCreatePLString("AutoCollapse");
-	dAutoRaiseLower = WMCreatePLString("AutoRaiseLower");
-	dAutoAttractIcons = WMCreatePLString("AutoAttractIcons");
-
-	dOmnipresent = WMCreatePLString("Omnipresent");
-
-	dDock = WMCreatePLString("Dock");
-	dDrawers = WMCreatePLString("Drawers");
-}
 WDock *drawer_create(virtual_screen *vscr, const char *name)
 {
 	WDock *dock;
 	WAppIcon *btn;
 
-	make_keys();
 	dock = dock_create_core(vscr);
 
 	/* Set basic variables */
@@ -611,14 +564,13 @@ static void drawerConsolidateIcons(WDock *drawer)
 
 void wDrawersRestoreState(virtual_screen *vscr)
 {
-	WMPropList *all_drawers, *drawer_state;
+	WMPropList *all_drawers, *drawer_state, *dDrawers;
 	int i;
-
-	make_keys();
 
 	if (w_global.session_state == NULL)
 		return;
 
+	dDrawers = WMCreatePLString("Drawers");
 	all_drawers = WMGetFromPLDictionary(w_global.session_state, dDrawers);
 	if (!all_drawers)
 		return;
@@ -769,25 +721,28 @@ WDock *drawerRestoreState(virtual_screen *vscr, WMPropList *drawer_state)
 {
 	WDock *drawer;
 	WMPropList *apps, *value, *dock_state;
+	WMPropList *dDock, *dPasteCommand, *dName, *dApplications;
 
 	if (!drawer_state)
 		return NULL;
 
-	make_keys();
-
 	WMRetainPropList(drawer_state);
 
 	/* Get the instance name, and create a drawer */
+	dName = WMRetainPropList(WMCreatePLString("Name"));
 	value = WMGetFromPLDictionary(drawer_state, dName);
 	drawer = drawer_create(vscr, WMGetFromPLString(value));
 
 	/* restore DnD command and paste command */
 #ifdef USE_DOCK_XDND
+	WMPropList *dDropCommand = NULL;
+	dDropCommand = WMRetainPropList(WMCreatePLString("DropCommand"));
 	value = WMGetFromPLDictionary(drawer_state, dDropCommand);
 	if (value && WMIsPLString(value))
 		drawer->icon_array[0]->dnd_command = wstrdup(WMGetFromPLString(value));
 #endif /* USE_DOCK_XDND */
 
+	dPasteCommand = WMRetainPropList(WMCreatePLString("PasteCommand"));
 	value = WMGetFromPLDictionary(drawer_state, dPasteCommand);
 	if (value && WMIsPLString(value))
 		drawer->icon_array[0]->paste_command = wstrdup(WMGetFromPLString(value));
@@ -796,6 +751,7 @@ WDock *drawerRestoreState(virtual_screen *vscr, WMPropList *drawer_state)
 	restore_drawer_position(drawer, drawer_state);
 
 	/* restore dock properties (applist and others) */
+	dDock = WMCreatePLString("Dock");
 	dock_state = WMGetFromPLDictionary(drawer_state, dDock);
 
 	/* restore collapsed state */
@@ -815,6 +771,7 @@ WDock *drawerRestoreState(virtual_screen *vscr, WMPropList *drawer_state)
 		vscr->drawer.attracting_drawer = drawer;
 
 	/* application list */
+	dApplications = WMCreatePLString("Applications");
 	apps = WMGetFromPLDictionary(dock_state, dApplications);
 	if (apps)
 		drawer_set_attacheddocks_do(drawer, apps);
@@ -854,39 +811,46 @@ static void drawerRestoreState_map(WDock *drawer)
 static WMPropList *drawerSaveState(WDock *drawer)
 {
 	WMPropList *pstr, *drawer_state;
+	WMPropList *dDock, *dPasteCommand, *dName, *dPosition;
 	WAppIcon *ai;
 	char buffer[64];
 
 	ai = drawer->icon_array[0];
 	/* Store its name */
 	pstr = WMCreatePLString(ai->wm_instance);
+	dName = WMRetainPropList(WMCreatePLString("Name"));
 	drawer_state = WMCreatePLDictionary(dName, pstr, NULL); /* we need this final NULL */
 	WMReleasePropList(pstr);
 
 	/* Store its position */
 	snprintf(buffer, sizeof(buffer), "%i,%i", ai->x_pos, ai->y_pos);
 	pstr = WMCreatePLString(buffer);
+	dPosition = WMCreatePLString("Position");
 	WMPutInPLDictionary(drawer_state, dPosition, pstr);
 	WMReleasePropList(pstr);
 
 #ifdef USE_DOCK_XDND
+	WMPropList *dDropCommand = NULL;
 	/* Store its DnD command */
 	if (ai->dnd_command) {
 		pstr = WMCreatePLString(ai->dnd_command);
+		dDropCommand = WMRetainPropList(WMCreatePLString("DropCommand"));
 		WMPutInPLDictionary(drawer_state, dDropCommand, pstr);
 		WMReleasePropList(pstr);
 	}
-#endif /* USE_DOCK_XDND */
+#endif
 
 	/* Store its paste command */
 	if (ai->paste_command) {
 		pstr = WMCreatePLString(ai->paste_command);
+		dPasteCommand = WMRetainPropList(WMCreatePLString("PasteCommand"));
 		WMPutInPLDictionary(drawer_state, dPasteCommand, pstr);
 		WMReleasePropList(pstr);
 	}
 
 	/* Store applications list and other properties */
 	pstr = drawer_save_state(drawer);
+	dDock = WMCreatePLString("Dock");
 	WMPutInPLDictionary(drawer_state, dDock, pstr);
 	WMReleasePropList(pstr);
 
@@ -896,11 +860,9 @@ static WMPropList *drawerSaveState(WDock *drawer)
 
 void wDrawersSaveState(virtual_screen *vscr)
 {
-	WMPropList *all_drawers, *drawer_state;
+	WMPropList *all_drawers, *drawer_state, *dDrawers;
 	int i;
 	WDrawerChain *dc;
-
-	make_keys();
 
 	all_drawers = WMCreatePLArray(NULL);
 	for (i=0, dc = vscr->drawer.drawers;
@@ -911,6 +873,7 @@ void wDrawersSaveState(virtual_screen *vscr)
 		WMReleasePropList(drawer_state);
 	}
 
+	dDrawers = WMCreatePLString("Drawers");
 	WMPutInPLDictionary(w_global.session_state, dDrawers, all_drawers);
 	WMReleasePropList(all_drawers);
 }
@@ -985,13 +948,17 @@ static WAppIcon *restore_drawer_icon_state(virtual_screen *vscr, WMPropList *inf
 {
 	WAppIcon *aicon;
 	WMPropList *cmd, *value;
+	WMPropList *dCommand, *dPasteCommand, *dLock, *dOmnipresent;
+	WMPropList *dName, *dForced, *dBuggyApplication, *dPosition, *dAutoLaunch;
 	char *wclass, *winstance, *command;
 
+	dCommand = WMRetainPropList(WMCreatePLString("Command"));
 	cmd = WMGetFromPLDictionary(info, dCommand);
 	if (!cmd || !WMIsPLString(cmd))
 		return NULL;
 
 	/* parse window name */
+	dName = WMRetainPropList(WMCreatePLString("Name"));
 	value = WMGetFromPLDictionary(info, dName);
 	if (!value)
 		return NULL;
@@ -1033,37 +1000,41 @@ static WAppIcon *restore_drawer_icon_state(virtual_screen *vscr, WMPropList *inf
 	aicon->icon->core->descriptor.parent_type = WCLASS_DOCK_ICON;
 	aicon->icon->core->descriptor.parent = aicon;
 
-#ifdef USE_DOCK_XDND			/* was OFFIX */
+#ifdef USE_DOCK_XDND
+	WMPropList *dDropCommand = NULL;
+	dDropCommand = WMRetainPropList(WMCreatePLString("DropCommand"));
 	cmd = WMGetFromPLDictionary(info, dDropCommand);
 	if (cmd)
 		aicon->dnd_command = wstrdup(WMGetFromPLString(cmd));
 #endif
 
+	dPasteCommand = WMRetainPropList(WMCreatePLString("PasteCommand"));
 	cmd = WMGetFromPLDictionary(info, dPasteCommand);
 	if (cmd)
 		aicon->paste_command = wstrdup(WMGetFromPLString(cmd));
 
 	/* check auto launch */
+	dAutoLaunch = WMRetainPropList(WMCreatePLString("AutoLaunch"));
 	value = WMGetFromPLDictionary(info, dAutoLaunch);
-
 	aicon->auto_launch = getBooleanDockValue(value, dAutoLaunch);
 
 	/* check lock */
+	dLock = WMRetainPropList(WMCreatePLString("Lock"));
 	value = WMGetFromPLDictionary(info, dLock);
-
 	aicon->lock = getBooleanDockValue(value, dLock);
 
 	/* check if it wasn't normally docked */
+	dForced = WMRetainPropList(WMCreatePLString("Forced"));
 	value = WMGetFromPLDictionary(info, dForced);
-
 	aicon->forced_dock = getBooleanDockValue(value, dForced);
 
 	/* check if we can rely on the stuff in the app */
+	dBuggyApplication = WMRetainPropList(WMCreatePLString("BuggyApplication"));
 	value = WMGetFromPLDictionary(info, dBuggyApplication);
-
 	aicon->buggy_app = getBooleanDockValue(value, dBuggyApplication);
 
 	/* get position in the dock */
+	dPosition = WMCreatePLString("Position");
 	value = WMGetFromPLDictionary(info, dPosition);
 	if (value && WMIsPLString(value)) {
 		if (sscanf(WMGetFromPLString(value), "%hi,%hi", &aicon->xindex, &aicon->yindex) != 2)
@@ -1074,8 +1045,8 @@ static WAppIcon *restore_drawer_icon_state(virtual_screen *vscr, WMPropList *inf
 	}
 
 	/* check if icon is omnipresent */
+	dOmnipresent = WMCreatePLString("Omnipresent");
 	value = WMGetFromPLDictionary(info, dOmnipresent);
-
 	aicon->omnipresent = getBooleanDockValue(value, dOmnipresent);
 
 	aicon->running = 0;
@@ -1089,7 +1060,8 @@ static WMPropList *drawer_save_state(WDock *dock)
 	int i;
 	WMPropList *icon_info;
 	WMPropList *list = NULL, *dock_state = NULL;
-	WMPropList *value;
+	WMPropList *value, *dYes, *dNo;
+	WMPropList *dApplications, *dCollapsed, *dAutoAttractIcons, *dAutoCollapse;
 
 	list = WMCreatePLArray(NULL);
 
@@ -1106,16 +1078,22 @@ static WMPropList *drawer_save_state(WDock *dock)
 		}
 	}
 
+	dApplications = WMCreatePLString("Applications");
 	dock_state = WMCreatePLDictionary(dApplications, list, NULL);
 	WMReleasePropList(list);
 
+	dYes = WMRetainPropList(WMCreatePLString("Yes"));
+	dNo = WMRetainPropList(WMCreatePLString("No"));
+	dCollapsed = WMCreatePLString("Collapsed");
 	value = (dock->collapsed ? dYes : dNo);
 	WMPutInPLDictionary(dock_state, dCollapsed, value);
 
 	value = (dock->auto_collapse ? dYes : dNo);
+	dAutoCollapse = WMCreatePLString("AutoCollapse");
 	WMPutInPLDictionary(dock_state, dAutoCollapse, value);
 
 	value = (dock->attract_icons ? dYes : dNo);
+	dAutoAttractIcons = WMCreatePLString("AutoAttractIcons");
 	WMPutInPLDictionary(dock_state, dAutoAttractIcons, value);
 
 	return dock_state;
@@ -1440,9 +1418,10 @@ WDock *getDrawer(virtual_screen *vscr, int y_index)
 static void restore_drawer_position(WDock *drawer, WMPropList *state)
 {
 	virtual_screen *vscr = drawer->vscr;
-	WMPropList *value;
+	WMPropList *value, *dPosition;
 	int y_index;
 
+	dPosition = WMCreatePLString("Position");
 	value = WMGetFromPLDictionary(state, dPosition);
 	if (!value || !WMIsPLString(value)) {
 		COMPLAIN("Position");
