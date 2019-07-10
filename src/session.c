@@ -154,7 +154,6 @@ static WMPropList *makeWindowState(WWindow *wwin, WApplication *wapp)
 		return NULL;
 
 	if (!PropGetWMClass(win, &class, &instance)) {
-		win_state = NULL;
 		if (instance)
 			wfree(instance);
 		if (class)
@@ -162,91 +161,91 @@ static WMPropList *makeWindowState(WWindow *wwin, WApplication *wapp)
 		if (command)
 			wfree(command);
 
-		return win_state;
-	} else {
-		if (class && instance)
-			snprintf(buffer, sizeof(buffer), "%s.%s", instance, class);
-		else if (instance)
-			snprintf(buffer, sizeof(buffer), "%s", instance);
-		else if (class)
-			snprintf(buffer, sizeof(buffer), ".%s", class);
-		else
-			snprintf(buffer, sizeof(buffer), ".");
+		return NULL;
+	}
 
-		name = WMCreatePLString(buffer);
-		cmd = WMCreatePLString(command);
+	if (class && instance)
+		snprintf(buffer, sizeof(buffer), "%s.%s", instance, class);
+	else if (instance)
+		snprintf(buffer, sizeof(buffer), "%s", instance);
+	else if (class)
+		snprintf(buffer, sizeof(buffer), ".%s", class);
+	else
+		snprintf(buffer, sizeof(buffer), ".");
 
-		workspace = WMCreatePLString(wwin->frame->vscr->workspace.array[wwin->frame->workspace]->name);
-		sYes = WMCreatePLString("Yes");
-		sNo = WMCreatePLString("No");
-		shaded = wwin->flags.shaded ? sYes : sNo;
-		miniaturized = wwin->flags.miniaturized ? sYes : sNo;
-		hidden = wwin->flags.hidden ? sYes : sNo;
-		snprintf(buffer, sizeof(buffer), "%ix%i+%i+%i",
-			 wwin->width, wwin->height, wwin->frame_x, wwin->frame_y);
+	name = WMCreatePLString(buffer);
+	cmd = WMCreatePLString(command);
 
-		geometry = WMCreatePLString(buffer);
-		for (mask = 0, i = 0; i < MAX_WINDOW_SHORTCUTS; i++) {
-			if (w_global.shortcut.windows[i] != NULL &&
-			    WMGetFirstInArray(w_global.shortcut.windows[i], wwin) != WANotFound)
-				mask |= 1 << i;
+	workspace = WMCreatePLString(wwin->frame->vscr->workspace.array[wwin->frame->workspace]->name);
+	sYes = WMCreatePLString("Yes");
+	sNo = WMCreatePLString("No");
+	shaded = wwin->flags.shaded ? sYes : sNo;
+	miniaturized = wwin->flags.miniaturized ? sYes : sNo;
+	hidden = wwin->flags.hidden ? sYes : sNo;
+	snprintf(buffer, sizeof(buffer), "%ix%i+%i+%i",
+		 wwin->width, wwin->height, wwin->frame_x, wwin->frame_y);
+
+	geometry = WMCreatePLString(buffer);
+	for (mask = 0, i = 0; i < MAX_WINDOW_SHORTCUTS; i++) {
+		if (w_global.shortcut.windows[i] != NULL &&
+		    WMGetFirstInArray(w_global.shortcut.windows[i], wwin) != WANotFound)
+			mask |= 1 << i;
+	}
+
+	snprintf(buffer, sizeof(buffer), "%u", mask);
+	shortcut = WMCreatePLString(buffer);
+
+	sName = WMCreatePLString("Name");
+	sCommand = WMCreatePLString("Command");
+	sWorkspace = WMCreatePLString("Workspace");
+	sShaded = WMCreatePLString("Shaded");
+	sMiniaturized = WMCreatePLString("Miniaturized");
+	sHidden = WMCreatePLString("Hidden");
+	sGeometry = WMCreatePLString("Geometry");
+	sShortcutMask = WMCreatePLString("ShortcutMask");
+	win_state = WMCreatePLDictionary(sName, name,
+					 sCommand, cmd,
+					 sWorkspace, workspace,
+					 sShaded, shaded,
+					 sMiniaturized, miniaturized,
+					 sHidden, hidden,
+					 sShortcutMask, shortcut, sGeometry, geometry, NULL);
+
+	WMReleasePropList(name);
+	WMReleasePropList(cmd);
+	WMReleasePropList(workspace);
+	WMReleasePropList(geometry);
+	WMReleasePropList(shortcut);
+	if (wapp && wapp->app_icon && wapp->app_icon->dock) {
+		int i;
+		char *name = NULL;
+		if (wapp->app_icon->dock == vscr->dock.dock)
+			name = "Dock";
+
+		/* Try the clips */
+		if (name == NULL) {
+			for (i = 0; i < wwin->frame->vscr->workspace.count; i++)
+				if (wwin->frame->vscr->workspace.array[i]->clip == wapp->app_icon->dock)
+					break;
+
+			if (i < wwin->frame->vscr->workspace.count)
+				name = wwin->frame->vscr->workspace.array[i]->name;
 		}
 
-		snprintf(buffer, sizeof(buffer), "%u", mask);
-		shortcut = WMCreatePLString(buffer);
+		/* Try the drawers */
+		if (name == NULL) {
+			WDrawerChain *dc;
+			for (dc = vscr->drawer.drawers; dc != NULL; dc = dc->next)
+				if (dc->adrawer == wapp->app_icon->dock)
+					break;
 
-		sName = WMCreatePLString("Name");
-		sCommand = WMCreatePLString("Command");
-		sWorkspace = WMCreatePLString("Workspace");
-		sShaded = WMCreatePLString("Shaded");
-		sMiniaturized = WMCreatePLString("Miniaturized");
-		sHidden = WMCreatePLString("Hidden");
-		sGeometry = WMCreatePLString("Geometry");
-		sShortcutMask = WMCreatePLString("ShortcutMask");
-		win_state = WMCreatePLDictionary(sName, name,
-						 sCommand, cmd,
-						 sWorkspace, workspace,
-						 sShaded, shaded,
-						 sMiniaturized, miniaturized,
-						 sHidden, hidden,
-						 sShortcutMask, shortcut, sGeometry, geometry, NULL);
-
-		WMReleasePropList(name);
-		WMReleasePropList(cmd);
-		WMReleasePropList(workspace);
-		WMReleasePropList(geometry);
-		WMReleasePropList(shortcut);
-		if (wapp && wapp->app_icon && wapp->app_icon->dock) {
-			int i;
-			char *name = NULL;
-			if (wapp->app_icon->dock == vscr->dock.dock)
-				name = "Dock";
-
-			/* Try the clips */
-			if (name == NULL) {
-				for (i = 0; i < wwin->frame->vscr->workspace.count; i++)
-					if (wwin->frame->vscr->workspace.array[i]->clip == wapp->app_icon->dock)
-						break;
-
-				if (i < wwin->frame->vscr->workspace.count)
-					name = wwin->frame->vscr->workspace.array[i]->name;
-			}
-
-			/* Try the drawers */
-			if (name == NULL) {
-				WDrawerChain *dc;
-				for (dc = vscr->drawer.drawers; dc != NULL; dc = dc->next)
-					if (dc->adrawer == wapp->app_icon->dock)
-						break;
-
-				name = dc->adrawer->icon_array[0]->wm_instance;
-			}
-
-			dock = WMCreatePLString(name);
-			sDock = WMCreatePLString("Dock");
-			WMPutInPLDictionary(win_state, sDock, dock);
-			WMReleasePropList(dock);
+			name = dc->adrawer->icon_array[0]->wm_instance;
 		}
+
+		dock = WMCreatePLString(name);
+		sDock = WMCreatePLString("Dock");
+		WMPutInPLDictionary(win_state, sDock, dock);
+		WMReleasePropList(dock);
 	}
 
 	if (instance)
