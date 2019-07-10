@@ -68,19 +68,6 @@ void menu_workspace_addwks(virtual_screen *vscr, WMenu *menu);
 void menu_workspace_delwks(virtual_screen *vscr, WMenu *menu);
 void menu_workspace_shortcut_labels(virtual_screen *vscr, WMenu *menu);
 
-static WMPropList *dWorkspaces = NULL;
-static WMPropList *dClip, *dName;
-
-static void make_keys(void)
-{
-	if (dWorkspaces != NULL)
-		return;
-
-	dWorkspaces = WMCreatePLString("Workspaces");
-	dName = WMCreatePLString("Name");
-	dClip = WMCreatePLString("Clip");
-}
-
 static void set_workspace_name(virtual_screen *vscr, WWorkspace *wspace, char *name)
 {
 	static const char *new_name = NULL;
@@ -117,23 +104,23 @@ static void update_workspace_list(virtual_screen *vscr, WWorkspace *wspace)
 
 static void set_clip_in_workspace(virtual_screen *vscr, WWorkspace *wspace, WMPropList *wks_state)
 {
-	WMPropList *clip_state = NULL;
+	WMPropList *dClip, *clip_state = NULL;
 	wspace->clip = NULL;
 
 	if (wPreferences.flags.noclip)
 		return;
 
-	if (wks_state)
+	if (wks_state) {
+		dClip = WMCreatePLString("Clip");
 		clip_state = WMGetFromPLDictionary(wks_state, dClip);
+	}
 
 	wspace->clip = clip_create(vscr, clip_state);
 }
 
 static void set_clip_in_workspace_map(virtual_screen *vscr, WWorkspace *wspace, int wksno, WMPropList *wks_state)
 {
-	WMPropList *clip_state, *tmp_state;
-
-	make_keys();
+	WMPropList *clip_state, *tmp_state, *dClip;
 
 	if (wksno < 0)
 		tmp_state = w_global.session_state;
@@ -143,6 +130,7 @@ static void set_clip_in_workspace_map(virtual_screen *vscr, WWorkspace *wspace, 
 	if (wPreferences.flags.noclip)
 		return;
 
+	dClip = WMCreatePLString("Clip");
 	clip_state = WMGetFromPLDictionary(tmp_state, dClip);
 	clip_map(wspace->clip, clip_state);
 
@@ -160,8 +148,6 @@ static void workspace_create_core(virtual_screen *vscr, WMPropList *wks_state, c
 
 	if (vscr->workspace.count >= MAX_WORKSPACES)
 		return;
-
-	make_keys();
 
 	/* Create a new one */
 	wspace = wmalloc(sizeof(WWorkspace));
@@ -184,27 +170,24 @@ void workspace_create(virtual_screen *vscr)
 
 static void workspace_create_with_state(virtual_screen *vscr, int wksno, WMPropList *parr)
 {
-	WMPropList *pstr, *wks_state = NULL;
+	WMPropList *dName, *pstr, *wks_state = NULL;
 	char *wksname = NULL;
 
-	make_keys();
-
 	wks_state = WMGetFromPLArray(parr, wksno);
-	if (WMIsPLDictionary(wks_state))
+	if (WMIsPLDictionary(wks_state)) {
+		dName = WMCreatePLString("Name");
 		pstr = WMGetFromPLDictionary(wks_state, dName);
-	else
+	} else {
 		pstr = wks_state;
+	}
 
 	wksname = WMGetFromPLString(pstr);
-
 	workspace_create_core(vscr, wks_state, wksname);
 }
 
 void workspace_map(virtual_screen *vscr, WWorkspace *wspace, int wksno, WMPropList *parr)
 {
 	WMPropList *wks_state = NULL;
-
-	make_keys();
 
 	if (parr != NULL)
 		wks_state = WMGetFromPLArray(parr, wksno);
@@ -966,9 +949,12 @@ void wWorkspaceMenuUpdate(virtual_screen *vscr, WMenu *menu)
 void wWorkspaceSaveState(virtual_screen *vscr, WMPropList *old_state)
 {
 	WMPropList *parr, *pstr, *wks_state, *old_wks_state, *foo, *bar;
+	WMPropList *dWorkspaces, *dClip, *dName;
 	int i;
 
-	make_keys();
+	dWorkspaces = WMCreatePLString("Workspaces");
+	dName = WMCreatePLString("Name");
+	dClip = WMCreatePLString("Clip");
 
 	old_wks_state = WMGetFromPLDictionary(old_state, dWorkspaces);
 	parr = WMCreatePLArray(NULL);
@@ -1043,14 +1029,13 @@ int set_clip_omnipresent(virtual_screen *vscr, int wksno)
 
 void workspaces_restore(virtual_screen *vscr)
 {
-	WMPropList *parr;
+	WMPropList *parr, *dWorkspaces;
 	int wksno;
-
-	make_keys();
 
 	if (w_global.session_state == NULL)
 		return;
 
+	dWorkspaces = WMCreatePLString("Workspaces");
 	parr = WMGetFromPLDictionary(w_global.session_state, dWorkspaces);
 	if (!parr)
 		return;
@@ -1061,14 +1046,13 @@ void workspaces_restore(virtual_screen *vscr)
 
 void workspaces_restore_map(virtual_screen *vscr)
 {
-	WMPropList *parr;
+	WMPropList *parr, *dWorkspaces;
 	int wksno;
-
-	make_keys();
 
 	if (w_global.session_state == NULL)
 		return;
 
+	dWorkspaces = WMCreatePLString("Workspaces");
 	parr = WMGetFromPLDictionary(w_global.session_state, dWorkspaces);
 	if (!parr)
 		return;
