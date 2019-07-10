@@ -86,42 +86,6 @@
 
 #include <WINGs/WUtil.h>
 
-
-static WMPropList *sApplications = NULL;
-static WMPropList *sCommand;
-static WMPropList *sName;
-static WMPropList *sHost;
-static WMPropList *sWorkspace;
-static WMPropList *sShaded;
-static WMPropList *sMiniaturized;
-static WMPropList *sHidden;
-static WMPropList *sGeometry;
-static WMPropList *sShortcutMask;
-
-static WMPropList *sDock;
-static WMPropList *sYes, *sNo;
-
-static void make_keys(void)
-{
-	if (sApplications != NULL)
-		return;
-
-	sApplications = WMCreatePLString("Applications");
-	sCommand = WMCreatePLString("Command");
-	sName = WMCreatePLString("Name");
-	sHost = WMCreatePLString("Host");
-	sWorkspace = WMCreatePLString("Workspace");
-	sShaded = WMCreatePLString("Shaded");
-	sMiniaturized = WMCreatePLString("Miniaturized");
-	sHidden = WMCreatePLString("Hidden");
-	sGeometry = WMCreatePLString("Geometry");
-	sDock = WMCreatePLString("Dock");
-	sShortcutMask = WMCreatePLString("ShortcutMask");
-
-	sYes = WMCreatePLString("Yes");
-	sNo = WMCreatePLString("No");
-}
-
 static int getBool(WMPropList * value)
 {
 	char *val;
@@ -177,6 +141,8 @@ static WMPropList *makeWindowState(WWindow *wwin, WApplication *wapp)
 	WMPropList *win_state, *cmd, *name, *workspace;
 	WMPropList *shaded, *miniaturized, *hidden, *geometry;
 	WMPropList *dock, *shortcut;
+	WMPropList *sWorkspace, *sCommand, *sName, *sDock, *sShaded, *sMiniaturized;
+	WMPropList *sHidden, *sGeometry, *sShortcutMask, *sYes, *sNo;
 
 	if (wwin->orig_main_window != None && wwin->orig_main_window != wwin->client_win)
 		win = wwin->orig_main_window;
@@ -201,6 +167,8 @@ static WMPropList *makeWindowState(WWindow *wwin, WApplication *wapp)
 		cmd = WMCreatePLString(command);
 
 		workspace = WMCreatePLString(wwin->frame->vscr->workspace.array[wwin->frame->workspace]->name);
+		sYes = WMCreatePLString("Yes");
+		sNo = WMCreatePLString("No");
 		shaded = wwin->flags.shaded ? sYes : sNo;
 		miniaturized = wwin->flags.miniaturized ? sYes : sNo;
 		hidden = wwin->flags.hidden ? sYes : sNo;
@@ -217,6 +185,14 @@ static WMPropList *makeWindowState(WWindow *wwin, WApplication *wapp)
 		snprintf(buffer, sizeof(buffer), "%u", mask);
 		shortcut = WMCreatePLString(buffer);
 
+		sName = WMCreatePLString("Name");
+		sCommand = WMCreatePLString("Command");
+		sWorkspace = WMCreatePLString("Workspace");
+		sShaded = WMCreatePLString("Shaded");
+		sMiniaturized = WMCreatePLString("Miniaturized");
+		sHidden = WMCreatePLString("Hidden");
+		sGeometry = WMCreatePLString("Geometry");
+		sShortcutMask = WMCreatePLString("ShortcutMask");
 		win_state = WMCreatePLDictionary(sName, name,
 						 sCommand, cmd,
 						 sWorkspace, workspace,
@@ -257,6 +233,7 @@ static WMPropList *makeWindowState(WWindow *wwin, WApplication *wapp)
 			}
 
 			dock = WMCreatePLString(name);
+			sDock = WMCreatePLString("Dock");
 			WMPutInPLDictionary(win_state, sDock, dock);
 			WMReleasePropList(dock);
 		}
@@ -277,11 +254,9 @@ static WMPropList *makeWindowState(WWindow *wwin, WApplication *wapp)
 void wSessionSaveState(virtual_screen *vscr)
 {
 	WWindow *wwin = vscr->window.focused;
-	WMPropList *win_info, *wks;
-	WMPropList *list = NULL;
+	WMPropList *win_info, *wks, *list = NULL;
+	WMPropList *sApplications, *sWorkspace;
 	WMArray *wapp_list = NULL;
-
-	make_keys();
 
 	if (!w_global.session_state) {
 		w_global.session_state = WMCreatePLDictionary(NULL, NULL);
@@ -290,9 +265,7 @@ void wSessionSaveState(virtual_screen *vscr)
 	}
 
 	list = WMCreatePLArray(NULL);
-
 	wapp_list = WMCreateArray(16);
-
 	while (wwin) {
 		WApplication *wapp = wApplicationOf(wwin->main_window);
 		Window appId = wwin->orig_main_window;
@@ -318,10 +291,12 @@ void wSessionSaveState(virtual_screen *vscr)
 		wwin = wwin->prev;
 	}
 
+	sApplications = WMCreatePLString("Applications");
 	WMRemoveFromPLDictionary(w_global.session_state, sApplications);
 	WMPutInPLDictionary(w_global.session_state, sApplications, list);
 	WMReleasePropList(list);
 
+	sWorkspace = WMCreatePLString("Workspace");
 	wks = WMCreatePLString(vscr->workspace.array[vscr->workspace.current]->name);
 	WMPutInPLDictionary(w_global.session_state, sWorkspace, wks);
 	WMReleasePropList(wks);
@@ -331,11 +306,13 @@ void wSessionSaveState(virtual_screen *vscr)
 
 void wSessionClearState(void)
 {
-	make_keys();
+	WMPropList *sApplications, *sWorkspace;
 
 	if (!w_global.session_state)
 		return;
 
+	sApplications = WMCreatePLString("Applications");
+	sWorkspace = WMCreatePLString("Workspace");
 	WMRemoveFromPLDictionary(w_global.session_state, sApplications);
 	WMRemoveFromPLDictionary(w_global.session_state, sWorkspace);
 }
@@ -363,11 +340,13 @@ static pid_t execCommand(virtual_screen *vscr, char *command)
 static WSavedState *getWindowState(virtual_screen *vscr, WMPropList *win_state)
 {
 	WSavedState *state = wmalloc(sizeof(WSavedState));
-	WMPropList *value;
+	WMPropList *value, *sShortcutMask;
+	WMPropList *sWorkspace, *sShaded, *sMiniaturized, *sHidden, *sGeometry;
 	char *tmp;
 	unsigned mask;
 	int i;
 
+	sWorkspace = WMCreatePLString("Workspace");
 	state->workspace = -1;
 	value = WMGetFromPLDictionary(win_state, sWorkspace);
 	if (value && WMIsPLString(value)) {
@@ -385,24 +364,29 @@ static WSavedState *getWindowState(virtual_screen *vscr, WMPropList *win_state)
 		}
 	}
 
+	sShaded = WMCreatePLString("Shaded");
 	value = WMGetFromPLDictionary(win_state, sShaded);
 	if (value != NULL)
 		state->shaded = getBool(value);
 
+	sMiniaturized = WMCreatePLString("Miniaturized");
 	value = WMGetFromPLDictionary(win_state, sMiniaturized);
 	if (value != NULL)
 		state->miniaturized = getBool(value);
 
+	sHidden = WMCreatePLString("Hidden");
 	value = WMGetFromPLDictionary(win_state, sHidden);
 	if (value != NULL)
 		state->hidden = getBool(value);
 
+	sShortcutMask = WMCreatePLString("ShortcutMask");
 	value = WMGetFromPLDictionary(win_state, sShortcutMask);
 	if (value != NULL) {
 		mask = getInt(value);
 		state->window_shortcuts = mask;
 	}
 
+	sGeometry = WMCreatePLString("Geometry");
 	value = WMGetFromPLDictionary(win_state, sGeometry);
 	if (value && WMIsPLString(value)) {
 		if (!(sscanf(WMGetFromPLString(value), "%ix%i+%i+%i",
@@ -434,6 +418,7 @@ void wSessionRestoreState(virtual_screen *vscr)
 	WSavedState *state;
 	char *instance, *class, *command;
 	WMPropList *win_info, *apps, *cmd, *value;
+	WMPropList *sApplications, *sCommand, *sName, *sDock;
 	pid_t pid;
 	int i, count;
 	WDock *dock;
@@ -441,13 +426,11 @@ void wSessionRestoreState(virtual_screen *vscr)
 	int j, n, found;
 	char *tmp;
 
-	make_keys();
-
 	if (!w_global.session_state)
 		return;
 
 	WMPLSetCaseSensitive(True);
-
+	sApplications = WMCreatePLString("Applications");
 	apps = WMGetFromPLDictionary(w_global.session_state, sApplications);
 	if (!apps)
 		return;
@@ -456,6 +439,9 @@ void wSessionRestoreState(virtual_screen *vscr)
 	if (count == 0)
 		return;
 
+	sCommand = WMCreatePLString("Command");
+	sName = WMCreatePLString("Name");
+	sDock = WMCreatePLString("Dock");
 	for (i = 0; i < count; i++) {
 		win_info = WMGetFromPLArray(apps, i);
 
@@ -543,23 +529,20 @@ void wSessionRestoreState(virtual_screen *vscr)
 
 void wSessionRestoreLastWorkspace(virtual_screen *vscr)
 {
-	WMPropList *wks;
+	WMPropList *wks, *sWorkspace;
 	int w;
 	char *value;
-
-	make_keys();
 
 	if (!w_global.session_state)
 		return;
 
 	WMPLSetCaseSensitive(True);
-
+	sWorkspace = WMCreatePLString("Workspace");
 	wks = WMGetFromPLDictionary(w_global.session_state, sWorkspace);
 	if (!wks || !WMIsPLString(wks))
 		return;
 
 	value = WMGetFromPLString(wks);
-
 	if (!value)
 		return;
 
