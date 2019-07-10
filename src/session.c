@@ -153,7 +153,9 @@ static WMPropList *makeWindowState(WWindow *wwin, WApplication *wapp)
 	if (!command)
 		return NULL;
 
-	if (PropGetWMClass(win, &class, &instance)) {
+	if (!PropGetWMClass(win, &class, &instance)) {
+		win_state = NULL;
+	} else {
 		if (class && instance)
 			snprintf(buffer, sizeof(buffer), "%s.%s", instance, class);
 		else if (instance)
@@ -237,8 +239,6 @@ static WMPropList *makeWindowState(WWindow *wwin, WApplication *wapp)
 			WMPutInPLDictionary(win_state, sDock, dock);
 			WMReleasePropList(dock);
 		}
-	} else {
-		win_state = NULL;
 	}
 
 	if (instance)
