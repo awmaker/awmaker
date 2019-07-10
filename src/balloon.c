@@ -488,7 +488,7 @@ static void miniwindowBalloon(WObjDescriptor *object)
 		return;
 	}
 
-	scr->balloon->h = icon->height;
+	scr->balloon->h = wPreferences.icon_size;
 	scr->balloon->text = wstrdup(icon->title);
 	scr->balloon->mini_preview = icon->mini_preview;
 	scr->balloon->objectWindow = icon->core->window;
@@ -566,7 +566,7 @@ static void appiconBalloon(WObjDescriptor *object)
 		return;
 	}
 
-	scr->balloon->h = aicon->icon->height - 2;
+	scr->balloon->h = wPreferences.icon_size - 2;
 	scr->balloon->objectWindow = aicon->icon->core->window;
 	if ((scr->balloon->prevType == object->parent_type || scr->balloon->prevType == WCLASS_MINIWINDOW)
 	    && scr->balloon->ignoreTimer) {

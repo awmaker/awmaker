@@ -81,7 +81,8 @@ void icon_appearanceObserver(void *self, WMNotification *notif)
 
 	/* so that the appicon expose handlers will paint the appicon specific
 	 * stuff */
-	XClearArea(dpy, icon->core->window, 0, 0, icon->width, icon->height, True);
+	XClearArea(dpy, icon->core->window, 0, 0,
+			   wPreferences.icon_size, wPreferences.icon_size, True);
 }
 
 void icon_tileObserver(void *self, WMNotification *notif)
@@ -112,8 +113,6 @@ WIcon *icon_create_core(virtual_screen *vscr)
 	WIcon *icon;
 
 	icon = wmalloc(sizeof(WIcon));
-	icon->width = wPreferences.icon_size;
-	icon->height = wPreferences.icon_size;
 	icon->core = wcore_create();
 	icon->vscr = vscr;
 
@@ -501,7 +500,7 @@ static void cycleColor(void *data)
 	XChangeGC(dpy, scr->icon_select_gc, GCDashOffset, &gcv);
 
 	XDrawRectangle(dpy, icon->core->window, scr->icon_select_gc, 0, 0,
-		       icon->width - 1, icon->height - 1);
+		       wPreferences.icon_size - 1, wPreferences.icon_size - 1);
 	icon->handlerID = WMAddTimerHandler(COLOR_CYCLE_DELAY, cycleColor, icon);
 }
 
@@ -525,14 +524,15 @@ void wIconSelect(WIcon *icon)
 			icon->handlerID = WMAddTimerHandler(10, cycleColor, icon);
 		else
 			XDrawRectangle(dpy, icon->core->window, scr->icon_select_gc, 0, 0,
-				       icon->width - 1, icon->height - 1);
+				       wPreferences.icon_size - 1, wPreferences.icon_size - 1);
 	} else {
 		if (icon->handlerID) {
 			WMDeleteTimerHandler(icon->handlerID);
 			icon->handlerID = NULL;
 		}
 
-		XClearArea(dpy, icon->core->window, 0, 0, icon->width, icon->height, True);
+		XClearArea(dpy, icon->core->window, 0, 0,
+				   wPreferences.icon_size, wPreferences.icon_size, True);
 	}
 }
 
@@ -743,10 +743,10 @@ static void update_icon_title(WIcon *icon)
 		tmp = ShrinkString(scr->icon_title_font, icon->title, wPreferences.icon_size - 4);
 		w = WMWidthOfString(scr->icon_title_font, tmp, l = strlen(tmp));
 
-		if (w > icon->width - 4)
-			x = (icon->width - 4) - w;
+		if (w > wPreferences.icon_size - 4)
+			x = (wPreferences.icon_size - 4) - w;
 		else
-			x = (icon->width - w) / 2;
+			x = (wPreferences.icon_size - w) / 2;
 
 		WMDrawString(scr->wmscreen, icon->core->window, scr->icon_title_color,
 			     scr->icon_title_font, x, 1, tmp, l);
@@ -770,7 +770,7 @@ void wIconPaint(WIcon *icon)
 
 	if (icon->selected)
 		XDrawRectangle(dpy, icon->core->window, scr->icon_select_gc, 0, 0,
-			       icon->width - 1, icon->height - 1);
+				       wPreferences.icon_size - 1, wPreferences.icon_size - 1);
 }
 
 /******************************************************************/

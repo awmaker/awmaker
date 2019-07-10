@@ -117,7 +117,7 @@ static void miniwindow_icon_map(WIcon *icon)
 	WScreen *scr = vscr->screen_ptr;
 
 	wcore_map_toplevel(icon->core, vscr, wwin->miniwindow->icon_x, wwin->miniwindow->icon_y,
-			   icon->width, icon->height, 0, scr->w_depth,
+			   wPreferences.icon_size, wPreferences.icon_size, 0, scr->w_depth,
 			   scr->w_visual, scr->w_colormap, scr->white_pixel);
 
 	if (wwin->wm_hints && (wwin->wm_hints->flags & IconWindowHint)) {

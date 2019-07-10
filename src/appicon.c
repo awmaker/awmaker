@@ -350,7 +350,7 @@ static void wAppIcon_map(WAppIcon *aicon)
 	WScreen *scr = vscr->screen_ptr;
 
 	wcore_map_toplevel(icon->core, vscr, wwin->miniwindow->icon_x, wwin->miniwindow->icon_y,
-			   icon->width, icon->height, 0,
+			   wPreferences.icon_size, wPreferences.icon_size, 0,
 			   scr->w_depth, scr->w_visual, scr->w_colormap,
 			   scr->white_pixel);
 
@@ -688,7 +688,7 @@ void appicon_map(WAppIcon *aicon)
 	virtual_screen *vscr = aicon->icon->vscr;
 	WScreen *scr = aicon->icon->vscr->screen_ptr;
 
-	wcore_map_toplevel(wcore, vscr, 0, 0, icon->width, icon->height, 0,
+	wcore_map_toplevel(wcore, vscr, 0, 0, wPreferences.icon_size, wPreferences.icon_size, 0,
 			   scr->w_depth, scr->w_visual,
 			   scr->w_colormap, scr->white_pixel);
 

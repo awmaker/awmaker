@@ -912,9 +912,10 @@ void clip_icon_map(virtual_screen *vscr)
 	WCoreWindow *wcore = icon->core;
 	WScreen *scr = vscr->screen_ptr;
 
-	wcore_map_toplevel(wcore, vscr, 0, 0, icon->width, icon->height, 0,
-			   scr->w_depth, scr->w_visual,
-			   scr->w_colormap, scr->white_pixel);
+	wcore_map_toplevel(wcore, vscr, 0, 0,
+					   wPreferences.icon_size, wPreferences.icon_size, 0,
+					   scr->w_depth, scr->w_visual,
+					   scr->w_colormap, scr->white_pixel);
 
 	map_icon_image(icon);
 

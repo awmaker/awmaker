@@ -539,9 +539,10 @@ void dock_map(WDock *dock, WMPropList *state)
 	if (!scr)
 		return;
 
-	wcore_map_toplevel(wcore, vscr, 0, 0, icon->width, icon->height, 0,
-			   scr->w_depth, scr->w_visual, scr->w_colormap,
-			   scr->white_pixel);
+	wcore_map_toplevel(wcore, vscr, 0, 0,
+					   wPreferences.icon_size, wPreferences.icon_size, 0,
+					   scr->w_depth, scr->w_visual, scr->w_colormap,
+					   scr->white_pixel);
 
 	if (wPreferences.flags.clip_merged_in_dock)
 		wcore->descriptor.handle_expose = clip_icon_expose;

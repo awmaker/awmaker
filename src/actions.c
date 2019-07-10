@@ -1214,10 +1214,9 @@ static void hideWindow(WIcon *icon, int icon_x, int icon_y, WWindow *wwin, int a
 	flushExpose();
 
 	if (animate)
-		animation_hide(wwin, icon_x, icon_y, icon->width, icon->height);
+		animation_hide(wwin, icon_x, icon_y, wPreferences.icon_size, wPreferences.icon_size);
 
 	wwin->flags.skip_next_animation = 0;
-
 	WMPostNotificationName(WMNChangedState, wwin, "hide");
 }
 
@@ -1364,7 +1363,7 @@ void wHideApplication(WApplication *wapp)
 #endif
 }
 
-static void unhideWindow(WIcon *icon, int icon_x, int icon_y, WWindow *wwin, int animate, int bringToCurrentWS)
+static void unhideWindow(int icon_x, int icon_y, WWindow *wwin, int animate, int bringToCurrentWS)
 {
 	if (bringToCurrentWS)
 		wWindowChangeWorkspace(wwin, wwin->vscr->workspace.current);
@@ -1372,7 +1371,7 @@ static void unhideWindow(WIcon *icon, int icon_x, int icon_y, WWindow *wwin, int
 	wwin->flags.hidden = 0;
 
 	if (animate)
-		animation_unhide(wwin, icon_x, icon_y, icon->width, icon->height);
+		animation_unhide(wwin, icon_x, icon_y, wPreferences.icon_size, wPreferences.icon_size);
 
 	wwin->flags.skip_next_animation = 0;
 	if (wwin->vscr->workspace.current == wwin->frame->workspace) {
@@ -1461,7 +1460,7 @@ void wUnhideApplication(WApplication *wapp, Bool miniwindows, Bool bringToCurren
 
 				WMPostNotificationName(WMNChangedState, wlist, "hide");
 			} else if (wlist->flags.hidden) {
-				unhideWindow(wapp->app_icon->icon, wapp->app_icon->x_pos,
+				unhideWindow(wapp->app_icon->x_pos,
 					     wapp->app_icon->y_pos, wlist, animate, bringToCurrentWS);
 				animate = False;
 			} else {

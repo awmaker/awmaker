@@ -1128,9 +1128,9 @@ static void drawer_map(WDock *dock, virtual_screen *vscr)
 	btn->y_pos = dock->y_pos;
 
 	wcore_map_toplevel(wcore, vscr, btn->x_pos, btn->y_pos,
-			   icon->width, icon->height, 0,
-			   scr->w_depth, scr->w_visual,
-			   scr->w_colormap, scr->white_pixel);
+					   wPreferences.icon_size, wPreferences.icon_size, 0,
+					   scr->w_depth, scr->w_visual,
+					   scr->w_colormap, scr->white_pixel);
 
 	map_icon_image(icon);
 

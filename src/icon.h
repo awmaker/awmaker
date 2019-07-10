@@ -37,8 +37,6 @@ typedef struct WIcon {
 	WCoreWindow 	*core;
 	WWindow 	*owner;		/* owner window */
 	char 		*title;		/* the icon name hint */
-	int		width;		/* window size x */
-	int		height;		/* window size y */
 
 	Window 		icon_win;	/* client suplied icon window */
 

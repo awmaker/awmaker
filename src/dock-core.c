@@ -855,7 +855,8 @@ void set_attacheddocks_map(WDock *dock)
 			else
 				ChangeStackingLevel(aicon->icon->vscr, aicon->icon->core, WMDockLevel);
 
-			wCoreConfigure(aicon->icon->core, aicon->x_pos, aicon->y_pos, aicon->icon->width, aicon->icon->height);
+			wCoreConfigure(aicon->icon->core, aicon->x_pos, aicon->y_pos,
+						   wPreferences.icon_size, wPreferences.icon_size);
 			if (!dock->collapsed)
 				XMapWindow(dpy, aicon->icon->core->window);
 
