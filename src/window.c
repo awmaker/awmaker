@@ -1296,10 +1296,10 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 		wwin->client_flags.shared_appicon = 0;
 
 	if (wwin->main_window) {
-            WApplication *app = wApplicationOf(wwin->main_window);
-            if (app && app->app_icon)
-		wwin->client_flags.shared_appicon = 0;
-        }
+		WApplication *app = wApplicationOf(wwin->main_window);
+		if (app && app->app_icon)
+			wwin->client_flags.shared_appicon = 0;
+	}
 
 	if (!withdraw && wwin->main_window && WFLAGP(wwin, shared_appicon))
 		wwindow_set_fakegroupleader(wwin);
