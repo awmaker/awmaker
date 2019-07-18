@@ -63,9 +63,11 @@ static void get_rimage_icon_from_x11(WIcon *icon);
 
 static void icon_update_pixmap(WIcon *icon, RImage *image);
 static void unset_icon_image(WIcon *icon);
+static char *get_default_image_path(void);
+static RImage *get_default_image(virtual_screen *vscr);
+static RImage *get_rimage_from_file(virtual_screen *vscr, const char *file_name, int max_size);
 
 /****** Notification Observers ******/
-
 void icon_appearanceObserver(void *self, WMNotification *notif)
 {
 	WIcon *icon = (WIcon *) self;
@@ -805,4 +807,115 @@ void unmap_icon_image(WIcon *icon)
 		XFreePixmap(dpy, icon->pixmap);
 
 	unset_icon_file_image(icon);
+}
+
+/* Get the file name of the image, using instance and class */
+char *get_icon_filename(const char *winstance, const char *wclass, const char *command,
+			Bool default_icon)
+{
+	char *file_name;
+	char *file_path;
+
+	/* Get the file name of the image, using instance and class */
+	file_name = wDefaultGetIconFile(winstance, wclass, default_icon);
+
+	/* Check if the file really exists in the disk */
+	if (file_name)
+		file_path = FindImage(wPreferences.icon_path, file_name);
+	else
+		file_path = NULL;
+
+	/* If the specific icon filename is not found, and command is specified,
+	 * then include the .app icons and re-do the search. */
+	if (!file_path && command) {
+		wApplicationExtractDirPackIcon(command, winstance, wclass);
+		file_name = wDefaultGetIconFile(winstance, wclass, False);
+
+		if (file_name) {
+			file_path = FindImage(wPreferences.icon_path, file_name);
+			if (!file_path)
+				wwarning(_("icon \"%s\" doesn't exist, check your config files"), file_name);
+
+			/* FIXME: Here, if file_path does not exist then the icon is still in the
+			 * "icon database" (w_global.domain.window_attr->dictionary), but the file
+			 * for the icon is no more on disk. Therefore, we should remove it from the
+			 * database. Is possible to do that using wDefaultChangeIcon() */
+		}
+	}
+
+	/*
+	 * Don't wfree(file_name) because it is a direct pointer inside the icon
+	 * dictionary (w_global.domain.window_attr->dictionary) and not a result
+	 * allocated with wstrdup()
+	 */
+
+	if (!file_path && default_icon)
+		file_path = get_default_image_path();
+
+	return file_path;
+}
+
+/* This function returns the image picture for the file_name file */
+static RImage *get_rimage_from_file(virtual_screen *vscr, const char *file_name, int max_size)
+{
+	RImage *image = NULL;
+
+	if (!file_name)
+		return NULL;
+
+	image = RLoadImage(vscr->screen_ptr->rcontext, file_name, 0);
+	if (!image)
+		wwarning(_("error loading image file \"%s\": %s"), file_name,
+			 RMessageForError(RErrorCode));
+
+	image = wIconValidateIconSize(image, max_size);
+
+	return image;
+}
+
+/* This function returns the default icon's full path
+ * If the path for an icon is not found, returns NULL */
+static char *get_default_image_path(void)
+{
+	char *path = NULL, *file = NULL;
+
+	/* Get the default icon */
+	file = wDefaultGetIconFile(NULL, NULL, True);
+	if (file)
+		path = FindImage(wPreferences.icon_path, file);
+
+	return path;
+}
+
+/* This function creates the RImage using the default icon */
+static RImage *get_default_image(virtual_screen *vscr)
+{
+	RImage *image = NULL;
+	char *path = NULL;
+
+	/* Get the filename full path */
+	path = get_default_image_path();
+	if (!path)
+		return NULL;
+
+	/* Get the default icon */
+	image = get_rimage_from_file(vscr, path, wPreferences.icon_size);
+	if (!image)
+		wwarning(_("could not find default icon \"%s\""), path);
+
+	/* Resize the icon to the wPreferences.icon_size size
+	 * usually this function will return early, because size is right */
+	image = wIconValidateIconSize(image, wPreferences.icon_size);
+
+	return image;
+}
+
+RImage *get_icon_image(virtual_screen *vscr, const char *winstance, const char *wclass, int max_size)
+{
+	char *file_name = NULL;
+
+	/* Get the file name of the image, using instance and class */
+	file_name = get_icon_filename(winstance, wclass, NULL, True);
+
+	return get_rimage_from_file(vscr, file_name, max_size);
 }

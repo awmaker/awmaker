@@ -85,4 +85,6 @@ void icon_appearanceObserver(void *self, WMNotification *notif);
 void icon_tileObserver(void *self, WMNotification *notif);
 
 void remove_cache_icon(char *filename);
+char *get_icon_filename(const char *winstance, const char *wclass, const char *command, Bool default_icon);
+RImage *get_icon_image(virtual_screen *vscr, const char *winstance, const char *wclass, int max_size);
 #endif /* WMICON_H_ */
