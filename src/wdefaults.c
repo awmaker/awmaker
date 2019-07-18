@@ -37,10 +37,7 @@
 #include "WindowMaker.h"
 #include "window.h"
 #include "wdefaults.h"
-#include "appicon.h"
-#include "screen.h"
 #include "workspace.h"
-#include "icon.h"
 #include "misc.h"
 
 #define APPLY_VAL(value, flag, attrib)	\
