@@ -574,7 +574,12 @@ void wIconUpdate(WIcon *icon)
 
 	if (wwin && WFLAGP(wwin, always_user_icon)) {
 		/* Forced use user_icon */
-		get_rimage_icon_from_user_icon(icon);
+		if (!icon->file_image) {
+			/* Set the new icon image */
+			icon->file_image = get_rimage_from_file(icon->vscr, icon->file_name, wPreferences.icon_size);
+			/* If is empty, then get the default image */
+			get_rimage_icon_from_user_icon(icon);
+		}
 	} else if (icon->icon_win != None) {
 		/* Get the Pixmap from the WIcon */
 		get_rimage_icon_from_icon_win(icon);
