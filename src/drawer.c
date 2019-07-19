@@ -1380,8 +1380,10 @@ static void swapDrawer(WDock *drawer, int new_x)
 		/* Update drawer's tile */
 		if (i == 0) {
 			wIconUpdate(ai->icon);
+			wIconPaint(ai->icon);
 			wDrawerIconPaint(ai);
 		}
+
 		XMoveWindow(dpy, ai->icon->core->window, ai->x_pos, ai->y_pos);
 	}
 }

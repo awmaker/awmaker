@@ -603,7 +603,6 @@ void wIconUpdate(WIcon *icon)
 	}
 
 	update_icon_pixmap(icon);
-	wIconPaint(icon);
 }
 
 void update_icon_pixmap(WIcon *icon)
@@ -800,6 +799,7 @@ void map_icon_image(WIcon *icon)
 
 	/* Update the icon, because icon could be NULL */
 	wIconUpdate(icon);
+	wIconPaint(icon);
 }
 
 void unmap_icon_image(WIcon *icon)

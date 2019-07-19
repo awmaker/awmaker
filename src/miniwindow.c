@@ -190,8 +190,10 @@ void miniwindow_unmap(WWindow *wwin)
 
 void miniwindow_iconupdate(WWindow *wwin)
 {
-	if (wwin->miniwindow->icon)
+	if (wwin->miniwindow->icon) {
 		wIconUpdate(wwin->miniwindow->icon);
+		wIconPaint(wwin->miniwindow->icon);
+	}
 }
 
 /* Callbacks */
