@@ -1724,6 +1724,7 @@ static void wDefaultUpdateIcons(virtual_screen *vscr)
 	while (aicon) {
 		/* Get the application icon, default included */
 		wIconChangeImageFile(aicon->icon, NULL);
+		wIconPaint(aicon->icon);
 		wAppIconPaint(aicon);
 		aicon = aicon->next;
 	}

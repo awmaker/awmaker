@@ -171,8 +171,10 @@ void clip_icon_mouse_down(WObjDescriptor *desc, XEvent *event)
 			clip_button2_menu(desc, event);
 		} else if (event->xbutton.state & ShiftMask) {
 			sts = wClipMakeIconOmnipresent(aicon, !aicon->omnipresent);
-			if (sts == WO_FAILED || sts == WO_SUCCESS)
+			if (sts == WO_FAILED || sts == WO_SUCCESS) {
+				wIconPaint(aicon->icon);
 				wAppIconPaint(aicon);
+			}
 		} else {
 			WAppIcon *btn = desc->parent;
 
@@ -697,10 +699,13 @@ static void omnipresentCallback(WMenu *menu, WMenuEntry *entry)
 	failed = 0;
 	WM_ITERATE_ARRAY(selectedIcons, aicon, iter) {
 		sts = wClipMakeIconOmnipresent(aicon, !aicon->omnipresent);
-		if (sts == WO_SUCCESS)
+		if (sts == WO_SUCCESS) {
+			wIconPaint(aicon->icon);
 			wAppIconPaint(aicon);
+		}
 
 		if (sts == WO_FAILED) {
+			wIconPaint(aicon->icon);
 			wAppIconPaint(aicon);
 			failed++;
 		} else if (aicon->icon->selected) {
@@ -1424,6 +1429,7 @@ Bool clip_attach_icon(WDock *dock, WAppIcon *icon, int x, int y, Bool update_ico
 		update_icon_pixmap(icon->icon);
 
 	/* Paint it */
+	wIconPaint(icon->icon);
 	wAppIconPaint(icon);
 
 	/* Save it */

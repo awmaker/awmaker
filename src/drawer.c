@@ -1099,10 +1099,13 @@ static WMPropList *drawer_save_state(WDock *dock)
 
 static void drawer_icon_expose(WObjDescriptor *desc, XEvent *event)
 {
+	WAppIcon *aicon = desc->parent;
+
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) event;
 
-	wAppIconPaint(desc->parent);
+	wIconPaint(aicon->icon);
+	wAppIconPaint(aicon);
 }
 
 static void drawer_unmap(WDock *dock)
@@ -1231,6 +1234,7 @@ Bool drawer_attach_icon(WDock *dock, WAppIcon *icon, int x, int y, Bool update_i
 		update_icon_pixmap(icon->icon);
 
 	/* Paint it */
+	wIconPaint(icon->icon);
 	wAppIconPaint(icon);
 
 	/* Save it */

@@ -674,10 +674,13 @@ void dock_leave(WDock *dock)
 
 void dock_icon_expose(WObjDescriptor *desc, XEvent *event)
 {
+	WAppIcon *aicon = desc->parent;
+
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) event;
 
-	wAppIconPaint(desc->parent);
+	wIconPaint(aicon->icon);
+	wAppIconPaint(aicon);
 }
 
 static int dock_set_attacheddocks_do(WDock *dock, WMPropList *apps)
@@ -958,6 +961,7 @@ Bool dock_attach_icon(WDock *dock, WAppIcon *icon, int x, int y, Bool update_ico
 		update_icon_pixmap(icon->icon);
 
 	/* Paint it */
+	wIconPaint(icon->icon);
 	wAppIconPaint(icon);
 
 	/* Save it */
@@ -1143,6 +1147,7 @@ void dockIconPaint(WAppIcon *btn)
 	} else if (wIsADrawer(btn)) {
 		wDrawerIconPaint(btn);
 	} else {
+		wIconPaint(btn->icon);
 		wAppIconPaint(btn);
 		save_appicon(btn);
 	}

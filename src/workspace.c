@@ -722,8 +722,10 @@ void wWorkspaceForceChange(virtual_screen *vscr, int workspace)
 	if (!wPreferences.sticky_icons)
 		wArrangeIcons(vscr, False);
 
-	if (vscr->dock.dock)
+	if (vscr->dock.dock) {
+		wIconPaint(vscr->dock.dock->icon_array[0]->icon);
 		wAppIconPaint(vscr->dock.dock->icon_array[0]);
+	}
 
 	if (!wPreferences.flags.noclip && (vscr->workspace.array[workspace]->clip->auto_collapse ||
 					   vscr->workspace.array[workspace]->clip->auto_raise_lower)) {

@@ -270,6 +270,7 @@ void removeAppIconFor(WApplication *wapp)
 		map_icon_image(wapp->app_icon->icon);
 
 		/* Paint it */
+		wIconPaint(wapp->app_icon->icon);
 		wAppIconPaint(wapp->app_icon);
 	} else if (wapp->app_icon->docked) {
 		wapp->app_icon->running = 0;
@@ -470,8 +471,6 @@ void wAppIconPaint(WAppIcon *aicon)
 	if (aicon->icon->owner)
 		wapp = wApplicationOf(aicon->icon->owner->main_window);
 
-	wIconPaint(aicon->icon);
-
 # ifdef WS_INDICATOR
 	if (aicon->docked && scr->dock && scr->dock == aicon->dock && aicon->yindex == 0)
 		updateDockNumbers(vscr);
@@ -606,6 +605,7 @@ static void setIconCallback(WMenu *menu, WMenuEntry *entry)
 				               _("OK"), NULL, NULL);
 			} else {
 				wDefaultChangeIcon(icon->wm_instance, icon->wm_class, file);
+				wIconPaint(icon->icon);
 				wAppIconPaint(icon);
 			}
 		}
@@ -743,10 +743,13 @@ static WMenu *openApplicationMenu(WApplication *wapp, int x, int y)
 
 static void iconExpose(WObjDescriptor *desc, XEvent *event)
 {
+	WAppIcon *aicon = desc->parent;
+
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) event;
 
-	wAppIconPaint(desc->parent);
+	wIconPaint(aicon->icon);
+	wAppIconPaint(aicon);
 }
 
 static void iconDblClick(WObjDescriptor *desc, XEvent *event)
@@ -1369,6 +1372,7 @@ static void create_appicon_from_dock(WWindow *wwin, WApplication *wapp)
 		wIconUpdate(wapp->app_icon->icon);
 
 		/* Paint it */
+		wIconPaint(wapp->app_icon->icon);
 		wAppIconPaint(wapp->app_icon);
 	}
 }
@@ -1418,6 +1422,7 @@ void move_appicon_to_dock(virtual_screen *vscr, WAppIcon *icon, char *wm_class, 
 	wAppIconMove(aicon, coord->x, coord->y);
 	XMapWindow(dpy, aicon->icon->core->window);
 	aicon->launching = 1;
+	wIconPaint(aicon->icon);
 	wAppIconPaint(aicon);
 
 	/* Move to the docked icon and destroy it */

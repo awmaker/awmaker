@@ -190,12 +190,14 @@ static void panelBtnCallback(WMWidget *self, void *data)
 	} else {
 		aicon = panel->editedIcon;
 
-		if (aicon == aicon->icon->vscr->clip.icon)
+		if (aicon == aicon->icon->vscr->clip.icon) {
 			wClipIconPaint(aicon);
-		else if (wIsADrawer(aicon))
+		} else if (wIsADrawer(aicon)) {
 			wDrawerIconPaint(aicon);
-		else
+		} else {
+			wIconPaint(aicon->icon);
 			wAppIconPaint(aicon);
+		}
 
 		wDefaultChangeIcon(aicon->wm_instance, aicon->wm_class, text);
 	}

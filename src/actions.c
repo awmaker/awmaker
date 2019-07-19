@@ -1358,8 +1358,10 @@ void wHideApplication(WApplication *wapp)
 		wArrangeIcons(vscr, True);
 
 #ifdef HIDDENDOT
-	if (wapp->app_icon)
+	if (wapp->app_icon) {
+		wIconPaint(wapp->app_icon->icon);
 		wAppIconPaint(wapp->app_icon);
+	}
 #endif
 }
 
@@ -1488,7 +1490,10 @@ void wUnhideApplication(WApplication *wapp, Bool miniwindows, Bool bringToCurren
 		wArrangeIcons(vscr, True);
 
 #ifdef HIDDENDOT
-	wAppIconPaint(wapp->app_icon);
+	if (wapp->app_icon) {
+		wIconPaint(wapp->app_icon->icon);
+		wAppIconPaint(wapp->app_icon);
+	}
 #endif
 }
 

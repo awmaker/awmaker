@@ -553,6 +553,7 @@ static void updateIconImage(WWindow *wwin)
 	WApplication *app = wApplicationOf(wwin->main_window);
 	if (app && app->app_icon) {
 		wIconUpdate(app->app_icon->icon);
+		wIconPaint(app->app_icon->icon); /* dup */
 		wAppIconPaint(app->app_icon);
 	}
 }

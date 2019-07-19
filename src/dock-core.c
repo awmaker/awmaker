@@ -271,6 +271,7 @@ void keepIconsCallback(WMenu *menu, WMenuEntry *entry)
 				update_icon_pixmap(aicon->icon);
 
 				/* Paint it */
+				wIconPaint(aicon->icon);
 				wAppIconPaint(aicon);
 			}
 		}
@@ -1102,8 +1103,10 @@ Bool wDockMoveIconBetweenDocks(WDock *src, WDock *dest, WAppIcon *icon, int x, i
 
 	if (dest->type == WM_DOCK || dest->type == WM_DRAWER) {
 		sts = wClipMakeIconOmnipresent(icon, False);
-		if (sts == WO_FAILED || sts == WO_SUCCESS)
+		if (sts == WO_FAILED || sts == WO_SUCCESS) {
+			wIconPaint(icon->icon);
 			wAppIconPaint(icon);
+		}
 	}
 
 	for (index = 1; index < src->max_icons; index++)
@@ -1195,6 +1198,7 @@ Bool wDockMoveIconBetweenDocks(WDock *src, WDock *dest, WAppIcon *icon, int x, i
 		update_icon_pixmap(icon->icon);
 
 	/* Paint it */
+	wIconPaint(icon->icon);
 	wAppIconPaint(icon);
 
 	return True;
@@ -1213,8 +1217,10 @@ void wDockDetach(WDock *dock, WAppIcon *icon)
 	 * Don't move it. -Dan
 	 */
 	sts = wClipMakeIconOmnipresent(icon, False);
-	if (sts == WO_FAILED || sts == WO_SUCCESS)
+	if (sts == WO_FAILED || sts == WO_SUCCESS) {
+		wIconPaint(icon->icon);
 		wAppIconPaint(icon);
+	}
 
 	icon->docked = 0;
 	icon->dock = NULL;
@@ -1279,6 +1285,7 @@ void wDockDetach(WDock *dock, WAppIcon *icon)
 			update_icon_pixmap(icon->icon);
 
 		/* Paint it */
+		wIconPaint(icon->icon);
 		wAppIconPaint(icon);
 
 		if (wPreferences.auto_arrange_icons)
