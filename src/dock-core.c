@@ -263,21 +263,15 @@ void keepIconsCallback(WMenu *menu, WMenuEntry *entry)
 			aicon->attracted = 0;
 			if (aicon->icon->shadowed) {
 				aicon->icon->shadowed = 0;
-
-				/*
-				 * Update icon pixmap, RImage doesn't change,
-				 * so call wIconUpdate is not needed
-				 */
 				update_icon_pixmap(aicon->icon);
-				wIconPaint(aicon->icon); /* dup */
-
-				/* Paint it */
 				wIconPaint(aicon->icon);
 				wAppIconPaint(aicon);
 			}
 		}
+
 		save_appicon(aicon);
 	}
+
 	WMFreeArray(selectedIcons);
 }
 
@@ -1191,14 +1185,8 @@ Bool wDockMoveIconBetweenDocks(WDock *src, WDock *dest, WAppIcon *icon, int x, i
 
 	MoveInStackListUnder(icon->icon->vscr, dest->icon_array[index - 1]->icon->core, icon->icon->core);
 
-	/*
-	 * Update icon pixmap, RImage doesn't change,
-	 * so call wIconUpdate is not needed
-	 */
-	if (update_icon) {
+	if (update_icon)
 		update_icon_pixmap(icon->icon);
-		wIconPaint(icon->icon); /* dup */
-	}
 
 	/* Paint it */
 	wIconPaint(icon->icon);
@@ -1280,14 +1268,8 @@ void wDockDetach(WDock *dock, WAppIcon *icon)
 
 		ChangeStackingLevel(icon->icon->vscr, icon->icon->core, NORMAL_ICON_LEVEL);
 
-		/*
-		 * Update icon pixmap, RImage doesn't change,
-		 * so call wIconUpdate is not needed
-		 */
-		if (update_icon) {
+		if (update_icon)
 			update_icon_pixmap(icon->icon);
-			wIconPaint(icon->icon); /* dup */
-		}
 
 		/* Paint it */
 		wIconPaint(icon->icon);

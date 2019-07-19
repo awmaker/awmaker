@@ -1373,7 +1373,6 @@ static void create_appicon_from_dock(WWindow *wwin, WApplication *wapp)
 
 		/* Update the icon images */
 		wIconUpdate(wapp->app_icon->icon);
-		wIconPaint(wapp->app_icon->icon); /* dup */
 
 		/* Paint it */
 		wIconPaint(wapp->app_icon->icon);

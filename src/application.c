@@ -192,7 +192,6 @@ void wApplicationActivate(WApplication *wapp)
 	if (wapp->app_icon) {
 		wIconSetHighlited(wapp->app_icon->icon, True);
 		wIconPaint(wapp->app_icon->icon);
-		wIconPaint(wapp->app_icon->icon); /* dup */
 		wAppIconPaint(wapp->app_icon);
 	}
 }
@@ -202,7 +201,6 @@ void wApplicationDeactivate(WApplication *wapp)
 	if (wapp->app_icon) {
 		wIconSetHighlited(wapp->app_icon->icon, False);
 		wIconPaint(wapp->app_icon->icon);
-		wIconPaint(wapp->app_icon->icon); /* dup */
 		wAppIconPaint(wapp->app_icon);
 	}
 }

@@ -554,7 +554,6 @@ static void updateIconImage(WWindow *wwin)
 	if (app && app->app_icon) {
 		wIconUpdate(app->app_icon->icon);
 		wIconPaint(app->app_icon->icon);
-		wIconPaint(app->app_icon->icon); /* dup */
 		wAppIconPaint(app->app_icon);
 	}
 }

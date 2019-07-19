@@ -1421,14 +1421,8 @@ Bool clip_attach_icon(WDock *dock, WAppIcon *icon, int x, int y, Bool update_ico
 	MoveInStackListUnder(icon->icon->vscr, dock->icon_array[index - 1]->icon->core, icon->icon->core);
 	wAppIconMove(icon, icon->x_pos, icon->y_pos);
 
-	/*
-	 * Update icon pixmap, RImage doesn't change,
-	 * so call wIconUpdate is not needed
-	 */
-	if (lupdate_icon) {
+	if (lupdate_icon)
 		update_icon_pixmap(icon->icon);
-		wIconPaint(icon->icon); /* dup */
-	}
 
 	/* Paint it */
 	wIconPaint(icon->icon);
