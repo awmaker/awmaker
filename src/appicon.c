@@ -463,14 +463,12 @@ static void updateDockNumbers(virtual_screen *vscr)
 
 void wAppIconPaint(WAppIcon *aicon)
 {
-	WApplication *wapp;
+	WApplication *wapp = NULL;
 	virtual_screen *vscr = aicon->icon->vscr;
 	WScreen *scr = vscr->screen_ptr;
 
 	if (aicon->icon->owner)
 		wapp = wApplicationOf(aicon->icon->owner->main_window);
-	else
-		wapp = NULL;
 
 	wIconPaint(aicon->icon);
 
