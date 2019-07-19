@@ -269,6 +269,7 @@ void keepIconsCallback(WMenu *menu, WMenuEntry *entry)
 				 * so call wIconUpdate is not needed
 				 */
 				update_icon_pixmap(aicon->icon);
+				wIconPaint(aicon->icon); /* dup */
 
 				/* Paint it */
 				wIconPaint(aicon->icon);
@@ -1194,8 +1195,10 @@ Bool wDockMoveIconBetweenDocks(WDock *src, WDock *dest, WAppIcon *icon, int x, i
 	 * Update icon pixmap, RImage doesn't change,
 	 * so call wIconUpdate is not needed
 	 */
-	if (update_icon)
+	if (update_icon) {
 		update_icon_pixmap(icon->icon);
+		wIconPaint(icon->icon); /* dup */
+	}
 
 	/* Paint it */
 	wIconPaint(icon->icon);
@@ -1281,8 +1284,10 @@ void wDockDetach(WDock *dock, WAppIcon *icon)
 		 * Update icon pixmap, RImage doesn't change,
 		 * so call wIconUpdate is not needed
 		 */
-		if (update_icon)
+		if (update_icon) {
 			update_icon_pixmap(icon->icon);
+			wIconPaint(icon->icon); /* dup */
+		}
 
 		/* Paint it */
 		wIconPaint(icon->icon);

@@ -77,8 +77,8 @@ void icon_appearanceObserver(void *self, WMNotification *notif)
 		/* If the rimage exists, update the icon, else create it */
 		if (icon->file_image)
 			update_icon_pixmap(icon);
-		else
-			wIconPaint(icon);
+
+		wIconPaint(icon);
 	}
 
 	/* so that the appicon expose handlers will paint the appicon specific
@@ -95,6 +95,7 @@ void icon_tileObserver(void *self, WMNotification *notif)
 	(void) notif;
 
 	update_icon_pixmap(icon);
+	wIconPaint(icon);
 
 	XClearArea(dpy, icon->core->window, 0, 0, 1, 1, True);
 }
@@ -328,6 +329,7 @@ int wIconChangeImageFile(WIcon *icon, const char *file)
 	set_icon_image_from_image(icon, image);
 	icon->file_name = wstrdup(path);
 	update_icon_pixmap(icon);
+	wIconPaint(icon);
 
 	wfree(path);
 	return 1;
@@ -513,6 +515,7 @@ void wIconSetHighlited(WIcon *icon, Bool flag)
 
 	icon->highlighted = flag;
 	update_icon_pixmap(icon);
+	wIconPaint(icon);
 }
 
 void wIconSelect(WIcon *icon)
@@ -600,6 +603,7 @@ void wIconUpdate(WIcon *icon)
 	}
 
 	update_icon_pixmap(icon);
+	wIconPaint(icon);
 }
 
 void update_icon_pixmap(WIcon *icon)
@@ -623,9 +627,6 @@ void update_icon_pixmap(WIcon *icon)
 	/* No pixmap, set default background */
 	if (icon->pixmap != None)
 		XSetWindowBackgroundPixmap(dpy, icon->core->window, icon->pixmap);
-
-	/* Paint it */
-	wIconPaint(icon);
 }
 
 static void get_rimage_icon_from_x11(WIcon *icon)

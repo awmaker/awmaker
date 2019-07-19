@@ -818,6 +818,7 @@ static void applySettings(WMWidget *button, void *client_data)
 				if (image) {
 					set_icon_image_from_image(wapp->app_icon->icon, image);
 					update_icon_pixmap(wapp->app_icon->icon);
+					wIconPaint(wapp->app_icon->icon);
 				} else {
 					wIconUpdate(wapp->app_icon->icon);
 				}
@@ -830,6 +831,7 @@ static void applySettings(WMWidget *button, void *client_data)
 				if (image) {
 					set_icon_image_from_image(wwin_inspected->miniwindow->icon, image);
 					update_icon_pixmap(wwin_inspected->miniwindow->icon);
+					wIconPaint(wwin_inspected->miniwindow->icon);
 				} else {
 					wIconUpdate(wwin_inspected->miniwindow->icon);
 				}
