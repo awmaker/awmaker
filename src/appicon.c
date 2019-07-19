@@ -252,8 +252,10 @@ void removeAppIconFor(WApplication *wapp)
 	if (!wapp->app_icon)
 		return;
 
-	if (wPreferences.highlight_active_app)
+	if (wPreferences.highlight_active_app) {
 		wIconSetHighlited(wapp->app_icon->icon, False);
+		wIconPaint(wapp->app_icon->icon); /* dup later */
+	}
 
 	if (wapp->app_icon->docked && !wapp->app_icon->attracted) {
 		wapp->app_icon->running = 0;

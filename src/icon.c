@@ -515,7 +515,6 @@ void wIconSetHighlited(WIcon *icon, Bool flag)
 
 	icon->highlighted = flag;
 	update_icon_pixmap(icon);
-	wIconPaint(icon);
 }
 
 void wIconSelect(WIcon *icon)
