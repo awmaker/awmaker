@@ -600,12 +600,10 @@ void wIconUpdate(WIcon *icon)
 		/* Get the Pixmap from the wm_hints, else, from the user */
 		unset_icon_image(icon);
 		icon->file_image = get_rimage_icon_from_wm_hints(icon);
-		if (!icon->file_image)
-			get_rimage_icon_from_default_icon(icon);
-	} else {
-		if (!icon->file_image)
-			get_rimage_icon_from_default_icon(icon);
 	}
+
+	if (!icon->file_image)
+		get_rimage_icon_from_default_icon(icon);
 
 	update_icon_pixmap(icon);
 }
