@@ -635,10 +635,8 @@ void update_icon_pixmap(WIcon *icon)
 
 static void get_rimage_icon_from_user_icon(WIcon *icon)
 {
-	if (icon->file_image)
-		return;
-
-	get_rimage_icon_from_default_icon(icon);
+	if (!icon->file_image)
+		get_rimage_icon_from_default_icon(icon);
 }
 
 static void get_rimage_icon_from_default_icon(WIcon *icon)
