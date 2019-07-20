@@ -58,7 +58,6 @@
 static void set_dockapp_in_icon(WIcon *icon);
 static void get_rimage_icon_from_user_icon(WIcon *icon);
 static void get_rimage_icon_from_default_icon(WIcon *icon);
-static void get_rimage_icon_from_x11(WIcon *icon);
 
 static void icon_update_pixmap(WIcon *icon, RImage *image);
 static void unset_icon_image(WIcon *icon);
@@ -595,7 +594,8 @@ void wIconUpdate(WIcon *icon)
 		icon->file_image = get_window_image_from_x11(icon->icon_win);
 	} else if (wwin && wwin->miniwindow->net_icon_image) {
 		/* Use _NET_WM_ICON icon */
-		get_rimage_icon_from_x11(icon);
+		unset_icon_image(icon);
+		icon->file_image = RRetainImage(icon->owner->miniwindow->net_icon_image);
 	} else if (wwin && wwin->wm_hints && (wwin->wm_hints->flags & IconPixmapHint)) {
 		/* Get the Pixmap from the wm_hints, else, from the user */
 		unset_icon_image(icon);
@@ -631,15 +631,6 @@ void update_icon_pixmap(WIcon *icon)
 	/* No pixmap, set default background */
 	if (icon->pixmap != None)
 		XSetWindowBackgroundPixmap(dpy, icon->core->window, icon->pixmap);
-}
-
-static void get_rimage_icon_from_x11(WIcon *icon)
-{
-	/* Remove the icon image */
-	unset_icon_image(icon);
-
-	/* Set the new icon image */
-	icon->file_image = RRetainImage(icon->owner->miniwindow->net_icon_image);
 }
 
 static void get_rimage_icon_from_user_icon(WIcon *icon)
