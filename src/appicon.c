@@ -271,9 +271,6 @@ void removeAppIconFor(WApplication *wapp)
 		set_icon_image_from_database(wapp->app_icon->icon, wapp->app_icon->wm_instance,
 					     wapp->app_icon->wm_class, wapp->app_icon->command);
 		map_icon_image(wapp->app_icon->icon);
-
-		/* Paint it */
-		wIconPaint(wapp->app_icon->icon);
 		wAppIconPaint(wapp->app_icon);
 	} else if (wapp->app_icon->docked) {
 		wapp->app_icon->running = 0;
