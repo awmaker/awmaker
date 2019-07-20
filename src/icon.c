@@ -575,14 +575,12 @@ void wIconUpdate(WIcon *icon)
 
 	/* Block if the icon is set by the user */
 	if (wwin && WFLAGP(wwin, always_user_icon)) {
-		/* Forced use user_icon */
-		if (!icon->file_image) {
-			/* Set the new icon image */
+		if (!icon->file_image)
 			icon->file_image = get_rimage_from_file(icon->vscr, icon->file_name, wPreferences.icon_size);
-			/* If is empty, then get the default image */
-			if (!icon->file_image)
-				get_rimage_icon_from_default_icon(icon);
-		}
+
+		/* If is empty, then get the default image */
+		if (!icon->file_image)
+			get_rimage_icon_from_default_icon(icon);
 
 		update_icon_pixmap(icon);
 		return;
