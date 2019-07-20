@@ -576,6 +576,7 @@ void wIconUpdate(WIcon *icon)
 	if (icon && icon->owner)
 		wwin = icon->owner;
 
+	/* Block if the icon is set by the user */
 	if (wwin && WFLAGP(wwin, always_user_icon)) {
 		/* Forced use user_icon */
 		if (!icon->file_image) {
@@ -584,7 +585,13 @@ void wIconUpdate(WIcon *icon)
 			/* If is empty, then get the default image */
 			get_rimage_icon_from_user_icon(icon);
 		}
-	} else if (icon->icon_win != None) {
+
+		update_icon_pixmap(icon);
+		return;
+	}
+
+	/* Get the icon from X11, different methods */
+	if (icon->icon_win != None) {
 		/* Get the Pixmap from the WIcon */
 		get_rimage_icon_from_icon_win(icon);
 	} else if (wwin && wwin->miniwindow->net_icon_image) {
