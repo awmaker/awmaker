@@ -56,7 +56,6 @@
 #define ICON_BORDER 3
 
 static void set_dockapp_in_icon(WIcon *icon);
-static void get_rimage_icon_from_icon_win(WIcon *icon);
 static void get_rimage_icon_from_user_icon(WIcon *icon);
 static void get_rimage_icon_from_default_icon(WIcon *icon);
 static void get_rimage_icon_from_x11(WIcon *icon);
@@ -592,8 +591,8 @@ void wIconUpdate(WIcon *icon)
 
 	/* Get the icon from X11, different methods */
 	if (icon->icon_win != None) {
-		/* Get the Pixmap from the WIcon */
-		get_rimage_icon_from_icon_win(icon);
+		unset_icon_image(icon);
+		icon->file_image = get_window_image_from_x11(icon->icon_win);
 	} else if (wwin && wwin->miniwindow->net_icon_image) {
 		/* Use _NET_WM_ICON icon */
 		get_rimage_icon_from_x11(icon);
@@ -665,21 +664,6 @@ static void get_rimage_icon_from_default_icon(WIcon *icon)
 
 	/* Set the new icon image */
 	icon->file_image = RRetainImage(scr->def_icon_rimage);
-}
-
-/* Get the RImage from the WIcon of the WWindow */
-static void get_rimage_icon_from_icon_win(WIcon *icon)
-{
-	RImage *image;
-
-	/* Create the new RImage */
-	image = get_window_image_from_x11(icon->icon_win);
-
-	/* Free the icon info */
-	unset_icon_image(icon);
-
-	/* Set the new info */
-	icon->file_image = image;
 }
 
 /* Set the dockapp in the WIcon */
