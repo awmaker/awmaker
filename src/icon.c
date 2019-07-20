@@ -561,8 +561,6 @@ void set_icon_image_from_image(WIcon *icon, RImage *image)
 		return;
 
 	unset_icon_image(icon);
-
-	icon->file_image = NULL;
 	icon->file_image = image;
 }
 
