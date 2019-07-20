@@ -56,7 +56,6 @@
 #define ICON_BORDER 3
 
 static void set_dockapp_in_icon(WIcon *icon);
-static void get_rimage_icon_from_user_icon(WIcon *icon);
 static void get_rimage_icon_from_default_icon(WIcon *icon);
 
 static void icon_update_pixmap(WIcon *icon, RImage *image);
@@ -581,7 +580,8 @@ void wIconUpdate(WIcon *icon)
 			/* Set the new icon image */
 			icon->file_image = get_rimage_from_file(icon->vscr, icon->file_name, wPreferences.icon_size);
 			/* If is empty, then get the default image */
-			get_rimage_icon_from_user_icon(icon);
+			if (!icon->file_image)
+				get_rimage_icon_from_default_icon(icon);
 		}
 
 		update_icon_pixmap(icon);
@@ -601,10 +601,10 @@ void wIconUpdate(WIcon *icon)
 		unset_icon_image(icon);
 		icon->file_image = get_rimage_icon_from_wm_hints(icon);
 		if (!icon->file_image)
-			get_rimage_icon_from_user_icon(icon);
+			get_rimage_icon_from_default_icon(icon);
 	} else {
-		/* Get the Pixmap from the user */
-		get_rimage_icon_from_user_icon(icon);
+		if (!icon->file_image)
+			get_rimage_icon_from_default_icon(icon);
 	}
 
 	update_icon_pixmap(icon);
@@ -631,12 +631,6 @@ void update_icon_pixmap(WIcon *icon)
 	/* No pixmap, set default background */
 	if (icon->pixmap != None)
 		XSetWindowBackgroundPixmap(dpy, icon->core->window, icon->pixmap);
-}
-
-static void get_rimage_icon_from_user_icon(WIcon *icon)
-{
-	if (!icon->file_image)
-		get_rimage_icon_from_default_icon(icon);
 }
 
 static void get_rimage_icon_from_default_icon(WIcon *icon)
