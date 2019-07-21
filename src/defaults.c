@@ -467,7 +467,9 @@ WDefaultEntry staticOptionList[] = {
 	{"DisableMiniwindows", "NO", NULL,
 	    &wPreferences.disable_miniwindows, getBool, NULL, NULL, NULL, 0},
 	{"EnableWorkspacePager", "NO", NULL,
-	    &wPreferences.enable_workspace_pager, getBool, NULL, NULL, NULL, 0}
+	    &wPreferences.enable_workspace_pager, getBool, NULL, NULL, NULL, 0},
+	{"SwitchPanelIconSize", "48", NULL,
+	    &wPreferences.switch_panel_icon_size, getInt, NULL, NULL, NULL, 0}
 };
 
 enum {
