@@ -751,13 +751,7 @@ void wIconPaint(WIcon *icon)
 
 void set_icon_image_from_database(WIcon *icon, const char *wm_instance, const char *wm_class, const char *command)
 {
-	char *file = NULL;
-
-	file = get_icon_filename(wm_instance, wm_class, command, False);
-	if (file) {
-		icon->file_name = wstrdup(file);
-		wfree(file);
-	}
+	icon->file_name = get_icon_filename(wm_instance, wm_class, command, False);
 }
 
 RImage *get_icon_image(virtual_screen *vscr, const char *winstance, const char *wclass, int max_size)
