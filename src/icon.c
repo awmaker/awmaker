@@ -800,21 +800,24 @@ char *get_icon_filename(const char *winstance, const char *wclass, const char *c
 	if (file_name)
 		file_path = FindImage(wPreferences.icon_path, file_name);
 
-	/* If the specific icon filename is not found, and command is specified,
-	 * then include the .app icons and re-do the search. */
+	/*
+	 * If the specific icon filename is not found, and command is specified,
+	 * then include the .app icons and re-do the search.
+	 */
 	if (!file_path && command) {
 		wApplicationExtractDirPackIcon(command, winstance, wclass);
 		file_name = wDefaultGetIconFile(winstance, wclass, False);
-
 		if (file_name) {
 			file_path = FindImage(wPreferences.icon_path, file_name);
 			if (!file_path)
 				wwarning(_("icon \"%s\" doesn't exist, check your config files"), file_name);
 
-			/* FIXME: Here, if file_path does not exist then the icon is still in the
+			/*
+			 * FIXME: Here, if file_path does not exist then the icon is still in the
 			 * "icon database" (w_global.domain.window_attr->dictionary), but the file
 			 * for the icon is no more on disk. Therefore, we should remove it from the
-			 * database. Is possible to do that using wDefaultChangeIcon() */
+			 * database. Is possible to do that using wDefaultChangeIcon()
+			 */
 		}
 	}
 
