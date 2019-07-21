@@ -760,6 +760,16 @@ void set_icon_image_from_database(WIcon *icon, const char *wm_instance, const ch
 	}
 }
 
+RImage *get_icon_image(virtual_screen *vscr, const char *winstance, const char *wclass, int max_size)
+{
+	char *file_name = NULL;
+
+	/* Get the file name of the image, using instance and class */
+	file_name = get_icon_filename(winstance, wclass, NULL, True);
+
+	return get_rimage_from_file(vscr, file_name, max_size);
+}
+
 void map_icon_image(WIcon *icon)
 {
 	icon->file_image = get_rimage_from_file(icon->vscr, icon->file_name, wPreferences.icon_size);
@@ -876,14 +886,4 @@ static RImage *get_default_image(virtual_screen *vscr)
 	image = wIconValidateIconSize(image, wPreferences.icon_size);
 
 	return image;
-}
-
-RImage *get_icon_image(virtual_screen *vscr, const char *winstance, const char *wclass, int max_size)
-{
-	char *file_name = NULL;
-
-	/* Get the file name of the image, using instance and class */
-	file_name = get_icon_filename(winstance, wclass, NULL, True);
-
-	return get_rimage_from_file(vscr, file_name, max_size);
 }
