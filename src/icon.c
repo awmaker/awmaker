@@ -791,8 +791,7 @@ void unmap_icon_image(WIcon *icon)
 char *get_icon_filename(const char *winstance, const char *wclass, const char *command,
 			Bool default_icon)
 {
-	char *file_name;
-	char *file_path;
+	char *file_name = NULL, *file_path = NULL;
 
 	/* Get the file name of the image, using instance and class */
 	file_name = wDefaultGetIconFile(winstance, wclass, default_icon);
@@ -800,8 +799,6 @@ char *get_icon_filename(const char *winstance, const char *wclass, const char *c
 	/* Check if the file really exists in the disk */
 	if (file_name)
 		file_path = FindImage(wPreferences.icon_path, file_name);
-	else
-		file_path = NULL;
 
 	/* If the specific icon filename is not found, and command is specified,
 	 * then include the .app icons and re-do the search. */
