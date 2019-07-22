@@ -566,6 +566,7 @@ void set_icon_image_from_image(WIcon *icon, RImage *image)
 
 void wIconUpdate(WIcon *icon)
 {
+	virtual_screen *vscr = icon->vscr;
 	WWindow *wwin = NULL;
 
 	if (icon && icon->owner)
@@ -574,7 +575,7 @@ void wIconUpdate(WIcon *icon)
 	/* Block if the icon is set by the user */
 	if (wwin && WFLAGP(wwin, always_user_icon)) {
 		if (!icon->file_image)
-			icon->file_image = get_rimage_from_file(icon->vscr, icon->file_name, wPreferences.icon_size);
+			icon->file_image = get_rimage_from_file(vscr, icon->file_name, wPreferences.icon_size);
 
 		/* If is empty, then get the default image */
 		if (!icon->file_image)
