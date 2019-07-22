@@ -77,6 +77,7 @@ struct _WDefaultEntry {
 	WDECallbackUpdate *update;
 	WMPropList *plkey;
 	WMPropList *plvalue;	/* default value */
+	unsigned int refresh;   /* Flag to comunicate convert and update calls */
 };
 
 /* used to map strings to integers */
@@ -131,8 +132,7 @@ static WDECallbackUpdate setFTitleBack;
 static WDECallbackUpdate setPTitleBack;
 static WDECallbackUpdate setUTitleBack;
 static WDECallbackUpdate setResizebarBack;
-static WDECallbackUpdate setWorkspaceBack;
-static WDECallbackUpdate setWorkspaceSpecificBack;
+static WDECallbackUpdate set_workspace_back;
 static WDECallbackUpdate setMenuTitleColor;
 static WDECallbackUpdate setMenuTextColor;
 static WDECallbackUpdate setMenuDisabledColor;
@@ -424,516 +424,759 @@ static WOptionEnumeration seDragMaximizedWindow[] = {
  * static defaults can't access the screen data, because it is
  * created after these defaults are read
  */
+enum {
+	SOL_COLORMAPSIZE,
+	SOL_DISABLEDITHERING,
+	SOL_ICONSIZE,
+	SOL_MODIFIERKEY,
+	SOL_FOCUSMODE,
+	SOL_NEWSTYLE,
+	SOL_DISABLEDOCK,
+	SOL_DISABLECLIP,
+	SOL_DISABLEDRAWERS,
+	SOL_CLIPMERGEDINDOCK,
+	SOL_DISABLEMINIWINDOWS,
+	SOL_ENABLEWORKSPACEPAGER
+};
+
 WDefaultEntry staticOptionList[] = {
 
 	{"ColormapSize", "4", NULL,
-	    &wPreferences.cmap_size, getInt, NULL, NULL, NULL},
+	    &wPreferences.cmap_size, getInt, NULL, NULL, NULL, 0},
 	{"DisableDithering", "NO", NULL,
-	    &wPreferences.no_dithering, getBool, NULL, NULL, NULL},
+	    &wPreferences.no_dithering, getBool, NULL, NULL, NULL, 0},
 	{"IconSize", "64", NULL,
-	    &wPreferences.icon_size, getInt, NULL, NULL, NULL},
+	    &wPreferences.icon_size, getInt, NULL, NULL, NULL, 0},
 	{"ModifierKey", "Mod1", NULL,
-	    &wPreferences.modifier_mask, getModMask, NULL, NULL, NULL},
+	    &wPreferences.modifier_mask, getModMask, NULL, NULL, NULL, 0},
 	{"FocusMode", "manual", seFocusModes,				/* have a problem when switching from */
-	    &wPreferences.focus_mode, getEnum, NULL, NULL, NULL},	/* manual to sloppy without restart */
+	    &wPreferences.focus_mode, getEnum, NULL, NULL, NULL, 0},	/* manual to sloppy without restart */
 	{"NewStyle", "new", seTitlebarModes,
-	    &wPreferences.new_style, getEnum, NULL, NULL, NULL},
+	    &wPreferences.new_style, getEnum, NULL, NULL, NULL, 0},
 	{"DisableDock", "NO", NULL,
-	    &wPreferences.flags.nodock, getBool, setIfDockPresent, NULL, NULL},
+	    &wPreferences.flags.nodock, getBool, setIfDockPresent, NULL, NULL, 0},
 	{"DisableClip", "NO", NULL,
-	    &wPreferences.flags.noclip, getBool, setIfClipPresent, NULL, NULL},
+	    &wPreferences.flags.noclip, getBool, setIfClipPresent, NULL, NULL, 0},
 	{"DisableDrawers", "NO", NULL,
-	    &wPreferences.flags.nodrawer, getBool, setIfDrawerPresent, NULL, NULL},
+	    &wPreferences.flags.nodrawer, getBool, setIfDrawerPresent, NULL, NULL, 0},
 	{"ClipMergedInDock", "NO", NULL,
-	    &wPreferences.flags.clip_merged_in_dock, getBool, setClipMergedInDock, NULL, NULL},
+	    &wPreferences.flags.clip_merged_in_dock, getBool, setClipMergedInDock, NULL, NULL, 0},
 	{"DisableMiniwindows", "NO", NULL,
-	    &wPreferences.disable_miniwindows, getBool, NULL, NULL, NULL},
+	    &wPreferences.disable_miniwindows, getBool, NULL, NULL, NULL, 0},
 	{"EnableWorkspacePager", "NO", NULL,
-	    &wPreferences.enable_workspace_pager, getBool, NULL, NULL, NULL}
+	    &wPreferences.enable_workspace_pager, getBool, NULL, NULL, NULL, 0}
 };
 
-WDefaultEntry noscreenOptionList[] = {
-	{"PixmapPath", DEF_PIXMAP_PATHS, NULL,
-	    &wPreferences.pixmap_path, getPathList, NULL, NULL, NULL},
-	{"IconPath", DEF_ICON_PATHS, NULL,
-	    &wPreferences.icon_path, getPathList, NULL, NULL, NULL},
-	{"IconificationStyle", "Zoom", seIconificationStyles,
-	    &wPreferences.iconification_style, getEnum, NULL, NULL, NULL},
-	{"EnforceIconMargin", "NO", NULL,
-	    &wPreferences.enforce_icon_margin, getBool, NULL, NULL, NULL},
-	{"DisableWSMouseActions", "NO", NULL,
-	    &wPreferences.disable_root_mouse, getBool, NULL, NULL, NULL},
-	{"MouseLeftButtonAction", "SelectWindows", seMouseButtonActions,
-	    &wPreferences.mouse_button1, getEnum, NULL, NULL, NULL},
-	{"MouseMiddleButtonAction", "OpenWindowListMenu", seMouseButtonActions,
-	    &wPreferences.mouse_button2, getEnum, NULL, NULL, NULL},
-	{"MouseRightButtonAction", "OpenApplicationsMenu", seMouseButtonActions,
-	    &wPreferences.mouse_button3, getEnum, NULL, NULL, NULL},
-	{"MouseBackwardButtonAction", "None", seMouseButtonActions,
-	    &wPreferences.mouse_button8, getEnum, NULL, NULL, NULL},
-	{"MouseForwardButtonAction", "None", seMouseButtonActions,
-	    &wPreferences.mouse_button9, getEnum, NULL, NULL, NULL},
-	{"MouseWheelAction", "None", seMouseWheelActions,
-	    &wPreferences.mouse_wheel_scroll, getEnum, NULL, NULL, NULL},
-	{"MouseWheelTiltAction", "None", seMouseWheelActions,
-	    &wPreferences.mouse_wheel_tilt, getEnum, NULL, NULL, NULL},
-	{"ColormapMode", "auto", seColormapModes,
-	    &wPreferences.colormap_mode, getEnum, NULL, NULL, NULL},
-	{"AutoFocus", "YES", NULL,
-	    &wPreferences.auto_focus, getBool, NULL, NULL, NULL},
-	{"RaiseDelay", "0", NULL,
-	    &wPreferences.raise_delay, getInt, NULL, NULL, NULL},
-	{"CirculateRaise", "NO", NULL,
-	    &wPreferences.circ_raise, getBool, NULL, NULL, NULL},
-	{"Superfluous", "YES", NULL,
-	    &wPreferences.superfluous, getBool, NULL, NULL, NULL},
-	{"AdvanceToNewWorkspace", "NO", NULL,
-	    &wPreferences.ws_advance, getBool, NULL, NULL, NULL},
-	{"CycleWorkspaces", "NO", NULL,
-	    &wPreferences.ws_cycle, getBool, NULL, NULL, NULL},
-	{"WorkspaceNameDisplayPosition", "center", seDisplayPositions,
-	    &wPreferences.workspace_name_display_position, getEnum, NULL, NULL, NULL},
-	{"SaveSessionOnExit", "NO", NULL,
-	    &wPreferences.save_session_on_exit, getBool, NULL, NULL, NULL},
-	{"WrapMenus", "NO", NULL,
-	    &wPreferences.wrap_menus, getBool, NULL, NULL, NULL},
-	{"ScrollableMenus", "YES", NULL,
-	    &wPreferences.scrollable_menus, getBool, NULL, NULL, NULL},
-	{"MenuScrollSpeed", "fast", seSpeeds,
-	    &wPreferences.menu_scroll_speed, getEnum, NULL, NULL, NULL},
-	{"IconSlideSpeed", "fast", seSpeeds,
-	    &wPreferences.icon_slide_speed, getEnum, NULL, NULL, NULL},
-	{"ShadeSpeed", "fast", seSpeeds,
-	    &wPreferences.shade_speed, getEnum, NULL, NULL, NULL},
-	{"BounceAppIconsWhenUrgent", "YES", NULL,
-	    &wPreferences.bounce_appicons_when_urgent, getBool, NULL, NULL, NULL},
-	{"RaiseAppIconsWhenBouncing", "NO", NULL,
-	    &wPreferences.raise_appicons_when_bouncing, getBool, NULL, NULL, NULL},
-	{"DoNotMakeAppIconsBounce", "NO", NULL,
-	    &wPreferences.do_not_make_appicons_bounce, getBool, NULL, NULL, NULL},
-	{"DoubleClickTime", "250", (void *) &wPreferences.dblclick_time,
-	    &wPreferences.dblclick_time, getInt, setDoubleClick, NULL, NULL},
-	{"ClipAutoraiseDelay", "600", NULL,
-	     &wPreferences.clip_auto_raise_delay, getInt, NULL, NULL, NULL},
-	{"ClipAutolowerDelay", "1000", NULL,
-	    &wPreferences.clip_auto_lower_delay, getInt, NULL, NULL, NULL},
-	{"ClipAutoexpandDelay", "600", NULL,
-	    &wPreferences.clip_auto_expand_delay, getInt, NULL, NULL, NULL},
-	{"ClipAutocollapseDelay", "1000", NULL,
-	    &wPreferences.clip_auto_collapse_delay, getInt, NULL, NULL, NULL},
-	{"WrapAppiconsInDock", "YES", NULL,
-	    &wPreferences.flags.wrap_appicons_in_dock, getBool, setWrapAppiconsInDock, NULL, NULL},
-	{"AlignSubmenus", "NO", NULL,
-	    &wPreferences.align_menus, getBool, NULL, NULL, NULL},
-	{"ViKeyMenus", "NO", NULL,
-	    &wPreferences.vi_key_menus, getBool, NULL, NULL, NULL},
-	{"OpenTransientOnOwnerWorkspace", "NO", NULL,
-	    &wPreferences.open_transients_with_parent, getBool, NULL, NULL, NULL},
-	{"WindowPlacement", "auto", sePlacements,
-	    &wPreferences.window_placement, getEnum, NULL, NULL, NULL},
-	{"IgnoreFocusClick", "NO", NULL,
-	    &wPreferences.ignore_focus_click, getBool, NULL, NULL, NULL},
-	{"UseSaveUnders", "NO", NULL,
-	    &wPreferences.use_saveunders, getBool, NULL, NULL, NULL},
-	{"OpaqueMove", "YES", NULL,
-	    &wPreferences.opaque_move, getBool, NULL, NULL, NULL},
-	{"OpaqueResize", "NO", NULL,
-	    &wPreferences.opaque_resize, getBool, NULL, NULL, NULL},
-	{"OpaqueMoveResizeKeyboard", "NO", NULL,
-	    &wPreferences.opaque_move_resize_keyboard, getBool, NULL, NULL, NULL},
-	{"DisableAnimations", "NO", NULL,
-	    &wPreferences.no_animations, getBool, NULL, NULL, NULL},
-	{"DontLinkWorkspaces", "YES", NULL,
-	    &wPreferences.no_autowrap, getBool, NULL, NULL, NULL},
-	{"WindowSnapping", "NO", NULL,
-	    &wPreferences.window_snapping, getBool, NULL, NULL, NULL},
-	{"SnapEdgeDetect", "1", NULL,
-	    &wPreferences.snap_edge_detect, getInt, NULL, NULL, NULL},
-	{"SnapCornerDetect", "10", NULL,
-	    &wPreferences.snap_corner_detect, getInt, NULL, NULL, NULL},
-	{"SnapToTopMaximizesFullscreen", "NO", NULL,
-	    &wPreferences.snap_to_top_maximizes_fullscreen, getBool, NULL, NULL, NULL},
-	{"DragMaximizedWindow", "Move", seDragMaximizedWindow,
-	    &wPreferences.drag_maximized_window, getEnum, NULL, NULL, NULL},
-	{"MoveHalfMaximizedWindowsBetweenScreens", "NO", NULL,
-	    &wPreferences.move_half_max_between_heads, getBool, NULL, NULL, NULL},
-	{"AlternativeHalfMaximized", "NO", NULL,
-	    &wPreferences.alt_half_maximize, getBool, NULL, NULL, NULL},
-	{"PointerWithHalfMaxWindows", "NO", NULL,
-	    &wPreferences.pointer_with_half_max_windows, getBool, NULL, NULL, NULL},
-	{"HighlightActiveApp", "YES", NULL,
-	    &wPreferences.highlight_active_app, getBool, NULL, NULL, NULL},
-	{"AutoArrangeIcons", "NO", NULL,
-	    &wPreferences.auto_arrange_icons, getBool, NULL, NULL, NULL},
-	{"WindowPlaceOrigin", "(64, 0)", NULL,
-	    &wPreferences.window_place_origin, getCoord, NULL, NULL, NULL},
-	{"ResizeDisplay", "center", seGeomDisplays,
-	    &wPreferences.size_display, getEnum, NULL, NULL, NULL},
-	{"MoveDisplay", "floating", seGeomDisplays,
-	    &wPreferences.move_display, getEnum, NULL, NULL, NULL},
-	{"DontConfirmKill", "NO", NULL,
-	    &wPreferences.dont_confirm_kill, getBool, NULL, NULL, NULL},
-	{"WindowTitleBalloons", "YES", NULL,
-	    &wPreferences.window_balloon, getBool, NULL, NULL, NULL},
-	{"MiniwindowTitleBalloons", "NO", NULL,
-	    &wPreferences.miniwin_title_balloon, getBool, NULL, NULL, NULL},
-	{"MiniwindowPreviewBalloons", "NO", NULL,
-	    &wPreferences.miniwin_preview_balloon, getBool, NULL, NULL, NULL},
-	{"AppIconBalloons", "NO", NULL,
-	    &wPreferences.appicon_balloon, getBool, NULL, NULL, NULL},
-	{"HelpBalloons", "NO", NULL,
-	    &wPreferences.help_balloon, getBool, NULL, NULL, NULL},
-	{"EdgeResistance", "30", NULL,
-	    &wPreferences.edge_resistance, getInt, NULL, NULL, NULL},
-	{"ResizeIncrement", "0", NULL,
-	    &wPreferences.resize_increment, getInt, NULL, NULL, NULL},
-	{"Attraction", "NO", NULL,
-	    &wPreferences.attract, getBool, NULL, NULL, NULL},
-	{"DisableBlinking", "NO", NULL,
-	    &wPreferences.dont_blink, getBool, NULL, NULL, NULL},
-	{"SingleClickLaunch",	"NO",	NULL,
-	    &wPreferences.single_click, getBool, NULL, NULL, NULL},
-	{"StrictWindozeCycle",	"YES",	NULL,
-	    &wPreferences.strict_windoze_cycle, getBool, NULL, NULL, NULL},
-	{"SwitchPanelOnlyOpen",	"NO",	NULL,
-	    &wPreferences.panel_only_open, getBool, NULL, NULL, NULL},
-	{"MiniPreviewSize", "128", NULL,
-	    &wPreferences.minipreview_size, getInt, NULL, NULL, NULL},
-	{"IgnoreGtkHints", "NO", NULL,
-	    &wPreferences.ignore_gtk_decoration_hints, getBool, NULL, NULL, NULL},
-
-	/* style options */
-	{"SmoothWorkspaceBack", "NO", NULL,
-	    NULL, getBool, NULL, NULL, NULL},
-	{"TitleJustify", "center", seJustifications,
-	    &wPreferences.title_justification, getEnum, setJustify, NULL, NULL},
-	{"WindowTitleExtendSpace", DEF_WINDOW_TITLE_EXTEND_SPACE, NULL,
-	    &wPreferences.window_title_clearance, getInt, setClearance, NULL, NULL},
-	{"WindowTitleMinHeight", "0", NULL,
-	    &wPreferences.window_title_min_height, getInt, setClearance, NULL, NULL},
-	{"WindowTitleMaxHeight", NUM2STRING(INT_MAX), NULL,
-	    &wPreferences.window_title_max_height, getInt, setClearance, NULL, NULL},
-	{"MenuTitleExtendSpace", DEF_MENU_TITLE_EXTEND_SPACE, NULL,
-	    &wPreferences.menu_title_clearance, getInt, setClearance, NULL, NULL},
-	{"MenuTitleMinHeight", "0", NULL,
-	    &wPreferences.menu_title_min_height, getInt, setClearance, NULL, NULL},
-	{"MenuTitleMaxHeight", NUM2STRING(INT_MAX), NULL,
-	    &wPreferences.menu_title_max_height, getInt, setClearance, NULL, NULL},
-	{"MenuTextExtendSpace", DEF_MENU_TEXT_EXTEND_SPACE, NULL,
-	    &wPreferences.menu_text_clearance, getInt, setClearance, NULL, NULL},
-	{"ShowClipTitle", "YES", NULL,
-	    &wPreferences.show_clip_title, getBool, NULL, NULL, NULL},
-	{"DialogHistoryLines", "500", NULL,
-	    &wPreferences.history_lines, getInt, NULL, NULL, NULL},
-	{"CycleActiveHeadOnly", "NO", NULL,
-	    &wPreferences.cycle_active_head_only, getBool, NULL, NULL, NULL},
-	{"CycleIgnoreMinimized", "NO", NULL,
-	    &wPreferences.cycle_ignore_minimized, getBool, NULL, NULL, NULL}
+enum {
+	OL_ICONPOSITION,
+	OL_ICONIFICATIONSTYLE,
+	OL_ENFORCEICONMARGIN,
+	OL_DISABLEWSMOUSEACTIONS,
+	OL_MOUSELEFTBUTTONACTION,
+	OL_MOUSEMIDDLEBUTTONACTION,
+	OL_MOUSERIGHTBUTTONACTION,
+	OL_MOUSEBACKWARDBUTTONACTION,
+	OL_MOUSEFORWARDBUTTONACTION,
+	OL_MOUSEWHEELACTION,
+	OL_MOUSEWHEELTILTACTION,
+	OL_PIXMAPPATH,
+	OL_ICONPATH,
+	OL_COLORMAPMODE,
+	OL_AUTOFOCUS,
+	OL_RAISEDELAY,
+	OL_CIRCULATERAISE,
+	OL_SUPERFLUOUS,
+	OL_ADVANCETONEWWORKSPACE,
+	OL_CYCLEWORKSPACES,
+	OL_WORKSPACENAMEDISPLAYPOSITION,
+	OL_WORKSPACEBORDER,
+	OL_WORKSPACEBORDERSIZE,
+	OL_STICKYICONS,
+	OL_SAVESESSIONONEXIT,
+	OL_WRAPMENUS,
+	OL_SCROLLABLEMENUS,
+	OL_MENUSCROLLSPEED,
+	OL_ICONSLIDESPEED,
+	OL_SHADESPEED,
+	OL_BOUNCEAPPICONSWHENURGENT,
+	OL_RAISEAPPICONSWHENBOUNCING,
+	OL_DONOTMAKEAPPICONSBOUNCE,
+	OL_DOUBLECLICKTIME,
+	OL_CLIPAUTORAISEDELAY,
+	OL_CLIPAUTOLOWERDELAY,
+	OL_CLIPAUTOEXPANDDELAY,
+	OL_CLIPAUTOCOLLAPSEDELAY,
+	OL_WRAPAPPICONSINDOCK,
+	OL_ALIGNSUBMENUS,
+	OL_VIKEYMENUS,
+	OL_OPENTRANSIENTONOWNERWORKSPACE,
+	OL_WINDOWPLACEMENT,
+	OL_IGNOREFOCUSCLICK,
+	OL_USESAVEUNDERS,
+	OL_OPAQUEMOVE,
+	OL_OPAQUERESIZE,
+	OL_OPAQUEMOVERESIZEKEYBOARD,
+	OL_DISABLEANIMATIONS,
+	OL_DONTLINKWORKSPACES,
+	OL_WINDOWSNAPPING,
+	OL_SNAPEDGEDETECT,
+	OL_SNAPCORNERDETECT,
+	OL_SNAPTOTOPMAXIMIZESFULLSCREEN,
+	OL_DRAGMAXIMIZEDWINDOW,
+	OL_MOVEHALFMAXIMIZEDWINDOWSBETWEENSCREENS,
+	OL_ALTERNATIVEHALFMAXIMIZED,
+	OL_POINTERWITHHALFMAXWINDOWS,
+	OL_HIGHLIGHTACTIVEAPP,
+	OL_AUTOARRANGEICONS,
+	OL_NOWINDOWOVERDOCK,
+	OL_NOWINDOWOVERICONS,
+	OL_WINDOWPLACEORIGIN,
+	OL_RESIZEDISPLAY,
+	OL_MOVEDISPLAY,
+	OL_DONTCONFIRMKILL,
+	OL_WINDOWTITLEBALLOONS,
+	OL_MINIWINDOWTITLEBALLOONS,
+	OL_MINIWINDOWPREVIEWBALLOONS,
+	OL_APPICONBALLOONS,
+	OL_HELPBALLOONS,
+	OL_EDGERESISTANCE,
+	OL_RESIZEINCREMENT,
+	OL_ATTRACTION,
+	OL_DISABLEBLINKING,
+	OL_SINGLECLICKLAUNCH,
+	OL_STRICTWINDOZECYCLE,
+	OL_SWITCHPANELONLYOPEN,
+	OL_MINIPREVIEWSIZE,
+	OL_IGNOREGTKHINTS,
+	OL_MENUSTYLE,
+	OL_WIDGETCOLOR,
+	OL_WORKSPACESPECIFICBACK,
+	OL_WORKSPACEBACK,
+	OL_SMOOTHWORKSPACEBACK,
+	OL_ICONBACK,
+	OL_TITLEJUSTIFY,
+	OL_WINDOWTITLEFONT,
+	OL_WINDOWTITLEEXTENDSPACE,
+	OL_WINDOWTITLEMINHEIGHT,
+	OL_WINDOWTITLEMAXHEIGHT,
+	OL_MENUTITLEEXTENDSPACE,
+	OL_MENUTITLEMINHEIGHT,
+	OL_MENUTITLEMAXHEIGHT,
+	OL_MENUTEXTEXTENDSPACE,
+	OL_MENUTITLEFONT,
+	OL_MENUTEXTFONT,
+	OL_ICONTITLEFONT,
+	OL_CLIPTITLEFONT,
+	OL_SHOWCLIPTITLE,
+	OL_LARGEDISPLAYFONT,
+	OL_HIGHLIGHTCOLOR,
+	OL_HIGHLIGHTTEXTCOLOR,
+	OL_CLIPTITLECOLOR,
+	OL_CCLIPTITLECOLOR,
+	OL_FTITLECOLOR,
+	OL_PTITLECOLOR,
+	OL_UTITLECOLOR,
+	OL_FTITLEBACK,
+	OL_PTITLEBACK,
+	OL_UTITLEBACK,
+	OL_RESIZEBARBACK,
+	OL_MENUTITLECOLOR,
+	OL_MENUTEXTCOLOR,
+	OL_MENUDISABLEDCOLOR,
+	OL_MENUTITLEBACK,
+	OL_MENUTEXTBACK,
+	OL_ICONTITLECOLOR,
+	OL_ICONTITLEBACK,
+	OL_SWITCHPANELIMAGES,
+	OL_MODIFIERKEYLABELS,
+	OL_FRAMEBORDERWIDTH,
+	OL_FRAMEBORDERCOLOR,
+	OL_FRAMEFOCUSEDBORDERCOLOR,
+	OL_FRAMESELECTEDBORDERCOLOR,
+	OL_WORKSPACEMAPBACK,
+	OL_ROOTMENUKEY,
+	OL_WINDOWLISTKEY,
+	OL_WINDOWMENUKEY,
+	OL_DOCKRAISELOWERKEY,
+	OL_CLIPRAISELOWERKEY,
+	OL_MINIATURIZEKEY,
+	OL_MINIMIZEALLKEY,
+	OL_HIDEKEY,
+	OL_HIDEOTHERSKEY,
+	OL_MOVERESIZEKEY,
+	OL_CLOSEKEY,
+	OL_MAXIMIZEKEY,
+	OL_VMAXIMIZEKEY,
+	OL_HMAXIMIZEKEY,
+	OL_LHMAXIMIZEKEY,
+	OL_RHMAXIMIZEKEY,
+	OL_THMAXIMIZEKEY,
+	OL_BHMAXIMIZEKEY,
+	OL_LTCMAXIMIZEKEY,
+	OL_RTCMAXIMIZEKEY,
+	OL_LBCMAXIMIZEKEY,
+	OL_RBCMAXIMIZEKEY,
+	OL_MAXIMUSKEY,
+	OL_KEEPONTOPKEY,
+	OL_KEEPATBOTTOMKEY,
+	OL_OMNIPRESENTKEY,
+	OL_RAISEKEY,
+	OL_LOWERKEY,
+	OL_RAISELOWERKEY,
+	OL_SHADEKEY,
+	OL_SELECTKEY,
+	OL_WORKSPACEMAPKEY,
+	OL_FOCUSNEXTKEY,
+	OL_FOCUSPREVKEY,
+	OL_GROUPNEXTKEY,
+	OL_GROUPPREVKEY,
+	OL_NEXTWORKSPACEKEY,
+	OL_PREVWORKSPACEKEY,
+	OL_LASTWORKSPACEKEY,
+	OL_NEXTWORKSPACELAYERKEY,
+	OL_PREVWORKSPACELAYERKEY,
+	OL_WORKSPACE1KEY,
+	OL_WORKSPACE2KEY,
+	OL_WORKSPACE3KEY,
+	OL_WORKSPACE4KEY,
+	OL_WORKSPACE5KEY,
+	OL_WORKSPACE6KEY,
+	OL_WORKSPACE7KEY,
+	OL_WORKSPACE8KEY,
+	OL_WORKSPACE9KEY,
+	OL_WORKSPACE10KEY,
+	OL_MOVETOWORKSPACE1KEY,
+	OL_MOVETOWORKSPACE2KEY,
+	OL_MOVETOWORKSPACE3KEY,
+	OL_MOVETOWORKSPACE4KEY,
+	OL_MOVETOWORKSPACE5KEY,
+	OL_MOVETOWORKSPACE6KEY,
+	OL_MOVETOWORKSPACE7KEY,
+	OL_MOVETOWORKSPACE8KEY,
+	OL_MOVETOWORKSPACE9KEY,
+	OL_MOVETOWORKSPACE10KEY,
+	OL_MOVETONEXTWORKSPACEKEY,
+	OL_MOVETOPREVWORKSPACEKEY,
+	OL_MOVETOLASTWORKSPACEKEY,
+	OL_MOVETONEXTWORKSPACELAYERKEY,
+	OL_MOVETOPREVWORKSPACELAYERKEY,
+	OL_WINDOWSHORTCUT1KEY,
+	OL_WINDOWSHORTCUT2KEY,
+	OL_WINDOWSHORTCUT3KEY,
+	OL_WINDOWSHORTCUT4KEY,
+	OL_WINDOWSHORTCUT5KEY,
+	OL_WINDOWSHORTCUT6KEY,
+	OL_WINDOWSHORTCUT7KEY,
+	OL_WINDOWSHORTCUT8KEY,
+	OL_WINDOWSHORTCUT9KEY,
+	OL_WINDOWSHORTCUT10KEY,
+	OL_MOVETO12TO6HEAD,
+	OL_MOVETO6TO12HEAD,
+	OL_WINDOWRELAUNCHKEY,
+	OL_SCREENSWITCHKEY,
+	OL_RUNKEY,
+#ifdef KEEP_XKB_LOCK_STATUS
+	OL_TOGGLEKBDMODEKEY,
+	OL_KBDMODELOCK,
+#endif	/* KEEP_XKB_LOCK_STATUS */
+	OL_NORMALCURSOR,
+	OL_ARROWCURSOR,
+	OL_MOVECURSOR,
+	OL_RESIZECURSOR,
+	OL_TOPLEFTRESIZECURSOR,
+	OL_TOPRIGHTRESIZECURSOR,
+	OL_BOTTOMLEFTRESIZECURSOR,
+	OL_BOTTOMRIGHTRESIZECURSOR,
+	OL_VERTICALRESIZECURSOR,
+	OL_HORIZONTALRESIZECURSOR,
+	OL_WAITCURSOR,
+	OL_QUESTIONCURSOR,
+	OL_TEXTCURSOR,
+	OL_SELECTCURSOR,
+	OL_DIALOGHISTORYLINES,
+	OL_CYCLEACTIVEHEADONLY,
+	OL_CYCLEIGNOREMINIMIZED
 };
 
 WDefaultEntry optionList[] = {
-
 	/* dynamic options */
 
-	{"NoWindowOverDock", "NO", NULL,
-	    &wPreferences.no_window_over_dock, getBool, updateUsableArea, NULL, NULL}, /* - */
-	{"NoWindowOverIcons", "NO", NULL,
-	    &wPreferences.no_window_over_icons, getBool, updateUsableArea, NULL, NULL}, /* - */
 	{"IconPosition", "blh", seIconPositions,
-	    &wPreferences.icon_yard, getEnum, setIconPosition, NULL, NULL}, /* - */
+	    &wPreferences.icon_yard, getEnum, setIconPosition, NULL, NULL, 1},
+	{"IconificationStyle", "Zoom", seIconificationStyles,
+	    &wPreferences.iconification_style, getEnum, NULL, NULL, NULL, 1},
+	{"EnforceIconMargin", "NO", NULL,
+	    &wPreferences.enforce_icon_margin, getBool, NULL, NULL, NULL, 1},
+	{"DisableWSMouseActions", "NO", NULL,
+	    &wPreferences.disable_root_mouse, getBool, NULL, NULL, NULL, 1},
+	{"MouseLeftButtonAction", "SelectWindows", seMouseButtonActions,
+	    &wPreferences.mouse_button1, getEnum, NULL, NULL, NULL, 1},
+	{"MouseMiddleButtonAction", "OpenWindowListMenu", seMouseButtonActions,
+	    &wPreferences.mouse_button2, getEnum, NULL, NULL, NULL, 1},
+	{"MouseRightButtonAction", "OpenApplicationsMenu", seMouseButtonActions,
+	    &wPreferences.mouse_button3, getEnum, NULL, NULL, NULL, 1},
+	{"MouseBackwardButtonAction", "None", seMouseButtonActions,
+	    &wPreferences.mouse_button8, getEnum, NULL, NULL, NULL, 1},
+	{"MouseForwardButtonAction", "None", seMouseButtonActions,
+	    &wPreferences.mouse_button9, getEnum, NULL, NULL, NULL, 1},
+	{"MouseWheelAction", "None", seMouseWheelActions,
+	    &wPreferences.mouse_wheel_scroll, getEnum, NULL, NULL, NULL, 1},
+	{"MouseWheelTiltAction", "None", seMouseWheelActions,
+	    &wPreferences.mouse_wheel_tilt, getEnum, NULL, NULL, NULL, 1},
+	{"PixmapPath", DEF_PIXMAP_PATHS, NULL,
+	    &wPreferences.pixmap_path, getPathList, NULL, NULL, NULL, 1},
+	{"IconPath", DEF_ICON_PATHS, NULL,
+	    &wPreferences.icon_path, getPathList, NULL, NULL, NULL, 1},
+	{"ColormapMode", "auto", seColormapModes,
+	    &wPreferences.colormap_mode, getEnum, NULL, NULL, NULL, 1},
+	{"AutoFocus", "YES", NULL,
+	    &wPreferences.auto_focus, getBool, NULL, NULL, NULL, 1},
+	{"RaiseDelay", "0", NULL,
+	    &wPreferences.raise_delay, getInt, NULL, NULL, NULL, 1},
+	{"CirculateRaise", "NO", NULL,
+	    &wPreferences.circ_raise, getBool, NULL, NULL, NULL, 1},
+	{"Superfluous", "YES", NULL,
+	    &wPreferences.superfluous, getBool, NULL, NULL, NULL, 1},
+	{"AdvanceToNewWorkspace", "NO", NULL,
+	    &wPreferences.ws_advance, getBool, NULL, NULL, NULL, 1},
+	{"CycleWorkspaces", "NO", NULL,
+	    &wPreferences.ws_cycle, getBool, NULL, NULL, NULL, 1},
+	{"WorkspaceNameDisplayPosition", "center", seDisplayPositions,
+	    &wPreferences.workspace_name_display_position, getEnum, NULL, NULL, NULL, 1},
 	{"WorkspaceBorder", "None", seWorkspaceBorder,
-	    &wPreferences.workspace_border_position, getEnum, updateUsableArea, NULL, NULL}, /* - */
+	    &wPreferences.workspace_border_position, getEnum, updateUsableArea, NULL, NULL, 1},
 	{"WorkspaceBorderSize", "0", NULL,
-	    &wPreferences.workspace_border_size, getInt, updateUsableArea, NULL, NULL}, /* - */
+	    &wPreferences.workspace_border_size, getInt, updateUsableArea, NULL, NULL, 1},
 	{"StickyIcons", "NO", NULL,
-	    &wPreferences.sticky_icons, getBool, setStickyIcons, NULL, NULL}, /* - */
+	    &wPreferences.sticky_icons, getBool, setStickyIcons, NULL, NULL, 1},
+	{"SaveSessionOnExit", "NO", NULL,
+	    &wPreferences.save_session_on_exit, getBool, NULL, NULL, NULL, 1},
+	{"WrapMenus", "NO", NULL,
+	    &wPreferences.wrap_menus, getBool, NULL, NULL, NULL, 1},
+	{"ScrollableMenus", "YES", NULL,
+	    &wPreferences.scrollable_menus, getBool, NULL, NULL, NULL, 1},
+	{"MenuScrollSpeed", "fast", seSpeeds,
+	    &wPreferences.menu_scroll_speed, getEnum, NULL, NULL, NULL, 1},
+	{"IconSlideSpeed", "fast", seSpeeds,
+	    &wPreferences.icon_slide_speed, getEnum, NULL, NULL, NULL, 1},
+	{"ShadeSpeed", "fast", seSpeeds,
+	    &wPreferences.shade_speed, getEnum, NULL, NULL, NULL, 1},
+	{"BounceAppIconsWhenUrgent", "YES", NULL,
+	    &wPreferences.bounce_appicons_when_urgent, getBool, NULL, NULL, NULL, 1},
+	{"RaiseAppIconsWhenBouncing", "NO", NULL,
+	    &wPreferences.raise_appicons_when_bouncing, getBool, NULL, NULL, NULL, 1},
+	{"DoNotMakeAppIconsBounce", "NO", NULL,
+	    &wPreferences.do_not_make_appicons_bounce, getBool, NULL, NULL, NULL, 1},
+	{"DoubleClickTime", "250", (void *) &wPreferences.dblclick_time,
+	    &wPreferences.dblclick_time, getInt, setDoubleClick, NULL, NULL, 1},
+	{"ClipAutoraiseDelay", "600", NULL,
+	     &wPreferences.clip_auto_raise_delay, getInt, NULL, NULL, NULL, 1},
+	{"ClipAutolowerDelay", "1000", NULL,
+	    &wPreferences.clip_auto_lower_delay, getInt, NULL, NULL, NULL, 1},
+	{"ClipAutoexpandDelay", "600", NULL,
+	    &wPreferences.clip_auto_expand_delay, getInt, NULL, NULL, NULL, 1},
+	{"ClipAutocollapseDelay", "1000", NULL,
+	    &wPreferences.clip_auto_collapse_delay, getInt, NULL, NULL, NULL, 1},
+	{"WrapAppiconsInDock", "YES", NULL,
+	    &wPreferences.flags.wrap_appicons_in_dock, getBool, setWrapAppiconsInDock, NULL, NULL, 1},
+	{"AlignSubmenus", "NO", NULL,
+	    &wPreferences.align_menus, getBool, NULL, NULL, NULL, 1},
+	{"ViKeyMenus", "NO", NULL,
+	    &wPreferences.vi_key_menus, getBool, NULL, NULL, NULL, 1},
+	{"OpenTransientOnOwnerWorkspace", "NO", NULL,
+	    &wPreferences.open_transients_with_parent, getBool, NULL, NULL, NULL, 1},
+	{"WindowPlacement", "auto", sePlacements,
+	    &wPreferences.window_placement, getEnum, NULL, NULL, NULL, 1},
+	{"IgnoreFocusClick", "NO", NULL,
+	    &wPreferences.ignore_focus_click, getBool, NULL, NULL, NULL, 1},
+	{"UseSaveUnders", "NO", NULL,
+	    &wPreferences.use_saveunders, getBool, NULL, NULL, NULL, 1},
+	{"OpaqueMove", "YES", NULL,
+	    &wPreferences.opaque_move, getBool, NULL, NULL, NULL, 1},
+	{"OpaqueResize", "NO", NULL,
+	    &wPreferences.opaque_resize, getBool, NULL, NULL, NULL, 1},
+	{"OpaqueMoveResizeKeyboard", "NO", NULL,
+	    &wPreferences.opaque_move_resize_keyboard, getBool, NULL, NULL, NULL, 1},
+	{"DisableAnimations", "NO", NULL,
+	    &wPreferences.no_animations, getBool, NULL, NULL, NULL, 1},
+	{"DontLinkWorkspaces", "YES", NULL,
+	    &wPreferences.no_autowrap, getBool, NULL, NULL, NULL, 1},
+	{"WindowSnapping", "NO", NULL,
+	    &wPreferences.window_snapping, getBool, NULL, NULL, NULL, 1},
+	{"SnapEdgeDetect", "1", NULL,
+	    &wPreferences.snap_edge_detect, getInt, NULL, NULL, NULL, 1},
+	{"SnapCornerDetect", "10", NULL,
+	    &wPreferences.snap_corner_detect, getInt, NULL, NULL, NULL, 1},
+	{"SnapToTopMaximizesFullscreen", "NO", NULL,
+	    &wPreferences.snap_to_top_maximizes_fullscreen, getBool, NULL, NULL, NULL, 1},
+	{"DragMaximizedWindow", "Move", seDragMaximizedWindow,
+	    &wPreferences.drag_maximized_window, getEnum, NULL, NULL, NULL, 1},
+	{"MoveHalfMaximizedWindowsBetweenScreens", "NO", NULL,
+	    &wPreferences.move_half_max_between_heads, getBool, NULL, NULL, NULL, 1},
+	{"AlternativeHalfMaximized", "NO", NULL,
+	    &wPreferences.alt_half_maximize, getBool, NULL, NULL, NULL, 1},
+	{"PointerWithHalfMaxWindows", "NO", NULL,
+	    &wPreferences.pointer_with_half_max_windows, getBool, NULL, NULL, NULL, 1},
+	{"HighlightActiveApp", "YES", NULL,
+	    &wPreferences.highlight_active_app, getBool, NULL, NULL, NULL, 1},
+	{"AutoArrangeIcons", "NO", NULL,
+	    &wPreferences.auto_arrange_icons, getBool, NULL, NULL, NULL, 1},
+	{"NoWindowOverDock", "NO", NULL,
+	    &wPreferences.no_window_over_dock, getBool, updateUsableArea, NULL, NULL, 1},
+	{"NoWindowOverIcons", "NO", NULL,
+	    &wPreferences.no_window_over_icons, getBool, updateUsableArea, NULL, NULL, 1},
+	{"WindowPlaceOrigin", "(64, 0)", NULL,
+	    &wPreferences.window_place_origin, getCoord, NULL, NULL, NULL, 1},
+	{"ResizeDisplay", "center", seGeomDisplays,
+	    &wPreferences.size_display, getEnum, NULL, NULL, NULL, 1},
+	{"MoveDisplay", "floating", seGeomDisplays,
+	    &wPreferences.move_display, getEnum, NULL, NULL, NULL, 1},
+	{"DontConfirmKill", "NO", NULL,
+	    &wPreferences.dont_confirm_kill, getBool, NULL, NULL, NULL, 1},
+	{"WindowTitleBalloons", "YES", NULL,
+	    &wPreferences.window_balloon, getBool, NULL, NULL, NULL, 1},
+	{"MiniwindowTitleBalloons", "NO", NULL,
+	    &wPreferences.miniwin_title_balloon, getBool, NULL, NULL, NULL, 1},
+	{"MiniwindowPreviewBalloons", "NO", NULL,
+	    &wPreferences.miniwin_preview_balloon, getBool, NULL, NULL, NULL, 1},
+	{"AppIconBalloons", "NO", NULL,
+	    &wPreferences.appicon_balloon, getBool, NULL, NULL, NULL, 1},
+	{"HelpBalloons", "NO", NULL,
+	    &wPreferences.help_balloon, getBool, NULL, NULL, NULL, 1},
+	{"EdgeResistance", "30", NULL,
+	    &wPreferences.edge_resistance, getInt, NULL, NULL, NULL, 1},
+	{"ResizeIncrement", "0", NULL,
+	    &wPreferences.resize_increment, getInt, NULL, NULL, NULL, 1},
+	{"Attraction", "NO", NULL,
+	    &wPreferences.attract, getBool, NULL, NULL, NULL, 1},
+	{"DisableBlinking", "NO", NULL,
+	    &wPreferences.dont_blink, getBool, NULL, NULL, NULL, 1},
+	{"SingleClickLaunch",	"NO",	NULL,
+	    &wPreferences.single_click, getBool, NULL, NULL, NULL, 1},
+	{"StrictWindozeCycle",	"YES",	NULL,
+	    &wPreferences.strict_windoze_cycle, getBool, NULL, NULL, NULL, 1},
+	{"SwitchPanelOnlyOpen",	"NO",	NULL,
+	    &wPreferences.panel_only_open, getBool, NULL, NULL, NULL, 1},
+	{"MiniPreviewSize", "128", NULL,
+	    &wPreferences.minipreview_size, getInt, NULL, NULL, NULL, 1},
+	{"IgnoreGtkHints", "NO", NULL,
+	    &wPreferences.ignore_gtk_decoration_hints, getBool, NULL, NULL, NULL, 1},
 
 	/* style options */
-
 	{"MenuStyle", "normal", seMenuStyles,
-	    &wPreferences.menu_style, getEnum, setMenuStyle, NULL, NULL}, /* - */
+	    &wPreferences.menu_style, getEnum, setMenuStyle, NULL, NULL, 1},
 	{"WidgetColor", "(solid, gray)", NULL,
-	    &wPreferences.texture.widgetcolor, getTexture, setWidgetColor, NULL, NULL},
+	    &wPreferences.texture.widgetcolor, getTexture, setWidgetColor, NULL, NULL, 1},
 	{"WorkspaceSpecificBack", "()", NULL,
-	    &wPreferences.workspacespecificback, getWSSpecificBackground, setWorkspaceSpecificBack, NULL, NULL},
+	    &wPreferences.workspacespecificback, getWSSpecificBackground, set_workspace_back, NULL, NULL, 1},
 	/* WorkspaceBack must come after WorkspaceSpecificBack or
 	 * WorkspaceBack won't know WorkspaceSpecificBack was also
 	 * specified and 2 copies of wmsetbg will be launched */
 	{"WorkspaceBack", "(solid, \"rgb:50/50/75\")", NULL,
-	    &wPreferences.workspaceback, getWSBackground, setWorkspaceBack, NULL, NULL},
+	    &wPreferences.workspaceback, getWSBackground, set_workspace_back, NULL, NULL, 1},
+	{"SmoothWorkspaceBack", "NO", NULL,
+	    NULL, getBool, NULL, NULL, NULL, 1},
 	{"IconBack", "(dgradient, \"rgb:a6/a6/b6\", \"rgb:51/55/61\")", NULL,
-	    &wPreferences.texture.iconback, getTexture, setIconTile, NULL, NULL},
+	    &wPreferences.texture.iconback, getTexture, setIconTile, NULL, NULL, 1},
+	{"TitleJustify", "center", seJustifications,
+	    &wPreferences.title_justification, getEnum, setJustify, NULL, NULL, 1},
 	{"WindowTitleFont", DEF_TITLE_FONT, NULL,
-	    &wPreferences.font.wintitle, getFont, setWinTitleFont, NULL, NULL}, /* - */
+	    &wPreferences.font.wintitle, getFont, setWinTitleFont, NULL, NULL, 1},
+	{"WindowTitleExtendSpace", DEF_WINDOW_TITLE_EXTEND_SPACE, NULL,
+	    &wPreferences.window_title_clearance, getInt, setClearance, NULL, NULL, 1},
+	{"WindowTitleMinHeight", "0", NULL,
+	    &wPreferences.window_title_min_height, getInt, setClearance, NULL, NULL, 1},
+	{"WindowTitleMaxHeight", NUM2STRING(INT_MAX), NULL,
+	    &wPreferences.window_title_max_height, getInt, setClearance, NULL, NULL, 1},
+	{"MenuTitleExtendSpace", DEF_MENU_TITLE_EXTEND_SPACE, NULL,
+	    &wPreferences.menu_title_clearance, getInt, setClearance, NULL, NULL, 1},
+	{"MenuTitleMinHeight", "0", NULL,
+	    &wPreferences.menu_title_min_height, getInt, setClearance, NULL, NULL, 1},
+	{"MenuTitleMaxHeight", NUM2STRING(INT_MAX), NULL,
+	    &wPreferences.menu_title_max_height, getInt, setClearance, NULL, NULL, 1},
+	{"MenuTextExtendSpace", DEF_MENU_TEXT_EXTEND_SPACE, NULL,
+	    &wPreferences.menu_text_clearance, getInt, setClearance, NULL, NULL, 1},
 	{"MenuTitleFont", DEF_MENU_TITLE_FONT, NULL,
-	    &wPreferences.font.menutitle, getFont, setMenuTitleFont, NULL, NULL}, /* - */
+	    &wPreferences.font.menutitle, getFont, setMenuTitleFont, NULL, NULL, 1},
 	{"MenuTextFont", DEF_MENU_ENTRY_FONT, NULL,
-	    &wPreferences.font.menutext, getFont, setMenuTextFont, NULL, NULL}, /* - */
+	    &wPreferences.font.menutext, getFont, setMenuTextFont, NULL, NULL, 1},
 	{"IconTitleFont", DEF_ICON_TITLE_FONT, NULL,
-	    &wPreferences.font.icontitle, getFont, setIconTitleFont, NULL, NULL}, /* - */
+	    &wPreferences.font.icontitle, getFont, setIconTitleFont, NULL, NULL, 1},
 	{"ClipTitleFont", DEF_CLIP_TITLE_FONT, NULL,
-	    &wPreferences.font.cliptitle, getFont, setClipTitleFont, NULL, NULL}, /* - */
+	    &wPreferences.font.cliptitle, getFont, setClipTitleFont, NULL, NULL, 1},
+	{"ShowClipTitle", "YES", NULL,
+	    &wPreferences.show_clip_title, getBool, NULL, NULL, NULL, 1},
 	{"LargeDisplayFont", DEF_WORKSPACE_NAME_FONT, NULL,
-	    &wPreferences.font.largedisplay, getFont, setLargeDisplayFont, NULL, NULL}, /* - */
+	    &wPreferences.font.largedisplay, getFont, setLargeDisplayFont, NULL, NULL, 1},
 	{"HighlightColor", "white", NULL,
-	    &wPreferences.color.highlight, getColor, setHightlight, NULL, NULL},
+	    &wPreferences.color.highlight, getColor, setHightlight, NULL, NULL, 1},
 	{"HighlightTextColor", "black", NULL,
-	    &wPreferences.color.highlighttext, getColor, setHightlightText, NULL, NULL},
+	    &wPreferences.color.highlighttext, getColor, setHightlightText, NULL, NULL, 1},
 	{"ClipTitleColor", "black", NULL,
-	    &wPreferences.color.cliptitle, getColor, setClipTitleColor, NULL, NULL},
+	    &wPreferences.color.cliptitle, getColor, setClipTitleColor, NULL, NULL, 1},
 	{"CClipTitleColor", "\"rgb:61/61/61\"", NULL,
-	    &wPreferences.color.cliptitlecollapsed, getColor, setClipTitleColorCollapsed, NULL, NULL},
+	    &wPreferences.color.cliptitlecollapsed, getColor, setClipTitleColorCollapsed, NULL, NULL, 1},
 	{"FTitleColor", "white", NULL,
-	    &wPreferences.color.titlefocused, getColor, setWTitleColorFocused, NULL, NULL},
+	    &wPreferences.color.titlefocused, getColor, setWTitleColorFocused, NULL, NULL, 1},
 	{"PTitleColor", "white", NULL,
-	    &wPreferences.color.titleowner, getColor, setWTitleColorOwner, NULL, NULL},
+	    &wPreferences.color.titleowner, getColor, setWTitleColorOwner, NULL, NULL, 1},
 	{"UTitleColor", "black", NULL,
-	    &wPreferences.color.titleunfocused, getColor, setWTitleColorUnfocused, NULL, NULL},
+	    &wPreferences.color.titleunfocused, getColor, setWTitleColorUnfocused, NULL, NULL, 1},
 	{"FTitleBack", "(solid, black)", NULL,
-	    &wPreferences.texture.titlebackfocused, getTexture, setFTitleBack, NULL, NULL},
+	    &wPreferences.texture.titlebackfocused, getTexture, setFTitleBack, NULL, NULL, 1},
 	{"PTitleBack", "(solid, gray40)", NULL,
-	    &wPreferences.texture.titlebackowner, getTexture, setPTitleBack, NULL, NULL},
+	    &wPreferences.texture.titlebackowner, getTexture, setPTitleBack, NULL, NULL, 1},
 	{"UTitleBack", "(solid, \"rgb:aa/aa/aa\")", NULL,
-	    &wPreferences.texture.titlebackunfocused, getTexture, setUTitleBack, NULL, NULL},
+	    &wPreferences.texture.titlebackunfocused, getTexture, setUTitleBack, NULL, NULL, 1},
 	{"ResizebarBack", "(solid, \"rgb:aa/aa/aa\")", NULL,
-	    &wPreferences.texture.resizebarback, getTexture, setResizebarBack, NULL, NULL},
+	    &wPreferences.texture.resizebarback, getTexture, setResizebarBack, NULL, NULL, 1},
 	{"MenuTitleColor", "white", NULL,
-	    &wPreferences.color.menutitle, getColor, setMenuTitleColor, NULL, NULL},
+	    &wPreferences.color.menutitle, getColor, setMenuTitleColor, NULL, NULL, 1},
 	{"MenuTextColor", "black", NULL,
-	    &wPreferences.color.menutext, getColor, setMenuTextColor, NULL, NULL},
+	    &wPreferences.color.menutext, getColor, setMenuTextColor, NULL, NULL, 1},
 	{"MenuDisabledColor", "gray50", NULL,
-	    &wPreferences.color.menudisabled, getColor, setMenuDisabledColor, NULL, NULL},
+	    &wPreferences.color.menudisabled, getColor, setMenuDisabledColor, NULL, NULL, 1},
 	{"MenuTitleBack", "(solid, black)", NULL,
-	    &wPreferences.texture.menutitleback, getTexture, setMenuTitleBack, NULL, NULL},
+	    &wPreferences.texture.menutitleback, getTexture, setMenuTitleBack, NULL, NULL, 1},
 	{"MenuTextBack", "(solid, \"rgb:aa/aa/aa\")", NULL,
-	    &wPreferences.texture.menutextback, getTexture, setMenuTextBack, NULL, NULL},
+	    &wPreferences.texture.menutextback, getTexture, setMenuTextBack, NULL, NULL, 1},
 	{"IconTitleColor", "white", NULL,
-	    &wPreferences.color.icontitle, getColor, setIconTitleColor, NULL, NULL},
+	    &wPreferences.color.icontitle, getColor, setIconTitleColor, NULL, NULL, 1},
 	{"IconTitleBack", "black", NULL,
-	    &wPreferences.color.icontitleback, getColor, setIconTitleBack, NULL, NULL},
+	    &wPreferences.color.icontitleback, getColor, setIconTitleBack, NULL, NULL, 1},
 	{"SwitchPanelImages", "(swtile.png, swback.png, 30, 40)", NULL,
-	    &wPreferences.sp_options, getPropList, setSwPOptions, NULL, NULL},
+	    &wPreferences.sp_options, getPropList, setSwPOptions, NULL, NULL, 1},
 	{"ModifierKeyLabels", "(\"Shift+\", \"Control+\", \"Mod1+\", \"Mod2+\", \"Mod3+\", \"Mod4+\", \"Mod5+\")", NULL,
-	    &wPreferences.modifierkeylabels, getPropList, setModifierKeyLabels, NULL, NULL},
+	    &wPreferences.modifierkeylabels, getPropList, setModifierKeyLabels, NULL, NULL, 1},
 	{"FrameBorderWidth", "1", NULL,
-	    &wPreferences.border_width, getInt, setFrameBorderWidth, NULL, NULL}, /* - */
+	    &wPreferences.border_width, getInt, setFrameBorderWidth, NULL, NULL, 1},
 	{"FrameBorderColor", "black", NULL,
-	    &wPreferences.color.frameborder, getColor, setFrameBorderColor, NULL, NULL},
+	    &wPreferences.color.frameborder, getColor, setFrameBorderColor, NULL, NULL, 1},
 	{"FrameFocusedBorderColor", "black", NULL,
-	    &wPreferences.color.frameborderfocused, getColor, setFrameFocusedBorderColor, NULL, NULL},
+	    &wPreferences.color.frameborderfocused, getColor, setFrameFocusedBorderColor, NULL, NULL, 1},
 	{"FrameSelectedBorderColor", "white", NULL,
-	    &wPreferences.color.frameborderselected, getColor, setFrameSelectedBorderColor, NULL, NULL},
+	    &wPreferences.color.frameborderselected, getColor, setFrameSelectedBorderColor, NULL, NULL, 1},
 	{"WorkspaceMapBack", "(solid, black)", NULL,
-	    &wPreferences.texture.workspacemapback, getTexture, setWorkspaceMapBackground, NULL, NULL},
+	    &wPreferences.texture.workspacemapback, getTexture, setWorkspaceMapBackground, NULL, NULL, 1},
 
 	/* keybindings */
 
 	{"RootMenuKey", "F12", NULL,
-	    &wPreferences.key.rootmenu, getKeybind, setKeyGrab_rootmenu, NULL, NULL},
+	    &wPreferences.key.rootmenu, getKeybind, setKeyGrab_rootmenu, NULL, NULL, 1},
 	{"WindowListKey", "F11", NULL,
-	    &wPreferences.key.windowlist, getKeybind, setKeyGrab_windowlist, NULL, NULL},
+	    &wPreferences.key.windowlist, getKeybind, setKeyGrab_windowlist, NULL, NULL, 1},
 	{"WindowMenuKey", "Control+Escape", NULL,
-	    &wPreferences.key.windowmenu, getKeybind, setKeyGrab_windowmenu, NULL, NULL},
+	    &wPreferences.key.windowmenu, getKeybind, setKeyGrab_windowmenu, NULL, NULL, 1},
 	{"DockRaiseLowerKey", "None", NULL,
-	    &wPreferences.key.dockraiselower, getKeybind, setKeyGrab_dockraiselower, NULL, NULL},
+	    &wPreferences.key.dockraiselower, getKeybind, setKeyGrab_dockraiselower, NULL, NULL, 1},
 	{"ClipRaiseLowerKey", "None", NULL,
-	    &wPreferences.key.clipraiselower, getKeybind, setKeyGrab_clipraiselower, NULL, NULL},
+	    &wPreferences.key.clipraiselower, getKeybind, setKeyGrab_clipraiselower, NULL, NULL, 1},
 	{"MiniaturizeKey", "Mod1+M", NULL,
-	    &wPreferences.key.miniaturize, getKeybind, setKeyGrab_miniaturize, NULL, NULL},
+	    &wPreferences.key.miniaturize, getKeybind, setKeyGrab_miniaturize, NULL, NULL, 1},
 	{"MinimizeAllKey", "None", NULL,
-	    &wPreferences.key.minimizeall, getKeybind, setKeyGrab_minimizeall, NULL, NULL},
+	    &wPreferences.key.minimizeall, getKeybind, setKeyGrab_minimizeall, NULL, NULL, 1},
 	{"HideKey", "Mod1+H", NULL,
-	    &wPreferences.key.hide, getKeybind, setKeyGrab_hide, NULL, NULL},
+	    &wPreferences.key.hide, getKeybind, setKeyGrab_hide, NULL, NULL, 1},
 	{"HideOthersKey", "None", NULL,
-	    &wPreferences.key.hideothers, getKeybind, setKeyGrab_hideothers, NULL, NULL},
+	    &wPreferences.key.hideothers, getKeybind, setKeyGrab_hideothers, NULL, NULL, 1},
 	{"MoveResizeKey", "None", (void *)WKBD_MOVERESIZE,
-	    &wPreferences.key.moveresize, getKeybind, setKeyGrab_moveresize, NULL, NULL},
+	    &wPreferences.key.moveresize, getKeybind, setKeyGrab_moveresize, NULL, NULL, 1},
 	{"CloseKey", "None", NULL,
-	    &wPreferences.key.close, getKeybind, setKeyGrab_close, NULL, NULL},
+	    &wPreferences.key.close, getKeybind, setKeyGrab_close, NULL, NULL, 1},
 	{"MaximizeKey", "None", NULL,
-	    &wPreferences.key.maximize, getKeybind, setKeyGrab_maximize, NULL, NULL},
+	    &wPreferences.key.maximize, getKeybind, setKeyGrab_maximize, NULL, NULL, 1},
 	{"VMaximizeKey", "None", NULL,
-	    &wPreferences.key.maximizev, getKeybind, setKeyGrab_maximizev, NULL, NULL},
+	    &wPreferences.key.maximizev, getKeybind, setKeyGrab_maximizev, NULL, NULL, 1},
 	{"HMaximizeKey", "None", NULL,
-	    &wPreferences.key.maximizeh, getKeybind, setKeyGrab_maximizeh, NULL, NULL},
+	    &wPreferences.key.maximizeh, getKeybind, setKeyGrab_maximizeh, NULL, NULL, 1},
 	{"LHMaximizeKey", "None", NULL,
-	    &wPreferences.key.maximizelh, getKeybind, setKeyGrab_maximizelh, NULL, NULL},
+	    &wPreferences.key.maximizelh, getKeybind, setKeyGrab_maximizelh, NULL, NULL, 1},
 	{"RHMaximizeKey", "None", NULL,
-	    &wPreferences.key.maximizerh, getKeybind, setKeyGrab_maximizerh, NULL, NULL},
+	    &wPreferences.key.maximizerh, getKeybind, setKeyGrab_maximizerh, NULL, NULL, 1},
 	{"THMaximizeKey", "None", NULL,
-	    &wPreferences.key.maximizeth, getKeybind, setKeyGrab_maximizeth, NULL, NULL},
+	    &wPreferences.key.maximizeth, getKeybind, setKeyGrab_maximizeth, NULL, NULL, 1},
 	{"BHMaximizeKey", "None", NULL,
-	    &wPreferences.key.maximizebh, getKeybind, setKeyGrab_maximizebh, NULL, NULL},
+	    &wPreferences.key.maximizebh, getKeybind, setKeyGrab_maximizebh, NULL, NULL, 1},
 	{"LTCMaximizeKey", "None", NULL,
-	    &wPreferences.key.maximizeltc, getKeybind, setKeyGrab_maximizeltc, NULL, NULL},
+	    &wPreferences.key.maximizeltc, getKeybind, setKeyGrab_maximizeltc, NULL, NULL, 1},
 	{"RTCMaximizeKey", "None", NULL,
-	    &wPreferences.key.maximizertc, getKeybind, setKeyGrab_maximizertc, NULL, NULL},
+	    &wPreferences.key.maximizertc, getKeybind, setKeyGrab_maximizertc, NULL, NULL, 1},
 	{"LBCMaximizeKey", "None", NULL,
-	    &wPreferences.key.maximizelbc, getKeybind, setKeyGrab_maximizelbc, NULL, NULL},
+	    &wPreferences.key.maximizelbc, getKeybind, setKeyGrab_maximizelbc, NULL, NULL, 1},
 	{"RBCMaximizeKey", "None", NULL,
-	    &wPreferences.key.maximizerbc, getKeybind, setKeyGrab_maximizerbc, NULL, NULL},
+	    &wPreferences.key.maximizerbc, getKeybind, setKeyGrab_maximizerbc, NULL, NULL, 1},
 	{"MaximusKey", "None", NULL,
-	    &wPreferences.key.maximus, getKeybind, setKeyGrab_maximus, NULL, NULL},
+	    &wPreferences.key.maximus, getKeybind, setKeyGrab_maximus, NULL, NULL, 1},
 	{"KeepOnTopKey", "None", NULL,
-	    &wPreferences.key.keepontop, getKeybind, setKeyGrab_keepontop, NULL, NULL},
+	    &wPreferences.key.keepontop, getKeybind, setKeyGrab_keepontop, NULL, NULL, 1},
 	{"KeepAtBottomKey", "None", NULL,
-	    &wPreferences.key.keepatbottom, getKeybind, setKeyGrab_keepatbottom, NULL, NULL},
+	    &wPreferences.key.keepatbottom, getKeybind, setKeyGrab_keepatbottom, NULL, NULL, 1},
 	{"OmnipresentKey", "None", NULL,
-	    &wPreferences.key.omnipresent, getKeybind, setKeyGrab_omnipresent, NULL, NULL},
+	    &wPreferences.key.omnipresent, getKeybind, setKeyGrab_omnipresent, NULL, NULL, 1},
 	{"RaiseKey", "Mod1+Up", NULL,
-	    &wPreferences.key.raise, getKeybind, setKeyGrab_raise, NULL, NULL},
+	    &wPreferences.key.raise, getKeybind, setKeyGrab_raise, NULL, NULL, 1},
 	{"LowerKey", "Mod1+Down", NULL,
-	    &wPreferences.key.lower, getKeybind, setKeyGrab_lower, NULL, NULL},
+	    &wPreferences.key.lower, getKeybind, setKeyGrab_lower, NULL, NULL, 1},
 	{"RaiseLowerKey", "None", NULL,
-	    &wPreferences.key.raiselower, getKeybind, setKeyGrab_raiselower, NULL, NULL},
+	    &wPreferences.key.raiselower, getKeybind, setKeyGrab_raiselower, NULL, NULL, 1},
 	{"ShadeKey", "None", NULL,
-	    &wPreferences.key.shade, getKeybind, setKeyGrab_shade, NULL, NULL},
+	    &wPreferences.key.shade, getKeybind, setKeyGrab_shade, NULL, NULL, 1},
 	{"SelectKey", "None", NULL,
-	    &wPreferences.key.select, getKeybind, setKeyGrab_select, NULL, NULL},
+	    &wPreferences.key.select, getKeybind, setKeyGrab_select, NULL, NULL, 1},
 	{"WorkspaceMapKey", "None", NULL,
-	    &wPreferences.key.workspacemap, getKeybind, setKeyGrab_workspacemap, NULL, NULL},
+	    &wPreferences.key.workspacemap, getKeybind, setKeyGrab_workspacemap, NULL, NULL, 1},
 	{"FocusNextKey", "Mod1+Tab", NULL,
-	    &wPreferences.key.focusnext, getKeybind, setKeyGrab_focusnext, NULL, NULL},
+	    &wPreferences.key.focusnext, getKeybind, setKeyGrab_focusnext, NULL, NULL, 1},
 	{"FocusPrevKey", "Mod1+Shift+Tab", NULL,
-	    &wPreferences.key.focusprev, getKeybind, setKeyGrab_focusprev, NULL, NULL},
+	    &wPreferences.key.focusprev, getKeybind, setKeyGrab_focusprev, NULL, NULL, 1},
 	{"GroupNextKey", "None", NULL,
-	    &wPreferences.key.groupnext, getKeybind, setKeyGrab_groupnext, NULL, NULL},
+	    &wPreferences.key.groupnext, getKeybind, setKeyGrab_groupnext, NULL, NULL, 1},
 	{"GroupPrevKey", "None", NULL,
-	    &wPreferences.key.groupprev, getKeybind, setKeyGrab_groupprev, NULL, NULL},
+	    &wPreferences.key.groupprev, getKeybind, setKeyGrab_groupprev, NULL, NULL, 1},
 	{"NextWorkspaceKey", "Mod1+Control+Right", NULL,
-	    &wPreferences.key.workspacenext, getKeybind, setKeyGrab_workspacenext, NULL, NULL},
+	    &wPreferences.key.workspacenext, getKeybind, setKeyGrab_workspacenext, NULL, NULL, 1},
 	{"PrevWorkspaceKey", "Mod1+Control+Left", NULL,
-	    &wPreferences.key.workspaceprev, getKeybind, setKeyGrab_workspaceprev, NULL, NULL},
+	    &wPreferences.key.workspaceprev, getKeybind, setKeyGrab_workspaceprev, NULL, NULL, 1},
 	{"LastWorkspaceKey", "None", NULL,
-	    &wPreferences.key.workspacelast, getKeybind, setKeyGrab_workspacelast, NULL, NULL},
+	    &wPreferences.key.workspacelast, getKeybind, setKeyGrab_workspacelast, NULL, NULL, 1},
 	{"NextWorkspaceLayerKey", "None", NULL,
-	    &wPreferences.key.workspacelayernext, getKeybind, setKeyGrab_workspacelayernext, NULL, NULL},
+	    &wPreferences.key.workspacelayernext, getKeybind, setKeyGrab_workspacelayernext, NULL, NULL, 1},
 	{"PrevWorkspaceLayerKey", "None", NULL,
-	    &wPreferences.key.workspacelayerprev, getKeybind, setKeyGrab_workspacelayerprev, NULL, NULL},
+	    &wPreferences.key.workspacelayerprev, getKeybind, setKeyGrab_workspacelayerprev, NULL, NULL, 1},
 	{"Workspace1Key", "Mod1+1", NULL,
-	    &wPreferences.key.workspace1, getKeybind, setKeyGrab_workspace1, NULL, NULL},
+	    &wPreferences.key.workspace1, getKeybind, setKeyGrab_workspace1, NULL, NULL, 1},
 	{"Workspace2Key", "Mod1+2", NULL,
-	    &wPreferences.key.workspace2, getKeybind, setKeyGrab_workspace2, NULL, NULL},
+	    &wPreferences.key.workspace2, getKeybind, setKeyGrab_workspace2, NULL, NULL, 1},
 	{"Workspace3Key", "Mod1+3", NULL,
-	    &wPreferences.key.workspace3, getKeybind, setKeyGrab_workspace3, NULL, NULL},
+	    &wPreferences.key.workspace3, getKeybind, setKeyGrab_workspace3, NULL, NULL, 1},
 	{"Workspace4Key", "Mod1+4", NULL,
-	    &wPreferences.key.workspace4, getKeybind, setKeyGrab_workspace4, NULL, NULL},
+	    &wPreferences.key.workspace4, getKeybind, setKeyGrab_workspace4, NULL, NULL, 1},
 	{"Workspace5Key", "Mod1+5", NULL,
-	    &wPreferences.key.workspace5, getKeybind, setKeyGrab_workspace5, NULL, NULL},
+	    &wPreferences.key.workspace5, getKeybind, setKeyGrab_workspace5, NULL, NULL, 1},
 	{"Workspace6Key", "Mod1+6", NULL,
-	    &wPreferences.key.workspace6, getKeybind, setKeyGrab_workspace6, NULL, NULL},
+	    &wPreferences.key.workspace6, getKeybind, setKeyGrab_workspace6, NULL, NULL, 1},
 	{"Workspace7Key", "Mod1+7", NULL,
-	    &wPreferences.key.workspace7, getKeybind, setKeyGrab_workspace7, NULL, NULL},
+	    &wPreferences.key.workspace7, getKeybind, setKeyGrab_workspace7, NULL, NULL, 1},
 	{"Workspace8Key", "Mod1+8", NULL,
-	    &wPreferences.key.workspace8, getKeybind, setKeyGrab_workspace8, NULL, NULL},
+	    &wPreferences.key.workspace8, getKeybind, setKeyGrab_workspace8, NULL, NULL, 1},
 	{"Workspace9Key", "Mod1+9", NULL,
-	    &wPreferences.key.workspace9, getKeybind, setKeyGrab_workspace9, NULL, NULL},
+	    &wPreferences.key.workspace9, getKeybind, setKeyGrab_workspace9, NULL, NULL, 1},
 	{"Workspace10Key", "Mod1+0", NULL,
-	    &wPreferences.key.workspace10, getKeybind, setKeyGrab_workspace10, NULL, NULL},
+	    &wPreferences.key.workspace10, getKeybind, setKeyGrab_workspace10, NULL, NULL, 1},
 	{"MoveToWorkspace1Key", "None", NULL,
-	    &wPreferences.key.movetoworkspace1, getKeybind, setKeyGrab_movetoworkspace1, NULL, NULL},
+	    &wPreferences.key.movetoworkspace1, getKeybind, setKeyGrab_movetoworkspace1, NULL, NULL, 1},
 	{"MoveToWorkspace2Key", "None", NULL,
-	    &wPreferences.key.movetoworkspace2, getKeybind, setKeyGrab_movetoworkspace2, NULL, NULL},
+	    &wPreferences.key.movetoworkspace2, getKeybind, setKeyGrab_movetoworkspace2, NULL, NULL, 1},
 	{"MoveToWorkspace3Key", "None", NULL,
-	    &wPreferences.key.movetoworkspace3, getKeybind, setKeyGrab_movetoworkspace3, NULL, NULL},
+	    &wPreferences.key.movetoworkspace3, getKeybind, setKeyGrab_movetoworkspace3, NULL, NULL, 1},
 	{"MoveToWorkspace4Key", "None", NULL,
-	    &wPreferences.key.movetoworkspace4, getKeybind, setKeyGrab_movetoworkspace4, NULL, NULL},
+	    &wPreferences.key.movetoworkspace4, getKeybind, setKeyGrab_movetoworkspace4, NULL, NULL, 1},
 	{"MoveToWorkspace5Key", "None", NULL,
-	    &wPreferences.key.movetoworkspace5, getKeybind, setKeyGrab_movetoworkspace5, NULL, NULL},
+	    &wPreferences.key.movetoworkspace5, getKeybind, setKeyGrab_movetoworkspace5, NULL, NULL, 1},
 	{"MoveToWorkspace6Key", "None", NULL,
-	    &wPreferences.key.movetoworkspace6, getKeybind, setKeyGrab_movetoworkspace6, NULL, NULL},
+	    &wPreferences.key.movetoworkspace6, getKeybind, setKeyGrab_movetoworkspace6, NULL, NULL, 1},
 	{"MoveToWorkspace7Key", "None", NULL,
-	    &wPreferences.key.movetoworkspace7, getKeybind, setKeyGrab_movetoworkspace7, NULL, NULL},
+	    &wPreferences.key.movetoworkspace7, getKeybind, setKeyGrab_movetoworkspace7, NULL, NULL, 1},
 	{"MoveToWorkspace8Key", "None", NULL,
-	    &wPreferences.key.movetoworkspace8, getKeybind, setKeyGrab_movetoworkspace8, NULL, NULL},
+	    &wPreferences.key.movetoworkspace8, getKeybind, setKeyGrab_movetoworkspace8, NULL, NULL, 1},
 	{"MoveToWorkspace9Key", "None", NULL,
-	    &wPreferences.key.movetoworkspace9, getKeybind, setKeyGrab_movetoworkspace9, NULL, NULL},
+	    &wPreferences.key.movetoworkspace9, getKeybind, setKeyGrab_movetoworkspace9, NULL, NULL, 1},
 	{"MoveToWorkspace10Key", "None", NULL,
-	    &wPreferences.key.movetoworkspace10, getKeybind, setKeyGrab_movetoworkspace10, NULL, NULL},
+	    &wPreferences.key.movetoworkspace10, getKeybind, setKeyGrab_movetoworkspace10, NULL, NULL, 1},
 	{"MoveToNextWorkspaceKey", "None", NULL,
-	    &wPreferences.key.movetonextworkspace, getKeybind, setKeyGrab_movetonextworkspace, NULL, NULL},
+	    &wPreferences.key.movetonextworkspace, getKeybind, setKeyGrab_movetonextworkspace, NULL, NULL, 1},
 	{"MoveToPrevWorkspaceKey", "None", NULL,
-	    &wPreferences.key.movetoprevworkspace, getKeybind, setKeyGrab_movetoprevworkspace, NULL, NULL},
+	    &wPreferences.key.movetoprevworkspace, getKeybind, setKeyGrab_movetoprevworkspace, NULL, NULL, 1},
 	{"MoveToLastWorkspaceKey", "None", NULL,
-	    &wPreferences.key.movetolastworkspace, getKeybind, setKeyGrab_movetolastworkspace, NULL, NULL},
+	    &wPreferences.key.movetolastworkspace, getKeybind, setKeyGrab_movetolastworkspace, NULL, NULL, 1},
 	{"MoveToNextWorkspaceLayerKey", "None", NULL,
-	    &wPreferences.key.movetonextworkspace, getKeybind, setKeyGrab_movetonextworkspacelayer, NULL, NULL},
+	    &wPreferences.key.movetonextworkspace, getKeybind, setKeyGrab_movetonextworkspacelayer, NULL, NULL, 1},
 	{"MoveToPrevWorkspaceLayerKey", "None", NULL,
-	    &wPreferences.key.movetoprevworkspace, getKeybind, setKeyGrab_movetoprevworkspacelayer, NULL, NULL},
+	    &wPreferences.key.movetoprevworkspace, getKeybind, setKeyGrab_movetoprevworkspacelayer, NULL, NULL, 1},
 	{"WindowShortcut1Key", "None", NULL,
-	    &wPreferences.key.windowshortcut1, getKeybind, setKeyGrab_windowshortcut1, NULL, NULL},
+	    &wPreferences.key.windowshortcut1, getKeybind, setKeyGrab_windowshortcut1, NULL, NULL, 1},
 	{"WindowShortcut2Key", "None", NULL,
-	    &wPreferences.key.windowshortcut2, getKeybind, setKeyGrab_windowshortcut2, NULL, NULL},
+	    &wPreferences.key.windowshortcut2, getKeybind, setKeyGrab_windowshortcut2, NULL, NULL, 1},
 	{"WindowShortcut3Key", "None", NULL,
-	    &wPreferences.key.windowshortcut3, getKeybind, setKeyGrab_windowshortcut3, NULL, NULL},
+	    &wPreferences.key.windowshortcut3, getKeybind, setKeyGrab_windowshortcut3, NULL, NULL, 1},
 	{"WindowShortcut4Key", "None", NULL,
-	    &wPreferences.key.windowshortcut4, getKeybind, setKeyGrab_windowshortcut4, NULL, NULL},
+	    &wPreferences.key.windowshortcut4, getKeybind, setKeyGrab_windowshortcut4, NULL, NULL, 1},
 	{"WindowShortcut5Key", "None", NULL,
-	    &wPreferences.key.windowshortcut5, getKeybind, setKeyGrab_windowshortcut5, NULL, NULL},
+	    &wPreferences.key.windowshortcut5, getKeybind, setKeyGrab_windowshortcut5, NULL, NULL, 1},
 	{"WindowShortcut6Key", "None", NULL,
-	    &wPreferences.key.windowshortcut6, getKeybind, setKeyGrab_windowshortcut6, NULL, NULL},
+	    &wPreferences.key.windowshortcut6, getKeybind, setKeyGrab_windowshortcut6, NULL, NULL, 1},
 	{"WindowShortcut7Key", "None", NULL,
-	    &wPreferences.key.windowshortcut7, getKeybind, setKeyGrab_windowshortcut7, NULL, NULL},
+	    &wPreferences.key.windowshortcut7, getKeybind, setKeyGrab_windowshortcut7, NULL, NULL, 1},
 	{"WindowShortcut8Key", "None", NULL,
-	    &wPreferences.key.windowshortcut8, getKeybind, setKeyGrab_windowshortcut8, NULL, NULL},
+	    &wPreferences.key.windowshortcut8, getKeybind, setKeyGrab_windowshortcut8, NULL, NULL, 1},
 	{"WindowShortcut9Key", "None", NULL,
-	    &wPreferences.key.windowshortcut9, getKeybind, setKeyGrab_windowshortcut9, NULL, NULL},
+	    &wPreferences.key.windowshortcut9, getKeybind, setKeyGrab_windowshortcut9, NULL, NULL, 1},
 	{"WindowShortcut10Key", "None", NULL,
-	    &wPreferences.key.windowshortcut10, getKeybind, setKeyGrab_windowshortcut10, NULL, NULL},
+	    &wPreferences.key.windowshortcut10, getKeybind, setKeyGrab_windowshortcut10, NULL, NULL, 1},
 	{"MoveTo12to6Head", "None", NULL,
-	    &wPreferences.key.moveto12to6head, getKeybind, setKeyGrab_moveto12to6head, NULL, NULL},
+	    &wPreferences.key.moveto12to6head, getKeybind, setKeyGrab_moveto12to6head, NULL, NULL, 1},
 	{"MoveTo6to12Head", "None", NULL,
-	    &wPreferences.key.moveto6to12head, getKeybind, setKeyGrab_moveto6to12head, NULL, NULL},
+	    &wPreferences.key.moveto6to12head, getKeybind, setKeyGrab_moveto6to12head, NULL, NULL, 1},
 	{"WindowRelaunchKey", "None", NULL,
-	    &wPreferences.key.windowrelaunch, getKeybind, setKeyGrab_windowrelaunch, NULL, NULL},
+	    &wPreferences.key.windowrelaunch, getKeybind, setKeyGrab_windowrelaunch, NULL, NULL, 1},
 	{"ScreenSwitchKey", "None", NULL,
-	    &wPreferences.key.screenswitch, getKeybind, setKeyGrab_screenswitch, NULL, NULL},
+	    &wPreferences.key.screenswitch, getKeybind, setKeyGrab_screenswitch, NULL, NULL, 1},
 	{"RunKey", "None", NULL,
-	    &wPreferences.key.run, getKeybind, setKeyGrab_run, NULL, NULL},
+	    &wPreferences.key.run, getKeybind, setKeyGrab_run, NULL, NULL, 1},
 
 #ifdef KEEP_XKB_LOCK_STATUS
 	{"ToggleKbdModeKey", "None", NULL,
-	    &wPreferences.key.togglekbdmode, getKeybind, setKeyGrab_toggle, NULL, NULL},
+	    &wPreferences.key.togglekbdmode, getKeybind, setKeyGrab_toggle, NULL, NULL, 1},
 	{"KbdModeLock", "NO", NULL,
-	    &wPreferences.modelock, getBool, NULL, NULL, NULL}, /* - */
+	    &wPreferences.modelock, getBool, NULL, NULL, NULL, 1},
 #endif				/* KEEP_XKB_LOCK_STATUS */
 
 	{"NormalCursor", "(builtin, left_ptr)", NULL,
-	    &wPreferences.cursors.root, getCursor, setCursor_root, NULL, NULL},
+	    &wPreferences.cursors.root, getCursor, setCursor_root, NULL, NULL, 1},
 	{"ArrowCursor", "(builtin, top_left_arrow)", NULL,
-	    &wPreferences.cursors.arrow, getCursor, setCursor_arrow, NULL, NULL},
+	    &wPreferences.cursors.arrow, getCursor, setCursor_arrow, NULL, NULL, 1},
 	{"MoveCursor", "(builtin, fleur)", NULL,
-	    &wPreferences.cursors.move, getCursor, setCursor_move, NULL, NULL},
+	    &wPreferences.cursors.move, getCursor, setCursor_move, NULL, NULL, 1},
 	{"ResizeCursor", "(builtin, sizing)", NULL,
-	    &wPreferences.cursors.resize, getCursor, setCursor_resize, NULL, NULL},
+	    &wPreferences.cursors.resize, getCursor, setCursor_resize, NULL, NULL, 1},
 	{"TopLeftResizeCursor", "(builtin, top_left_corner)", NULL,
-	    &wPreferences.cursors.resizetopleft, getCursor, setCursor_topleftresize, NULL, NULL},
+	    &wPreferences.cursors.resizetopleft, getCursor, setCursor_topleftresize, NULL, NULL, 1},
 	{"TopRightResizeCursor", "(builtin, top_right_corner)", NULL,
-	    &wPreferences.cursors.resizetopright, getCursor, setCursor_toprightresize, NULL, NULL},
+	    &wPreferences.cursors.resizetopright, getCursor, setCursor_toprightresize, NULL, NULL, 1},
 	{"BottomLeftResizeCursor", "(builtin, bottom_left_corner)", NULL,
-	    &wPreferences.cursors.resizebottomleft, getCursor, setCursor_bottomleftresize, NULL, NULL},
+	    &wPreferences.cursors.resizebottomleft, getCursor, setCursor_bottomleftresize, NULL, NULL, 1},
 	{"BottomRightResizeCursor", "(builtin, bottom_right_corner)", NULL,
-	    &wPreferences.cursors.resizebottomright, getCursor, setCursor_bottomrightresize, NULL, NULL},
+	    &wPreferences.cursors.resizebottomright, getCursor, setCursor_bottomrightresize, NULL, NULL, 1},
 	{"VerticalResizeCursor", "(builtin, sb_v_double_arrow)", NULL,
-	    &wPreferences.cursors.resizevertical, getCursor, setCursor_verticalresize, NULL, NULL},
+	    &wPreferences.cursors.resizevertical, getCursor, setCursor_verticalresize, NULL, NULL, 1},
 	{"HorizontalResizeCursor", "(builtin, sb_h_double_arrow)", NULL,
-	    &wPreferences.cursors.resizehorizontal, getCursor, setCursor_horizontalresize, NULL, NULL},
+	    &wPreferences.cursors.resizehorizontal, getCursor, setCursor_horizontalresize, NULL, NULL, 1},
 	{"WaitCursor", "(builtin, watch)", NULL,
-	    &wPreferences.cursors.wait, getCursor, setCursor_wait, NULL, NULL},
+	    &wPreferences.cursors.wait, getCursor, setCursor_wait, NULL, NULL, 1},
 	{"QuestionCursor", "(builtin, question_arrow)", NULL,
-	    &wPreferences.cursors.question, getCursor, setCursor_question, NULL, NULL},
+	    &wPreferences.cursors.question, getCursor, setCursor_question, NULL, NULL, 1},
 	{"TextCursor", "(builtin, xterm)", NULL,
-	    &wPreferences.cursors.text, getCursor, setCursor_text, NULL, NULL},
+	    &wPreferences.cursors.text, getCursor, setCursor_text, NULL, NULL, 1},
 	{"SelectCursor", "(builtin, cross)", NULL,
-	    &wPreferences.cursors.select, getCursor, setCursor_select, NULL, NULL}
+	    &wPreferences.cursors.select, getCursor, setCursor_select, NULL, NULL, 1},
+	{"DialogHistoryLines", "500", NULL,
+	    &wPreferences.history_lines, getInt, NULL, NULL, NULL, 1},
+	{"CycleActiveHeadOnly", "NO", NULL,
+	    &wPreferences.cycle_active_head_only, getBool, NULL, NULL, NULL, 1},
+	{"CycleIgnoreMinimized", "NO", NULL,
+	    &wPreferences.cycle_ignore_minimized, getBool, NULL, NULL, NULL, 1}
 };
 
 static void init_defaults(void);
-static void read_defaults_noscreen(WMPropList *new_dict);
 static void wReadStaticDefaults(WMPropList *dict);
+static void wReadStaticDefaults_update(void);
 static void wDefaultsMergeGlobalMenus(WDDomain *menuDomain);
 static void wDefaultUpdateIcons(virtual_screen *vscr);
 static WDDomain *wDefaultsInitDomain(const char *domain, Bool requireDictionary);
+static void backimage_launch_helper(virtual_screen *vscr, WMPropList *value);
+static unsigned int default_update(WDefaultEntry *entry, WMPropList *plvalue);
+static void read_defaults(WMPropList *new_dict);
+static void wReadDefaults(virtual_screen *vscr, WMPropList *new_dict);
 
 void startup_set_defaults_virtual(void)
 {
@@ -948,6 +1191,7 @@ void startup_set_defaults_virtual(void)
 	/* read defaults that don't change until a restart and are
 	 * screen independent */
 	wReadStaticDefaults(w_global.domain.wmaker ? w_global.domain.wmaker->dictionary : NULL);
+	wReadStaticDefaults_update();
 
 	/* check sanity of some values */
 	if (wPreferences.icon_size < 16) {
@@ -967,8 +1211,6 @@ void startup_set_defaults_virtual(void)
 	w_global.domain.window_attr = wDefaultsInitDomain("WMWindowAttributes", True);
 	if (!w_global.domain.window_attr->dictionary)
 		wwarning(_("could not read domain \"%s\" from defaults database"), "WMWindowAttributes");
-
-	read_defaults_noscreen(w_global.domain.wmaker->dictionary);
 }
 
 /* This function sets the default values for all lists */
@@ -982,17 +1224,6 @@ static void init_defaults(void)
 	/* Set the default values for the option list */
 	for (i = 0; i < wlengthof(optionList); i++) {
 		entry = &optionList[i];
-
-		entry->plkey = WMCreatePLString(entry->key);
-		if (entry->default_value)
-			entry->plvalue = WMCreatePropListFromDescription(entry->default_value);
-		else
-			entry->plvalue = NULL;
-	}
-
-	/* Set the default values for the noscren option list */
-	for (i = 0; i < wlengthof(noscreenOptionList); i++) {
-		entry = &noscreenOptionList[i];
 
 		entry->plkey = WMCreatePLString(entry->key);
 		if (entry->default_value)
@@ -1292,69 +1523,73 @@ static void wReadStaticDefaults(WMPropList *dict)
 		if (plvalue) {
 			/* convert data */
 			(*entry->convert) (entry, plvalue, entry->addr);
-			if (entry->update)
-				(*entry->update) (NULL);
+			entry->refresh = 1;
 		}
 	}
 }
 
-static void read_defaults_noscreen(WMPropList *new_dict)
+static void wReadStaticDefaults_update(void)
+{
+	WDefaultEntry *entry;
+	unsigned int i;
+
+	for (i = 0; i < wlengthof(staticOptionList); i++) {
+		entry = &staticOptionList[i];
+
+		if (entry->update && entry->refresh)
+			(*entry->update) (NULL);
+
+		entry->refresh = 0;
+	}
+}
+
+void set_defaults_global(WMPropList *new_dict)
 {
 	unsigned int i;
-	WMPropList *plvalue, *old_value, *old_dict = NULL;
+	WMPropList *plvalue;
 	WDefaultEntry *entry;
 
-	if (w_global.domain.wmaker->dictionary != new_dict)
-		old_dict = w_global.domain.wmaker->dictionary;
+	for (i = 0; i < wlengthof(optionList); i++) {
+		entry = &optionList[i];
 
-	for (i = 0; i < wlengthof(noscreenOptionList); i++) {
-		entry = &noscreenOptionList[i];
-
-		if (new_dict)
-			plvalue = WMGetFromPLDictionary(new_dict, entry->plkey);
-		else
-			plvalue = NULL;
-
-		if (!old_dict)
-			old_value = NULL;
-		else
-			old_value = WMGetFromPLDictionary(old_dict, entry->plkey);
-
-		if (!plvalue && !old_value) {
+		plvalue = WMGetFromPLDictionary(new_dict, entry->plkey);
+		if (!plvalue) {
 			/* no default in  the DB. Use builtin default */
 			plvalue = entry->plvalue;
 			if (plvalue && new_dict)
 				WMPutInPLDictionary(new_dict, entry->plkey, plvalue);
-
-		} else if (!plvalue) {
-			/* value was deleted from DB. Keep current value */
-			continue;
-		} else if (!old_value) {
-			/* set value for the 1st time */
-		} else if (!WMIsPropListEqualTo(plvalue, old_value)) {
-			/* value has changed */
-		} else {
-			/* Value was not changed since last time.
-			 * We must continue, except if WorkspaceSpecificBack
-			 * was updated previously
-			 */
 		}
 
 		/* convert data */
-		if (plvalue) {
-			/* convert data */
-			if ((*entry->convert) (entry, plvalue, entry->addr)) {
-				if (entry->update)
-					(*entry->update) (NULL);
-			}
-		}
+		(*entry->convert) (entry, plvalue, entry->addr);
 	}
 }
 
-static unsigned int read_defaults_step1(virtual_screen *vscr, WMPropList *new_dict)
+unsigned int set_defaults_virtual_screen(virtual_screen *vscr)
 {
 	unsigned int i, needs_refresh = 0;
-	int update_workspace_back = 0;
+	WDefaultEntry *entry;
+
+	for (i = 0; i < wlengthof(optionList); i++) {
+		entry = &optionList[i];
+
+		/* Check if refresh it (always true at the starting */
+		if (entry->refresh) {
+			/* Run the update function if exists */
+			if (entry->update)
+				needs_refresh |= (*entry->update) (vscr);
+
+			/* Change the flag */
+			entry->refresh = 0;
+		}
+	}
+
+	return needs_refresh;
+}
+
+static void read_defaults(WMPropList *new_dict)
+{
+	unsigned int i;
 	WMPropList *plvalue, *old_value, *old_dict = NULL;
 	WDefaultEntry *entry;
 
@@ -1380,42 +1615,34 @@ static unsigned int read_defaults_step1(virtual_screen *vscr, WMPropList *new_di
 			if (plvalue && new_dict)
 				WMPutInPLDictionary(new_dict, entry->plkey, plvalue);
 
+			default_update(entry, plvalue);
 		} else if (!plvalue) {
 			/* value was deleted from DB. Keep current value */
-			continue;
 		} else if (!old_value) {
 			/* set value for the 1st time */
+			default_update(entry, plvalue);
 		} else if (!WMIsPropListEqualTo(plvalue, old_value)) {
 			/* value has changed */
+			default_update(entry, plvalue);
 		} else {
-			/* Value was not changed since last time.
-			 * We must continue, except if WorkspaceSpecificBack
-			 * was updated previously
-			 */
-			if (!(strcmp(entry->key, "WorkspaceBack") == 0 &&
-			    update_workspace_back &&
-			    vscr->screen_ptr->flags.backimage_helper_launched))
-				continue;
-		}
-
-		if (plvalue) {
-			/* convert data */
-			if ((*entry->convert) (entry, plvalue, entry->addr)) {
-				/*
-				 * If the WorkspaceSpecificBack data has been changed
-				 * so that the helper will be launched now, we must be
-				 * sure to send the default background texture config
-				 * to the helper.
-				 */
-				if (strcmp(entry->key, "WorkspaceSpecificBack") == 0 &&
-				    !vscr->screen_ptr->flags.backimage_helper_launched)
-					update_workspace_back = 1;
-
-				if (entry->update)
-					needs_refresh |= (*entry->update) (vscr);
-			}
+			/* Value was not changed since last time.*/
 		}
 	}
+}
+
+static unsigned int default_update(WDefaultEntry *entry, WMPropList *plvalue)
+{
+	unsigned int needs_refresh = 0;
+	int ret;
+
+	if (!plvalue)
+		return 0;
+
+	/* convert data */
+	ret = (*entry->convert) (entry, plvalue, entry->addr);
+	entry->refresh = ret;
+	if (!ret)
+		return 0;
 
 	return needs_refresh;
 }
@@ -1494,11 +1721,12 @@ static void refresh_defaults(virtual_screen *vscr, unsigned int needs_refresh)
 	}
 }
 
-void wReadDefaults(virtual_screen *vscr, WMPropList *new_dict)
+static void wReadDefaults(virtual_screen *vscr, WMPropList *new_dict)
 {
 	unsigned int needs_refresh;
 
-	needs_refresh = read_defaults_step1(vscr, new_dict);
+	read_defaults(new_dict);
+	needs_refresh = set_defaults_virtual_screen(vscr);
 
 	if (needs_refresh != 0 && !w_global.startup.phase1)
 		refresh_defaults(vscr, needs_refresh);
@@ -2978,122 +3206,120 @@ static int setFrameSelectedBorderColor(virtual_screen *vscr)
 	return REFRESH_FRAME_BORDER;
 }
 
-static int setWorkspaceSpecificBack(virtual_screen *vscr)
+static int set_workspace_back(virtual_screen *vscr)
 {
-	WMPropList *value;
-	WMPropList *val;
+	WMPropList *value, *val;
 	char *str;
-	int i;
+	int i, cont = 0;
 
-#ifdef notworking
 	/*
-	 * I moved this code here to update these functions, probably holding
-	 * the default value in the wPreferences struct, changing the WMPropList
-	 * workspacespecificback to a defstructpl, with the value and the default
-	 * value. TODO. kix.
+	 * Now, I will move the logic between updateing workspace back and
+	 * workspace specific back here.
+	 *
+	 * First we work with WorkspaceSpecificBack.
+	 * If the WorkspaceSpecificBack data has been changed
+	 * so that the helper will be launched now, we must be
+	 * sure to send the default background texture config
+	 * to the helper.
+	 *
+	 * All was done using flags. If we read all values first, we can
+	 * play with them. I will use the refresh flag to do it.
 	 */
-	/*
-	 * Kluge to force wmsetbg helper to set the default background.
-	 * If the WorkspaceSpecificBack is changed once wmaker has started,
-	 * the WorkspaceBack won't be sent to the helper, unless the user
-	 * changes it's value too. So, we must force this by removing the
-	 * value from the defaults DB.
-	 */
-	if (!scr->flags.backimage_helper_launched && !scr->flags.startup) {
-		WMPropList *key = WMCreatePLString("WorkspaceBack");
 
-		WMRemoveFromPLDictionary(w_global.domain.wmaker->dictionary, key);
+	/* setWorkspaceSpecificBack */
+	if (optionList[OL_WORKSPACESPECIFICBACK].refresh) {
+		value = wPreferences.workspacespecificback;
 
-		WMReleasePropList(key);
-	}
-#endif
+		if (vscr->screen_ptr->flags.backimage_helper_launched) {
+			if (WMGetPropListItemCount(value) == 0) {
+				SendHelperMessage(vscr, 'C', 0, NULL);
+				SendHelperMessage(vscr, 'K', 0, NULL);
 
-	value = wPreferences.workspacespecificback;
-
-	if (vscr->screen_ptr->flags.backimage_helper_launched) {
-		if (WMGetPropListItemCount(value) == 0) {
-			SendHelperMessage(vscr, 'C', 0, NULL);
-			SendHelperMessage(vscr, 'K', 0, NULL);
-
-			WMReleasePropList(value);
-			return 0;
-		}
-	} else {
-		if (WMGetPropListItemCount(value) == 0)
-			return 0;
-
-		if (!start_bg_helper(vscr)) {
-			WMReleasePropList(value);
-			return 0;
-		}
-
-		SendHelperMessage(vscr, 'P', -1, wPreferences.pixmap_path);
-	}
-
-	for (i = 0; i < WMGetPropListItemCount(value); i++) {
-		val = WMGetFromPLArray(value, i);
-		if (val && WMIsPLArray(val) && WMGetPropListItemCount(val) > 0) {
-			str = WMGetPropListDescription(val, False);
-			SendHelperMessage(vscr, 'S', i + 1, str);
-			wfree(str);
+				WMReleasePropList(value);
+				return 0;
+			}
 		} else {
-			SendHelperMessage(vscr, 'U', i + 1, NULL);
+			if (WMGetPropListItemCount(value) == 0)
+				return 0;
+
+			if (!start_bg_helper(vscr)) {
+				WMReleasePropList(value);
+				return 0;
+			} else {
+				/* Enable the flag to set the default background */
+				cont = 1;
+			}
+
+			SendHelperMessage(vscr, 'P', -1, wPreferences.pixmap_path);
 		}
+
+		for (i = 0; i < WMGetPropListItemCount(value); i++) {
+			val = WMGetFromPLArray(value, i);
+			if (val && WMIsPLArray(val) && WMGetPropListItemCount(val) > 0) {
+				str = WMGetPropListDescription(val, False);
+				SendHelperMessage(vscr, 'S', i + 1, str);
+				wfree(str);
+			} else {
+				SendHelperMessage(vscr, 'U', i + 1, NULL);
+			}
+		}
+
+		sleep(1);
+
+		WMReleasePropList(value);
 	}
 
-	sleep(1);
+	/* setWorkspaceBack */
+	if (optionList[OL_WORKSPACEBACK].refresh || cont) {
+		value = wPreferences.workspaceback;
 
-	WMReleasePropList(value);
+		if (vscr->screen_ptr->flags.backimage_helper_launched) {
+			if (WMGetPropListItemCount(value) == 0) {
+				SendHelperMessage(vscr, 'U', 0, NULL);
+			} else {
+				/* set the default workspace background to this one */
+				str = WMGetPropListDescription(value, False);
+				if (str) {
+					SendHelperMessage(vscr, 'S', 0, str);
+					wfree(str);
+					SendHelperMessage(vscr, 'C', vscr->workspace.current + 1, NULL);
+				} else {
+					SendHelperMessage(vscr, 'U', 0, NULL);
+				}
+			}
+		} else if (WMGetPropListItemCount(value) > 0) {
+			backimage_launch_helper(vscr, value);
+		}
+
+		WMReleasePropList(value);
+	}
+
 	return 0;
 }
 
-static int setWorkspaceBack(virtual_screen *vscr)
+static void backimage_launch_helper(virtual_screen *vscr, WMPropList *value)
 {
-	WMPropList *value = wPreferences.workspaceback;
+	char *text;
+	char *dither;
+	int len;
 
-	if (vscr->screen_ptr->flags.backimage_helper_launched) {
-		char *str;
+	text = WMGetPropListDescription(value, False);
+	len = strlen(text) + 40;
+	dither = wPreferences.no_dithering ? "-m" : "-d";
+	if (!strchr(text, '\'') && !strchr(text, '\\')) {
+		char command[len];
 
-		if (WMGetPropListItemCount(value) == 0) {
-			SendHelperMessage(vscr, 'U', 0, NULL);
-		} else {
-			/* set the default workspace background to this one */
-			str = WMGetPropListDescription(value, False);
-			if (str) {
-				SendHelperMessage(vscr, 'S', 0, str);
-				wfree(str);
-				SendHelperMessage(vscr, 'C', vscr->workspace.current + 1, NULL);
-			} else {
-				SendHelperMessage(vscr, 'U', 0, NULL);
-			}
-		}
-	} else if (WMGetPropListItemCount(value) > 0) {
-		char *text;
-		char *dither;
-		int len;
+		if (wPreferences.smooth_workspace_back)
+			snprintf(command, len, "wmsetbg %s -S -p '%s' &", dither, text);
+		else
+			snprintf(command, len, "wmsetbg %s -p '%s' &", dither, text);
 
-		text = WMGetPropListDescription(value, False);
-		len = strlen(text) + 40;
-		dither = wPreferences.no_dithering ? "-m" : "-d";
-		if (!strchr(text, '\'') && !strchr(text, '\\')) {
-			char command[len];
-
-			if (wPreferences.smooth_workspace_back)
-				snprintf(command, len, "wmsetbg %s -S -p '%s' &", dither, text);
-			else
-				snprintf(command, len, "wmsetbg %s -p '%s' &", dither, text);
-
-			ExecuteShellCommand(vscr, command);
-		} else {
-			wwarning(_("Invalid arguments for background \"%s\""), text);
-		}
-
-		wfree(text);
+		ExecuteShellCommand(vscr, command);
+	} else {
+		wwarning(_("Invalid arguments for background \"%s\""), text);
 	}
 
-	WMReleasePropList(value);
-
-	return 0;
+	wfree(text);
 }
 
 static int setWidgetColor(virtual_screen *vscr)

@@ -82,6 +82,53 @@ typedef struct {
 	WMHandlerID magic;
 } delay_data;
 
+static Bool check_moved_to_submenu(WMenu *menu, XEvent ev, int prevx, int prevy);
+static Bool getMenuInfo(WMPropList *info, int *x, int *y, Bool *lowered);
+static Bool getMenuPath(WMenu *menu, char *buffer, int bufSize);
+static int check_key(WMenu *menu, XKeyEvent *event);
+static int getEntryAt(WMenu *menu, int y);
+static int isPointNearBoder(WMenu *menu, int x, int y);
+static int keyboardMenu(WMenu *menu);
+static int menu_handle_selected_entry(WMenu *menu, WMenuEntry *entry, XEvent *ev, int entry_no);
+static Pixmap renderTexture(WMenu *menu);
+static void appearanceObserver(void *self, WMNotification *notif);
+static void callback_leaving(void *user_param);
+static void changeMenuLevels(WMenu *menu, int lower);
+static void delaySelection(void *data);
+static void dragScrollMenuCallback(void *data);
+static void drawFrame(WMenu *menu, Drawable win, int y, int w, int h, int type);
+static void getPointerPosition(virtual_screen *vscr, int *x, int *y);
+static void getScrollAmount(WMenu *menu, int *hamount, int *vamount);
+static void insertEntry(WMenu *menu, WMenuEntry *entry, int index);
+static void makeVisible(WMenu *menu);
+static void menu_handle_switchmenu(WMenu *menu, WObjDescriptor *desc,
+				   WMenuEntry *entry, XEvent *event);
+static void menu_motion_handle_moveout(WMenu *menu, XEvent *ev,
+				       delay_data *d_data,
+				       int delayed_select,
+				       int *prevx, int *prevy);
+static void menu_motion_select_entry(WMenu *menu, WMenuEntry *entry,
+				     int *entry_no, int y,
+				     int delayed_select);
+static void menu_moved_toitem(WMenu *menu, WMenu *smenu, XEvent *ev,
+			      delay_data *d_data, int delayed_select,
+			      int *prevx, int *prevy);
+static void menu_rename_workspace(virtual_screen *vscr, int entry_no);
+static void menuTitleMouseDown(WCoreWindow * sender, void *data, XEvent * event);
+static void menuTitleMouseDown(WCoreWindow *sender, void *data, XEvent *event);
+static void move_menus(WMenu *menu, int x, int y);
+static void paintEntry(WMenu *menu, int index, int selected);
+static void raiseMenus(WMenu *menu, int submenus);
+static void restore_rootmenu_map(virtual_screen *vscr);
+static void restore_rootmenu(virtual_screen *vscr, WMPropList *menus);
+static void restore_switchmenu(virtual_screen *vscr, WMPropList *menu);
+static void restore_switchmenu(virtual_screen *vscr, WMPropList *menus);
+static void saveMenuInfo(WMPropList *dict, WMenu *menu, WMPropList *key);
+static void scrollMenuCallback(void *data);
+static void submenu_unmap_cascade(WMenu *menu, WMenuEntry *entry,
+				  int entry_no, int delayed_select);
+static WMenu *findMenu(virtual_screen *vscr, int *x_ret, int *y_ret);
+static WMenu *parentMenu(WMenu *menu);
 static void menuMouseDown(WObjDescriptor *desc, XEvent *event);
 static void menuExpose(WObjDescriptor *desc, XEvent *event);
 static void menuTitleDoubleClick(WCoreWindow *sender, void *data, XEvent *event);
@@ -625,8 +672,9 @@ void wMenuDestroy(WMenu *menu)
 	menu_destroy(menu);
 }
 
-static void drawFrame(virtual_screen *vscr, Drawable win, int y, int w, int h, int type)
+static void drawFrame(WMenu *menu, Drawable win, int y, int w, int h, int type)
 {
+	virtual_screen *vscr = menu->vscr;
 	XSegment segs[2];
 	int i;
 
@@ -698,12 +746,12 @@ static void paintEntry(WMenu *menu, int index, int selected)
 	if (selected) {
 		XFillRectangle(dpy, win, WMColorGC(scr->select_color), 1, y + 1, w - 2, h - 3);
 		if (scr->menu_item_texture->any.type == WTEX_SOLID)
-			drawFrame(vscr, win, y, w, h, type);
+			drawFrame(menu, win, y, w, h, type);
 	} else {
 		if (scr->menu_item_texture->any.type == WTEX_SOLID) {
 			XClearArea(dpy, win, 0, y + 1, w - 1, h - 3, False);
 			/* draw the frame */
-			drawFrame(vscr, win, y, w, h, type);
+			drawFrame(menu, win, y, w, h, type);
 		} else {
 			XClearArea(dpy, win, 0, y, w, h, False);
 		}
