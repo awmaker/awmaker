@@ -581,7 +581,6 @@ void wIconUpdate(WIcon *icon)
 		/* If is empty, then get the default image */
 		if (!icon->file_image) {
 			get_rimage_icon_from_default_icon(icon);
-			unset_icon_image(icon);
 			icon->file_image = RRetainImage(scr->def_icon_rimage);
 		}
 
@@ -605,7 +604,6 @@ void wIconUpdate(WIcon *icon)
 
 	if (!icon->file_image) {
 		get_rimage_icon_from_default_icon(icon);
-		unset_icon_image(icon);
 		icon->file_image = RRetainImage(scr->def_icon_rimage);
 	}
 
