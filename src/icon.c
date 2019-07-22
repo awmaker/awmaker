@@ -567,6 +567,7 @@ void set_icon_image_from_image(WIcon *icon, RImage *image)
 void wIconUpdate(WIcon *icon)
 {
 	virtual_screen *vscr = icon->vscr;
+	WScreen *scr = vscr->screen_ptr;
 	WWindow *wwin = NULL;
 
 	if (icon && icon->owner)
@@ -578,8 +579,11 @@ void wIconUpdate(WIcon *icon)
 			icon->file_image = get_rimage_from_file(vscr, icon->file_name, wPreferences.icon_size);
 
 		/* If is empty, then get the default image */
-		if (!icon->file_image)
+		if (!icon->file_image) {
 			get_rimage_icon_from_default_icon(icon);
+			unset_icon_image(icon);
+			icon->file_image = RRetainImage(scr->def_icon_rimage);
+		}
 
 		update_icon_pixmap(icon);
 		return;
@@ -599,8 +603,11 @@ void wIconUpdate(WIcon *icon)
 		icon->file_image = get_rimage_icon_from_wm_hints(icon);
 	}
 
-	if (!icon->file_image)
+	if (!icon->file_image) {
 		get_rimage_icon_from_default_icon(icon);
+		unset_icon_image(icon);
+		icon->file_image = RRetainImage(scr->def_icon_rimage);
+	}
 
 	update_icon_pixmap(icon);
 }
@@ -636,12 +643,6 @@ static void get_rimage_icon_from_default_icon(WIcon *icon)
 	/* If the icon don't have image, we should use the default image. */
 	if (!scr->def_icon_rimage)
 		scr->def_icon_rimage = get_default_image(vscr);
-
-	/* Remove the icon image */
-	unset_icon_image(icon);
-
-	/* Set the new icon image */
-	icon->file_image = RRetainImage(scr->def_icon_rimage);
 }
 
 /* Set the dockapp in the WIcon */
