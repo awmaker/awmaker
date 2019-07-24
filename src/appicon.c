@@ -132,9 +132,8 @@ void create_appicon_for_application(WApplication *wapp, WWindow *wwin)
 {
 	/* Try to create an icon from the dock or clip */
 	create_appicon_from_dock(wwin, wapp);
-
-	/* If already created, set some flags */
 	if (wapp->app_icon) {
+		/* If already created, set some flags */
 		if (!WFLAGP(wapp->main_window_desc, no_appicon)) {
 			WWindow *mainw = wapp->main_window_desc;
 
@@ -150,10 +149,9 @@ void create_appicon_for_application(WApplication *wapp, WWindow *wwin)
 			wIconPaint(wapp->app_icon->icon);
 			wAppIconPaint(wapp->app_icon);
 		}
-	}
 
-	if (wapp->app_icon)
 		return;
+	}
 
 	/* Create the icon */
 	wAppIcon_create(wapp);
