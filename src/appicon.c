@@ -156,8 +156,6 @@ void create_appicon_for_application(WApplication *wapp, WWindow *wwin)
 	/* Create the icon */
 	wAppIcon_create(wapp);
 	wAppIcon_map(wapp->app_icon);
-	wIconUpdate(wapp->app_icon->icon);
-	wIconPaint(wapp->app_icon->icon);
 
 	/* Now, paint the icon */
 	if (!WFLAGP(wapp->main_window_desc, no_appicon))
