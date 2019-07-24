@@ -133,6 +133,23 @@ void create_appicon_for_application(WApplication *wapp, WWindow *wwin)
 	/* Try to create an icon from the dock or clip */
 	create_appicon_from_dock(wwin, wapp);
 
+	/* If already created, set some flags */
+	if (wapp->app_icon && !WFLAGP(wapp->main_window_desc, no_appicon)) {
+		WWindow *mainw = wapp->main_window_desc;
+
+		wapp->app_icon->running = 1;
+		wapp->app_icon->icon->owner = mainw;
+		if (mainw->wm_hints && (mainw->wm_hints->flags & IconWindowHint))
+			wapp->app_icon->icon->icon_win = mainw->wm_hints->icon_window;
+
+		/* Update the icon images */
+		wIconUpdate(wapp->app_icon->icon);
+
+		/* Paint it */
+		wIconPaint(wapp->app_icon->icon);
+		wAppIconPaint(wapp->app_icon);
+	}
+
 	if (wapp->app_icon)
 		return;
 
@@ -1357,23 +1374,6 @@ static void create_appicon_from_dock(WWindow *wwin, WApplication *wapp)
 			if (wapp->app_icon)
 				break;
 		}
-	}
-
-	/* If created, then set some flags */
-	if (wapp->app_icon && !WFLAGP(wapp->main_window_desc, no_appicon)) {
-		WWindow *mainw = wapp->main_window_desc;
-
-		wapp->app_icon->running = 1;
-		wapp->app_icon->icon->owner = mainw;
-		if (mainw->wm_hints && (mainw->wm_hints->flags & IconWindowHint))
-			wapp->app_icon->icon->icon_win = mainw->wm_hints->icon_window;
-
-		/* Update the icon images */
-		wIconUpdate(wapp->app_icon->icon);
-
-		/* Paint it */
-		wIconPaint(wapp->app_icon->icon);
-		wAppIconPaint(wapp->app_icon);
 	}
 }
 
