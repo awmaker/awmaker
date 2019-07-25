@@ -599,7 +599,7 @@ void wIconUpdate(WIcon *icon)
 	} else if (wwin && wwin->wm_hints && (wwin->wm_hints->flags & IconPixmapHint)) {
 		/* Get the Pixmap from the wm_hints, else, from the user */
 		unset_icon_image(icon);
-		icon->file_image = get_rimage_icon_from_wm_hints(icon);
+		icon->file_image = get_rimage_icon_from_wm_hints(wwin);
 	}
 
 	if (!icon->file_image) {
@@ -679,19 +679,16 @@ static void set_dockapp_in_icon(WIcon *icon)
 }
 
 /* Get the RImage from the XWindow wm_hints */
-RImage *get_rimage_icon_from_wm_hints(WIcon *icon)
+RImage *get_rimage_icon_from_wm_hints(WWindow *wwin)
 {
 	RImage *image = NULL;
 	unsigned int w, h, d;
-	WWindow *wwin;
 
-	if ((!icon) || (!icon->owner))
+	if (!wwin)
 		return NULL;
 
-	wwin = icon->owner;
-
 	if (!getSize(wwin->wm_hints->icon_pixmap, &w, &h, &d)) {
-		icon->owner->wm_hints->flags &= ~IconPixmapHint;
+		wwin->wm_hints->flags &= ~IconPixmapHint;
 		return NULL;
 	}
 

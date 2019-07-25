@@ -814,7 +814,7 @@ static void applySettings(WMWidget *button, void *client_data)
 		if (!WFLAGP(wwin_inspected, always_user_icon)) {
 			/* Change App Icon image, using the icon provided by the client */
 			if (wapp->app_icon) {
-				RImage *image = get_rimage_icon_from_wm_hints(wapp->app_icon->icon);
+				RImage *image = get_rimage_icon_from_wm_hints(wapp->app_icon->icon->owner);
 				if (image) {
 					set_icon_image_from_image(wapp->app_icon->icon, image);
 					update_icon_pixmap(wapp->app_icon->icon);
@@ -828,7 +828,7 @@ static void applySettings(WMWidget *button, void *client_data)
 			/* Change icon image if the app is minimized,
 			 * using the icon provided by the client */
 			if (wwin_inspected->miniwindow->icon) {
-				RImage *image = get_rimage_icon_from_wm_hints(wwin_inspected->miniwindow->icon);
+				RImage *image = get_rimage_icon_from_wm_hints(wwin_inspected->miniwindow->icon->owner);
 				if (image) {
 					set_icon_image_from_image(wwin_inspected->miniwindow->icon, image);
 					update_icon_pixmap(wwin_inspected->miniwindow->icon);
