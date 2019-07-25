@@ -194,9 +194,7 @@ static void addIconForWindow(WSwitchPanel *panel, WMWidget *parent, WWindow *wwi
 	WMResizeWidget(icon, icon_tile_size, icon_tile_size);
 	WMMoveWidget(icon, x, y);
 
-	if (!WFLAGP(wwin, always_user_icon) && wwin->miniwindow->net_icon_image)
-		image = RRetainImage(wwin->miniwindow->net_icon_image);
-
+	image = icon_get_usable_icon(wwin);
 	/* get_icon_image() includes the default icon image */
 	if (!image)
 		image = get_icon_image(panel->vscr, wwin->wm_instance, wwin->wm_class, icon_tile_size);

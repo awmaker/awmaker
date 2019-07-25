@@ -70,6 +70,7 @@ void update_icon_pixmap(WIcon *icon);
 
 int wIconChangeImageFile(WIcon *icon, const char *file);
 
+RImage *icon_get_usable_icon(WWindow *wwin);
 RImage *wIconValidateIconSize(RImage *icon, int max_size);
 RImage *get_rimage_icon_from_wm_hints(WWindow *wwin);
 

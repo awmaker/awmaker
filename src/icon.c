@@ -564,6 +564,34 @@ void set_icon_image_from_image(WIcon *icon, RImage *image)
 	icon->file_image = image;
 }
 
+RImage *icon_get_usable_icon(WWindow *wwin)
+{
+	WApplication *wapp;
+	RImage *image = NULL;
+
+	if (!wwin)
+		return NULL;
+
+	/* Get the image from the miniwindow */
+	if (wwin->miniwindow && wwin->miniwindow->icon && wwin->miniwindow->icon->file_image)
+		image = RRetainImage(wwin->miniwindow->icon->file_image);
+
+	/* Get the image from the appicon */
+	wapp = wApplicationOf(wwin->main_window);
+	if (!image && wapp && wapp->app_icon && wapp->app_icon->icon && wapp->app_icon->icon->file_image)
+		image = RRetainImage(wapp->app_icon->icon->file_image);
+
+	/* Use _NET_WM_ICON icon */
+	if (!WFLAGP(wwin, always_user_icon) && wwin->miniwindow->net_icon_image)
+		image = RRetainImage(wwin->miniwindow->net_icon_image);
+
+	/* Get the Pixmap from the wm_hints, else, from the user */
+	if (!image && wwin->wm_hints && (wwin->wm_hints->flags & IconPixmapHint))
+		image = get_rimage_icon_from_wm_hints(wwin);
+
+	return image;
+}
+
 void wIconUpdate(WIcon *icon)
 {
 	virtual_screen *vscr = icon->vscr;
