@@ -388,13 +388,13 @@ static char *get_icon_cache_path(void)
 	return NULL;
 }
 
-static RImage *get_wwindow_image_from_wmhints(WWindow *wwin, WIcon *icon)
+static RImage *get_wwindow_image_from_wmhints(WWindow *wwin)
 {
 	RImage *image = NULL;
 	XWMHints *hints = wwin->wm_hints;
 
 	if (hints && (hints->flags & IconPixmapHint) && hints->icon_pixmap != None)
-		image = RCreateImageFromDrawable(icon->vscr->screen_ptr->rcontext,
+		image = RCreateImageFromDrawable(wwin->vscr->screen_ptr->rcontext,
 						 hints->icon_pixmap,
 						 (hints->flags & IconMaskHint)
 						 ? hints->icon_mask : None);
@@ -452,7 +452,7 @@ char *wIconStore(WIcon *icon)
 	if (wwin->miniwindow->net_icon_image)
 		image = RRetainImage(wwin->miniwindow->net_icon_image);
 	else
-		image = get_wwindow_image_from_wmhints(wwin, icon);
+		image = get_wwindow_image_from_wmhints(wwin);
 
 	if (!image) {
 		wfree(path);
@@ -695,7 +695,7 @@ RImage *get_rimage_icon_from_wm_hints(WIcon *icon)
 		return NULL;
 	}
 
-	image = get_wwindow_image_from_wmhints(wwin, icon);
+	image = get_wwindow_image_from_wmhints(wwin);
 	if (!image)
 		return NULL;
 
