@@ -45,6 +45,7 @@
 #include "window.h"
 #include "winspector.h"
 #include "icon.h"
+#include "miniwindow.h"
 #include "properties.h"
 #include "actions.h"
 #include "client.h"
@@ -73,9 +74,6 @@
 # include "motif.h"
 #endif
 #include "wmspec.h"
-
-#define MOD_MASK wPreferences.modifier_mask
-
 
 /***** Local Stuff *****/
 static WWindowState *windowState = NULL;
@@ -192,6 +190,8 @@ WWindow *wWindowCreate(void)
 	wwin = wmalloc(sizeof(WWindow));
 	wretain(wwin);
 
+	wwin->miniwindow = miniwindow_create();
+
 	wwin->client_descriptor.handle_mousedown = frameMouseDown;
 	wwin->client_descriptor.parent = wwin;
 	wwin->client_descriptor.self = wwin;
@@ -260,9 +260,8 @@ void wWindowDestroy(WWindow *wwin)
 		wwin->frame = NULL;
 	}
 
-	if (wwin->icon) {
-		RemoveFromStackList(wwin->icon->vscr, wwin->icon->core);
-		wIconDestroy(wwin->icon);
+	if (wwin->miniwindow->icon) {
+		miniwindow_destroy_icon(wwin);
 		if (wPreferences.auto_arrange_icons)
 			wArrangeIcons(wwin->vscr, True);
 	}
@@ -270,8 +269,10 @@ void wWindowDestroy(WWindow *wwin)
 	if (wwin->title)
 		wfree(wwin->title);
 
-	if (wwin->net_icon_image)
-		RReleaseImage(wwin->net_icon_image);
+	if (wwin->miniwindow->net_icon_image)
+		RReleaseImage(wwin->miniwindow->net_icon_image);
+
+	miniwindow_destroy(wwin);
 
 	wrelease(wwin);
 }
@@ -1295,10 +1296,10 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 		wwin->client_flags.shared_appicon = 0;
 
 	if (wwin->main_window) {
-            WApplication *app = wApplicationOf(wwin->main_window);
-            if (app && app->app_icon)
-		wwin->client_flags.shared_appicon = 0;
-        }
+		WApplication *app = wApplicationOf(wwin->main_window);
+		if (app && app->app_icon)
+			wwin->client_flags.shared_appicon = 0;
+	}
 
 	if (!withdraw && wwin->main_window && WFLAGP(wwin, shared_appicon))
 		wwindow_set_fakegroupleader(wwin);
@@ -2096,10 +2097,7 @@ void wWindowChangeWorkspace(WWindow *wwin, int workspace)
 				wapp->last_workspace = workspace;
 
 			if (wwin->flags.miniaturized) {
-				if (wwin->icon) {
-					XUnmapWindow(dpy, wwin->icon->core->window);
-					wwin->icon->mapped = 0;
-				}
+				miniwindow_unmap(wwin);
 			} else {
 				unmap = 1;
 				wSetFocusTo(vscr, NULL);
@@ -2107,14 +2105,10 @@ void wWindowChangeWorkspace(WWindow *wwin, int workspace)
 		}
 	} else {
 		/* brought to current workspace. Map window */
-		if (wwin->flags.miniaturized && !wPreferences.sticky_icons) {
-			if (wwin->icon) {
-				XMapWindow(dpy, wwin->icon->core->window);
-				wwin->icon->mapped = 1;
-			}
-		} else if (!wwin->flags.mapped && !(wwin->flags.miniaturized || wwin->flags.hidden)) {
+		if (wwin->flags.miniaturized && !wPreferences.sticky_icons)
+			miniwindow_map(wwin);
+		else if (!wwin->flags.mapped && !(wwin->flags.miniaturized || wwin->flags.hidden))
 			wWindowMap(wwin);
-		}
 	}
 	if (!IS_OMNIPRESENT(wwin)) {
 		int oldWorkspace = wwin->frame->workspace;
@@ -2707,7 +2701,7 @@ void wWindowResetMouseGrabs(WWindow * wwin)
 
 	if (!WFLAGP(wwin, no_bind_mouse)) {
 		/* grabs for Meta+drag */
-		wHackedGrabButton(dpy, AnyButton, MOD_MASK, wwin->client_win,
+		wHackedGrabButton(dpy, AnyButton, wPreferences.modifier_mask, wwin->client_win,
 				  True, ButtonPressMask | ButtonReleaseMask,
 				  GrabModeSync, GrabModeAsync, None, None);
 
@@ -2723,10 +2717,10 @@ void wWindowResetMouseGrabs(WWindow * wwin)
 							  True, ButtonPressMask | ButtonReleaseMask,
 							  GrabModeSync, GrabModeAsync, None, None);
 
-			wHackedGrabButton(dpy, Button4, MOD_MASK | ControlMask, wwin->client_win,
+			wHackedGrabButton(dpy, Button4, wPreferences.modifier_mask | ControlMask, wwin->client_win,
 							  True, ButtonPressMask | ButtonReleaseMask,
 							  GrabModeSync, GrabModeAsync, None, None);
-			wHackedGrabButton(dpy, Button5, MOD_MASK | ControlMask, wwin->client_win,
+			wHackedGrabButton(dpy, Button5, wPreferences.modifier_mask | ControlMask, wwin->client_win,
 							  True, ButtonPressMask | ButtonReleaseMask,
 							  GrabModeSync, GrabModeAsync, None, None);
 		}
@@ -2928,7 +2922,7 @@ static void resizebarMouseDown(WCoreWindow *sender, void *data, XEvent *event)
 				 GrabModeAsync, GrabModeAsync, None, None, CurrentTime) != GrabSuccess)
 			return;
 
-	if (event->xbutton.state & MOD_MASK)
+	if (event->xbutton.state & wPreferences.modifier_mask)
 		wMouseMoveWindow(wwin, event);
 	else
 		wMouseResizeWindow(wwin, event);
@@ -2977,7 +2971,7 @@ static void titlebarDblClick(WCoreWindow *sender, void *data, XEvent *event)
 			}
 		}
 	} else if (event->xbutton.button == Button3) {
-		if (event->xbutton.state & MOD_MASK)
+		if (event->xbutton.state & wPreferences.modifier_mask)
 			wHideOtherApplications(wwin);
 	} else if (event->xbutton.button == Button2) {
 		wSelectWindow(wwin, !wwin->flags.selected);
@@ -3032,7 +3026,7 @@ static void frameMouseDown(WObjDescriptor *desc, XEvent *event)
 		}
 	}
 
-	if (event->xbutton.state & MOD_MASK) {
+	if (event->xbutton.state & wPreferences.modifier_mask) {
 		/* move the window */
 		if (XGrabPointer(dpy, wwin->client_win, False,
 				 ButtonMotionMask | ButtonReleaseMask | ButtonPressMask,
@@ -3078,7 +3072,7 @@ static void titlebarMouseDown(WCoreWindow *sender, void *data, XEvent *event)
 
 	if (event->xbutton.button == Button1 || event->xbutton.button == Button2) {
 		if (event->xbutton.button == Button1) {
-			if (event->xbutton.state & MOD_MASK)
+			if (event->xbutton.state & wPreferences.modifier_mask)
 				wLowerFrame(wwin->frame->vscr, wwin->frame->core);
 			else
 				wRaiseFrame(wwin->frame->vscr, wwin->frame->core);

@@ -58,11 +58,15 @@
 #include "icon.h"
 #include "shell.h"
 #include "actions.h"
+#include "dock-core.h"
 #include "dock.h"
+#include "clip.h"
+#include "drawer.h"
 #include "workspace.h"
 #include "properties.h"
 #include "misc.h"
 #include "winmenu.h"
+#include "miniwindow.h"
 
 typedef struct _WDefaultEntry  WDefaultEntry;
 typedef int (WDECallbackConvert) (WDefaultEntry *entry, WMPropList *plvalue, void *addr);
@@ -102,15 +106,12 @@ static WDECallbackConvert getKeybind;
 static WDECallbackConvert getModMask;
 static WDECallbackConvert getPropList;
 static WDECallbackConvert getCursor;
+static WDECallbackConvert getClipMergedInDock;
+static WDECallbackConvert getIfDockPresent;
 
 /* value setting functions */
 static WDECallbackUpdate setJustify;
 static WDECallbackUpdate setClearance;
-static WDECallbackUpdate setIfDockPresent;
-static WDECallbackUpdate setIfClipPresent;
-static WDECallbackUpdate setIfDrawerPresent;
-static WDECallbackUpdate setClipMergedInDock;
-static WDECallbackUpdate setWrapAppiconsInDock;
 static WDECallbackUpdate setStickyIcons;
 static WDECallbackUpdate setWidgetColor;
 static WDECallbackUpdate setIconTile;
@@ -431,9 +432,9 @@ enum {
 	SOL_MODIFIERKEY,
 	SOL_FOCUSMODE,
 	SOL_NEWSTYLE,
+	SOL_DISABLEDRAWERS,
 	SOL_DISABLEDOCK,
 	SOL_DISABLECLIP,
-	SOL_DISABLEDRAWERS,
 	SOL_CLIPMERGEDINDOCK,
 	SOL_DISABLEMINIWINDOWS,
 	SOL_ENABLEWORKSPACEPAGER
@@ -453,18 +454,22 @@ WDefaultEntry staticOptionList[] = {
 	    &wPreferences.focus_mode, getEnum, NULL, NULL, NULL, 0},	/* manual to sloppy without restart */
 	{"NewStyle", "new", seTitlebarModes,
 	    &wPreferences.new_style, getEnum, NULL, NULL, NULL, 0},
-	{"DisableDock", "NO", NULL,
-	    &wPreferences.flags.nodock, getBool, setIfDockPresent, NULL, NULL, 0},
-	{"DisableClip", "NO", NULL,
-	    &wPreferences.flags.noclip, getBool, setIfClipPresent, NULL, NULL, 0},
 	{"DisableDrawers", "NO", NULL,
-	    &wPreferences.flags.nodrawer, getBool, setIfDrawerPresent, NULL, NULL, 0},
+	    &wPreferences.flags.nodrawer, getBool, NULL, NULL, NULL, 0},
+	/* getIfDockPresent modifies noclip flag, so must be used after set that flag */
+	{"DisableDock", "NO", NULL,
+	    &wPreferences.flags.nodock, getIfDockPresent, NULL, NULL, NULL, 0},
+	{"DisableClip", "NO", NULL,
+	    &wPreferences.flags.noclip, getBool, NULL, NULL, NULL, 0},
+	/* getClipMergedInDock modifies noclip flag, so must be used after set that flag */
 	{"ClipMergedInDock", "NO", NULL,
-	    &wPreferences.flags.clip_merged_in_dock, getBool, setClipMergedInDock, NULL, NULL, 0},
+	    &wPreferences.flags.clip_merged_in_dock, getClipMergedInDock, NULL, NULL, NULL, 0},
 	{"DisableMiniwindows", "NO", NULL,
 	    &wPreferences.disable_miniwindows, getBool, NULL, NULL, NULL, 0},
 	{"EnableWorkspacePager", "NO", NULL,
-	    &wPreferences.enable_workspace_pager, getBool, NULL, NULL, NULL, 0}
+	    &wPreferences.enable_workspace_pager, getBool, NULL, NULL, NULL, 0},
+	{"SwitchPanelIconSize", "48", NULL,
+	    &wPreferences.switch_panel_icon_size, getInt, NULL, NULL, NULL, 0}
 };
 
 enum {
@@ -778,7 +783,7 @@ WDefaultEntry optionList[] = {
 	{"ClipAutocollapseDelay", "1000", NULL,
 	    &wPreferences.clip_auto_collapse_delay, getInt, NULL, NULL, NULL, 1},
 	{"WrapAppiconsInDock", "YES", NULL,
-	    &wPreferences.flags.wrap_appicons_in_dock, getBool, setWrapAppiconsInDock, NULL, NULL, 1},
+	    &wPreferences.flags.wrap_appicons_in_dock, getBool, NULL, NULL, NULL, 1},
 	{"AlignSubmenus", "NO", NULL,
 	    &wPreferences.align_menus, getBool, NULL, NULL, NULL, 1},
 	{"ViKeyMenus", "NO", NULL,
@@ -1169,7 +1174,6 @@ WDefaultEntry optionList[] = {
 
 static void init_defaults(void);
 static void wReadStaticDefaults(WMPropList *dict);
-static void wReadStaticDefaults_update(void);
 static void wDefaultsMergeGlobalMenus(WDDomain *menuDomain);
 static void wDefaultUpdateIcons(virtual_screen *vscr);
 static WDDomain *wDefaultsInitDomain(const char *domain, Bool requireDictionary);
@@ -1188,10 +1192,8 @@ void startup_set_defaults_virtual(void)
 	if (!w_global.domain.wmaker->dictionary)
 		wwarning(_("could not read domain \"%s\" from defaults database"), "WindowMaker");
 
-	/* read defaults that don't change until a restart and are
-	 * screen independent */
+	/* Read defaults that don't change until a restart. Screen independent */
 	wReadStaticDefaults(w_global.domain.wmaker ? w_global.domain.wmaker->dictionary : NULL);
-	wReadStaticDefaults_update();
 
 	/* check sanity of some values */
 	if (wPreferences.icon_size < 16) {
@@ -1408,7 +1410,7 @@ void wDefaultsCheckDomains(void *arg)
 				}
 
 				for (i = 0; i < w_global.screen_count; i++) {
-					vscr = wScreenWithNumber(i);
+					vscr = w_global.vscreens[i];
 					if (vscr->screen_ptr)
 						wReadDefaults(vscr, dict);
 				}
@@ -1451,7 +1453,7 @@ void wDefaultsCheckDomains(void *arg)
 
 				w_global.domain.window_attr->dictionary = dict;
 				for (i = 0; i < w_global.screen_count; i++) {
-					vscr = wScreenWithNumber(i);
+					vscr = w_global.vscreens[i];
 					if (vscr->screen_ptr) {
 						wDefaultUpdateIcons(vscr);
 
@@ -1520,26 +1522,9 @@ static void wReadStaticDefaults(WMPropList *dict)
 		if (!plvalue)
 			plvalue = entry->plvalue;
 
-		if (plvalue) {
+		if (plvalue)
 			/* convert data */
 			(*entry->convert) (entry, plvalue, entry->addr);
-			entry->refresh = 1;
-		}
-	}
-}
-
-static void wReadStaticDefaults_update(void)
-{
-	WDefaultEntry *entry;
-	unsigned int i;
-
-	for (i = 0; i < wlengthof(staticOptionList); i++) {
-		entry = &staticOptionList[i];
-
-		if (entry->update && entry->refresh)
-			(*entry->update) (NULL);
-
-		entry->refresh = 0;
 	}
 }
 
@@ -1741,6 +1726,7 @@ static void wDefaultUpdateIcons(virtual_screen *vscr)
 	while (aicon) {
 		/* Get the application icon, default included */
 		wIconChangeImageFile(aicon->icon, NULL);
+		wIconPaint(aicon->icon);
 		wAppIconPaint(aicon);
 		aicon = aicon->next;
 	}
@@ -1752,8 +1738,8 @@ static void wDefaultUpdateIcons(virtual_screen *vscr)
 		wDrawerIconPaint(dc->adrawer->icon_array[0]);
 
 	while (wwin) {
-		if (wwin->icon && wwin->flags.miniaturized)
-			wIconChangeImageFile(wwin->icon, NULL);
+		if (wwin->miniwindow->icon && wwin->flags.miniaturized)
+			wIconChangeImageFile(wwin->miniwindow->icon, NULL);
 
 		wwin = wwin->prev;
 	}
@@ -2505,6 +2491,20 @@ static int getCursor(WDefaultEntry *entry, WMPropList *value, void *addr)
 
 #undef CURSOR_ID_NONE
 
+static int getIfDockPresent(WDefaultEntry *entry, WMPropList *value, void *addr)
+{
+	int ret = getBool(entry, value, addr);
+	wPreferences.flags.nodrawer = wPreferences.flags.nodrawer || wPreferences.flags.nodock;
+	return ret;
+}
+
+static int getClipMergedInDock(WDefaultEntry *entry, WMPropList *value, void *addr)
+{
+	int ret = getBool(entry, value, addr);
+	wPreferences.flags.noclip = wPreferences.flags.noclip || wPreferences.flags.clip_merged_in_dock;
+	return ret;
+}
+
 /* ---------------- value setting functions --------------- */
 static int setJustify(virtual_screen *vscr)
 {
@@ -2520,49 +2520,6 @@ static int setClearance(virtual_screen *vscr)
 	(void) vscr;
 
 	return REFRESH_WINDOW_FONT | REFRESH_BUTTON_IMAGES | REFRESH_MENU_TITLE_FONT | REFRESH_MENU_FONT;
-}
-
-static int setIfDockPresent(virtual_screen *vscr)
-{
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) vscr;
-
-	wPreferences.flags.nodrawer = wPreferences.flags.nodrawer || wPreferences.flags.nodock;
-
-	return 0;
-}
-
-static int setIfClipPresent(virtual_screen *vscr)
-{
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) vscr;
-
-	return 0;
-}
-
-static int setIfDrawerPresent(virtual_screen *vscr)
-{
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) vscr;
-
-	return 0;
-}
-
-static int setClipMergedInDock(virtual_screen *vscr)
-{
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) vscr;
-
-	wPreferences.flags.noclip = wPreferences.flags.noclip || wPreferences.flags.clip_merged_in_dock;
-	return 0;
-}
-
-static int setWrapAppiconsInDock(virtual_screen *vscr)
-{
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) vscr;
-
-	return 0;
 }
 
 static int setStickyIcons(virtual_screen *vscr)

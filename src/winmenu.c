@@ -47,6 +47,7 @@
 #include "icon.h"
 #include "xinerama.h"
 #include "winmenu.h"
+#include "miniwindow.h"
 
 static WMenu *makeWorkspaceMenu(virtual_screen *vscr);
 static WMenu *makeOptionsMenu(virtual_screen *vscr);
@@ -171,7 +172,7 @@ static void execWindowOptionCommand(WMenu *menu, WMenuEntry *entry)
 static void execMaximizeCommand(WMenu *menu, WMenuEntry *entry)
 {
 	WWindow *wwin = (WWindow *) entry->clientdata;
-	
+
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) menu;
 
@@ -292,7 +293,7 @@ static void execMenuCommand(WMenu *menu, WMenuEntry *entry)
 		if (!wwin->flags.miniaturized)
 			wSelectWindow(wwin, !wwin->flags.selected);
 		else
-			wIconSelect(wwin->icon);
+			wIconSelect(wwin->miniwindow->icon);
 		break;
 
 	case MC_MOVERESIZE:

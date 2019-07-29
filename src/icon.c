@@ -48,30 +48,23 @@
 #include "winmenu.h"
 #include "input.h"
 #include "framewin.h"
+#include "miniwindow.h"
 
 /**** Global varianebles ****/
 
-#define MOD_MASK wPreferences.modifier_mask
 #define CACHE_ICON_PATH "/Library/WindowMaker/CachedPixmaps"
 #define ICON_BORDER 3
 
-static void miniwindowExpose(WObjDescriptor *desc, XEvent *event);
-static void miniwindowMouseDown(WObjDescriptor *desc, XEvent *event);
-static void miniwindowDblClick(WObjDescriptor *desc, XEvent *event);
-
 static void set_dockapp_in_icon(WIcon *icon);
-static void get_rimage_icon_from_icon_win(WIcon *icon);
-static void get_rimage_icon_from_user_icon(WIcon *icon);
 static void get_rimage_icon_from_default_icon(WIcon *icon);
-static void get_rimage_icon_from_x11(WIcon *icon);
 
 static void icon_update_pixmap(WIcon *icon, RImage *image);
 static void unset_icon_image(WIcon *icon);
-
-static void create_minipreview_showerror(WWindow *wwin);
+static char *get_default_image_path(void);
+static RImage *get_default_image(virtual_screen *vscr);
+static RImage *get_rimage_from_file(virtual_screen *vscr, const char *file_name, int max_size);
 
 /****** Notification Observers ******/
-
 void icon_appearanceObserver(void *self, WMNotification *notif)
 {
 	WIcon *icon = (WIcon *) self;
@@ -81,13 +74,14 @@ void icon_appearanceObserver(void *self, WMNotification *notif)
 		/* If the rimage exists, update the icon, else create it */
 		if (icon->file_image)
 			update_icon_pixmap(icon);
-		else
-			wIconPaint(icon);
+
+		wIconPaint(icon);
 	}
 
 	/* so that the appicon expose handlers will paint the appicon specific
 	 * stuff */
-	XClearArea(dpy, icon->core->window, 0, 0, icon->width, icon->height, True);
+	XClearArea(dpy, icon->core->window, 0, 0,
+			   wPreferences.icon_size, wPreferences.icon_size, True);
 }
 
 void icon_tileObserver(void *self, WMNotification *notif)
@@ -98,6 +92,7 @@ void icon_tileObserver(void *self, WMNotification *notif)
 	(void) notif;
 
 	update_icon_pixmap(icon);
+	wIconPaint(icon);
 
 	XClearArea(dpy, icon->core->window, 0, 0, 1, 1, True);
 }
@@ -113,69 +108,17 @@ static int getSize(Drawable d, unsigned int *w, unsigned int *h, unsigned int *d
 	return XGetGeometry(dpy, d, &rjunk, &xjunk, &yjunk, w, h, &bjunk, dep);
 }
 
-void icon_for_wwindow_map(WIcon *icon)
-{
-	WWindow *wwin = icon->owner;
-	virtual_screen *vscr = wwin->vscr;
-	WScreen *scr = vscr->screen_ptr;
-
-	wcore_map_toplevel(icon->core, vscr, wwin->icon_x, wwin->icon_y,
-			   icon->width, icon->height, 0, scr->w_depth,
-			   scr->w_visual, scr->w_colormap, scr->white_pixel);
-
-	if (wwin->wm_hints && (wwin->wm_hints->flags & IconWindowHint)) {
-		if (wwin->client_win == wwin->main_window) {
-			WApplication *wapp;
-			/* do not let miniwindow steal app-icon's icon window */
-			wapp = wApplicationOf(wwin->client_win);
-			if (!wapp || wapp->app_icon == NULL)
-				icon->icon_win = wwin->wm_hints->icon_window;
-		} else {
-			icon->icon_win = wwin->wm_hints->icon_window;
-		}
-	}
-
-	wIconChangeTitle(icon, wwin);
-
-	map_icon_image(icon);
-
-	WMAddNotificationObserver(icon_appearanceObserver, icon, WNIconAppearanceSettingsChanged, icon);
-	WMAddNotificationObserver(icon_tileObserver, icon, WNIconTileSettingsChanged, icon);
-}
-
-void icon_for_wwindow_miniwindow_map(WIcon *icon)
-{
-	WWindow *wwin = icon->owner;
-	virtual_screen *vscr = wwin->vscr;
-	WScreen *scr = vscr->screen_ptr;
-
-	wcore_map_toplevel(icon->core, vscr, wwin->icon_x, wwin->icon_y,
-			   icon->width, icon->height, 0,
-			   scr->w_depth, scr->w_visual, scr->w_colormap,
-			   scr->white_pixel);
-
-	if (wwin->wm_hints && (wwin->wm_hints->flags & IconWindowHint))
-		icon->icon_win = wwin->wm_hints->icon_window;
-
-	map_icon_image(icon);
-
-	WMAddNotificationObserver(icon_appearanceObserver, icon, WNIconAppearanceSettingsChanged, icon);
-	WMAddNotificationObserver(icon_tileObserver, icon, WNIconTileSettingsChanged, icon);
-}
-
 WIcon *icon_create_core(virtual_screen *vscr)
 {
 	WIcon *icon;
 
 	icon = wmalloc(sizeof(WIcon));
-	icon->width = wPreferences.icon_size;
-	icon->height = wPreferences.icon_size;
 	icon->core = wcore_create();
 	icon->vscr = vscr;
 
 	/* will be overriden if this is a application icon */
-	icon->core->descriptor.handle_mousedown = miniwindowMouseDown;
-	icon->core->descriptor.handle_expose = miniwindowExpose;
+	icon->core->descriptor.handle_mousedown = miniwindow_MouseDown;
+	icon->core->descriptor.handle_expose = miniwindow_Expose;
 	icon->core->descriptor.parent_type = WCLASS_MINIWINDOW;
 	icon->core->descriptor.parent = icon;
 
@@ -218,8 +161,8 @@ void wIconDestroy(WIcon *icon)
 		int x = 0, y = 0;
 
 		if (icon->owner) {
-			x = icon->owner->icon_x;
-			y = icon->owner->icon_y;
+			x = icon->owner->miniwindow->icon_x;
+			y = icon->owner->miniwindow->icon_y;
 		}
 
 		XUnmapWindow(dpy, icon->icon_win);
@@ -327,7 +270,7 @@ static void icon_update_pixmap(WIcon *icon, RImage *image)
 
 void wIconChangeTitle(WIcon *icon, WWindow *wwin)
 {
-	if (!icon || !wwin)
+	if (!icon || !wwin || !wwin->title)
 		return;
 
 	if (icon->title)
@@ -383,6 +326,7 @@ int wIconChangeImageFile(WIcon *icon, const char *file)
 	set_icon_image_from_image(icon, image);
 	icon->file_name = wstrdup(path);
 	update_icon_pixmap(icon);
+	wIconPaint(icon);
 
 	wfree(path);
 	return 1;
@@ -444,13 +388,13 @@ static char *get_icon_cache_path(void)
 	return NULL;
 }
 
-static RImage *get_wwindow_image_from_wmhints(WWindow *wwin, WIcon *icon)
+static RImage *get_wwindow_image_from_wmhints(WWindow *wwin)
 {
 	RImage *image = NULL;
 	XWMHints *hints = wwin->wm_hints;
 
 	if (hints && (hints->flags & IconPixmapHint) && hints->icon_pixmap != None)
-		image = RCreateImageFromDrawable(icon->vscr->screen_ptr->rcontext,
+		image = RCreateImageFromDrawable(wwin->vscr->screen_ptr->rcontext,
 						 hints->icon_pixmap,
 						 (hints->flags & IconMaskHint)
 						 ? hints->icon_mask : None);
@@ -505,10 +449,10 @@ char *wIconStore(WIcon *icon)
 		return filename;
 	}
 
-	if (wwin->net_icon_image)
-		image = RRetainImage(wwin->net_icon_image);
+	if (wwin->miniwindow->net_icon_image)
+		image = RRetainImage(wwin->miniwindow->net_icon_image);
 	else
-		image = get_wwindow_image_from_wmhints(wwin, icon);
+		image = get_wwindow_image_from_wmhints(wwin);
 
 	if (!image) {
 		wfree(path);
@@ -557,7 +501,7 @@ static void cycleColor(void *data)
 	XChangeGC(dpy, scr->icon_select_gc, GCDashOffset, &gcv);
 
 	XDrawRectangle(dpy, icon->core->window, scr->icon_select_gc, 0, 0,
-		       icon->width - 1, icon->height - 1);
+		       wPreferences.icon_size - 1, wPreferences.icon_size - 1);
 	icon->handlerID = WMAddTimerHandler(COLOR_CYCLE_DELAY, cycleColor, icon);
 }
 
@@ -581,14 +525,15 @@ void wIconSelect(WIcon *icon)
 			icon->handlerID = WMAddTimerHandler(10, cycleColor, icon);
 		else
 			XDrawRectangle(dpy, icon->core->window, scr->icon_select_gc, 0, 0,
-				       icon->width - 1, icon->height - 1);
+				       wPreferences.icon_size - 1, wPreferences.icon_size - 1);
 	} else {
 		if (icon->handlerID) {
 			WMDeleteTimerHandler(icon->handlerID);
 			icon->handlerID = NULL;
 		}
 
-		XClearArea(dpy, icon->core->window, 0, 0, icon->width, icon->height, True);
+		XClearArea(dpy, icon->core->window, 0, 0,
+				   wPreferences.icon_size, wPreferences.icon_size, True);
 	}
 }
 
@@ -616,36 +561,78 @@ void set_icon_image_from_image(WIcon *icon, RImage *image)
 		return;
 
 	unset_icon_image(icon);
-
-	icon->file_image = NULL;
 	icon->file_image = image;
+}
+
+RImage *icon_get_usable_icon(WWindow *wwin)
+{
+	WApplication *wapp;
+	RImage *image = NULL;
+
+	if (!wwin)
+		return NULL;
+
+	/* Get the image from the miniwindow */
+	if (wwin->miniwindow && wwin->miniwindow->icon && wwin->miniwindow->icon->file_image)
+		image = RRetainImage(wwin->miniwindow->icon->file_image);
+
+	/* Get the image from the appicon */
+	wapp = wApplicationOf(wwin->main_window);
+	if (!image && wapp && wapp->app_icon && wapp->app_icon->icon && wapp->app_icon->icon->file_image)
+		image = RRetainImage(wapp->app_icon->icon->file_image);
+
+	/* Use _NET_WM_ICON icon */
+	if (!WFLAGP(wwin, always_user_icon) && wwin->miniwindow->net_icon_image)
+		image = RRetainImage(wwin->miniwindow->net_icon_image);
+
+	/* Get the Pixmap from the wm_hints, else, from the user */
+	if (!image && wwin->wm_hints && (wwin->wm_hints->flags & IconPixmapHint))
+		image = get_rimage_icon_from_wm_hints(wwin);
+
+	return image;
 }
 
 void wIconUpdate(WIcon *icon)
 {
+	virtual_screen *vscr = icon->vscr;
+	WScreen *scr = vscr->screen_ptr;
 	WWindow *wwin = NULL;
 
 	if (icon && icon->owner)
 		wwin = icon->owner;
 
+	/* Block if the icon is set by the user */
 	if (wwin && WFLAGP(wwin, always_user_icon)) {
-		/* Forced use user_icon */
-		get_rimage_icon_from_user_icon(icon);
-	} else if (icon->icon_win != None) {
-		/* Get the Pixmap from the WIcon */
-		get_rimage_icon_from_icon_win(icon);
-	} else if (wwin && wwin->net_icon_image) {
+		if (!icon->file_image)
+			icon->file_image = get_rimage_from_file(vscr, icon->file_name, wPreferences.icon_size);
+
+		/* If is empty, then get the default image */
+		if (!icon->file_image) {
+			get_rimage_icon_from_default_icon(icon);
+			icon->file_image = RRetainImage(scr->def_icon_rimage);
+		}
+
+		update_icon_pixmap(icon);
+		return;
+	}
+
+	/* Get the icon from X11, different methods */
+	if (icon->icon_win != None) {
+		unset_icon_image(icon);
+		icon->file_image = get_window_image_from_x11(icon->icon_win);
+	} else if (wwin && wwin->miniwindow->net_icon_image) {
 		/* Use _NET_WM_ICON icon */
-		get_rimage_icon_from_x11(icon);
+		unset_icon_image(icon);
+		icon->file_image = RRetainImage(icon->owner->miniwindow->net_icon_image);
 	} else if (wwin && wwin->wm_hints && (wwin->wm_hints->flags & IconPixmapHint)) {
 		/* Get the Pixmap from the wm_hints, else, from the user */
 		unset_icon_image(icon);
-		icon->file_image = get_rimage_icon_from_wm_hints(icon);
-		if (!icon->file_image)
-			get_rimage_icon_from_user_icon(icon);
-	} else {
-		/* Get the Pixmap from the user */
-		get_rimage_icon_from_user_icon(icon);
+		icon->file_image = get_rimage_icon_from_wm_hints(wwin);
+	}
+
+	if (!icon->file_image) {
+		get_rimage_icon_from_default_icon(icon);
+		icon->file_image = RRetainImage(scr->def_icon_rimage);
 	}
 
 	update_icon_pixmap(icon);
@@ -657,7 +644,7 @@ void update_icon_pixmap(WIcon *icon)
 		XFreePixmap(dpy, icon->pixmap);
 
 	icon->pixmap = None;
- 
+
 	/* Create the pixmap */
 	if (icon->file_image)
 		icon_update_pixmap(icon, icon->file_image);
@@ -672,26 +659,6 @@ void update_icon_pixmap(WIcon *icon)
 	/* No pixmap, set default background */
 	if (icon->pixmap != None)
 		XSetWindowBackgroundPixmap(dpy, icon->core->window, icon->pixmap);
-
-	/* Paint it */
-	wIconPaint(icon);
-}
-
-static void get_rimage_icon_from_x11(WIcon *icon)
-{
-	/* Remove the icon image */
-	unset_icon_image(icon);
-
-	/* Set the new icon image */
-	icon->file_image = RRetainImage(icon->owner->net_icon_image);
-}
-
-static void get_rimage_icon_from_user_icon(WIcon *icon)
-{
-	if (icon->file_image)
-		return;
-
-	get_rimage_icon_from_default_icon(icon);
 }
 
 static void get_rimage_icon_from_default_icon(WIcon *icon)
@@ -702,27 +669,6 @@ static void get_rimage_icon_from_default_icon(WIcon *icon)
 	/* If the icon don't have image, we should use the default image. */
 	if (!scr->def_icon_rimage)
 		scr->def_icon_rimage = get_default_image(vscr);
-
-	/* Remove the icon image */
-	unset_icon_image(icon);
-
-	/* Set the new icon image */
-	icon->file_image = RRetainImage(scr->def_icon_rimage);
-}
-
-/* Get the RImage from the WIcon of the WWindow */
-static void get_rimage_icon_from_icon_win(WIcon *icon)
-{
-	RImage *image;
-
-	/* Create the new RImage */
-	image = get_window_image_from_x11(icon->icon_win);
-
-	/* Free the icon info */
-	unset_icon_image(icon);
-
-	/* Set the new info */
-	icon->file_image = image;
 }
 
 /* Set the dockapp in the WIcon */
@@ -755,29 +701,26 @@ static void set_dockapp_in_icon(WIcon *icon)
 	/* Needed to move the icon clicking on the application part */
 	if ((XGetWindowAttributes(dpy, icon->icon_win, &attr)) &&
 	    (attr.all_event_masks & ButtonPressMask))
-		wHackedGrabButton(dpy, Button1, MOD_MASK, icon->core->window, True,
+		wHackedGrabButton(dpy, Button1, wPreferences.modifier_mask, icon->core->window, True,
 				  ButtonPressMask, GrabModeSync, GrabModeAsync,
 				  None, wPreferences.cursor[WCUR_ARROW]);
 }
 
 /* Get the RImage from the XWindow wm_hints */
-RImage *get_rimage_icon_from_wm_hints(WIcon *icon)
+RImage *get_rimage_icon_from_wm_hints(WWindow *wwin)
 {
 	RImage *image = NULL;
 	unsigned int w, h, d;
-	WWindow *wwin;
 
-	if ((!icon) || (!icon->owner))
+	if (!wwin)
 		return NULL;
 
-	wwin = icon->owner;
-
 	if (!getSize(wwin->wm_hints->icon_pixmap, &w, &h, &d)) {
-		icon->owner->wm_hints->flags &= ~IconPixmapHint;
+		wwin->wm_hints->flags &= ~IconPixmapHint;
 		return NULL;
 	}
 
-	image = get_wwindow_image_from_wmhints(wwin, icon);
+	image = get_wwindow_image_from_wmhints(wwin);
 	if (!image)
 		return NULL;
 
@@ -799,10 +742,10 @@ static void update_icon_title(WIcon *icon)
 		tmp = ShrinkString(scr->icon_title_font, icon->title, wPreferences.icon_size - 4);
 		w = WMWidthOfString(scr->icon_title_font, tmp, l = strlen(tmp));
 
-		if (w > icon->width - 4)
-			x = (icon->width - 4) - w;
+		if (w > wPreferences.icon_size - 4)
+			x = (wPreferences.icon_size - 4) - w;
 		else
-			x = (icon->width - w) / 2;
+			x = (wPreferences.icon_size - w) / 2;
 
 		WMDrawString(scr->wmscreen, icon->core->window, scr->icon_title_color,
 			     scr->icon_title_font, x, 1, tmp, l);
@@ -826,139 +769,24 @@ void wIconPaint(WIcon *icon)
 
 	if (icon->selected)
 		XDrawRectangle(dpy, icon->core->window, scr->icon_select_gc, 0, 0,
-			       icon->width - 1, icon->height - 1);
+				       wPreferences.icon_size - 1, wPreferences.icon_size - 1);
 }
 
 /******************************************************************/
 
-static void miniwindowExpose(WObjDescriptor *desc, XEvent *event)
-{
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) event;
-
-	wIconPaint(desc->parent);
-}
-
-static void miniwindowDblClick(WObjDescriptor *desc, XEvent *event)
-{
-	WIcon *icon = desc->parent;
-
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) event;
-
-	assert(icon->owner != NULL);
-
-	wDeiconifyWindow(icon->owner);
-}
-
-static void miniwindowMouseDown(WObjDescriptor *desc, XEvent *event)
-{
-	WIcon *icon = desc->parent;
-	WWindow *wwin = icon->owner;
-	XEvent ev;
-	int x = wwin->icon_x, y = wwin->icon_y;
-	int dx = event->xbutton.x, dy = event->xbutton.y;
-	int grabbed = 0;
-	int clickButton = event->xbutton.button;
-	Bool hasMoved = False;
-
-	if (WCHECK_STATE(WSTATE_MODAL))
-		return;
-
-	if (IsDoubleClick(icon->vscr, event)) {
-		miniwindowDblClick(desc, event);
-		return;
-	}
-
-	if (event->xbutton.button == Button1) {
-		if (event->xbutton.state & MOD_MASK)
-			wLowerFrame(icon->vscr, icon->core);
-		else
-			wRaiseFrame(icon->vscr, icon->core);
-		if (event->xbutton.state & ShiftMask) {
-			wIconSelect(icon);
-			wSelectWindow(icon->owner, !wwin->flags.selected);
-		}
-	} else if (event->xbutton.button == Button3) {
-		WObjDescriptor *desc;
-
-		OpenWindowMenu(wwin, event->xbutton.x_root, event->xbutton.y_root, False);
-
-		/* allow drag select of menu */
-		desc = &wwin->vscr->menu.window_menu->core->descriptor;
-		event->xbutton.send_event = True;
-		(*desc->handle_mousedown) (desc, event);
-
-		return;
-	}
-
-	if (XGrabPointer(dpy, icon->core->window, False, ButtonMotionMask
-			 | ButtonReleaseMask | ButtonPressMask, GrabModeAsync,
-			 GrabModeAsync, None, None, CurrentTime) != GrabSuccess) {
-	}
-
-	while (1) {
-		WMMaskEvent(dpy, PointerMotionMask | ButtonReleaseMask | ButtonPressMask
-			    | ButtonMotionMask | ExposureMask, &ev);
-		switch (ev.type) {
-		case Expose:
-			WMHandleEvent(&ev);
-			break;
-
-		case MotionNotify:
-			hasMoved = True;
-			if (!grabbed) {
-				if (abs(dx - ev.xmotion.x) >= MOVE_THRESHOLD ||
-				    abs(dy - ev.xmotion.y) >= MOVE_THRESHOLD) {
-					XChangeActivePointerGrab(dpy, ButtonMotionMask
-								 | ButtonReleaseMask | ButtonPressMask,
-								 wPreferences.cursor[WCUR_MOVE], CurrentTime);
-					grabbed = 1;
-				} else {
-					break;
-				}
-			}
-			x = ev.xmotion.x_root - dx;
-			y = ev.xmotion.y_root - dy;
-			XMoveWindow(dpy, icon->core->window, x, y);
-			break;
-
-		case ButtonPress:
-			break;
-
-		case ButtonRelease:
-			if (ev.xbutton.button != clickButton)
-				break;
-
-			if (wwin->icon_x != x || wwin->icon_y != y)
-				wwin->flags.icon_moved = 1;
-
-			XMoveWindow(dpy, icon->core->window, x, y);
-			wwin->icon_x = x;
-			wwin->icon_y = y;
-			XUngrabPointer(dpy, CurrentTime);
-
-			if (wPreferences.auto_arrange_icons)
-				wArrangeIcons(wwin->vscr, True);
-
-			if (wPreferences.single_click && !hasMoved)
-				miniwindowDblClick(desc, event);
-
-			return;
-
-		}
-	}
-}
-
 void set_icon_image_from_database(WIcon *icon, const char *wm_instance, const char *wm_class, const char *command)
 {
-	char *file = NULL;
+	icon->file_name = get_icon_filename(wm_instance, wm_class, command, False);
+}
 
-	file = get_icon_filename(wm_instance, wm_class, command, False);
-	if (file) {
-		icon->file_name = wstrdup(file);
-		wfree(file);
-	}
+RImage *get_icon_image(virtual_screen *vscr, const char *winstance, const char *wclass, int max_size)
+{
+	char *file_name = NULL;
+
+	/* Get the file name of the image, using instance and class */
+	file_name = get_icon_filename(winstance, wclass, NULL, True);
+
+	return get_rimage_from_file(vscr, file_name, max_size);
 }
 
 void map_icon_image(WIcon *icon)
@@ -967,6 +795,7 @@ void map_icon_image(WIcon *icon)
 
 	/* Update the icon, because icon could be NULL */
 	wIconUpdate(icon);
+	wIconPaint(icon);
 }
 
 void unmap_icon_image(WIcon *icon)
@@ -977,36 +806,103 @@ void unmap_icon_image(WIcon *icon)
 	unset_icon_file_image(icon);
 }
 
-int create_icon_minipreview(WWindow *wwin)
+/* Get the file name of the image, using instance and class */
+char *get_icon_filename(const char *winstance, const char *wclass, const char *command,
+			Bool default_icon)
 {
-	Pixmap pixmap;
-	int ret;
+	char *file_name = NULL, *file_path = NULL;
 
-	ret = create_minipixmap_for_wwindow(wwin->vscr, wwin, &pixmap);
-	if (ret) {
-		create_minipreview_showerror(wwin);
-		return -1;
+	/* Get the file name of the image, using instance and class */
+	file_name = wDefaultGetIconFile(winstance, wclass, default_icon);
+
+	/* Check if the file really exists in the disk */
+	if (file_name)
+		file_path = FindImage(wPreferences.icon_path, file_name);
+
+	/*
+	 * If the specific icon filename is not found, and command is specified,
+	 * then include the .app icons and re-do the search.
+	 */
+	if (!file_path && command) {
+		wApplicationExtractDirPackIcon(command, winstance, wclass);
+		file_name = wDefaultGetIconFile(winstance, wclass, False);
+		if (file_name) {
+			file_path = FindImage(wPreferences.icon_path, file_name);
+			if (!file_path)
+				wwarning(_("icon \"%s\" doesn't exist, check your config files"), file_name);
+
+			/*
+			 * FIXME: Here, if file_path does not exist then the icon is still in the
+			 * "icon database" (w_global.domain.window_attr->dictionary), but the file
+			 * for the icon is no more on disk. Therefore, we should remove it from the
+			 * database. Is possible to do that using wDefaultChangeIcon()
+			 */
+		}
 	}
 
-	if (wwin->icon->mini_preview != None)
-		XFreePixmap(dpy, wwin->icon->mini_preview);
+	/*
+	 * Don't wfree(file_name) because it is a direct pointer inside the icon
+	 * dictionary (w_global.domain.window_attr->dictionary) and not a result
+	 * allocated with wstrdup()
+	 */
 
-	wwin->icon->mini_preview = pixmap;
+	if (!file_path && default_icon)
+		file_path = get_default_image_path();
 
-	return 0;
+	return file_path;
 }
 
-static void create_minipreview_showerror(WWindow *wwin)
+/* This function returns the image picture for the file_name file */
+static RImage *get_rimage_from_file(virtual_screen *vscr, const char *file_name, int max_size)
 {
-	const char *title;
-	char title_buf[32];
+	RImage *image = NULL;
 
-	if (wwin->title) {
-		title = wwin->title;
-	} else {
-		snprintf(title_buf, sizeof(title_buf), "(id=0x%lx)", wwin->client_win);
-		title = title_buf;
-	}
+	if (!file_name)
+		return NULL;
 
-	wwarning(_("creation of mini-preview failed for window \"%s\""), title);
+	image = RLoadImage(vscr->screen_ptr->rcontext, file_name, 0);
+	if (!image)
+		wwarning(_("error loading image file \"%s\": %s"), file_name,
+			 RMessageForError(RErrorCode));
+
+	image = wIconValidateIconSize(image, max_size);
+
+	return image;
+}
+
+/* This function returns the default icon's full path
+ * If the path for an icon is not found, returns NULL */
+static char *get_default_image_path(void)
+{
+	char *path = NULL, *file = NULL;
+
+	/* Get the default icon */
+	file = wDefaultGetIconFile(NULL, NULL, True);
+	if (file)
+		path = FindImage(wPreferences.icon_path, file);
+
+	return path;
+}
+
+/* This function creates the RImage using the default icon */
+static RImage *get_default_image(virtual_screen *vscr)
+{
+	RImage *image = NULL;
+	char *path = NULL;
+
+	/* Get the filename full path */
+	path = get_default_image_path();
+	if (!path)
+		return NULL;
+
+	/* Get the default icon */
+	image = get_rimage_from_file(vscr, path, wPreferences.icon_size);
+	if (!image)
+		wwarning(_("could not find default icon \"%s\""), path);
+
+	/* Resize the icon to the wPreferences.icon_size size
+	 * usually this function will return early, because size is right */
+	image = wIconValidateIconSize(image, wPreferences.icon_size);
+
+	return image;
 }

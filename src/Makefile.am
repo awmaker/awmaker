@@ -4,13 +4,15 @@ BUILT_SOURCES = wconfig.h
 
 bin_PROGRAMS = awmaker
 
-EXTRA_DIST = 
+EXTRA_DIST =
 
 awmaker_SOURCES = 	\
 	GNUstep.h \
 	WindowMaker.h \
 	actions.c \
 	actions.h \
+	animations.c \
+	animations.h \
 	appicon.c \
 	appicon.h \
 	application.c \
@@ -21,6 +23,7 @@ awmaker_SOURCES = 	\
 	balloon.h \
 	client.c \
 	client.h \
+	clip.c \
 	colormap.c \
 	colormap.h \
 	cycling.c \
@@ -31,9 +34,11 @@ awmaker_SOURCES = 	\
 	dialog.c \
 	dialog.h \
 	dock.c \
+	dock-core.c \
 	dockedapp.c \
 	dockedapp.h \
 	dock.h \
+	drawer.c \
 	event.c \
 	event.h \
 	extend_pixmaps.h \
@@ -51,6 +56,8 @@ awmaker_SOURCES = 	\
 	main.h \
 	menu.c \
 	menu.h \
+	miniwindow.c \
+	miniwindow.h \
 	misc.h \
 	monitor.c \
 	monitor.h \
@@ -156,7 +163,7 @@ AM_CFLAGS =
 
 AM_CPPFLAGS = $(DFLAGS) \
 	-I$(top_srcdir)/wrlib \
-	-I$(top_srcdir)/WINGs @HEADER_SEARCH_PATH@ 
+	-I$(top_srcdir)/WINGs @HEADER_SEARCH_PATH@
 
 
 awmaker_LDADD = \

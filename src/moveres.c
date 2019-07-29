@@ -33,6 +33,7 @@
 #include "window.h"
 #include "client.h"
 #include "icon.h"
+#include "dock-core.h"
 #include "dock.h"
 #include "actions.h"
 #include "workspace.h"
@@ -41,6 +42,7 @@
 #include "geomview.h"
 #include "screen.h"
 #include "xinerama.h"
+#include "miniwindow.h"
 
 #include <WINGs/WINGsP.h>
 
@@ -2282,8 +2284,8 @@ void wUnselectWindows(virtual_screen *vscr)
 
 	while (WMGetArrayItemCount(vscr->screen_ptr->selected_windows)) {
 		wwin = WMGetFromArray(vscr->screen_ptr->selected_windows, 0);
-		if (wwin->flags.miniaturized && wwin->icon && wwin->icon->selected)
-			wIconSelect(wwin->icon);
+		if (wwin->flags.miniaturized && wwin->miniwindow->icon && wwin->miniwindow->icon->selected)
+			wIconSelect(wwin->miniwindow->icon);
 
 		wSelectWindow(wwin, False);
 	}

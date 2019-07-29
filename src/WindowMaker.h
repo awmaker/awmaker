@@ -663,6 +663,7 @@ extern struct WPreferences {
 	/* Frame border */
 	int border_width;
 
+	int switch_panel_icon_size;   /* icon size in switch panel */
 } wPreferences;
 
 /****** Global Variables  ******/

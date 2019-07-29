@@ -46,10 +46,5 @@ void wDefaultChangeIcon(const char *instance, const char *class, const char *fil
 void wDefaultFillAttributes(const char *instance, const char *class,
 			    WWindowAttributes *attr, WWindowAttributes *mask,
 			    Bool useGlobalDefault);
-RImage *get_rimage_from_file(virtual_screen *vscr, const char *file_name, int max_size);
-RImage *get_default_image(virtual_screen *vscr);
-RImage *get_icon_image(virtual_screen *vscr, const char *winstance, const char *wclass, int max_size);
 char *wDefaultGetIconFile(const char *instance, const char *class, Bool default_icon);
-char *get_icon_filename(const char *winstance, const char *wclass, const char *command,
-			Bool default_icon);
 #endif

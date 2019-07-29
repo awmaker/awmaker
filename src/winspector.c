@@ -43,11 +43,13 @@
 #include "appicon.h"
 #include "actions.h"
 #include "winspector.h"
+#include "dock-core.h"
 #include "dock.h"
 #include "client.h"
 #include "wmspec.h"
 #include "misc.h"
 #include "switchmenu.h"
+#include "miniwindow.h"
 
 #include <WINGs/WUtil.h>
 
@@ -812,25 +814,29 @@ static void applySettings(WMWidget *button, void *client_data)
 		if (!WFLAGP(wwin_inspected, always_user_icon)) {
 			/* Change App Icon image, using the icon provided by the client */
 			if (wapp->app_icon) {
-				RImage *image = get_rimage_icon_from_wm_hints(wapp->app_icon->icon);
+				RImage *image = get_rimage_icon_from_wm_hints(wapp->app_icon->icon->owner);
 				if (image) {
 					set_icon_image_from_image(wapp->app_icon->icon, image);
 					update_icon_pixmap(wapp->app_icon->icon);
 				} else {
 					wIconUpdate(wapp->app_icon->icon);
 				}
+
+				wIconPaint(wapp->app_icon->icon);
 			}
 
 			/* Change icon image if the app is minimized,
 			 * using the icon provided by the client */
-			if (wwin_inspected->icon) {
-				RImage *image = get_rimage_icon_from_wm_hints(wwin_inspected->icon);
+			if (wwin_inspected->miniwindow->icon) {
+				RImage *image = get_rimage_icon_from_wm_hints(wwin_inspected->miniwindow->icon->owner);
 				if (image) {
-					set_icon_image_from_image(wwin_inspected->icon, image);
-					update_icon_pixmap(wwin_inspected->icon);
+					set_icon_image_from_image(wwin_inspected->miniwindow->icon, image);
+					update_icon_pixmap(wwin_inspected->miniwindow->icon);
 				} else {
-					wIconUpdate(wwin_inspected->icon);
+					wIconUpdate(wwin_inspected->miniwindow->icon);
 				}
+
+				wIconPaint(wwin_inspected->miniwindow->icon);
 			}
 		} else {
 			/* Change App Icon image */
@@ -838,8 +844,8 @@ static void applySettings(WMWidget *button, void *client_data)
 				wIconChangeImageFile(wapp->app_icon->icon, file);
 
 			/* Change icon image if the app is minimized */
-			if (wwin_inspected->icon)
-				wIconChangeImageFile(wwin_inspected->icon, file);
+			if (wwin_inspected->miniwindow->icon)
+				wIconChangeImageFile(wwin_inspected->miniwindow->icon, file);
 		}
 
 		if (file)
@@ -1290,7 +1296,6 @@ WWindow *wGetWindowOfInspectorForWindow(WWindow *wwin_inspected)
 	if (!wwin_inspected->inspector)
 		return NULL;
 
-	assert(wwin_inspected->flags.inspector_open != 0);
 	return wwin_inspected->inspector->wwin;
 }
 

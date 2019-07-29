@@ -65,7 +65,7 @@
 #include "stacking.h"
 #include "defaults.h"
 #include "workspace.h"
-#include "dock.h"
+#include "dock-core.h"
 #include "framewin.h"
 #include "properties.h"
 #include "balloon.h"
@@ -81,11 +81,7 @@
 #include "switchmenu.h"
 #include "wsmap.h"
 
-
-#define MOD_MASK wPreferences.modifier_mask
-
 /************ Local stuff ***********/
-
 static void saveTimestamp(XEvent *event);
 static void handleColormapNotify(XEvent *event);
 static void handleMapNotify(XEvent *event);
@@ -827,7 +823,7 @@ static void handleButtonPress(XEvent *event)
 	if (desc->parent_type == WCLASS_WINDOW) {
 		XSync(dpy, 0);
 
-		if (event->xbutton.state & ( MOD_MASK | ControlMask )) {
+		if (event->xbutton.state & (wPreferences.modifier_mask | ControlMask )) {
 			XAllowEvents(dpy, AsyncPointer, CurrentTime);
 		} else {
 			if (wPreferences.ignore_focus_click)
@@ -839,7 +835,7 @@ static void handleButtonPress(XEvent *event)
 		XSync(dpy, 0);
 	} else if (desc->parent_type == WCLASS_APPICON
 		   || desc->parent_type == WCLASS_MINIWINDOW || desc->parent_type == WCLASS_DOCK_ICON) {
-		if (event->xbutton.state & MOD_MASK) {
+		if (event->xbutton.state & wPreferences.modifier_mask) {
 			XSync(dpy, 0);
 			XAllowEvents(dpy, AsyncPointer, CurrentTime);
 			XSync(dpy, 0);
@@ -1244,7 +1240,7 @@ static void handleXkbIndicatorStateNotify(XkbEvent *event)
 	(void) event;
 
 	for (i = 0; i < w_global.screen_count; i++) {
-		vscr = wScreenWithNumber(i);
+		vscr = w_global.vscreens[i];
 		wwin = vscr->window.focused;
 		if (wwin && wwin->flags.focused) {
 			XkbGetState(dpy, XkbUseCoreKbd, &staterec);
@@ -1768,7 +1764,7 @@ static void handleKeyPress(XEvent *event)
 
 			/* find index of this screen */
 			for (i = 0; i < w_global.screen_count; i++) {
-				vscr1 = wScreenWithNumber(i);
+				vscr1 = w_global.vscreens[i];
 				if (vscr1->screen_ptr == vscr->screen_ptr)
 					break;
 			}
@@ -1777,7 +1773,7 @@ static void handleKeyPress(XEvent *event)
 			if (i >= w_global.screen_count)
 				i = 0;
 
-			vscr2 = wScreenWithNumber(i);
+			vscr2 = w_global.vscreens[i];
 			if (vscr2->screen_ptr)
 				XWarpPointer(dpy, vscr->screen_ptr->root_win, vscr2->screen_ptr->root_win, 0, 0, 0, 0,
 					     vscr2->screen_ptr->scr_width / 2, vscr2->screen_ptr->scr_height / 2);

@@ -48,6 +48,7 @@
 #include "stacking.h"
 #include "xinerama.h"
 #include "properties.h"
+#include "miniwindow.h"
 
 
 /* Root Window Properties */
@@ -539,20 +540,20 @@ RImage *get_window_image_from_x11(Window window)
 static void updateIconImage(WWindow *wwin)
 {
 	/* Remove the icon image from X11 */
-	if (wwin->net_icon_image)
-		RReleaseImage(wwin->net_icon_image);
+	if (wwin->miniwindow->net_icon_image)
+		RReleaseImage(wwin->miniwindow->net_icon_image);
 
 	/* Save the icon in the X11 icon */
-	wwin->net_icon_image = get_window_image_from_x11(wwin->client_win);
+	wwin->miniwindow->net_icon_image = get_window_image_from_x11(wwin->client_win);
 
 	/* Refresh the Window Icon */
-	if (wwin->icon)
-		wIconUpdate(wwin->icon);
+	miniwindow_iconupdate(wwin);
 
 	/* Refresh the application icon */
 	WApplication *app = wApplicationOf(wwin->main_window);
 	if (app && app->app_icon) {
 		wIconUpdate(app->app_icon->icon);
+		wIconPaint(app->app_icon->icon);
 		wAppIconPaint(app->app_icon);
 	}
 }
@@ -1245,18 +1246,6 @@ static void doStateAtom(WWindow *wwin, Atom state, int set, Bool init)
 	}
 }
 
-static void removeIcon(WWindow *wwin)
-{
-	if (wwin->icon == NULL)
-		return;
-	if (wwin->flags.miniaturized && wwin->icon->mapped) {
-		XUnmapWindow(dpy, wwin->icon->core->window);
-		RemoveFromStackList(wwin->icon->vscr, wwin->icon->core);
-		wIconDestroy(wwin->icon);
-		wwin->icon = NULL;
-	}
-}
-
 static Bool handleWindowType(WWindow *wwin, Atom type, int *layer)
 {
 	Bool ret = True;
@@ -1490,13 +1479,12 @@ void wNETWMCheckClientHints(WWindow *wwin, int *layer, int *workspace)
 	wScreenUpdateUsableArea(wwin->vscr);
 }
 
-static Bool updateNetIconInfo(WWindow *wwin)
+static void updateNetIconInfo(WWindow *wwin)
 {
 	Atom type_ret;
 	int fmt_ret;
 	unsigned long nitems_ret, bytes_after_ret;
 	long *data = NULL;
-	Bool hasState = False;
 	Bool old_state = wwin->flags.net_handle_icon;
 
 	if (XGetWindowProperty(dpy, wwin->client_win, net_wm_handled_icons, 0, 1, False,
@@ -1505,8 +1493,6 @@ static Bool updateNetIconInfo(WWindow *wwin)
 		long handled = *data;
 		wwin->flags.net_handle_icon = (handled != 0);
 		XFree(data);
-		hasState = True;
-
 	} else {
 		wwin->flags.net_handle_icon = False;
 	}
@@ -1515,36 +1501,25 @@ static Bool updateNetIconInfo(WWindow *wwin)
 			       XA_CARDINAL, &type_ret, &fmt_ret, &nitems_ret,
 			       &bytes_after_ret, (unsigned char **)&data) == Success && data) {
 
-#ifdef NETWM_PROPER
-		if (wwin->flags.net_handle_icon)
-#else
 		wwin->flags.net_handle_icon = True;
-#endif
-		{
-			wwin->icon_x = data[0];
-			wwin->icon_y = data[1];
-			wwin->icon_w = data[2];
-			wwin->icon_h = data[3];
-		}
-
+		wwin->miniwindow->icon_x = data[0];
+		wwin->miniwindow->icon_y = data[1];
+		wwin->miniwindow->icon_w = data[2];
+		wwin->miniwindow->icon_h = data[3];
 		XFree(data);
-		hasState = True;
-
 	} else {
 		wwin->flags.net_handle_icon = False;
 	}
 
 	if (wwin->flags.miniaturized && old_state != wwin->flags.net_handle_icon) {
 		if (wwin->flags.net_handle_icon) {
-			removeIcon(wwin);
+			miniwindow_removeIcon(wwin);
 		} else {
 			wwin->flags.miniaturized = False;
 			wwin->flags.skip_next_animation = True;
 			wIconifyWindow(wwin);
 		}
 	}
-
-	return hasState;
 }
 
 void wNETWMCheckInitialClientState(WWindow *wwin)
@@ -1756,10 +1731,7 @@ void wNETWMCheckClientHintChange(WWindow *wwin, XPropertyEvent *event)
 		if (name)
 			wfree(name);
 	} else if (event->atom == net_wm_title) {
-		if (wwin->icon) {
-			wIconChangeTitle(wwin->icon, wwin);
-			wIconPaint(wwin->icon);
-		}
+		miniwindow_updatetitle(wwin);
 	} else if (event->atom == net_wm_icon) {
 		updateIconImage(wwin);
 	} else if (event->atom == net_wm_window_opacity) {

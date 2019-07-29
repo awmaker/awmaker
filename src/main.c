@@ -280,7 +280,7 @@ noreturn void wAbort(Bool dumpCore)
 	virtual_screen *vscr;
 
 	for (i = 0; i < w_global.screen_count; i++) {
-		vscr = wScreenWithNumber(i);
+		vscr = w_global.vscreens[i];
 		if (vscr->screen_ptr)
 			RestoreDesktop(vscr);
 	}

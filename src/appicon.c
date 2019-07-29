@@ -35,11 +35,14 @@
 #include "WindowMaker.h"
 #include "window.h"
 #include "icon.h"
+#include "miniwindow.h"
 #include "application.h"
 #include "appicon.h"
 #include "actions.h"
 #include "stacking.h"
+#include "dock-core.h"
 #include "dock.h"
+#include "drawer.h"
 #include "wdefaults.h"
 #include "workspace.h"
 #include "superfluous.h"
@@ -59,9 +62,6 @@
  * icon_file for the dock is got from the preferences file by
  * using the classname/instancename
  */
-
-#define MOD_MASK       wPreferences.modifier_mask
-#define ICON_SIZE      wPreferences.icon_size
 
 static void iconDblClick(WObjDescriptor *desc, XEvent *event);
 static void appicon_handle_menubutton(WAppIcon *aicon, XEvent *event);
@@ -132,14 +132,30 @@ void create_appicon_for_application(WApplication *wapp, WWindow *wwin)
 {
 	/* Try to create an icon from the dock or clip */
 	create_appicon_from_dock(wwin, wapp);
+	if (wapp->app_icon) {
+		/* If already created, set some flags */
+		if (!WFLAGP(wapp->main_window_desc, no_appicon)) {
+			WWindow *mainw = wapp->main_window_desc;
 
-	if (wapp->app_icon)
+			wapp->app_icon->running = 1;
+			wapp->app_icon->icon->owner = mainw;
+			if (mainw->wm_hints && (mainw->wm_hints->flags & IconWindowHint))
+				wapp->app_icon->icon->icon_win = mainw->wm_hints->icon_window;
+
+			/* Update the icon images */
+			wIconUpdate(wapp->app_icon->icon);
+
+			/* Paint it */
+			wIconPaint(wapp->app_icon->icon);
+			wAppIconPaint(wapp->app_icon);
+		}
+
 		return;
+	}
 
 	/* Create the icon */
 	wAppIcon_create(wapp);
 	wAppIcon_map(wapp->app_icon);
-	wIconUpdate(wapp->app_icon->icon);
 
 	/* Now, paint the icon */
 	if (!WFLAGP(wapp->main_window_desc, no_appicon))
@@ -222,7 +238,11 @@ void paint_app_icon(WApplication *wapp)
 		 * because if painted, then PlaceIcon will return the next
 		 * space on the screen, and the icon will move */
 		if (wapp->app_icon->next == NULL && wapp->app_icon->prev == NULL) {
-			PlaceIcon(vscr, &x, &y, wGetHeadForWindow(wapp->main_window_desc));
+			WCoord *coord;
+			coord = PlaceIcon(vscr, wGetHeadForWindow(wapp->main_window_desc));
+			x = coord->x;
+			y = coord->y;
+			wfree(coord);
 			wAppIconMove(wapp->app_icon, x, y);
 			wLowerFrame(icon->vscr, icon->core);
 		}
@@ -247,8 +267,10 @@ void removeAppIconFor(WApplication *wapp)
 	if (!wapp->app_icon)
 		return;
 
-	if (wPreferences.highlight_active_app)
+	if (wPreferences.highlight_active_app) {
 		wIconSetHighlited(wapp->app_icon->icon, False);
+		wIconPaint(wapp->app_icon->icon); /* dup later */
+	}
 
 	if (wapp->app_icon->docked && !wapp->app_icon->attracted) {
 		wapp->app_icon->running = 0;
@@ -264,8 +286,6 @@ void removeAppIconFor(WApplication *wapp)
 		set_icon_image_from_database(wapp->app_icon->icon, wapp->app_icon->wm_instance,
 					     wapp->app_icon->wm_class, wapp->app_icon->command);
 		map_icon_image(wapp->app_icon->icon);
-
-		/* Paint it */
 		wAppIconPaint(wapp->app_icon);
 	} else if (wapp->app_icon->docked) {
 		wapp->app_icon->running = 0;
@@ -331,9 +351,32 @@ static void wAppIcon_create(WApplication *wapp)
 	wapp->app_icon = aicon;
 }
 
+/*
+ * The function wAppIcon_map maps the icon used in the
+ * appicon. This function is like the miniwindow_map
+ * function, but it does not include title and the stuff
+ * to create the used icon is a little bit different.
+ * It incluces DND code too
+ */
 static void wAppIcon_map(WAppIcon *aicon)
 {
-	icon_for_wwindow_miniwindow_map(aicon->icon);
+	WIcon *icon = aicon->icon;
+	WWindow *wwin = icon->owner;
+	virtual_screen *vscr = wwin->vscr;
+	WScreen *scr = vscr->screen_ptr;
+
+	wcore_map_toplevel(icon->core, vscr, wwin->miniwindow->icon_x, wwin->miniwindow->icon_y,
+			   wPreferences.icon_size, wPreferences.icon_size, 0,
+			   scr->w_depth, scr->w_visual, scr->w_colormap,
+			   scr->white_pixel);
+
+	if (wwin->wm_hints && (wwin->wm_hints->flags & IconWindowHint))
+		icon->icon_win = wwin->wm_hints->icon_window;
+
+	map_icon_image(icon);
+
+	WMAddNotificationObserver(icon_appearanceObserver, icon, WNIconAppearanceSettingsChanged, icon);
+	WMAddNotificationObserver(icon_tileObserver, icon, WNIconTileSettingsChanged, icon);
 
 #ifdef USE_DOCK_XDND
 	wXDNDMakeAwareness(aicon->icon->core->window);
@@ -436,16 +479,12 @@ static void updateDockNumbers(virtual_screen *vscr)
 
 void wAppIconPaint(WAppIcon *aicon)
 {
-	WApplication *wapp;
+	WApplication *wapp = NULL;
 	virtual_screen *vscr = aicon->icon->vscr;
 	WScreen *scr = vscr->screen_ptr;
 
 	if (aicon->icon->owner)
 		wapp = wApplicationOf(aicon->icon->owner->main_window);
-	else
-		wapp = NULL;
-
-	wIconPaint(aicon->icon);
 
 # ifdef WS_INDICATOR
 	if (aicon->docked && scr->dock && scr->dock == aicon->dock && aicon->yindex == 0)
@@ -564,8 +603,6 @@ static void setIconCallback(WMenu *menu, WMenuEntry *entry)
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) menu;
 
-	assert(icon != NULL);
-
 	if (icon->editing)
 		return;
 
@@ -583,6 +620,7 @@ static void setIconCallback(WMenu *menu, WMenuEntry *entry)
 				               _("OK"), NULL, NULL);
 			} else {
 				wDefaultChangeIcon(icon->wm_instance, icon->wm_class, file);
+				wIconPaint(icon->icon);
 				wAppIconPaint(icon);
 			}
 		}
@@ -607,10 +645,7 @@ static void killCallback(WMenu *menu, WMenuEntry *entry)
 
 	WCHANGE_STATE(WSTATE_MODAL);
 
-	assert(entry->clientdata != NULL);
-
 	shortname = basename(wapp->app_icon->wm_instance);
-
 	buffer = wstrconcat(wapp->app_icon ? shortname : NULL,
 			    _(" will be forcibly closed.\n"
 			      "Any unsaved changes will be lost.\n" "Please confirm."));
@@ -666,7 +701,7 @@ void appicon_map(WAppIcon *aicon)
 	virtual_screen *vscr = aicon->icon->vscr;
 	WScreen *scr = aicon->icon->vscr->screen_ptr;
 
-	wcore_map_toplevel(wcore, vscr, 0, 0, icon->width, icon->height, 0,
+	wcore_map_toplevel(wcore, vscr, 0, 0, wPreferences.icon_size, wPreferences.icon_size, 0,
 			   scr->w_depth, scr->w_visual,
 			   scr->w_colormap, scr->white_pixel);
 
@@ -723,10 +758,13 @@ static WMenu *openApplicationMenu(WApplication *wapp, int x, int y)
 
 static void iconExpose(WObjDescriptor *desc, XEvent *event)
 {
+	WAppIcon *aicon = desc->parent;
+
 	/* Parameter not used, but tell the compiler that it is ok */
 	(void) event;
 
-	wAppIconPaint(desc->parent);
+	wIconPaint(aicon->icon);
+	wAppIconPaint(aicon);
 }
 
 static void iconDblClick(WObjDescriptor *desc, XEvent *event)
@@ -736,10 +774,7 @@ static void iconDblClick(WObjDescriptor *desc, XEvent *event)
 	virtual_screen *vscr = aicon->icon->vscr;
 	int unhideHere;
 
-	assert(aicon->icon->owner != NULL);
-
 	wapp = wApplicationOf(aicon->icon->owner->main_window);
-
 	if (event->xbutton.state & ControlMask) {
 		relaunchApplication(wapp);
 		return;
@@ -752,7 +787,7 @@ static void iconDblClick(WObjDescriptor *desc, XEvent *event)
 
 	wUnhideApplication(wapp, event->xbutton.button == Button2, unhideHere);
 
-	if (event->xbutton.state & MOD_MASK)
+	if (event->xbutton.state & wPreferences.modifier_mask)
 		wHideOtherApplications(aicon->icon->owner);
 }
 
@@ -1029,7 +1064,7 @@ static void appicon_move_motion(virtual_screen *vscr, WScreen *scr, XEvent ev,
 	*x = ev.xmotion.x_root - *ofs_x;
 	*y = ev.xmotion.y_root - *ofs_y;
 	wAppIconMove(aicon, *x, *y);
-	if (!(ev.xmotion.state & MOD_MASK) || aicon->launching || aicon->lock || *originalDock == NULL) {
+	if (!(ev.xmotion.state & wPreferences.modifier_mask) || aicon->launching || aicon->lock || *originalDock == NULL) {
 		for (i = 0; *dockable && i < vscr->drawer.drawer_count + 2; i++) {
 			WDock *theDock = allDocks[i];
 			if (theDock == NULL)
@@ -1131,7 +1166,7 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 	if (wPreferences.flags.noupdates && originalDock != NULL)
 		return False;
 
-	if (event->xbutton.state & MOD_MASK) {
+	if (event->xbutton.state & wPreferences.modifier_mask) {
 		/*
 		 * If Mod is pressed for an docked appicon,
 		 * assume it is to undock it,so don't lower it
@@ -1186,7 +1221,7 @@ Bool wHandleAppIconMove(WAppIcon *aicon, XEvent *event)
 	wins[0] = icon->core->window;
 	wins[1] = scr->dock_shadow;
 	XRestackWindows(dpy, wins, 2);
-	XMoveResizeWindow(dpy, scr->dock_shadow, aicon->x_pos, aicon->y_pos, ICON_SIZE, ICON_SIZE);
+	XMoveResizeWindow(dpy, scr->dock_shadow, aicon->x_pos, aicon->y_pos, wPreferences.icon_size, wPreferences.icon_size);
 
 	if (superfluous) {
 		if (icon->pixmap != None)
@@ -1338,22 +1373,6 @@ static void create_appicon_from_dock(WWindow *wwin, WApplication *wapp)
 				break;
 		}
 	}
-
-	/* If created, then set some flags */
-	if (wapp->app_icon && !WFLAGP(wapp->main_window_desc, no_appicon)) {
-		WWindow *mainw = wapp->main_window_desc;
-
-		wapp->app_icon->running = 1;
-		wapp->app_icon->icon->owner = mainw;
-		if (mainw->wm_hints && (mainw->wm_hints->flags & IconWindowHint))
-			wapp->app_icon->icon->icon_win = mainw->wm_hints->icon_window;
-
-		/* Update the icon images */
-		wIconUpdate(wapp->app_icon->icon);
-
-		/* Paint it */
-		wAppIconPaint(wapp->app_icon);
-	}
 }
 
 /* Add the appicon to the appiconlist */
@@ -1388,7 +1407,7 @@ static void remove_from_appicon_list(WAppIcon *appicon)
 void move_appicon_to_dock(virtual_screen *vscr, WAppIcon *icon, char *wm_class, char *wm_instance)
 {
 	WAppIcon *aicon;
-	int x0, y0;
+	WCoord *coord;
 
 	/* Create appicon's icon */
 	aicon = create_appicon(vscr, NULL, wm_class, wm_instance);
@@ -1397,14 +1416,18 @@ void move_appicon_to_dock(virtual_screen *vscr, WAppIcon *icon, char *wm_class, 
 	appicon_map(aicon);
 
 	/* Map it on the screen, in the right possition */
-	PlaceIcon(vscr, &x0, &y0, wGetHeadForWindow(aicon->icon->owner));
-	wAppIconMove(aicon, x0, y0);
+	coord = PlaceIcon(vscr, wGetHeadForWindow(aicon->icon->owner));
+	wAppIconMove(aicon, coord->x, coord->y);
 	XMapWindow(dpy, aicon->icon->core->window);
 	aicon->launching = 1;
+	wIconPaint(aicon->icon);
 	wAppIconPaint(aicon);
 
 	/* Move to the docked icon and destroy it */
-	slide_window(aicon->icon->core->window, x0, y0, icon->x_pos, icon->y_pos);
+	slide_window(aicon->icon->core->window, coord->x, coord->y, icon->x_pos, icon->y_pos);
 	XUnmapWindow(dpy, aicon->icon->core->window);
 	wAppIconDestroy(aicon);
+	wfree(coord);
 }
+
+

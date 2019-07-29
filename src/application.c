@@ -34,8 +34,10 @@
 #include "appmenu.h"
 #include "properties.h"
 #include "workspace.h"
+#include "dock-core.h"
 #include "dock.h"
 #include "wdefaults.h"
+#include "miniwindow.h"
 
 
 /******** Local variables ********/
@@ -120,7 +122,7 @@ WApplication *wApplicationCreate(WWindow *wwin)
 	}
 
 	wapp->main_window_desc->fake_group = wwin->fake_group;
-	wapp->main_window_desc->net_icon_image = RRetainImage(wwin->net_icon_image);
+	wapp->main_window_desc->miniwindow->net_icon_image = RRetainImage(wwin->miniwindow->net_icon_image);
 
 	leader = wWindowFor(main_window);
 	if (leader)
@@ -189,6 +191,7 @@ void wApplicationActivate(WApplication *wapp)
 {
 	if (wapp->app_icon) {
 		wIconSetHighlited(wapp->app_icon->icon, True);
+		wIconPaint(wapp->app_icon->icon);
 		wAppIconPaint(wapp->app_icon);
 	}
 }
@@ -197,6 +200,7 @@ void wApplicationDeactivate(WApplication *wapp)
 {
 	if (wapp->app_icon) {
 		wIconSetHighlited(wapp->app_icon->icon, False);
+		wIconPaint(wapp->app_icon->icon);
 		wAppIconPaint(wapp->app_icon);
 	}
 }

@@ -56,8 +56,6 @@
 #define MENU_SCROLL_STEP  menuScrollParameters[(int)wPreferences.menu_scroll_speed].steps
 #define MENU_SCROLL_DELAY menuScrollParameters[(int)wPreferences.menu_scroll_speed].delay
 
-#define COMPLAIN(key) wwarning(_("bad value in menus state info: %s"), key)
-
 /***** Local Stuff ******/
 static struct {
 	int steps;
@@ -2449,9 +2447,9 @@ static Bool getMenuInfo(WMPropList *info, int *x, int *y, Bool *lowered)
 
 	if (pos != NULL && WMIsPLString(pos)) {
 		if (sscanf(WMGetFromPLString(pos), "%i,%i", x, y) != 2)
-			COMPLAIN("Position");
+			wwarning(_("bad value in menus state info: Position"));
 	} else {
-		COMPLAIN("(position, flags...)");
+		wwarning(_("bad value in menus state info: position, flags,.."));
 		return False;
 	}
 

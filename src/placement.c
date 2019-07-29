@@ -35,9 +35,10 @@
 #include "appicon.h"
 #include "actions.h"
 #include "application.h"
-#include "dock.h"
+#include "dock-core.h"
 #include "xinerama.h"
 #include "placement.h"
+#include "miniwindow.h"
 
 static int get_y_origin(WArea usableArea);
 static int get_x_origin(WArea usableArea);
@@ -79,17 +80,15 @@ iconPosition(WCoreWindow *wcore, int sx1, int sy1, int sx2, int sy2,
 		    || wPreferences.sticky_icons)
 		   && ((WIcon *) parent)->mapped) {
 
-		*retX = ((WIcon *) parent)->owner->icon_x;
-		*retY = ((WIcon *) parent)->owner->icon_y;
-
+		*retX = miniwindow_get_xpos(((WIcon *) parent)->owner);
+		*retY = miniwindow_get_ypos(((WIcon *) parent)->owner);
 		ok = 1;
 	} else if (wcore->descriptor.parent_type == WCLASS_WINDOW
 		   && ((WWindow *) parent)->flags.icon_moved
 		   && (((WWindow *) parent)->frame->workspace == workspace || IS_OMNIPRESENT((WWindow *) parent)
 		       || wPreferences.sticky_icons)) {
-		*retX = ((WWindow *) parent)->icon_x;
-		*retY = ((WWindow *) parent)->icon_y;
-
+		*retX = miniwindow_get_xpos((WWindow *) parent);
+		*retY = miniwindow_get_ypos((WWindow *) parent);
 		ok = 1;
 	}
 
@@ -109,7 +108,7 @@ iconPosition(WCoreWindow *wcore, int sx1, int sy1, int sx2, int sy2,
 	return ok;
 }
 
-void PlaceIcon(virtual_screen *vscr, int *x_ret, int *y_ret, int head)
+WCoord *PlaceIcon(virtual_screen *vscr, int head)
 {
 	int pf;			/* primary axis */
 	int sf;			/* secondary axis */
@@ -122,6 +121,9 @@ void PlaceIcon(virtual_screen *vscr, int *x_ret, int *y_ret, int head)
 	int done = 0;
 	WMBagIterator iter;
 	WArea area = wGetUsableAreaForHead(vscr, head, NULL, False);
+	WCoord *coord;
+
+	coord = wmalloc(sizeof(WCoord));
 
 	/* Do not place icons under the dock. */
 	if (vscr->dock.dock) {
@@ -205,8 +207,8 @@ void PlaceIcon(virtual_screen *vscr, int *x_ret, int *y_ret, int head)
 		}
 	}
 	/* Default position */
-	*x_ret = 0;
-	*y_ret = 0;
+	coord->x = 0;
+	coord->y = 0;
 
 	/* Look for an empty slot */
 	for (si = 0; si < sf; si++) {
@@ -219,8 +221,8 @@ void PlaceIcon(virtual_screen *vscr, int *x_ret, int *y_ret, int head)
 				y = yo + ys * (si * isize);
 			}
 			if (!map[INDEX(x / isize, y / isize)]) {
-				*x_ret = x;
-				*y_ret = y;
+				coord->x = x;
+				coord->y = y;
 				done = 1;
 				break;
 			}
@@ -231,6 +233,8 @@ void PlaceIcon(virtual_screen *vscr, int *x_ret, int *y_ret, int head)
 	}
 
 	wfree(map);
+
+	return coord;
 }
 
 /* Computes the intersecting length of two line sections */

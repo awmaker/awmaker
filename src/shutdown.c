@@ -69,7 +69,7 @@ void Shutdown(WShutdownMode mode)
 		}
 #endif
 		for (i = 0; i < w_global.screen_count; i++) {
-			vscr = wScreenWithNumber(i);
+			vscr = w_global.vscreens[i];
 			if (vscr->screen_ptr) {
 				if (vscr->screen_ptr->helper_pid)
 					kill(vscr->screen_ptr->helper_pid, SIGKILL);
@@ -95,7 +95,7 @@ void Shutdown(WShutdownMode mode)
 				w_global.inotify.fd_event_queue = -1;
 			}
 #endif
-			vscr = wScreenWithNumber(i);
+			vscr = w_global.vscreens[i];
 			if (vscr->screen_ptr) {
 				if (vscr->screen_ptr->helper_pid)
 					kill(vscr->screen_ptr->helper_pid, SIGKILL);

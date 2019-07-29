@@ -47,7 +47,9 @@
 #include "main.h"
 #include "actions.h"
 #include "properties.h"
+#include "dock-core.h"
 #include "dock.h"
+#include "drawer.h"
 #include "resources.h"
 #include "workspace.h"
 #include "session.h"
@@ -438,8 +440,6 @@ static void allocGCs(WScreen *scr)
 	gcv.graphics_exposures = False;
 	gcm = GCGraphicsExposures;
 	scr->draw_gc = XCreateGC(dpy, scr->w_win, gcm, &gcv);
-
-	assert(scr->stipple_bitmap != None);
 
 	/* mono GC */
 	scr->mono_gc = XCreateGC(dpy, scr->stipple_bitmap, gcm, &gcv);
@@ -1054,13 +1054,6 @@ int wScreenKeepInside(virtual_screen *vscr, int *x, int *y, int width, int heigh
 		*y = sy2 - height, moved = 1;
 
 	return moved;
-}
-
-virtual_screen *wScreenWithNumber(int i)
-{
-	assert(i < w_global.vscreen_count);
-
-	return w_global.vscreens[i];
 }
 
 virtual_screen *wScreenForRootWindow(Window window)

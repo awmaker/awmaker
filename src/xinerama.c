@@ -28,6 +28,7 @@
 #include "window.h"
 #include "framewin.h"
 #include "placement.h"
+#include "dock-core.h"
 #include "dock.h"
 
 #ifdef USE_XINERAMA
@@ -217,7 +218,7 @@ Bool wAppIconTouchesHead(WAppIcon *aicon, int head)
 	vscr = aicon->icon->vscr;
 	rect = wGetRectForHead(vscr->screen_ptr, head);
 	a = calcIntersectionArea(aicon->x_pos, aicon->y_pos,
-				 aicon->icon->width, aicon->icon->height,
+				 wPreferences.icon_size, wPreferences.icon_size,
 				 rect.pos.x, rect.pos.y, rect.size.width, rect.size.height);
 
 	return (a != 0);

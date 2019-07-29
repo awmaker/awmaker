@@ -37,8 +37,6 @@ typedef struct WIcon {
 	WCoreWindow 	*core;
 	WWindow 	*owner;		/* owner window */
 	char 		*title;		/* the icon name hint */
-	int		width;		/* window size x */
-	int		height;		/* window size y */
 
 	Window 		icon_win;	/* client suplied icon window */
 
@@ -60,8 +58,6 @@ typedef struct WIcon {
 					 * color */
 } WIcon;
 
-void icon_for_wwindow_map(WIcon *icon);
-void icon_for_wwindow_miniwindow_map(WIcon *icon);
 WIcon *icon_create_core(virtual_screen *vscr);
 
 void set_icon_image_from_database(WIcon *icon, const char *wm_instance, const char *wm_class, const char *command);
@@ -74,8 +70,9 @@ void update_icon_pixmap(WIcon *icon);
 
 int wIconChangeImageFile(WIcon *icon, const char *file);
 
+RImage *icon_get_usable_icon(WWindow *wwin);
 RImage *wIconValidateIconSize(RImage *icon, int max_size);
-RImage *get_rimage_icon_from_wm_hints(WIcon *icon);
+RImage *get_rimage_icon_from_wm_hints(WWindow *wwin);
 
 char *wIconStore(WIcon *icon);
 char *get_name_for_instance_class(const char *wm_instance, const char *wm_class);
@@ -89,6 +86,6 @@ void icon_appearanceObserver(void *self, WMNotification *notif);
 void icon_tileObserver(void *self, WMNotification *notif);
 
 void remove_cache_icon(char *filename);
-
-int create_icon_minipreview(WWindow *wwin);
+char *get_icon_filename(const char *winstance, const char *wclass, const char *command, Bool default_icon);
+RImage *get_icon_image(virtual_screen *vscr, const char *winstance, const char *wclass, int max_size);
 #endif /* WMICON_H_ */

@@ -31,7 +31,10 @@
 #include "window.h"
 #include "icon.h"
 #include "appicon.h"
+#include "dock-core.h"
 #include "dock.h"
+#include "clip.h"
+#include "drawer.h"
 #include "dockedapp.h"
 #include "dialog.h"
 #include "misc.h"
@@ -187,12 +190,14 @@ static void panelBtnCallback(WMWidget *self, void *data)
 	} else {
 		aicon = panel->editedIcon;
 
-		if (aicon == aicon->icon->vscr->clip.icon)
+		if (aicon == aicon->icon->vscr->clip.icon) {
 			wClipIconPaint(aicon);
-		else if (wIsADrawer(aicon))
+		} else if (wIsADrawer(aicon)) {
 			wDrawerIconPaint(aicon);
-		else
+		} else {
+			wIconPaint(aicon->icon);
 			wAppIconPaint(aicon);
+		}
 
 		wDefaultChangeIcon(aicon->wm_instance, aicon->wm_class, text);
 	}

@@ -30,7 +30,7 @@
 #include <X11/Xatom.h>
 
 #include "WindowMaker.h"
-#include "dock.h"
+#include "dock-core.h"
 #include "xdnd.h"
 #include "workspace.h"
 
