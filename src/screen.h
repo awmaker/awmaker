@@ -137,7 +137,7 @@ struct virtual_screen {
 	} frame;
 };
 
-/* each WScreen is saved into a context associated with it's root window */
+/* each WScreen is saved into a context associated with its root window */
 struct WScreen {
 	virtual_screen *vscr;                    /* Virtual screen used by the WScreen */
 

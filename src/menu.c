@@ -1894,7 +1894,7 @@ static int menu_handle_selected_entry(WMenu *menu, WMenuEntry *entry, XEvent *ev
 		/* blink and erase menu selection */
 		menu_blink_selected(menu);
 
-		/* unmap the menu, it's parents and call the callback */
+		/* unmap the menu, its parents and call the callback */
 		if (!menu->flags.buttoned && (!menu->flags.app_menu || menu->parent != NULL))
 			closeCascade(menu);
 		else
@@ -2293,7 +2293,7 @@ static void menuTitleMouseDown(WCoreWindow * sender, void *data, XEvent * event)
  * closed when the button is clicked.
  *
  * Side effects:
- * 	The closed menu is reinserted at it's parent menus
+ * 	The closed menu is reinserted at its parent menus
  * cascade list.
  *----------------------------------------------------------------------
  */

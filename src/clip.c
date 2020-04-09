@@ -1515,7 +1515,7 @@ Bool clip_snap_icon(WDock *dock, WAppIcon *icon, int req_x, int req_y, int *ret_
 
 		for (i = 0; i < tmp->max_icons; i++) {
 			nicon = tmp->icon_array[i];
-			if (nicon && nicon != icon &&	/* Icon can't be it's own neighbour */
+			if (nicon && nicon != icon &&	/* Icon can't be its own neighbour */
 			    (abs(nicon->xindex - ex_x) <= CLIP_ATTACH_VICINITY &&
 			     abs(nicon->yindex - ex_y) <= CLIP_ATTACH_VICINITY)) {
 				neighbours = 1;
