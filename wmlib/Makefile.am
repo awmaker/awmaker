@@ -8,7 +8,7 @@ include_HEADERS = WMaker.h
 
 AM_CPPFLAGS = $(DFLAGS) @XCFLAGS@
 
-libWMaker_la_LIBADD = -lX11
+libWMaker_la_LIBADD = @XLFLAGS@ @XLIBS@
 
 libWMaker_la_SOURCES = 	\
 	menu.c 		\
@@ -16,7 +16,7 @@ libWMaker_la_SOURCES = 	\
 	event.c 	\
 	command.c	\
 	app.h		\
-	menu.h	
+	menu.h
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = wmlib.pc

@@ -66,7 +66,7 @@ Window Maker and awmaker share some things, like the libraries (WINGs, WUtil
 and wraster) and the WPrefs application. awmaker should not include in the
 future this libraries in their code, and use the libraries included in the
 Window Maker development tree. WPrefs shouldn't be a problem, because the
-look&feel should be the same between Window Maker and awmaker. 
+look&feel should be the same between Window Maker and awmaker.
 
 Please, read the README.WMAKER file for more info about Window Maker.
 
@@ -95,7 +95,7 @@ The next steps are:
 4. Include shutdown steps. The shutdown step should unmap all the items
    (workspaces,...) without destroy the items.
 5. Join steps 3 and 4. We can change the screen without restart awmaker.
-   
+
 CAN I PLAY?
 ===========
 Yes! You are very welcome to help in the project. Fork it. We are in

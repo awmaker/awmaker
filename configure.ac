@@ -34,7 +34,7 @@ AC_PREREQ([2.69])
 
 dnl Configuration for Autoconf and Automake
 dnl =======================================
-AC_INIT([WindowMaker],[0.95.8],[wmaker-dev@googlegroups.com],[WindowMaker],[http://www.windowmaker.org/])
+AC_INIT([WindowMaker],[0.95.9],[wmaker-dev@googlegroups.com],[WindowMaker],[http://www.windowmaker.org/])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_HEADERS([config.h])
 
@@ -284,18 +284,14 @@ _bindir=`eval echo $_bindir`
 _libdir=`eval echo $libdir`
 _libdir=`eval echo $_libdir`
 
-lib_search_path='-L${libdir}'
-
-inc_search_path='-I${includedir}'
-
 dnl ===============================================
 dnl Specify paths to look for libraries and headers
 dnl ===============================================
 AC_ARG_WITH(libs-from, AS_HELP_STRING([--with-libs-from], [pass compiler flags to look for libraries]),
-	[lib_search_path="$withval $lib_search_path"])
+	[lib_search_path="$withval"], [lib_search_path='-L${libdir}'])
 
 AC_ARG_WITH(incs-from, AS_HELP_STRING([--with-incs-from], [pass compiler flags to look for header files]),
-	[inc_search_path="$withval $inc_search_path"])
+	[inc_search_path="$withval"], [inc_search_path='-I${includedir}'])
 
 
 dnl Features Configuration
@@ -409,7 +405,7 @@ AC_CHECK_HEADERS([sys/inotify.h],
     [AC_DEFINE([HAVE_INOTIFY], [1], [Check for inotify])])
 
 
-dnl Check for syslog 
+dnl Check for syslog
 dnl ================
 dnl It is used by WUtil to log the wwarning, werror and wfatal
 AC_CHECK_HEADERS([syslog.h], [AC_DEFINE([HAVE_SYSLOG], [1], [Check for syslog])])
@@ -456,7 +452,7 @@ AC_PATH_XTRA
 
 AS_IF([test "x$no_x" = "xyes"],
     [AC_MSG_ERROR([The path for the X11 files not found!
-Make sure you have X and it's headers and libraries (the -devel packages
+Make sure you have X and its headers and libraries (the -devel packages
 in Linux) installed.])])
 
 X_LIBRARY_PATH=$x_libraries
@@ -471,7 +467,7 @@ AC_SUBST(X_LIBRARY_PATH)
 
 
 dnl Decide which locale function to use, setlocale() or _Xsetlocale()
-dnl by MANOME Tomonori 
+dnl by MANOME Tomonori
 dnl ===========================================
 WM_I18N_XLOCALE
 

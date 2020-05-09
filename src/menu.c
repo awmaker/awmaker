@@ -85,7 +85,7 @@ static Bool getMenuInfo(WMPropList *info, int *x, int *y, Bool *lowered);
 static Bool getMenuPath(WMenu *menu, char *buffer, int bufSize);
 static int check_key(WMenu *menu, XKeyEvent *event);
 static int getEntryAt(WMenu *menu, int y);
-static int isPointNearBoder(WMenu *menu, int x, int y);
+static int isPointNearBorder(WMenu *menu, int x, int y);
 static int keyboardMenu(WMenu *menu);
 static int menu_handle_selected_entry(WMenu *menu, WMenuEntry *entry, XEvent *ev, int entry_no);
 static Pixmap renderTexture(WMenu *menu);
@@ -1422,7 +1422,7 @@ static void getScrollAmount(WMenu *menu, int *hamount, int *vamount)
 		*hamount = WMIN(MENU_SCROLL_STEP, abs(menuX1));
 	} else if (xroot >= (rect.pos.x + rect.size.width - 2) && menuX2 > (rect.pos.x + rect.size.width - 1)) {
 		/* scroll to the left */
-		*hamount = WMIN(MENU_SCROLL_STEP, abs(menuX2 - rect.pos.x - rect.size.width - 1));
+		*hamount = WMIN(MENU_SCROLL_STEP, abs(menuX2 - rect.pos.x - (int) rect.size.width - 1));
 		if (*hamount == 0)
 			*hamount = 1;
 
@@ -1434,7 +1434,7 @@ static void getScrollAmount(WMenu *menu, int *hamount, int *vamount)
 		*vamount = WMIN(MENU_SCROLL_STEP, abs(menuY1));
 	} else if (yroot >= (rect.pos.y + rect.size.height - 2) && menuY2 > (rect.pos.y + rect.size.height - 1)) {
 		/* scroll up */
-		*vamount = WMIN(MENU_SCROLL_STEP, abs(menuY2 - rect.pos.y - rect.size.height - 2));
+		*vamount = WMIN(MENU_SCROLL_STEP, abs(menuY2 - rect.pos.y - (int) rect.size.height - 2));
 		*vamount = -*vamount;
 	}
 }
@@ -1501,7 +1501,7 @@ static void scrollMenuCallback(void *data)
 	}
 }
 
-static int isPointNearBoder(WMenu *menu, int x, int y)
+static int isPointNearBorder(WMenu *menu, int x, int y)
 {
 	int menuX1 = menu->x_pos;
 	int menuY1 = menu->y_pos;
@@ -1573,7 +1573,7 @@ void wMenuScroll(WMenu *menu)
 
 			/* on_border is != 0 if the pointer is between the menu
 			 * and the screen border and is close enough to the border */
-			on_border = isPointNearBoder(menu, x, y);
+			on_border = isPointNearBorder(menu, x, y);
 
 			smenu = wMenuUnderPointer(vscr);
 			if ((smenu == NULL && !on_border) || (smenu && parentMenu(smenu) != omenu)) {
@@ -1894,7 +1894,7 @@ static int menu_handle_selected_entry(WMenu *menu, WMenuEntry *entry, XEvent *ev
 		/* blink and erase menu selection */
 		menu_blink_selected(menu);
 
-		/* unmap the menu, it's parents and call the callback */
+		/* unmap the menu, its parents and call the callback */
 		if (!menu->flags.buttoned && (!menu->flags.app_menu || menu->parent != NULL))
 			closeCascade(menu);
 		else
@@ -2293,7 +2293,7 @@ static void menuTitleMouseDown(WCoreWindow * sender, void *data, XEvent * event)
  * closed when the button is clicked.
  *
  * Side effects:
- * 	The closed menu is reinserted at it's parent menus
+ * 	The closed menu is reinserted at its parent menus
  * cascade list.
  *----------------------------------------------------------------------
  */

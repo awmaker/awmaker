@@ -6,7 +6,7 @@
 #
 # Revision history:
 # 	WM-ver	author			email			date
-# 	0.63.1	Jan "judas" Tomka	<tomka@oalevice.sk>	Jan 28 2001 
+# 	0.63.1	Jan "judas" Tomka	<tomka@oalevice.sk>	Jan 28 2001
 # 	0.64.0	Jan "judas" Tomka	<tomka@oalevice.sk>	Feb 22 2001
 # 	0.65.1	Jan "judas" Tomka	<judas@linux.sk>	Aug 08 2001
 # 	0.70.0	Jan "judas" Tomka	<judas@linux.sk>	Oct 15 2001
@@ -1693,7 +1693,7 @@ msgstr "Odstrániť hornú lištu"
 msgid ""
 "Remove the titlebar of this window.\n"
 "To access the window commands menu of a window\n"
-"without it's titlebar, press Control+Esc (or the\n"
+"without its titlebar, press Control+Esc (or the\n"
 "equivalent shortcut, if you changed the default\n"
 "settings)."
 msgstr ""

@@ -5,7 +5,7 @@
 # Version history:
 #   WM-ver        author                  email                   date
 #   0.80.2        Ernest Adrogué          eadrogue@gmx.net        23 Feb 2003
-#   CVS-20030914	Ernest Adrogué          eadrogue@gmx.net        15 Set 2003		
+#   CVS-20030914	Ernest Adrogué          eadrogue@gmx.net        15 Set 2003
 #
 msgid ""
 msgstr ""
@@ -1684,7 +1684,7 @@ msgstr "Deshabilitar la barra de títol"
 msgid ""
 "Remove the titlebar of this window.\n"
 "To access the window commands menu of a window\n"
-"without it's titlebar, press Control+Esc (or the\n"
+"without its titlebar, press Control+Esc (or the\n"
 "equivalent shortcut, if you changed the default\n"
 "settings)."
 msgstr ""

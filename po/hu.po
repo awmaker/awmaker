@@ -2,7 +2,7 @@
 # Copyright (C) 1998-2000 Free Software Foundation, Inc.
 # Horvath Szabolcs <horvathsz@penguinpowered.com>
 # thanks to magyar@lists.linux.hu.
-#                                                                                              
+#
 msgid ""
 msgstr ""
 "Project-Id-Version: Window Maker 0.95.5\n"
@@ -1562,7 +1562,7 @@ msgstr "Címsor letiltása"
 msgid ""
 "Remove the titlebar of this window.\n"
 "To access the window commands menu of a window\n"
-"without it's titlebar, press Control+Esc (or the\n"
+"without its titlebar, press Control+Esc (or the\n"
 "equivalent shortcut, if you changed the default\n"
 "settings)."
 msgstr ""

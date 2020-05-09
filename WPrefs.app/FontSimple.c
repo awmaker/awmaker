@@ -1,9 +1,9 @@
 /* FontSimple.c- simplified font configuration panel
- * 
+ *
  *  WPrefs - Window Maker Preferences Program
- * 
+ *
  *  Copyright (c) 1998-2004 Alfredo K. Kojima
- * 
+ *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
@@ -22,6 +22,7 @@
 #include "WPrefs.h"
 #include <unistd.h>
 #include <fontconfig/fontconfig.h>
+#include <math.h>
 
 /* workaround for older fontconfig, that doesn't define these constants */
 #ifndef FC_WEIGHT_NORMAL
@@ -521,7 +522,7 @@ static void selectedOption(WMWidget * w, void *data)
 				WMListItem *item = WMGetListItem(panel->sizeL, i);
 				int distance;
 
-				distance = abs(size - atoi(item->text));
+				distance = fabs(size - atoi(item->text));
 
 				if (i == 0 || distance < closest) {
 					closest = distance;

@@ -854,7 +854,7 @@ void wClipIconPaint(WAppIcon *aicon)
 	WMColor *color;
 	Window win = aicon->icon->core->window;
 	int length, nlength;
-	char *ws_name, ws_number[10];
+	char *ws_name, ws_number[sizeof vscr->workspace.current * CHAR_BIT / 3 + 1];
 	int ty, tx;
 
 	wIconPaint(aicon->icon);
@@ -863,7 +863,7 @@ void wClipIconPaint(WAppIcon *aicon)
 	ws_name = wmalloc(length + 1);
 	snprintf(ws_name, length + 1, "%s", workspace->name);
 
-	if (snprintf(ws_number, sizeof(ws_number), "%d", vscr->workspace.current + 1) == sizeof(ws_number))
+	if (snprintf(ws_number, sizeof ws_number, "%u", vscr->workspace.current + 1) == sizeof(ws_number))
 		snprintf(ws_number, sizeof(ws_number), "-");
 
 	nlength = strlen(ws_number);
@@ -1515,7 +1515,7 @@ Bool clip_snap_icon(WDock *dock, WAppIcon *icon, int req_x, int req_y, int *ret_
 
 		for (i = 0; i < tmp->max_icons; i++) {
 			nicon = tmp->icon_array[i];
-			if (nicon && nicon != icon &&	/* Icon can't be it's own neighbour */
+			if (nicon && nicon != icon &&	/* Icon can't be its own neighbour */
 			    (abs(nicon->xindex - ex_x) <= CLIP_ATTACH_VICINITY &&
 			     abs(nicon->yindex - ex_y) <= CLIP_ATTACH_VICINITY)) {
 				neighbours = 1;
