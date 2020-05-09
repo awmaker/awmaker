@@ -461,7 +461,7 @@ void wAppIconMove(WAppIcon *aicon, int x, int y)
 static void updateDockNumbers(virtual_screen *vscr)
 {
 	int length;
-	char *ws_numbers[20];
+	char ws_numbers[20];
 	WAppIcon *dicon = vscr->dock.dock->icon_array[0];
 
 	snprintf(ws_numbers, sizeof(ws_numbers), "%i [ %i ]",
