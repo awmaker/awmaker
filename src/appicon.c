@@ -487,7 +487,8 @@ void wAppIconPaint(WAppIcon *aicon)
 		wapp = wApplicationOf(aicon->icon->owner->main_window);
 
 # ifdef WS_INDICATOR
-	if (aicon->docked && scr->dock && scr->dock == aicon->dock && aicon->yindex == 0)
+	if (aicon->docked && vscr->dock.dock &&
+		vscr->dock.dock == aicon->dock && aicon->yindex == 0)
 		updateDockNumbers(vscr);
 # endif
 	if (aicon->docked && !aicon->running && aicon->command != NULL) {
