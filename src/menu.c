@@ -85,7 +85,7 @@ static Bool getMenuInfo(WMPropList *info, int *x, int *y, Bool *lowered);
 static Bool getMenuPath(WMenu *menu, char *buffer, int bufSize);
 static int check_key(WMenu *menu, XKeyEvent *event);
 static int getEntryAt(WMenu *menu, int y);
-static int isPointNearBoder(WMenu *menu, int x, int y);
+static int isPointNearBorder(WMenu *menu, int x, int y);
 static int keyboardMenu(WMenu *menu);
 static int menu_handle_selected_entry(WMenu *menu, WMenuEntry *entry, XEvent *ev, int entry_no);
 static Pixmap renderTexture(WMenu *menu);
@@ -1501,7 +1501,7 @@ static void scrollMenuCallback(void *data)
 	}
 }
 
-static int isPointNearBoder(WMenu *menu, int x, int y)
+static int isPointNearBorder(WMenu *menu, int x, int y)
 {
 	int menuX1 = menu->x_pos;
 	int menuY1 = menu->y_pos;
@@ -1573,7 +1573,7 @@ void wMenuScroll(WMenu *menu)
 
 			/* on_border is != 0 if the pointer is between the menu
 			 * and the screen border and is close enough to the border */
-			on_border = isPointNearBoder(menu, x, y);
+			on_border = isPointNearBorder(menu, x, y);
 
 			smenu = wMenuUnderPointer(vscr);
 			if ((smenu == NULL && !on_border) || (smenu && parentMenu(smenu) != omenu)) {
