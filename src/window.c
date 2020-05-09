@@ -864,9 +864,9 @@ void wwindow_set_placement_auto(WWindow *wwin, WWindow *transientOwner,
 	offs = WMAX(20, 2 * transientOwner->frame->top_width);
 
 	*x = transientOwner->frame_x +
-	    abs((transientOwner->frame->width - *width) / 2) + offs;
+	    abs(((int) transientOwner->frame->width - (int) *width) / 2) + offs;
 	*y = transientOwner->frame_y +
-	    abs((transientOwner->frame->height - *height) / 3) + offs;
+	    abs(((int) transientOwner->frame->height - (int) *height) / 3) + offs;
 
 	/* limit transient windows to be inside their parent's head */
 	rect.pos.x = transientOwner->frame_x;
