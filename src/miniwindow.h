@@ -27,7 +27,7 @@
 typedef struct WMiniWindow {
 	struct WIcon *icon;        /* Window icon when miminized else is NULL! */
 	int icon_x, icon_y;        /* Position of the icon */
-	int icon_w, icon_h;
+	int icon_w, icon_h;        /* Used by minimize animation */
 	RImage *net_icon_image;    /* Window Image */
 } WMiniWindow;
 
