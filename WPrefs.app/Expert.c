@@ -314,6 +314,7 @@ static void storeDefaults(_Panel *panel)
 
 			text = WMGetTextFieldText(panel->textfield[i]);
 			value = atoi(text);
+			wfree(text);
 
 			SetIntegerForKey(value, expert_options[i].op_name);
 			break;
