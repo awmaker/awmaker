@@ -394,22 +394,18 @@ static void updateMakeShortcutMenu(WMenu *menu, WWindow *wwin)
 {
 	WMenu *smenu = menu->cascades[menu->entries[MC_OPTIONS]->cascade];
 	int i;
-	char *buffer;
-	int buflen;
+	char buffer[64];
 	KeyCode kcode;
 
 	if (!smenu)
 		return;
-
-	buflen = strlen(_("Set Shortcut")) + 16;
-	buffer = wmalloc(buflen);
 
 	for (i = wlengthof(menu_options_entries); i < smenu->entry_no; i++) {
 		int shortcutNo = i - wlengthof(menu_options_entries);
 		WMenuEntry *entry = smenu->entries[i];
 		WMArray *shortSelWindows = w_global.shortcut.windows[shortcutNo];
 
-		snprintf(buffer, buflen, "%s %i", _("Set Shortcut"), shortcutNo + 1);
+		snprintf(buffer, sizeof(buffer), _("Set Shortcut %i"), shortcutNo + 1);
 
 		if (!shortSelWindows) {
 			entry->flags.indicator_on = 0;
@@ -465,8 +461,6 @@ static void updateMakeShortcutMenu(WMenu *menu, WWindow *wwin)
 		}
 		entry->clientdata = wwin;
 	}
-
-	wfree(buffer);
 }
 
 static void updateOptionsMenu(WMenu *menu, WWindow *wwin)
