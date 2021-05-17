@@ -895,7 +895,7 @@ AC_CONFIG_FILES(
     Makefile
 
     dnl WRaster Library
-    wrlib/Makefile
+    wrlib/Makefile wrlib/po/Makefile
     wrlib/tests/Makefile
 
     dnl WINGs toolkit
