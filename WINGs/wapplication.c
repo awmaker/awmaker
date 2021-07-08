@@ -184,7 +184,7 @@ char *WMPathForResourceOfType(const char *resource, const char *ext)
 		gssysapps = "/usr/lib/GNUstep/Applications";
 
 	appdir = wmalloc(slen);
-	if (snprintf(appdir, slen, "Applications/%s.app", WMApplication.applicationName) >= slen)
+	if (snprintf(appdir, slen, "/%s.app", WMApplication.applicationName) >= slen)
 		goto out;
 
 	path = checkFile(gsuserapps, appdir, ext, resource);
