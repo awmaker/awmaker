@@ -40,7 +40,6 @@ char *WMUserDefaultsDidChangeNotification = "WMUserDefaultsDidChangeNotification
 
 static void synchronizeUserDefaults(void *foo);
 
-#define DEFAULTS_DIR "/Defaults"
 #ifndef HAVE_INOTIFY
 /* Check defaults database for changes every this many milliseconds */
 /* XXX: this is shared with src/ stuff, put it in some common header */
@@ -49,7 +48,7 @@ static void synchronizeUserDefaults(void *foo);
 
 const char *wusergnusteppath()
 {
-	static const char subdir[] = "/GNUstep";
+	static const char subdir[] = "/"GSUSER_SUBDIR;
 	static char *path = NULL;
 	char *gspath, *h;
 	int pathlen;
@@ -87,11 +86,11 @@ char *wdefaultspathfordomain(const char *domain)
 	size_t slen;
 
 	gspath = wusergnusteppath();
-	slen = strlen(gspath) + strlen(DEFAULTS_DIR) + strlen(domain) + 4;
+	slen = strlen(gspath) + strlen("/"DEFAULTS_SUBDIR) + strlen(domain) + 4;
 	path = wmalloc(slen);
 
 	strcpy(path, gspath);
-	strcat(path, DEFAULTS_DIR);
+	strcat(path, "/"DEFAULTS_SUBDIR);
 	strcat(path, "/");
 	strcat(path, domain);
 
