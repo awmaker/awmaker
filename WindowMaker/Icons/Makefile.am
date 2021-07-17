@@ -1,8 +1,8 @@
 
-defsdatadir = $(pkgdatadir)/Icons
+icodatadir = $(pkgdatadir)/Icons
 
 
-defsdata_DATA = \
+icodata_DATA = \
 	BitchX.tiff\
 	BitchX.xpm\
 	clip.tiff\
@@ -74,5 +74,5 @@ defsdata_DATA = \
 	xv.xpm
 
 
-EXTRA_DIST = $(defsdata_DATA)
+EXTRA_DIST = $(icodata_DATA)
 

@@ -1,7 +1,7 @@
 
-defsdatadir = $(pkgdatadir)/IconSets
+icosdatadir = $(pkgdatadir)/IconSets
 
-defsdata_DATA = Default.iconset
+icosdata_DATA = Default.iconset
 
 EXTRA_DIST =
 
