@@ -23,6 +23,18 @@ config-paths.h: Makefile
 	@echo '' >> $@
 	@echo '/* where the global defaults are stored */' >> $@
 	@echo '#define DEFSDATADIR "$(defsdatadir)"' >> $@
+	@echo '' >> $@
+	@echo '/* where the user data root is located */' >> $@
+	@echo '#define GSUSER_SUBDIR "GNUstep"' >> $@
+	@echo '' >> $@
+	@echo '/* where the user defaults are stored */' >> $@
+	@echo '#define DEFAULTS_SUBDIR "Defaults"' >> $@
+	@echo '' >> $@
+	@echo '/* where the user data are stored */' >> $@
+	@echo '#define USERDATA_SUBDIR "Library"' >> $@
+	@echo '' >> $@
+	@echo '/* where the user package data are stored */' >> $@
+	@echo '#define PKGDATA_SUBDIR LIBRARY_SUBDIR "/WindowMaker"' >> $@
 
 ACLOCAL_AMFLAGS = -I m4
 
