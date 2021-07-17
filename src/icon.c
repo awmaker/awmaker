@@ -52,7 +52,7 @@
 
 /**** Global varianebles ****/
 
-#define CACHE_ICON_PATH "/Library/WindowMaker/CachedPixmaps"
+#define CACHE_ICON_PATH "/"PACKAGE"/CachedPixmaps"
 #define ICON_BORDER 3
 
 static void set_dockapp_in_icon(WIcon *icon);
@@ -367,7 +367,7 @@ static char *get_icon_cache_path(void)
 	char *path;
 	int len, ret;
 
-	prefix = wusergnusteppath();
+	prefix = wuserdatapath();
 	len = strlen(prefix) + strlen(CACHE_ICON_PATH) + 2;
 	path = wmalloc(len);
 	snprintf(path, len, "%s%s/", prefix, CACHE_ICON_PATH);
@@ -377,7 +377,7 @@ static char *get_icon_cache_path(void)
 		return path;
 
 	/* Create the folder */
-	ret = wmkdirhier((const char *) path);
+	ret = wmkdirhier(path);
 
 	/* Exit 1 on success, 0 on failure */
 	if (ret == 1)
