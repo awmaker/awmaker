@@ -79,6 +79,21 @@ const char *wusergnusteppath()
 	return path;
 }
 
+const char *wuserdatapath()
+{
+	static char *path = NULL;
+	char *libpath;
+
+	if (path)
+		/* Value have been already computed, re-use it */
+		return path;
+
+	if (!path)
+		path = wstrappend(wexpandpath(wusergnusteppath()), "/"USERDATA_SUBDIR);
+
+	return path;
+}
+
 char *wdefaultspathfordomain(const char *domain)
 {
 	char *path;
