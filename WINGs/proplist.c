@@ -1824,7 +1824,7 @@ static int wrmdirhier_fn(const char *path, const struct stat *st,
 /*
  * remove a directory hierarchy
  *
- * refuses to remove anything outside $WMAKER_USER_ROOT
+ * refuses to remove anything outside $WMAKER_USER_ROOT/Defaults or $WMAKER_USER_ROOT/Library
  *
  * returns 1 on success, 0 on failure
  *
@@ -1834,14 +1834,16 @@ static int wrmdirhier_fn(const char *path, const struct stat *st,
  */
 int wrmdirhier(const char *path)
 {
+	const char *libpath, *udefpath;
 	struct stat st;
 	int error;
-	const char *t;
 
-	/* Only remove directories under $WMAKER_USER_ROOT */
-	if ((t = wusergnusteppath()) == NULL)
+	/* Only remove directories under $WMAKER_USER_ROOT/Defaults or $WMAKER_USER_ROOT/Library */
+	if ((( libpath = wuserdatapath()) == NULL) ||
+		((udefpath = wdefaultspathfordomain("")) == NULL))
 		return EPERM;
-	if (strncmp(path, t, strlen(t)) != 0)
+	if ((strncmp(path,  libpath, strlen( libpath)) != 0) &&
+		(strncmp(path, udefpath, strlen(udefpath)) != 0))
 		return EPERM;
 
 	/* Shortcut if it doesn't exist to begin with */
