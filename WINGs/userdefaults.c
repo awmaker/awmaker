@@ -66,7 +66,7 @@ const char *wusergnusteppath()
 		wwarning(_("variable WMAKER_USER_ROOT defined with invalid path, not used"));
 	}
 
-	gspath = wexpandpath("~/"GSUSER_SUBDIR);
+	gspath = wexpandpath(GSUSER_DIR);
 	if (gspath)
 		path = gspath;
 

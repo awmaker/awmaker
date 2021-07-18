@@ -19,22 +19,25 @@ config-paths.h: Makefile
 	@echo '#define PIXMAPDIR "$(pixmapdir)"' >> $@
 	@echo '' >> $@
 	@echo '/* where shared data is stored */' >> $@
-	@echo '#define PKGDATADIR "$(datadir)/WindowMaker"' >> $@
+	@echo '#define PKGDATADIR "$(datadir)/$(PACKAGE_TARNAME)"' >> $@
 	@echo '' >> $@
 	@echo '/* where the global defaults are stored */' >> $@
 	@echo '#define PKGCONFDIR "$(pkgconfdir)"' >> $@
 	@echo '' >> $@
 	@echo '/* where the user data root is located */' >> $@
-	@echo '#define GSUSER_SUBDIR "GNUstep"' >> $@
+	@echo '#define GSUSER_DIR "~/GNUstep"' >> $@
 	@echo '' >> $@
 	@echo '/* where the user defaults are stored */' >> $@
-	@echo '#define DEFAULTS_SUBDIR "Defaults"' >> $@
+	@echo '#define DEFAULTS_SUBDIR "/Defaults"' >> $@
 	@echo '' >> $@
 	@echo '/* where the user data are stored */' >> $@
-	@echo '#define USERDATA_SUBDIR "Library"' >> $@
+	@echo '#define USERDATA_SUBDIR "/Library"' >> $@
 	@echo '' >> $@
 	@echo '/* where the user package data are stored */' >> $@
-	@echo '#define PKGDATA_SUBDIR LIBRARY_SUBDIR "/WindowMaker"' >> $@
+	@echo '#define PKGDATA_SUBDIR "/$(PACKAGE_TARNAME)"' >> $@
+	@echo '' >> $@
+	@echo '/* where the user pixmap data are stored */' >> $@
+	@echo '#define PIXMAP_SUBDIR "/pixmaps"' >> $@
 
 ACLOCAL_AMFLAGS = -I m4
 
