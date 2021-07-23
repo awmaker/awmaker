@@ -23,8 +23,8 @@
 #include "wconfig.h"
 
 /* Keyboard definitions */
-unsigned int _NumLockMask;
-unsigned int _ScrollLockMask;
+extern unsigned int _NumLockMask;
+extern unsigned int _ScrollLockMask;
 
 /* Keyboard functions */
 void wHackedGrabButton(Display *dpy, unsigned int button, unsigned int modifiers,

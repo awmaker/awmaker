@@ -18,8 +18,10 @@
  */
 
 #include <X11/Xutil.h>
-
 #include "input.h"
+
+unsigned int _NumLockMask;
+unsigned int _ScrollLockMask;
 
 /* Keyboard functions */
 #ifdef NUMLOCK_HACK
