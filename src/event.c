@@ -751,6 +751,8 @@ static void executeButtonAction(virtual_screen *vscr, XEvent *event, int action)
 	case WA_SELECT_WINDOWS:
 		wUnselectWindows(vscr);
 		wSelectWindows(vscr, event);
+		if (wPreferences.close_rootmenu_left_right_click)
+			rootmenu_destroy(vscr);
 		break;
 	case WA_OPEN_APPMENU:
 		OpenRootMenu(vscr, event->xbutton.x_root, event->xbutton.y_root, False);

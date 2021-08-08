@@ -437,6 +437,10 @@ msgstr "Распахнуть окно при перетаскивании к в�
 msgid "Double click on titlebar maximize a window to full screen."
 msgstr "Распахнуть окно двойным щелчком."
 
+#: ../../WPrefs.app/Expert.c:121
+msgid "Close rootmenu when mouse (left or right) is clicked outside focus."
+msgstr "Закрывать меню приложений правым или левым щелчком мыши вне фокуса."
+
 #: ../../WPrefs.app/Expert.c:328
 msgid "Expert User Preferences"
 msgstr "Установки для опытного пользователя"
