@@ -105,6 +105,7 @@ static Atom net_wm_state_hidden;
 static Atom net_wm_state_fullscreen;
 static Atom net_wm_state_above;
 static Atom net_wm_state_below;
+static Atom net_wm_state_focused;
 static Atom net_wm_allowed_actions;
 static Atom net_wm_action_move;
 static Atom net_wm_action_resize;
@@ -188,6 +189,7 @@ static atomitem_t atomNames[] = {
 	{"_NET_WM_STATE_FULLSCREEN", &net_wm_state_fullscreen},
 	{"_NET_WM_STATE_ABOVE", &net_wm_state_above},
 	{"_NET_WM_STATE_BELOW", &net_wm_state_below},
+	{"_NET_WM_STATE_FOCUSED", &net_wm_state_focused},
 	{"_NET_WM_ALLOWED_ACTIONS", &net_wm_allowed_actions},
 	{"_NET_WM_ACTION_MOVE", &net_wm_action_move},
 	{"_NET_WM_ACTION_RESIZE", &net_wm_action_resize},
@@ -316,6 +318,7 @@ static void setSupportedHints(WScreen *scr)
 	atom[i++] = net_wm_state_fullscreen;
 	atom[i++] = net_wm_state_above;
 	atom[i++] = net_wm_state_below;
+	atom[i++] = net_wm_state_focused;
 
 	atom[i++] = net_wm_allowed_actions;
 	atom[i++] = net_wm_action_move;
@@ -1018,6 +1021,8 @@ static void updateStateHint(WWindow *wwin, Bool changedWorkspace, Bool del)
 			state[i++] = net_wm_state_above;
 		if (wwin->flags.fullscreen)
 			state[i++] = net_wm_state_fullscreen;
+		if (wwin->flags.focused)
+			state[i++] = net_wm_state_focused;
 
 		XChangeProperty(dpy, wwin->client_win, net_wm_state, XA_ATOM, 32,
 				PropModeReplace, (unsigned char *)state, i);
@@ -1807,8 +1812,9 @@ static void observer(void *self, WMNotification *notif)
 	} else if (strcmp(name, WMNChangedStacking) == 0 && wwin) {
 		updateClientListStacking(wwin->vscr, NULL);
 		updateStateHint(wwin, False, False);
-	} else if (strcmp(name, WMNChangedFocus) == 0) {
+	} else if (strcmp(name, WMNChangedFocus) == 0 && wwin) {
 		updateFocusHint(wwin);
+		updateStateHint(wwin, False, False);
 	} else if (strcmp(name, WMNChangedWorkspace) == 0 && wwin) {
 		updateWorkspaceHint(wwin, False, False);
 		updateStateHint(wwin, True, False);
