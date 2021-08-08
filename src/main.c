@@ -377,7 +377,7 @@ static void execInitScript(void)
 {
 	char *file, *paths;
 
-	paths = wstrconcat(wuserdatapath(), "/"PACKAGE);
+	paths = wstrconcat(wuserdatapath(), "/" PACKAGE_TARNAME);
 	paths = wstrappend(paths, ":" DEF_CONFIG_PATHS);
 
 	file = wfindfile(paths, DEF_INIT_SCRIPT);
@@ -395,7 +395,7 @@ void ExecExitScript(void)
 {
 	char *file, *paths;
 
-	paths = wstrconcat(wuserdatapath(), "/"PACKAGE);
+	paths = wstrconcat(wuserdatapath(), "/" PACKAGE_TARNAME);
 	paths = wstrappend(paths, ":" DEF_CONFIG_PATHS);
 
 	file = wfindfile(paths, DEF_EXIT_SCRIPT);
@@ -523,7 +523,7 @@ static int real_main(int argc, char **argv)
 				printf("Window Maker %s\n", VERSION);
 				exit(0);
 			} else if (strcmp(argv[i], "--global_defaults_path") == 0) {
-			 	printf("%s\n", PKGCONFDIR);
+				printf("%s\n", PKGCONFDIR);
 				exit(0);
 			} else if (strcmp(argv[i], "-locale") == 0 || strcmp(argv[i], "--locale") == 0) {
 				i++;

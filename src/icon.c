@@ -52,7 +52,7 @@
 
 /**** Global varianebles ****/
 
-#define CACHE_ICON_PATH "/"PACKAGE"/CachedPixmaps"
+#define CACHE_ICON_PATH "/" PACKAGE_TARNAME "/CachedPixmaps"
 #define ICON_BORDER 3
 
 static void set_dockapp_in_icon(WIcon *icon);
@@ -365,12 +365,10 @@ static char *get_icon_cache_path(void)
 {
 	const char *prefix;
 	char *path;
-	int len, ret;
+	int ret;
 
 	prefix = wuserdatapath();
-	len = strlen(prefix) + strlen(CACHE_ICON_PATH) + 2;
-	path = wmalloc(len);
-	snprintf(path, len, "%s%s/", prefix, CACHE_ICON_PATH);
+	path = wstrconcat(prefix, CACHE_ICON_PATH "/");
 
 	/* If the folder exists, exit */
 	if (access(path, F_OK) == 0)
