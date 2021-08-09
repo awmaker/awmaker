@@ -394,7 +394,7 @@ static WMColorPanel *makeColorPanel(WMScreen * scrPtr, const char *name)
 	panel->mode = WMWheelModeColorPanel;
 	panel->lastChanged = 0;
 	panel->slidersmode = WMRGBModeColorPanel;
-	panel->configurationPath = wstrconcat(wusergnusteppath(), "/Library/Colors/");
+	panel->configurationPath = wstrconcat(wuserdatapath(), "/Colors/");
 
 	/* Some General Purpose Widgets */
 	panel->colorWell = WMCreateColorWell(panel->win);
@@ -1159,21 +1159,18 @@ static void readConfiguration(W_ColorPanel * panel)
 
 	DIR *dPtr;
 	struct dirent *dp;
-	struct stat stat_buf;
 	int item;
 
-	if (stat(panel->configurationPath, &stat_buf) != 0) {
-		if (mkdir(panel->configurationPath, S_IRWXU | S_IRGRP | S_IROTH | S_IXGRP | S_IXOTH) != 0) {
-			werror(_("Color Panel: Could not create directory %s needed"
-				    " to store configurations"), panel->configurationPath);
-			WMSetPopUpButtonEnabled(panel->customPaletteMenuBtn, False);
-			WMSetPopUpButtonEnabled(panel->colorListColorMenuBtn, False);
-			WMSetPopUpButtonEnabled(panel->colorListListMenuBtn, False);
-			WMRunAlertPanel(WMWidgetScreen(panel->win), panel->win,
-					_("File Error"),
-					_("Could not create ColorPanel configuration directory"),
-					_("OK"), NULL, NULL);
-		}
+	if (!wmkdirhier(panel->configurationPath)) {
+		werror(_("Color Panel: Could not create directory %s needed"
+			 " to store configurations"), panel->configurationPath);
+		WMSetPopUpButtonEnabled(panel->customPaletteMenuBtn, False);
+		WMSetPopUpButtonEnabled(panel->colorListColorMenuBtn, False);
+		WMSetPopUpButtonEnabled(panel->colorListListMenuBtn, False);
+		WMRunAlertPanel(WMWidgetScreen(panel->win), panel->win,
+				_("File Error"),
+				_("Could not create ColorPanel configuration directory"),
+				_("OK"), NULL, NULL);
 		return;
 	}
 
@@ -2645,7 +2642,7 @@ static void hsbTextFieldCallback(void *observerData, WMNotification * notificati
 {
 	CPColor cpColor;
 	int value[3];
-	char tmp[4];
+	char tmp[12];  /* We only 4 bytes needed, but compilers cannot know that */
 	int n;
 	W_ColorPanel *panel = (W_ColorPanel *) observerData;
 
@@ -3504,13 +3501,17 @@ static void convertCPColor(CPColor * color)
 		old_hue = color->hsv.hue;
 		RRGBtoHSV(&(color->rgb), &(color->hsv));
 
-		/* In black the hue is undefined, and may change by conversion
-		 * Same for white. */
-		if (((color->rgb.red == 0) &&
-		     (color->rgb.green == 0) &&
-		     (color->rgb.blue == 0)) ||
-		    ((color->rgb.red == 0) && (color->rgb.green == 0) && (color->rgb.blue == 255))
-		    )
+		/*
+		 * For pure grey colors, the Hue is generally calculated
+		 * as 0, but in reality the Hue does not matter.
+		 *
+		 * But in an interactive GUI it is interresting to remember
+		 * the previous Hue because if user moves away from perfect
+		 * grey then he could be interrested in finding back his
+		 * previous tint
+		 */
+		if ((color->rgb.red == color->rgb.green) &&
+		    (color->rgb.red == color->rgb.blue)  )
 			color->hsv.hue = old_hue;
 		break;
 	case cpHSV:

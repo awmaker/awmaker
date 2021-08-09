@@ -1169,7 +1169,11 @@ WDefaultEntry optionList[] = {
 	{"CycleActiveHeadOnly", "NO", NULL,
 	    &wPreferences.cycle_active_head_only, getBool, NULL, NULL, NULL, 1},
 	{"CycleIgnoreMinimized", "NO", NULL,
-	    &wPreferences.cycle_ignore_minimized, getBool, NULL, NULL, NULL, 1}
+	    &wPreferences.cycle_ignore_minimized, getBool, NULL, NULL, NULL, 1},
+	{"DbClickFullScreen", "NO", NULL,
+	    &wPreferences.double_click_fullscreen, getBool, NULL, NULL, NULL, 1},
+	{"CloseRootMenuByLeftOrRightMouseClick", "NO", NULL,
+	    &wPreferences.close_rootmenu_left_right_click, getBool, NULL, NULL, NULL, 1}
 };
 
 static void init_defaults(void);
@@ -1252,7 +1256,7 @@ static WMPropList *readGlobalDomain(const char *domainName, Bool requireDictiona
 	char path[PATH_MAX];
 	struct stat stbuf;
 
-	snprintf(path, sizeof(path), "%s/%s", DEFSDATADIR, domainName);
+	snprintf(path, sizeof(path), "%s/%s", PKGCONFDIR, domainName);
 	if (stat(path, &stbuf) >= 0) {
 		globalDict = WMReadPropListFromFile(path);
 		if (globalDict && requireDictionary && !WMIsPLDictionary(globalDict)) {
@@ -1302,7 +1306,7 @@ static void wDefaultsMergeGlobalMenus(WDDomain *menuDomain)
 		return;
 
 #ifdef GLOBAL_PREAMBLE_MENU_FILE
-	submenu = WMReadPropListFromFile(DEFSDATADIR "/" GLOBAL_PREAMBLE_MENU_FILE);
+	submenu = WMReadPropListFromFile(PKGCONFDIR "/" GLOBAL_PREAMBLE_MENU_FILE);
 
 	if (submenu && !WMIsPLArray(submenu)) {
 		wwarning(_("invalid global menu file %s"), GLOBAL_PREAMBLE_MENU_FILE);
@@ -1316,7 +1320,7 @@ static void wDefaultsMergeGlobalMenus(WDDomain *menuDomain)
 #endif
 
 #ifdef GLOBAL_EPILOGUE_MENU_FILE
-	submenu = WMReadPropListFromFile(DEFSDATADIR "/" GLOBAL_EPILOGUE_MENU_FILE);
+	submenu = WMReadPropListFromFile(PKGCONFDIR "/" GLOBAL_EPILOGUE_MENU_FILE);
 
 	if (submenu && !WMIsPLArray(submenu)) {
 		wwarning(_("invalid global menu file %s"), GLOBAL_EPILOGUE_MENU_FILE);

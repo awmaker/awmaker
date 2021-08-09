@@ -40,7 +40,6 @@ char *WMUserDefaultsDidChangeNotification = "WMUserDefaultsDidChangeNotification
 
 static void synchronizeUserDefaults(void *foo);
 
-#define DEFAULTS_DIR "/Defaults"
 #ifndef HAVE_INOTIFY
 /* Check defaults database for changes every this many milliseconds */
 /* XXX: this is shared with src/ stuff, put it in some common header */
@@ -49,20 +48,15 @@ static void synchronizeUserDefaults(void *foo);
 
 const char *wusergnusteppath()
 {
-	static const char subdir[] = "/GNUstep";
 	static char *path = NULL;
-	char *gspath, *h;
+	char *gspath;
 	int pathlen;
 
 	if (path)
 		/* Value have been already computed, re-use it */
 		return path;
 
-#ifdef HAVE_SECURE_GETENV
-	gspath = secure_getenv("WMAKER_USER_ROOT");
-#else
-	gspath = getenv("WMAKER_USER_ROOT");
-#endif
+	gspath = GETENV("WMAKER_USER_ROOT");
 	if (gspath) {
 		gspath = wexpandpath(gspath);
 		if (gspath) {
@@ -72,14 +66,24 @@ const char *wusergnusteppath()
 		wwarning(_("variable WMAKER_USER_ROOT defined with invalid path, not used"));
 	}
 
-	h = wgethomedir();
-	if (!h)
-		return NULL;
+	gspath = wexpandpath(GSUSER_DIR);
+	if (gspath)
+		path = gspath;
 
-	pathlen = strlen(h);
-	path = wmalloc(pathlen + sizeof(subdir));
-	strcpy(path, h);
-	strcpy(path + pathlen, subdir);
+	return path;
+}
+
+const char *wuserdatapath()
+{
+	static char *path = NULL;
+	char *libpath;
+
+	if (path)
+		/* Value have been already computed, re-use it */
+		return path;
+
+	if (!path)
+		path = wstrappend(wexpandpath(wusergnusteppath()), "/"USERDATA_SUBDIR);
 
 	return path;
 }
@@ -91,11 +95,11 @@ char *wdefaultspathfordomain(const char *domain)
 	size_t slen;
 
 	gspath = wusergnusteppath();
-	slen = strlen(gspath) + strlen(DEFAULTS_DIR) + strlen(domain) + 4;
+	slen = strlen(gspath) + strlen("/"DEFAULTS_SUBDIR) + strlen(domain) + 4;
 	path = wmalloc(slen);
 
 	strcpy(path, gspath);
-	strcat(path, DEFAULTS_DIR);
+	strcat(path, "/"DEFAULTS_SUBDIR);
 	strcat(path, "/");
 	strcat(path, domain);
 
@@ -108,9 +112,9 @@ char *wglobaldefaultspathfordomain(const char *domain)
 	char *t = NULL;
 	size_t len;
 
-	len = strlen(DEFSDATADIR) + strlen(domain) + 2;
+	len = strlen(PKGCONFDIR) + strlen(domain) + 2;
 	t = wmalloc(len);
-	snprintf(t, len, "%s/%s", DEFSDATADIR, domain);
+	snprintf(t, len, "%s/%s", PKGCONFDIR, domain);
 
 	return t;
 }

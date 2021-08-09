@@ -1695,6 +1695,7 @@ Bool WMWritePropListToFile(WMPropList * plist, const char *path)
 	if (fprintf(theFile, "%s\n", desc) != strlen(desc) + 1) {
 		werror(_("writing to file: %s failed"), thePath);
 		wfree(desc);
+		fclose(theFile);
 		goto failure;
 	}
 
@@ -1731,21 +1732,28 @@ Bool WMWritePropListToFile(WMPropList * plist, const char *path)
  * file, and the last component is stripped off. the rest is the
  * the hierarchy to be created.
  *
- * refuses to create anything outside $WMAKER_USER_ROOT
+ * refuses to create anything outside $WMAKER_USER_ROOT/Defaults or $WMAKER_USER_ROOT/Library
  *
  * returns 1 on success, 0 on failure
  */
 int wmkdirhier(const char *path)
 {
-	const char *t;
+	static const char *libpath = NULL, *udefpath = NULL;
 	char *thePath = NULL, buf[1024];
 	size_t p, plen;
 	struct stat st;
 
-	/* Only create directories under $WMAKER_USER_ROOT */
-	if ((t = wusergnusteppath()) == NULL)
+	if (!libpath)
+		libpath = wuserdatapath();
+	if (!udefpath)
+		udefpath = wdefaultspathfordomain("");
+
+	/* Only create directories under $WMAKER_USER_ROOT/Defaults or $WMAKER_USER_ROOT/Library */
+	if (( libpath == NULL) ||
+		(udefpath == NULL))
 		return 0;
-	if (strncmp(path, t, strlen(t)) != 0)
+	if ((strncmp(path,  libpath, strlen( libpath)) != 0) &&
+		(strncmp(path, udefpath, strlen(udefpath)) != 0))
 		return 0;
 
 	thePath = wstrdup(path);
@@ -1770,7 +1778,6 @@ int wmkdirhier(const char *path)
 	}
 
 	memset(buf, 0, sizeof(buf));
-	strncpy(buf, t, sizeof(buf) - 1);
 	p = strlen(buf);
 	plen = strlen(thePath);
 
@@ -1780,8 +1787,8 @@ int wmkdirhier(const char *path)
 
 		strncpy(buf, thePath, p);
 		if (mkdir(buf, 0777) == -1 && errno == EEXIST &&
-		    stat(buf, &st) == 0 && !S_ISDIR(st.st_mode)) {
-			werror(_("Could not create component %s"), buf);
+			stat(buf, &st) == 0 && !S_ISDIR(st.st_mode)) {
+			werror(_("Could not create path component %s"), buf);
 			wfree(thePath);
 			return 0;
 		}
@@ -1823,7 +1830,7 @@ static int wrmdirhier_fn(const char *path, const struct stat *st,
 /*
  * remove a directory hierarchy
  *
- * refuses to remove anything outside $WMAKER_USER_ROOT
+ * refuses to remove anything outside $WMAKER_USER_ROOT/Defaults or $WMAKER_USER_ROOT/Library
  *
  * returns 1 on success, 0 on failure
  *
@@ -1833,14 +1840,16 @@ static int wrmdirhier_fn(const char *path, const struct stat *st,
  */
 int wrmdirhier(const char *path)
 {
+	const char *libpath, *udefpath;
 	struct stat st;
 	int error;
-	const char *t;
 
-	/* Only remove directories under $WMAKER_USER_ROOT */
-	if ((t = wusergnusteppath()) == NULL)
+	/* Only remove directories under $WMAKER_USER_ROOT/Defaults or $WMAKER_USER_ROOT/Library */
+	if ((( libpath = wuserdatapath()) == NULL) ||
+		((udefpath = wdefaultspathfordomain("")) == NULL))
 		return EPERM;
-	if (strncmp(path, t, strlen(t)) != 0)
+	if ((strncmp(path,  libpath, strlen( libpath)) != 0) &&
+		(strncmp(path, udefpath, strlen(udefpath)) != 0))
 		return EPERM;
 
 	/* Shortcut if it doesn't exist to begin with */

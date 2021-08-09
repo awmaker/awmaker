@@ -446,12 +446,18 @@ static void str2rcolor(RContext * rc, const char *name, RColor * color)
 {
 	XColor xcolor;
 
-	XParseColor(rc->dpy, rc->cmap, name, &xcolor);
-
-	color->alpha = 255;
-	color->red = xcolor.red >> 8;
-	color->green = xcolor.green >> 8;
-	color->blue = xcolor.blue >> 8;
+	if (XParseColor(rc->dpy, rc->cmap, name, &xcolor) != 0) {
+		color->alpha = 255;
+		color->red = xcolor.red >> 8;
+		color->green = xcolor.green >> 8;
+		color->blue = xcolor.blue >> 8;
+	} else {
+		/* Color Name was not found - Return white instead */
+		color->alpha = 255;
+		color->red   = 255;
+		color->green = 255;
+		color->blue  = 255;
+	}
 }
 
 static void dumpRImage(const char *path, RImage * image)
@@ -1822,7 +1828,7 @@ static void createPanel(Panel * p)
 	char *tmp;
 	Bool ok = True;
 
-	panel->fprefix = wstrconcat(wusergnusteppath(), "/Library/WindowMaker");
+	panel->fprefix = wstrconcat(wuserdatapath(), "/"PACKAGE);
 
 	if (access(panel->fprefix, F_OK) != 0) {
 		if (mkdir(panel->fprefix, 0755) < 0) {

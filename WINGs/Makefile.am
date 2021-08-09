@@ -12,7 +12,7 @@ lib_LTLIBRARIES = libWUtil.la libWINGs.la
 
 
 LDADD= libWUtil.la libWINGs.la $(top_builddir)/wrlib/libwraster.la @INTLIBS@
-libWINGs_la_LIBADD = libWUtil.la $(top_builddir)/wrlib/libwraster.la @XLIBS@ @XFTLIBS@ @FCLIBS@ @LIBM@ @PANGOLIBS@
+libWINGs_la_LIBADD = libWUtil.la $(top_builddir)/wrlib/libwraster.la @XLIBS@ @XFT_LIBS@ @FCLIBS@ @LIBM@ @PANGO_LIBS@
 libWUtil_la_LIBADD = @LIBBSD@
 
 EXTRA_DIST = BUGS make-rgb Examples Extras Tests
@@ -87,11 +87,12 @@ libWUtil_la_SOURCES = 	\
 	wutil.c
 
 
-AM_CFLAGS =
+AM_CFLAGS = @PANGO_CFLAGS@
 
 AM_CPPFLAGS = -DRESOURCE_PATH=\"$(datadir)/WINGs\" \
-	 -I$(top_srcdir)/WINGs/WINGs -I$(top_srcdir)/wrlib -I$(top_srcdir)/src \
-	@XFTFLAGS@ @HEADER_SEARCH_PATH@
+	 -I$(top_srcdir)/WINGs/WINGs -I$(top_builddir)/WINGs/WINGs \
+	 -I$(top_builddir)/wrlib -I$(top_srcdir)/src \
+	@XFT_CFLAGS@ @HEADER_SEARCH_PATH@
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = WINGs.pc WUtil.pc
@@ -105,8 +106,8 @@ WINGs.pc: Makefile
 	@echo 'Version: $(VERSION)' >> $@
 	@echo 'Requires: wrlib WUtil' >> $@
 	@echo 'Libs: $(lib_search_path) -lWINGs' >> $@
-	@echo 'Libs.private: $(XFTLIBS) $(PANGOLIBS) $(XLIBS) -lm $(INTLIBS)' >> $@
-	@echo 'Cflags: $(inc_search_path)' >> $@
+	@echo 'Libs.private: $(XFT_LIBS) $(PANGOLIBS) $(XLIBS) -lm $(INTLIBS)' >> $@
+	@echo 'Cflags: $(inc_search_path) @PANGO_CFLAGS@' >> $@
 
 WUtil.pc: Makefile
 	@echo "Generating $@"

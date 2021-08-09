@@ -1,39 +1,38 @@
-DOMAIN = WPrefs
+DOMAIN = WRaster
 
-CATALOGS = @WPREFSMOFILES@
+CATALOGS = @WRASTERMOFILES@
 
-CLEANFILES = $(DOMAIN).pot $(CATALOGS)
+CLEANFILES = $(CATALOGS) $(DOMAIN).pot
 
-EXTRA_DIST = bg.po ca.po cs.po de.po es.po et.po fi.po fr.po fy.po hr.po hu.po \
-	it.po ja.po ko.po nl.po pt.po ru.po sk.po tr.po uk.po zh_CN.po zh_TW.po
+EXTRA_DIST = fr.po
 
 POTFILES  = \
-	$(top_srcdir)/WPrefs.app/Appearance.c \
-	$(top_srcdir)/WPrefs.app/Configurations.c \
-	$(top_srcdir)/WPrefs.app/Docks.c \
-	$(top_srcdir)/WPrefs.app/Expert.c \
-	$(top_srcdir)/WPrefs.app/Focus.c \
-	$(top_srcdir)/WPrefs.app/FontSimple.c \
-	$(top_srcdir)/WPrefs.app/Icons.c \
-	$(top_srcdir)/WPrefs.app/KeyboardShortcuts.c \
-	$(top_srcdir)/WPrefs.app/Menu.c \
-	$(top_srcdir)/WPrefs.app/MenuPreferences.c \
-	$(top_srcdir)/WPrefs.app/MouseSettings.c \
-	$(top_srcdir)/WPrefs.app/Paths.c \
-	$(top_srcdir)/WPrefs.app/Preferences.c \
-	$(top_srcdir)/WPrefs.app/TexturePanel.c \
-	$(top_srcdir)/WPrefs.app/WPrefs.c \
-	$(top_srcdir)/WPrefs.app/WindowHandling.c \
-	$(top_srcdir)/WPrefs.app/Workspace.c \
-	$(top_srcdir)/WPrefs.app/double.c \
-	$(top_srcdir)/WPrefs.app/editmenu.c \
-	$(top_srcdir)/WPrefs.app/main.c \
-	$(top_srcdir)/WPrefs.app/xmodifier.c
-
-# not_yet_fully_implemented
-#	$(top_srcdir)/WPrefs.app/KeyboardSettings.c \
-#	$(top_srcdir)/WPrefs.app/Themes.c \
-#
+	$(top_srcdir)/wrlib/raster.c	\
+	$(top_srcdir)/wrlib/alpha_combine.c	\
+	$(top_srcdir)/wrlib/draw.c	\
+	$(top_srcdir)/wrlib/color.c	\
+	$(top_srcdir)/wrlib/load.c	\
+	$(top_srcdir)/wrlib/save.c	\
+	$(top_srcdir)/wrlib/gradient.c	\
+	$(top_srcdir)/wrlib/xpixmap.c	\
+	$(top_srcdir)/wrlib/convert.c	\
+	$(top_srcdir)/wrlib/context.c	\
+	$(top_srcdir)/wrlib/misc.c	\
+	$(top_srcdir)/wrlib/scale.c	\
+	$(top_srcdir)/wrlib/rotate.c	\
+	$(top_srcdir)/wrlib/flip.c	\
+	$(top_srcdir)/wrlib/convolve.c	\
+	$(top_srcdir)/wrlib/save_xpm.c	\
+	$(top_srcdir)/wrlib/xutil.c	\
+	$(top_srcdir)/wrlib/load_ppm.c	\
+	$(top_srcdir)/wrlib/load_gif.c	\
+	$(top_srcdir)/wrlib/load_jpeg.c	\
+	$(top_srcdir)/wrlib/load_png.c	\
+	$(top_srcdir)/wrlib/load_tiff.c	\
+	$(top_srcdir)/wrlib/load_xpm.c	\
+	$(top_srcdir)/wrlib/load_xpm_normalized.c	\
+	$(top_srcdir)/wrlib/load_webp.c	\
+	$(top_srcdir)/wrlib/load_magick.c
 
 SUFFIXES = .po .mo
 
@@ -88,4 +87,4 @@ am__v_CHKTRANS_1 =
 # 'make check' will make sure the tranlation sources are in line with the compiled source
 check-local:
 	$(AM_V_CHKTRANS)$(top_srcdir)/script/check-translation-sources.sh \
-		"$(srcdir)" -s "$(top_srcdir)/WPrefs.app/Makefile.am"
+		"$(srcdir)" -s "$(top_srcdir)/wrlib/Makefile.am"

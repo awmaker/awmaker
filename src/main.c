@@ -327,9 +327,9 @@ static void check_defaults(void)
 	path = wdefaultspathfordomain("WindowMaker");
 
 	if (access(path, R_OK) != 0) {
-		wwarning(_("could not find user GNUstep directory (%s)."), path);
+		wwarning(_("could not find user GNUstep defaults (%s)."), path);
 
-		if (system("wmaker.inst --batch") != 0)
+		if ((wmkdirhier(path) != 1) || (system("wmaker.inst --batch") != 0))
 			wwarning(_("There was an error while creating GNUstep directory, please "
 				   "make sure you have installed Window Maker correctly and run wmaker.inst"));
 		else
@@ -355,7 +355,7 @@ static void inotifyWatchConfig(void)
 			   " Changes to the defaults database will require"
 			   " a restart to take effect. Check your kernel!"));
 	} else {
-		watchPath = wstrconcat(wusergnusteppath(), "/Defaults");
+		watchPath = wdefaultspathfordomain("");
 		/* Add the watch; really we are only looking for modify events
 		 * but we might want more in the future so check all events for now.
 		 * The individual events are checked for in event.c.
@@ -377,7 +377,7 @@ static void execInitScript(void)
 {
 	char *file, *paths;
 
-	paths = wstrconcat(wusergnusteppath(), "/Library/WindowMaker");
+	paths = wstrconcat(wuserdatapath(), "/"PACKAGE);
 	paths = wstrappend(paths, ":" DEF_CONFIG_PATHS);
 
 	file = wfindfile(paths, DEF_INIT_SCRIPT);
@@ -395,7 +395,7 @@ void ExecExitScript(void)
 {
 	char *file, *paths;
 
-	paths = wstrconcat(wusergnusteppath(), "/Library/WindowMaker");
+	paths = wstrconcat(wuserdatapath(), "/"PACKAGE);
 	paths = wstrappend(paths, ":" DEF_CONFIG_PATHS);
 
 	file = wfindfile(paths, DEF_EXIT_SCRIPT);
@@ -523,7 +523,7 @@ static int real_main(int argc, char **argv)
 				printf("Window Maker %s\n", VERSION);
 				exit(0);
 			} else if (strcmp(argv[i], "--global_defaults_path") == 0) {
-			  printf("%s\n", DEFSDATADIR);
+			 	printf("%s\n", PKGCONFDIR);
 				exit(0);
 			} else if (strcmp(argv[i], "-locale") == 0 || strcmp(argv[i], "--locale") == 0) {
 				i++;

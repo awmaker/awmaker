@@ -2941,12 +2941,22 @@ static void titlebarDblClick(WCoreWindow *sender, void *data, XEvent *event)
 
 	if (event->xbutton.button == Button1) {
 		if (event->xbutton.state == 0) {
-			if (!WFLAGP(wwin, no_shadeable)) {
+			if (!WFLAGP(wwin, no_shadeable) & !wPreferences.double_click_fullscreen) {
 				/* shade window */
 				if (wwin->flags.shaded)
 					wUnshadeWindow(wwin);
 				else
 					wShadeWindow(wwin);
+			}
+		}
+
+		if (wPreferences.double_click_fullscreen) {
+			int dir = 0;
+			if (event->xbutton.state == 0) {
+				/* maximize window full screen */
+				dir |= (MAX_VERTICAL|MAX_HORIZONTAL);
+				int ndir = dir ^ wwin->flags.maximized;
+				wMaximizeWindow(wwin, ndir, wGetHeadForWindow(wwin));
 			}
 		} else {
 			int dir = 0;

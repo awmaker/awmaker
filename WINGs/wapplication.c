@@ -131,6 +131,7 @@ error:
 
 char *WMPathForResourceOfType(const char *resource, const char *ext)
 {
+	const char *gslocapps, *gssysapps, *gsuserapps;
 	char *path, *appdir;
 	size_t slen;
 
@@ -140,12 +141,12 @@ char *WMPathForResourceOfType(const char *resource, const char *ext)
 	 * Paths are searched in this order:
 	 * - resourcePath/ext
 	 * - dirname(argv[0])/ext
+	 * - GNUSTEP_USER_APPS/ApplicationName.app/ext
 	 * - WMAKER_USER_ROOT/Applications/ApplicationName.app/ext
-	 * - ~/GNUstep/Applications/ApplicationName.app/ext
-	 * - GNUSTEP_LOCAL_ROOT/Applications/ApplicationName.app/ext
-	 * - /usr/local/GNUstep/Applications/ApplicationName.app/ext
-	 * - GNUSTEP_SYSTEM_ROOT/Applications/ApplicationName.app/ext
-	 * - /usr/GNUstep/Applications/ApplicationName.app/ext
+	 * - GNUSTEP_LOCAL_APPS/ApplicationName.app/ext
+	 * - /usr/local/lib/GNUstep/Applications/ApplicationName.app/ext
+	 * - GNUSTEP_SYSTEM_APPS/ApplicationName.app/ext
+	 * - /usr/lib/GNUstep/Applications/ApplicationName.app/ext
 	 */
 
 	if (WMApplication.resourcePath) {
@@ -170,32 +171,35 @@ char *WMPathForResourceOfType(const char *resource, const char *ext)
 		}
 	}
 
-	slen = strlen(WMApplication.applicationName) + sizeof("Applications/.app");
+	slen = strlen(WMApplication.applicationName) + sizeof("/.app");
+
+	gsuserapps = GETENV("GNUSTEP_USER_APPS");
+	if (!gsuserapps)
+		gsuserapps = wstrconcat(wusergnusteppath(), "/Applications");
+	gslocapps = GETENV("GNUSTEP_LOCAL_APPS");
+	if (!gslocapps)
+		gslocapps = "/usr/local/lib/GNUstep/Applications";
+	gssysapps = GETENV("GNUSTEP_SYSTEM_APPS");
+	if (!gssysapps)
+		gssysapps = "/usr/lib/GNUstep/Applications";
+
 	appdir = wmalloc(slen);
-	if (snprintf(appdir, slen, "Applications/%s.app", WMApplication.applicationName) >= slen)
+	if (snprintf(appdir, slen, "/%s.app", WMApplication.applicationName) >= slen)
 		goto out;
 
-	path = checkFile(getenv("WMAKER_USER_ROOT"), appdir, ext, resource);
+	path = checkFile(gsuserapps, appdir, ext, resource);
 	if (path)
 		goto out;
 
-	path = checkFile(wusergnusteppath(), appdir, ext, resource);
+	path = checkFile(gslocapps, appdir, ext, resource);
 	if (path)
 		goto out;
 
-	path = checkFile(getenv("GNUSTEP_LOCAL_ROOT"), appdir, ext, resource);
+	path = checkFile(gssysapps, appdir, ext, resource);
 	if (path)
 		goto out;
 
-	path = checkFile("/usr/local/GNUstep", appdir, ext, resource);
-	if (path)
-		goto out;
-
-	path = checkFile(getenv("GNUSTEP_SYSTEM_ROOT"), appdir, ext, resource);
-	if (path)
-		goto out;
-
-	path = checkFile("/usr/GNUstep", appdir, ext, resource); /* falls through */
+	path = checkFile("/usr/GNUstep/System/Applications", appdir, ext, resource); /* falls through */
 
 out:
 	if (appdir)

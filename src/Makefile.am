@@ -159,11 +159,12 @@ xmodifier.hack_nf.c: xmodifier.c $(top_srcdir)/script/nested-func-to-macro.sh
 endif
 
 
-AM_CFLAGS =
+AM_CFLAGS = @PANGO_CFLAGS@
 
 AM_CPPFLAGS = $(DFLAGS) \
-	-I$(top_srcdir)/wrlib \
-	-I$(top_srcdir)/WINGs @HEADER_SEARCH_PATH@
+	-I$(top_builddir)/wrlib \
+	-I$(top_srcdir)/WINGs -I$(top_builddir)/WINGs \
+	@HEADER_SEARCH_PATH@
 
 
 awmaker_LDADD = \

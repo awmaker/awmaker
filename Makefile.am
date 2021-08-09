@@ -19,10 +19,25 @@ config-paths.h: Makefile
 	@echo '#define PIXMAPDIR "$(pixmapdir)"' >> $@
 	@echo '' >> $@
 	@echo '/* where shared data is stored */' >> $@
-	@echo '#define PKGDATADIR "$(datadir)/WindowMaker"' >> $@
+	@echo '#define PKGDATADIR "$(datadir)/$(PACKAGE_TARNAME)"' >> $@
 	@echo '' >> $@
 	@echo '/* where the global defaults are stored */' >> $@
-	@echo '#define DEFSDATADIR "$(defsdatadir)"' >> $@
+	@echo '#define PKGCONFDIR "$(pkgconfdir)"' >> $@
+	@echo '' >> $@
+	@echo '/* where the user data root is located */' >> $@
+	@echo '#define GSUSER_DIR "~/GNUstep"' >> $@
+	@echo '' >> $@
+	@echo '/* where the user defaults are stored */' >> $@
+	@echo '#define DEFAULTS_SUBDIR "/Defaults"' >> $@
+	@echo '' >> $@
+	@echo '/* where the user data are stored */' >> $@
+	@echo '#define USERDATA_SUBDIR "/Library"' >> $@
+	@echo '' >> $@
+	@echo '/* where the user package data are stored */' >> $@
+	@echo '#define PKGDATA_SUBDIR "/$(PACKAGE_TARNAME)"' >> $@
+	@echo '' >> $@
+	@echo '/* where the user pixmap data are stored */' >> $@
+	@echo '#define PIXMAP_SUBDIR "/pixmaps"' >> $@
 
 ACLOCAL_AMFLAGS = -I m4
 
@@ -41,11 +56,13 @@ EXTRA_DIST = TODO BUGS BUGFORM FAQ INSTALL \
 	script/check-cmdline-options-doc.sh \
 	script/check-translation-sources.sh \
 	script/check-wmaker-loaddef-callbacks.sh \
+	script/generate-html-from-man.sh \
 	script/generate-mapfile-from-header.sh \
 	script/generate-po-from-template.sh \
 	script/generate-txt-from-texi.sh \
 	script/nested-func-to-macro.sh \
-	script/replace-ac-keywords.sh
+	script/replace-ac-keywords.sh \
+	script/replace-generated-content.sh
 
 
 .PHONY:	coverage-reset coverage
@@ -61,6 +78,10 @@ coverage:
 	lcov --compat-libtool --capture --directory . --output-file coverage/coverage.info
 	genhtml --output-directory @lcov_output_directory@ coverage/coverage.info
 endif
+
+################################################################################
+# Section for the I18N processing
+################################################################################
 
 # make update-lang PO=<lang>
 # ==========================
@@ -80,12 +101,33 @@ if HAVE_XGETTEXT
 	  ($(am__cd) $$subdir && $(MAKE) $(AM_MAKEFLAGS) update-lang || exit $$?); \
 	done
 
-SUBDIRS_PO = WINGs/po po util/po WPrefs.app/po
+SUBDIRS_PO = wrlib/po WINGs/po po util/po WPrefs.app/po
 else
 	@echo "Error: the program 'xgettext' was not found by configure, it is mandatory for this operation" >&2 ; exit 1
 endif
 
 .PHONY: update-lang
+
+################################################################################
+# Section related to generating HTML content for the website
+################################################################################
+
+if WITH_WEB_REPO
+
+SUBDIRS_WEB = doc
+
+website:
+	@for subdir in $(SUBDIRS_WEB); do \
+	  ($(am__cd) $$subdir && $(MAKE) $(AM_MAKEFLAGS) website || exit $$?); \
+	done
+
+endif
+
+.PHONY: website
+
+################################################################################
+# Section for the automated checks
+################################################################################
 
 # Create a 'silent-rule' for our make check the same way automake does
 AM_V_CHKOPTS = $(am__v_CHKOPTS_$(V))

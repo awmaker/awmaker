@@ -1,10 +1,10 @@
 
-defsdatadir = $(pkgdatadir)/Pixmaps
+xpmdatadir = $(pkgdatadir)/Pixmaps
 
-defsdata_DATA = tile.tiff \
+xpmdata_DATA = tile.tiff \
 		tile.xpm \
 		swtile.png \
 		swback.png \
 		swback2.png
 
-EXTRA_DIST = $(defsdata_DATA)
+EXTRA_DIST = $(xpmdata_DATA)

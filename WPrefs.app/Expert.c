@@ -113,8 +113,13 @@ static const struct {
 	  /* default: */ False, OPTION_WMAKER, "OpenTransientOnOwnerWorkspace" },
 
 	{ N_("Wrap dock-attached icons around the screen edges."),
-	  /* default: */ True, OPTION_WMAKER, "WrapAppiconsInDock" }
+	  /* default: */ True, OPTION_WMAKER, "WrapAppiconsInDock" },
 
+	{ N_("Double click on titlebar maximize a window to full screen."),
+	  /* default: */ False, OPTION_WMAKER, "DbClickFullScreen" },
+
+	{ N_("Close rootmenu when mouse (left or right) is clicked outside focus."),
+	  /* default: */ False, OPTION_WMAKER, "CloseRootMenuByLeftOrRightMouseClick" }
 };
 
 
@@ -140,15 +145,16 @@ typedef struct _Panel {
 static void changeIntTextfield(void *data, int delta)
 {
 	WMTextField *textfield;
-	char *text;
+	char *text, buffer[12];
 	int value;
 
 	textfield = (WMTextField *)data;
 	text = WMGetTextFieldText(textfield);
 	value = atoi(text);
+	wfree(text);
 	value += delta;
-	sprintf(text, "%d", value);
-	WMSetTextFieldText(textfield, text);
+	sprintf(buffer, "%d", value);
+	WMSetTextFieldText(textfield, buffer);
 }
 
 static void downButtonCallback(WMWidget *self, void *data)
@@ -308,6 +314,7 @@ static void storeDefaults(_Panel *panel)
 
 			text = WMGetTextFieldText(panel->textfield[i]);
 			value = atoi(text);
+			wfree(text);
 
 			SetIntegerForKey(value, expert_options[i].op_name);
 			break;

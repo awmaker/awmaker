@@ -41,7 +41,7 @@ AC_CONFIG_HEADERS([config.h])
 dnl We need the EXTRA_xxx_DEPENDENCIES keyword in Makefiles which have been
 dnl introduced in the version 1.11.3; because the 1.12 was realeased shortly
 dnl after, we just ask for it
-AM_INIT_AUTOMAKE([1.12 silent-rules])
+AM_INIT_AUTOMAKE([1.12 silent-rules -Wno-portability])
 
 dnl Reference file used by 'configure' to make sure the path to sources is valid
 AC_CONFIG_SRCDIR([src/WindowMaker.h])
@@ -230,6 +230,18 @@ AS_IF([test "x$debug" = "xyes"],
      AX_CFLAGS_GCC_OPTION([-Wno-deprecated])
      AX_CFLAGS_GCC_OPTION([-Wno-deprecated-declarations])
 ])
+
+
+dnl To upload documentation to the Website
+dnl ======================================
+AC_ARG_WITH([web-repo],
+    [AS_HELP_STRING([--with-web-repo=PATH], [path to your git repository for the Web home page (maintainer stuff)])],
+    [AS_CASE([$withval],
+        [yes], [AC_MSG_ERROR([bad value '$withval' for --with-web-repo, expected a path]) ],
+        [no],  [WEB_REPO_ROOT=""],
+        [WEB_REPO_ROOT=$withval])],
+    [WEB_REPO_ROOT=""])
+WM_CHECK_WEBREPODIR
 
 
 dnl Support for Nested Functions by the compiler
@@ -443,6 +455,7 @@ dnl that the gettext environment works
 WM_I18N_LANGUAGES
 WM_I18N_XGETTEXT
 WM_I18N_MENUTEXTDOMAIN
+WM_LIBRARY_CONSTRUCTORS
 
 dnl ===========================================
 dnl 		Stuff that uses X
@@ -603,72 +616,36 @@ AC_SUBST(FCLIBS)
 
 dnl Xft2 antialiased font support
 dnl =============================
+m4_define([XFT_MIN_VERSION], [2.1.0])
+PKG_CHECK_MODULES([XFT], [xft >= ]XFT_MIN_VERSION,
+    [], dnl Module found, nothing to do
+    [XFT_CFLAGS=failed])
+AS_IF([test "x$XFT_CFLAGS" = "xfailed"],
+    [dnl pkg-config did not find it, try the legacy method
+     AC_CHECK_PROG([XFTCONFIG], [xft-config], [xft-config])
+     AS_IF([test -z "$XFTCONFIG"],
+         [AC_MSG_ERROR([libXft2 is not installed, is too old or could not be found -- $XFT_PKG_ERRORS]) ])
+     XFT_LIBS=`$XFTCONFIG --libs`
+     XFT_CFLAGS=`$XFTCONFIG --cflags`
+     WM_CHECK_XFT_VERSION(XFT_MIN_VERSION,
+         [], dnl Version is ok, nothing to do
+         [AC_MSG_ERROR([Version of libXft is too old, consider upgrading to] XFT_MIN_VERSION [or newer]) ])
+    ])
+AC_SUBST(XFT_CFLAGS)
+AC_SUBST(XFT_LIBS)
 
-xft=yes
-XFTLIBS=""
-
-if test "x$PKG_CONFIG" != x -a "`$PKG_CONFIG xft; echo $?`" = 0; then
-        XFTCONFIG="$PKG_CONFIG xft"
-        pkgconfig_xft=yes
-else
-        AC_CHECK_PROG(XFTCONFIG, xft-config, xft-config)
-fi
-
-AC_MSG_CHECKING([for the Xft2 library])
-
-if test "x$XFTCONFIG" != x; then
-        XFTLIBS=`$XFTCONFIG --libs`
-        XFTFLAGS=`$XFTCONFIG --cflags`
-        AC_MSG_RESULT([found])
-else
-        AC_MSG_RESULT([not found])
-        echo
-        echo "ERROR!!! libXft2 is not installed or could not be found."
-        echo "         Xft2 is a requirement for building Window Maker."
-        echo "         Please install it (along with fontconfig) before continuing."
-        echo
-        exit 1
-fi
-
-minXFT="2.1.0"
-goodxft="no"
-
-dnl
-dnl The macro below will use $XFTFLAGS (defined above) to find Xft.h
-dnl
-WM_CHECK_XFT_VERSION($minXFT, goodxft=yes, goodxft=no)
-
-if test "$goodxft" = no; then
-        echo
-        echo "ERROR!!! libXft on this system is an old version."
-        echo "         Please consider upgrading to at least version ${minXFT}."
-        echo
-        exit 1
-fi
-
-AC_SUBST(XFTFLAGS)
-AC_SUBST(XFTLIBS)
 
 dnl PANGO support
 dnl =============
-pango=no
-AC_ARG_ENABLE(pango, AS_HELP_STRING([--enable-pango], [enable Pango text layout support]),
-                pango=$enableval, pango=no)
+dnl The libray can be used by WINGs to get better support on UTF-8 for i18n
+AC_ARG_ENABLE([pango],
+    [AS_HELP_STRING([--disable-pango], [disable Pango text layout support @<:@default=auto@:>@])],
+    [AS_CASE([$enableval],
+        [yes|no], [],
+        [AC_MSG_ERROR([bad value $enableval for --disable-pango])] )],
+    [enable_pango=auto])
+WM_CHECK_LIBPANGO
 
-PANGOFLAGS=
-PANGOLIBS=
-if test "$pango" = yes; then
-	PANGOLIBS=`$PKG_CONFIG pangoxft --libs`
-	PANGOFLAGS=`$PKG_CONFIG pangoxft --cflags`
-	if test "x$PANGOLIBS" = "x" ; then
-	        AC_MSG_RESULT([not found])
-	else
-		AC_DEFINE(USE_PANGO, 1, [Define if Pango is to be used])
-		AC_MSG_RESULT([found])
-	fi
-fi
-inc_search_path="$inc_search_path $PANGOFLAGS"
-AC_SUBST(PANGOLIBS)
 
 dnl ==============================================
 dnl         Graphic Format Libraries
@@ -846,21 +823,21 @@ AS_IF([test "x$with_gnustepdir" = "x"],
 AC_SUBST([wprefs_datadir])dnl
 AC_SUBST([wprefs_bindir])dnl
 
-dnl Support for DEFSDATADIR option
+dnl Support for PKGCONFDIR option
 dnl ============================
-AC_ARG_WITH([defsdatadir],
-    [AS_HELP_STRING([--with-defsdatadir=PATH], [specify where global defaults are located [SYSCONFDIR/WindowMaker]])],
+AC_ARG_WITH([pkgconfdir],
+    [AS_HELP_STRING([--with-pkgconfdir=PATH], [specify where global defaults are located [SYSCONFDIR/WindowMaker]])],
     [AS_CASE([$withval],
-        [yes|no], [AC_MSG_ERROR([bad value '$withval' for --with-defsdatadir, expected a path]) ],
+        [yes|no], [AC_MSG_ERROR([bad value '$withval' for --with-pkgconfdir, expected a path]) ],
         [/*],  [], dnl Absolute path, ok
         [\$*], [], dnl Assumes it starts with a reference to $prefix or a similar variable, ok
-        [AC_MSG_ERROR([bad path '$withval' for defsdatadir, expecting an absolute path])])],
-    [with_defsdatadir=""])
+        [AC_MSG_ERROR([bad path '$withval' for pkgconfdir, expecting an absolute path])])],
+    [with_pkgconfdir=""])
 
-AS_IF([test "x$with_defsdatadir" != "x"],
-    [defsdatadir="$with_defsdatadir"],
-    [defsdatadir='${sysconfdir}/WindowMaker'])
-AC_SUBST([defsdatadir])dnl
+AS_IF([test "x$with_pkgconfdir" != "x"],
+    [pkgconfdir="$with_pkgconfdir"],
+    [pkgconfdir='${sysconfdir}/${PACKAGE_TARNAME}'])
+AC_SUBST([pkgconfdir])dnl
 
 dnl Enable User Defined Menu thing
 dnl ==============================
@@ -895,7 +872,7 @@ AC_CONFIG_FILES(
     Makefile
 
     dnl WRaster Library
-    wrlib/Makefile
+    wrlib/Makefile wrlib/po/Makefile
     wrlib/tests/Makefile
 
     dnl WINGs toolkit
@@ -940,9 +917,10 @@ echo "Supported core features:            :$supported_core"
 echo "Supported X extensions:             :$supported_xext"
 echo "Supported graphic format libraries  :$supported_gfx"
 echo "Unsupported features                :$unsupported"
-echo "Antialiased text support in WINGs   : $xft"
 echo "Pango text layout support in WINGs  : $pango"
 echo "Translated languages to support     :$supported_locales"
+AS_IF([test "x$WEB_REPO_ROOT" != "x"],
+    [AS_ECHO(["Git repository for WMaker's Website : $WEB_REPO_ROOT"]) ])
 AS_IF([test "x$debug" = "xyes"],
     [AS_ECHO(["Debug enabled: CFLAGS = $CFLAGS"]) ])
 echo
@@ -966,6 +944,15 @@ AS_IF([test "x$enable_jpeg" = xno], [dnl
     AS_ECHO([])
     AS_ECHO(["WARNING   WARNING   WARNING   WARNING   WARNING   WARNING   WARNING"])dnl
 ])
+
+AS_IF([test "x$LINGUAS" != "x"],
+    [AS_IF([test "X$wm_cv_library_constructors" = "Xlegacy"],
+        [AC_MSG_WARN([I18N is enabled, but library constructor attribute is not supported])
+         AS_ECHO(["   If you have translation problems in lib WRaster, yet you know that the translation"])
+         AS_ECHO(["   file (po) is valid, this could be a cause."])
+         AS_ECHO([])dnl
+        ])dnl
+    ])
 
 
 dnl This is for Emacs.  I'm lazy, I know... (nicolai)

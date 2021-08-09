@@ -26,37 +26,48 @@ m4_pattern_allow([^WM_OSDEP(_[A-Z]*)?$])
 
 # WM_CHECK_XFT_VERSION(MIN_VERSION, [ACTION-IF-FOUND [,ACTION-IF-NOT-FOUND]])
 #
-# $XFTFLAGS should be defined before calling this macro,
+# $XFT_CFLAGS should be defined before calling this macro,
 # else it will not be able to find Xft.h
 #
 AC_DEFUN([WM_CHECK_XFT_VERSION],
-[
-CPPFLAGS_old="$CPPFLAGS"
-CPPFLAGS="$CPPFLAGS $XFTFLAGS $inc_search_path"
-xft_major_version=`echo $1 | sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\1/'`
-xft_minor_version=`echo $1 | sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\2/'`
-xft_micro_version=`echo $1 | sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\3/'`
-AC_MSG_CHECKING([whether libXft is at least version $1])
-AC_CACHE_VAL(ac_cv_lib_xft_version_ok,
-[AC_TRY_LINK(
-[/* Test version of libXft we have */
+[m4_define([XFT_REQUIRED_VERSION],
+    m4_eval(m4_bregexp($1, [^\([[0-9]]*\)\.\([[0-9]]*\)\.\([[0-9]]*\)],
+                       [\1 * 10000 + \2 * 100 + \3]) ) )dnl
+ AC_CACHE_CHECK([whether libXft is at least version $1], [ac_cv_lib_xft_version_ok],
+    [CPPFLAGS_save="$CPPFLAGS"
+     CPPFLAGS="$CPPFLAGS $XFT_CFLAGS $inc_search_path"
+     AC_TRY_LINK([
 #include <X11/Xlib.h>
 #include <X11/Xft/Xft.h>
-
-#if !defined(XFT_VERSION) || XFT_VERSION < $xft_major_version*10000 + $xft_minor_version*100 + $xft_micro_version
+], [
+#if !defined(XFT_VERSION) || XFT_VERSION < ]XFT_REQUIRED_VERSION[
 #error libXft on this system is too old. Consider upgrading to at least $1
 #endif
-], [],
-eval "ac_cv_lib_xft_version_ok=yes",
-eval "ac_cv_lib_xft_version_ok=no")])
-if eval "test \"`echo '$ac_cv_lib_xft_version_ok'`\" = yes"; then
-  AC_MSG_RESULT(yes)
-  ifelse([$2], , :, [$2])
-else
-  AC_MSG_RESULT(no)
-  ifelse([$3], , , [$3])
-fi
-CPPFLAGS="$CPPFLAGS_old"
+], [ac_cv_lib_xft_version_ok=yes], [ac_cv_lib_xft_version_ok=no])
+     CPPFLAGS="$CPPFLAGS_save"])
+ m4_undefine([XFT_REQUIRED_VERSION])dnl
+ AS_IF([test "x$ac_cv_lib_xft_version_ok" != "xyes"], [$3], [$2])dnl
+])
+
+
+# WM_CHECK_LIBPANGO
+# -----------------
+#
+# If the support was not disabled by user, check for the pango library using
+# pkg-config, and if found place the appropriate stuff in the variables
+# PANGO_CFLAGS (for compiler) and PANGO_LIBS (for linker)
+AC_DEFUN([WM_CHECK_LIBPANGO],
+[AS_IF([test "x$enable_pango" != "xno"],
+    [PKG_CHECK_MODULES([PANGO], [pangoxft],
+        [AC_DEFINE([USE_PANGO], [1], [defined when the pango library is used in WINGs])
+         pango="yes"],
+        [pango="no"])
+     AS_IF([test "x$enable_pango$pango" == "xyesno"],
+        [AC_MSG_ERROR([Pango library was not found - $PANGO_PKG_ERRORS])])
+    ],
+    [pango="no"])
+ AC_SUBST([PANGO_CFLAGS])dnl
+ AC_SUBST([PANGO_LIBS])dnl
 ])
 
 
@@ -180,6 +191,37 @@ m4_bmatch([$9], [^-$], [],
 m4_popdef([ENABLEVAR])dnl
 m4_popdef([CACHEVAR])dnl
 m4_popdef([USEVAR])dnl
+])
+
+
+# WM_CHECK_WEBREPODIR
+# -------------------
+#
+# If the maintainer's option --with-web-repo was specified, check that the path provided is a valid
+# existing directory and that it is a GIT repository that looks like Window Maker's Website repo.
+AC_DEFUN_ONCE([WM_CHECK_WEBREPODIR],
+[AS_IF([test "x$WEB_REPO_ROOT" != "x"],
+    [AS_IF([test ! -d "$WEB_REPO_ROOT"],
+         [AC_MSG_ERROR([The path "$with_web_repo" is not a directory, for --with-web-repo])])
+
+     # Convert to an Absolute path in the case it is not
+     WEB_REPO_ROOT=`cd "$WEB_REPO_ROOT" ; pwd`
+
+     AS_IF([test ! -d "$WEB_REPO_ROOT/.git"],
+         [AC_MSG_ERROR([The path "$WEB_REPO_ROOT" is not a GIT repository, for --with-web-repo])])
+     AS_IF([test ! -f "$WEB_REPO_ROOT/_config.yml"],
+         [AC_MSG_ERROR([The path "$WEB_REPO_ROOT" does not look like Window Maker's website repository, for --with-web-repo])])
+
+     # This is used to convert MAN pages into HTML pages
+     AC_CACHE_CHECK([how to convert man to html], [ac_cv_path_GROFF],
+         [AC_PATH_PROGS_FEATURE_CHECK([GROFF], [groff],
+             [echo '.TH dummy 0' | $ac_path_GROFF -man -Dutf8 -Thtml > /dev/null 2> /dev/null
+              test $? -eq 0 && ac_cv_path_GROFF=$ac_path_GROFF ac_path_GROFF_found=:],
+             [AC_MSG_ERROR([no working "groff" found -- If you have "groff-base" it is not enough for HTML support])]) ])
+     AC_SUBST([GROFF], [$ac_cv_path_GROFF])
+    ])
+ AM_CONDITIONAL([WITH_WEB_REPO], [test "x$WEB_REPO_ROOT" != "x"])
+ AC_SUBST([WEB_REPO_ROOT])
 ])
 
 

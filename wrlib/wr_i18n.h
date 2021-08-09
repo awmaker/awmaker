@@ -1,6 +1,7 @@
-/* wconfig.h
+/*
+ *  Window Maker window manager
  *
- *  Copyright (c) 2001 Dan Pascu
+ *  Copyright (c) 2021 Window Maker Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -13,28 +14,28 @@
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ *  with this program, see the file COPYING.
  */
 
-#ifndef WINGS_CONFIG_H_
-#define WINGS_CONFIG_H_
+/*
+ * This file defines the basic stuff for WRaster's message
+ * internationalization in the code
+ */
 
-#include "../config.h"
+#ifndef WRASTER_I18N_H
+#define WRASTER_I18N_H
 
 #if defined(HAVE_LIBINTL_H) && defined(I18N)
 # include <libintl.h>
-# define _(text) dgettext("WINGs", text)
+# define _(text) dgettext("WRaster", (text))
 #else
 # define _(text) (text)
 #endif
 
-#ifdef HAVE_SECURE_GETENV
-#define GETENV(x) secure_getenv((x))
-#else
-#define GETENV(x) getenv((x))
+/*
+ * the N_ macro is used for initializers, it will make xgettext pick the
+ * string for translation when generating PO files
+ */
+#define N_(text) (text)
+
 #endif
-
-
-#endif /* WINGS_CONFIG_H_ */
-

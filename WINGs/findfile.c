@@ -39,7 +39,7 @@
 #endif
 
 
-char *wgethomedir()
+const char *wgethomedir()
 {
 	static char *home = NULL;
 	char *tmp;
@@ -48,11 +48,7 @@ char *wgethomedir()
 	if (home)
 		return home;
 
-#ifdef HAVE_SECURE_GETENV
-	tmp = secure_getenv("HOME");
-#else
-	tmp = getenv("HOME");
-#endif
+	tmp = GETENV("HOME");
 	if (tmp) {
 		home = wstrdup(tmp);
 		return home;

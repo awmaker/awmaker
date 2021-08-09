@@ -914,6 +914,11 @@ static ItemData *parseCommand(WMPropList * item)
 
 		data->type = ExecInfo;
 
+		if (parameter == NULL) {
+			wfree(data);
+			return NULL;
+		}
+
 		data->param.exec.command = wstrdup(parameter);
 		if (shortcut)
 			data->param.exec.shortcut = wstrdup(shortcut);
@@ -926,6 +931,12 @@ static ItemData *parseCommand(WMPropList * item)
 		 * |pipe
 		 */
 		p = parameter;
+
+		if (p == NULL) {
+			wfree(data);
+			return NULL;
+		}
+
 		while (isspace(*p) && *p)
 			p++;
 		if (*p == '|') {
@@ -1482,16 +1493,11 @@ static WMPropList *getDefaultMenu(_Panel * panel)
 
 static void showData(_Panel * panel)
 {
-	const char *gspath;
 	char *menuPath, *labelText;
 	char buf[1024];
 	WMPropList *pmenu;
 
-	gspath = wusergnusteppath();
-
-	menuPath = wmalloc(strlen(gspath) + 32);
-	strcpy(menuPath, gspath);
-	strcat(menuPath, "/Defaults/WMRootMenu");
+	menuPath = wdefaultspathfordomain("WMRootMenu");
 
 	pmenu = WMReadPropListFromFile(menuPath);
 
@@ -1502,8 +1508,12 @@ static void showData(_Panel * panel)
 
 		path = wexpandpath(WMGetFromPLString(pmenu));
 
-		if (access(path, F_OK) < 0)
+		if (access(path, F_OK) < 0) {
+			char *old_path = path;
+
 			path = wfindfile(DEF_CONFIG_PATHS, path);
+			wfree(old_path);
+		}
 
 		/* TODO: if needed, concatenate locale suffix to path.
 		   See getLocalizedMenuFile() in src/rootmenu.c. */

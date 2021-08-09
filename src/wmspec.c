@@ -105,6 +105,7 @@ static Atom net_wm_state_hidden;
 static Atom net_wm_state_fullscreen;
 static Atom net_wm_state_above;
 static Atom net_wm_state_below;
+static Atom net_wm_state_focused;
 static Atom net_wm_allowed_actions;
 static Atom net_wm_action_move;
 static Atom net_wm_action_resize;
@@ -188,6 +189,7 @@ static atomitem_t atomNames[] = {
 	{"_NET_WM_STATE_FULLSCREEN", &net_wm_state_fullscreen},
 	{"_NET_WM_STATE_ABOVE", &net_wm_state_above},
 	{"_NET_WM_STATE_BELOW", &net_wm_state_below},
+	{"_NET_WM_STATE_FOCUSED", &net_wm_state_focused},
 	{"_NET_WM_ALLOWED_ACTIONS", &net_wm_allowed_actions},
 	{"_NET_WM_ACTION_MOVE", &net_wm_action_move},
 	{"_NET_WM_ACTION_RESIZE", &net_wm_action_resize},
@@ -316,6 +318,7 @@ static void setSupportedHints(WScreen *scr)
 	atom[i++] = net_wm_state_fullscreen;
 	atom[i++] = net_wm_state_above;
 	atom[i++] = net_wm_state_below;
+	atom[i++] = net_wm_state_focused;
 
 	atom[i++] = net_wm_allowed_actions;
 	atom[i++] = net_wm_action_move;
@@ -840,10 +843,56 @@ Bool wNETWMGetUsableArea(virtual_screen *vscr, int head, WArea *area)
 
 	rect = wGetRectForHead(vscr->screen_ptr, head);
 
-	area->x1 = rect.pos.x + area->x1;
-	area->x2 = rect.pos.x + rect.size.width - area->x2;
-	area->y1 = rect.pos.y + area->y1;
-	area->y2 = rect.pos.y + rect.size.height - area->y2;
+	/* NOTE(gryf): calculation for the reserved area should be preformed for
+	 * current head, but area, which comes form _NET_WM_STRUT, has to be
+	 * calculated relative to entire screen size, i.e. suppose we have three
+	 * heads arranged like this:
+	 *
+	 * ╔════════════════════════╗
+	 * ║ 0                      ║
+	 * ║                        ╠═══════════╗
+	 * ║                        ║ 2         ║
+	 * ║                        ║           ║
+	 * ╟────────────────────────╫───────────╢
+	 * ╠════════════════════════╬═══════════╝
+	 * ║ 1                      ║
+	 * ║                        ║
+	 * ║                        ║
+	 * ║                        ║
+	 * ║                        ║
+	 * ╟────────────────────────╢
+	 * ╚════════════════════════╝
+	 *
+	 * where head 0 have resolution 1920x1080, head 1: 1920x1200 and head 2
+	 * 800x600, so the screen size in this arrangement will be 2720x2280 (1920
+	 * + 800) x (1080 + 1200).
+	 *
+	 * Bottom line represents some 3rd party panel, which sets properties in
+	 * _NET_WM_STRUT_PARTIAL and optionally _NET_WM_STRUT.
+	 *
+	 * By coincidence, coordinates x1 and y1 from left and top are the same as
+	 * the original data which came from _NET_WM_STRUT, since they meaning
+	 * distance from the edge, so we leave it as-is, otherwise if they have 0
+	 * value, we need to set right head position.
+	 */
+
+	/* optional reserved space from left */
+	if (area->x1 == 0) area->x1 = rect.pos.x;
+
+	/* optional reserved space from top */
+	if (area->y1 == 0) area->y1 = rect.pos.y;
+
+	/* optional reserved space from right */
+	if (area->x2 == 0)
+		area->x2 = rect.pos.x + rect.size.width;
+	else
+		area->x2 = scr->scr_width - area->x2;
+
+	/* optional reserved space from bottom */
+	if (area->y2 == 0)
+		area->y2 = rect.pos.y + rect.size.height;
+	else
+		area->y2 = scr->scr_height - area->y2;
 
 	return True;
 }
@@ -1018,6 +1067,8 @@ static void updateStateHint(WWindow *wwin, Bool changedWorkspace, Bool del)
 			state[i++] = net_wm_state_above;
 		if (wwin->flags.fullscreen)
 			state[i++] = net_wm_state_fullscreen;
+		if (wwin->flags.focused)
+			state[i++] = net_wm_state_focused;
 
 		XChangeProperty(dpy, wwin->client_win, net_wm_state, XA_ATOM, 32,
 				PropModeReplace, (unsigned char *)state, i);
@@ -1807,8 +1858,9 @@ static void observer(void *self, WMNotification *notif)
 	} else if (strcmp(name, WMNChangedStacking) == 0 && wwin) {
 		updateClientListStacking(wwin->vscr, NULL);
 		updateStateHint(wwin, False, False);
-	} else if (strcmp(name, WMNChangedFocus) == 0) {
+	} else if (strcmp(name, WMNChangedFocus) == 0 && wwin) {
 		updateFocusHint(wwin);
+		updateStateHint(wwin, False, False);
 	} else if (strcmp(name, WMNChangedWorkspace) == 0 && wwin) {
 		updateWorkspaceHint(wwin, False, False);
 		updateStateHint(wwin, True, False);

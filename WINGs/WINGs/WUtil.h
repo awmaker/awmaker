@@ -249,7 +249,7 @@ char* wexpandpath(const char *path);
 int wcopy_file(const char *toPath, const char *srcFile, const char *destFile);
 
 /* don't free the returned string */
-char* wgethomedir(void);
+const char* wgethomedir(void);
 
 /* ---[ WINGs/proplist.c ]------------------------------------------------ */
 
@@ -864,6 +864,7 @@ Bool WMWritePropListToFile(WMPropList *plist, const char *path);
 
 /* don't free the returned string */
 const char* wusergnusteppath(void);
+const char* wuserdatapath(void);
 
 /* Free the returned string when you no longer need it */
 char* wdefaultspathfordomain(const char *domain);
