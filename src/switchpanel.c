@@ -402,7 +402,7 @@ WSwitchPanel *wInitSwitchPanel(virtual_screen *vscr, WWindow *curwin, Bool class
 	WMGetScaleBaseFromSystemFont(vscr->screen_ptr->wmscreen, &wmScaleWidth, &wmScaleHeight);
 
 	icon_size = wPreferences.switch_panel_icon_size;
-	icon_tile_size = (short int)(((float)icon_size * (float)1.2) + 0.5);
+	icon_tile_size = (short int)(((float)icon_size * 1.2F) + 0.5F);
 	border_space = WMScaleY(10);
 	label_height = WMScaleY(25);
 
