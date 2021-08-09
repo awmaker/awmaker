@@ -823,7 +823,7 @@ AS_IF([test "x$with_gnustepdir" = "x"],
 AC_SUBST([wprefs_datadir])dnl
 AC_SUBST([wprefs_bindir])dnl
 
-dnl Support for DEFSDATADIR option
+dnl Support for PKGCONFDIR option
 dnl ============================
 AC_ARG_WITH([defsdatadir],
     [AS_HELP_STRING([--with-defsdatadir=PATH], [specify where global defaults are located [SYSCONFDIR/WindowMaker]])],
