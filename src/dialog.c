@@ -210,8 +210,10 @@ static char *HistoryFileName(const char *name)
 {
 	char *filename = NULL;
 
-	filename = wstrdup(wusergnusteppath());
-	filename = wstrappend(filename, "/.AppInfo/WindowMaker/History");
+	filename = wstrdup(getenv("XDG_STATE_HOME"));
+	if (!filename)
+		filename = wstrconcat(wusergnusteppath(),"/.AppInfo");
+	filename = wstrappend(wexpandpath(filename), "/"PACKAGE"/History");
 	if (name && strlen(name)) {
 		filename = wstrappend(filename, ".");
 		filename = wstrappend(filename, name);
