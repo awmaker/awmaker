@@ -80,17 +80,15 @@ const char *wusergnusteppath(void)
 	return path;
 }
 
-const char *wuserdatapath()
+const char *wuserdatapath(void)
 {
 	static char *path = NULL;
-	char *libpath;
 
 	if (path)
 		/* Value have been already computed, re-use it */
 		return path;
 
-	if (!path)
-		path = wstrappend(wexpandpath(wusergnusteppath()), "/"USERDATA_SUBDIR);
+	path = wstrconcat(wusergnusteppath(), "/" USERDATA_SUBDIR);
 
 	return path;
 }
