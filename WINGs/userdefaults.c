@@ -48,8 +48,10 @@ static void synchronizeUserDefaults(void *foo);
 
 const char *wusergnusteppath()
 {
+	static const char subdir[] = "/" GSUSER_SUBDIR;
 	static char *path = NULL;
 	char *gspath;
+	const char *h;
 	int pathlen;
 
 	if (path)
@@ -66,9 +68,14 @@ const char *wusergnusteppath()
 		wwarning(_("variable WMAKER_USER_ROOT defined with invalid path, not used"));
 	}
 
-	gspath = wexpandpath(GSUSER_DIR);
-	if (gspath)
-		path = gspath;
+	h = wgethomedir();
+	if (!h)
+		return NULL;
+
+	pathlen = strlen(h);
+	path = wmalloc(pathlen + sizeof(subdir));
+	strcpy(path, h);
+	strcpy(path + pathlen, subdir);
 
 	return path;
 }
