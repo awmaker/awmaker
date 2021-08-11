@@ -100,12 +100,11 @@ char *wdefaultspathfordomain(const char *domain)
 	size_t slen;
 
 	gspath = wusergnusteppath();
-	slen = strlen(gspath) + strlen("/"DEFAULTS_SUBDIR) + strlen(domain) + 4;
+	slen = strlen(gspath) + strlen("/" DEFAULTS_SUBDIR "/") + strlen(domain) + 1;
 	path = wmalloc(slen);
 
 	strcpy(path, gspath);
-	strcat(path, "/"DEFAULTS_SUBDIR);
-	strcat(path, "/");
+	strcat(path, "/" DEFAULTS_SUBDIR "/");
 	strcat(path, domain);
 
 	return path;
