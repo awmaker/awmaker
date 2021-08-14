@@ -210,10 +210,12 @@ static char *HistoryFileName(const char *name)
 {
 	char *filename = NULL;
 
-	filename = wstrdup(getenv("XDG_STATE_HOME"));
-	if (!filename)
-		filename = wstrconcat(wusergnusteppath(),"/.AppInfo");
-	filename = wstrappend(wexpandpath(filename), "/"PACKAGE"/History");
+	filename = getenv("XDG_STATE_HOME");
+	if (filename)
+		filename = wstrappend(wexpandpath(filename), "/" PACKAGE_TARNAME "/History");
+	else
+		filename = wstrconcat(wusergnusteppath(), "/.AppInfo/" PACKAGE_TARNAME "/History");
+
 	if (name && strlen(name)) {
 		filename = wstrappend(filename, ".");
 		filename = wstrappend(filename, name);
