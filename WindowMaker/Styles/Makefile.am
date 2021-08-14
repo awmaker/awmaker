@@ -1,7 +1,7 @@
 
-stydatadir = $(pkgdatadir)/Styles
+styledatadir = $(pkgdatadir)/Styles
 
-stydata_DATA =\
+styledata_DATA =\
 	Adwaita.style\
 	Autumn.style\
 	Black.style\
@@ -39,6 +39,6 @@ stydata_DATA =\
 	Traditional.style\
 	VioletBlue.style
 
-EXTRA_DIST = $(stydata_DATA)
+EXTRA_DIST = $(styledata_DATA)
 
 
