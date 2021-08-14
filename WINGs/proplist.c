@@ -1738,24 +1738,30 @@ Bool WMWritePropListToFile(WMPropList * plist, const char *path)
  */
 int wmkdirhier(const char *path)
 {
-	static const char *libpath = NULL, *udefpath = NULL;
+	const char *libpath;
+	char *udefpath;
+	int cmp;
 	char *thePath = NULL, buf[1024];
 	size_t p, plen;
 	struct stat st;
 
-	if (!libpath)
-		libpath = wuserdatapath();
-	if (!udefpath)
-		udefpath = wdefaultspathfordomain("");
-
 	/* Only create directories under $WMAKER_USER_ROOT/Defaults or $WMAKER_USER_ROOT/Library */
-	if (( libpath == NULL) ||
-		(udefpath == NULL))
-		return 0;
-	if ((strncmp(path,  libpath, strlen( libpath)) != 0) &&
-		(strncmp(path, udefpath, strlen(udefpath)) != 0))
-		return 0;
+	libpath = wuserdatapath();
+	if (strncmp(path, libpath, strlen(libpath)) == 0)
+		if (path[strlen(libpath)] == '/')
+			goto path_in_valid_tree;
 
+	udefpath = wdefaultspathfordomain("");
+	cmp = strncmp(path, udefpath, strlen(udefpath));
+	wfree(udefpath);
+	if (cmp == 0)
+		/* Note: by side effect, 'udefpath' already contains a final '/'  */
+		goto path_in_valid_tree;
+
+	/* If we reach this point, the path is outside the allowed tree */
+	return 0;
+
+ path_in_valid_tree:
 	thePath = wstrdup(path);
 	/* Strip the trailing component if it is a file */
 	p = strlen(thePath);
@@ -1787,7 +1793,7 @@ int wmkdirhier(const char *path)
 
 		strncpy(buf, thePath, p);
 		if (mkdir(buf, 0777) == -1 && errno == EEXIST &&
-			stat(buf, &st) == 0 && !S_ISDIR(st.st_mode)) {
+		    stat(buf, &st) == 0 && !S_ISDIR(st.st_mode)) {
 			werror(_("Could not create path component %s"), buf);
 			wfree(thePath);
 			return 0;
@@ -1840,17 +1846,27 @@ static int wrmdirhier_fn(const char *path, const struct stat *st,
  */
 int wrmdirhier(const char *path)
 {
-	const char *libpath, *udefpath;
+	const char *libpath;
+	char *udefpath = NULL;
 	struct stat st;
 	int error;
 
 	/* Only remove directories under $WMAKER_USER_ROOT/Defaults or $WMAKER_USER_ROOT/Library */
-	if ((( libpath = wuserdatapath()) == NULL) ||
-		((udefpath = wdefaultspathfordomain("")) == NULL))
-		return EPERM;
-	if ((strncmp(path,  libpath, strlen( libpath)) != 0) &&
-		(strncmp(path, udefpath, strlen(udefpath)) != 0))
-		return EPERM;
+	libpath = wuserdatapath();
+	if (strncmp(path, libpath, strlen(libpath)) == 0)
+		if (path[strlen(libpath)] == '/')
+			goto path_in_valid_tree;
+
+	udefpath = wdefaultspathfordomain("");
+	if (strncmp(path, udefpath, strlen(udefpath)) == 0)
+		/* Note: by side effect, 'udefpath' already contains a final '/'  */
+		goto path_in_valid_tree;
+
+	wfree(udefpath);
+	return EPERM;
+
+ path_in_valid_tree:
+	wfree(udefpath);
 
 	/* Shortcut if it doesn't exist to begin with */
 	if (stat(path, &st) == -1)

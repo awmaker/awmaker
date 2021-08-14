@@ -39,7 +39,7 @@
 #endif
 
 
-const char *wgethomedir()
+const char *wgethomedir(void)
 {
 	static char *home = NULL;
 	char *tmp;
