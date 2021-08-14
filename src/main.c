@@ -327,9 +327,9 @@ static void check_defaults(void)
 	path = wdefaultspathfordomain("WindowMaker");
 
 	if (access(path, R_OK) != 0) {
-		wwarning(_("could not find user GNUstep defaults (%s)."), path);
+		wwarning(_("could not find user GNUstep directory (%s)."), path);
 
-		if ((wmkdirhier(path) != 1) || (system("wmaker.inst --batch") != 0))
+		if (system("wmaker.inst --batch") != 0)
 			wwarning(_("There was an error while creating GNUstep directory, please "
 				   "make sure you have installed Window Maker correctly and run wmaker.inst"));
 		else
