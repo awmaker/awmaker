@@ -9,7 +9,7 @@
 
 struct W_Application WMApplication;
 
-char *_WINGS_progname = NULL;
+const char *_WINGS_progname = NULL;
 
 Bool W_ApplicationInitialized(void)
 {
@@ -133,6 +133,7 @@ char *WMPathForResourceOfType(const char *resource, const char *ext)
 {
 	const char *gslocapps, *gssysapps, *gsuserapps;
 	char *path, *appdir;
+	char buffer[PATH_MAX];
 	size_t slen;
 
 	path = appdir = NULL;
@@ -141,8 +142,8 @@ char *WMPathForResourceOfType(const char *resource, const char *ext)
 	 * Paths are searched in this order:
 	 * - resourcePath/ext
 	 * - dirname(argv[0])/ext
-	 * - GNUSTEP_USER_APPS/ApplicationName.app/ext
 	 * - WMAKER_USER_ROOT/Applications/ApplicationName.app/ext
+	 * - GNUSTEP_USER_APPS/ApplicationName.app/ext
 	 * - GNUSTEP_LOCAL_APPS/ApplicationName.app/ext
 	 * - /usr/local/lib/GNUstep/Applications/ApplicationName.app/ext
 	 * - GNUSTEP_SYSTEM_APPS/ApplicationName.app/ext
@@ -171,30 +172,35 @@ char *WMPathForResourceOfType(const char *resource, const char *ext)
 		}
 	}
 
+	snprintf(buffer, sizeof(buffer), "Applications/%s.app", WMApplication.applicationName);
+	path = checkFile(GETENV("WMAKER_USER_ROOT"), buffer, ext, resource);
+	if (path)
+		goto out;
+
 	slen = strlen(WMApplication.applicationName) + sizeof("/.app");
-
-	gsuserapps = GETENV("GNUSTEP_USER_APPS");
-	if (!gsuserapps)
-		gsuserapps = wstrconcat(wusergnusteppath(), "/Applications");
-	gslocapps = GETENV("GNUSTEP_LOCAL_APPS");
-	if (!gslocapps)
-		gslocapps = "/usr/local/lib/GNUstep/Applications";
-	gssysapps = GETENV("GNUSTEP_SYSTEM_APPS");
-	if (!gssysapps)
-		gssysapps = "/usr/lib/GNUstep/Applications";
-
 	appdir = wmalloc(slen);
 	if (snprintf(appdir, slen, "/%s.app", WMApplication.applicationName) >= slen)
 		goto out;
 
+	gsuserapps = GETENV("GNUSTEP_USER_APPS");
+	if (!gsuserapps) {
+		snprintf(buffer, sizeof(buffer), "%s/Applications", wusergnusteppath());
+		gsuserapps = buffer;
+	}
 	path = checkFile(gsuserapps, appdir, ext, resource);
 	if (path)
 		goto out;
 
+	gslocapps = GETENV("GNUSTEP_LOCAL_APPS");
+	if (!gslocapps)
+		gslocapps = "/usr/local/lib/GNUstep/Applications";
 	path = checkFile(gslocapps, appdir, ext, resource);
 	if (path)
 		goto out;
 
+	gssysapps = GETENV("GNUSTEP_SYSTEM_APPS");
+	if (!gssysapps)
+		gssysapps = "/usr/lib/GNUstep/Applications";
 	path = checkFile(gssysapps, appdir, ext, resource);
 	if (path)
 		goto out;
