@@ -1,0 +1,3 @@
+[submodule "third_party/wmaker-crm"]
+	path = third_party/wmaker-crm
+	url = https://repo.or.cz/wmaker-crm.git
