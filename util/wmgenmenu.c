@@ -392,6 +392,11 @@ int main(int argc, char *argv[])
 	printf("%s", WMGetPropListDescription(RMenu, True));
 	puts("");
 
+	wfree(tmp);
+	wfree(theme_paths);
+	wfree(style_paths);
+	wfree(icon_paths);
+
 	return 0;
 }
 
