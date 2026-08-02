@@ -473,7 +473,7 @@ void animateResize(virtual_screen *vscr, int x, int y, int w, int h, int fx, int
 	(void) x;
 	(void) y;
 	(void) w;
-	(void) y;
+	(void) h;
 	(void) fx;
 	(void) fy;
 	(void) fw;
@@ -490,22 +490,18 @@ void animation_minimize(WWindow *wwin)
 	(void) wwin;
 }
 
-void animation_hide(WWindow *wwin, int icon_x, int icon_y, int width, int height)
+void animation_hide(WWindow *wwin, int icon_x, int icon_y)
 {
 	(void) wwin;
 	(void) icon_x;
 	(void) icon_y;
-	(void) width;
-	(void) height;
 }
 
-void animation_unhide(WWindow *wwin, int icon_x, int icon_y, int width, int height)
+void animation_unhide(WWindow *wwin, int icon_x, int icon_y)
 {
 	(void) wwin;
 	(void) icon_x;
 	(void) icon_y;
-	(void) width;
-	(void) height;
 }
 
 void animation_slide_window(Window win, int icon_x, int icon_y, int x, int y)
