@@ -402,7 +402,7 @@ void switchmenu_handle_notification_wwin(WMenu *menu, WWindow *wwin, const char 
 	} else if (strcmp(name, WMNChangedName) == 0) {
 		switchmenu_changeitem(menu, wwin);
 	} else if (strcmp(name, WMNChangedState) == 0) {
-		if (strcmp(data, "omnipresent"))
+		if (strcmp(data, "omnipresent") == 0)
 			switchmenu_changeworkspaceitem(menu, wwin);
 		else
 			switchmenu_changestate(menu, wwin);
