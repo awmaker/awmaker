@@ -415,10 +415,13 @@ static RImage *findBestIcon(unsigned long *data, unsigned long items)
 		/* get the current icon's size */
 		sx = (int) data[i];
 		sy = (int) data[i + 1];
-		if ((sx < 1) || (sy < 1))
+		if (sx < 1 || sy < 1 || sx > 4096 || sy > 4096)
 			break;
 
 		size = sx * sy + 2;
+		if ((unsigned long) size > items - i)
+			break;
+
 		/* check the size difference if it's not too large */
 		if ((sx <= wanted) && (sy <= wanted)) {
 			dx = wanted - sx;
