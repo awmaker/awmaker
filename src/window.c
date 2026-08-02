@@ -1964,12 +1964,19 @@ void wWindowConstrainSize(WWindow *wwin, unsigned int *nwidth, unsigned int *nhe
 	int baseH = 0;
 
 	if (wwin->normal_hints) {
-		winc = wwin->normal_hints->width_inc;
-		hinc = wwin->normal_hints->height_inc;
-		minW = wwin->normal_hints->min_width;
-		minH = wwin->normal_hints->min_height;
-		maxW = wwin->normal_hints->max_width;
-		maxH = wwin->normal_hints->max_height;
+		if (!wwin->flags.maximized) {
+			winc = wwin->normal_hints->width_inc;
+			hinc = wwin->normal_hints->height_inc;
+		}
+		if (wwin->normal_hints->min_width > minW)
+			minW = wwin->normal_hints->min_width;
+		if (wwin->normal_hints->min_height > minH)
+			minH = wwin->normal_hints->min_height;
+		if (wwin->normal_hints->max_width < maxW)
+			maxW = wwin->normal_hints->max_width;
+		if (wwin->normal_hints->max_height < maxH)
+			maxH = wwin->normal_hints->max_height;
+
 		if (wwin->normal_hints->flags & PAspect) {
 			minAX = wwin->normal_hints->min_aspect.x;
 			minAY = wwin->normal_hints->min_aspect.y;
@@ -1981,15 +1988,22 @@ void wWindowConstrainSize(WWindow *wwin, unsigned int *nwidth, unsigned int *nhe
 		baseH = wwin->normal_hints->base_height;
 	}
 
+	/* trust the mins provided by the client but not the maxs */
 	if (width < minW)
 		width = minW;
 	if (height < minH)
 		height = minH;
 
-	if (width > maxW)
-		width = maxW;
-	if (height > maxH)
-		height = maxH;
+	/* if only one dimension is over the top, set a default 4/3 ratio */
+	if (width > maxW && height < maxH)
+		width = height * 4 / 3;
+	else if (height > maxH && width < maxW)
+		height = width * 3 / 4;
+	else if (width > maxW && height > maxH) {
+		/* if both are over the top, set size to almost fullscreen */
+		height = wwin->vscr->screen_ptr->scr_height - 2 * wPreferences.icon_size;
+		width = wwin->vscr->screen_ptr->scr_width - 2 * wPreferences.icon_size;
+	}
 
 	/* aspect ratio code borrowed from olwm */
 	if (minAX > 0) {
@@ -2028,15 +2042,17 @@ void wWindowConstrainSize(WWindow *wwin, unsigned int *nwidth, unsigned int *nhe
 		}
 	}
 
-	if (baseW != 0)
-		width = (((width - baseW) / winc) * winc) + baseW;
-	else
-		width = (((width - minW) / winc) * winc) + minW;
+	if (!wwin->flags.maximized) {
+		if (baseW != 0)
+			width = (((width - baseW) / winc) * winc) + baseW;
+		else
+			width = (((width - minW) / winc) * winc) + minW;
 
-	if (baseH != 0)
-		height = (((height - baseH) / hinc) * hinc) + baseH;
-	else
-		height = (((height - minH) / hinc) * hinc) + minH;
+		if (baseH != 0)
+			height = (((height - baseH) / hinc) * hinc) + baseH;
+		else
+			height = (((height - minH) / hinc) * hinc) + minH;
+	}
 
 	/* broken stupid apps may cause preposterous values for these.. */
 	if (width > 0)
