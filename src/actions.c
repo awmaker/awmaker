@@ -507,6 +507,7 @@ void handleMaximize(WWindow *wwin, int directions)
 		else if (!wPreferences.alt_half_maximize)
 			wUnmaximizeWindow(wwin);
 
+		return;
 	} else if (!wPreferences.alt_half_maximize)
 		wUnmaximizeWindow(wwin);
 
