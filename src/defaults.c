@@ -1082,9 +1082,9 @@ WDefaultEntry optionList[] = {
 	{"MoveToLastWorkspaceKey", "None", NULL,
 	    &wPreferences.key.movetolastworkspace, getKeybind, setKeyGrab_movetolastworkspace, NULL, NULL, 1},
 	{"MoveToNextWorkspaceLayerKey", "None", NULL,
-	    &wPreferences.key.movetonextworkspace, getKeybind, setKeyGrab_movetonextworkspacelayer, NULL, NULL, 1},
+	    &wPreferences.key.movetonextworkspacelayer, getKeybind, setKeyGrab_movetonextworkspacelayer, NULL, NULL, 1},
 	{"MoveToPrevWorkspaceLayerKey", "None", NULL,
-	    &wPreferences.key.movetoprevworkspace, getKeybind, setKeyGrab_movetoprevworkspacelayer, NULL, NULL, 1},
+	    &wPreferences.key.movetoprevworkspacelayer, getKeybind, setKeyGrab_movetoprevworkspacelayer, NULL, NULL, 1},
 	{"WindowShortcut1Key", "None", NULL,
 	    &wPreferences.key.windowshortcut1, getKeybind, setKeyGrab_windowshortcut1, NULL, NULL, 1},
 	{"WindowShortcut2Key", "None", NULL,
@@ -4886,7 +4886,7 @@ static int setKeyGrab_movetonextworkspacelayer(virtual_screen *vscr)
 	WWindow *wwin;
 	char *value;
 
-	value = wPreferences.key.movetonextworkspace;
+	value = wPreferences.key.movetonextworkspacelayer;
 
 	set_keygrab(&shortcut, value);
 	wKeyBindings[WKBD_MOVE_NEXTWSLAYER] = shortcut;
@@ -4909,7 +4909,7 @@ static int setKeyGrab_movetoprevworkspacelayer(virtual_screen *vscr)
 	WWindow *wwin;
 	char *value;
 
-	value = wPreferences.key.movetoprevworkspace;
+	value = wPreferences.key.movetoprevworkspacelayer;
 
 	set_keygrab(&shortcut, value);
 	wKeyBindings[WKBD_MOVE_PREVWSLAYER] = shortcut;
