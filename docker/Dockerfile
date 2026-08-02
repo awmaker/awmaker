@@ -59,6 +59,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         x11proto-xinerama-dev \
     && rm -rf /var/lib/apt/lists/*
 
+# Test/runner apps useful inside the container (drawn on the host X server)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        xterm \
+        x11-apps \
+        x11-utils \
+        xfonts-base \
+    && rm -rf /var/lib/apt/lists/*
+
 # Optional image-format libraries + helper libs (auto-detected by configure)
 RUN apt-get update && apt-get install -y --no-install-recommends \
         libpng-dev \
