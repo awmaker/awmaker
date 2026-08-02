@@ -19,6 +19,7 @@
 #include <string.h>
 
 #include "WindowMaker.h"
+#include "wmspec.h"
 #include "framewin.h"
 #include "window.h"
 #include "client.h"
@@ -1868,7 +1869,7 @@ int wMouseMoveWindow(WWindow *wwin, XEvent *ev)
 			break;
 
 		case ButtonRelease:
-			if (event.xbutton.button != ev->xbutton.button)
+			if (!wwin->moveresize.active && (event.xbutton.button != ev->xbutton.button))
 				break;
 
 			if (started) {
@@ -1918,6 +1919,10 @@ int wMouseMoveWindow(WWindow *wwin, XEvent *ev)
 					/* get rid of the geometry window */
 					WMUnmapWidget(scr->gview);
 				}
+			}
+			if (wwin->moveresize.active) {
+				XUngrabPointer(dpy, CurrentTime);
+				wwin->moveresize.active = 0;
 			}
 			done = True;
 			break;
@@ -2068,6 +2073,29 @@ void wMouseResizeWindow(WWindow *wwin, XEvent *ev)
 	ry2 = fy + fh - 1;
 	shiftl = XKeysymToKeycode(dpy, XK_Shift_L);
 	shiftr = XKeysymToKeycode(dpy, XK_Shift_R);
+
+	if (wwin->moveresize.active) {
+		int direction = wwin->moveresize.resize_edge;
+
+		res = 0;
+		is_resizebar = 0;
+		if (direction == _NET_WM_MOVERESIZE_SIZE_TOP)
+			res |= UP;
+		else if (direction == _NET_WM_MOVERESIZE_SIZE_BOTTOM)
+			res |= DOWN;
+		else if (direction == _NET_WM_MOVERESIZE_SIZE_LEFT)
+			res |= LEFT;
+		else if (direction == _NET_WM_MOVERESIZE_SIZE_RIGHT)
+			res |= RIGHT;
+		else if (direction == _NET_WM_MOVERESIZE_SIZE_TOPLEFT)
+			res |= (UP | LEFT);
+		else if (direction == _NET_WM_MOVERESIZE_SIZE_TOPRIGHT)
+			res |= (UP | RIGHT);
+		else if (direction == _NET_WM_MOVERESIZE_SIZE_BOTTOMLEFT)
+			res |= (DOWN | LEFT);
+		else if (direction == _NET_WM_MOVERESIZE_SIZE_BOTTOMRIGHT)
+			res |= (DOWN | RIGHT);
+	}
 
 	while (1) {
 		WMMaskEvent(dpy, KeyPressMask | ButtonMotionMask
@@ -2225,7 +2253,7 @@ void wMouseResizeWindow(WWindow *wwin, XEvent *ev)
 			break;
 
 		case ButtonRelease:
-			if (event.xbutton.button != ev->xbutton.button)
+			if (!wwin->moveresize.active && (event.xbutton.button != ev->xbutton.button))
 				break;
 
 			if (started) {
@@ -2246,6 +2274,10 @@ void wMouseResizeWindow(WWindow *wwin, XEvent *ev)
 
 				wWindowConfigure(wwin, fx, fy, fw, fh - vert_border);
 				wWindowSynthConfigureNotify(wwin);
+			}
+			if (wwin->moveresize.active) {
+				XUngrabPointer(dpy, CurrentTime);
+				wwin->moveresize.active = 0;
 			}
 			return;
 
