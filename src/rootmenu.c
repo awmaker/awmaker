@@ -1692,12 +1692,8 @@ void OpenRootMenu(virtual_screen *vscr, int x, int y, int keyboard)
 {
 	WMenu *rootmenu = NULL;
 
-	if (!vscr->menu.root_menu)
-		vscr->menu.root_menu = create_rootmenu(vscr);
-
-	rootmenu = vscr->menu.root_menu;
-
-	if (rootmenu->flags.mapped) {
+	if (vscr->menu.root_menu && vscr->menu.root_menu->flags.mapped) {
+		rootmenu = vscr->menu.root_menu;
 		if (!rootmenu->flags.buttoned) {
 			switchmenu_destroy(vscr);
 		} else {
@@ -1711,6 +1707,22 @@ void OpenRootMenu(virtual_screen *vscr, int x, int y, int keyboard)
 		}
 		return;
 	}
+
+	/* Rebuild the root menu when it was never created or the WMRootMenu
+	 * definition changed on disk since it was last built, so that editing
+	 * the menu takes effect without restarting the WM. */
+	if (!vscr->menu.root_menu ||
+	    w_global.domain.root_menu->timestamp > vscr->menu.root_menu->timestamp) {
+		if (vscr->menu.root_menu)
+			rootmenu_destroy(vscr);
+		vscr->menu.root_menu = create_rootmenu(vscr);
+		if (vscr->menu.root_menu)
+			vscr->menu.root_menu->timestamp = w_global.domain.root_menu->timestamp;
+	}
+
+	rootmenu = vscr->menu.root_menu;
+	if (!rootmenu)
+		return;
 
 	vscr->menu.root_menu->x_pos = x;
 	vscr->menu.root_menu->y_pos = y;
