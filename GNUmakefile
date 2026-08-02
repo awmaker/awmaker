@@ -25,13 +25,16 @@
 
 .DEFAULT_GOAL := all
 
-.PHONY: all docker docker-clean
+.PHONY: all docker docker-run docker-clean
 
 all:
 	$(MAKE) -f Makefile all
 
 docker:
 	./docker/build.sh
+
+docker-run:
+	./script/docker-run.sh
 
 docker-clean:
 	rm -rf build-libs

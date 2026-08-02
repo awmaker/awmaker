@@ -39,6 +39,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         file \
         ca-certificates \
         git \
+        xauth \
     && rm -rf /var/lib/apt/lists/*
 
 # X11, fonts and required X extensions

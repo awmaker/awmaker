@@ -31,3 +31,21 @@ services:
       - -lc
     command:
       - script/docker-build.sh
+
+  # Run awmaker inside the container, drawing its windows on the macOS X
+  # server (XQuartz) over TCP. script/docker-run.sh launches a dedicated
+  # XQuartz server (no quartz-wm) and injects the X cookie into a temporary
+  # Xauthority that is mounted read-only here.
+  run:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: awmaker-builder
+    volumes:
+      - ..:/workspace/awmaker
+    working_dir: /workspace/awmaker
+    environment:
+      - MAKEFLAGS=--no-print-directory
+    entrypoint:
+      - /bin/bash
+      - -lc
