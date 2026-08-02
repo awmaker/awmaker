@@ -166,6 +166,14 @@ DISPLAY="host.docker.internal:$DISP" \
              # seticons, ...) on PATH. They are built into util/ as ELF binaries,
              # not system-installed.
              export PATH="/workspace/awmaker/util:$PATH"
+             # WPrefs (the configurator) is built as WPrefs.app/WPrefs but not
+             # installed. The root menu runs "WPrefs"; give it a wrapper that
+             # executes it from its source dir, so the runtime resource
+             # fallback (WPrefs.app/main.c: "." / "..") finds WPrefs.tiff.
+             mkdir -p "$HOME/bin"
+             printf "%s\n" "#!/bin/sh" "cd /workspace/awmaker/WPrefs.app && exec ./WPrefs \"\$@\"" > "$HOME/bin/WPrefs"
+             chmod +x "$HOME/bin/WPrefs"
+             export PATH="$HOME/bin:$PATH"
              xauth add "host.docker.internal:'$DISP'" MIT-MAGIC-COOKIE-1 "$AWMAKER_COOKIE"
              exec "/workspace/awmaker/'$AWMAKER_BIN'"' || true
 
