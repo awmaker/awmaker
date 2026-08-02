@@ -122,6 +122,14 @@ if ! lsof -iTCP:"$((6000 + DISP))" -sTCP:LISTEN >/dev/null 2>&1; then
     exit 1
 fi
 echo "==> XQuartz listening on TCP :$DISP"
+echo ""
+echo "    IMPORTANT: press Cmd-Option-A (View -> Full Screen) in the XQuartz"
+echo "    window NOW. awmaker is a window manager and places the dock/clip/"
+echo "    panels against the edges of the X root window. XQuartz starts in"
+echo "    'rootless' mode where that window is not shown, so everything would"
+echo "    appear scattered across the macOS desktop. Full Screen gives it a"
+echo "    contiguous surface so the dock and panels land on the screen edges."
+echo ""
 
 # --- Step 3: run awmaker in the container -----------------------------------
 # The container connects over TCP to host.docker.internal:$DISP, so its
