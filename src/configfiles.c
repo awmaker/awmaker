@@ -270,26 +270,26 @@ static Bool write_root_menu(const char *path)
 		WMPropList *bg = mk_menu("Background");
 
 		WMPropList *solid = mk_menu("Solid");
-		menu_add(solid, mk_entry("Black", "EXEC", "wdwrite WindowMaker WorkspaceBack (solid, black)"));
-		menu_add(solid, mk_entry("Blue", "EXEC", "wdwrite WindowMaker WorkspaceBack (solid, \"#505075\")"));
-		menu_add(solid, mk_entry("Indigo", "EXEC", "wdwrite WindowMaker WorkspaceBack (solid, \"#243e6c\")"));
-		menu_add(solid, mk_entry("Bluemarine", "EXEC", "wdwrite WindowMaker WorkspaceBack (solid, \"#224477\")"));
-		menu_add(solid, mk_entry("Deep Blue", "EXEC", "wdwrite WindowMaker WorkspaceBack (solid, \"#180090\")"));
-		menu_add(solid, mk_entry("Purple", "EXEC", "wdwrite WindowMaker WorkspaceBack (solid, \"#554466\")"));
-		menu_add(solid, mk_entry("Wheat", "EXEC", "wdwrite WindowMaker WorkspaceBack (solid, wheat4)"));
-		menu_add(solid, mk_entry("Dark Gray", "EXEC", "wdwrite WindowMaker WorkspaceBack (solid, \"#333340\")"));
-		menu_add(solid, mk_entry("Wine", "EXEC", "wdwrite WindowMaker WorkspaceBack (solid, \"#400020\")"));
+		menu_add(solid, mk_entry("Black", "EXEC", "wdwrite WindowMaker WorkspaceBack '(solid, black)'"));
+		menu_add(solid, mk_entry("Blue", "EXEC", "wdwrite WindowMaker WorkspaceBack '(solid, \"#505075\")'"));
+		menu_add(solid, mk_entry("Indigo", "EXEC", "wdwrite WindowMaker WorkspaceBack '(solid, \"#243e6c\")'"));
+		menu_add(solid, mk_entry("Bluemarine", "EXEC", "wdwrite WindowMaker WorkspaceBack '(solid, \"#224477\")'"));
+		menu_add(solid, mk_entry("Deep Blue", "EXEC", "wdwrite WindowMaker WorkspaceBack '(solid, \"#180090\")'"));
+		menu_add(solid, mk_entry("Purple", "EXEC", "wdwrite WindowMaker WorkspaceBack '(solid, \"#554466\")'"));
+		menu_add(solid, mk_entry("Wheat", "EXEC", "wdwrite WindowMaker WorkspaceBack '(solid, wheat4)'"));
+		menu_add(solid, mk_entry("Dark Gray", "EXEC", "wdwrite WindowMaker WorkspaceBack '(solid, \"#333340\")'"));
+		menu_add(solid, mk_entry("Wine", "EXEC", "wdwrite WindowMaker WorkspaceBack '(solid, \"#400020\")'"));
 		menu_add(bg, solid);
 
 		WMPropList *grad = mk_menu("Gradient");
-		menu_add(grad, mk_entry("Sunset", "EXEC", "wdwrite WindowMaker WorkspaceBack (mvgradient, deepskyblue4, black, deepskyblue4, tomato4)"));
-		menu_add(grad, mk_entry("Sky", "EXEC", "wdwrite WindowMaker WorkspaceBack (vgradient, blue4, white)"));
-		menu_add(grad, mk_entry("Blue Shades", "EXEC", "wdwrite WindowMaker WorkspaceBack (vgradient, \"#7080a5\", \"#101020\")"));
-		menu_add(grad, mk_entry("Indigo Shades", "EXEC", "wdwrite WindowMaker WorkspaceBack (vgradient, \"#746ebc\", \"#242e4c\")"));
-		menu_add(grad, mk_entry("Purple Shades", "EXEC", "wdwrite WindowMaker WorkspaceBack (vgradient, \"#654c66\", \"#151426\")"));
-		menu_add(grad, mk_entry("Wheat Shades", "EXEC", "wdwrite WindowMaker WorkspaceBack (vgradient, \"#a09060\", \"#302010\")"));
-		menu_add(grad, mk_entry("Grey Shades", "EXEC", "wdwrite WindowMaker WorkspaceBack (vgradient, \"#636380\", \"#131318\")"));
-		menu_add(grad, mk_entry("Wine Shades", "EXEC", "wdwrite WindowMaker WorkspaceBack (vgradient, \"#600040\", \"#180010\")"));
+		menu_add(grad, mk_entry("Sunset", "EXEC", "wdwrite WindowMaker WorkspaceBack '(mvgradient, deepskyblue4, black, deepskyblue4, tomato4)'"));
+		menu_add(grad, mk_entry("Sky", "EXEC", "wdwrite WindowMaker WorkspaceBack '(vgradient, blue4, white)'"));
+		menu_add(grad, mk_entry("Blue Shades", "EXEC", "wdwrite WindowMaker WorkspaceBack '(vgradient, \"#7080a5\", \"#101020\")'"));
+		menu_add(grad, mk_entry("Indigo Shades", "EXEC", "wdwrite WindowMaker WorkspaceBack '(vgradient, \"#746ebc\", \"#242e4c\")'"));
+		menu_add(grad, mk_entry("Purple Shades", "EXEC", "wdwrite WindowMaker WorkspaceBack '(vgradient, \"#654c66\", \"#151426\")'"));
+		menu_add(grad, mk_entry("Wheat Shades", "EXEC", "wdwrite WindowMaker WorkspaceBack '(vgradient, \"#a09060\", \"#302010\")'"));
+		menu_add(grad, mk_entry("Grey Shades", "EXEC", "wdwrite WindowMaker WorkspaceBack '(vgradient, \"#636380\", \"#131318\")'"));
+		menu_add(grad, mk_entry("Wine Shades", "EXEC", "wdwrite WindowMaker WorkspaceBack '(vgradient, \"#600040\", \"#180010\")'"));
 		menu_add(bg, grad);
 
 		/* OPEN_MENU of the user background dir with a command per scaling mode. */
