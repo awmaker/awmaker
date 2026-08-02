@@ -209,7 +209,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/WPrefs
 %{_bindir}/wkdemenu.pl
 %{_bindir}/wm-oldmenu2new
-%{_bindir}/wmaker.inst
 %{_bindir}/wxcopy
 %{_bindir}/wxpaste
 %{_bindir}/wmiv

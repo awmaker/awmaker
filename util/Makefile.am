@@ -7,9 +7,9 @@ pkgdatadir  = $(datadir)/@PACKAGE@
 bin_PROGRAMS = wxcopy wxpaste wdwrite wdread getstyle setstyle convertfonts \
 	seticons geticonset wmsetbg wmagnify wmgenmenu wmmenugen wmiv
 
-bin_SCRIPTS = wmaker.inst wm-oldmenu2new wkdemenu.pl
+bin_SCRIPTS = wm-oldmenu2new wkdemenu.pl
 
-EXTRA_DIST = wmaker.inst.in bughint wm-oldmenu2new wkdemenu.pl
+EXTRA_DIST = bughint wm-oldmenu2new wkdemenu.pl
 
 AM_CPPFLAGS = \
 	 $(DFLAGS) $(WINGs_CFLAGS) $(WRASTER_CFLAGS) \
@@ -74,13 +74,3 @@ wmiv_LDADD = \
 	@GFXLIBS@ $(PTHREAD_CFLAGS) $(PTHREAD_LIBS) $(LIBEXIF)
 
 wmiv_SOURCES = wmiv.c wmiv.h
-
-CLEANFILES = wmaker.inst
-
-wmaker.inst: $(srcdir)/wmaker.inst.in ./Makefile
-	$(AM_V_GEN)sed -e "s|#pkgdatadir#|$(pkgdatadir)|" \
-		-e "s|#sysconfdir#|$(sysconfdir)/WindowMaker|" \
-		-e "s|#version#|$(VERSION)|" \
-		-e "s|#bindir#|$(bindir)|" \
-			$(srcdir)/wmaker.inst.in >wmaker.inst ; \
-	chmod 755 wmaker.inst

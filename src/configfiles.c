@@ -27,8 +27,8 @@
 /*
  * Create the user configuration files (and the directory tree that holds
  * them) when they are missing. This lets awmaker start with a minimal but
- * valid configuration without requiring an external installer script
- * (wmaker.inst) or pre-existing files.
+ * valid configuration without requiring an external installer script or
+ * pre-existing files.
  *
  * The files written here mirror the ones the old installer would have
  * installed; values that are not explicitly present fall back to the defaults
@@ -131,77 +131,216 @@ static Bool write_exitscript(const char *path)
 }
 
 /*
- * Minimal WMRootMenu: a root system menu with a terminal, the WPrefs
- * configurator, workspaces and a commands/session section.
+ * Helpers to build the root menu plist. They mirror the reference text menus
+ * (WindowMaker/menu + appearance.menu + background.menu) translated into the
+ * WMRootMenu plist format that awmaker reads (rootmenu.c configureMenu).
+ */
+static WMPropList *mk_entry(const char *title, const char *cmd, const char *params)
+{
+	WMPropList *e;
+
+	if (params)
+		e = WMCreatePLArray(WMCreatePLString(title),
+				    WMCreatePLString(cmd),
+				    WMCreatePLString(params), NULL);
+	else
+		e = WMCreatePLArray(WMCreatePLString(title),
+				    WMCreatePLString(cmd), NULL);
+	return e;
+}
+
+static WMPropList *mk_menu(const char *title)
+{
+	return WMCreatePLArray(WMCreatePLString(title), NULL);
+}
+
+/* Append `item' to `menu' then release the caller's reference. */
+static void menu_add(WMPropList *menu, WMPropList *item)
+{
+	WMAddToPLArray(menu, item);
+	WMReleasePropList(item);
+}
+
+/*
+ * WMRootMenu (plist). Replicates the reference application/background theme
+ * menus: an Info panel, launchers, workspaces, applications, utils, selection,
+ * commands, an Appearance section (background solids/gradients/images plus
+ * styles/themes/icon-sets via OPEN_MENU of the user data dirs) and a session
+ * section.
  */
 static Bool write_root_menu(const char *path)
 {
-	WMPropList *menu, *sub, *entry;
+	WMPropList *menu, *sub;
+	const char *usr = wusergnusteppath();
 	Bool ok;
 
-	menu = WMCreatePLArray(WMCreatePLString(_("Window Maker")), NULL);
+	menu = mk_menu("Window Maker");
 
-	entry = WMCreatePLArray(WMCreatePLString(_("XTerm")),
-				WMCreatePLString("EXEC"),
-				WMCreatePLString("xterm -sb"), NULL);
-	WMAddToPLArray(menu, entry);
-	WMReleasePropList(entry);
+	/* Info */
+	sub = mk_menu("Info");
+	menu_add(sub, mk_entry("Info Panel", "INFO_PANEL", NULL));
+	menu_add(sub, mk_entry("Legal", "LEGAL_PANEL", NULL));
+	menu_add(sub, mk_entry("System Console", "EXEC", "xconsole"));
+	menu_add(sub, mk_entry("System Load", "SHEXEC", "xosview || xload"));
+	menu_add(sub, mk_entry("Process List", "EXEC", "xterm -e top"));
+	menu_add(sub, mk_entry("Manual Browser", "EXEC", "xman"));
+	menu_add(menu, sub);
 
-	entry = WMCreatePLArray(WMCreatePLString(_("Configure Window Maker")),
-				WMCreatePLString("EXEC"),
-				WMCreatePLString("WPrefs"), NULL);
-	WMAddToPLArray(menu, entry);
-	WMReleasePropList(entry);
+	menu_add(menu, mk_entry("Run...", "SHEXEC", "%a(Run,Type command to run:)"));
+	menu_add(menu, mk_entry("XTerm", "EXEC", "xterm -sb"));
+	menu_add(menu, mk_entry("Mozilla Firefox", "EXEC", "firefox"));
+	menu_add(menu, mk_entry("Workspaces", "WORKSPACE_MENU", NULL));
 
-	entry = WMCreatePLArray(WMCreatePLString(_("Workspaces")),
-				WMCreatePLString("WORKSPACE_MENU"), NULL);
-	WMAddToPLArray(menu, entry);
-	WMReleasePropList(entry);
+	/* Applications */
+	sub = mk_menu("Applications");
+	menu_add(sub, mk_entry("Gimp", "SHEXEC", "gimp >/dev/null"));
+	menu_add(sub, mk_entry("Ghostview", "EXEC", "ghostview %a(GhostView,Enter file to view)"));
+	menu_add(sub, mk_entry("Xpdf", "EXEC", "xpdf %a(Xpdf,Enter PDF to view)"));
+	menu_add(sub, mk_entry("Abiword", "EXEC", "abiword"));
+	menu_add(sub, mk_entry("Dia", "EXEC", "dia"));
 
-	sub = WMCreatePLArray(WMCreatePLString(_("Commands")), NULL);
+	{
+		WMPropList *oo = mk_menu("OpenOffice.org");
+		menu_add(oo, mk_entry("OpenOffice.org", "EXEC", "ooffice"));
+		menu_add(oo, mk_entry("Writer", "EXEC", "oowriter"));
+		menu_add(oo, mk_entry("Spreadsheet", "EXEC", "oocalc"));
+		menu_add(oo, mk_entry("Draw", "EXEC", "oodraw"));
+		menu_add(oo, mk_entry("Impress", "EXEC", "ooimpress"));
+		menu_add(sub, oo);
+	}
 
-	entry = WMCreatePLArray(WMCreatePLString(_("Hide Others")),
-				WMCreatePLString("HIDE_OTHERS"), NULL);
-	WMAddToPLArray(sub, entry);
-	WMReleasePropList(entry);
+	{
+		WMPropList *ed = mk_menu("Editors");
+		menu_add(ed, mk_entry("XEmacs", "EXEC", "xemacs"));
+		menu_add(ed, mk_entry("Emacs", "EXEC", "emacs"));
+		menu_add(ed, mk_entry("XJed", "EXEC", "xjed"));
+		menu_add(ed, mk_entry("VI", "EXEC", "xterm -e vi"));
+		menu_add(ed, mk_entry("GVIM", "EXEC", "gvim"));
+		menu_add(ed, mk_entry("NEdit", "EXEC", "nedit"));
+		menu_add(ed, mk_entry("Xedit", "EXEC", "xedit"));
+		menu_add(sub, ed);
+	}
 
-	entry = WMCreatePLArray(WMCreatePLString(_("Show All")),
-				WMCreatePLString("SHOW_ALL"), NULL);
-	WMAddToPLArray(sub, entry);
-	WMReleasePropList(entry);
+	{
+		WMPropList *mm = mk_menu("Multimedia");
+		WMPropList *xm = mk_menu("XMMS");
+		menu_add(xm, mk_entry("XMMS", "EXEC", "xmms"));
+		menu_add(xm, mk_entry("XMMS play/pause", "EXEC", "xmms -t"));
+		menu_add(xm, mk_entry("XMMS stop", "EXEC", "xmms -s"));
+		menu_add(mm, xm);
+		menu_add(mm, mk_entry("Xine video player", "EXEC", "xine"));
+		menu_add(mm, mk_entry("MPlayer", "EXEC", "mplayer"));
+		menu_add(sub, mm);
+	}
+	menu_add(menu, sub);
 
-	entry = WMCreatePLArray(WMCreatePLString(_("Arrange Icons")),
-				WMCreatePLString("ARRANGE_ICONS"), NULL);
-	WMAddToPLArray(sub, entry);
-	WMReleasePropList(entry);
+	/* Utils */
+	sub = mk_menu("Utils");
+	menu_add(sub, mk_entry("Calculator", "EXEC", "xcalc"));
+	menu_add(sub, mk_entry("Window Properties", "SHEXEC",
+			       "xprop | xmessage -center -title xprop -file -"));
+	menu_add(sub, mk_entry("Font Chooser", "EXEC", "xfontsel"));
+	menu_add(sub, mk_entry("Magnify", "EXEC", "wmagnify"));
+	menu_add(sub, mk_entry("Colormap", "EXEC", "xcmap"));
+	menu_add(sub, mk_entry("Kill X Application", "EXEC", "xkill"));
+	menu_add(menu, sub);
 
-	entry = WMCreatePLArray(WMCreatePLString(_("Refresh")),
-				WMCreatePLString("REFRESH"), NULL);
-	WMAddToPLArray(sub, entry);
-	WMReleasePropList(entry);
+	/* Selection */
+	sub = mk_menu("Selection");
+	menu_add(sub, mk_entry("Copy", "SHEXEC", "echo %s | wxcopy"));
+	menu_add(sub, mk_entry("Mail To", "EXEC", "xterm -name mail -T Pine -e pine %s"));
+	menu_add(sub, mk_entry("Navigate", "EXEC", "netscape %s"));
+	menu_add(sub, mk_entry("Search in Manual", "SHEXEC",
+			       "man %s | xless || echo \"no manual page for %s\""));
+	menu_add(menu, sub);
 
-	entry = WMCreatePLArray(WMCreatePLString(_("Save Session")),
-				WMCreatePLString("SAVE_SESSION"), NULL);
-	WMAddToPLArray(sub, entry);
-	WMReleasePropList(entry);
+	/* Commands */
+	sub = mk_menu("Commands");
+	menu_add(sub, mk_entry("Hide Others", "HIDE_OTHERS", NULL));
+	menu_add(sub, mk_entry("Show All", "SHOW_ALL", NULL));
+	menu_add(sub, mk_entry("Arrange Icons", "ARRANGE_ICONS", NULL));
+	menu_add(sub, mk_entry("Refresh", "REFRESH", NULL));
+	menu_add(sub, mk_entry("Lock", "EXEC", "xlock -allowroot -usefirst"));
+	menu_add(menu, sub);
 
-	entry = WMCreatePLArray(WMCreatePLString(_("Clear Session")),
-				WMCreatePLString("CLEAR_SESSION"), NULL);
-	WMAddToPLArray(sub, entry);
-	WMReleasePropList(entry);
+	/* Appearance */
+	sub = mk_menu("Appearance");
 
-	entry = WMCreatePLArray(WMCreatePLString(_("Restart")),
-				WMCreatePLString("RESTART"), NULL);
-	WMAddToPLArray(sub, entry);
-	WMReleasePropList(entry);
+	{
+		WMPropList *bg = mk_menu("Background");
 
-	entry = WMCreatePLArray(WMCreatePLString(_("Exit...")),
-				WMCreatePLString("EXIT"), NULL);
-	WMAddToPLArray(sub, entry);
-	WMReleasePropList(entry);
+		WMPropList *solid = mk_menu("Solid");
+		menu_add(solid, mk_entry("Black", "EXEC", "wdwrite WindowMaker WorkspaceBack (solid, black)"));
+		menu_add(solid, mk_entry("Blue", "EXEC", "wdwrite WindowMaker WorkspaceBack (solid, \"#505075\")"));
+		menu_add(solid, mk_entry("Indigo", "EXEC", "wdwrite WindowMaker WorkspaceBack (solid, \"#243e6c\")"));
+		menu_add(solid, mk_entry("Bluemarine", "EXEC", "wdwrite WindowMaker WorkspaceBack (solid, \"#224477\")"));
+		menu_add(solid, mk_entry("Deep Blue", "EXEC", "wdwrite WindowMaker WorkspaceBack (solid, \"#180090\")"));
+		menu_add(solid, mk_entry("Purple", "EXEC", "wdwrite WindowMaker WorkspaceBack (solid, \"#554466\")"));
+		menu_add(solid, mk_entry("Wheat", "EXEC", "wdwrite WindowMaker WorkspaceBack (solid, wheat4)"));
+		menu_add(solid, mk_entry("Dark Gray", "EXEC", "wdwrite WindowMaker WorkspaceBack (solid, \"#333340\")"));
+		menu_add(solid, mk_entry("Wine", "EXEC", "wdwrite WindowMaker WorkspaceBack (solid, \"#400020\")"));
+		menu_add(bg, solid);
 
-	WMAddToPLArray(menu, sub);
-	WMReleasePropList(sub);
+		WMPropList *grad = mk_menu("Gradient");
+		menu_add(grad, mk_entry("Sunset", "EXEC", "wdwrite WindowMaker WorkspaceBack (mvgradient, deepskyblue4, black, deepskyblue4, tomato4)"));
+		menu_add(grad, mk_entry("Sky", "EXEC", "wdwrite WindowMaker WorkspaceBack (vgradient, blue4, white)"));
+		menu_add(grad, mk_entry("Blue Shades", "EXEC", "wdwrite WindowMaker WorkspaceBack (vgradient, \"#7080a5\", \"#101020\")"));
+		menu_add(grad, mk_entry("Indigo Shades", "EXEC", "wdwrite WindowMaker WorkspaceBack (vgradient, \"#746ebc\", \"#242e4c\")"));
+		menu_add(grad, mk_entry("Purple Shades", "EXEC", "wdwrite WindowMaker WorkspaceBack (vgradient, \"#654c66\", \"#151426\")"));
+		menu_add(grad, mk_entry("Wheat Shades", "EXEC", "wdwrite WindowMaker WorkspaceBack (vgradient, \"#a09060\", \"#302010\")"));
+		menu_add(grad, mk_entry("Grey Shades", "EXEC", "wdwrite WindowMaker WorkspaceBack (vgradient, \"#636380\", \"#131318\")"));
+		menu_add(grad, mk_entry("Wine Shades", "EXEC", "wdwrite WindowMaker WorkspaceBack (vgradient, \"#600040\", \"#180010\")"));
+		menu_add(bg, grad);
+
+		/* OPEN_MENU of the user background dir with a command per scaling mode. */
+		WMPropList *imgs = mk_menu("Images");
+		char bg_buf[1024];
+		snprintf(bg_buf, sizeof(bg_buf), "-noext %s/Library/WindowMaker/Backgrounds WITH wmsetbg -u -t", usr);
+		menu_add(imgs, mk_entry("Tiled", "OPEN_MENU", bg_buf));
+		snprintf(bg_buf, sizeof(bg_buf), "-noext %s/Library/WindowMaker/Backgrounds WITH wmsetbg -u -s", usr);
+		menu_add(imgs, mk_entry("Scaled", "OPEN_MENU", bg_buf));
+		snprintf(bg_buf, sizeof(bg_buf), "-noext %s/Library/WindowMaker/Backgrounds WITH wmsetbg -u -e", usr);
+		menu_add(imgs, mk_entry("Centered", "OPEN_MENU", bg_buf));
+		snprintf(bg_buf, sizeof(bg_buf), "-noext %s/Library/WindowMaker/Backgrounds WITH wmsetbg -u -a", usr);
+		menu_add(imgs, mk_entry("Maximized", "OPEN_MENU", bg_buf));
+		snprintf(bg_buf, sizeof(bg_buf), "-noext %s/Library/WindowMaker/Backgrounds WITH wmsetbg -u -f", usr);
+		menu_add(imgs, mk_entry("Filled", "OPEN_MENU", bg_buf));
+		menu_add(bg, imgs);
+
+		menu_add(sub, bg);
+	}
+
+	/* themes + icon sets via OPEN_MENU of the user data dirs */
+	{
+		char buf[1024];
+		snprintf(buf, sizeof(buf), "-noext %s/Library/WindowMaker/Styles WITH setstyle", usr);
+		menu_add(sub, mk_entry("Styles", "OPEN_MENU", buf));
+		snprintf(buf, sizeof(buf), "-noext %s/Library/WindowMaker/Themes WITH setstyle", usr);
+		menu_add(sub, mk_entry("Themes", "OPEN_MENU", buf));
+		snprintf(buf, sizeof(buf), "-noext %s/Library/WindowMaker/IconSets WITH seticons", usr);
+		menu_add(sub, mk_entry("Icon Sets", "OPEN_MENU", buf));
+	}
+
+	{
+		char buf[1024];
+		snprintf(buf, sizeof(buf), "geticonset %s/Library/WindowMaker/IconSets/%%a(IconSet name)", usr);
+		menu_add(sub, mk_entry("Save IconSet", "EXEC", buf));
+		snprintf(buf, sizeof(buf), "getstyle -p %s/Library/WindowMaker/Themes/%%a(Theme name)", usr);
+		menu_add(sub, mk_entry("Save Theme", "EXEC", buf));
+	}
+
+	menu_add(sub, mk_entry("Preferences Utility", "EXEC", "WPrefs"));
+	menu_add(menu, sub);
+
+	/* Session */
+	sub = mk_menu("Session");
+	menu_add(sub, mk_entry("Save Session", "SAVE_SESSION", NULL));
+	menu_add(sub, mk_entry("Clear Session", "CLEAR_SESSION", NULL));
+	menu_add(sub, mk_entry("Restart Window Maker", "RESTART", NULL));
+	menu_add(sub, mk_entry("Start BlackBox", "RESTART", "blackbox"));
+	menu_add(sub, mk_entry("Start IceWM", "RESTART", "icewm"));
+	menu_add(sub, mk_entry("Exit", "EXIT", NULL));
+	menu_add(menu, sub);
 
 	ok = write_file_if_missing(path, menu);
 	WMReleasePropList(menu);
