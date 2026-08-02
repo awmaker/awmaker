@@ -414,7 +414,24 @@ static void startup_set_defaults(void)
 #endif
 
 #ifdef USE_RANDR
-	w_global.xext.randr.supported = XRRQueryExtension(dpy, &w_global.xext.randr.event_base, &foo);
+	{
+		int rr_major = 0, rr_minor = 0;
+		Bool rr_ext = XRRQueryExtension(dpy, &w_global.xext.randr.event_base, &foo);
+		Bool rr_ver = rr_ext && XRRQueryVersion(dpy, &rr_major, &rr_minor);
+
+		if (rr_ver && (rr_major > 1 || (rr_major == 1 && rr_minor >= 3))) {
+			w_global.xext.randr.supported = 1;
+		} else {
+			w_global.xext.randr.supported = 0;
+			if (!rr_ext)
+				wwarning(_("RandR extension is not available"));
+			else if (!rr_ver)
+				wwarning(_("RandR version check failed, RandR disabled"));
+			else
+				wwarning(_("RandR version %d.%d found but RandR version >=1.3 required"),
+					 rr_major, rr_minor);
+		}
+	}
 #endif
 
 #ifdef KEEP_XKB_LOCK_STATUS
