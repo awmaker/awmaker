@@ -2006,6 +2006,25 @@ static int getEnum(WDefaultEntry *entry, WMPropList *value, void *addr)
 	return True;
 }
 
+static void free_defstruct(defstruct *ds)
+{
+	if (ds) {
+		wfree(ds->defvalue);
+		wfree(ds->value);
+		wfree(ds);
+	}
+}
+
+static void free_defstructpl(defstructpl *ds)
+{
+	if (ds) {
+		wfree(ds->key);
+		WMReleasePropList(ds->defvalue);
+		WMReleasePropList(ds->value);
+		wfree(ds);
+	}
+}
+
 static int getTexture(WDefaultEntry *entry, WMPropList *value, void *addr)
 {
 	defstructpl *defstruct;
@@ -2030,7 +2049,9 @@ static int getTexture(WDefaultEntry *entry, WMPropList *value, void *addr)
 	defstruct->value = name;
 	defstruct->defvalue = defname;
 
-	/* TODO: We need free the previous memory, if used */
+	/* Free the previous memory, if used */
+	if (addr && *(defstructpl **)addr)
+		free_defstructpl(*(defstructpl **)addr);
 	if (addr)
 		*(defstructpl **)addr = defstruct;
 
@@ -2145,6 +2166,9 @@ static int getFont(WDefaultEntry *entry, WMPropList *value, void *addr)
 	fontname = wmalloc(len + sizeof(char *));
 	snprintf(fontname, len, "%s", val);
 
+	/* Free the previous memory, if used */
+	if (addr && *(char **)addr)
+		wfree(*(char **)addr);
 	if (addr)
 		*(char **)addr = fontname;
 
@@ -2177,7 +2201,9 @@ static int getColor(WDefaultEntry *entry, WMPropList *value, void *addr)
 	color->value = colorname;
 	color->defvalue = def_colorname;
 
-	/* TODO: We need free the previous memory, if used */
+	/* Free the previous memory, if used */
+	if (addr && *(defstruct **)addr)
+		free_defstruct(*(defstruct **)addr);
 	if (addr)
 		*(defstruct **)addr = color;
 
@@ -2473,7 +2499,13 @@ static int getCursor(WDefaultEntry *entry, WMPropList *value, void *addr)
 	defstruct->value = cursorname;
 	defstruct->defvalue = defcursorname;
 
-	/* TODO: We need free the previous memory, if used */
+	/* Free the previous memory, if used (this defstruct has no ->key) */
+	if (addr && *(defstructpl **)addr) {
+		defstructpl *old = *(defstructpl **)addr;
+		WMReleasePropList(old->defvalue);
+		WMReleasePropList(old->value);
+		wfree(old);
+	}
 	if (addr)
 		*(defstructpl **)addr = defstruct;
 
