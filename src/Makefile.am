@@ -26,6 +26,7 @@ awmaker_SOURCES = 	\
 	clip.c \
 	colormap.c \
 	colormap.h \
+	configfiles.c \
 	cycling.c \
 	cycling.h \
 	def_pixmaps.h \

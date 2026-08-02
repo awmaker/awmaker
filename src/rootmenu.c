@@ -1657,11 +1657,13 @@ WMenu *create_rootmenu(virtual_screen *vscr)
 	rootmenu_setup_switchmenu_notif();
 
 	definition = w_global.domain.root_menu->dictionary;
-	if (!definition)
-		return NULL;
-
-	if (!WMIsPLArray(definition))
-		return NULL;
+	if (!definition || !WMIsPLArray(definition)) {
+		/* No usable root-menu definition (file missing or malformed): fall
+		 * back to the built-in minimal menu instead of returning NULL, which
+		 * would make restore_rootmenu() dereference a NULL menu and crash. */
+		menu = makeDefaultMenu(vscr);
+		return menu;
+	}
 
 	menu = configureMenu(vscr, definition);
 	if (!menu)

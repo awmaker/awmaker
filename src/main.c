@@ -329,11 +329,11 @@ static void check_defaults(void)
 	if (access(path, R_OK) != 0) {
 		wwarning(_("could not find user GNUstep directory (%s)."), path);
 
-		if (system("wmaker.inst --batch") != 0)
-			wwarning(_("There was an error while creating GNUstep directory, please "
-				   "make sure you have installed Window Maker correctly and run wmaker.inst"));
-		else
+		if (wCreateDefaultConfig())
 			wwarning(_("%s directory created with default configuration."), path);
+		else
+			wwarning(_("There was an error while creating the GNUstep directory. "
+				   "awmaker will continue with the built-in defaults."));
 	}
 
 	wfree(path);
