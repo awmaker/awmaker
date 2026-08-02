@@ -133,8 +133,9 @@ static char *findUniqueName(virtual_screen *vscr, const char *instance_basename)
 		already_in_use = False;
 
 		for (dc = vscr->drawer.drawers; dc != NULL; dc = dc->next) {
-			if (!strncmp(dc->adrawer->icon_array[0]->wm_instance, buffer,
-					sizeof buffer)) {
+			if (dc->adrawer->icon_array[0] && dc->adrawer->icon_array[0]->wm_instance &&
+			    !strncmp(dc->adrawer->icon_array[0]->wm_instance, buffer,
+				     sizeof buffer)) {
 				already_in_use = True;
 				break;
 			}
