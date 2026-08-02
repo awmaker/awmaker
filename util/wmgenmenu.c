@@ -519,7 +519,7 @@ noreturn void print_help(int print_usage, int exitval)
 {
 	printf("Usage: %s [-h] [-v]\n", prog_name);
 	if (print_usage) {
-		puts("Writes a menu structure usable as ~/" GSUSER_SUBDIR "/" USERDATA_SUBDIR "/WMRootMenu to stdout");
+		puts("Writes a menu structure usable as ~/" GSUSER_SUBDIR "/" DEFAULTS_SUBDIR "/WMRootMenu to stdout");
 		puts("");
 		puts("  -h, --help           display this help and exit");
 		puts("  -v, --version        output version information and exit");
