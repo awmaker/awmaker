@@ -144,4 +144,10 @@ wmlib/wmlib.pc
 # Some text editors generate backup files
 *~
 
+# Shared libraries (WINGs, wrlib, wmlib) are provided by the
+# `third_party/wmaker-crm` submodule. They are built and installed into the
+# local `build-libs/` prefix (gitignored) by `script/build-libs.sh`, and
+# awmaker: links against them via pkg-config. Nothing is kept in the tree root.
+/build-libs/
+
 .pc

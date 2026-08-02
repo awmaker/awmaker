@@ -12,58 +12,56 @@ bin_SCRIPTS = wmaker.inst wm-oldmenu2new wkdemenu.pl
 EXTRA_DIST = wmaker.inst.in bughint wm-oldmenu2new wkdemenu.pl
 
 AM_CPPFLAGS = \
-	 $(DFLAGS) -I$(top_srcdir)/WINGs -I$(top_builddir)/wrlib \
+	 $(DFLAGS) $(WINGs_CFLAGS) $(WRASTER_CFLAGS) \
 	@HEADER_SEARCH_PATH@ \
 	-DETCDIR=\"sysconfdir\" -DDATADIR=\"pkgdatadir\"
 
 liblist= @LIBRARY_SEARCH_PATH@ @INTLIBS@
 
-wdwrite_LDADD = $(top_builddir)/WINGs/libWUtil.la $(liblist)
+wdwrite_LDADD = $(WINGs_LIBS) $(liblist)
 
-wdread_LDADD = $(top_builddir)/WINGs/libWUtil.la $(liblist)
+wdread_LDADD = $(WINGs_LIBS) $(liblist)
 
 wxcopy_LDADD = @XLFLAGS@ @XLIBS@
 
 wxpaste_LDADD = @XLFLAGS@ @XLIBS@
 
-getstyle_LDADD = $(top_builddir)/WINGs/libWUtil.la $(liblist)
+getstyle_LDADD = $(WINGs_LIBS) $(liblist)
 
 getstyle_SOURCES = getstyle.c fontconv.c common.h
 
 setstyle_LDADD = \
-	$(top_builddir)/WINGs/libWUtil.la \
+	$(WINGs_LIBS) \
 	@XLFLAGS@ @XLIBS@ $(liblist)
 
 setstyle_SOURCES = setstyle.c fontconv.c common.h
 
-convertfonts_LDADD = $(top_builddir)/WINGs/libWUtil.la $(liblist)
+convertfonts_LDADD = $(WINGs_LIBS) $(liblist)
 
 convertfonts_SOURCES = convertfonts.c fontconv.c common.h
 
-seticons_LDADD= $(top_builddir)/WINGs/libWUtil.la $(liblist)
+seticons_LDADD= $(WINGs_LIBS) $(liblist)
 
-geticonset_LDADD= $(top_builddir)/WINGs/libWUtil.la $(liblist)
+geticonset_LDADD= $(WINGs_LIBS) $(liblist)
 
 wmagnify_LDADD = \
-	$(top_builddir)/WINGs/libWINGs.la \
-	$(top_builddir)/WINGs/libWUtil.la \
-	$(top_builddir)/wrlib/libwraster.la \
+	$(WINGs_LIBS) \
+	$(WRASTER_LIBS) \
 	@XLFLAGS@ @XLIBS@ @INTLIBS@
 
 wmsetbg_LDADD = \
-	$(top_builddir)/WINGs/libWINGs.la \
-	$(top_builddir)/WINGs/libWUtil.la \
-	$(top_builddir)/wrlib/libwraster.la \
+	$(WINGs_LIBS) \
+	$(WRASTER_LIBS) \
 	@XLFLAGS@ @LIBXINERAMA@ @XLIBS@ @INTLIBS@
 
 wmgenmenu_LDADD = \
-	$(top_builddir)/WINGs/libWUtil.la \
+	$(WINGs_LIBS) \
 	@INTLIBS@
 
 wmgenmenu_SOURCES = wmgenmenu.c wmgenmenu.h
 
 wmmenugen_LDADD = \
-	$(top_builddir)/WINGs/libWUtil.la \
+	$(WINGs_LIBS) \
 	@INTLIBS@
 
 wmmenugen_SOURCES = wmmenugen.c wmmenugen.h wmmenugen_misc.c \
@@ -71,7 +69,7 @@ wmmenugen_SOURCES = wmmenugen.c wmmenugen.h wmmenugen_misc.c \
 	wmmenugen_parse_xdg.c
 
 wmiv_LDADD = \
-	$(top_builddir)/wrlib/libwraster.la \
+	$(WRASTER_LIBS) \
 	@XLFLAGS@ @XLIBS@ \
 	@GFXLIBS@ $(PTHREAD_CFLAGS) $(PTHREAD_LIBS) $(LIBEXIF)
 

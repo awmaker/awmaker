@@ -647,6 +647,26 @@ AC_ARG_ENABLE([pango],
 WM_CHECK_LIBPANGO
 
 
+dnl Shared libraries from the wmaker-crm submodule
+dnl =============================================
+dnl WINGs, WUtil and wrlib are built and installed separately (see
+dnl script/build-libs.sh) into the build-libs/ prefix and are consumed here
+dnl through pkg-config. Set PKG_CONFIG_PATH to point to that prefix when
+dnl running configure (the docker build script does this automatically).
+PKG_CHECK_MODULES([WINGs], [WINGs], [],
+    [AC_MSG_ERROR([WINGs development library not found.
+Have you built the shared libraries? See script/build-libs.sh, and set
+PKG_CONFIG_PATH to the build-libs/lib/pkgconfig directory.])])
+PKG_CHECK_MODULES([WRASTER], [wrlib], [],
+    [AC_MSG_ERROR([wrlib (WRaster) development library not found.
+Have you built the shared libraries? See script/build-libs.sh, and set
+PKG_CONFIG_PATH to the build-libs/lib/pkgconfig directory.])])
+AC_SUBST(WINGs_CFLAGS)
+AC_SUBST(WINGs_LIBS)
+AC_SUBST(WRASTER_CFLAGS)
+AC_SUBST(WRASTER_LIBS)
+
+
 dnl ==============================================
 dnl         Graphic Format Libraries
 dnl ==============================================
@@ -879,15 +899,6 @@ dnl ==========================
 AC_CONFIG_FILES(
     Makefile
 
-    dnl WRaster Library
-    wrlib/Makefile wrlib/po/Makefile
-    wrlib/tests/Makefile
-
-    dnl WINGs toolkit
-    WINGs/Makefile WINGs/WINGs/Makefile WINGs/po/Makefile
-    WINGs/Documentation/Makefile WINGs/Resources/Makefile WINGs/Extras/Makefile
-    WINGs/Examples/Makefile WINGs/Tests/Makefile
-
     dnl Window Maker's core
     src/Makefile src/wconfig.h po/Makefile
     doc/Makefile doc/build/Makefile
@@ -905,7 +916,6 @@ AC_CONFIG_FILES(
     util/Makefile util/po/Makefile
 
     dnl Misceleanous stuff
-    wmlib/Makefile
     test/Makefile
 )
 
