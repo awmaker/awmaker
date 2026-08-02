@@ -119,6 +119,22 @@ static unsigned getInt(WMPropList * value)
 	return n;
 }
 
+static unsigned getHex(WMPropList * value)
+{
+	char *val;
+	unsigned n;
+
+	if (!WMIsPLString(value))
+		return 0;
+	val = WMGetFromPLString(value);
+	if (!val)
+		return 0;
+	if (sscanf(val, "0x%04X", &n) != 1)
+		return 0;
+
+	return n;
+}
+
 static WMPropList *makeWindowState(WWindow *wwin, WApplication *wapp)
 {
 	virtual_screen *vscr = wwin->vscr;
@@ -127,10 +143,10 @@ static WMPropList *makeWindowState(WWindow *wwin, WApplication *wapp)
 	unsigned mask;
 	char *class, *instance, *command = NULL, buffer[512];
 	WMPropList *win_state, *cmd, *name, *workspace;
-	WMPropList *shaded, *miniaturized, *hidden, *geometry;
+	WMPropList *shaded, *miniaturized, *maximized, *hidden, *geometry;
 	WMPropList *dock, *shortcut;
 	WMPropList *sWorkspace, *sCommand, *sName, *sDock, *sShaded, *sMiniaturized;
-	WMPropList *sHidden, *sGeometry, *sShortcutMask, *sYes, *sNo;
+	WMPropList *sMaximized, *sHidden, *sGeometry, *sShortcutMask, *sYes, *sNo;
 
 	if (wwin->orig_main_window != None && wwin->orig_main_window != wwin->client_win)
 		win = wwin->orig_main_window;
@@ -169,6 +185,8 @@ static WMPropList *makeWindowState(WWindow *wwin, WApplication *wapp)
 	sNo = WMCreatePLString("No");
 	shaded = wwin->flags.shaded ? sYes : sNo;
 	miniaturized = wwin->flags.miniaturized ? sYes : sNo;
+	snprintf(buffer, sizeof(buffer), "0x%04X", wwin->flags.maximized);
+	maximized = WMCreatePLString(buffer);
 	hidden = wwin->flags.hidden ? sYes : sNo;
 	snprintf(buffer, sizeof(buffer), "%ix%i+%i+%i",
 		 wwin->width, wwin->height, wwin->frame_x, wwin->frame_y);
@@ -188,6 +206,7 @@ static WMPropList *makeWindowState(WWindow *wwin, WApplication *wapp)
 	sWorkspace = WMCreatePLString("Workspace");
 	sShaded = WMCreatePLString("Shaded");
 	sMiniaturized = WMCreatePLString("Miniaturized");
+	sMaximized = WMCreatePLString("Maximized");
 	sHidden = WMCreatePLString("Hidden");
 	sGeometry = WMCreatePLString("Geometry");
 	sShortcutMask = WMCreatePLString("ShortcutMask");
@@ -196,6 +215,7 @@ static WMPropList *makeWindowState(WWindow *wwin, WApplication *wapp)
 					 sWorkspace, workspace,
 					 sShaded, shaded,
 					 sMiniaturized, miniaturized,
+					 sMaximized, maximized,
 					 sHidden, hidden,
 					 sShortcutMask, shortcut, sGeometry, geometry, NULL);
 
@@ -203,6 +223,7 @@ static WMPropList *makeWindowState(WWindow *wwin, WApplication *wapp)
 	WMReleasePropList(cmd);
 	WMReleasePropList(workspace);
 	WMReleasePropList(geometry);
+	WMReleasePropList(maximized);
 	WMReleasePropList(shortcut);
 	if (wapp && wapp->app_icon && wapp->app_icon->dock) {
 		int i;
@@ -336,7 +357,7 @@ static WSavedState *getWindowState(virtual_screen *vscr, WMPropList *win_state)
 {
 	WSavedState *state = wmalloc(sizeof(WSavedState));
 	WMPropList *value, *sShortcutMask;
-	WMPropList *sWorkspace, *sShaded, *sMiniaturized, *sHidden, *sGeometry;
+	WMPropList *sWorkspace, *sShaded, *sMiniaturized, *sMaximized, *sHidden, *sGeometry;
 	char *tmp;
 	unsigned mask;
 	int i;
@@ -368,6 +389,11 @@ static WSavedState *getWindowState(virtual_screen *vscr, WMPropList *win_state)
 	value = WMGetFromPLDictionary(win_state, sMiniaturized);
 	if (value != NULL)
 		state->miniaturized = getBool(value);
+
+	sMaximized = WMCreatePLString("Maximized");
+	value = WMGetFromPLDictionary(win_state, sMaximized);
+	if (value != NULL)
+		state->maximized = getHex(value);
 
 	sHidden = WMCreatePLString("Hidden");
 	value = WMGetFromPLDictionary(win_state, sHidden);
