@@ -1,24 +1,11 @@
-/* rootmenu.c- user defined menu
+/*
+ * awmaker - Abstracting Window Maker
  *
- *  Window Maker window manager
- *
- *  Copyright (c) 1997-2003 Alfredo K. Kojima
- *  Copyright (c) 1998-2003 Dan Pascu
- *  Copyright (c) 2014 Window Maker Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ * Fork of GNU Window Maker (GPL-2).
+ * Copyright (C) Alfredo K. Kojima, Dan Pascu, the Window Maker Team,
+ * and individual contributors; see LICENSE for full attribution.
+ * Fork modifications: Copyright (C) Rodolfo Garcia Penas (kix) <kix@kix.es>.
+ * SPDX-License-Identifier: GPL-2.0-or-later
  */
 
 #include "wconfig.h"

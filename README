@@ -100,3 +100,15 @@ CAN I PLAY?
 ===========
 Yes! You are very welcome to help in the project. Fork it. We are in
 https://github.com/awmaker/awmaker
+
+LICENSE & COPYRIGHT
+===================
+awmaker is a fork of GNU Window Maker. It is free software, distributed
+under the terms of the GNU General Public License, version 2 or (at your
+option) any later version; see `COPYING`. Some artwork is distributed under
+the WTFPL; see `COPYING.WTFPL`.
+
+The exhaustive copyright attribution of both the original Window Maker
+sources and the fork modifications is consolidated in `LICENSE`. Every
+C/H source file in this tree carries a standard short header that points
+to it. The fork is maintained by Rodolfo García Peñas (kix) <kix@kix.es>.

@@ -1,59 +1,11 @@
-/* usermenu.c- user defined menu
+/*
+ * awmaker - Abstracting Window Maker
  *
- *  Window Maker window manager
- *
- *  Copyright (c) hmmm... Should I put everybody's name here?
- *  Where's my lawyer?? -- ]d :D
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * * * * * * * * *
- * User defined menu is good, but beer's always better
- * if someone wanna start hacking something, He heard...
- * TODO
- *  - enhance commands. (eg, exit, hide, list all app's member
- *    window and etc)
- *  - cache menu... dunno.. if people really use this feature :P
- *  - Violins, senseless violins!
- *  that's all, right now :P
- *  - external! WINGs menu editor.
- *  TODONOT
- *  - allow applications to share their menu. ] think it
- *    looks weird since there still are more than 1 appicon.
- *
- *  Syntax...
- *  (
- *    "Program Name",
- *    ("Command 1", SHORTCUT, 1),
- *    ("Command 2", SHORTCUT, 2, ("Allowed_instant_1", "Allowed_instant_2")),
- *    ("Command 3", SHORTCUT, (3,4,5), ("Allowed_instant_1")),
- *    (
- *      "Submenu",
- *      ("Kill Command", KILL),
- *      ("Hide Command", HIDE),
- *      ("Hide Others Command", HIDE_OTHERS),
- *      ("Members", MEMBERS),
- *      ("Exit Command", EXIT)
- *    )
- *  )
- *
- *  Tips:
- *  - If you don't want short cut keys to be listed
- *    in the right side of entries, you can just put them
- *    in array instead of using the string directly.
- *
+ * Fork of GNU Window Maker (GPL-2).
+ * Copyright (C) Alfredo K. Kojima, Dan Pascu, the Window Maker Team,
+ * and individual contributors; see LICENSE for full attribution.
+ * Fork modifications: Copyright (C) Rodolfo Garcia Penas (kix) <kix@kix.es>.
+ * SPDX-License-Identifier: GPL-2.0-or-later
  */
 
 #include "wconfig.h"

@@ -1,0 +1,70 @@
+awmaker - Abstracting Window Maker
+=================================
+
+This repository is a fork of GNU Window Maker, the window manager for the
+X Window System (https://windowmaker.org). The fork is maintained by
+Rodolfo García Peñas (kix) <kix@kix.es> with the goal of abstracting the
+project away from the X Window System as much as possible.
+
+Licensing
+---------
+
+awmaker is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free
+Software Foundation; either version 2 of the License, or (at your option)
+any later version.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+The complete license text is in the file `COPYING` in this directory.
+
+Artwork (icons and images) that is not covered by the GPL is covered by
+the Do What The Fuck you want to Public License (WTFPL); see
+`COPYING.WTFPL`.
+
+Each source file carries a short standard header that points here. The
+copyright notices listed in the section below are reproduced exhaustively
+and faithfully from the original source files; see the "Copyright holders"
+section.
+
+Copyright holders (exhaustive attribution)
+------------------------------------------
+
+The Window Maker source code this fork is derived from carries the
+following copyright notices across its files (file paths indicate where
+specific contributors appear):
+
+  Copyright (c) 1997-2003, 1998-2003, 1999-2003, 2000-2003, 2000,
+     1997-2004, 1997-2001, 1998-2004, 1998 Alfredo K. Kojima
+     (the majority of src/, util/ and WPrefs.app/)
+  Copyright (c) 1998-2003, 2004 Dan Pascu
+  Copyright (c) 2013, 2014, 2014 (David Maciejak) Window Maker Team
+     / Window Maker Developers Team
+  Copyright (c) 2010 Tamas Tevesz <ice@extreme.hu>      [util/wmmenugen*]
+  Copyright (C) 2010 Carlos R. Mafra                      [util/wmgenmenu*]
+  Copyright (c) 1998 scottc                               [src/xutil.h]
+  Copyright (c) 1997 Shige Abe                           [src/switchmenu.c]
+  Copyright (c) 1998 James Thompson              [WPrefs.app/TexturePanel.c]
+  Copyright (c) 2012 Daniel Dechelotte                  [WPrefs.app/Docks.c]
+  Copyright (c) Rob Nation and others                    [src/colormap.c]
+  Copyright (C) 1996 Ben Wing                 [WPrefs.app/xmodifier.c, src/xmodifier.c]
+  Copyright (C) 1995 Sun Microsystems, Inc.    [WPrefs.app/xmodifier.c, src/xmodifier.c]
+  Copyright (C) 1989-1995 Free Software Foundation, Inc.
+     (bison/flex generated code in some .c files)
+  Copyright (c) (placeholder; original header reads "hmmm... Should I put
+     everybody's name here?")                 [src/usermenu.c, src/usermenu.h]
+
+Fork modifications and new files
+--------------------------------
+
+The modifications to the Window Maker sources made for this fork, and the
+new files added for it (for example src/configfiles.c, the script/ and
+docker/ trees, and the top-level GNUmakefile), are:
+
+  Copyright (c) 2017, 2019-2026 Rodolfo García Peñas (kix) <kix@kix.es>
+
+and are licensed under the same GPL-2.0-or-later terms as the rest of the
+project.
