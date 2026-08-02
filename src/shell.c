@@ -99,7 +99,7 @@ int execute_command(virtual_screen *vscr, char **argv, int argc)
 		setsid();
 #endif
 		/* argv is not null-terminated */
-		a = (char **) malloc(argc + 1);
+		a = (char **) malloc(sizeof(char *) * (argc + 1));
 		if (!a) {
 			werror("out of memory trying to relaunch the application");
 			Exit(-1);
