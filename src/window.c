@@ -1254,6 +1254,15 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 	/* get geometry stuff */
 	wClientGetNormalHints(wwin, &wattribs, True, &x, &y, &width, &height);
 
+	/* Some applications create placeholder windows with 1x1 size
+	 * (e.g. VirtualBox internal windows). Don't manage those initial
+	 * 1x1 windows. */
+	if (width <= 1 && height <= 1 && !wwin->flags.is_dockapp) {
+		wWindowDestroy(wwin);
+		XUngrabServer(dpy);
+		return NULL;
+	}
+
 	/* get colormap windows */
 	GetColormapWindows(wwin);
 

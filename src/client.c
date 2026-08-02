@@ -205,6 +205,21 @@ void wClientConfigure(WWindow *wwin, XConfigureRequestEvent *xcre)
 	if (nheight != wwin->old_geometry.height)
 		wwin->flags.maximized &= ~(MAX_VERTICAL | MAX_LEFTHALF | MAX_RIGHTHALF | MAX_MAXIMUS);
 
+	wWindowConstrainSize(wwin, (unsigned int *)&nwidth, (unsigned int *)&nheight);
+
+	/* Ignore tiny position adjustments from client ConfigureRequests to prevent
+	 * window jitters (e.g., VirtualBox sending incremental 1-2px corrections). */
+	if (wwin->flags.mapped && !wwin->moveresize.active && (xcre->value_mask & (CWX | CWY))) {
+		int dx = abs(nx - wwin->frame_x);
+		int dy = abs(ny - wwin->frame_y);
+
+		if (dx < 3 && dy < 3) {
+			/* Keep current position */
+			nx = wwin->frame_x;
+			ny = wwin->frame_y;
+		}
+	}
+
 	wWindowConfigure(wwin, nx, ny, nwidth, nheight);
 	wwin->old_geometry.x = nx;
 	wwin->old_geometry.y = ny;
