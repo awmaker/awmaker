@@ -715,6 +715,8 @@ WDefaultEntry optionList[] = {
 	    &wPreferences.mouse_wheel_scroll, getEnum, NULL, NULL, NULL, 1},
 	{"MouseWheelTiltAction", "None", seMouseWheelActions,
 	    &wPreferences.mouse_wheel_tilt, getEnum, NULL, NULL, NULL, 1},
+	{"MouseWheelFocus", "NO", NULL,
+	    &wPreferences.mouse_wheel_focus, getBool, NULL, NULL, NULL, 0},
 	{"PixmapPath", DEF_PIXMAP_PATHS, NULL,
 	    &wPreferences.pixmap_path, getPathList, NULL, NULL, NULL, 1},
 	{"IconPath", DEF_ICON_PATHS, NULL,

@@ -424,6 +424,7 @@ extern struct WPreferences {
 	signed char mouse_button9;         /* action for 5th button aka forward mouse button */
 	signed char mouse_wheel_scroll;    /* action for mouse wheel scroll */
 	signed char mouse_wheel_tilt;      /* action for mouse wheel tilt */
+	char mouse_wheel_focus;            /* allow focus window with mouse wheel */
 
 	/* balloon text */
 	char window_balloon;

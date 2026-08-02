@@ -3030,7 +3030,7 @@ static void frameMouseDown(WObjDescriptor *desc, XEvent *event)
 
 	DestroyWindowMenu(wwin->vscr);
 
-	if (!(event->xbutton.state & ControlMask) && !WFLAGP(wwin, no_focusable))
+	if ((wPreferences.mouse_wheel_focus || (event->xbutton.button != Button4 && event->xbutton.button != Button5)) && !(event->xbutton.state & ControlMask) && !WFLAGP(wwin, no_focusable))
 		wSetFocusTo(wwin->vscr, wwin);
 
 	if (event->xbutton.button == Button1)
