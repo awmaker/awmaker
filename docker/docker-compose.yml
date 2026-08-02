@@ -1,0 +1,33 @@
+# awmaker build via Docker on macOS
+#
+# Mounts the host awmaker tree (including the `third_party/wmaker-crm`
+# submodule) read-write into the container, then builds it. Build artifacts,
+# the shared libraries (build-libs/) and the resulting binaries are all written
+# back to the host, so you can edit the sources on macOS and rebuild.
+#
+# Nothing is installed outside the working tree: the shared libraries go to
+# <tree>/build-libs and the awmaker binary stays in <tree>/src.
+
+services:
+  build:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: awmaker-builder
+    # Read/write mount of the host awmaker tree. On mac use the native file
+    # sharing (VirtioFS recommended: Settings -> General -> VirtioFS) for
+    # acceptable performance.
+    volumes:
+      - ..:/workspace/awmaker
+    working_dir: /workspace/awmaker
+    environment:
+      # Keep the build quiet but visible
+      - MAKEFLAGS=--no-print-directory
+      # Build awmaker, linking against ./build-libs. Set INSTALL=1 to also
+      # stage the binary into a local prefix (still inside the tree).
+      - INSTALL=0
+    entrypoint:
+      - /bin/bash
+      - -lc
+    command:
+      - script/docker-build.sh

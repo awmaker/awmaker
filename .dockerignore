@@ -1,0 +1,9 @@
+# The awmaker-builder image does not COPY any source into the image: the host
+# tree is provided at runtime through a read-write volume mount. Therefore the
+# Docker build context only needs the docker/ directory; everything else is
+# excluded to keep the image build fast and small.
+
+# Build context root is the awmaker tree; keep only what Dockerfile needs.
+**
+!docker
+!docker/Dockerfile
