@@ -3277,7 +3277,7 @@ static int setWidgetColor(virtual_screen *vscr)
 	if (vscr->screen_ptr->widget_texture)
 		wTextureDestroy(vscr, (WTexture *) vscr->screen_ptr->widget_texture);
 
-	vscr->screen_ptr->widget_texture = *(WTexSolid **) texture;
+	vscr->screen_ptr->widget_texture = (WTexSolid *) texture;
 
 	return 0;
 }
