@@ -76,6 +76,61 @@ static Bool write_file_if_missing(const char *path, WMPropList *plist)
 }
 
 /*
+ * Write a plain-text file (e.g. a shell script) only if it does not already
+ * exist, making it executable. Returns True on success or when the file was
+ * already present.
+ */
+static Bool write_script_if_missing(const char *path, const char *content)
+{
+	FILE *fp;
+	struct stat st;
+
+	if (stat(path, &st) == 0)
+		return True;
+
+	fp = fopen(path, "w");
+	if (!fp)
+		return False;
+	if (fputs(content, fp) == EOF) {
+		fclose(fp);
+		return False;
+	}
+	if (fclose(fp) != 0)
+		return False;
+
+	return chmod(path, 0755) == 0;
+}
+
+/* Minimal, empty autostart script users can edit. */
+static Bool write_autostart(const char *path)
+{
+	return write_script_if_missing(path,
+		"#!/bin/sh\n"
+		"#\n"
+		"# Place applications to be executed when WindowMaker is started here.\n"
+		"# This should only be used for non-X applications or applications that\n"
+		"# do not support session management. Other applications should be\n"
+		"# restarted by the WindowMaker session restoring mechanism.\n"
+		"#\n"
+		"# WindowMaker will wait until this script finishes, so put a ``&'' at\n"
+		"# the end of command lines that could block.\n"
+		"#\n");
+}
+
+/* Minimal, empty exit script users can edit. */
+static Bool write_exitscript(const char *path)
+{
+	return write_script_if_missing(path,
+		"#!/bin/sh\n"
+		"#\n"
+		"# Place commands to be executed when WindowMaker is exited here.\n"
+		"#\n"
+		"# WindowMaker will wait until this script finishes, so put a ``&'' at\n"
+		"# the end of command lines that could block.\n"
+		"#\n");
+}
+
+/*
  * Minimal WMRootMenu: a root system menu with a terminal, the WPrefs
  * configurator, workspaces and a commands/session section.
  */
@@ -430,6 +485,17 @@ Bool wCreateDefaultConfig(void)
 	ok = wmkdir_free(p) && ok;
 	p = wstrconcat(lib, "/WindowMaker/WPrefs");
 	ok = wmkdir_free(p) && ok;
+
+	if (!ok)
+		return False;
+
+	p = wstrconcat(lib, "/WindowMaker/autostart");
+	ok = write_autostart(p) && ok;
+	wfree(p);
+
+	p = wstrconcat(lib, "/WindowMaker/exitscript");
+	ok = write_exitscript(p) && ok;
+	wfree(p);
 
 	if (!ok)
 		return False;
