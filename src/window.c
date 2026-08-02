@@ -1197,7 +1197,7 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 
 	XSaveContext(dpy, window, w_global.context.client_win, (XPointer) & wwin->client_descriptor);
 
-#ifndef USE_XSHAPE
+#ifdef USE_XSHAPE
 	wwindow_set_xshape(dpy, window, wwin);
 #endif
 
