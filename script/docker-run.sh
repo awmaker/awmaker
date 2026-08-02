@@ -60,7 +60,13 @@ case "$1" in
     "")
         echo "==> Building the awmaker image (first run downloads deps)..."
         $COMPOSE build
-        echo "==> Building awmaker (shared libs + binary)..."
+        # Build awmaker (shared libs + binary). Note: we deliberately run the
+        # plain build (no `make install`): in this container the local libtool
+        # is configured with fast_install=needless, so the binary is linked
+        # directly into src/awmaker without the .libs/ file that `make install`
+        # would need, and `make install` fails. Instead docker-run.sh populates
+        # the per-user ~/GNUstep data from the sources and puts the built
+        # utilities (util/) on PATH (see Step 3).
         $COMPOSE run --rm build
         ;;
     *)
@@ -145,8 +151,22 @@ DISPLAY="host.docker.internal:$DISP" \
         -e DISPLAY \
         -e LD_LIBRARY_PATH \
         -e AWMAKER_COOKIE \
-        run 'export XAUTHORITY=$(mktemp); \
-             xauth add "host.docker.internal:'$DISP'" MIT-MAGIC-COOKIE-1 "$AWMAKER_COOKIE"; \
+        run 'set -e
+             GS=$HOME/GNUstep
+             # Populate the per-user data dirs from the sources so awmaker can
+             # find icons, pixmaps/backgrounds and logos without a system-wide
+             # install. awmaker looks these up via DEF_ICON_PATHS /
+             # DEF_PIXMAP_PATHS under $HOME/GNUstep.
+             mkdir -p "$GS/Library/Icons" "$GS/Library/WindowMaker/Pixmaps" "$GS/Library/WindowMaker/Backgrounds"
+             cp -n /workspace/awmaker/WindowMaker/Icons/* "$GS/Library/Icons/" 2>/dev/null || true
+             cp -n /workspace/awmaker/WindowMaker/Pixmaps/* "$GS/Library/WindowMaker/Pixmaps/" 2>/dev/null || true
+             cp -n /workspace/awmaker/WindowMaker/Backgrounds/* "$GS/Library/WindowMaker/Backgrounds/" 2>/dev/null || true
+             export XAUTHORITY=$(mktemp)
+             # Put the compiled source utilities (wmsetbg, wdwrite, getstyle,
+             # seticons, ...) on PATH. They are built into util/ as ELF binaries,
+             # not system-installed.
+             export PATH="/workspace/awmaker/util:$PATH"
+             xauth add "host.docker.internal:'$DISP'" MIT-MAGIC-COOKIE-1 "$AWMAKER_COOKIE"
              exec "/workspace/awmaker/'$AWMAKER_BIN'"' || true
 
 echo "==> awmaker exited."

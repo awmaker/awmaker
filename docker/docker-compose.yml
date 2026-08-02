@@ -23,9 +23,12 @@ services:
     environment:
       # Keep the build quiet but visible
       - MAKEFLAGS=--no-print-directory
-      # Build awmaker, linking against ./build-libs. Set INSTALL=1 to also
-      # stage the binary into a local prefix (still inside the tree).
-      - INSTALL=0
+      # Takes its value from the shell (passthrough), so `INSTALL=1 docker
+      # compose run ... build` stages the binary + system data into the local
+      # prefix build-libs/stage. Unset/0 means build-only (no install). See
+      # script/docker-build.sh for the default (0) and the local PREFIX.
+      - INSTALL
+      - PREFIX
     entrypoint:
       - /bin/bash
       - -lc
