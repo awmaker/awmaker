@@ -121,6 +121,7 @@ static WDECallbackUpdate setPTitleBack;
 static WDECallbackUpdate setUTitleBack;
 static WDECallbackUpdate setResizebarBack;
 static WDECallbackUpdate set_workspace_back;
+static WDECallbackUpdate set_workspace_specific_back;
 static WDECallbackUpdate setMenuTitleColor;
 static WDECallbackUpdate setMenuTextColor;
 static WDECallbackUpdate setMenuDisabledColor;
@@ -862,10 +863,10 @@ WDefaultEntry optionList[] = {
 	{"WidgetColor", "(solid, gray)", NULL,
 	    &wPreferences.texture.widgetcolor, getTexture, setWidgetColor, NULL, NULL, 1},
 	{"WorkspaceSpecificBack", "()", NULL,
-	    &wPreferences.workspacespecificback, getWSSpecificBackground, set_workspace_back, NULL, NULL, 1},
+	    &wPreferences.workspacespecificback, getWSSpecificBackground, set_workspace_specific_back, NULL, NULL, 1},
 	/* WorkspaceBack must come after WorkspaceSpecificBack or
 	 * WorkspaceBack won't know WorkspaceSpecificBack was also
-	 * specified and 2 copies of wmsetbg will be launched */
+	 * updated */
 	{"WorkspaceBack", "(solid, \"rgb:50/50/75\")", NULL,
 	    &wPreferences.workspaceback, getWSBackground, set_workspace_back, NULL, NULL, 1},
 	{"SmoothWorkspaceBack", "NO", NULL,
@@ -3188,94 +3189,86 @@ static int setFrameSelectedBorderColor(virtual_screen *vscr)
 	return REFRESH_FRAME_BORDER;
 }
 
-static int set_workspace_back(virtual_screen *vscr)
+static int set_workspace_specific_back(virtual_screen *vscr)
 {
 	WMPropList *value, *val;
 	char *str;
-	int i, cont = 0;
+	int i;
 
 	/*
-	 * Now, I will move the logic between updateing workspace back and
-	 * workspace specific back here.
-	 *
-	 * First we work with WorkspaceSpecificBack.
-	 * If the WorkspaceSpecificBack data has been changed
-	 * so that the helper will be launched now, we must be
-	 * sure to send the default background texture config
-	 * to the helper.
-	 *
-	 * All was done using flags. If we read all values first, we can
-	 * play with them. I will use the refresh flag to do it.
+	 * First we work with WorkspaceSpecificBack. If the data has been
+	 * changed so that the helper will be launched now, we must be sure
+	 * to send the default background texture config to the helper too.
+	 * Force WorkspaceBack to be resent in that case.
 	 */
+	value = wPreferences.workspacespecificback;
 
-	/* setWorkspaceSpecificBack */
-	if (optionList[OL_WORKSPACESPECIFICBACK].refresh) {
-		value = wPreferences.workspacespecificback;
+	if (vscr->screen_ptr->flags.backimage_helper_launched) {
+		if (WMGetPropListItemCount(value) == 0) {
+			SendHelperMessage(vscr, 'C', 0, NULL);
+			SendHelperMessage(vscr, 'K', 0, NULL);
 
-		if (vscr->screen_ptr->flags.backimage_helper_launched) {
-			if (WMGetPropListItemCount(value) == 0) {
-				SendHelperMessage(vscr, 'C', 0, NULL);
-				SendHelperMessage(vscr, 'K', 0, NULL);
+			WMReleasePropList(value);
+			return 0;
+		}
+	} else {
+		if (WMGetPropListItemCount(value) == 0)
+			return 0;
 
-				WMReleasePropList(value);
-				return 0;
-			}
+		if (!start_bg_helper(vscr)) {
+			WMReleasePropList(value);
+			return 0;
 		} else {
-			if (WMGetPropListItemCount(value) == 0)
-				return 0;
-
-			if (!start_bg_helper(vscr)) {
-				WMReleasePropList(value);
-				return 0;
-			} else {
-				/* Enable the flag to set the default background */
-				cont = 1;
-			}
-
-			SendHelperMessage(vscr, 'P', -1, wPreferences.pixmap_path);
+			/* Enable the flag to set the default background */
+			optionList[OL_WORKSPACEBACK].refresh = 1;
 		}
 
-		for (i = 0; i < WMGetPropListItemCount(value); i++) {
-			val = WMGetFromPLArray(value, i);
-			if (val && WMIsPLArray(val) && WMGetPropListItemCount(val) > 0) {
-				str = WMGetPropListDescription(val, False);
-				SendHelperMessage(vscr, 'S', i + 1, str);
+		SendHelperMessage(vscr, 'P', -1, wPreferences.pixmap_path);
+	}
+
+	for (i = 0; i < WMGetPropListItemCount(value); i++) {
+		val = WMGetFromPLArray(value, i);
+		if (val && WMIsPLArray(val) && WMGetPropListItemCount(val) > 0) {
+			str = WMGetPropListDescription(val, False);
+			SendHelperMessage(vscr, 'S', i + 1, str);
+			wfree(str);
+		} else {
+			SendHelperMessage(vscr, 'U', i + 1, NULL);
+		}
+	}
+
+	sleep(1);
+
+	WMReleasePropList(value);
+	return 0;
+}
+
+static int set_workspace_back(virtual_screen *vscr)
+{
+	WMPropList *value;
+	char *str;
+
+	value = wPreferences.workspaceback;
+
+	if (vscr->screen_ptr->flags.backimage_helper_launched) {
+		if (WMGetPropListItemCount(value) == 0) {
+			SendHelperMessage(vscr, 'U', 0, NULL);
+		} else {
+			/* set the default workspace background to this one */
+			str = WMGetPropListDescription(value, False);
+			if (str) {
+				SendHelperMessage(vscr, 'S', 0, str);
 				wfree(str);
+				SendHelperMessage(vscr, 'C', vscr->workspace.current + 1, NULL);
 			} else {
-				SendHelperMessage(vscr, 'U', i + 1, NULL);
-			}
-		}
-
-		sleep(1);
-
-		WMReleasePropList(value);
-	}
-
-	/* setWorkspaceBack */
-	if (optionList[OL_WORKSPACEBACK].refresh || cont) {
-		value = wPreferences.workspaceback;
-
-		if (vscr->screen_ptr->flags.backimage_helper_launched) {
-			if (WMGetPropListItemCount(value) == 0) {
 				SendHelperMessage(vscr, 'U', 0, NULL);
-			} else {
-				/* set the default workspace background to this one */
-				str = WMGetPropListDescription(value, False);
-				if (str) {
-					SendHelperMessage(vscr, 'S', 0, str);
-					wfree(str);
-					SendHelperMessage(vscr, 'C', vscr->workspace.current + 1, NULL);
-				} else {
-					SendHelperMessage(vscr, 'U', 0, NULL);
-				}
 			}
-		} else if (WMGetPropListItemCount(value) > 0) {
-			backimage_launch_helper(vscr, value);
 		}
-
-		WMReleasePropList(value);
+	} else if (WMGetPropListItemCount(value) > 0) {
+		backimage_launch_helper(vscr, value);
 	}
 
+	WMReleasePropList(value);
 	return 0;
 }
 
