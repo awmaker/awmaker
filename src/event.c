@@ -357,8 +357,11 @@ static void handle_inotify_events(void)
 			}
 
 			if (matched) {
-				/* react to events that indicate a file was created/moved/written */
-				if ((pevent->mask & (IN_MODIFY | IN_CLOSE_WRITE | IN_MOVED_TO | IN_CREATE)) && oneShotFlag == 0) {
+				/* react to events that indicate a file was created/moved/written
+				 * (do NOT react to IN_MODIFY: the file may be mid-write, and an
+				 * early reload would pre-advance the domain timestamp and cause
+				 * the real change to be missed until the next write) */
+				if ((pevent->mask & (IN_CLOSE_WRITE | IN_MOVED_TO | IN_CREATE)) && oneShotFlag == 0) {
 					wwarning(_("Inotify: Reading config files in defaults database."));
 					wDefaultsCheckDomains(NULL);
 					oneShotFlag = 1;
