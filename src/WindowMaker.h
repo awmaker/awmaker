@@ -347,6 +347,10 @@ extern struct WPreferences {
 	char vi_key_menus;                 /* use h/j/k/l to select */
 	char align_menus;                  /* align menu with their parents */
 	char window_list_app_icons;        /* show app icons in the window list menu */
+	char hot_corners;                  /* let corners execute actions */
+	int hot_corner_delay;		/* Delay after which the hot corner is triggered */
+	int hot_corner_edge;		/* Hot corner edge size */
+	char *hot_corner_actions[4];	/* Action of each corner */
 	char use_saveunders;               /* turn on SaveUnders for menus, icons etc. */
 	char no_window_over_dock;
 	char no_window_over_icons;
@@ -548,6 +552,7 @@ extern struct WPreferences {
 
 	/* Key binds */
 	WMPropList *modifierkeylabels;
+	WMPropList *hotcorneractions;
 
 	struct {
 		char clipraiselower[MAX_SHORTCUT_LENGTH];

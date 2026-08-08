@@ -228,6 +228,7 @@ static WDECallbackUpdate setMenuStyle;
 static WDECallbackUpdate setSwPOptions;
 static WDECallbackUpdate updateUsableArea;
 static WDECallbackUpdate setModifierKeyLabels;
+static WDECallbackUpdate setHotCornerActions;
 static WDECallbackUpdate setCursor_root;
 static WDECallbackUpdate setCursor_select;
 static WDECallbackUpdate setCursor_move;
@@ -757,6 +758,14 @@ WDefaultEntry optionList[] = {
 	    &wPreferences.wrap_menus, getBool, NULL, NULL, NULL, 1},
 	{"ScrollableMenus", "YES", NULL,
 	    &wPreferences.scrollable_menus, getBool, NULL, NULL, NULL, 1},
+	{"HotCorners", "NO", NULL,
+	    &wPreferences.hot_corners, getBool, NULL, NULL, NULL, 1},
+	{"HotCornerDelay", "250", (void *) &wPreferences.hot_corner_delay,
+	    &wPreferences.hot_corner_delay, getInt, NULL, NULL, NULL, 1},
+	{"HotCornerEdge", "2", (void *) &wPreferences.hot_corner_edge,
+	    &wPreferences.hot_corner_edge, getInt, NULL, NULL, NULL, 1},
+	{"HotCornerActions", "(\"None\", \"None\", \"None\", \"None\")", NULL,
+	    &wPreferences.hotcorneractions, getPropList, setHotCornerActions, NULL, NULL, 1},
 	{"MenuScrollSpeed", "fast", seSpeeds,
 	    &wPreferences.menu_scroll_speed, getEnum, NULL, NULL, NULL, 1},
 	{"IconSlideSpeed", "fast", seSpeeds,
@@ -5651,6 +5660,45 @@ static int setModifierKeyLabels(virtual_screen *vscr)
 		} else {
 			wwarning(_("Invalid argument for option ModifierKeyLabels item %d"), i);
 			wPreferences.modifier_labels[i] = NULL;
+		}
+	}
+
+	WMReleasePropList(array);
+
+	return 0;
+}
+
+static int setHotCornerActions(virtual_screen *vscr)
+{
+	WMPropList *array;
+	int i;
+
+	array = wPreferences.hotcorneractions;
+
+	if (!WMIsPLArray(array) || WMGetPropListItemCount(array) != 4) {
+		wwarning(_("Value for option \"HotCornerActions\" must be an array of 4 strings"));
+		WMReleasePropList(array);
+		return 0;
+	}
+
+	DestroyWindowMenu(vscr);
+
+	for (i = 0; i < 4; i++) {
+		if (wPreferences.hot_corner_actions[i]) {
+			wfree(wPreferences.hot_corner_actions[i]);
+			wPreferences.hot_corner_actions[i] = NULL;
+		}
+
+		if (WMIsPLString(WMGetFromPLArray(array, i))) {
+			const char *val;
+			val = WMGetFromPLString(WMGetFromPLArray(array, i));
+			if (strcasecmp(val, "NONE") != 0)
+				wPreferences.hot_corner_actions[i] = wstrdup(val);
+			else
+				wPreferences.hot_corner_actions[i] = NULL;
+		} else {
+			wwarning(_("Invalid argument for option \"HotCornerActions\" item %d"), i);
+			wPreferences.hot_corner_actions[i] = NULL;
 		}
 	}
 

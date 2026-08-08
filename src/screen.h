@@ -312,6 +312,7 @@ struct WScreen {
     WMHandlerID *autoRaiseTimer;
     Window autoRaiseWindow;	       /* window that is scheduled to be
                                         * raised */
+    WMHandlerID *hot_corner_timer;     /* timer for hot corner activation */
 #ifdef USE_DOCK_XDND
     char *xdestring;
 #endif
@@ -330,6 +331,7 @@ struct WScreen {
         unsigned int doing_alt_tab:1;
         unsigned int jump_back_pending:1;
         unsigned int ignore_focus_events:1;
+        unsigned int in_hot_corner:3;
     } flags;
 };
 

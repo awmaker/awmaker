@@ -565,6 +565,7 @@ void Initialize(WMScreen * scr)
 #endif
 	InitKeyboardShortcuts(WPrefs.banner);
 	InitMouseSettings(WPrefs.banner);
+	InitHotCornerShortcuts(WPrefs.banner);
 
 	InitAppearance(WPrefs.banner);
 

@@ -24,6 +24,7 @@ WPrefs_SOURCES = \
 	Expert.c \
 	Focus.c \
 	FontSimple.c \
+	HotCornerShortcuts.c \
 	Icons.c \
 	KeyboardShortcuts.c \
 	Menu.c \
