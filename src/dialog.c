@@ -1417,7 +1417,7 @@ void panel_show(virtual_screen *vscr, int type)
 		break;
 	case PANEL_INFO:
 		win_width = WMScaleX(INFOPANEL_WIDTH);
-		win_height = WMScaleX(INFOPANEL_HEIGHT);
+		win_height = WMScaleY(INFOPANEL_HEIGHT);
 		sprintf(title, "Info");
 
 		if (infoPanel) {
