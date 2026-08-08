@@ -402,12 +402,6 @@ static void mapGeometryDisplay(WWindow *wwin, int x, int y, int w, int h)
 	showGeometry(wwin, x, y, x + w, y + h, 0);
 }
 
-static void set_inside_position(WWindow *tmpw, virtual_screen *vscr, int *x, int *y)
-{
-	wScreenBringInside(vscr, x, y,
-			   (int) tmpw->frame->width, (int) tmpw->frame->height);
-}
-
 static void doWindowMove(WWindow *wwin, WMArray *array, int dx, int dy)
 {
 	WWindow *tmpw;
@@ -421,7 +415,8 @@ static void doWindowMove(WWindow *wwin, WMArray *array, int dx, int dy)
 		WM_ITERATE_ARRAY(array, tmpw, iter) {
 			x = tmpw->frame_x + dx;
 			y = tmpw->frame_y + dy;
-			set_inside_position(tmpw, wwin->vscr, &x, &y);
+			wScreenBringInside(wwin->vscr, &x, &y,
+					   (int) tmpw->frame->width, (int) tmpw->frame->height);
 			wWindowMove(tmpw, x, y);
 		}
 	}
@@ -479,7 +474,8 @@ static void drawFrames(WWindow *wwin, WMArray *array, int dx, int dy)
 		WM_ITERATE_ARRAY(array, tmpw, iter) {
 			x = tmpw->frame_x + dx;
 			y = tmpw->frame_y + dy;
-			set_inside_position(tmpw, wwin->vscr, &x, &y);
+			wScreenBringInside(wwin->vscr, &x, &y,
+					   (int) tmpw->frame->width, (int) tmpw->frame->height);
 			drawTransparentFrame(tmpw, x, y, tmpw->frame->width, tmpw->frame->height);
 		}
 	}
