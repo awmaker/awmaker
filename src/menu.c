@@ -427,7 +427,7 @@ void wMenuRemoveItem(WMenu *menu, int index)
 
 	if (menu->entries[index]->rtext) {
 		wfree(menu->entries[index]->rtext);
-		menu->entries[index]->text = NULL;
+		menu->entries[index]->rtext = NULL;
 	}
 
 	if (menu->entries[index]->free_cdata && menu->entries[index]->clientdata)
