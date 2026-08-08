@@ -47,15 +47,17 @@ static Bool wmkdir(const char *path)
 	for (p = dir + 1; *p; p++) {
 		if (*p == '/') {
 			*p = '\0';
-			if (mkdir(dir, 0777) == -1 && errno != EEXIST) {
-				wfree(dir);
-				return False;
+			if (mkdir(dir, 0777) == -1) {
+				if (errno != EEXIST || stat(dir, &st) == -1 || !S_ISDIR(st.st_mode)) {
+					wfree(dir);
+					return False;
+				}
 			}
 			*p = '/';
 		}
 	}
-	if (mkdir(dir, 0777) == -1 && errno != EEXIST) {
-		if (stat(dir, &st) == -1 || !S_ISDIR(st.st_mode)) {
+	if (mkdir(dir, 0777) == -1) {
+		if (errno != EEXIST || stat(dir, &st) == -1 || !S_ISDIR(st.st_mode)) {
 			wfree(dir);
 			return False;
 		}
@@ -589,7 +591,8 @@ static Bool wmkdir_free(char *path)
 
 Bool wCreateDefaultConfig(void)
 {
-	const char *defs, *lib;
+	char *defs;
+	const char *lib;
 	char *p;
 	Bool ok = True;
 
@@ -599,12 +602,18 @@ Bool wCreateDefaultConfig(void)
 	defs = wdefaultspathfordomain("");
 	lib = wuserdatapath();
 
-	if (!wmkdir_free(wstrdup(wusergnusteppath())))
+	if (!wmkdir_free(wstrdup(wusergnusteppath()))) {
+		wfree(defs);
 		return False;
-	if (!wmkdir_free(wstrdup(defs)))
+	}
+	if (!wmkdir_free(wstrdup(defs))) {
+		wfree(defs);
 		return False;
-	if (!wmkdir_free(wstrdup(lib)))
+	}
+	if (!wmkdir_free(wstrdup(lib))) {
+		wfree(defs);
 		return False;
+	}
 
 	p = wstrconcat(lib, "/Icons");
 	ok = wmkdir_free(p) && ok;
@@ -625,8 +634,10 @@ Bool wCreateDefaultConfig(void)
 	p = wstrconcat(lib, "/WindowMaker/WPrefs");
 	ok = wmkdir_free(p) && ok;
 
-	if (!ok)
+	if (!ok) {
+		wfree(defs);
 		return False;
+	}
 
 	p = wstrconcat(lib, "/WindowMaker/autostart");
 	ok = write_autostart(p) && ok;
@@ -636,8 +647,10 @@ Bool wCreateDefaultConfig(void)
 	ok = write_exitscript(p) && ok;
 	wfree(p);
 
-	if (!ok)
+	if (!ok) {
+		wfree(defs);
 		return False;
+	}
 
 	p = wstrconcat(defs, "WMGLOBAL");
 	ok = write_wm_global(p) && ok;
@@ -659,5 +672,6 @@ Bool wCreateDefaultConfig(void)
 	ok = write_window_maker(p) && ok;
 	wfree(p);
 
+	wfree(defs);
 	return ok;
 }
