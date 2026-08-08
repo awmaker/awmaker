@@ -148,10 +148,10 @@ static void changeImage(WSwitchPanel *panel, int idecks, int selected, Bool dim,
 		} else {
 			RColor color;
 			WMScreen *wscr = WMWidgetScreen(icon);
-			color.red = 255;
 			color.red = WMRedComponentOfColor(WMGrayColor(wscr)) >> 8;
 			color.green = WMGreenComponentOfColor(WMGrayColor(wscr)) >> 8;
 			color.blue = WMBlueComponentOfColor(WMGrayColor(wscr)) >> 8;
+			color.alpha = 255;
 			RFillImage(back, &color);
 		}
 
