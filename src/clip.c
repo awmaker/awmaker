@@ -1007,7 +1007,6 @@ void clip_destroy(WDock *dock)
 
 static WMPropList *clip_save_state(WDock *dock)
 {
-	virtual_screen *vscr = dock->vscr;
 	int i;
 	WMPropList *icon_info;
 	WMPropList *list = NULL, *dock_state = NULL;
@@ -1057,12 +1056,7 @@ static WMPropList *clip_save_state(WDock *dock)
 	dAutoRaiseLower = WMCreatePLString("AutoRaiseLower");
 	WMPutInPLDictionary(dock_state, dAutoRaiseLower, value);
 
-	/* TODO: Check why in the last workspace, clip is at x=0, y=0
-	 * Save the Clip position using the Clip in workspace 1
-	 */
-	snprintf(buffer, sizeof(buffer), "%i,%i",
-		 vscr->workspace.array[0]->clip->x_pos,
-		 vscr->workspace.array[0]->clip->y_pos);
+	snprintf(buffer, sizeof(buffer), "%i,%i", dock->x_pos, dock->y_pos);
 	value = WMCreatePLString(buffer);
 	dPosition = WMCreatePLString("Position");
 	WMPutInPLDictionary(dock_state, dPosition, value);
