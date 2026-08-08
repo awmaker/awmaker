@@ -3408,8 +3408,8 @@ static void set_keygrab(WShortKey *shortcut, char *value)
 			if (mod < 0) {
 				wwarning(_("Invalid key modifier \"%s\""), b);
 				error = 1;
-			}
-			shortcut->modifier |= mod;
+			} else
+				shortcut->modifier |= mod;
 
 			b = k + 1;
 		}
