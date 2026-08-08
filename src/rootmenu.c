@@ -1695,7 +1695,7 @@ void OpenRootMenu(virtual_screen *vscr, int x, int y, int keyboard)
 	if (vscr->menu.root_menu && vscr->menu.root_menu->flags.mapped) {
 		rootmenu = vscr->menu.root_menu;
 		if (!rootmenu->flags.buttoned) {
-			switchmenu_destroy(vscr);
+			rootmenu_destroy(vscr);
 		} else {
 			wRaiseFrame(vscr, rootmenu->frame->core);
 
