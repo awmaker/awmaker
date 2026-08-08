@@ -152,6 +152,7 @@ static WDECallbackUpdate setKeyGrab_maximizertc;
 static WDECallbackUpdate setKeyGrab_maximizelbc;
 static WDECallbackUpdate setKeyGrab_maximizerbc;
 static WDECallbackUpdate setKeyGrab_maximus;
+static WDECallbackUpdate setKeyGrab_central;
 static WDECallbackUpdate setKeyGrab_keepontop;
 static WDECallbackUpdate setKeyGrab_keepatbottom;
 static WDECallbackUpdate setKeyGrab_omnipresent;
@@ -1022,6 +1023,8 @@ WDefaultEntry optionList[] = {
 	    &wPreferences.key.maximizerbc, getKeybind, setKeyGrab_maximizerbc, NULL, NULL, 1},
 	{"MaximusKey", "None", NULL,
 	    &wPreferences.key.maximus, getKeybind, setKeyGrab_maximus, NULL, NULL, 1},
+	{"CentralKey", "None", NULL,
+	    &wPreferences.key.central, getKeybind, setKeyGrab_central, NULL, NULL, 1},
 	{"KeepOnTopKey", "None", NULL,
 	    &wPreferences.key.keepontop, getKeybind, setKeyGrab_keepontop, NULL, NULL, 1},
 	{"KeepAtBottomKey", "None", NULL,
@@ -3990,6 +3993,29 @@ static int setKeyGrab_maximus(virtual_screen *vscr)
 
 	set_keygrab(&shortcut, value);
 	wKeyBindings[WKBD_MAXIMUS] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_central(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.central;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_CENTRAL] = shortcut;
 	wwin = vscr->window.focused;
 
 	while (wwin != NULL) {

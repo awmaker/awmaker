@@ -78,6 +78,7 @@ static const struct {
 	{ "LBCMaximizeKey", N_("Maximize active window left bottom corner") },
 	{ "RBCMaximizeKey", N_("Maximize active window right bottom corner") },
 	{ "MaximusKey",     N_("Maximus: Tiled maximization ") },
+	{ "CenterKey",      N_("Maximize active window central") },
 	{ "KeepOnTopKey",   N_("Toggle window on top status") },
 	{ "KeepAtBottomKey",N_("Toggle window at bottom status") },
 	{ "OmnipresentKey", N_("Toggle window omnipresent status") },

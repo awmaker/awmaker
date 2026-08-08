@@ -588,6 +588,7 @@ extern struct WPreferences {
 		char maximizeth[MAX_SHORTCUT_LENGTH];
 		char maximizev[MAX_SHORTCUT_LENGTH];
 		char maximus[MAX_SHORTCUT_LENGTH];
+		char central[MAX_SHORTCUT_LENGTH];
 		char miniaturize[MAX_SHORTCUT_LENGTH];
 		char minimizeall[MAX_SHORTCUT_LENGTH];
 		char moveresize[MAX_SHORTCUT_LENGTH];

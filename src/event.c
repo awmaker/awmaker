@@ -1656,6 +1656,13 @@ static void handleKeyPress(XEvent *event)
 			handleMaximize(wwin, MAX_MAXIMUS | MAX_KEYBOARD);
 		}
 		break;
+	case WKBD_CENTRAL:
+		if (ISMAPPED(wwin) && ISFOCUSED(wwin) && IS_RESIZABLE(wwin)) {
+			DestroyWindowMenu(vscr);
+			handleMaximize(wwin, MAX_CENTRAL | MAX_KEYBOARD);
+			movePionterToWindowCenter(wwin);
+		}
+		break;
 	case WKBD_KEEP_ON_TOP:
 		if (ISMAPPED(wwin) && ISFOCUSED(wwin)) {
 			DestroyWindowMenu(vscr);

@@ -531,6 +531,7 @@ static void createPixmaps(virtual_screen *vscr)
 
 	LOADSNAPINDICATOR(MENU_SNAP_V_INDICATOR_XBM_DATA, menu_snap_vertical_indicator)
 	LOADSNAPINDICATOR(MENU_SNAP_H_INDICATOR_XBM_DATA, menu_snap_horizontal_indicator)
+	LOADSNAPINDICATOR(MENU_CENTRAL_INDICATOR_XBM_DATA, menu_central_indicator)
 	LOADSNAPINDICATOR(MENU_SNAP_RH_INDICATOR_XBM_DATA, menu_snap_rh_indicator)
 	LOADSNAPINDICATOR(MENU_SNAP_LH_INDICATOR_XBM_DATA, menu_snap_lh_indicator)
 	LOADSNAPINDICATOR(MENU_SNAP_TH_INDICATOR_XBM_DATA, menu_snap_th_indicator)

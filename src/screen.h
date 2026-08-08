@@ -269,6 +269,7 @@ struct WScreen {
 
     struct WPixmap *menu_snap_vertical_indicator;  /* for vertical snap window */
     struct WPixmap *menu_snap_horizontal_indicator;  /* for horizontal snap window */
+    struct WPixmap *menu_central_indicator;  /* for central window */
     struct WPixmap *menu_snap_rh_indicator;  /* for right half snap window */
     struct WPixmap *menu_snap_lh_indicator;  /* for left half snap window */
     struct WPixmap *menu_snap_th_indicator;  /* for top half snap window */
