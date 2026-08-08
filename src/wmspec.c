@@ -92,6 +92,7 @@ static Atom net_wm_state_skip_taskbar;
 static Atom net_wm_state_skip_pager;
 static Atom net_wm_state_hidden;
 static Atom net_wm_state_fullscreen;
+static Atom net_wm_fullscreen_monitors;
 static Atom net_wm_state_above;
 static Atom net_wm_state_below;
 static Atom net_wm_state_focused;
@@ -176,6 +177,7 @@ static atomitem_t atomNames[] = {
 	{"_NET_WM_STATE_SKIP_PAGER", &net_wm_state_skip_pager},
 	{"_NET_WM_STATE_HIDDEN", &net_wm_state_hidden},
 	{"_NET_WM_STATE_FULLSCREEN", &net_wm_state_fullscreen},
+	{"_NET_WM_FULLSCREEN_MONITORS", &net_wm_fullscreen_monitors},
 	{"_NET_WM_STATE_ABOVE", &net_wm_state_above},
 	{"_NET_WM_STATE_BELOW", &net_wm_state_below},
 	{"_NET_WM_STATE_FOCUSED", &net_wm_state_focused},
@@ -276,6 +278,7 @@ static void setSupportedHints(WScreen *scr)
 	atom[i++] = net_wm_state_skip_pager;
 	atom[i++] = net_wm_state_hidden;
 	atom[i++] = net_wm_state_fullscreen;
+	atom[i++] = net_wm_fullscreen_monitors;
 	atom[i++] = net_wm_state_above;
 	atom[i++] = net_wm_state_below;
 	atom[i++] = net_wm_state_focused;
@@ -1006,6 +1009,7 @@ static void updateStateHint(WWindow *wwin, Bool changedWorkspace, Bool del)
 {				/* changeable */
 	if (del) {
 		XDeleteProperty(dpy, wwin->client_win, net_wm_state);
+		XDeleteProperty(dpy, wwin->client_win, net_wm_fullscreen_monitors);
 	} else {
 		Atom state[15];	/* nr of defined state atoms */
 		int i = 0;
@@ -1046,6 +1050,18 @@ static void updateStateHint(WWindow *wwin, Bool changedWorkspace, Bool del)
 
 		XChangeProperty(dpy, wwin->client_win, net_wm_state, XA_ATOM, 32,
 				PropModeReplace, (unsigned char *)state, i);
+
+		if (wwin->flags.fullscreen && (wwin->flags.fullscreen_monitors[0] != -1)) {
+			unsigned long data[4];
+
+			data[0] = wwin->flags.fullscreen_monitors[0];
+			data[1] = wwin->flags.fullscreen_monitors[1];
+			data[2] = wwin->flags.fullscreen_monitors[2];
+			data[3] = wwin->flags.fullscreen_monitors[3];
+
+			XChangeProperty(dpy, wwin->client_win, net_wm_fullscreen_monitors, XA_CARDINAL, 32,
+				PropModeReplace, (unsigned char *)data, 4);
+		}
 	}
 }
 
@@ -1239,8 +1255,10 @@ static void doStateAtom(WWindow *wwin, Atom state, int set, Bool init)
 		} else {
 			if (set)
 				wFullscreenWindow(wwin);
-			else
+			else {
 				wUnfullscreenWindow(wwin);
+				wwin->flags.fullscreen_monitors[0] = -1;
+			}
 		}
 	} else if (state == net_wm_state_above) {
 		if (set == _NET_WM_STATE_TOGGLE)
@@ -1808,6 +1826,20 @@ Bool wNETWMProcessClientMessage(XClientMessageEvent *event)
 		else
 			wMouseResizeWindow(wwin, &fake_event);
 
+		return True;
+	} else if (event->message_type == net_wm_fullscreen_monitors) {
+		unsigned long top, bottom, left, right, src_indication;
+
+		top = event->data.l[0];
+		bottom = event->data.l[1];
+		left = event->data.l[2];
+		right = event->data.l[3];
+		src_indication = event->data.l[4];
+
+		if (src_indication > 1)
+			wwarning("_NET_WM_FULLSCREEN_MONITORS source indication %ld not supported", src_indication);
+
+		wFullscreenMonitorsWindow(wwin, top, bottom, left, right);
 		return True;
 	}
 

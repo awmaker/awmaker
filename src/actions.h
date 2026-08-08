@@ -67,6 +67,7 @@ void wArrangeIcons(virtual_screen *vscr, Bool arrangeAll);
 void wMakeWindowVisible(WWindow *wwin);
 
 void wFullscreenWindow(WWindow *wwin);
+void wFullscreenMonitorsWindow(WWindow *wwin, unsigned long top, unsigned long bottom, unsigned long left, unsigned long right);
 void wUnfullscreenWindow(WWindow *wwin);
 
 void animateResize(virtual_screen *vscr, int x, int y, int w, int h, int fx, int fy, int fw, int fh);

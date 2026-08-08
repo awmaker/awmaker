@@ -40,6 +40,7 @@ int wGetHeadForPointerLocation(virtual_screen *vscr);
 int wGetHeadRelativeToCurrentHead(virtual_screen *vscr, int current_head, int direction);
 
 WMRect wGetRectForHead(WScreen *scr, int head);
+void wGetRectUnion(const WMRect *rect1, const WMRect *rect2, WMRect *dest);
 WArea wGetUsableAreaForHead(virtual_screen *vscr, int head, WArea *totalAreaPtr, Bool noicons);
 WMPoint wGetPointToCenterRectInHead(virtual_screen *vscr, int head, int width, int height);
 

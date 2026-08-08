@@ -1229,6 +1229,7 @@ WWindow *wManageWindow(virtual_screen *vscr, Window window)
 
 	XChangeWindowAttributes(dpy, window, CWEventMask | CWDontPropagate | CWSaveUnder, &attribs);
 	XSetWindowBorderWidth(dpy, window, 0);
+	wwin->flags.fullscreen_monitors[0] = -1;
 
 	/* get hints from GNUstep app */
 	if (wwin->wm_class != NULL && strcmp(wwin->wm_class, "GNUstep") == 0)
