@@ -30,6 +30,7 @@
 #define SAVE_GEOMETRY_ALL      SAVE_GEOMETRY_X | SAVE_GEOMETRY_Y | SAVE_GEOMETRY_WIDTH | SAVE_GEOMETRY_HEIGHT
 
 void wSetFocusTo(virtual_screen *vscr, WWindow *wwin);
+void wSetFocusToDirection(virtual_screen *vscr, int direction);
 
 int wMouseMoveWindow(WWindow *wwin, XEvent *ev);
 int wKeyboardMoveResizeWindow(WWindow *wwin);

@@ -560,6 +560,10 @@ extern struct WPreferences {
 		char dockraiselower[MAX_SHORTCUT_LENGTH];
 		char focusnext[MAX_SHORTCUT_LENGTH];
 		char focusprev[MAX_SHORTCUT_LENGTH];
+		char focusleft[MAX_SHORTCUT_LENGTH];
+		char focusright[MAX_SHORTCUT_LENGTH];
+		char focusup[MAX_SHORTCUT_LENGTH];
+		char focusdown[MAX_SHORTCUT_LENGTH];
 		char groupnext[MAX_SHORTCUT_LENGTH];
 		char groupprev[MAX_SHORTCUT_LENGTH];
 		char markset[MAX_SHORTCUT_LENGTH];

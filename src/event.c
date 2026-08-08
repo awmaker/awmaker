@@ -1740,6 +1740,22 @@ static void handleKeyPress(XEvent *event)
 		StartWindozeCycle(wwin, event, False, False);
 		break;
 
+	case WKBD_FOCUSLEFT:
+		wSetFocusToDirection(vscr, DIRECTION_LEFT);
+		break;
+
+	case WKBD_FOCUSRIGHT:
+		wSetFocusToDirection(vscr, DIRECTION_RIGHT);
+		break;
+
+	case WKBD_FOCUSUP:
+		wSetFocusToDirection(vscr, DIRECTION_UP);
+		break;
+
+	case WKBD_FOCUSDOWN:
+		wSetFocusToDirection(vscr, DIRECTION_DOWN);
+		break;
+
 	case WKBD_GROUPNEXT:
 		StartWindozeCycle(wwin, event, True, True);
 		break;

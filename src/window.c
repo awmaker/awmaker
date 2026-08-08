@@ -3350,3 +3350,28 @@ static WWindow *window_focus_click(WWindow *wwin)
 
 	return tmp;
 }
+
+Bool wWindowIsFullyCovered(WWindow *wwin)
+{
+	virtual_screen *vscr = wwin->vscr;
+	int cx = wwin->frame_x;
+	int cy = wwin->frame_y;
+	int cright = cx + (int)wwin->width;
+	int cbottom = cy + (int)wwin->height;
+	WWindow *w;
+
+	for (w = vscr->window.focused; w != NULL; w = w->prev) {
+		if (w == wwin)
+			continue;
+		if (!w->flags.mapped)
+			continue;
+		if (!w->frame || w->frame->workspace != vscr->workspace.current)
+			continue;
+		if (w->frame_x <= cx &&
+		    w->frame_y <= cy &&
+		    w->frame_x + (int)w->width >= cright &&
+		    w->frame_y + (int)w->height >= cbottom)
+			return True;
+	}
+	return False;
+}

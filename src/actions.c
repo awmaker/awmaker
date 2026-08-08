@@ -195,9 +195,87 @@ void wSetFocusTo(virtual_screen *vscr, WWindow *wwin)
 	old_scr = vscr;
 }
 
+void wSetFocusToDirection(virtual_screen *vscr, int direction)
+{
+	WWindow *focused = vscr->window.focused;
+	WWindow *best = NULL;
+	WWindow *candidate = NULL;
+	int my_cx, my_cy;
+	long best_score = -1;
+
+	if (!focused || !focused->flags.mapped)
+		return;
+
+	/* centre of the focused window */
+	my_cx = focused->frame_x + (int)focused->width / 2;
+	my_cy = focused->frame_y + (int)focused->height / 2;
+
+	/* Iterate from most-recently-focused to least-recently-focused */
+	for (candidate = focused->prev; candidate != NULL; candidate = candidate->prev) {
+		int his_cx, his_cy, distance, offset;
+		long score;
+
+		if (!candidate->flags.mapped)
+			continue;
+		if (WFLAGP(candidate, no_focusable))
+			continue;
+		if (!candidate->frame || candidate->frame->workspace != vscr->workspace.current)
+			continue;
+
+		/* ignore fully covered windows if cannot raised them */
+		if (!wPreferences.circ_raise && wWindowIsFullyCovered(candidate))
+			continue;
+
+		/* relative centre of candidate */
+		his_cx = (candidate->frame_x - my_cx) + (int)candidate->width / 2;
+		his_cy = (candidate->frame_y - my_cy) + (int)candidate->height / 2;
+
+		switch (direction) {
+		case DIRECTION_RIGHT:
+			distance = his_cx;
+			offset = his_cy < 0 ? -his_cy : his_cy;
+			break;
+		case DIRECTION_LEFT:
+			distance = -his_cx;
+			offset = his_cy < 0 ? -his_cy : his_cy;
+			break;
+		case DIRECTION_DOWN:
+			distance = his_cy;
+			offset = his_cx < 0 ? -his_cx : his_cx;
+			break;
+		case DIRECTION_UP:
+			distance = -his_cy;
+			offset = his_cx < 0 ? -his_cx : his_cx;
+			break;
+		default:
+			continue;
+		}
+
+		/* candidate must be strictly in the requested direction */
+		if (distance <= 0)
+			continue;
+
+		score = distance + offset;
+
+		/* heavy penalty for windows more than 45 degrees off-axis */
+		if (offset > distance)
+			score += 1000000L;
+
+		if (best_score < 0 || score < best_score) {
+			best = candidate;
+			best_score = score;
+		}
+	}
+
+	if (best) {
+		if (wPreferences.circ_raise)
+			wRaiseFrame(vscr, best->frame->core);
+		wSetFocusTo(vscr, best);
+	}
+}
+
 void wShadeWindow(WWindow *wwin)
 {
-
 	if (wwin->flags.shaded)
 		return;
 

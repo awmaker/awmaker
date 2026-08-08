@@ -344,6 +344,7 @@ void wWindowUnfocus(WWindow *wwin);
 
 void wWindowUpdateName(WWindow *wwin, const char *newTitle);
 void wWindowConstrainSize(WWindow *wwin, unsigned int *nwidth, unsigned int *nheight);
+Bool wWindowIsFullyCovered(WWindow *wwin);
 void wWindowCropSize(WWindow *wwin, unsigned int maxw, unsigned int maxh,
                      unsigned int *nwidth, unsigned int *nheight);
 void wWindowConfigure(WWindow *wwin, int req_x, int req_y,

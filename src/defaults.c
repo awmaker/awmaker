@@ -163,6 +163,10 @@ static WDECallbackUpdate setKeyGrab_select;
 static WDECallbackUpdate setKeyGrab_workspacemap;
 static WDECallbackUpdate setKeyGrab_focusnext;
 static WDECallbackUpdate setKeyGrab_focusprev;
+static WDECallbackUpdate setKeyGrab_focusleft;
+static WDECallbackUpdate setKeyGrab_focusright;
+static WDECallbackUpdate setKeyGrab_focusup;
+static WDECallbackUpdate setKeyGrab_focusdown;
 static WDECallbackUpdate setKeyGrab_groupnext;
 static WDECallbackUpdate setKeyGrab_groupprev;
 static WDECallbackUpdate setKeyGrab_markset;
@@ -1040,6 +1044,14 @@ WDefaultEntry optionList[] = {
 	    &wPreferences.key.focusnext, getKeybind, setKeyGrab_focusnext, NULL, NULL, 1},
 	{"FocusPrevKey", "Mod1+Shift+Tab", NULL,
 	    &wPreferences.key.focusprev, getKeybind, setKeyGrab_focusprev, NULL, NULL, 1},
+	{"FocusWindowLeftKey", "None", NULL,
+	    &wPreferences.key.focusleft, getKeybind, setKeyGrab_focusleft, NULL, NULL, 1},
+	{"FocusWindowRightKey", "None", NULL,
+	    &wPreferences.key.focusright, getKeybind, setKeyGrab_focusright, NULL, NULL, 1},
+	{"FocusWindowUpKey", "None", NULL,
+	    &wPreferences.key.focusup, getKeybind, setKeyGrab_focusup, NULL, NULL, 1},
+	{"FocusWindowDownKey", "None", NULL,
+	    &wPreferences.key.focusdown, getKeybind, setKeyGrab_focusdown, NULL, NULL, 1},
 	{"GroupNextKey", "None", NULL,
 	    &wPreferences.key.groupnext, getKeybind, setKeyGrab_groupnext, NULL, NULL, 1},
 	{"GroupPrevKey", "None", NULL,
@@ -4231,6 +4243,98 @@ static int setKeyGrab_focusprev(virtual_screen *vscr)
 
 	set_keygrab(&shortcut, value);
 	wKeyBindings[WKBD_FOCUSPREV] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_focusleft(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.focusleft;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_FOCUSLEFT] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_focusright(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.focusright;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_FOCUSRIGHT] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_focusup(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.focusup;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_FOCUSUP] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_focusdown(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.focusdown;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_FOCUSDOWN] = shortcut;
 	wwin = vscr->window.focused;
 
 	while (wwin != NULL) {
