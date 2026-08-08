@@ -101,15 +101,19 @@ void wCoreConfigure(WCoreWindow * core, int req_x, int req_y, int req_w, int req
 	xwc.x = req_x;
 	xwc.y = req_y;
 
-	if (req_w < 0)
-		req_w = 0;
+	/* A dimension <= 0 means "keep the current size" (matching upstream),
+	 * so only request a size change for axes that carry a real value.
+	 * The old code clamped < 0 to 0 and always set CWWidth|CWHeight, which
+	 * would have sized a window down to 0 if a caller ever passed 0. */
+	if (req_w > 0) {
+		mask |= CWWidth;
+		xwc.width = req_w;
+	}
 
-	if (req_h < 0)
-		req_h = 0;
-
-	mask |= CWWidth | CWHeight;
-	xwc.width = req_w;
-	xwc.height = req_h;
+	if (req_h > 0) {
+		mask |= CWHeight;
+		xwc.height = req_h;
+	}
 
 	XConfigureWindow(dpy, core->window, mask, &xwc);
 }
