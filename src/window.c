@@ -12,6 +12,7 @@
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
+#include <X11/Xatom.h>
 #ifdef USE_XSHAPE
 #include <X11/extensions/shape.h>
 #endif
@@ -54,6 +55,7 @@
 #include "osdep.h"
 #include "input.h"
 #include "shell.h"
+#include "switchmenu.h"
 
 #ifdef USER_MENU
 #include "usermenu.h"
@@ -213,11 +215,14 @@ void wWindowDestroy(WWindow *wwin)
 		}
 	}
 
+	/* clean up any mark assigned to this window */
+	if (wwin->mark_key_label != NULL)
+		wWindowUnsetMark(wwin);
+
 	if (wwin->fake_group && wwin->fake_group->retainCount > 0) {
 		wwin->fake_group->retainCount--;
 		if (wwin->fake_group->retainCount == 0 && wwin->fake_group->leader != None) {
-			XDestroyWindow(dpy, wwin->fake_group->leader);
-			wwin->fake_group->leader = None;
+			XDestroyWindow(dpy, wwin->fake_group->leader);			wwin->fake_group->leader = None;
 			wwin->fake_group->origLeader = None;
 			XFlush(dpy);
 		}
@@ -788,8 +793,17 @@ static int window_restarting_restore(Window window, WWindow *wwin, WWindowState 
 	if (wstate != NULL || win_state != NULL)
 		window_restore_shortcut(wwin, win_state, wstate);
 
-	if (wstate != NULL)
+	/* restore mark: prefer session state, fall back to warm-restart hint */
+	if (win_state != NULL && win_state->state->mark_key != NULL)
+		wWindowSetMark(wwin, win_state->state->mark_key);
+	else if (wstate != NULL && wstate->mark_key != NULL)
+		wWindowSetMark(wwin, wstate->mark_key);
+
+	if (wstate != NULL) {
+		if (wstate->mark_key != NULL)
+			wfree(wstate->mark_key);
 		wfree(wstate);
+	}
 
 	return workspace;
 }
@@ -2521,6 +2535,14 @@ void wWindowSaveState(WWindow *wwin)
 
 	XChangeProperty(dpy, wwin->client_win, w_global.atom.wmaker.state,
 			w_global.atom.wmaker.state, 32, PropModeReplace, (unsigned char *)data, 10);
+
+	if (wwin->mark_key_label != NULL)
+		XChangeProperty(dpy, wwin->client_win, w_global.atom.wmaker.mark_key,
+					XA_STRING, 8, PropModeReplace,
+					(unsigned char *)wwin->mark_key_label,
+					strlen(wwin->mark_key_label));
+	else
+		XDeleteProperty(dpy, wwin->client_win, w_global.atom.wmaker.mark_key);
 }
 
 static int getSavedState(Window window, WSavedState **state)
@@ -2530,6 +2552,7 @@ static int getSavedState(Window window, WSavedState **state)
 	unsigned long nitems_ret;
 	unsigned long bytes_after_ret;
 	long *data;
+	unsigned char *mk_data = NULL;
 
 	if (XGetWindowProperty(dpy, window, w_global.atom.wmaker.state, 0, 10,
 			       True, w_global.atom.wmaker.state,
@@ -2556,6 +2579,15 @@ static int getSavedState(Window window, WSavedState **state)
 	(*state)->window_shortcuts = data[9];
 
 	XFree(data);
+
+	(*state)->mark_key = NULL;
+	if (XGetWindowProperty(dpy, window, w_global.atom.wmaker.mark_key, 0, 256,
+							True, XA_STRING, &type_ret, &fmt_ret, &nitems_ret, &bytes_after_ret,
+							&mk_data) == Success && mk_data && nitems_ret > 0 && type_ret == XA_STRING)
+		(*state)->mark_key = wstrdup((char *)mk_data);
+
+	if (mk_data)
+		XFree(mk_data);
 
 	return 1;
 }
@@ -2892,6 +2924,9 @@ static void release_wwindowstate(WWindowState *wstate)
 	if (wstate->command)
 		wfree(wstate->command);
 
+	if (wstate->state && wstate->state->mark_key)
+		wfree(wstate->state->mark_key);
+
 	wfree(wstate->state);
 	wfree(wstate);
 }
@@ -2903,6 +2938,28 @@ void wWindowSetOmnipresent(WWindow *wwin, Bool flag)
 
 	wwin->flags.omnipresent = flag;
 	WMPostNotificationName(WMNChangedState, wwin, "omnipresent");
+}
+
+void wWindowSetMark(WWindow *wwin, const char *label)
+{
+	/* Remove any previous mark first */
+	if (wwin->mark_key_label != NULL)
+		wWindowUnsetMark(wwin);
+
+	wwin->mark_key_label = wstrdup(label);
+
+	WMPostNotificationName(WMNChangedState, wwin, "mark");
+}
+
+void wWindowUnsetMark(WWindow *wwin)
+{
+	if (wwin->mark_key_label == NULL)
+		return;
+
+	wfree(wwin->mark_key_label);
+	wwin->mark_key_label = NULL;
+
+	WMPostNotificationName(WMNChangedState, wwin, "mark");
 }
 
 static void resizebarMouseDown(WCoreWindow *sender, void *data, XEvent *event)

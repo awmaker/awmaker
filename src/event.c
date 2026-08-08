@@ -1361,6 +1361,12 @@ static int CheckFullScreenWindowFocused(virtual_screen *vscr)
 	return 0;
 }
 
+static void startMarkCapture(virtual_screen *vscr, WMarkCaptureMode mode)
+{
+	vscr->mark_capture_mode = mode;
+	XGrabKeyboard(dpy, vscr->screen_ptr->root_win, False, GrabModeAsync, GrabModeAsync, CurrentTime);
+}
+
 static void handleKeyPress(XEvent *event)
 {
 	virtual_screen *vscr = wScreenForRootWindow(event->xkey.root);
@@ -1374,6 +1380,118 @@ static void handleKeyPress(XEvent *event)
 
 	/* ignore CapsLock */
 	modifiers = event->xkey.state & w_global.shortcut.modifiers_mask;
+
+	/* ----------------------------------------------------------- *
+	 * Window mark capture mode                                     *
+	 *                                                              *
+	 * We grabbed the keyboard so all keypresses come here until    *
+	 * we release the grab.                                         *
+	 * ------------------------------------------------------------ */
+	if (vscr->mark_capture_mode != MARK_CAPTURE_IDLE) {
+		int capture_mode = vscr->mark_capture_mode;
+		KeySym cap_ksym;
+		char label[MAX_SHORTCUT_LENGTH];
+
+		/* Skip modifier-only keypresses */
+		cap_ksym = XLookupKeysym(&event->xkey, 0);
+		if (cap_ksym == NoSymbol || IsModifierKey(cap_ksym))
+			return;
+
+		/* Real key received: exit capture mode and release grab */
+		vscr->mark_capture_mode = MARK_CAPTURE_IDLE;
+		XUngrabKeyboard(dpy, CurrentTime);
+
+		if (!GetCanonicalShortcutLabel(modifiers, cap_ksym, label, sizeof(label)))
+			wstrlcpy(label, "?", sizeof(label));
+
+		if (capture_mode == MARK_CAPTURE_SET) {
+			WWindow *target = vscr->window.focused;
+			Bool conflict = False;
+			int i;
+
+			/* Conflict check against static wmaker bindings */
+			for (i = 0; i < WKBD_LAST; i++) {
+				if (wKeyBindings[i].keycode == event->xkey.keycode && wKeyBindings[i].modifier == modifiers) {
+					wwarning("window mark: '%s' is already a wmaker binding, mark not assigned", label);
+					conflict = True;
+					break;
+				}
+			}
+
+			/* Conflict check against existing marks on other windows */
+			if (!conflict) {
+				WWindow *tw = vscr->window.focused;
+				while (tw) {
+					if (tw != target && tw->mark_key_label != NULL && strcmp(tw->mark_key_label, label) == 0) {
+						wwarning("window mark: label '%s' is already used by another window, mark not assigned", label);
+						conflict = True;
+						break;
+					}
+					tw = tw->prev;
+				}
+			}
+
+			if (!conflict && target != NULL)
+				wWindowSetMark(target, label);
+
+		} else {
+			/* Find marked window by label */
+			WWindow *tw = vscr->window.focused;
+
+			while (tw) {
+				if (tw->mark_key_label != NULL && strcmp(tw->mark_key_label, label) == 0)
+					break;
+				tw = tw->prev;
+			}
+			if (tw == NULL) {
+				wwarning("window mark: no window labelled '%s'", label);
+			} else if (capture_mode == MARK_CAPTURE_BRING) {
+				if (tw->frame->workspace != vscr->workspace.current)
+					wWindowChangeWorkspace(tw, vscr->workspace.current);
+				wMakeWindowVisible(tw);
+			} else if (capture_mode == MARK_CAPTURE_JUMP) {
+				wMakeWindowVisible(tw);
+			} else {
+				/* MARK_CAPTURE_SWAP: swap position, size and workspace between focused and tw */
+				WWindow *focused = vscr->window.focused;
+				int fx, fy, fw, fh, tx, ty, tw_w, tw_h;
+				int f_ws, t_ws;
+
+				if (focused == NULL || focused == tw)
+					return;
+
+				/* Snapshot both geometries */
+				fx   = focused->frame_x;
+				fy   = focused->frame_y;
+				fw   = focused->width;
+				fh   = focused->height;
+				f_ws = focused->frame->workspace;
+
+				tx   = tw->frame_x;
+				ty   = tw->frame_y;
+				tw_w = tw->width;
+				tw_h = tw->height;
+				t_ws = tw->frame->workspace;
+
+				/* Swap workspaces first so configure lands in the right one */
+				if (f_ws != t_ws) {
+					wWindowChangeWorkspace(focused, t_ws);
+					wWindowChangeWorkspace(tw, f_ws);
+				}
+
+				/* Swap positions and sizes */
+				wWindowConfigure(focused, tx, ty, tw_w, tw_h);
+				wWindowConfigure(tw, fx, fy, fw, fh);
+
+				/* Follow origin window: switch view to the workspace it landed in,
+				 * then restore focus to it */
+				if (f_ws != t_ws)
+					wWorkspaceChange(vscr, t_ws);
+				wSetFocusTo(vscr, focused);
+			}
+		}
+		return;
+	}
 
 	for (i = 0; i < WKBD_LAST; i++) {
 		if (wKeyBindings[i].keycode == 0)
@@ -1628,6 +1746,29 @@ static void handleKeyPress(XEvent *event)
 
 	case WKBD_GROUPPREV:
 		StartWindozeCycle(wwin, event, False, True);
+		break;
+
+	case WKBD_MARK_SET:
+		if (ISMAPPED(wwin) && ISFOCUSED(wwin))
+			startMarkCapture(vscr, MARK_CAPTURE_SET);
+		break;
+
+	case WKBD_MARK_UNSET:
+		if (ISMAPPED(wwin) && ISFOCUSED(wwin) && wwin->mark_key_label != NULL)
+			wWindowUnsetMark(wwin);
+		break;
+
+	case WKBD_MARK_BRING:
+		startMarkCapture(vscr, MARK_CAPTURE_BRING);
+		break;
+
+	case WKBD_MARK_JUMP:
+		startMarkCapture(vscr, MARK_CAPTURE_JUMP);
+		break;
+
+	case WKBD_MARK_SWAP:
+		if (ISMAPPED(wwin) && ISFOCUSED(wwin))
+			startMarkCapture(vscr, MARK_CAPTURE_SWAP);
 		break;
 
 	case WKBD_WORKSPACE1 ... WKBD_WORKSPACE10:

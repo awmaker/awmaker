@@ -36,6 +36,14 @@ typedef struct WReservedArea {
 typedef struct WScreen WScreen;
 typedef struct virtual_screen virtual_screen;
 
+typedef enum {
+    MARK_CAPTURE_IDLE  = 0,
+    MARK_CAPTURE_SET   = 1,
+    MARK_CAPTURE_BRING = 2,
+    MARK_CAPTURE_JUMP  = 3,
+    MARK_CAPTURE_SWAP  = 4
+} WMarkCaptureMode;
+
 /* This virtual screen includes all items located in the screen */
 struct virtual_screen {
 	int id;                        /* Virtual screen ID */
@@ -125,6 +133,8 @@ struct virtual_screen {
 	struct {
 		int border_width;
 	} frame;
+
+	WMarkCaptureMode mark_capture_mode;    /* vim-like window marking capture */
 };
 
 /* each WScreen is saved into a context associated with its root window */

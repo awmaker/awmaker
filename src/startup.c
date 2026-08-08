@@ -242,7 +242,9 @@ static char *atomNames[] = {
 
 	"_GTK_APPLICATION_OBJECT_PATH",
 
-	"WM_IGNORE_FOCUS_EVENTS"
+	"WM_IGNORE_FOCUS_EVENTS",
+
+	"_WINDOWMAKER_MARK_KEY"
 };
 
 static void startup_set_atoms(void)
@@ -302,6 +304,7 @@ static void startup_set_atoms(void)
 	w_global.atom.desktop.gtk_object_path = atom[20];
 
 	w_global.atom.wm.ignore_focus_events = atom[21];
+	w_global.atom.wmaker.mark_key = atom[22];
 
 #ifdef USE_DOCK_XDND
 	wXDNDInitializeAtoms();

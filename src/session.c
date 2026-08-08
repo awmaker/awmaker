@@ -145,8 +145,10 @@ static WMPropList *makeWindowState(WWindow *wwin, WApplication *wapp)
 	WMPropList *win_state, *cmd, *name, *workspace;
 	WMPropList *shaded, *miniaturized, *maximized, *hidden, *geometry;
 	WMPropList *dock, *shortcut;
+	WMPropList *mark_key_pl = NULL;
 	WMPropList *sWorkspace, *sCommand, *sName, *sDock, *sShaded, *sMiniaturized;
 	WMPropList *sMaximized, *sHidden, *sGeometry, *sShortcutMask, *sYes, *sNo;
+	WMPropList *sMarkKey;
 
 	if (wwin->orig_main_window != None && wwin->orig_main_window != wwin->client_win)
 		win = wwin->orig_main_window;
@@ -201,6 +203,9 @@ static WMPropList *makeWindowState(WWindow *wwin, WApplication *wapp)
 	snprintf(buffer, sizeof(buffer), "%u", mask);
 	shortcut = WMCreatePLString(buffer);
 
+	if (wwin->mark_key_label)
+		mark_key_pl = WMCreatePLString(wwin->mark_key_label);
+
 	sName = WMCreatePLString("Name");
 	sCommand = WMCreatePLString("Command");
 	sWorkspace = WMCreatePLString("Workspace");
@@ -210,6 +215,7 @@ static WMPropList *makeWindowState(WWindow *wwin, WApplication *wapp)
 	sHidden = WMCreatePLString("Hidden");
 	sGeometry = WMCreatePLString("Geometry");
 	sShortcutMask = WMCreatePLString("ShortcutMask");
+	sMarkKey = WMCreatePLString("MarkKey");
 	win_state = WMCreatePLDictionary(sName, name,
 					 sCommand, cmd,
 					 sWorkspace, workspace,
@@ -218,6 +224,11 @@ static WMPropList *makeWindowState(WWindow *wwin, WApplication *wapp)
 					 sMaximized, maximized,
 					 sHidden, hidden,
 					 sShortcutMask, shortcut, sGeometry, geometry, NULL);
+
+	if (mark_key_pl) {
+		WMPutInPLDictionary(win_state, sMarkKey, mark_key_pl);
+		WMReleasePropList(mark_key_pl);
+	}
 
 	WMReleasePropList(name);
 	WMReleasePropList(cmd);
@@ -359,6 +370,7 @@ static WSavedState *getWindowState(virtual_screen *vscr, WMPropList *win_state)
 	WSavedState *state = wmalloc(sizeof(WSavedState));
 	WMPropList *value, *sShortcutMask;
 	WMPropList *sWorkspace, *sShaded, *sMiniaturized, *sMaximized, *sHidden, *sGeometry;
+	WMPropList *sMarkKey;
 	char *tmp;
 	unsigned mask;
 	int i;
@@ -406,6 +418,14 @@ static WSavedState *getWindowState(virtual_screen *vscr, WMPropList *win_state)
 	if (value != NULL) {
 		mask = getInt(value);
 		state->window_shortcuts = mask;
+	}
+
+	sMarkKey = WMCreatePLString("MarkKey");
+	value = WMGetFromPLDictionary(win_state, sMarkKey);
+	if (value != NULL && WMIsPLString(value)) {
+		char *s = WMGetFromPLString(value);
+		if (s && *s)
+			state->mark_key = wstrdup(s);
 	}
 
 	sGeometry = WMCreatePLString("Geometry");
@@ -535,6 +555,8 @@ void wSessionRestoreState(virtual_screen *vscr)
 		} else if ((pid = execCommand(vscr, command)) > 0) {
 			wWindowAddSavedState(instance, class, command, pid, state);
 		} else {
+			if (state->mark_key)
+				wfree(state->mark_key);
 			wfree(state);
 		}
 

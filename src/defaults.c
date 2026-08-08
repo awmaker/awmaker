@@ -165,6 +165,11 @@ static WDECallbackUpdate setKeyGrab_focusnext;
 static WDECallbackUpdate setKeyGrab_focusprev;
 static WDECallbackUpdate setKeyGrab_groupnext;
 static WDECallbackUpdate setKeyGrab_groupprev;
+static WDECallbackUpdate setKeyGrab_markset;
+static WDECallbackUpdate setKeyGrab_markunset;
+static WDECallbackUpdate setKeyGrab_markbring;
+static WDECallbackUpdate setKeyGrab_markjump;
+static WDECallbackUpdate setKeyGrab_markswap;
 static WDECallbackUpdate setKeyGrab_workspacenext;
 static WDECallbackUpdate setKeyGrab_workspaceprev;
 static WDECallbackUpdate setKeyGrab_workspacelast;
@@ -1028,6 +1033,16 @@ WDefaultEntry optionList[] = {
 	    &wPreferences.key.groupnext, getKeybind, setKeyGrab_groupnext, NULL, NULL, 1},
 	{"GroupPrevKey", "None", NULL,
 	    &wPreferences.key.groupprev, getKeybind, setKeyGrab_groupprev, NULL, NULL, 1},
+	{"MarkSetKey", "None", NULL,
+	    &wPreferences.key.markset, getKeybind, setKeyGrab_markset, NULL, NULL, 1},
+	{"MarkUnsetKey", "None", NULL,
+	    &wPreferences.key.markunset, getKeybind, setKeyGrab_markunset, NULL, NULL, 1},
+	{"MarkBringKey", "None", NULL,
+	    &wPreferences.key.markbring, getKeybind, setKeyGrab_markbring, NULL, NULL, 1},
+	{"MarkJumpKey", "None", NULL,
+	    &wPreferences.key.markjump, getKeybind, setKeyGrab_markjump, NULL, NULL, 1},
+	{"MarkSwapKey", "None", NULL,
+	    &wPreferences.key.markswap, getKeybind, setKeyGrab_markswap, NULL, NULL, 1},
 	{"NextWorkspaceKey", "Mod1+Control+Right", NULL,
 	    &wPreferences.key.workspacenext, getKeybind, setKeyGrab_workspacenext, NULL, NULL, 1},
 	{"PrevWorkspaceKey", "Mod1+Control+Left", NULL,
@@ -4249,6 +4264,121 @@ static int setKeyGrab_groupprev(virtual_screen *vscr)
 
 	set_keygrab(&shortcut, value);
 	wKeyBindings[WKBD_GROUPPREV] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_markset(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.markset;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_MARK_SET] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_markunset(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.markunset;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_MARK_UNSET] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_markbring(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.markbring;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_MARK_BRING] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_markjump(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.markjump;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_MARK_JUMP] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_markswap(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.markswap;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_MARK_SWAP] = shortcut;
 	wwin = vscr->window.focused;
 
 	while (wwin != NULL) {

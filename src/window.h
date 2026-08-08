@@ -286,6 +286,7 @@ typedef struct WWindow {
 	struct WMiniWindow *miniwindow;
 	char *title;				/* Window title */
 	Atom type;
+	char *mark_key_label;		/* Vim-like Window Marking */
 } WWindow;
 
 #define HAS_TITLEBAR(w)		(!(WFLAGP((w), no_titlebar) || (w)->flags.fullscreen))
@@ -310,6 +311,7 @@ typedef struct WSavedState {
     unsigned int w;
     unsigned int h;
     unsigned window_shortcuts; /* mask like 1<<shortcut_number */
+	char *mark_key;	/* serialised mark key label */
 } WSavedState;
 
 typedef struct WWindowState {
@@ -384,4 +386,6 @@ WMagicNumber wWindowGetSavedState(Window win);
 void wWindowDeleteSavedState(WMagicNumber id);
 Bool wWindowObscuresWindow(WWindow *wwin, WWindow *obscured);
 void wWindowSetOmnipresent(WWindow *wwin, Bool flag);
+void wWindowSetMark(WWindow *wwin, const char *label);
+void wWindowUnsetMark(WWindow *wwin);
 #endif

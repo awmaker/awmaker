@@ -33,6 +33,8 @@
 	((w)->wm_gnustep_attr->window_level == WMMainMenuWindowLevel || \
 	 (w)->wm_gnustep_attr->window_level == WMSubmenuWindowLevel))
 
+#define MAX_RTEXT_LENGTH (MAX_WORKSPACENAME_WIDTH + MAX_SHORTCUT_LENGTH + 16)
+
 static int initialized = 0;
 static void switchmenu_setup_switchmenu_notif(void);
 static void observer(void *self, WMNotification *notif);
@@ -166,6 +168,26 @@ static int menuIndexForWindow(WMenu * menu, WWindow * wwin, int old_pos)
 	return idx;
 }
 
+static void fillRtext(char *buf, size_t bufsz, WWindow *wwin, virtual_screen *vscr)
+{
+	char *mlbl = wwin->mark_key_label ? GetShortcutString(wwin->mark_key_label) : NULL;
+
+	if (IS_OMNIPRESENT(wwin)) {
+		if (mlbl)
+			snprintf(buf, bufsz, "[%s] [*]", mlbl);
+		else
+			snprintf(buf, bufsz, "[*]");
+	} else {
+		if (mlbl)
+			snprintf(buf, bufsz, "[%s] [%s]", mlbl,
+				 vscr->workspace.array[wwin->frame->workspace]->name);
+		else
+			snprintf(buf, bufsz, "[%s]",
+				 vscr->workspace.array[wwin->frame->workspace]->name);
+	}
+	wfree(mlbl);
+}
+
 void switchmenu_additem(WMenu *menu, WWindow *wwin)
 {
 	virtual_screen *vscr;
@@ -196,12 +218,8 @@ void switchmenu_additem(WMenu *menu, WWindow *wwin)
 	wfree(t);
 
 	entry->flags.indicator = 1;
-	entry->rtext = wmalloc(MAX_WORKSPACENAME_WIDTH + 8);
-	if (IS_OMNIPRESENT(wwin))
-		snprintf(entry->rtext, MAX_WORKSPACENAME_WIDTH, "[*]");
-	else
-		snprintf(entry->rtext, MAX_WORKSPACENAME_WIDTH, "[%s]",
-			 vscr->workspace.array[wwin->frame->workspace]->name);
+	entry->rtext = wmalloc(MAX_RTEXT_LENGTH);
+	fillRtext(entry->rtext, MAX_RTEXT_LENGTH, wwin, vscr);
 
 	if (wwin->flags.hidden) {
 		entry->flags.indicator_type = MI_HIDDEN;
@@ -279,11 +297,7 @@ static void switchmenu_changeentry_workspaceitem(WMenu *menu, WWindow *wwin,
 
 	vscr = menu->vscr;
 
-	if (IS_OMNIPRESENT(wwin))
-		snprintf(entry->rtext, MAX_WORKSPACENAME_WIDTH, "[*]");
-	else
-		snprintf(entry->rtext, MAX_WORKSPACENAME_WIDTH, "[%s]",
-			 vscr->workspace.array[wwin->frame->workspace]->name);
+	fillRtext(entry->rtext, MAX_RTEXT_LENGTH, wwin, vscr);
 
 	rt = entry->rtext;
 	entry->rtext = NULL;
@@ -369,11 +383,7 @@ static void update_menu_workspacerename(WMenu *menu, int workspace)
 	for (i = 0; i < menu->entry_no; i++) {
 		wwin = (WWindow *) menu->entries[i]->clientdata;
 		if (wwin->frame->workspace == workspace && !IS_OMNIPRESENT(wwin)) {
-			if (IS_OMNIPRESENT(wwin))
-				snprintf(menu->entries[i]->rtext, MAX_WORKSPACENAME_WIDTH, "[*]");
-			else
-				snprintf(menu->entries[i]->rtext, MAX_WORKSPACENAME_WIDTH, "[%s]",
-					 vscr->workspace.array[wwin->frame->workspace]->name);
+			fillRtext(menu->entries[i]->rtext, MAX_RTEXT_LENGTH, wwin, vscr);
 
 			menu->flags.realized = 0;
 		}
@@ -403,6 +413,8 @@ void switchmenu_handle_notification_wwin(WMenu *menu, WWindow *wwin, const char 
 		switchmenu_changeitem(menu, wwin);
 	} else if (strcmp(name, WMNChangedState) == 0) {
 		if (strcmp(data, "omnipresent") == 0)
+			switchmenu_changeworkspaceitem(menu, wwin);
+		else if (strcmp(data, "mark") == 0)
 			switchmenu_changeworkspaceitem(menu, wwin);
 		else
 			switchmenu_changestate(menu, wwin);

@@ -773,61 +773,42 @@ char *GetShortcutString(const char *shortcut)
 	return buffer;
 }
 
+Bool GetCanonicalShortcutLabel(unsigned int modifiers, KeySym ksym, char *buf, size_t bufsz)
+{
+	static const struct { unsigned int mask; const char *name; } mt[] = {
+		{ ShiftMask,   "Shift+"   },
+		{ ControlMask, "Control+" },
+		{ Mod1Mask,    "Mod1+"    },
+		{ Mod2Mask,    "Mod2+"    },
+		{ Mod3Mask,    "Mod3+"    },
+		{ Mod4Mask,    "Mod4+"    },
+		{ Mod5Mask,    "Mod5+"    },
+		{ 0, NULL }
+	};
+	const char *kname = XKeysymToString(ksym);
+	size_t i;
+
+	if (!kname)
+		return False;
+
+	buf[0] = '\0';
+	for (i = 0; mt[i].mask; i++) {
+		if (modifiers & mt[i].mask)
+			wstrlcat(buf, mt[i].name, bufsz);
+	}
+	wstrlcat(buf, kname, bufsz);
+
+	return True;
+}
+
 char *GetShortcutKey(WShortKey key)
 {
-	const char *key_name;
 	char buffer[256];
-	char *wr;
 
-	void append_string(const char *text)
-	{
-		const char *string = text;
-
-		while (*string) {
-			if (wr >= buffer + sizeof(buffer) - 1)
-				break;
-
-			*wr++ = *string++;
-		}
-	}
-
-	void append_modifier(int modifier_index, const char *fallback_name)
-	{
-		if (wPreferences.modifier_labels[modifier_index]) {
-			append_string(wPreferences.modifier_labels[modifier_index]);
-		} else {
-			append_string(fallback_name);
-		}
-	}
-
-	key_name = XKeysymToString(XkbKeycodeToKeysym(dpy, key.keycode, 0, 0));
-	if (!key_name)
+	if (!GetCanonicalShortcutLabel(key.modifier,
+				       XkbKeycodeToKeysym(dpy, key.keycode, 0, 0),
+				       buffer, sizeof(buffer)))
 		return NULL;
-
-	wr = buffer;
-	if (key.modifier & ControlMask)
-		append_modifier(1, "Control+");
-
-	if (key.modifier & ShiftMask)
-		append_modifier(0, "Shift+");
-
-	if (key.modifier & Mod1Mask)
-		append_modifier(2, "Mod1+");
-
-	if (key.modifier & Mod2Mask)
-		append_modifier(3, "Mod2+");
-
-	if (key.modifier & Mod3Mask)
-		append_modifier(4, "Mod3+");
-
-	if (key.modifier & Mod4Mask)
-		append_modifier(5, "Mod4+");
-
-	if (key.modifier & Mod5Mask)
-		append_modifier(6, "Mod5+");
-
-	append_string(key_name);
-	*wr = '\0';
 
 	return GetShortcutString(buffer);
 }

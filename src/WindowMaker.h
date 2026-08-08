@@ -555,6 +555,11 @@ extern struct WPreferences {
 		char focusprev[MAX_SHORTCUT_LENGTH];
 		char groupnext[MAX_SHORTCUT_LENGTH];
 		char groupprev[MAX_SHORTCUT_LENGTH];
+		char markset[MAX_SHORTCUT_LENGTH];
+		char markunset[MAX_SHORTCUT_LENGTH];
+		char markbring[MAX_SHORTCUT_LENGTH];
+		char markjump[MAX_SHORTCUT_LENGTH];
+		char markswap[MAX_SHORTCUT_LENGTH];
 		char hide[MAX_SHORTCUT_LENGTH];
 		char hideothers[MAX_SHORTCUT_LENGTH];
 		char keepatbottom[MAX_SHORTCUT_LENGTH];
@@ -756,6 +761,7 @@ extern struct wmaker_global_variables {
 
 			Atom icon_size;
 			Atom icon_tile;
+			Atom mark_key;
 		} wmaker;
 
 	} atom;
