@@ -248,7 +248,7 @@ static WMPixmap *dummy_background_pixmap(WWorkspaceMap *wsmap)
 	WMPixmap *icon;
 	RColor frame_bg_color;
 
-	img = RCreateImage(wsmap->wswidth, wsmap->wsheight, 0);
+	img = RCreateImage(wsmap->mini_workspace_width, wsmap->mini_workspace_height, 0);
 	if (!img)
 		return NULL;
 
