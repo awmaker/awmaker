@@ -23,12 +23,42 @@
 #include "resources.h"
 #include "screen.h"
 
-int wGetColorForColormap(Colormap colormap, const char *color_name, XColor *color)
+static unsigned long scale_color_component(unsigned short value, unsigned long mask)
+{
+	unsigned long m = mask;
+	int shift = 0, bits = 0;
+
+	if (!m)
+		return 0;
+
+	while (!(m & 1)) {
+		shift++;
+		m >>= 1;
+	}
+	while (m) {
+		bits++;
+		m >>= 1;
+	}
+
+	return ((unsigned long)(value >> (16 - bits)) & ((1UL << bits) - 1)) << shift;
+}
+
+int wGetColorForColormap(WScreen *scr, Colormap colormap, const char *color_name, XColor *color)
 {
 	if (!XParseColor(dpy, colormap, color_name, color)) {
 		wwarning(_("could not parse color \"%s\""), color_name);
 		return False;
 	}
+
+	if (scr->w_visual->class == TrueColor) {
+		/* Compute pixel directly from RGB components using the visual's
+		 * channel masks, avoiding a colormap cell allocation. */
+		color->pixel = scale_color_component(color->red, scr->w_visual->red_mask)
+		             | scale_color_component(color->green, scr->w_visual->green_mask)
+		             | scale_color_component(color->blue, scr->w_visual->blue_mask);
+		return True;
+	}
+
 	if (!XAllocColor(dpy, colormap, color)) {
 		wwarning(_("could not allocate color \"%s\""), color_name);
 		return False;
@@ -38,11 +68,14 @@ int wGetColorForColormap(Colormap colormap, const char *color_name, XColor *colo
 
 int wGetColor(WScreen *scr, const char *color_name, XColor *color)
 {
-	return wGetColorForColormap(scr->w_colormap, color_name, color);
+	return wGetColorForColormap(scr, scr->w_colormap, color_name, color);
 }
 
 void wFreeColor(WScreen * scr, unsigned long pixel)
 {
+	if (scr->w_visual->class == TrueColor)
+		return;
+
 	if (pixel != scr->white_pixel && pixel != scr->black_pixel) {
 		unsigned long colors[1];
 
