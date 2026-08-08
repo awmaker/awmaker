@@ -110,7 +110,10 @@ static const struct {
 	  /* default: */ False, OPTION_WMAKER, "DbClickFullScreen" },
 
 	{ N_("Close rootmenu when mouse (left or right) is clicked outside focus."),
-	  /* default: */ False, OPTION_WMAKER, "CloseRootMenuByLeftOrRightMouseClick" }
+	  /* default: */ False, OPTION_WMAKER, "CloseRootMenuByLeftOrRightMouseClick" },
+
+	{ N_("Show app icons in the window list menu."),
+	  /* default: */ False, OPTION_WMAKER, "WindowListAppIcons" }
 };
 
 

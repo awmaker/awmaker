@@ -27,6 +27,8 @@
 #include "workspace.h"
 #include "framewin.h"
 #include "switchmenu.h"
+#include "icon.h"
+#include "pixmap.h"
 
 #define IS_GNUSTEP_MENU(w) ((w)->wm_gnustep_attr && \
 	((w)->wm_gnustep_attr->flags & GSWindowLevelAttr) && \
@@ -456,4 +458,50 @@ static void wsobserver(void *self, WMNotification *notif)
 	(void) self;
 
 	switchmenu_handle_notification(vscr->menu.switch_menu, name, workspace);
+}
+
+/*
+ * switchMenuIconForWindow
+ *
+ * Build a WPixmap for the given window's icon, sized to fit a menu entry.
+ * The pixmap is computed on demand from the source of truth (the WWindow),
+ * so nothing is cached in the (possibly not resident) menu.
+ */
+WPixmap *switchMenuIconForWindow(virtual_screen *vscr, WWindow *wwin)
+{
+	WScreen *scr;
+	WPixmap *pix;
+	RImage *image;
+	int max_size;
+
+	if (!vscr || !vscr->screen_ptr || !wwin)
+		return NULL;
+
+	scr = vscr->screen_ptr;
+
+	max_size = WMFontHeight(scr->menu_entry_font) + 2;
+	if (max_size < 12)
+		max_size = 12;
+
+	image = icon_get_usable_icon(wwin);
+	if (!image)
+		image = get_icon_image(vscr, wwin->wm_instance, wwin->wm_class, max_size);
+
+	if (!image)
+		return NULL;
+
+	image = wIconValidateIconSize(image, max_size);
+	if (!image)
+		return NULL;
+
+	pix = wmalloc(sizeof(WPixmap));
+	memset(pix, 0, sizeof(WPixmap));
+	RConvertImageMask(scr->rcontext, image, &pix->image, &pix->mask, 128);
+	pix->width = image->width;
+	pix->height = image->height;
+	pix->depth = scr->w_depth;
+
+	RReleaseImage(image);
+
+	return pix;
 }

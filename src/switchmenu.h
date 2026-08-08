@@ -21,4 +21,6 @@ WMenu *switchmenu_create(virtual_screen *vscr);
 void switchmenu_destroy(virtual_screen *vscr);
 void OpenSwitchMenu(virtual_screen *vscr, int x, int y, int keyboard);
 
+WPixmap *switchMenuIconForWindow(virtual_screen *vscr, WWindow *wwin);
+
 #endif /* WMSWITCHMENU_H */

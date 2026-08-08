@@ -346,6 +346,7 @@ extern struct WPreferences {
 	char scrollable_menus;             /* let them be scrolled */
 	char vi_key_menus;                 /* use h/j/k/l to select */
 	char align_menus;                  /* align menu with their parents */
+	char window_list_app_icons;        /* show app icons in the window list menu */
 	char use_saveunders;               /* turn on SaveUnders for menus, icons etc. */
 	char no_window_over_dock;
 	char no_window_over_icons;

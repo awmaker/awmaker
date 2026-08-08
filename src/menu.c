@@ -32,6 +32,7 @@
 #include "dialog.h"
 #include "rootmenu.h"
 #include "switchmenu.h"
+#include "pixmap.h"
 
 #define F_NORMAL	0
 #define F_TOP		1
@@ -531,6 +532,16 @@ static void set_menu_width(WMenu *menu)
 		text = menu->entries[i]->text;
 		width = WMWidthOfString(scr->menu_entry_font, text, strlen(text)) + 10;
 
+		if (wPreferences.window_list_app_icons &&
+		    menu == menu->vscr->menu.switch_menu) {
+			WPixmap *ipix = switchMenuIconForWindow(menu->vscr,
+							     (WWindow *) menu->entries[i]->clientdata);
+			if (ipix) {
+				width += ipix->width + 4;
+				wPixmapDestroy(ipix);
+			}
+		}
+
 		if (menu->entries[i]->flags.indicator)
 			width += MENU_INDICATOR_SPACE;
 
@@ -758,6 +769,24 @@ static void paintEntry(WMenu *menu, int index, int selected)
 	x = 5;
 	if (entry->flags.indicator)
 		x += MENU_INDICATOR_SPACE + 2;
+
+	if (wPreferences.window_list_app_icons && menu == vscr->menu.switch_menu) {
+		WPixmap *ipix = switchMenuIconForWindow(vscr, (WWindow *) entry->clientdata);
+		if (ipix) {
+			int ix = x;
+			int iy = y + (h - ipix->height) / 2;
+			if (ipix->mask != None) {
+				XSetClipMask(dpy, scr->copy_gc, ipix->mask);
+				XSetClipOrigin(dpy, scr->copy_gc, ix, iy);
+			}
+			XCopyArea(dpy, ipix->image, win, scr->copy_gc,
+				  0, 0, ipix->width, ipix->height, ix, iy);
+			if (ipix->mask != None)
+				XSetClipOrigin(dpy, scr->copy_gc, 0, 0);
+			x += ipix->width + 4;
+			wPixmapDestroy(ipix);
+		}
+	}
 
 	WMDrawString(scr->wmscreen, win, color, scr->menu_entry_font,
 		     x, 3 + y + wPreferences.menu_text_clearance, entry->text, strlen(entry->text));
