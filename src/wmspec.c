@@ -944,15 +944,26 @@ static void updateCurrentWorkspace(virtual_screen *vscr)
 static void updateWorkspaceNames(virtual_screen *vscr)
 {
 	char buf[MAX_WORKSPACES * (MAX_WORKSPACENAME_WIDTH + 1)], *pos;
-	unsigned int i, len, curr_size;
+	unsigned int i, len;
+	size_t space;
 
 	pos = buf;
 	len = 0;
+	space = sizeof(buf);
 	for (i = 0; i < vscr->workspace.count; i++) {
-		curr_size = strlen(vscr->workspace.array[i]->name);
-		strcpy(pos, vscr->workspace.array[i]->name);
-		pos += (curr_size + 1);
-		len += (curr_size + 1);
+		size_t n;
+
+		n = strlen(vscr->workspace.array[i]->name);
+		if (n > MAX_WORKSPACENAME_WIDTH)
+			n = MAX_WORKSPACENAME_WIDTH;
+		if (n + 1 > space)
+			n = space - 1;
+
+		memcpy(pos, vscr->workspace.array[i]->name, n);
+		pos[n] = '\0';
+		pos += n + 1;
+		len += n + 1;
+		space -= n + 1;
 	}
 
 	XChangeProperty(dpy, vscr->screen_ptr->root_win, net_desktop_names, utf8_string, 8,
