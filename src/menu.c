@@ -784,6 +784,39 @@ static void paintEntry(WMenu *menu, int index, int selected)
 		case MI_SHADED:
 			indicator = scr->menu_shade_indicator;
 			break;
+		case MI_SNAP_V:
+			indicator = scr->menu_snap_vertical_indicator;
+			break;
+		case MI_SNAP_H:
+			indicator = scr->menu_snap_horizontal_indicator;
+			break;
+		case MI_SNAP_RH:
+			indicator = scr->menu_snap_rh_indicator;
+			break;
+		case MI_SNAP_LH:
+			indicator = scr->menu_snap_lh_indicator;
+			break;
+		case MI_SNAP_TH:
+			indicator = scr->menu_snap_th_indicator;
+			break;
+		case MI_SNAP_BH:
+			indicator = scr->menu_snap_bh_indicator;
+			break;
+		case MI_SNAP_TL:
+			indicator = scr->menu_snap_tl_indicator;
+			break;
+		case MI_SNAP_TR:
+			indicator = scr->menu_snap_tr_indicator;
+			break;
+		case MI_SNAP_BL:
+			indicator = scr->menu_snap_bl_indicator;
+			break;
+		case MI_SNAP_BR:
+			indicator = scr->menu_snap_br_indicator;
+			break;
+		case MI_SNAP_TILED:
+			indicator = scr->menu_snap_tiled_indicator;
+			break;
 		case MI_DIAMOND:
 		default:
 			indicator = scr->menu_radio_indicator;

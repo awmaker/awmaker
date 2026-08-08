@@ -517,6 +517,32 @@ static void createPixmaps(virtual_screen *vscr)
 
 	vscr->screen_ptr->menu_shade_indicator = pix;
 
+	/* maximize-direction (snap) indicators */
+#define LOADSNAPINDICATOR(XBM,I) {\
+	pix = wPixmapCreateFromXBMData(vscr->screen_ptr, (char *)XBM, (char *)XBM,\
+				       MENU_SNAP_INDICATOR_W_XBM_SIZE,\
+				       MENU_SNAP_INDICATOR_H_XBM_SIZE,\
+				       vscr->screen_ptr->black_pixel,\
+				       vscr->screen_ptr->white_pixel);\
+	if (pix != NULL)\
+		pix->shared = 1;\
+	vscr->screen_ptr->I = pix;\
+}
+
+	LOADSNAPINDICATOR(MENU_SNAP_V_INDICATOR_XBM_DATA, menu_snap_vertical_indicator)
+	LOADSNAPINDICATOR(MENU_SNAP_H_INDICATOR_XBM_DATA, menu_snap_horizontal_indicator)
+	LOADSNAPINDICATOR(MENU_SNAP_RH_INDICATOR_XBM_DATA, menu_snap_rh_indicator)
+	LOADSNAPINDICATOR(MENU_SNAP_LH_INDICATOR_XBM_DATA, menu_snap_lh_indicator)
+	LOADSNAPINDICATOR(MENU_SNAP_TH_INDICATOR_XBM_DATA, menu_snap_th_indicator)
+	LOADSNAPINDICATOR(MENU_SNAP_BH_INDICATOR_XBM_DATA, menu_snap_bh_indicator)
+	LOADSNAPINDICATOR(MENU_SNAP_TL_INDICATOR_XBM_DATA, menu_snap_tl_indicator)
+	LOADSNAPINDICATOR(MENU_SNAP_TR_INDICATOR_XBM_DATA, menu_snap_tr_indicator)
+	LOADSNAPINDICATOR(MENU_SNAP_BL_INDICATOR_XBM_DATA, menu_snap_bl_indicator)
+	LOADSNAPINDICATOR(MENU_SNAP_BR_INDICATOR_XBM_DATA, menu_snap_br_indicator)
+	LOADSNAPINDICATOR(MENU_SNAP_TILED_INDICATOR_XBM_DATA, menu_snap_tiled_indicator)
+
+#undef LOADSNAPINDICATOR
+
 	create_logo_image(vscr);
 
 	vscr->screen_ptr->dock_dots = make3Dots(vscr->screen_ptr);

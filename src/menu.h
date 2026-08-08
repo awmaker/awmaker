@@ -18,6 +18,17 @@
 #define MI_MINIWINDOW	2
 #define MI_HIDDEN	3
 #define MI_SHADED	4
+#define MI_SNAP_V	5
+#define MI_SNAP_H	6
+#define MI_SNAP_LH	7
+#define MI_SNAP_RH	8
+#define MI_SNAP_TH	9
+#define MI_SNAP_BH	10
+#define MI_SNAP_TL	11
+#define MI_SNAP_TR	12
+#define MI_SNAP_BL	13
+#define MI_SNAP_BR	14
+#define MI_SNAP_TILED	15
 
 typedef struct WMenuEntry {
 	int order;
@@ -34,7 +45,7 @@ typedef struct WMenuEntry {
 		unsigned int enabled:1;		/* entry is selectable */
 		unsigned int indicator:1;	/* left indicator */
 		unsigned int indicator_on:1;
-		unsigned int indicator_type:3;
+		unsigned int indicator_type:5;
 		unsigned int editable:1;
 	} flags;
 } WMenuEntry;

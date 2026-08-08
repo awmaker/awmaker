@@ -257,6 +257,18 @@ struct WScreen {
     struct WPixmap *menu_hide_indicator;   /* for hidden window */
     struct WPixmap *menu_shade_indicator;  /* for shaded window */
 
+    struct WPixmap *menu_snap_vertical_indicator;  /* for vertical snap window */
+    struct WPixmap *menu_snap_horizontal_indicator;  /* for horizontal snap window */
+    struct WPixmap *menu_snap_rh_indicator;  /* for right half snap window */
+    struct WPixmap *menu_snap_lh_indicator;  /* for left half snap window */
+    struct WPixmap *menu_snap_th_indicator;  /* for top half snap window */
+    struct WPixmap *menu_snap_bh_indicator;  /* for bottom half snap window */
+    struct WPixmap *menu_snap_tl_indicator;  /* for top left snap window */
+    struct WPixmap *menu_snap_tr_indicator;  /* for top right snap window */
+    struct WPixmap *menu_snap_bl_indicator;  /* for bottom left snap window */
+    struct WPixmap *menu_snap_br_indicator;  /* for bottom right snap window */
+    struct WPixmap *menu_snap_tiled_indicator;  /* for tiled window */
+
     struct WPixmap *dock_dots;	       /* 3 dots for the Dock */
     Window dock_shadow;		       /* shadow for dock buttons */
 
