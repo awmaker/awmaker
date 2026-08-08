@@ -404,32 +404,8 @@ static void mapGeometryDisplay(WWindow *wwin, int x, int y, int w, int h)
 
 static void set_inside_position(WWindow *tmpw, virtual_screen *vscr, int *x, int *y)
 {
-/* TODO: with xinerama patch was #if 0, check this */
-#if 1
-	WScreen *scr = vscr->screen_ptr;
-	/* Minimum portion of the window that must stay on screen (per axis) while
-	 * moving a group of selected windows, so the window never becomes
-	 * unreachable. NOTE: this deliberately keeps only min_visible_x/y px of
-	 * the window visible (not the whole window fully clamped inside) — matches
-	 * upstream behaviour; do not "fix" this as if it were a bug. X and Y could
-	 * differ (e.g. exposed as WPrefs settings in the future). */
-	const int min_visible_x = 20;
-	const int min_visible_y = 20;
-
-	/* don't let windows become unreachable */
-	if (*x + (int) tmpw->frame->width < min_visible_x)
-		*x = min_visible_x - (int) tmpw->frame->width;
-	else if (*x + min_visible_x > scr->scr_width)
-		*x = scr->scr_width - min_visible_x;
-
-	if (*y + (int) tmpw->frame->height < min_visible_y)
-		*y = min_visible_y - (int) tmpw->frame->height;
-	else if (*y + min_visible_y > scr->scr_height)
-		*y = scr->scr_height - min_visible_y;
-#else
 	wScreenBringInside(vscr, x, y,
 			   (int) tmpw->frame->width, (int) tmpw->frame->height);
-#endif
 }
 
 static void doWindowMove(WWindow *wwin, WMArray *array, int dx, int dy)
