@@ -418,6 +418,15 @@ static Bool addShortcut(const char *file, const char *shortcutDefinition, WMenu 
 		sb->cmd = scmd;
 		sb->quick = squick;
 		shAddMenuBinding(sb);
+
+		/* Paint the menu's shortcut label from the binding list (F5-M),
+		 * not from the raw file string. */
+		if (entry) {
+			char label[128];
+
+			shLabelFor(sb, label, sizeof(label));
+			entry->rtext = wstrdup(label);
+		}
 	} else {
 		wfree(scmd);
 	}
@@ -914,8 +923,7 @@ static WMenuEntry *addMenuEntry(WMenu *menu, const char *title, const char *shor
 		if (!shortcutOk) {
 			wwarning(_("%s:can't add shortcut for entry \"%s\""), file_name, title);
 		} else {
-			if (addShortcut(file_name, shortcut, menu, entry, command, params))
-				entry->rtext = GetShortcutString(shortcut);
+			addShortcut(file_name, shortcut, menu, entry, command, params);
 		}
 	}
 

@@ -25,6 +25,8 @@
 
 #include <string.h>
 
+#include <X11/XKBlib.h>
+
 #include <WINGs/WUtil.h>
 
 void shExec(virtual_screen *vscr, const char *cmdline)
@@ -392,4 +394,35 @@ void wKeyTreeRebuild(void)
 		if (leaf)
 			wKeyNodeAddBinding(leaf, b);
 	}
+}
+
+/*
+ * Render a binding's key sequence as a shortcut label ("Control+Alt+R", chain
+ * keys joined with '+') into buf. Used by menus purely to paint the label (F5-M);
+ * return the label length.
+ */
+unsigned int shLabelFor(const SHBinding *b, char *buf, unsigned int buflen)
+{
+	int i, len;
+
+	buf[0] = '\0';
+
+	len = (b->chain_length > 1) ? b->chain_length : 1;
+
+	for (i = 0; i < len; i++) {
+		unsigned int mod = (i == 0) ? b->modifier : b->chain_modifiers[i - 1];
+		KeyCode key = (i == 0) ? b->keycode : b->chain_keycodes[i - 1];
+		char part[128];
+
+		if (i > 0)
+			wstrlcat(buf, "+", buflen);
+
+		if (GetCanonicalShortcutLabel(mod, XkbKeycodeToKeysym(dpy, key, 0, 0),
+					      part, sizeof(part)))
+			wstrlcat(buf, part, buflen);
+		else
+			wstrlcat(buf, "?", buflen);
+	}
+
+	return (unsigned int)strlen(buf);
 }
