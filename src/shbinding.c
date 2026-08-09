@@ -19,6 +19,7 @@
 #include "dialog.h"
 #include "main.h"
 #include "screen.h"
+#include "shbinding.h"
 
 #include <WINGs/WUtil.h>
 
@@ -172,4 +173,17 @@ void shInfoPanel(virtual_screen *vscr)
 void shLegalPanel(virtual_screen *vscr)
 {
 	panel_show(vscr, PANEL_LEGAL);
+}
+
+/*
+ * Persistent, session-lifetime binding list (F5, §8F5.2): the source of truth
+ * fed by every wKeyBindings[WKBD_*] (as RSM_WKBD) and by the root-menu shortcuts
+ * (decoded at parse time). Menus never feed or own it; they only paint labels.
+ */
+static SHBinding *shBindingList;
+
+void shAddBinding(SHBinding *b)
+{
+	b->next = shBindingList;
+	shBindingList = b;
 }

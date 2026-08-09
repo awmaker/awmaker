@@ -35,4 +35,47 @@ void shClearSession(virtual_screen *vscr);
 void shInfoPanel(virtual_screen *vscr);
 void shLegalPanel(virtual_screen *vscr);
 
+/*
+ * SHBinding — persistent, menu-independent keybinding/action list (F5, §8F5).
+ *
+ * Unlike the deleted shortcutList, an SHBinding stores only data (action type +
+ * parameters), never a pointer into a materialized menu, so it cannot dangle
+ * when the root menu is rebuilt (the F5 SIGSEGV root cause). Execution goes
+ * through shRunAction, which dispatches to the sh* logic functions above.
+ */
+
+typedef enum {
+	RSM_EXEC,           /* run cmd via shExec (cmd) */
+	RSM_RESTART,        /* restart WM via shRestart (cmd, optional) */
+	RSM_EXIT,           /* exit via shExit (quick) */
+	RSM_SHUTDOWN,       /* shutdown via shShutdown (quick) */
+	RSM_REFRESH,        /* shRefresh */
+	RSM_ARRANGE_ICONS,  /* shArrangeIcons */
+	RSM_HIDE_OTHERS,    /* shHideOthers */
+	RSM_SHOW_ALL,       /* shShowAll */
+	RSM_SAVE_SESSION,   /* shSaveSession */
+	RSM_CLEAR_SESSION,  /* shClearSession */
+	RSM_INFO_PANEL,     /* shInfoPanel */
+	RSM_LEGAL_PANEL,    /* shLegalPanel */
+	RSM_WKBD            /* a window-keybinding action (wkbd_idx) */
+} SHActionType;
+
+typedef struct SHBinding {
+	unsigned int modifier;
+	KeyCode keycode;
+	int chain_length;               /* 1 if not a chain */
+	unsigned int *chain_modifiers;
+	KeyCode *chain_keycodes;
+	SHActionType type;
+	char *cmd;                      /* RSM_EXEC/RESTART: params (owned) */
+	Bool quick;                     /* RSM_EXIT/SHUTDOWN */
+	int wkbd_idx;                   /* RSM_WKBD: WKBD_* index */
+	struct SHBinding *next;
+} SHBinding;
+
+void shAddBinding(SHBinding *b);
+void shRebuildList(void);
+void shRunAction(SHBinding *b, virtual_screen *vscr);
+unsigned int shLabelFor(const SHBinding *b, char *buf, unsigned int buflen);
+
 #endif /* WMSHBINDING_H */
