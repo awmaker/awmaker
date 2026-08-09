@@ -462,7 +462,7 @@ static Bool addShortcut(const char *file, const char *shortcutDefinition, WMenu 
 		sb->type = type;
 		sb->cmd = scmd;
 		sb->quick = squick;
-		shAddBinding(sb);
+		shAddMenuBinding(sb);
 	} else {
 		wfree(scmd);
 	}
@@ -1638,6 +1638,11 @@ void rootmenu_destroy(virtual_screen *vscr)
 	vscr->menu.flags.root_menu_changed_shortcuts = 0;
 	vscr->menu.flags.added_workspace_menu = 0;
 	vscr->menu.flags.added_window_menu = 0;
+
+	/* Drop the menu's shortcut bindings and rebuild the trie (F5-K): only
+	 * when the menu is actually (re)built, never reentrantly on open/close. */
+	shClearMenuBindings();
+	wKeyTreeRebuild();
 }
 
 /*
@@ -1686,6 +1691,12 @@ void OpenRootMenu(virtual_screen *vscr, int x, int y, int keyboard)
 		vscr->menu.root_menu = create_rootmenu(vscr);
 		if (vscr->menu.root_menu)
 			vscr->menu.root_menu->timestamp = w_global.domain.root_menu->timestamp;
+
+		/* The menu was (re)built: merge its freshly-parsed shortcuts into
+		 * the runtime list and rebuild the key trie (F5-K). This happens on
+		 * config change / first build, not on every open/close. */
+		shRebuildList();
+		wKeyTreeRebuild();
 	}
 
 	rootmenu = vscr->menu.root_menu;

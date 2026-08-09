@@ -23,6 +23,8 @@
 #include "keybind.h"
 #include "keytree.h"
 
+#include <string.h>
+
 #include <WINGs/WUtil.h>
 
 void shExec(virtual_screen *vscr, const char *cmdline)
@@ -184,10 +186,68 @@ void shLegalPanel(virtual_screen *vscr)
  */
 static SHBinding *shBindingList;
 
+/*
+ * Root-menu shortcut bindings (F5-J/K). 'shMenuBindings' is the canonical,
+ * persistently-owned collection of root-menu shortcuts; 'shBindingList' is a
+ * derived runtime list (owned clones) rebuilt by shRebuildList from
+ * wKeyBindings + shMenuBindings. Keeping the two separate lets a root-menu
+ * rebuild clear+recollect without touching the wKeyBindings-derived part and
+ * without sharing/double-freeing nodes.
+ */
+static SHBinding *shMenuBindings;
+
 void shAddBinding(SHBinding *b)
 {
 	b->next = shBindingList;
 	shBindingList = b;
+}
+
+void shAddMenuBinding(SHBinding *b)
+{
+	b->next = shMenuBindings;
+	shMenuBindings = b;
+}
+
+void shClearMenuBindings(void)
+{
+	SHBinding *b, *tmp;
+
+	for (b = shMenuBindings; b != NULL; b = tmp) {
+		tmp = b->next;
+		wfree(b->cmd);
+		wfree(b->chain_modifiers);
+		wfree(b->chain_keycodes);
+		wfree(b);
+	}
+	shMenuBindings = NULL;
+
+	/* drop them from the derived runtime list */
+	shRebuildList();
+}
+
+static SHBinding *shCloneBinding(const SHBinding *src)
+{
+	SHBinding *b = wmalloc(sizeof(SHBinding));
+
+	*b = *src;
+	b->next = NULL;
+
+	if (src->cmd)
+		b->cmd = wstrdup(src->cmd);
+
+	if (src->chain_length > 1) {
+		int n = src->chain_length - 1;
+
+		b->chain_modifiers = wmalloc(n * sizeof(unsigned int));
+		b->chain_keycodes = wmalloc(n * sizeof(KeyCode));
+		memcpy(b->chain_modifiers, src->chain_modifiers, n * sizeof(unsigned int));
+		memcpy(b->chain_keycodes, src->chain_keycodes, n * sizeof(KeyCode));
+	} else {
+		b->chain_modifiers = NULL;
+		b->chain_keycodes = NULL;
+	}
+
+	return b;
 }
 
 /*
@@ -255,30 +315,34 @@ static void shFreeBindings(void)
 }
 
 /*
- * Register every window keybinding (wKeyBindings[0..WKBD_LAST-1]) as an
- * RSM_WKBD binding — the single source of truth. Chains (F5-I) and root-menu
- * shortcuts (F5-J) will add further bindings through shAddBinding.
+ * Rebuild the runtime SHBinding list from wKeyBindings (RSM_WKBD) + the
+ * canonical root-menu shortcuts (shMenuBindings) (F5-G/F5-J). The single source
+ * of truth for the key trie. Each entry is a clone so it is owned by the
+ * runtime list; the canonical menu collection stays untouched.
  */
 void shRebuildList(void)
 {
 	int i;
+	SHBinding *mb;
 
 	shFreeBindings();
 
 	for (i = 0; i < WKBD_LAST; i++) {
-		SHBinding *b;
-
 		if (wKeyBindings[i].keycode == 0)
 			continue;
 
-		b = wmalloc(sizeof(SHBinding));
-		b->modifier = wKeyBindings[i].modifier;
-		b->keycode = wKeyBindings[i].keycode;
-		b->chain_length = 1;
-		b->type = RSM_WKBD;
-		b->wkbd_idx = i;
+		SHBinding *b = shCloneBinding(&(SHBinding){
+			.modifier = wKeyBindings[i].modifier,
+			.keycode = wKeyBindings[i].keycode,
+			.chain_length = 1,
+			.type = RSM_WKBD,
+			.wkbd_idx = i,
+		});
 		shAddBinding(b);
 	}
+
+	for (mb = shMenuBindings; mb != NULL; mb = mb->next)
+		shAddBinding(shCloneBinding(mb));
 }
 
 /*

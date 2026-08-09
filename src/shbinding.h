@@ -79,10 +79,20 @@ void shRunAction(SHBinding *b, virtual_screen *vscr);
 unsigned int shLabelFor(const SHBinding *b, char *buf, unsigned int buflen);
 
 /*
+ * Root-menu shortcut bindings (F5-J/K). They are collected in their own list
+ * (shAddMenuBinding), cleared on root-menu destruction (shClearMenuBindings),
+ * and merged into the runtime list by shRebuildList. Keeping them separate from
+ * the per-menu menu/entry pointers lets the key trie execute them without any
+ * menu object, and lets a root-menu rebuild recollect cleanly (no duplicates).
+ */
+void shAddMenuBinding(SHBinding *b);
+void shClearMenuBindings(void);
+
+/*
  * Rebuild the key-chain trie from the SHBinding list (F5-H). Populates
  * wKeyTreeRoot with one leaf per binding, keyed by its (chain of) key(s).
- * Called on config change; must not be called from inside a menu open/close
- * (F5-K) to avoid the reentrancy/use-after-free the F5 port hit.
+ * Called on config change (wKeyTreeRebuild) — data-only, never reentrant with
+ * menu open/close, so no use-after-free (the F5 SIGSEGV root cause).
  */
 void wKeyTreeRebuild(void);
 
