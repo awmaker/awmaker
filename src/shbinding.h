@@ -34,6 +34,7 @@ void shSaveSession(virtual_screen *vscr);
 void shClearSession(virtual_screen *vscr);
 void shInfoPanel(virtual_screen *vscr);
 void shLegalPanel(virtual_screen *vscr);
+void shKeybindsPanel(virtual_screen *vscr);
 
 /*
  * SHBinding — persistent, menu-independent keybinding/action list (F5, §8F5).
@@ -57,6 +58,7 @@ typedef enum {
 	RSM_CLEAR_SESSION,  /* shClearSession */
 	RSM_INFO_PANEL,     /* shInfoPanel */
 	RSM_LEGAL_PANEL,    /* shLegalPanel */
+	RSM_KEYBINDS_PANEL, /* shKeybindsPanel */
 	RSM_WKBD            /* a window-keybinding action (wkbd_idx) */
 } SHActionType;
 

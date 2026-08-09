@@ -17,6 +17,7 @@
 #include "misc.h"
 #include "shutdown.h"
 #include "dialog.h"
+#include "dialog_keybinds.h"
 #include "main.h"
 #include "screen.h"
 #include "shbinding.h"
@@ -181,6 +182,11 @@ void shLegalPanel(virtual_screen *vscr)
 	panel_show(vscr, PANEL_LEGAL);
 }
 
+void shKeybindsPanel(virtual_screen *vscr)
+{
+	panel_show_keybinds(vscr);
+}
+
 /*
  * Persistent, session-lifetime binding list (F5, §8F5.2): the source of truth
  * fed by every wKeyBindings[WKBD_*] (as RSM_WKBD) and by the root-menu shortcuts
@@ -301,6 +307,9 @@ void shRunAction(SHBinding *b, virtual_screen *vscr)
 		break;
 	case RSM_LEGAL_PANEL:
 		shLegalPanel(vscr);
+		break;
+	case RSM_KEYBINDS_PANEL:
+		shKeybindsPanel(vscr);
 		break;
 	case RSM_WKBD:
 		break;

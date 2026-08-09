@@ -209,6 +209,13 @@ static void legalPanelCommand(WMenu *menu, WMenuEntry *entry)
 	shLegalPanel(menu->vscr);
 }
 
+static void keybindsPanelCommand(WMenu *menu, WMenuEntry *entry)
+{
+	(void) entry;
+
+	shKeybindsPanel(menu->vscr);
+}
+
 /********************************************************************/
 
 static char *getLocalizedMenuFile(const char *menu)
@@ -351,6 +358,8 @@ static Bool decodeShortcutAction(const char *command, const char *params,
 		*type = RSM_INFO_PANEL;
 	} else if (strcmp(command, "LEGAL_PANEL") == 0) {
 		*type = RSM_LEGAL_PANEL;
+	} else if (strcmp(command, "KEYBINDS_PANEL") == 0) {
+		*type = RSM_KEYBINDS_PANEL;
 	} else {
 		return False;
 	}
@@ -912,6 +921,9 @@ static WMenuEntry *addMenuEntry(WMenu *menu, const char *title, const char *shor
 		shortcutOk = True;
 	} else if (strcmp(command, "LEGAL_PANEL") == 0) {
 		entry = wMenuAddCallback(menu, title, legalPanelCommand, NULL);
+		shortcutOk = True;
+	} else if (strcmp(command, "KEYBINDS_PANEL") == 0) {
+		entry = wMenuAddCallback(menu, title, keybindsPanelCommand, NULL);
 		shortcutOk = True;
 	} else {
 		wwarning(_("%s:unknown command \"%s\" in menu config."), file_name, command);
