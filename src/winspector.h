@@ -15,7 +15,7 @@ typedef struct InspectorPanel InspectorPanel;
 
 #include "config.h"
 #include "window.h"
-#include "dialog.h"
+#include "dialog_iconchooser.h"
 
 struct InspectorPanel {
 	struct InspectorPanel *nextPtr;

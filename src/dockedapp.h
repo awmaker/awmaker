@@ -13,7 +13,7 @@
 
 typedef struct AppSettingsPanel AppSettingsPanel;
 
-#include "dialog.h"
+#include "dialog_iconchooser.h"
 
 struct AppSettingsPanel {
 	WMWindow *win;

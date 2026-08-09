@@ -48,6 +48,9 @@
 #include "actions.h"
 #include "xinerama.h"
 #include "dialog.h"
+#include "appicon.h"
+#include "dockedapp.h"
+#include "winspector.h"
 #include "dialog_iconchooser.h"
 
 #define ICONDLG_WIDTH 450

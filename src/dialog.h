@@ -12,8 +12,6 @@
 #ifndef WMDIALOG_H_
 #define WMDIALOG_H_
 
-typedef struct IconPanel IconPanel;
-
 #include "screen.h"
 
 enum {
