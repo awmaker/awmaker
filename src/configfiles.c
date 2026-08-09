@@ -182,6 +182,7 @@ static Bool write_root_menu(const char *path)
 	sub = mk_menu("Info");
 	menu_add(sub, mk_entry("Info Panel", "INFO_PANEL", NULL));
 	menu_add(sub, mk_entry("Legal", "LEGAL_PANEL", NULL));
+	menu_add(sub, mk_entry("Key Bindings", "KEYBINDS_PANEL", NULL));
 	menu_add(sub, mk_entry("System Console", "EXEC", "xconsole"));
 	menu_add(sub, mk_entry("System Load", "SHEXEC", "xosview || xload"));
 	menu_add(sub, mk_entry("Process List", "EXEC", "xterm -e top"));
