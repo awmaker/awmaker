@@ -1071,3 +1071,37 @@ int wGetWorkspaceNumber(virtual_screen *vscr, const char *value)
 
 	return w;
 }
+
+/*
+ * Open the workspace menu by keyboard shortcut (G1, §8F5.7).
+ *
+ * Builds a transient, independent menu (NOT vscr->workspace.menu, which is owned
+ * by the root-menu WORKSPACE_MENU cascade). Opening a shared menu here would
+ * conflict with the root menu: wMenuMapAt won't reposition an already-mapped
+ * menu and a single WMenu cannot be in two places at once. Pattern follows
+ * clip_button2_menu (clip.c:193-224).
+ */
+void OpenWorkspaceMenu(virtual_screen *vscr, int x, int y, int keyboard)
+{
+	WMenu *wsMenu;
+	WScreen *scr = vscr->screen_ptr;
+
+	wsMenu = wWorkspaceMenuMake(vscr, False);
+	wWorkspaceMenuUpdate(vscr, wsMenu);
+	workspaces_set_menu_enabled_items(vscr, wsMenu);
+
+	menu_map(wsMenu);
+	wsMenu->x_pos = x;
+	wsMenu->y_pos = y;
+
+	if (keyboard) {
+		wsMenu->x_pos -= wsMenu->frame->width / 2;
+		if (y == scr->scr_height / 2)
+			wsMenu->y_pos = y - wsMenu->frame->height / 2;
+	}
+
+	wMenuMapAt(vscr, wsMenu, keyboard);
+
+	wsMenu->flags.realized = 0;
+	wMenuDestroy(wsMenu);
+}
