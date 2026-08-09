@@ -60,6 +60,7 @@ static const struct {
 } keyOptions[] = {
 	{ "RootMenuKey",    N_("Open applications menu") },
 	{ "WindowListKey",  N_("Open window list menu") },
+	{ "WorkspaceMenuKey", N_("Open workspace menu") },
 	{ "WindowMenuKey",  N_("Open window commands menu") },
 	{ "HideKey",        N_("Hide active application") },
 	{ "HideOthersKey",  N_("Hide other applications") },
