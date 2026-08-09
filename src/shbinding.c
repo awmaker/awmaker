@@ -20,6 +20,7 @@
 #include "main.h"
 #include "screen.h"
 #include "shbinding.h"
+#include "keybind.h"
 
 #include <WINGs/WUtil.h>
 
@@ -235,5 +236,46 @@ void shRunAction(SHBinding *b, virtual_screen *vscr)
 		break;
 	case RSM_WKBD:
 		break;
+	}
+}
+
+static void shFreeBindings(void)
+{
+	SHBinding *b, *tmp;
+
+	for (b = shBindingList; b != NULL; b = tmp) {
+		tmp = b->next;
+		wfree(b->chain_modifiers);
+		wfree(b->chain_keycodes);
+		wfree(b->cmd);
+		wfree(b);
+	}
+	shBindingList = NULL;
+}
+
+/*
+ * Register every window keybinding (wKeyBindings[0..WKBD_LAST-1]) as an
+ * RSM_WKBD binding — the single source of truth. Chains (F5-I) and root-menu
+ * shortcuts (F5-J) will add further bindings through shAddBinding.
+ */
+void shRebuildList(void)
+{
+	int i;
+
+	shFreeBindings();
+
+	for (i = 0; i < WKBD_LAST; i++) {
+		SHBinding *b;
+
+		if (wKeyBindings[i].keycode == 0)
+			continue;
+
+		b = wmalloc(sizeof(SHBinding));
+		b->modifier = wKeyBindings[i].modifier;
+		b->keycode = wKeyBindings[i].keycode;
+		b->chain_length = 1;
+		b->type = RSM_WKBD;
+		b->wkbd_idx = i;
+		shAddBinding(b);
 	}
 }
