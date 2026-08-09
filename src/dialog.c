@@ -50,26 +50,8 @@
 #include "actions.h"
 #include "xinerama.h"
 
-#define LEGAL_TEXT \
-	"    Window Maker is free software; you can redistribute it and/or "\
-	"modify it under the terms of the GNU General Public License as "\
-	"published by the Free Software Foundation; either version 2 of the "\
-	"License, or (at your option) any later version.\n\n"\
-	"    Window Maker is distributed in the hope that it will be useful, "\
-	"but WITHOUT ANY WARRANTY; without even the implied warranty "\
-	"of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. "\
-	"See the GNU General Public License for more details.\n\n"\
-	"    You should have received a copy of the GNU General Public "\
-	"License along with this program; if not, write to the Free Software "\
-	"Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA"\
-	"02110-1301 USA."
-
 #define ICONDLG_WIDTH 450
 #define ICONDLG_HEIGHT 280
-
-#define LEGALPANEL_WIDTH 420
-#define LEGALPANEL_HEIGHT 250
-#define MARGIN 10
 
 #define CRASHING_WIDTH 295
 #define CRASHING_HEIGHT 345
@@ -92,20 +74,14 @@ static void setViewedImage(IconPanel *panel, const char *file);
 static void toggleSaveSession(WMWidget *w, void *data);
 static void create_dialog_iconchooser_widgets(IconPanel *panel, const int win_width, const int win_height, int wmScaleWidth, int wmScaleHeight);
 static void destroy_dialog_iconchooser(IconPanel *panel, Window parent);
-static void destroy_legal_panel(WCoreWindow *foo, void *data, XEvent *event);
 static char *HistoryFileName(const char *name);
 static char *create_dialog_iconchooser_title(const char *instance, const char *class);
 static WMArray *GenerateVariants(const char *complete);
 static WMArray *LoadHistory(const char *filename, int max);
 static WMPixmap *getWindowMakerIconImage(WMScreen *scr);
 static WMPoint getCenter(virtual_screen *vscr, int width, int height);
-static void destroy_panel(void);
-
-static void create_legal_widgets(virtual_screen *vscr, Panel *panel, int win_width, int win_height, int wmScaleWidth, int wmScaleHeight);
 
 static int alert_panel(WMAlertPanel *panel, virtual_screen *vscr, const char *title);
-
-static Panel *legalPanel = NULL;
 
 static WMPoint getCenter(virtual_screen *vscr, int width, int height)
 {
@@ -1083,108 +1059,6 @@ Bool wIconChooserDialog(AppSettingsPanel *app_panel, InspectorPanel *ins_panel, 
 	destroy_dialog_iconchooser(panel, parent);
 
 	return result;
-}
-
-/*
- ***********************************************************************
- * Legal Panel
- ***********************************************************************
- */
-
-static void destroy_panel(void)
-{
-	Panel *panel;
-
-	panel = legalPanel;
-	legalPanel = NULL;
-
-	WMUnmapWidget(panel->win);
-	WMDestroyWidget(panel->win);
-	wUnmanageWindow(panel->wwin, False, False);
-	wfree(panel);
-}
-
-static void destroy_legal_panel(WCoreWindow *foo, void *data, XEvent *event)
-{
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) foo;
-	(void) data;
-	(void) event;
-
-	destroy_panel();
-}
-
-static void create_legal_widgets(virtual_screen *vscr, Panel *panel, int win_width, int win_height, int wmScaleWidth, int wmScaleHeight)
-{
-	panel->win = WMCreateWindow(vscr->screen_ptr->wmscreen, "legal");
-	WMResizeWidget(panel->win, win_width, win_height);
-
-	panel->frame = WMCreateFrame(panel->win);
-	WMResizeWidget(panel->frame, win_width - (2 * WMScaleX(MARGIN)), win_height - (2 * WMScaleY(MARGIN)));
-	WMMoveWidget(panel->frame, WMScaleX(MARGIN), WMScaleY(MARGIN));
-	WMSetFrameTitle(panel->frame, NULL);
-
-	panel->lbl_license = WMCreateLabel(panel->frame);
-	WMSetLabelWraps(panel->lbl_license, True);
-	WMResizeWidget(panel->lbl_license, win_width - (4 * WMScaleX(10)), win_height - (4 * WMScaleY(10)));
-	WMMoveWidget(panel->lbl_license, WMScaleX(8), WMScaleY(8));
-	WMSetLabelTextAlignment(panel->lbl_license, WALeft);
-	WMSetLabelText(panel->lbl_license, LEGAL_TEXT);
-}
-
-void panel_show_legal(virtual_screen *vscr)
-{
-	/* Common */
-	Panel *panel = NULL;
-	Window parent;
-	WWindow *wwin;
-	WMPoint center;
-	int wmScaleWidth, wmScaleHeight;
-	int win_width, win_height;
-	char title[256];
-	int wframeflags;
-
-	WMGetScaleBaseFromSystemFont(vscr->screen_ptr->wmscreen, &wmScaleWidth, &wmScaleHeight);
-
-	win_width = WMScaleX(LEGALPANEL_WIDTH);
-	win_height = WMScaleY(LEGALPANEL_HEIGHT);
-	sprintf(title, "Legal");
-
-	if (legalPanel) {
-		if (legalPanel->vscr->screen_ptr == vscr->screen_ptr) {
-			wRaiseFrame(legalPanel->wwin->frame->vscr, legalPanel->wwin->frame->core);
-			wSetFocusTo(vscr, legalPanel->wwin);
-		}
-
-		return;
-	}
-
-	panel = wmalloc(sizeof(Panel));
-	panel->vscr = vscr;
-	panel->type = PANEL_LEGAL;
-	create_legal_widgets(vscr, panel, win_width, win_height, wmScaleWidth, wmScaleHeight);
-	legalPanel = panel;
-
-	WMRealizeWidget(panel->win);
-	WMMapSubwidgets(panel->win);
-	WMMapSubwidgets(panel->frame);
-
-	parent = XCreateSimpleWindow(dpy, vscr->screen_ptr->root_win, 0, 0, win_width, win_height, 0, 0, 0);
-	XReparentWindow(dpy, WMWidgetXID(panel->win), parent, 0, 0);
-	center = getCenter(vscr, win_width, win_height);
-
-	wframeflags = WFF_RIGHT_BUTTON | WFF_BORDER | WFF_TITLEBAR;
-
-	wwin = wManageInternalWindow(vscr, parent, None, title, center.x, center.y, win_width, win_height, wframeflags);
-
-	WSETUFLAG(wwin, no_closable, 0);
-	WSETUFLAG(wwin, no_close_button, 0);
-
-	wwin->frame->on_click_right = destroy_legal_panel;
-
-	panel->wwin = wwin;
-	WMMapWidget(panel->win);
-	wWindowMap(wwin);
 }
 
 /*

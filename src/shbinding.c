@@ -19,6 +19,7 @@
 #include "dialog.h"
 #include "dialog_keybinds.h"
 #include "dialog_info.h"
+#include "dialog_legal.h"
 #include "main.h"
 #include "screen.h"
 #include "shbinding.h"
