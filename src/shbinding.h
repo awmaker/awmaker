@@ -24,6 +24,8 @@
 
 void shExec(virtual_screen *vscr, const char *cmdline);
 void shRestart(virtual_screen *vscr, const char *cmdline);
+void shExit(virtual_screen *vscr, Bool quick);
+void shShutdown(virtual_screen *vscr, Bool quick);
 void shRefresh(virtual_screen *vscr);
 void shArrangeIcons(virtual_screen *vscr);
 void shShowAll(virtual_screen *vscr);

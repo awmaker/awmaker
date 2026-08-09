@@ -150,89 +150,12 @@ static void execCommand(WMenu *menu, WMenuEntry *entry)
 
 static void exitCommand(WMenu *menu, WMenuEntry *entry)
 {
-	static int inside = 0;
-	int result;
-
-	/* prevent reentrant calls */
-	if (inside)
-		return;
-
-	inside = 1;
-
-#define R_CANCEL 0
-#define R_EXIT   1
-
-	result = R_CANCEL;
-
-	if ((long)entry->clientdata == M_QUICK) {
-		result = R_EXIT;
-	} else {
-		int r, oldSaveSessionFlag;
-
-		oldSaveSessionFlag = wPreferences.save_session_on_exit;
-		r = wExitDialog(menu->vscr, _("Exit"),
-				_("Exit window manager?"), _("Exit"), _("Cancel"), NULL);
-
-		if (r == WAPRDefault) {
-			result = R_EXIT;
-		} else if (r == WAPRAlternate) {
-			/* Don't modify the "save session on exit" flag if the
-			 * user canceled the operation. */
-			wPreferences.save_session_on_exit = oldSaveSessionFlag;
-		}
-	}
-
-	if (result == R_EXIT)
-		Shutdown(WSExitMode);
-
-#undef R_EXIT
-#undef R_CANCEL
-	inside = 0;
+	shExit(menu->vscr, (entry->clientdata == (void *)M_QUICK));
 }
 
 static void shutdownCommand(WMenu *menu, WMenuEntry *entry)
 {
-	static int inside = 0;
-	int result;
-
-	/* prevent reentrant calls */
-	if (inside)
-		return;
-
-	inside = 1;
-
-#define R_CANCEL 0
-#define R_CLOSE 1
-#define R_KILL 2
-
-	result = R_CANCEL;
-	if ((long)entry->clientdata == M_QUICK)
-		result = R_CLOSE;
-	else {
-		int r, oldSaveSessionFlag;
-
-		oldSaveSessionFlag = wPreferences.save_session_on_exit;
-
-		r = wExitDialog(menu->vscr,
-				_("Kill X session"),
-				_("Kill Window System session?\n"
-				  "(all applications will be closed)"), _("Kill"), _("Cancel"), NULL);
-		if (r == WAPRDefault) {
-			result = R_KILL;
-		} else if (r == WAPRAlternate) {
-			/* Don't modify the "save session on exit" flag if the
-			 * user canceled the operation. */
-			wPreferences.save_session_on_exit = oldSaveSessionFlag;
-		}
-	}
-
-	if (result != R_CANCEL)
-		Shutdown(WSKillMode);
-
-#undef R_CLOSE
-#undef R_CANCEL
-#undef R_KILL
-	inside = 0;
+	shShutdown(menu->vscr, (entry->clientdata == (void *)M_QUICK));
 }
 
 static void restartCommand(WMenu *menu, WMenuEntry *entry)
