@@ -1542,6 +1542,13 @@ static void handleKeyPress(XEvent *event)
 				       True);
 		}
 		break;
+	case WKBD_WORKSPACEMENU:
+		if (!CheckFullScreenWindowFocused(vscr)) {
+			WMRect rect = wGetRectForHead(scr, wGetHeadForPointerLocation(vscr));
+			OpenWorkspaceMenu(vscr, rect.pos.x + rect.size.width / 2, rect.pos.y + rect.size.height / 2,
+					  True);
+		}
+		break;
 
 	case WKBD_WINDOWMENU:
 		if (ISMAPPED(wwin) && ISFOCUSED(wwin))
