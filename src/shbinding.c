@@ -18,6 +18,7 @@
 #include "shutdown.h"
 #include "dialog.h"
 #include "dialog_keybinds.h"
+#include "dialog_info.h"
 #include "main.h"
 #include "screen.h"
 #include "shbinding.h"
@@ -174,12 +175,12 @@ void shClearSession(virtual_screen *vscr)
 
 void shInfoPanel(virtual_screen *vscr)
 {
-	panel_show(vscr, PANEL_INFO);
+	panel_show_info(vscr);
 }
 
 void shLegalPanel(virtual_screen *vscr)
 {
-	panel_show(vscr, PANEL_LEGAL);
+	panel_show_legal(vscr);
 }
 
 void shKeybindsPanel(virtual_screen *vscr)
