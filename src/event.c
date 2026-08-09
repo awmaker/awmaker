@@ -1369,17 +1369,12 @@ static void startMarkCapture(virtual_screen *vscr, WMarkCaptureMode mode)
 	XGrabKeyboard(dpy, vscr->screen_ptr->root_win, False, GrabModeAsync, GrabModeAsync, CurrentTime);
 }
 
-/* Temporary default for the chain inactivity timeout, until the
- * KeychainTimeoutDelay pref is wired in (CF5-4). Milliseconds. */
-#ifndef KEYCHAIN_TIMEOUT_DEFAULT
-#define KEYCHAIN_TIMEOUT_DEFAULT 1000
-#endif
-
 /* ------------------------------------------------------------------ *
  * Key-chain timeout support (F5/§8F5.8)                               *
  *                                                                    *
  * After a chain leader is pressed, the chain is cancelled on         *
- * inactivity so the user is not stuck in a half-entered sequence.    *
+ * inactivity (wPreferences.keychain_timeout_delay ms; 0 disables) so *
+ * the user is not stuck in a half-entered sequence.                  *
  * ------------------------------------------------------------------ */
 
 static void chainTimeoutCallback(void *data)
@@ -1394,10 +1389,13 @@ static void chainTimeoutCallback(void *data)
 /* Start (or restart) the chain inactivity timer */
 static void wStartChainTimer(void)
 {
-	if (w_global.shortcut.chain_timeout_handler)
-		WMDeleteTimerHandler(w_global.shortcut.chain_timeout_handler);
-	w_global.shortcut.chain_timeout_handler =
-		WMAddTimerHandler(KEYCHAIN_TIMEOUT_DEFAULT, chainTimeoutCallback, NULL);
+	if (wPreferences.keychain_timeout_delay > 0) {
+		if (w_global.shortcut.chain_timeout_handler)
+			WMDeleteTimerHandler(w_global.shortcut.chain_timeout_handler);
+		w_global.shortcut.chain_timeout_handler =
+			WMAddTimerHandler(wPreferences.keychain_timeout_delay,
+					  chainTimeoutCallback, NULL);
+	}
 }
 
 /* Cancel the chain inactivity timer, if armed */

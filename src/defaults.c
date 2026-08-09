@@ -795,6 +795,8 @@ WDefaultEntry optionList[] = {
 	    &wPreferences.clip_auto_expand_delay, getInt, NULL, NULL, NULL, 1},
 	{"ClipAutocollapseDelay", "1000", NULL,
 	    &wPreferences.clip_auto_collapse_delay, getInt, NULL, NULL, NULL, 1},
+	{"KeychainTimeoutDelay", "1000", NULL,
+	    &wPreferences.keychain_timeout_delay, getInt, NULL, NULL, NULL, 1},
 	{"WrapAppiconsInDock", "YES", NULL,
 	    &wPreferences.flags.wrap_appicons_in_dock, getBool, NULL, NULL, NULL, 1},
 	{"AlignSubmenus", "NO", NULL,

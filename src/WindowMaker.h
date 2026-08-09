@@ -480,6 +480,7 @@ extern struct WPreferences {
 	int clip_auto_lower_delay;          /* Delay after which the clip will be lowered when leaved */
 	int clip_auto_expand_delay;         /* Delay after which the clip will expand when entered */
 	int clip_auto_collapse_delay;       /* Delay after which the clip will collapse when leaved */
+	int keychain_timeout_delay;         /* Delay before an idle key-chain is cancelled (0 disables) */
 
 	union WTexture *wsmbackTexture;
 
