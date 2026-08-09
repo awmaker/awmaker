@@ -848,12 +848,8 @@ static WMenuEntry *addMenuEntry(WMenu *menu, const char *title, const char *shor
 		shortcutOk = True;
 	} else if (strcmp(command, "WORKSPACE_MENU") == 0) {
 		entry = addWorkspaceMenu(vscr, menu, title);
-
-		shortcutOk = True;
 	} else if (strcmp(command, "WINDOWS_MENU") == 0) {
 		entry = addWindowsMenu(vscr, menu, title);
-
-		shortcutOk = True;
 	} else if (strcmp(command, "ARRANGE_ICONS") == 0) {
 		entry = wMenuAddCallback(menu, title, arrangeIconsCommand, NULL);
 
