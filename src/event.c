@@ -1544,8 +1544,11 @@ static void handleKeyPress(XEvent *event)
 	 * the inactivity timer (CF5-4) aborts it.
 	 *
 	 * A WKBD binding (RSM_WKBD) sets 'command' and falls into the usual switch;
-	 * any other leaf action runs its sh* logic function directly. If the trie
-	 * matched, we do not fall through to the wKeyBindings[] loop below.
+	 * any other leaf action runs its sh* logic function directly. This is the
+	 * single dispatch path (CUN-2): the trie is always rebuilt from the whole
+	 * SHBinding list (built-ins + root-menu shortcuts) on startup and on any
+	 * root-menu rebuild, so a linear fallback scan of wKeyBindings[] is no
+	 * longer needed.
 	 */
 	if (w_global.shortcut.curpos != NULL) {
 		/* Inside a chain: look for the next key among the children. */
@@ -1611,17 +1614,6 @@ static void handleKeyPress(XEvent *event)
 			shRunAction(b, vscr);
 		}
 		return;
-	}
-
-	for (i = 0; i < WKBD_LAST; i++) {
-		if (wKeyBindings[i].keycode == 0)
-			continue;
-
-		if (wKeyBindings[i].keycode == event->xkey.keycode && (wKeyBindings[i].modifier ==
-									      modifiers)) {
-			command = i;
-			break;
-		}
 	}
 
 	if (command < 0) {

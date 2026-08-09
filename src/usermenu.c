@@ -31,10 +31,14 @@
 
 #define MAX_SHORTCUT_LENGTH 64
 
+typedef struct WUserKey {
+	unsigned int modifier;
+	KeyCode keycode;
+} WUserKey;
 
 typedef struct {
 	virtual_screen *screen;
-	WShortKey *key;
+	WUserKey *key;
 	int key_no;
 } WUserMenuData;
 
@@ -99,7 +103,7 @@ static WUserMenuData *convertShortcuts(virtual_screen *vscr, WMPropList *shortcu
 	if (!data)
 		return NULL;
 
-	data->key = wmalloc(sizeof(WShortKey) * keycount);
+	data->key = wmalloc(sizeof(WUserKey) * keycount);
 	if (!data->key) {
 		wfree(data);
 		return NULL;

@@ -152,14 +152,14 @@ enum {
 	WKBD_LAST
 };
 
-typedef struct WShortKey {
-    unsigned int modifier;
-    KeyCode keycode;
-} WShortKey;
-
 /* ---[ Global Variables ]------------------------------------------------ */
 
 struct SHBinding;	/* shbinding.h (CUN-1: built-ins are SHBinding, RSM_WKBD) */
+/*
+ * NOTE: the key-chain struct WShortKey used to live here; it is now local to
+ * usermenu.c (CUN-2), where it is only the {modifier,keycode} pair used to
+ * synthesize user-menu keystrokes for the client — not a WM keybinding.
+ */
 /* `wKeyBindings` is declared in shbinding.h — include it to use the built-ins. */
 
 /* ---[ Functions ]------------------------------------------------------- */
