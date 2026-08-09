@@ -645,6 +645,7 @@ extern struct WPreferences {
 		char workspacelayernext[MAX_SHORTCUT_LENGTH];
 		char workspacelayerprev[MAX_SHORTCUT_LENGTH];
 		char workspacemap[MAX_SHORTCUT_LENGTH];
+		char workspacemenu[MAX_SHORTCUT_LENGTH];
 		char workspacenext[MAX_SHORTCUT_LENGTH];
 		char workspaceprev[MAX_SHORTCUT_LENGTH];
 	} key;

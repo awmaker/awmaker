@@ -154,6 +154,7 @@
 	WorkspaceMapBack = (solid, black);
 	RootMenuKey = F12;
 	WindowListKey = F11;
+	WorkspaceMenuKey = None;
 	WindowMenuKey = "Control+Escape";
 	DockRaiseLowerKey = None;
 	ClipRaiseLowerKey = None;

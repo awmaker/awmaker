@@ -131,6 +131,7 @@ static WDECallbackUpdate setHightlight;
 static WDECallbackUpdate setHightlightText;
 static WDECallbackUpdate setKeyGrab_rootmenu;
 static WDECallbackUpdate setKeyGrab_windowlist;
+static WDECallbackUpdate setKeyGrab_workspacemenu;
 static WDECallbackUpdate setKeyGrab_windowmenu;
 static WDECallbackUpdate setKeyGrab_dockraiselower;
 static WDECallbackUpdate setKeyGrab_clipraiselower;
@@ -600,6 +601,7 @@ enum {
 	OL_WORKSPACEMAPBACK,
 	OL_ROOTMENUKEY,
 	OL_WINDOWLISTKEY,
+	OL_WORKSPACEMENUKEY,
 	OL_WINDOWMENUKEY,
 	OL_DOCKRAISELOWERKEY,
 	OL_CLIPRAISELOWERKEY,
@@ -981,6 +983,8 @@ WDefaultEntry optionList[] = {
 	    &wPreferences.key.rootmenu, getKeybind, setKeyGrab_rootmenu, NULL, NULL, 1},
 	{"WindowListKey", "F11", NULL,
 	    &wPreferences.key.windowlist, getKeybind, setKeyGrab_windowlist, NULL, NULL, 1},
+	{"WorkspaceMenuKey", "None", NULL,
+	    &wPreferences.key.workspacemenu, getKeybind, setKeyGrab_workspacemenu, NULL, NULL, 1},
 	{"WindowMenuKey", "Control+Escape", NULL,
 	    &wPreferences.key.windowmenu, getKeybind, setKeyGrab_windowmenu, NULL, NULL, 1},
 	{"DockRaiseLowerKey", "None", NULL,
@@ -3510,6 +3514,29 @@ static int setKeyGrab_windowlist(virtual_screen *vscr)
 
 	set_keygrab(&shortcut, value);
 	wKeyBindings[WKBD_WINDOWLIST] = shortcut;
+	wwin = vscr->window.focused;
+
+	while (wwin != NULL) {
+		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
+		if (!WFLAGP(wwin, no_bind_keys))
+			wWindowSetKeyGrabs(wwin);
+
+		wwin = wwin->prev;
+	}
+
+	return 0;
+}
+
+static int setKeyGrab_workspacemenu(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+	WWindow *wwin;
+	char *value;
+
+	value = wPreferences.key.workspacemenu;
+
+	set_keygrab(&shortcut, value);
+	wKeyBindings[WKBD_WORKSPACEMENU] = shortcut;
 	wwin = vscr->window.focused;
 
 	while (wwin != NULL) {
