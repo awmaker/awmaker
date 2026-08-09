@@ -187,3 +187,53 @@ void shAddBinding(SHBinding *b)
 	b->next = shBindingList;
 	shBindingList = b;
 }
+
+/*
+ * Dispatch a binding to its action. RSM_WKBD is a window keybinding: its actual
+ * execution flows through handleKeyPress' normal switch / the key trie (F5-H/I),
+ * so nothing runs here; the root-menu RSM_* actions run the Phase-1 logic
+ * functions directly (no duplicated callbacks).
+ */
+void shRunAction(SHBinding *b, virtual_screen *vscr)
+{
+	switch (b->type) {
+	case RSM_EXEC:
+		shExec(vscr, b->cmd);
+		break;
+	case RSM_RESTART:
+		shRestart(vscr, b->cmd);
+		break;
+	case RSM_EXIT:
+		shExit(vscr, b->quick);
+		break;
+	case RSM_SHUTDOWN:
+		shShutdown(vscr, b->quick);
+		break;
+	case RSM_REFRESH:
+		shRefresh(vscr);
+		break;
+	case RSM_ARRANGE_ICONS:
+		shArrangeIcons(vscr);
+		break;
+	case RSM_HIDE_OTHERS:
+		shHideOthers(vscr);
+		break;
+	case RSM_SHOW_ALL:
+		shShowAll(vscr);
+		break;
+	case RSM_SAVE_SESSION:
+		shSaveSession(vscr);
+		break;
+	case RSM_CLEAR_SESSION:
+		shClearSession(vscr);
+		break;
+	case RSM_INFO_PANEL:
+		shInfoPanel(vscr);
+		break;
+	case RSM_LEGAL_PANEL:
+		shLegalPanel(vscr);
+		break;
+	case RSM_WKBD:
+		break;
+	}
+}
