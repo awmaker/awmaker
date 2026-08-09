@@ -286,7 +286,7 @@ void wRootMenuBindShortcuts(Window window)
 	SHBinding *b;
 
 	for (b = shGetBindings(); b != NULL; b = b->next) {
-		if (b->type == RSM_WKBD || b->keycode == 0 || b->chain_length != 1)
+		if (b->type == RSM_WKBD || b->keycode == 0)
 			continue;
 
 		if (b->modifier != AnyModifier) {

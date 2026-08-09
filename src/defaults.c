@@ -130,6 +130,7 @@ static WDECallbackUpdate setMenuTextBack;
 static WDECallbackUpdate setHightlight;
 static WDECallbackUpdate setHightlightText;
 static WDECallbackUpdate setKeyGrab_rootmenu;
+static WDECallbackUpdate setKeyGrab_keychaincancel;
 static WDECallbackUpdate setKeyGrab_windowlist;
 static WDECallbackUpdate setKeyGrab_workspacemenu;
 static WDECallbackUpdate setKeyGrab_windowmenu;
@@ -983,6 +984,8 @@ WDefaultEntry optionList[] = {
 
 	{"RootMenuKey", "F12", NULL,
 	    &wPreferences.key.rootmenu, getKeybind, setKeyGrab_rootmenu, NULL, NULL, 1},
+	{"KeychainCancelKey", "Escape", NULL,
+	    &wPreferences.key.keychain_cancel, getKeybind, setKeyGrab_keychaincancel, NULL, NULL, 1},
 	{"WindowListKey", "F11", NULL,
 	    &wPreferences.key.windowlist, getKeybind, setKeyGrab_windowlist, NULL, NULL, 1},
 	{"WorkspaceMenuKey", "None", NULL,
@@ -3502,6 +3505,19 @@ static int setKeyGrab_rootmenu(virtual_screen *vscr)
 
 		wwin = wwin->prev;
 	}
+
+	return 0;
+}
+
+static int setKeyGrab_keychaincancel(virtual_screen *vscr)
+{
+	WShortKey shortcut;
+
+	(void)vscr;
+
+	set_keygrab(&shortcut, wPreferences.key.keychain_cancel);
+	w_global.shortcut.chain_cancel_modifiers = shortcut.modifier;
+	w_global.shortcut.chain_cancel_keycode = shortcut.keycode;
 
 	return 0;
 }

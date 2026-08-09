@@ -576,6 +576,10 @@ static Bool write_window_maker(const char *path)
 			    WMCreatePLString("F12"));
 	WMPutInPLDictionary(root, WMCreatePLString("WindowListKey"),
 			    WMCreatePLString("F11"));
+	WMPutInPLDictionary(root, WMCreatePLString("KeychainTimeoutDelay"),
+			    WMCreatePLString("1000"));
+	WMPutInPLDictionary(root, WMCreatePLString("KeychainCancelKey"),
+			    WMCreatePLString("Escape"));
 
 	ok = write_file_if_missing(path, root);
 	WMReleasePropList(root);

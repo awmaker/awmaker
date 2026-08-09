@@ -651,6 +651,7 @@ extern struct WPreferences {
 		char workspacemenu[MAX_SHORTCUT_LENGTH];
 		char workspacenext[MAX_SHORTCUT_LENGTH];
 		char workspaceprev[MAX_SHORTCUT_LENGTH];
+		char keychain_cancel[MAX_SHORTCUT_LENGTH];   /* key to abort a key-chain */
 	} key;
 
 	struct {
@@ -839,6 +840,8 @@ extern struct wmaker_global_variables {
 		 */
 		struct WKeyNode *curpos;
 		WMHandlerID chain_timeout_handler;
+		unsigned int chain_cancel_modifiers;   /* KeychainCancelKey (0 = none) */
+		KeyCode chain_cancel_keycode;
 	} shortcut;
 
 	/* Application related */

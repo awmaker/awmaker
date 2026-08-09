@@ -1549,6 +1549,17 @@ static void handleKeyPress(XEvent *event)
 	 */
 	if (w_global.shortcut.curpos != NULL) {
 		/* Inside a chain: look for the next key among the children. */
+
+		/* KeychainCancelKey: abort the chain without consuming a real binding. */
+		if (w_global.shortcut.chain_cancel_keycode != 0 &&
+		    event->xkey.keycode == w_global.shortcut.chain_cancel_keycode &&
+		    modifiers == w_global.shortcut.chain_cancel_modifiers) {
+			wCancelChainTimer();
+			XUngrabKeyboard(dpy, CurrentTime);
+			w_global.shortcut.curpos = NULL;
+			return;
+		}
+
 		WKeyNode *siblings = w_global.shortcut.curpos->first_child;
 
 		match = wKeyTreeFind(siblings, modifiers, event->xkey.keycode);
