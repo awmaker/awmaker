@@ -42,6 +42,8 @@ awmaker_SOURCES = 	\
 	dialog_legal.h \
 	dialog_iconchooser.c \
 	dialog_iconchooser.h \
+	dialog_crash.c \
+	dialog_crash.h \
 	dock.c \
 	dock-core.c \
 	dockedapp.c \

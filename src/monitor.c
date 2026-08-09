@@ -26,6 +26,7 @@
 #include "screen.h"
 #include "window.h"
 #include "dialog.h"
+#include "dialog_crash.h"
 #include "main.h"
 
 

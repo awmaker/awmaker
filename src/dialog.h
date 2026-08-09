@@ -22,21 +22,6 @@ enum {
 	WMStartAlternate
 };
 
-typedef struct CrashPanel {
-	WMWindow *win;		/* main window */
-	WMLabel *iconL;		/* application icon */
-	WMLabel *nameL;		/* title of panel */
-	WMFrame *sepF;		/* separator frame */
-	WMLabel *noteL;		/* Title of note */
-	WMLabel *note2L;	/* body of note with what happened */
-	WMFrame *whatF;		/* "what to do next" frame */
-	WMPopUpButton *whatP;	/* action selection popup button */
-	WMButton *okB;		/* ok button */
-	Bool done;		/* if finished with this dialog */
-	int action;		/* what to do after */
-	KeyCode retKey;
-} CrashPanel;
-
 typedef struct WMInputPanelWithHistory {
 	WMInputPanel *panel;
 	WMArray *history;
@@ -56,5 +41,4 @@ int wInputDialog(virtual_screen *vscr, const char *title, const char *message, c
 int wExitDialog(virtual_screen *vscr, const char *title, const char *message, const char *defBtn,
 		const char *altBtn, const char *othBtn);
 
-int wShowCrashingDialogPanel(int whatSig);
 #endif
