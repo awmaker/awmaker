@@ -32,5 +32,7 @@ void shShowAll(virtual_screen *vscr);
 void shHideOthers(virtual_screen *vscr);
 void shSaveSession(virtual_screen *vscr);
 void shClearSession(virtual_screen *vscr);
+void shInfoPanel(virtual_screen *vscr);
+void shLegalPanel(virtual_screen *vscr);
 
 #endif /* WMSHBINDING_H */

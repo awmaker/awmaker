@@ -163,3 +163,13 @@ void shClearSession(virtual_screen *vscr)
 	wSessionClearState();
 	wScreenSaveState(vscr);
 }
+
+void shInfoPanel(virtual_screen *vscr)
+{
+	panel_show(vscr, PANEL_INFO);
+}
+
+void shLegalPanel(virtual_screen *vscr)
+{
+	panel_show(vscr, PANEL_LEGAL);
+}

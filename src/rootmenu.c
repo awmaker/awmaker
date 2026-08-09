@@ -207,18 +207,16 @@ static void clearSessionCommand(WMenu *menu, WMenuEntry *entry)
 
 static void infoPanelCommand(WMenu *menu, WMenuEntry *entry)
 {
-	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 
-	panel_show(menu->vscr, PANEL_INFO);
+	shInfoPanel(menu->vscr);
 }
 
 static void legalPanelCommand(WMenu *menu, WMenuEntry *entry)
 {
-	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 
-	panel_show(menu->vscr, PANEL_LEGAL);
+	shLegalPanel(menu->vscr);
 }
 
 /********************************************************************/
