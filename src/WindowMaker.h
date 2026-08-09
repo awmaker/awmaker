@@ -115,7 +115,7 @@ typedef enum {
 	WCUR_LAST
 } w_cursor;
 
-#define MAX_SHORTCUT_LENGTH 32
+#define MAX_SHORTCUT_LENGTH 64
 
 /* geometry displays */
 #define WDIS_NEW		0	/* new style */

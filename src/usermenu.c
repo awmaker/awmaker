@@ -29,7 +29,7 @@
 #include "misc.h"
 #include "appmenu.h"
 
-#define MAX_SHORTCUT_LENGTH 32
+#define MAX_SHORTCUT_LENGTH 64
 
 
 typedef struct {

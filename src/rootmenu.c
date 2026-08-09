@@ -51,7 +51,7 @@
 
 #include <WINGs/WUtil.h>
 
-#define MAX_SHORTCUT_LENGTH 32
+#define MAX_SHORTCUT_LENGTH 64
 
 static WMenu *readMenuPipe(virtual_screen *vscr, char **file_name);
 static WMenu *readPLMenuPipe(virtual_screen *vscr, char **file_name);
