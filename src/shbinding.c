@@ -379,6 +379,9 @@ void wKeyTreeRebuild(void)
 	unsigned int mods[10];
 	KeyCode keys[10];
 
+	/* Dropping the old trie invalidates any in-flight chain cursor; cancel it. */
+	w_global.shortcut.curpos = NULL;
+
 	wKeyTreeDestroy(wKeyTreeRoot);
 	wKeyTreeRoot = NULL;
 

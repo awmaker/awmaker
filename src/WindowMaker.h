@@ -16,6 +16,8 @@
 #include <limits.h>
 #include <WINGs/WINGs.h>
 
+struct WKeyNode;	/* keytree.h (F5 chain trie) */
+
 
 /* class codes */
 typedef enum {
@@ -829,6 +831,13 @@ extern struct wmaker_global_variables {
 		unsigned int modifiers_mask;
 
 		WMArray *windows[MAX_WINDOW_SHORTCUTS];
+
+		/*
+		 * Key-chain state (F5/§8F5.8): when we are mid-chain, curpos is the
+		 * trie node reached so far; NULL means no chain in progress.
+		 */
+		struct WKeyNode *curpos;
+		WMHandlerID chain_timeout_handler;
 	} shortcut;
 
 	/* Application related */
