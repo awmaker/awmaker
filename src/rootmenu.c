@@ -64,16 +64,6 @@ static void wsobserver(void *self, WMNotification *notif);
 static void rootmenu_setup_switchmenu_notif(void);
 static void rootmenu_map(virtual_screen *vscr, int keyboard);
 
-typedef struct Shortcut {
-	struct Shortcut *next;
-
-	int modifier;
-	KeyCode keycode;
-	WMenuEntry *entry;
-	WMenu *menu;
-} Shortcut;
-
-static Shortcut *shortcutList = NULL;
 static int initialized = 0;
 
 /*
@@ -264,19 +254,19 @@ static char *getLocalizedMenuFile(const char *menu)
 Bool wRootMenuPerformShortcut(XEvent *event)
 {
 	virtual_screen *vscr = wScreenForRootWindow(event->xkey.root);
-	Shortcut *ptr;
+	SHBinding *b;
 	int modifiers;
 	int done = 0;
 
 	/* ignore CapsLock */
 	modifiers = event->xkey.state & w_global.shortcut.modifiers_mask;
 
-	for (ptr = shortcutList; ptr != NULL; ptr = ptr->next) {
-		if (ptr->keycode == 0 || ptr->menu->vscr != vscr)
+	for (b = shGetBindings(); b != NULL; b = b->next) {
+		if (b->type == RSM_WKBD || b->keycode == 0 || b->chain_length != 1)
 			continue;
 
-		if (ptr->keycode == event->xkey.keycode && ptr->modifier == modifiers) {
-			(*ptr->entry->callback) (ptr->menu, ptr->entry);
+		if (b->keycode == event->xkey.keycode && b->modifier == modifiers) {
+			shRunAction(b, vscr);
 			done = True;
 		}
 	}
@@ -286,19 +276,20 @@ Bool wRootMenuPerformShortcut(XEvent *event)
 
 void wRootMenuBindShortcuts(Window window)
 {
-	Shortcut *ptr;
+	SHBinding *b;
 
-	ptr = shortcutList;
-	while (ptr) {
-		if (ptr->modifier != AnyModifier) {
-			XGrabKey(dpy, ptr->keycode, ptr->modifier | LockMask,
+	for (b = shGetBindings(); b != NULL; b = b->next) {
+		if (b->type == RSM_WKBD || b->keycode == 0 || b->chain_length != 1)
+			continue;
+
+		if (b->modifier != AnyModifier) {
+			XGrabKey(dpy, b->keycode, b->modifier | LockMask,
 				 window, True, GrabModeAsync, GrabModeAsync);
 #ifdef NUMLOCK_HACK
-			wHackedGrabKey(dpy, ptr->keycode, ptr->modifier, window, True, GrabModeAsync, GrabModeAsync);
+			wHackedGrabKey(dpy, b->keycode, b->modifier, window, True, GrabModeAsync, GrabModeAsync);
 #endif
 		}
-		XGrabKey(dpy, ptr->keycode, ptr->modifier, window, True, GrabModeAsync, GrabModeAsync);
-		ptr = ptr->next;
+		XGrabKey(dpy, b->keycode, b->modifier, window, True, GrabModeAsync, GrabModeAsync);
 	}
 }
 
@@ -316,27 +307,6 @@ void rebindKeygrabs(virtual_screen *vscr)
 
 		wwin = wwin->prev;
 	}
-}
-
-static void removeShortcutsForMenu(WMenu *menu)
-{
-	Shortcut *ptr, *tmp;
-	Shortcut *newList = NULL;
-
-	ptr = shortcutList;
-	while (ptr != NULL) {
-		tmp = ptr->next;
-		if (ptr->menu == menu) {
-			wfree(ptr);
-		} else {
-			ptr->next = newList;
-			newList = ptr;
-		}
-		ptr = tmp;
-	}
-
-	shortcutList = newList;
-	menu->vscr->menu.flags.root_menu_changed_shortcuts = 1;
 }
 
 /*
@@ -391,24 +361,19 @@ static Bool decodeShortcutAction(const char *command, const char *params,
 static Bool addShortcut(const char *file, const char *shortcutDefinition, WMenu *menu,
 			WMenuEntry *entry, const char *command, const char *params)
 {
-	Shortcut *ptr;
 	KeySym ksym;
 	char *k;
 	char buf[MAX_SHORTCUT_LENGTH], *b;
-	SHBinding *sb;
 	SHActionType type;
 	char *scmd = NULL;
 	Bool squick = False;
 	unsigned int modifier = 0;
 	KeyCode keycode = 0;
 
-	ptr = wmalloc(sizeof(Shortcut));
-
 	wstrlcpy(buf, shortcutDefinition, MAX_SHORTCUT_LENGTH);
 	b = (char *)buf;
 
 	/* get modifiers */
-	ptr->modifier = 0;
 	while ((k = strchr(b, '+')) != NULL) {
 		int mod;
 
@@ -416,14 +381,12 @@ static Bool addShortcut(const char *file, const char *shortcutDefinition, WMenu 
 		mod = wXModifierFromKey(b);
 		if (mod < 0) {
 			wwarning(_("%s: invalid key modifier \"%s\""), file, b);
-			wfree(ptr);
 			return False;
 		}
-		ptr->modifier |= mod;
+		modifier |= mod;
 
 		b = k + 1;
 	}
-	modifier = ptr->modifier;
 
 	/* get key */
 	ksym = XStringToKeysym(b);
@@ -431,31 +394,23 @@ static Bool addShortcut(const char *file, const char *shortcutDefinition, WMenu 
 	if (ksym == NoSymbol) {
 		wwarning(_("%s:invalid kbd shortcut specification \"%s\" for entry %s"),
 			 file, shortcutDefinition, entry->text);
-		wfree(ptr);
 		return False;
 	}
 
 	keycode = XKeysymToKeycode(dpy, ksym);
-	ptr->keycode = keycode;
-	if (ptr->keycode == 0) {
+	if (keycode == 0) {
 		wwarning(_("%s:invalid key in shortcut \"%s\" for entry %s"), file,
 			 shortcutDefinition, entry->text);
-		wfree(ptr);
 		return False;
 	}
 
-	ptr->menu = menu;
-	ptr->entry = entry;
-
-	ptr->next = shortcutList;
-	shortcutList = ptr;
-
 	menu->vscr->menu.flags.root_menu_changed_shortcuts = 1;
 
-	/* F5-J: also decode into a menu-independent SHBinding so the key trie
-	 * (F5-H/I) can execute the shortcut without any menu pointer. */
+	/* Decode into a menu-independent SHBinding so the key trie (F5-H/I) can
+	 * execute the shortcut without any menu pointer. */
 	if (decodeShortcutAction(command, params, &type, &scmd, &squick)) {
-		sb = wmalloc(sizeof(SHBinding));
+		SHBinding *sb = wmalloc(sizeof(SHBinding));
+
 		sb->modifier = modifier;
 		sb->keycode = keycode;
 		sb->chain_length = 1;
@@ -574,7 +529,6 @@ static WMenu *constructPLMenu(virtual_screen *vscr, const char *path)
 	if (!menu)
 		return NULL;
 
-	menu->on_destroy = removeShortcutsForMenu;
 	return menu;
 }
 
@@ -860,7 +814,6 @@ static WMenuEntry *addMenuEntry(WMenu *menu, const char *title, const char *shor
 
 			dummy = menu_create(vscr, title);
 			menu_map(dummy);
-			dummy->on_destroy = removeShortcutsForMenu;
 			entry = wMenuAddCallback(menu, title, constructMenu, path);
 			entry->free_cdata = wfree;
 			wMenuEntrySetCascade_create(menu, entry, dummy);
@@ -878,7 +831,6 @@ static WMenuEntry *addMenuEntry(WMenu *menu, const char *title, const char *shor
 
 			dummy = menu_create(vscr, title);
 			menu_map(dummy);
-			dummy->on_destroy = removeShortcutsForMenu;
 			entry = wMenuAddCallback(menu, title, constructPLMenuFromPipe, path);
 			entry->free_cdata = wfree;
 			wMenuEntrySetCascade_create(menu, entry, dummy);
@@ -997,7 +949,6 @@ static WMenu *parseCascade(virtual_screen *vscr, WMenu *menu, WMenuParser parser
 			/* start submenu */
 			cascade = menu_create(vscr, M_(title));
 			menu_map(cascade);
-			cascade->on_destroy = removeShortcutsForMenu;
 			if (!parseCascade(vscr, cascade, parser))
 				wMenuDestroy(cascade);
 			else
@@ -1040,8 +991,7 @@ static WMenu *readMenu(virtual_screen *vscr, const char *flat_file, FILE *file)
 		if (strcasecmp(command, "MENU") == 0) {
 			menu = menu_create(vscr, M_(title));
 			menu_map(menu);
-			menu->on_destroy = removeShortcutsForMenu;
-			if (!parseCascade(vscr, menu, parser)) {
+					if (!parseCascade(vscr, menu, parser)) {
 				wMenuDestroy(menu);
 				menu = NULL;
 			}
@@ -1128,7 +1078,6 @@ static WMenu *readPLMenuPipe(virtual_screen *vscr, char **file_name)
 	if (!menu)
 		return NULL;
 
-	menu->on_destroy = removeShortcutsForMenu;
 	return menu;
 }
 
@@ -1324,7 +1273,6 @@ static WMenu *readMenuDirectory(virtual_screen *vscr, const char *title, char **
 
 	menu = menu_create(vscr, M_(title));
 	menu_map(menu);
-	menu->on_destroy = removeShortcutsForMenu;
 
 	WM_ITERATE_ARRAY(dirs, data, iter) {
 		/* New directory. Use same OPEN_MENU command that was used
@@ -1592,7 +1540,6 @@ static WMenu *configureMenu(virtual_screen *vscr, WMPropList *definition)
 	mtitle = WMGetFromPLString(elem);
 	menu = menu_create(vscr, M_(mtitle));
 	menu_map(menu);
-	menu->on_destroy = removeShortcutsForMenu;
 
 	configure_menu_entries(vscr, definition, menu, count);
 	wMenuRealize(menu);

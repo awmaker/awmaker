@@ -78,6 +78,11 @@ void shRebuildList(void);
 void shRunAction(SHBinding *b, virtual_screen *vscr);
 unsigned int shLabelFor(const SHBinding *b, char *buf, unsigned int buflen);
 
+/* Runtime binding list accessor (F5-L): the derived list rebuilt by
+ * shRebuildList. Read-only iteration by callers (e.g. wRootMenuBindShortcuts /
+ * wRootMenuPerformShortcut) for keygrabs / fallback dispatch. */
+SHBinding *shGetBindings(void);
+
 /*
  * Root-menu shortcut bindings (F5-J/K). They are collected in their own list
  * (shAddMenuBinding), cleared on root-menu destruction (shClearMenuBindings),

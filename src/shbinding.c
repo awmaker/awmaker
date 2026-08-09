@@ -202,6 +202,11 @@ void shAddBinding(SHBinding *b)
 	shBindingList = b;
 }
 
+SHBinding *shGetBindings(void)
+{
+	return shBindingList;
+}
+
 void shAddMenuBinding(SHBinding *b)
 {
 	b->next = shMenuBindings;
