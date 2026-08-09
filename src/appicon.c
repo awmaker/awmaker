@@ -37,6 +37,7 @@
 #include "menu.h"
 #include "framewin.h"
 #include "dialog.h"
+#include "dialog_iconchooser.h"
 #include "xinerama.h"
 #include "client.h"
 #include "placement.h"

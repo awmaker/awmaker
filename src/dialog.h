@@ -14,41 +14,12 @@
 
 typedef struct IconPanel IconPanel;
 
-#include "appicon.h"
-#include "dockedapp.h"
-#include "winspector.h"
+#include "screen.h"
 
 enum {
 	WMAbort = 0,
 	WMRestart,
 	WMStartAlternate
-};
-
-struct IconPanel {
-	virtual_screen *vscr;
-	WWindow *wwin;
-	WMWindow *win;
-
-	WMLabel *dirLabel;
-	WMLabel *iconLabel;
-
-	WMList *dirList;
-	WMList *iconList;
-	WMFont *normalfont;
-
-	WMButton *previewButton;
-
-	WMLabel *iconView;
-
-	WMLabel *fileLabel;
-	WMTextField *fileField;
-
-	WMButton *okButton;
-	WMButton *cancelButton;
-
-	short done;
-	short result;
-	short preview;
 };
 
 typedef struct CrashPanel {
@@ -84,8 +55,6 @@ int wInputDialog(virtual_screen *vscr, const char *title, const char *message, c
 
 int wExitDialog(virtual_screen *vscr, const char *title, const char *message, const char *defBtn,
 		const char *altBtn, const char *othBtn);
-
-Bool wIconChooserDialog(AppSettingsPanel *app_panel, InspectorPanel *ins_panel, WAppIcon *icon, char **file);
 
 int wShowCrashingDialogPanel(int whatSig);
 #endif

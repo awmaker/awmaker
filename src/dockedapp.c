@@ -26,6 +26,7 @@
 #include "drawer.h"
 #include "dockedapp.h"
 #include "dialog.h"
+#include "dialog_iconchooser.h"
 #include "misc.h"
 #include "wdefaults.h"
 #include "framewin.h"

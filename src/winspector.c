@@ -25,6 +25,7 @@
 #include "workspace.h"
 #include "wdefaults.h"
 #include "dialog.h"
+#include "dialog_iconchooser.h"
 #include "icon.h"
 #include "stacking.h"
 #include "application.h"
