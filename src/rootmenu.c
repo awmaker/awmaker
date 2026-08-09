@@ -47,6 +47,7 @@
 #include "switchmenu.h"
 #include "screen.h"
 #include "input.h"
+#include "shbinding.h"
 
 #include <WINGs/WUtil.h>
 
@@ -144,14 +145,7 @@ static int initialized = 0;
 
 static void execCommand(WMenu *menu, WMenuEntry *entry)
 {
-	char *cmdline;
-
-	cmdline = ExpandOptions(menu->vscr, (char *)entry->clientdata);
-	if (!cmdline)
-		return;
-
-	ExecuteShellCommand(menu->vscr, cmdline);
-	wfree(cmdline);
+	shExec(menu->vscr, entry->clientdata);
 }
 
 static void exitCommand(WMenu *menu, WMenuEntry *entry)
@@ -243,65 +237,49 @@ static void shutdownCommand(WMenu *menu, WMenuEntry *entry)
 
 static void restartCommand(WMenu *menu, WMenuEntry *entry)
 {
-	/* Parameter not used, but tell the compiler that it is ok */
-	(void) menu;
-	(void) entry;
-
-	Shutdown(WSRestartPreparationMode);
-	Restart((char *)entry->clientdata, False);
-	Restart(NULL, True);
+	shRestart(menu->vscr, entry->clientdata);
 }
 
 static void refreshCommand(WMenu *menu, WMenuEntry *entry)
 {
-	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 
-	wRefreshDesktop(menu->vscr);
+	shRefresh(menu->vscr);
 }
 
 static void arrangeIconsCommand(WMenu *menu, WMenuEntry *entry)
 {
-	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 
-	wArrangeIcons(menu->vscr, True);
+	shArrangeIcons(menu->vscr);
 }
 
 static void showAllCommand(WMenu *menu, WMenuEntry *entry)
 {
-	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 
-	wShowAllWindows(menu->vscr);
+	shShowAll(menu->vscr);
 }
 
 static void hideOthersCommand(WMenu *menu, WMenuEntry *entry)
 {
-	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 
-	wHideOtherApplications(menu->vscr->window.focused);
+	shHideOthers(menu->vscr);
 }
 
 static void saveSessionCommand(WMenu *menu, WMenuEntry *entry)
 {
-	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 
-	if (!wPreferences.save_session_on_exit)
-		wSessionSaveState(menu->vscr);
-
-	wScreenSaveState(menu->vscr);
+	shSaveSession(menu->vscr);
 }
 
 static void clearSessionCommand(WMenu *menu, WMenuEntry *entry)
 {
-	/* Parameter not used, but tell the compiler that it is ok */
 	(void) entry;
 
-	wSessionClearState();
-	wScreenSaveState(menu->vscr);
+	shClearSession(menu->vscr);
 }
 
 static void infoPanelCommand(WMenu *menu, WMenuEntry *entry)
