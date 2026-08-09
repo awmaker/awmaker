@@ -35,6 +35,7 @@
 #include "WindowMaker.h"
 #include "GNUstep.h"
 #include "screen.h"
+#include "shbinding.h"
 #include "wcore.h"
 #include "window.h"
 #include "framewin.h"
@@ -801,12 +802,12 @@ Bool GetCanonicalShortcutLabel(unsigned int modifiers, KeySym ksym, char *buf, s
 	return True;
 }
 
-char *GetShortcutKey(WShortKey key)
+char *GetShortcutKey(const SHBinding *key)
 {
 	char buffer[256];
 
-	if (!GetCanonicalShortcutLabel(key.modifier,
-				       XkbKeycodeToKeysym(dpy, key.keycode, 0, 0),
+	if (!GetCanonicalShortcutLabel(key->modifier,
+				       XkbKeycodeToKeysym(dpy, key->keycode, 0, 0),
 				       buffer, sizeof(buffer)))
 		return NULL;
 

@@ -27,6 +27,7 @@
 #include "client.h"
 #include "application.h"
 #include "keybind.h"
+#include "shbinding.h"
 #include "misc.h"
 #include "framewin.h"
 #include "workspace.h"
@@ -228,7 +229,7 @@ static void updateUnmaximizeShortcut(WMenuEntry *entry, int flags)
 		break;
 	}
 
-	entry->rtext = GetShortcutKey(wKeyBindings[key]);
+	entry->rtext = GetShortcutKey(&wKeyBindings[key]);
 }
 
 static void execMenuCommand(WMenu *menu, WMenuEntry *entry)
@@ -364,7 +365,7 @@ static void updateWorkspaceMenu(WMenu *menu)
 				strncpy(title, vscr->workspace.array[i]->name, MAX_WORKSPACENAME_WIDTH);
 				title[MAX_WORKSPACENAME_WIDTH] = 0;
 				menu->entries[i]->text = wstrdup(title);
-				menu->entries[i]->rtext = GetShortcutKey(wKeyBindings[WKBD_MOVE_WORKSPACE1 + i]);
+				menu->entries[i]->rtext = GetShortcutKey(&wKeyBindings[WKBD_MOVE_WORKSPACE1 + i]);
 				menu->flags.realized = 0;
 			}
 		} else {
@@ -372,14 +373,14 @@ static void updateWorkspaceMenu(WMenu *menu)
 			title[MAX_WORKSPACENAME_WIDTH] = 0;
 
 			entry = wMenuAddCallback(menu, title, switchWSCommand, NULL);
-			entry->rtext = GetShortcutKey(wKeyBindings[WKBD_MOVE_WORKSPACE1 + i]);
+			entry->rtext = GetShortcutKey(&wKeyBindings[WKBD_MOVE_WORKSPACE1 + i]);
 
 			menu->flags.realized = 0;
 		}
 
 		/* workspace shortcut labels */
 		if (i / 10 == vscr->workspace.current / 10)
-			entry->rtext = GetShortcutKey(wKeyBindings[WKBD_MOVE_WORKSPACE1 + (i % 10)]);
+			entry->rtext = GetShortcutKey(&wKeyBindings[WKBD_MOVE_WORKSPACE1 + (i % 10)]);
 		else
 			entry->rtext = NULL;
 	}
@@ -423,7 +424,7 @@ static void updateMakeShortcutMenu(WMenu *menu, WWindow *wwin)
 		if (kcode) {
 			char *tmp;
 
-			tmp = GetShortcutKey(wKeyBindings[WKBD_WINDOW1 + shortcutNo]);
+			tmp = GetShortcutKey(&wKeyBindings[WKBD_WINDOW1 + shortcutNo]);
 			if (tmp == NULL) {
 				if (entry->rtext != NULL) {
 					/* There was a shortcut, but there is no more */
@@ -467,19 +468,19 @@ static void updateOptionsMenu(WMenu *menu, WWindow *wwin)
 	smenu->entries[WO_KEEP_ON_TOP]->flags.indicator_on =
 	    (wwin->frame->core->stacking->window_level == WMFloatingLevel) ? 1 : 0;
 	menu_entry_set_enabled(smenu, WO_KEEP_ON_TOP, !wwin->flags.miniaturized);
-	smenu->entries[WO_KEEP_ON_TOP]->rtext = GetShortcutKey(wKeyBindings[WKBD_KEEP_ON_TOP]);
+	smenu->entries[WO_KEEP_ON_TOP]->rtext = GetShortcutKey(&wKeyBindings[WKBD_KEEP_ON_TOP]);
 
 	/* keep at bottom check */
 	smenu->entries[WO_KEEP_AT_BOTTOM]->clientdata = wwin;
 	smenu->entries[WO_KEEP_AT_BOTTOM]->flags.indicator_on =
 	    (wwin->frame->core->stacking->window_level == WMSunkenLevel) ? 1 : 0;
 	menu_entry_set_enabled(smenu, WO_KEEP_AT_BOTTOM, !wwin->flags.miniaturized);
-	smenu->entries[WO_KEEP_AT_BOTTOM]->rtext = GetShortcutKey(wKeyBindings[WKBD_KEEP_AT_BOTTOM]);
+	smenu->entries[WO_KEEP_AT_BOTTOM]->rtext = GetShortcutKey(&wKeyBindings[WKBD_KEEP_AT_BOTTOM]);
 
 	/* omnipresent check */
 	smenu->entries[WO_OMNIPRESENT]->clientdata = wwin;
 	smenu->entries[WO_OMNIPRESENT]->flags.indicator_on = IS_OMNIPRESENT(wwin);
-	smenu->entries[WO_OMNIPRESENT]->rtext = GetShortcutKey(wKeyBindings[WKBD_OMNIPRESENT]);
+	smenu->entries[WO_OMNIPRESENT]->rtext = GetShortcutKey(&wKeyBindings[WKBD_OMNIPRESENT]);
 
 	smenu->flags.realized = 0;
 }
@@ -491,7 +492,7 @@ static void updateMaximizeMenu(WMenu *menu, WWindow *wwin)
 
 	for (i = 0; i < smenu->entry_no; i++) {
 		smenu->entries[i]->clientdata = wwin;
-		smenu->entries[i]->rtext = GetShortcutKey(wKeyBindings[menu_maximize_entries[i].shortcut_idx]);
+		smenu->entries[i]->rtext = GetShortcutKey(&wKeyBindings[menu_maximize_entries[i].shortcut_idx]);
 	}
 
 	smenu->flags.realized = 0;
@@ -626,7 +627,7 @@ static void updateMenuForWindow(WMenu *menu, WWindow *wwin)
 			text = _("Maximize");
 
 		menu->entries[MC_MAXIMIZE]->text = text;
-		menu->entries[MC_MAXIMIZE]->rtext = GetShortcutKey(wKeyBindings[WKBD_MAXIMIZE]);
+		menu->entries[MC_MAXIMIZE]->rtext = GetShortcutKey(&wKeyBindings[WKBD_MAXIMIZE]);
 	}
 
 	if (wwin->flags.shaded) {
@@ -675,13 +676,13 @@ static void updateMenuForWindow(WMenu *menu, WWindow *wwin)
 	/* Update shortcut labels except for (Un)Maximize which is
 	 * handled separately.
 	 */
-	menu->entries[MC_MINIATURIZE]->rtext = GetShortcutKey(wKeyBindings[WKBD_MINIATURIZE]);
-	menu->entries[MC_SHADE]->rtext = GetShortcutKey(wKeyBindings[WKBD_SHADE]);
-	menu->entries[MC_HIDE]->rtext = GetShortcutKey(wKeyBindings[WKBD_HIDE]);
-	menu->entries[MC_MOVERESIZE]->rtext = GetShortcutKey(wKeyBindings[WKBD_MOVERESIZE]);
-	menu->entries[MC_SELECT]->rtext = GetShortcutKey(wKeyBindings[WKBD_SELECT]);
-	menu->entries[MC_RELAUNCH]->rtext = GetShortcutKey(wKeyBindings[WKBD_RELAUNCH]);
-	menu->entries[MC_CLOSE]->rtext = GetShortcutKey(wKeyBindings[WKBD_CLOSE]);
+	menu->entries[MC_MINIATURIZE]->rtext = GetShortcutKey(&wKeyBindings[WKBD_MINIATURIZE]);
+	menu->entries[MC_SHADE]->rtext = GetShortcutKey(&wKeyBindings[WKBD_SHADE]);
+	menu->entries[MC_HIDE]->rtext = GetShortcutKey(&wKeyBindings[WKBD_HIDE]);
+	menu->entries[MC_MOVERESIZE]->rtext = GetShortcutKey(&wKeyBindings[WKBD_MOVERESIZE]);
+	menu->entries[MC_SELECT]->rtext = GetShortcutKey(&wKeyBindings[WKBD_SELECT]);
+	menu->entries[MC_RELAUNCH]->rtext = GetShortcutKey(&wKeyBindings[WKBD_RELAUNCH]);
+	menu->entries[MC_CLOSE]->rtext = GetShortcutKey(&wKeyBindings[WKBD_CLOSE]);
 
 	/* set the client data of the entries to the window */
 	for (i = 0; i < menu->entry_no; i++)

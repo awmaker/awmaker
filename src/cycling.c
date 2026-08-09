@@ -21,6 +21,7 @@
 #include "window.h"
 #include "framewin.h"
 #include "keybind.h"
+#include "shbinding.h"
 #include "actions.h"
 #include "stacking.h"
 #include "cycling.h"
@@ -71,7 +72,7 @@ static WWindow *change_focus_and_raise(WWindow *newFocused, WWindow *oldFocused,
 void StartWindozeCycle(WWindow *wwin, XEvent *event, Bool next, Bool class_only)
 {
 
-	WShortKey binding;
+	SHBinding binding;
 	WSwitchPanel	*swpanel	= NULL;
 	virtual_screen	*vscr		= wScreenForRootWindow(event->xkey.root);
 	KeyCode		leftKey		= XKeysymToKeycode(dpy, XK_Left);

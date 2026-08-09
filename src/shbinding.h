@@ -80,6 +80,13 @@ void shRebuildList(void);
 void shRunAction(SHBinding *b, virtual_screen *vscr);
 unsigned int shLabelFor(const SHBinding *b, char *buf, unsigned int buflen);
 
+/*
+ * Built-in window-manager keybindings (CUN-1): a fixed table of SHBinding of
+ * type RSM_WKBD, wkbd_idx = its own index (1:1 with the WKBD_* enum).
+ * Defined in main.c, populated by the setKeyGrab_* defaults.
+ */
+extern SHBinding wKeyBindings[WKBD_LAST];
+
 /* Runtime binding list accessor (F5-L): the derived list rebuilt by
  * shRebuildList. Read-only iteration by callers (e.g. wRootMenuBindShortcuts /
  * wRootMenuPerformShortcut) for keygrabs / fallback dispatch. */

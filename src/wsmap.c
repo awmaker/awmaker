@@ -21,6 +21,7 @@
 #include "window.h"
 #include "misc.h"
 #include "workspace.h"
+#include "shbinding.h"
 #include "wsmap.h"
 #include "texture.h"
 

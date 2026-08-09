@@ -159,7 +159,8 @@ typedef struct WShortKey {
 
 /* ---[ Global Variables ]------------------------------------------------ */
 
-extern WShortKey wKeyBindings[WKBD_LAST];
+struct SHBinding;	/* shbinding.h (CUN-1: built-ins are SHBinding, RSM_WKBD) */
+/* `wKeyBindings` is declared in shbinding.h — include it to use the built-ins. */
 
 /* ---[ Functions ]------------------------------------------------------- */
 

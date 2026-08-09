@@ -41,6 +41,7 @@
 #include "client.h"
 #include "colormap.h"
 #include "keybind.h"
+#include "shbinding.h"
 #include "stacking.h"
 #include "wdefaults.h"
 #include "workspace.h"
@@ -2707,7 +2708,7 @@ static void setFocusMode(WWindow *wwin)
 void wWindowSetKeyGrabs(WWindow * wwin)
 {
 	int i;
-	WShortKey *key;
+	SHBinding *key;
 
 	for (i = 0; i < WKBD_LAST; i++) {
 		key = &wKeyBindings[i];

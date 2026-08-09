@@ -36,6 +36,7 @@
 #include "clip.h"
 #include "actions.h"
 #include "workspace.h"
+#include "shbinding.h"
 #include "appicon.h"
 #include "wmspec.h"
 #include "xinerama.h"
@@ -833,7 +834,7 @@ WMenu *wWorkspaceMenuMake(virtual_screen *vscr, const char *title)
 	wMenuAddCallback(wsmenu, _("New"), newWSCommand, NULL);
 	wMenuAddCallback(wsmenu, _("Destroy Last"), deleteWSCommand, NULL);
 	entry = wMenuAddCallback(wsmenu, _("Last Used"), lastWSCommand, NULL);
-	entry->rtext = GetShortcutKey(wKeyBindings[WKBD_LASTWORKSPACE]);
+	entry->rtext = GetShortcutKey(&wKeyBindings[WKBD_LASTWORKSPACE]);
 
 	return wsmenu;
 }
@@ -884,7 +885,7 @@ void menu_workspace_shortcut_labels(virtual_screen *vscr, WMenu *menu)
 	for (i = 0; i < vscr->workspace.count; i++) {
 		/* workspace shortcut labels */
 		if (i / 10 == vscr->workspace.current / 10)
-			menu->entries[i + MC_WORKSPACE1]->rtext = GetShortcutKey(wKeyBindings[WKBD_WORKSPACE1 + (i % 10)]);
+			menu->entries[i + MC_WORKSPACE1]->rtext = GetShortcutKey(&wKeyBindings[WKBD_WORKSPACE1 + (i % 10)]);
 		else
 			menu->entries[i + MC_WORKSPACE1]->rtext = NULL;
 

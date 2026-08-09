@@ -349,14 +349,7 @@ void shRebuildList(void)
 		if (wKeyBindings[i].keycode == 0)
 			continue;
 
-		SHBinding *b = shCloneBinding(&(SHBinding){
-			.modifier = wKeyBindings[i].modifier,
-			.keycode = wKeyBindings[i].keycode,
-			.chain_length = 1,
-			.type = RSM_WKBD,
-			.wkbd_idx = i,
-		});
-		shAddBinding(b);
+		shAddBinding(shCloneBinding(&wKeyBindings[i]));
 	}
 
 	for (mb = shMenuBindings; mb != NULL; mb = mb->next)

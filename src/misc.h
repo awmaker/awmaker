@@ -35,7 +35,7 @@ char *FindImage(const char *paths, const char *file);
 char *ExpandOptions(virtual_screen *vscr, const char *cmdline);
 char *GetShortcutString(const char *text);
 Bool GetCanonicalShortcutLabel(unsigned int modifiers, KeySym ksym, char *buf, size_t bufsz);
-char *GetShortcutKey(WShortKey key);
+char *GetShortcutKey(const struct SHBinding *key);
 char *EscapeWM_CLASS(const char *name, const char *class);
 char *StrConcatDot(const char *a, const char *b);
 char *GetCommandForWindow(Window win);

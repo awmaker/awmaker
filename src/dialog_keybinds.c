@@ -332,7 +332,7 @@ static int collect_rows(Row *rows, int capacity)
 		if (!wkbd_name[i])
 			continue;
 
-		key = GetShortcutKey(wKeyBindings[i]);
+		key = GetShortcutKey(&wKeyBindings[i]);
 		if (!key)
 			continue;
 

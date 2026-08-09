@@ -40,6 +40,7 @@
 #include "startup.h"
 #include "menu.h"
 #include "keybind.h"
+#include "shbinding.h"
 #include "xmodifier.h"
 #include "session.h"
 #include "shutdown.h"
@@ -61,7 +62,7 @@ char *ProgName;
 
 struct WPreferences wPreferences;
 
-WShortKey wKeyBindings[WKBD_LAST];
+SHBinding wKeyBindings[WKBD_LAST];
 
 /* notifications */
 const char WMNManaged[] = "WMNManaged";

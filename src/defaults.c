@@ -41,6 +41,7 @@
 #include "resources.h"
 #include "defaults.h"
 #include "keybind.h"
+#include "shbinding.h"
 #include "xmodifier.h"
 #include "icon.h"
 #include "shell.h"
@@ -3436,7 +3437,7 @@ static int setMenuTextBack(virtual_screen *vscr)
 	return REFRESH_MENU_TEXTURE;
 }
 
-static void set_keygrab(WShortKey *shortcut, char *value)
+static void set_keygrab(SHBinding *shortcut, char *value)
 {
 	char buf[MAX_SHORTCUT_LENGTH];
 	KeySym ksym;
@@ -3486,32 +3487,36 @@ static void set_keygrab(WShortKey *shortcut, char *value)
 	}
 }
 
-static int setKeyGrab_rootmenu(virtual_screen *vscr)
+/*
+ * Parse a key string into built-in binding slot 'idx' and regrab window keys.
+ * Shared by all the per-action setKeyGrab_* wrappers (CUN-1).
+ */
+static void wkbd_set_keygrab(virtual_screen *vscr, int idx, const char *value)
 {
-	WShortKey shortcut;
 	WWindow *wwin;
-	char *value;
 
-	value = wPreferences.key.rootmenu;
+	set_keygrab(&wKeyBindings[idx], (char *)value);
+	wKeyBindings[idx].type = RSM_WKBD;
+	wKeyBindings[idx].wkbd_idx = idx;
 
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_ROOTMENU] = shortcut;
 	wwin = vscr->window.focused;
-
 	while (wwin != NULL) {
 		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
 		if (!WFLAGP(wwin, no_bind_keys))
 			wWindowSetKeyGrabs(wwin);
-
 		wwin = wwin->prev;
 	}
+}
 
+static int setKeyGrab_rootmenu(virtual_screen *vscr)
+{
+	wkbd_set_keygrab(vscr, WKBD_ROOTMENU, wPreferences.key.rootmenu);
 	return 0;
 }
 
 static int setKeyGrab_keychaincancel(virtual_screen *vscr)
 {
-	WShortKey shortcut;
+	SHBinding shortcut;
 
 	(void)vscr;
 
@@ -3524,2121 +3529,558 @@ static int setKeyGrab_keychaincancel(virtual_screen *vscr)
 
 static int setKeyGrab_windowlist(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.windowlist;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_WINDOWLIST] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_WINDOWLIST, wPreferences.key.windowlist);
 	return 0;
 }
 
 static int setKeyGrab_workspacemenu(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.workspacemenu;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_WORKSPACEMENU] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_WORKSPACEMENU, wPreferences.key.workspacemenu);
 	return 0;
 }
 
 static int setKeyGrab_windowmenu(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.windowmenu;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_WINDOWMENU] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_WINDOWMENU, wPreferences.key.windowmenu);
 	return 0;
 }
 
 static int setKeyGrab_dockraiselower(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.dockraiselower;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_DOCKRAISELOWER] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_DOCKRAISELOWER, wPreferences.key.dockraiselower);
 	return 0;
 }
 
 static int setKeyGrab_clipraiselower(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.clipraiselower;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_CLIPRAISELOWER] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_CLIPRAISELOWER, wPreferences.key.clipraiselower);
 	return 0;
 }
 
 static int setKeyGrab_miniaturize(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.miniaturize;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_MINIATURIZE] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_MINIATURIZE, wPreferences.key.miniaturize);
 	return 0;
 }
 
 static int setKeyGrab_minimizeall(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.minimizeall;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_MINIMIZEALL] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_MINIMIZEALL, wPreferences.key.minimizeall);
 	return 0;
 }
 
 static int setKeyGrab_hide(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.hide;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_HIDE] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_HIDE, wPreferences.key.hide);
 	return 0;
 }
 
 static int setKeyGrab_hideothers(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.hideothers;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_HIDE_OTHERS] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_HIDE_OTHERS, wPreferences.key.hideothers);
 	return 0;
 }
 
 static int setKeyGrab_moveresize(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.moveresize;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_MOVERESIZE] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_MOVERESIZE, wPreferences.key.moveresize);
 	return 0;
 }
 
 static int setKeyGrab_close(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.close;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_CLOSE] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_CLOSE, wPreferences.key.close);
 	return 0;
 }
 
 static int setKeyGrab_maximize(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.maximize;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_MAXIMIZE] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_MAXIMIZE, wPreferences.key.maximize);
 	return 0;
 }
 
 static int setKeyGrab_maximizev(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.maximizev;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_VMAXIMIZE] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_VMAXIMIZE, wPreferences.key.maximizev);
 	return 0;
 }
 
 static int setKeyGrab_maximizeh(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.maximizeh;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_HMAXIMIZE] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_HMAXIMIZE, wPreferences.key.maximizeh);
 	return 0;
 }
 
 static int setKeyGrab_maximizelh(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.maximizelh;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_LHMAXIMIZE] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_LHMAXIMIZE, wPreferences.key.maximizelh);
 	return 0;
 }
 
 static int setKeyGrab_maximizerh(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.maximizerh;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_RHMAXIMIZE] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_RHMAXIMIZE, wPreferences.key.maximizerh);
 	return 0;
 }
 
 static int setKeyGrab_maximizeth(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.maximizeth;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_THMAXIMIZE] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_THMAXIMIZE, wPreferences.key.maximizeth);
 	return 0;
 }
 
 static int setKeyGrab_maximizebh(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.maximizebh;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_BHMAXIMIZE] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_BHMAXIMIZE, wPreferences.key.maximizebh);
 	return 0;
 }
 
 static int setKeyGrab_maximizeltc(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.maximizeltc;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_LTCMAXIMIZE] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_LTCMAXIMIZE, wPreferences.key.maximizeltc);
 	return 0;
 }
 
 static int setKeyGrab_maximizertc(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.maximizertc;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_RTCMAXIMIZE] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_RTCMAXIMIZE, wPreferences.key.maximizertc);
 	return 0;
 }
 
 static int setKeyGrab_maximizelbc(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.maximizelbc;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_LBCMAXIMIZE] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_LBCMAXIMIZE, wPreferences.key.maximizelbc);
 	return 0;
 }
 
 static int setKeyGrab_maximizerbc(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.maximizerbc;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_RBCMAXIMIZE] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_RBCMAXIMIZE, wPreferences.key.maximizerbc);
 	return 0;
 }
 
 static int setKeyGrab_maximus(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.maximus;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_MAXIMUS] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_MAXIMUS, wPreferences.key.maximus);
 	return 0;
 }
 
 static int setKeyGrab_central(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.central;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_CENTRAL] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_CENTRAL, wPreferences.key.central);
 	return 0;
 }
 
 static int setKeyGrab_keepontop(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.keepontop;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_KEEP_ON_TOP] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_KEEP_ON_TOP, wPreferences.key.keepontop);
 	return 0;
 }
 
 static int setKeyGrab_keepatbottom(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.keepatbottom;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_KEEP_AT_BOTTOM] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_KEEP_AT_BOTTOM, wPreferences.key.keepatbottom);
 	return 0;
 }
 
 static int setKeyGrab_omnipresent(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.omnipresent;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_OMNIPRESENT] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_OMNIPRESENT, wPreferences.key.omnipresent);
 	return 0;
 }
 
 static int setKeyGrab_raise(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.raise;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_RAISE] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_RAISE, wPreferences.key.raise);
 	return 0;
 }
 
 static int setKeyGrab_lower(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.lower;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_LOWER] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_LOWER, wPreferences.key.lower);
 	return 0;
 }
 
 static int setKeyGrab_raiselower(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.raiselower;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_RAISELOWER] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_RAISELOWER, wPreferences.key.raiselower);
 	return 0;
 }
 
 static int setKeyGrab_shade(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.shade;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_SHADE] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_SHADE, wPreferences.key.shade);
 	return 0;
 }
 
 static int setKeyGrab_select(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.select;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_SELECT] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_SELECT, wPreferences.key.select);
 	return 0;
 }
 
 static int setKeyGrab_workspacemap(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.workspacemap;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_WORKSPACEMAP] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_WORKSPACEMAP, wPreferences.key.workspacemap);
 	return 0;
 }
 
 static int setKeyGrab_focusnext(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.focusnext;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_FOCUSNEXT] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_FOCUSNEXT, wPreferences.key.focusnext);
 	return 0;
 }
 
 static int setKeyGrab_focusprev(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.focusprev;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_FOCUSPREV] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_FOCUSPREV, wPreferences.key.focusprev);
 	return 0;
 }
 
 static int setKeyGrab_focusleft(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.focusleft;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_FOCUSLEFT] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_FOCUSLEFT, wPreferences.key.focusleft);
 	return 0;
 }
 
 static int setKeyGrab_focusright(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.focusright;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_FOCUSRIGHT] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_FOCUSRIGHT, wPreferences.key.focusright);
 	return 0;
 }
 
 static int setKeyGrab_focusup(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.focusup;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_FOCUSUP] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_FOCUSUP, wPreferences.key.focusup);
 	return 0;
 }
 
 static int setKeyGrab_focusdown(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.focusdown;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_FOCUSDOWN] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_FOCUSDOWN, wPreferences.key.focusdown);
 	return 0;
 }
 
 static int setKeyGrab_groupnext(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.groupnext;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_GROUPNEXT] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_GROUPNEXT, wPreferences.key.groupnext);
 	return 0;
 }
 
 static int setKeyGrab_groupprev(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.groupprev;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_GROUPPREV] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_GROUPPREV, wPreferences.key.groupprev);
 	return 0;
 }
 
 static int setKeyGrab_markset(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.markset;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_MARK_SET] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_MARK_SET, wPreferences.key.markset);
 	return 0;
 }
 
 static int setKeyGrab_markunset(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.markunset;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_MARK_UNSET] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_MARK_UNSET, wPreferences.key.markunset);
 	return 0;
 }
 
 static int setKeyGrab_markbring(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.markbring;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_MARK_BRING] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_MARK_BRING, wPreferences.key.markbring);
 	return 0;
 }
 
 static int setKeyGrab_markjump(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.markjump;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_MARK_JUMP] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_MARK_JUMP, wPreferences.key.markjump);
 	return 0;
 }
 
 static int setKeyGrab_markswap(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.markswap;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_MARK_SWAP] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_MARK_SWAP, wPreferences.key.markswap);
 	return 0;
 }
 
 static int setKeyGrab_workspacenext(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.workspacenext;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_NEXTWORKSPACE] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_NEXTWORKSPACE, wPreferences.key.workspacenext);
 	return 0;
 }
 
 static int setKeyGrab_workspaceprev(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.workspaceprev;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_PREVWORKSPACE] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_PREVWORKSPACE, wPreferences.key.workspaceprev);
 	return 0;
 }
 
 static int setKeyGrab_workspacelast(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.workspacelast;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_LASTWORKSPACE] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
-	/* Refresh Workspace Menu, if opened */
+	wkbd_set_keygrab(vscr, WKBD_LASTWORKSPACE, wPreferences.key.workspacelast);
 	return REFRESH_WORKSPACE_MENU;
 }
 
 static int setKeyGrab_workspacelayernext(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.workspacelayernext;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_NEXTWSLAYER] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_NEXTWSLAYER, wPreferences.key.workspacelayernext);
 	return 0;
 }
 
 static int setKeyGrab_workspacelayerprev(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.workspacelayerprev;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_PREVWSLAYER] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_PREVWSLAYER, wPreferences.key.workspacelayerprev);
 	return 0;
 }
 
 static int setKeyGrab_workspace1(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.workspace1;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_WORKSPACE1] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_WORKSPACE1, wPreferences.key.workspace1);
 	return REFRESH_WORKSPACE_MENU;
 }
 
 static int setKeyGrab_workspace2(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.workspace2;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_WORKSPACE2] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_WORKSPACE2, wPreferences.key.workspace2);
 	return REFRESH_WORKSPACE_MENU;
 }
 
 static int setKeyGrab_workspace3(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.workspace3;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_WORKSPACE3] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_WORKSPACE3, wPreferences.key.workspace3);
 	return REFRESH_WORKSPACE_MENU;
 }
 
 static int setKeyGrab_workspace4(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.workspace4;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_WORKSPACE4] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_WORKSPACE4, wPreferences.key.workspace4);
 	return REFRESH_WORKSPACE_MENU;
 }
 
 static int setKeyGrab_workspace5(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.workspace5;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_WORKSPACE5] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_WORKSPACE5, wPreferences.key.workspace5);
 	return REFRESH_WORKSPACE_MENU;
 }
 
 static int setKeyGrab_workspace6(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.workspace6;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_WORKSPACE6] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_WORKSPACE6, wPreferences.key.workspace6);
 	return REFRESH_WORKSPACE_MENU;
 }
 
 static int setKeyGrab_workspace7(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.workspace7;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_WORKSPACE7] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_WORKSPACE7, wPreferences.key.workspace7);
 	return REFRESH_WORKSPACE_MENU;
 }
 
 static int setKeyGrab_workspace8(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.workspace8;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_WORKSPACE8] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_WORKSPACE8, wPreferences.key.workspace8);
 	return REFRESH_WORKSPACE_MENU;
 }
 
 static int setKeyGrab_workspace9(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.workspace9;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_WORKSPACE9] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_WORKSPACE9, wPreferences.key.workspace9);
 	return REFRESH_WORKSPACE_MENU;
 }
 
 static int setKeyGrab_workspace10(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.workspace10;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_WORKSPACE10] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_WORKSPACE10, wPreferences.key.workspace10);
 	return REFRESH_WORKSPACE_MENU;
 }
 
 static int setKeyGrab_movetoworkspace1(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.movetoworkspace1;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_MOVE_WORKSPACE1] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_MOVE_WORKSPACE1, wPreferences.key.movetoworkspace1);
 	return REFRESH_WORKSPACE_MENU;
 }
 
 static int setKeyGrab_movetoworkspace2(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.movetoworkspace2;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_MOVE_WORKSPACE2] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_MOVE_WORKSPACE2, wPreferences.key.movetoworkspace2);
 	return REFRESH_WORKSPACE_MENU;
 }
 
 static int setKeyGrab_movetoworkspace3(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.movetoworkspace3;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_MOVE_WORKSPACE3] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_MOVE_WORKSPACE3, wPreferences.key.movetoworkspace3);
 	return REFRESH_WORKSPACE_MENU;
 }
 
 static int setKeyGrab_movetoworkspace4(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.movetoworkspace4;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_MOVE_WORKSPACE4] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_MOVE_WORKSPACE4, wPreferences.key.movetoworkspace4);
 	return REFRESH_WORKSPACE_MENU;
 }
 
 static int setKeyGrab_movetoworkspace5(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.movetoworkspace5;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_MOVE_WORKSPACE5] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_MOVE_WORKSPACE5, wPreferences.key.movetoworkspace5);
 	return REFRESH_WORKSPACE_MENU;
 }
 
 static int setKeyGrab_movetoworkspace6(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.movetoworkspace6;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_MOVE_WORKSPACE6] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_MOVE_WORKSPACE6, wPreferences.key.movetoworkspace6);
 	return REFRESH_WORKSPACE_MENU;
 }
 
 static int setKeyGrab_movetoworkspace7(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.movetoworkspace7;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_MOVE_WORKSPACE7] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_MOVE_WORKSPACE7, wPreferences.key.movetoworkspace7);
 	return REFRESH_WORKSPACE_MENU;
 }
 
 static int setKeyGrab_movetoworkspace8(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.movetoworkspace8;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_MOVE_WORKSPACE8] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_MOVE_WORKSPACE8, wPreferences.key.movetoworkspace8);
 	return REFRESH_WORKSPACE_MENU;
 }
 
 static int setKeyGrab_movetoworkspace9(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.movetoworkspace9;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_MOVE_WORKSPACE9] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_MOVE_WORKSPACE9, wPreferences.key.movetoworkspace9);
 	return REFRESH_WORKSPACE_MENU;
 }
 
 static int setKeyGrab_movetoworkspace10(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.movetoworkspace10;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_MOVE_WORKSPACE10] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_MOVE_WORKSPACE10, wPreferences.key.movetoworkspace10);
 	return REFRESH_WORKSPACE_MENU;
 }
 
 static int setKeyGrab_movetonextworkspace(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.movetonextworkspace;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_MOVE_NEXTWORKSPACE] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_MOVE_NEXTWORKSPACE, wPreferences.key.movetonextworkspace);
 	return 0;
 }
 
 static int setKeyGrab_movetoprevworkspace(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.movetoprevworkspace;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_MOVE_PREVWORKSPACE] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_MOVE_PREVWORKSPACE, wPreferences.key.movetoprevworkspace);
 	return 0;
 }
 
 static int setKeyGrab_movetolastworkspace(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.movetolastworkspace;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_MOVE_LASTWORKSPACE] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_MOVE_LASTWORKSPACE, wPreferences.key.movetolastworkspace);
 	return 0;
 }
 
 static int setKeyGrab_movetonextworkspacelayer(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.movetonextworkspacelayer;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_MOVE_NEXTWSLAYER] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_MOVE_NEXTWSLAYER, wPreferences.key.movetonextworkspacelayer);
 	return 0;
 }
 
 static int setKeyGrab_movetoprevworkspacelayer(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.movetoprevworkspacelayer;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_MOVE_PREVWSLAYER] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_MOVE_PREVWSLAYER, wPreferences.key.movetoprevworkspacelayer);
 	return 0;
 }
 
 static int setKeyGrab_windowshortcut1(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.windowshortcut1;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_WINDOW1] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_WINDOW1, wPreferences.key.windowshortcut1);
 	return 0;
 }
 
 static int setKeyGrab_windowshortcut2(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.windowshortcut2;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_WINDOW2] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_WINDOW2, wPreferences.key.windowshortcut2);
 	return 0;
 }
 
 static int setKeyGrab_windowshortcut3(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.windowshortcut3;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_WINDOW3] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_WINDOW3, wPreferences.key.windowshortcut3);
 	return 0;
 }
 
 static int setKeyGrab_windowshortcut4(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.windowshortcut4;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_WINDOW4] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_WINDOW4, wPreferences.key.windowshortcut4);
 	return 0;
 }
 
 static int setKeyGrab_windowshortcut5(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.windowshortcut5;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_WINDOW5] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_WINDOW5, wPreferences.key.windowshortcut5);
 	return 0;
 }
 
 static int setKeyGrab_windowshortcut6(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.windowshortcut6;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_WINDOW6] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_WINDOW6, wPreferences.key.windowshortcut6);
 	return 0;
 }
 
 static int setKeyGrab_windowshortcut7(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.windowshortcut7;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_WINDOW7] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_WINDOW7, wPreferences.key.windowshortcut7);
 	return 0;
 }
 
 static int setKeyGrab_windowshortcut8(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.windowshortcut8;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_WINDOW8] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_WINDOW8, wPreferences.key.windowshortcut8);
 	return 0;
 }
 
 static int setKeyGrab_windowshortcut9(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.windowshortcut9;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_WINDOW9] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_WINDOW9, wPreferences.key.windowshortcut9);
 	return 0;
 }
 
 static int setKeyGrab_windowshortcut10(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.windowshortcut10;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_WINDOW10] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_WINDOW10, wPreferences.key.windowshortcut10);
 	return 0;
 }
 
 static int setKeyGrab_moveto12to6head(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.windowshortcut10;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_MOVE_12_TO_6_HEAD] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_MOVE_12_TO_6_HEAD, wPreferences.key.windowshortcut10);
 	return 0;
 }
 
 static int setKeyGrab_moveto6to12head(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.windowshortcut10;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_MOVE_6_TO_12_HEAD] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_MOVE_6_TO_12_HEAD, wPreferences.key.windowshortcut10);
 	return 0;
 }
 
 static int setKeyGrab_windowrelaunch(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.windowrelaunch;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_RELAUNCH] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_RELAUNCH, wPreferences.key.windowrelaunch);
 	return 0;
 }
 
 static int setKeyGrab_screenswitch(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.screenswitch;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_SWITCH_SCREEN] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_SWITCH_SCREEN, wPreferences.key.screenswitch);
 	return 0;
 }
 
 static int setKeyGrab_run(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.run;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_RUN] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_RUN, wPreferences.key.run);
 	return 0;
 }
 
 #ifdef KEEP_XKB_LOCK_STATUS
 static int setKeyGrab_togglekbdmode(virtual_screen *vscr)
 {
-	WShortKey shortcut;
-	WWindow *wwin;
-	char *value;
-
-	value = wPreferences.key.togglekbdmode;
-
-	set_keygrab(&shortcut, value);
-	wKeyBindings[WKBD_TOGGLE] = shortcut;
-	wwin = vscr->window.focused;
-
-	while (wwin != NULL) {
-		XUngrabKey(dpy, AnyKey, AnyModifier, wwin->frame->core->window);
-		if (!WFLAGP(wwin, no_bind_keys))
-			wWindowSetKeyGrabs(wwin);
-
-		wwin = wwin->prev;
-	}
-
+	wkbd_set_keygrab(vscr, WKBD_TOGGLE, wPreferences.key.togglekbdmode);
 	return 0;
 }
+
+
 #endif
 
 static int setIconPosition(virtual_screen *vscr)
