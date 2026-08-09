@@ -21,6 +21,7 @@
 #include "screen.h"
 #include "shbinding.h"
 #include "keybind.h"
+#include "keytree.h"
 
 #include <WINGs/WUtil.h>
 
@@ -277,5 +278,49 @@ void shRebuildList(void)
 		b->type = RSM_WKBD;
 		b->wkbd_idx = i;
 		shAddBinding(b);
+	}
+}
+
+/*
+ * Rebuild the key-chain trie from the SHBinding list (F5-H).
+ *
+ * Every binding in the list becomes one leaf in wKeyTreeRoot, keyed by its key
+ * sequence (leader key + followers for a chain). Multiple bindings sharing a
+ * sequence all attach to the same leaf (insertion order).
+ *
+ * Inert by itself: the executor (F5-I, handleKeyPress) has not been switched
+ * over yet, so this commit changes no runtime behaviour.
+ */
+void wKeyTreeRebuild(void)
+{
+	SHBinding *b;
+	unsigned int mods[10];
+	KeyCode keys[10];
+
+	wKeyTreeDestroy(wKeyTreeRoot);
+	wKeyTreeRoot = NULL;
+
+	for (b = shBindingList; b != NULL; b = b->next) {
+		WKeyNode *leaf;
+		int len, j;
+
+		if (b->keycode == 0)
+			continue;
+
+		len = (b->chain_length > 1) ? b->chain_length : 1;
+		mods[0] = b->modifier;
+		keys[0] = b->keycode;
+
+		for (j = 1; j < len; j++) {
+			mods[j] = b->chain_modifiers[j - 1];
+			keys[j] = b->chain_keycodes[j - 1];
+		}
+
+		if (len > 10)
+			len = 10;
+
+		leaf = wKeyTreeInsert(&wKeyTreeRoot, mods, keys, len);
+		if (leaf)
+			wKeyNodeAddBinding(leaf, b);
 	}
 }

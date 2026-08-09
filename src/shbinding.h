@@ -78,4 +78,12 @@ void shRebuildList(void);
 void shRunAction(SHBinding *b, virtual_screen *vscr);
 unsigned int shLabelFor(const SHBinding *b, char *buf, unsigned int buflen);
 
+/*
+ * Rebuild the key-chain trie from the SHBinding list (F5-H). Populates
+ * wKeyTreeRoot with one leaf per binding, keyed by its (chain of) key(s).
+ * Called on config change; must not be called from inside a menu open/close
+ * (F5-K) to avoid the reentrancy/use-after-free the F5 port hit.
+ */
+void wKeyTreeRebuild(void);
+
 #endif /* WMSHBINDING_H */

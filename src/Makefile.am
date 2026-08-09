@@ -53,6 +53,8 @@ awmaker_SOURCES = 	\
 	input.c \
 	input.h \
 	keybind.h \
+	keytree.h \
+	keytree.c \
 	main.c \
 	main.h \
 	menu.c \
