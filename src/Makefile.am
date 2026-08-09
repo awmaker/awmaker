@@ -34,6 +34,8 @@ awmaker_SOURCES = 	\
 	defaults.h \
 	dialog.c \
 	dialog.h \
+	dialog_keybinds.c \
+	dialog_keybinds.h \
 	dock.c \
 	dock-core.c \
 	dockedapp.c \
