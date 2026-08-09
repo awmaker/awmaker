@@ -367,20 +367,18 @@ static Bool decodeShortcutAction(const char *command, const char *params,
 	return True;
 }
 
-static Bool addShortcut(const char *file, const char *shortcutDefinition, WMenu *menu,
-			WMenuEntry *entry, const char *command, const char *params)
+/* Parse a single "Mod1+Mod2+Key" token into modifier/keycode.
+ * Returns True on success. */
+static Bool parseShortcutToken(const char *file, const char *token,
+			       unsigned int *modifier, KeyCode *keycode)
 {
-	KeySym ksym;
+	char buf[MAX_SHORTCUT_LENGTH];
+	char *b;
 	char *k;
-	char buf[MAX_SHORTCUT_LENGTH], *b;
-	SHActionType type;
-	char *scmd = NULL;
-	Bool squick = False;
-	unsigned int modifier = 0;
-	KeyCode keycode = 0;
+	KeySym ksym;
 
-	wstrlcpy(buf, shortcutDefinition, MAX_SHORTCUT_LENGTH);
-	b = (char *)buf;
+	wstrlcpy(buf, token, MAX_SHORTCUT_LENGTH);
+	b = buf;
 
 	/* get modifiers */
 	while ((k = strchr(b, '+')) != NULL) {
@@ -392,7 +390,7 @@ static Bool addShortcut(const char *file, const char *shortcutDefinition, WMenu 
 			wwarning(_("%s: invalid key modifier \"%s\""), file, b);
 			return False;
 		}
-		modifier |= mod;
+		*modifier |= mod;
 
 		b = k + 1;
 	}
@@ -401,16 +399,52 @@ static Bool addShortcut(const char *file, const char *shortcutDefinition, WMenu 
 	ksym = XStringToKeysym(b);
 
 	if (ksym == NoSymbol) {
-		wwarning(_("%s:invalid kbd shortcut specification \"%s\" for entry %s"),
-			 file, shortcutDefinition, entry->text);
+		wwarning(_("%s: invalid kbd shortcut specification \"%s\""), file, token);
 		return False;
 	}
 
-	keycode = XKeysymToKeycode(dpy, ksym);
-	if (keycode == 0) {
-		wwarning(_("%s:invalid key in shortcut \"%s\" for entry %s"), file,
-			 shortcutDefinition, entry->text);
+	*keycode = XKeysymToKeycode(dpy, ksym);
+	if (*keycode == 0) {
+		wwarning(_("%s: invalid key in shortcut \"%s\""), file, token);
 		return False;
+	}
+
+	return True;
+}
+
+static Bool addShortcut(const char *file, const char *shortcutDefinition, WMenu *menu,
+			WMenuEntry *entry, const char *command, const char *params)
+{
+	char buf[MAX_SHORTCUT_LENGTH], *tokens[8], *b;
+	int nchain = 0, i;
+	SHActionType type;
+	char *scmd = NULL;
+	Bool squick = False;
+
+	wstrlcpy(buf, shortcutDefinition, MAX_SHORTCUT_LENGTH);
+
+	/* Split the definition on spaces: first token = leader, the rest are the
+	 * chain's followers (each token is "Mod1+Key"). */
+	b = buf;
+	for (;;) {
+		char *space;
+
+		while (*b == ' ')
+			b++;
+		if (!*b)
+			break;
+		space = strpbrk(b, " \t");
+		if (space)
+			*space = 0;
+		if (nchain >= (int)(sizeof(tokens) / sizeof(tokens[0]))) {
+			wwarning(_("%s: too many keys in shortcut \"%s\""), file,
+				 shortcutDefinition);
+			return False;
+		}
+		tokens[nchain++] = b;
+		if (!space)
+			break;
+		b = space + 1;
 	}
 
 	menu->vscr->menu.flags.root_menu_changed_shortcuts = 1;
@@ -420,12 +454,34 @@ static Bool addShortcut(const char *file, const char *shortcutDefinition, WMenu 
 	if (decodeShortcutAction(command, params, &type, &scmd, &squick)) {
 		SHBinding *sb = wmalloc(sizeof(SHBinding));
 
-		sb->modifier = modifier;
-		sb->keycode = keycode;
-		sb->chain_length = 1;
+		sb->modifier = 0;
+		sb->keycode = 0;
+		sb->chain_length = nchain;
+		sb->chain_modifiers = NULL;
+		sb->chain_keycodes = NULL;
 		sb->type = type;
 		sb->cmd = scmd;
 		sb->quick = squick;
+
+		if (!parseShortcutToken(file, tokens[0], &sb->modifier, &sb->keycode)) {
+			wfree(scmd);
+			wfree(sb);
+			return False;
+		}
+		if (nchain > 1) {
+			sb->chain_modifiers = wmalloc((nchain - 1) * sizeof(unsigned int));
+			sb->chain_keycodes = wmalloc((nchain - 1) * sizeof(KeyCode));
+			for (i = 1; i < nchain; i++) {
+				if (!parseShortcutToken(file, tokens[i], &sb->chain_modifiers[i - 1],
+							 &sb->chain_keycodes[i - 1])) {
+					wfree(sb->chain_modifiers);
+					wfree(sb->chain_keycodes);
+					wfree(scmd);
+					wfree(sb);
+					return False;
+				}
+			}
+		}
 		shAddMenuBinding(sb);
 
 		/* Paint the menu's shortcut label from the binding list (F5-M),
