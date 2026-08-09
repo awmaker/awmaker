@@ -64,6 +64,8 @@
 #include "screen.h"
 #include "shutdown.h"
 #include "misc.h"
+#include "shbinding.h"
+#include "keytree.h"
 #include "event.h"
 #include "winmenu.h"
 #include "switchmenu.h"
@@ -1493,6 +1495,32 @@ static void handleKeyPress(XEvent *event)
 		return;
 	}
 
+	/*
+	 * Key-chain trie (F5-I): a leaf at the root level dispatches immediately.
+	 * A WKBD binding (RSM_WKBD) sets 'command' and falls into the usual switch;
+	 * any other leaf action runs its sh* logic function directly. If the trie
+	 * matched, we do not fall through to the wKeyBindings[] loop below.
+	 */
+	if (wKeyTreeRoot != NULL) {
+		WKeyNode *node = wKeyTreeFind(wKeyTreeRoot, modifiers, event->xkey.keycode);
+		WKeyAction *act;
+
+		if (node != NULL && node->actions != NULL) {
+			for (act = node->actions; act != NULL; act = act->next) {
+				SHBinding *b = act->u.binding;
+
+				if (b == NULL)
+					continue;
+				if (b->type == RSM_WKBD) {
+					command = b->wkbd_idx;
+					goto dispatch_switch;
+				}
+				shRunAction(b, vscr);
+			}
+			return;
+		}
+	}
+
 	for (i = 0; i < WKBD_LAST; i++) {
 		if (wKeyBindings[i].keycode == 0)
 			continue;
@@ -1527,6 +1555,7 @@ static void handleKeyPress(XEvent *event)
 #define ISMAPPED(w) ((w) && !(w)->flags.miniaturized && ((w)->flags.mapped || (w)->flags.shaded))
 #define ISFOCUSED(w) ((w) && (w)->flags.focused)
 
+dispatch_switch:
 	switch (command) {
 	case WKBD_ROOTMENU:
 		if (!CheckFullScreenWindowFocused(vscr)) {

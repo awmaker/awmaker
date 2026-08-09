@@ -50,6 +50,8 @@
 #include "drawer.h"
 #include "workspace.h"
 #include "keybind.h"
+#include "shbinding.h"
+#include "keytree.h"
 #include "framewin.h"
 #include "session.h"
 #include "defaults.h"
@@ -620,6 +622,11 @@ void StartUp(Bool defaultScreenOnly)
 		else
 			wSessionRestoreLastWorkspace(w_global.vscreens[j]);
 	}
+
+	/* Build the SHBinding list and the key-chain trie now that defaults and
+	 * the root menu are up (F5-G/F5-H/F5-I). */
+	shRebuildList();
+	wKeyTreeRebuild();
 
 #ifndef HAVE_INOTIFY
 	/* setup defaults file polling */
