@@ -44,6 +44,7 @@ typedef struct _Panel {
 
 	Bool capturing;
 	char **shortcuts;
+	char **db_value;
 	int actionCount;
 } _Panel;
 
@@ -459,6 +460,15 @@ static void showData(_Panel * panel)
 	for (i = 0; i < panel->actionCount; i++) {
 
 		str = GetStringForKey(keyOptions[i].key);
+		/* Remember what was actually stored in the DB (NULL if absent) so
+		 * storeData can avoid clobbering awmaker's built-in defaults. */
+		if (panel->db_value[i])
+			wfree(panel->db_value[i]);
+		if (str)
+			panel->db_value[i] = wstrdup(str);
+		else
+			panel->db_value[i] = NULL;
+
 		if (panel->shortcuts[i])
 			wfree(panel->shortcuts[i]);
 		if (str)
@@ -547,6 +557,9 @@ static void createPanel(Panel * p)
 
 	panel->actionCount = WMGetListNumberOfRows(panel->actLs);
 	panel->shortcuts = wmalloc(sizeof(char *) * panel->actionCount);
+	panel->db_value = wmalloc(sizeof(char *) * panel->actionCount);
+	memset(panel->shortcuts, 0, sizeof(char *) * panel->actionCount);
+	memset(panel->db_value, 0, sizeof(char *) * panel->actionCount);
 
     /***************** Shortcut ****************/
 
@@ -595,6 +608,8 @@ static void storeData(_Panel * panel)
 	char *str;
 
 	for (i = 0; i < panel->actionCount; i++) {
+		const char *orig;
+
 		str = NULL;
 		if (panel->shortcuts[i]) {
 			str = wtrimspace(panel->shortcuts[i]);
@@ -603,6 +618,18 @@ static void storeData(_Panel * panel)
 				str = NULL;
 			}
 		}
+
+		/* Only write an action whose value changed from what was originally
+		 * in the DB. In particular, an action that was absent from the DB
+		 * (relying on awmaker's built-in default) and was left untouched must
+		 * NOT be written as "None", which would wipe the built-in default. */
+		orig = panel->db_value[i];
+		if ((str == NULL && orig == NULL) ||
+		    (str != NULL && orig != NULL && strcmp(str, orig) == 0)) {
+			wfree(str);
+			continue;
+		}
+
 		if (str) {
 			SetStringForKey(str, keyOptions[i].key);
 			wfree(str);
