@@ -804,14 +804,17 @@ Bool GetCanonicalShortcutLabel(unsigned int modifiers, KeySym ksym, char *buf, s
 
 char *GetShortcutKey(const SHBinding *key)
 {
-	char buffer[256];
+	char buffer[128];
 
-	if (!GetCanonicalShortcutLabel(key->modifier,
-				       XkbKeycodeToKeysym(dpy, key->keycode, 0, 0),
-				       buffer, sizeof(buffer)))
+	/* Render the shortcut label through the unified shLabelFor (CUN-2) so
+	 * built-in labels match the canonical form used by the root menu and the
+	 * keybinds panel (e.g. "Control+Mod1+R"). Returns NULL when there is no
+	 * usable label (mirrors the previous behaviour). */
+	shLabelFor(key, buffer, sizeof(buffer));
+	if (buffer[0] == '\0' || (buffer[0] == '?' && buffer[1] == '\0'))
 		return NULL;
 
-	return GetShortcutString(buffer);
+	return wstrdup(buffer);
 }
 
 char *EscapeWM_CLASS(const char *name, const char *class)
