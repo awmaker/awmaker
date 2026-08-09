@@ -339,12 +339,68 @@ static void removeShortcutsForMenu(WMenu *menu)
 	menu->vscr->menu.flags.root_menu_changed_shortcuts = 1;
 }
 
-static Bool addShortcut(const char *file, const char *shortcutDefinition, WMenu *menu, WMenuEntry *entry)
+/*
+ * Map a root-menu command/params to an SHActionType + payload for an SHBinding
+ * (F5-J). Mirrors the branches of addMenuEntry so a shortcut executes the same
+ * logic the menu entry would.
+ */
+static Bool decodeShortcutAction(const char *command, const char *params,
+				 SHActionType *type, char **cmd, Bool *quick)
+{
+	*cmd = NULL;
+	*quick = False;
+
+	if (strcmp(command, "EXEC") == 0) {
+		*type = RSM_EXEC;
+		*cmd = wstrconcat("exec ", params);
+	} else if (strcmp(command, "SHEXEC") == 0) {
+		*type = RSM_EXEC;
+		*cmd = wstrdup(params);
+	} else if (strcmp(command, "EXIT") == 0) {
+		*type = RSM_EXIT;
+		*quick = (params && strcmp(params, "QUICK") == 0);
+	} else if (strcmp(command, "SHUTDOWN") == 0) {
+		*type = RSM_SHUTDOWN;
+		*quick = (params && strcmp(params, "QUICK") == 0);
+	} else if (strcmp(command, "REFRESH") == 0) {
+		*type = RSM_REFRESH;
+	} else if (strcmp(command, "ARRANGE_ICONS") == 0) {
+		*type = RSM_ARRANGE_ICONS;
+	} else if (strcmp(command, "HIDE_OTHERS") == 0) {
+		*type = RSM_HIDE_OTHERS;
+	} else if (strcmp(command, "SHOW_ALL") == 0) {
+		*type = RSM_SHOW_ALL;
+	} else if (strcmp(command, "RESTART") == 0) {
+		*type = RSM_RESTART;
+		*cmd = wstrdup(params ? params : "");
+	} else if (strcmp(command, "SAVE_SESSION") == 0) {
+		*type = RSM_SAVE_SESSION;
+	} else if (strcmp(command, "CLEAR_SESSION") == 0) {
+		*type = RSM_CLEAR_SESSION;
+	} else if (strcmp(command, "INFO_PANEL") == 0) {
+		*type = RSM_INFO_PANEL;
+	} else if (strcmp(command, "LEGAL_PANEL") == 0) {
+		*type = RSM_LEGAL_PANEL;
+	} else {
+		return False;
+	}
+
+	return True;
+}
+
+static Bool addShortcut(const char *file, const char *shortcutDefinition, WMenu *menu,
+			WMenuEntry *entry, const char *command, const char *params)
 {
 	Shortcut *ptr;
 	KeySym ksym;
 	char *k;
 	char buf[MAX_SHORTCUT_LENGTH], *b;
+	SHBinding *sb;
+	SHActionType type;
+	char *scmd = NULL;
+	Bool squick = False;
+	unsigned int modifier = 0;
+	KeyCode keycode = 0;
 
 	ptr = wmalloc(sizeof(Shortcut));
 
@@ -367,6 +423,7 @@ static Bool addShortcut(const char *file, const char *shortcutDefinition, WMenu 
 
 		b = k + 1;
 	}
+	modifier = ptr->modifier;
 
 	/* get key */
 	ksym = XStringToKeysym(b);
@@ -378,7 +435,8 @@ static Bool addShortcut(const char *file, const char *shortcutDefinition, WMenu 
 		return False;
 	}
 
-	ptr->keycode = XKeysymToKeycode(dpy, ksym);
+	keycode = XKeysymToKeycode(dpy, ksym);
+	ptr->keycode = keycode;
 	if (ptr->keycode == 0) {
 		wwarning(_("%s:invalid key in shortcut \"%s\" for entry %s"), file,
 			 shortcutDefinition, entry->text);
@@ -393,6 +451,21 @@ static Bool addShortcut(const char *file, const char *shortcutDefinition, WMenu 
 	shortcutList = ptr;
 
 	menu->vscr->menu.flags.root_menu_changed_shortcuts = 1;
+
+	/* F5-J: also decode into a menu-independent SHBinding so the key trie
+	 * (F5-H/I) can execute the shortcut without any menu pointer. */
+	if (decodeShortcutAction(command, params, &type, &scmd, &squick)) {
+		sb = wmalloc(sizeof(SHBinding));
+		sb->modifier = modifier;
+		sb->keycode = keycode;
+		sb->chain_length = 1;
+		sb->type = type;
+		sb->cmd = scmd;
+		sb->quick = squick;
+		shAddBinding(sb);
+	} else {
+		wfree(scmd);
+	}
 
 	return True;
 }
@@ -889,7 +962,7 @@ static WMenuEntry *addMenuEntry(WMenu *menu, const char *title, const char *shor
 		if (!shortcutOk) {
 			wwarning(_("%s:can't add shortcut for entry \"%s\""), file_name, title);
 		} else {
-			if (addShortcut(file_name, shortcut, menu, entry))
+			if (addShortcut(file_name, shortcut, menu, entry, command, params))
 				entry->rtext = GetShortcutString(shortcut);
 		}
 	}
