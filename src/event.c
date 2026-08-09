@@ -1369,11 +1369,53 @@ static void startMarkCapture(virtual_screen *vscr, WMarkCaptureMode mode)
 	XGrabKeyboard(dpy, vscr->screen_ptr->root_win, False, GrabModeAsync, GrabModeAsync, CurrentTime);
 }
 
+/* Temporary default for the chain inactivity timeout, until the
+ * KeychainTimeoutDelay pref is wired in (CF5-4). Milliseconds. */
+#ifndef KEYCHAIN_TIMEOUT_DEFAULT
+#define KEYCHAIN_TIMEOUT_DEFAULT 1000
+#endif
+
+/* ------------------------------------------------------------------ *
+ * Key-chain timeout support (F5/§8F5.8)                               *
+ *                                                                    *
+ * After a chain leader is pressed, the chain is cancelled on         *
+ * inactivity so the user is not stuck in a half-entered sequence.    *
+ * ------------------------------------------------------------------ */
+
+static void chainTimeoutCallback(void *data)
+{
+	(void)data;
+
+	XUngrabKeyboard(dpy, CurrentTime);
+	w_global.shortcut.curpos = NULL;
+	w_global.shortcut.chain_timeout_handler = NULL;
+}
+
+/* Start (or restart) the chain inactivity timer */
+static void wStartChainTimer(void)
+{
+	if (w_global.shortcut.chain_timeout_handler)
+		WMDeleteTimerHandler(w_global.shortcut.chain_timeout_handler);
+	w_global.shortcut.chain_timeout_handler =
+		WMAddTimerHandler(KEYCHAIN_TIMEOUT_DEFAULT, chainTimeoutCallback, NULL);
+}
+
+/* Cancel the chain inactivity timer, if armed */
+static void wCancelChainTimer(void)
+{
+	if (w_global.shortcut.chain_timeout_handler) {
+		WMDeleteTimerHandler(w_global.shortcut.chain_timeout_handler);
+		w_global.shortcut.chain_timeout_handler = NULL;
+	}
+}
+
 static void handleKeyPress(XEvent *event)
 {
 	virtual_screen *vscr = wScreenForRootWindow(event->xkey.root);
 	WScreen *scr = vscr->screen_ptr;
 	WWindow *wwin = vscr->window.focused;
+	WKeyNode *match = NULL;
+	WKeyAction *act;
 	short i, widx;
 	int modifiers, command = -1;
 #ifdef KEEP_XKB_LOCK_STATUS
@@ -1496,29 +1538,70 @@ static void handleKeyPress(XEvent *event)
 	}
 
 	/*
-	 * Key-chain trie (F5-I): a leaf at the root level dispatches immediately.
+	 * Key-chain trie (F5-I/§8F5.8). The trie is a prefix trie covering ALL
+	 * key bindings (built-in wKeyBindings + root-menu SHORTCUTs combined).
+	 * w_global.shortcut.curpos tracks the last matched internal node; NULL
+	 * means we are at the root (idle). While mid-chain the keyboard is
+	 * grabbed (sticky) so all keys come here until the chain completes or
+	 * the inactivity timer (CF5-4) aborts it.
+	 *
 	 * A WKBD binding (RSM_WKBD) sets 'command' and falls into the usual switch;
 	 * any other leaf action runs its sh* logic function directly. If the trie
 	 * matched, we do not fall through to the wKeyBindings[] loop below.
 	 */
-	if (wKeyTreeRoot != NULL) {
-		WKeyNode *node = wKeyTreeFind(wKeyTreeRoot, modifiers, event->xkey.keycode);
-		WKeyAction *act;
+	if (w_global.shortcut.curpos != NULL) {
+		/* Inside a chain: look for the next key among the children. */
+		WKeyNode *siblings = w_global.shortcut.curpos->first_child;
 
-		if (node != NULL && node->actions != NULL) {
-			for (act = node->actions; act != NULL; act = act->next) {
-				SHBinding *b = act->u.binding;
+		match = wKeyTreeFind(siblings, modifiers, event->xkey.keycode);
 
-				if (b == NULL)
-					continue;
-				if (b->type == RSM_WKBD) {
-					command = b->wkbd_idx;
-					goto dispatch_switch;
-				}
-				shRunAction(b, vscr);
-			}
+		if (match != NULL && match->first_child != NULL) {
+			/* Internal node: advance and keep waiting. */
+			w_global.shortcut.curpos = match;
+			wStartChainTimer();
 			return;
 		}
+
+		if (match == NULL) {
+			/* Unrecognized key inside a chain: exit chain mode. */
+			wCancelChainTimer();
+			XUngrabKeyboard(dpy, CurrentTime);
+			w_global.shortcut.curpos = NULL;
+			return;
+		}
+
+		/* Leaf reached: execute, then exit chain mode. */
+		wCancelChainTimer();
+		XUngrabKeyboard(dpy, CurrentTime);
+		w_global.shortcut.curpos = NULL;
+	} else {
+		/* Idle: look for a root-level match. */
+		match = wKeyTreeFind(wKeyTreeRoot, modifiers, event->xkey.keycode);
+
+		if (match != NULL && match->first_child != NULL) {
+			/* Internal node: enter chain mode (sticky grab + timer). */
+			w_global.shortcut.curpos = match;
+			XGrabKeyboard(dpy, scr->root_win, False,
+				      GrabModeAsync, GrabModeAsync, CurrentTime);
+			wStartChainTimer();
+			return;
+		}
+	}
+
+	/* Execute all leaf actions for this key sequence (may be several). */
+	if (match != NULL) {
+		for (act = match->actions; act != NULL; act = act->next) {
+			SHBinding *b = act->u.binding;
+
+			if (b == NULL)
+				continue;
+			if (b->type == RSM_WKBD) {
+				command = b->wkbd_idx;
+				goto dispatch_switch;
+			}
+			shRunAction(b, vscr);
+		}
+		return;
 	}
 
 	for (i = 0; i < WKBD_LAST; i++) {
