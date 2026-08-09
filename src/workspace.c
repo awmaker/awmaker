@@ -820,15 +820,12 @@ static void onMenuEntryEdited(WMenu *menu, WMenuEntry *entry)
 	wWorkspaceRename(menu->vscr, (long)entry->clientdata, tmp);
 }
 
-WMenu *wWorkspaceMenuMake(virtual_screen *vscr, Bool titled)
+WMenu *wWorkspaceMenuMake(virtual_screen *vscr, const char *title)
 {
 	WMenu *wsmenu;
 	WMenuEntry *entry;
 
-	if (titled)
-		wsmenu = menu_create(vscr, _("Workspaces"));
-	else
-		wsmenu = menu_create(vscr, NULL);
+	wsmenu = menu_create(vscr, title);
 
 	/* callback to be called when an entry is edited */
 	wsmenu->on_edit = onMenuEntryEdited;
@@ -1086,7 +1083,7 @@ void OpenWorkspaceMenu(virtual_screen *vscr, int x, int y, int keyboard)
 	WMenu *wsMenu;
 	WScreen *scr = vscr->screen_ptr;
 
-	wsMenu = wWorkspaceMenuMake(vscr, False);
+	wsMenu = wWorkspaceMenuMake(vscr, _("Workspace Management"));
 	wWorkspaceMenuUpdate(vscr, wsMenu);
 	workspaces_set_menu_enabled_items(vscr, wsMenu);
 

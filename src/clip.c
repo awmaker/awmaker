@@ -198,7 +198,7 @@ static void clip_button2_menu(WObjDescriptor *desc, XEvent *event)
 	WMenu *wsMenu;
 	int xpos;
 
-	wsMenu = wWorkspaceMenuMake(vscr, False);
+	wsMenu = wWorkspaceMenuMake(vscr, NULL);
 	wWorkspaceMenuUpdate(vscr, wsMenu);
 	workspaces_set_menu_enabled_items(vscr, wsMenu);
 
