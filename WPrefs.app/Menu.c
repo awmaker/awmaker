@@ -88,6 +88,7 @@ typedef struct _Panel {
 	WMTextField *shortT;
 	WMButton *sgrabB;
 	WMButton *sclearB;
+	WMLabel *shortH;
 
 	WMList *icommandL;
 
@@ -713,8 +714,8 @@ static void createPanel(_Panel * p)
 	/* shortcut */
 
 	panel->shortF = WMCreateFrame(panel->optionsF);
-	WMResizeWidget(panel->shortF, width, 50);
-	WMMoveWidget(panel->shortF, 10, 160);
+	WMResizeWidget(panel->shortF, width, 110);
+	WMMoveWidget(panel->shortF, 10, 105);
 	WMSetFrameTitle(panel->shortF, _("Keyboard Shortcut"));
 
 	panel->shortT = WMCreateTextField(panel->shortF);
@@ -734,6 +735,13 @@ static void createPanel(_Panel * p)
 	WMMoveWidget(panel->sclearB, width - 155, 18);
 	WMSetButtonText(panel->sclearB, _("Clear"));
 	WMSetButtonAction(panel->sclearB, sgrabClicked, panel);
+
+	panel->shortH = WMCreateLabel(panel->shortF);
+	WMResizeWidget(panel->shortH, width - 20, 60);
+	WMMoveWidget(panel->shortH, 10, 48);
+	WMSetLabelText(panel->shortH, _("Type the shortcut, or press \"Capture\".\n"
+					"Multiple space-separated keys form a key\n"
+					"chain, e.g. \"Control+Alt+a Control+Alt+b\"."));
 
 	WMMapSubwidgets(panel->shortF);
 
