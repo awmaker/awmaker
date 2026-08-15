@@ -95,6 +95,7 @@ Perpetrator: Sudish Joseph <sj@eng.mindspring.net>, Sept. 1997. */
  */
 
 static int MetaMask, HyperMask, SuperMask, AltMask, ModeMask;
+static int MetaIndex, HyperIndex, SuperIndex, AltIndex, ModeIndex;
 
 static const char *index_to_name(int indice)
 {
@@ -281,6 +282,12 @@ static void x_reset_modifier_mapping(Display *display)
 	AltMask = (alt_bit ? (1 << alt_bit) : 0);
 	ModeMask = (mode_bit ? (1 << mode_bit) : 0);	/* unused */
 
+	MetaIndex = meta_bit;
+	HyperIndex = hyper_bit;
+	SuperIndex = super_bit;
+	AltIndex = alt_bit;
+	ModeIndex = mode_bit;
+
 	XFreeModifiermap(x_modifier_keymap);
 }
 
@@ -345,4 +352,39 @@ int wXModifierFromKey(const char *key)
 void wXModifierInitialize(void)
 {
 	x_reset_modifier_mapping(dpy);
+}
+
+int ModifierFromKey(Display *dpy, const char *key)
+{
+	static int eqw = 0;
+
+	if (!eqw) {
+		x_reset_modifier_mapping(dpy);
+		eqw = 1;
+	}
+
+	if (strcasecmp(key, "SHIFT") == 0)
+		return ShiftMapIndex;
+	else if (strcasecmp(key, "CONTROL") == 0)
+		return ControlMapIndex;
+	else if (strcasecmp(key, "ALT") == 0)
+		return AltIndex;
+	else if (strcasecmp(key, "META") == 0)
+		return MetaIndex;
+	else if (strcasecmp(key, "SUPER") == 0)
+		return SuperIndex;
+	else if (strcasecmp(key, "HYPER") == 0)
+		return HyperIndex;
+	else if (strcasecmp(key, "MOD1") == 0)
+		return Mod1MapIndex;
+	else if (strcasecmp(key, "MOD2") == 0)
+		return Mod2MapIndex;
+	else if (strcasecmp(key, "MOD3") == 0)
+		return Mod3MapIndex;
+	else if (strcasecmp(key, "MOD4") == 0)
+		return Mod4MapIndex;
+	else if (strcasecmp(key, "MOD5") == 0)
+		return Mod5MapIndex;
+	else
+		return -1;
 }

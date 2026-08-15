@@ -131,7 +131,10 @@ void AddDeadChildHandler(pid_t pid, void (*handler)(void*), void *data);
 
 
 /* ---[ xmodifier.c ] ---------------------------------------------------- */
-int ModifierFromKey(Display * dpy, const char *key);
+void wXModifierInitialize(Display *display);
+int  wXModifierFromKey(const char *key);
+char *wXModifierToShortcutLabel(int mask);
+int ModifierFromKey(Display *dpy, const char *key);
 
 
 /* ---[ Panel Initializers ]---------------------------------------------- */

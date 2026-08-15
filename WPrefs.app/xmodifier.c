@@ -96,6 +96,7 @@ Perpetrator: Sudish Joseph <sj@eng.mindspring.net>, Sept. 1997. */
  */
 
 static int MetaIndex, HyperIndex, SuperIndex, AltIndex, ModeIndex;
+static int MetaMask, HyperMask, SuperMask, AltMask, ModeMask;
 
 static const char *index_to_name(int indice)
 {
@@ -286,6 +287,12 @@ static void x_reset_modifier_mapping(Display *display)
 	AltIndex = alt_bit;
 	ModeIndex = mode_bit;
 
+	MetaMask = (meta_bit ? (1 << meta_bit) : 0);
+	HyperMask = (hyper_bit ? (1 << hyper_bit) : 0);
+	SuperMask = (super_bit ? (1 << super_bit) : 0);
+	AltMask = (alt_bit ? (1 << alt_bit) : 0);
+	ModeMask = (mode_bit ? (1 << mode_bit) : 0);	/* unused */
+
 	XFreeModifiermap(x_modifier_keymap);
 }
 
@@ -319,6 +326,67 @@ int ModifierFromKey(Display *dpy, const char *key)
 		return Mod4MapIndex;
 	else if (strcasecmp(key, "MOD5") == 0)
 		return Mod5MapIndex;
+	else
+		return -1;
+}
+
+void wXModifierInitialize(Display *display)
+{
+	x_reset_modifier_mapping(display);
+}
+
+char *wXModifierToShortcutLabel(int mask)
+{
+	if (mask < 0)
+		return NULL;
+
+	if (mask == ShiftMask)
+		return "Sh+";
+	if (mask == ControlMask)
+		return "^";
+	if (mask == AltMask)
+		return "A+";
+	if (mask == Mod1Mask)
+		return "M1+";
+	if (mask == Mod2Mask)
+		return "M2+";
+	if (mask == Mod3Mask)
+		return "M3+";
+	if (mask == Mod4Mask)
+		return "M4+";
+	if (mask == Mod5Mask)
+		return "M5+";
+	if (mask == MetaMask)
+		return "M+";
+
+	wwarning(_("Can't convert keymask 0x%04X to a shortcut label"), mask);
+	return NULL;
+}
+
+int wXModifierFromKey(const char *key)
+{
+	if (strcasecmp(key, "SHIFT") == 0 && ShiftMask != 0)
+		return ShiftMask;
+	else if (strcasecmp(key, "CONTROL") == 0 && ControlMask != 0)
+		return ControlMask;
+	else if (strcasecmp(key, "ALT") == 0 && AltMask != 0)
+		return AltMask;
+	else if (strcasecmp(key, "META") == 0 && MetaMask != 0)
+		return MetaMask;
+	else if (strcasecmp(key, "SUPER") == 0 && SuperMask != 0)
+		return SuperMask;
+	else if (strcasecmp(key, "HYPER") == 0 && HyperMask != 0)
+		return HyperMask;
+	else if (strcasecmp(key, "MOD1") == 0 && Mod1Mask != 0)
+		return Mod1Mask;
+	else if (strcasecmp(key, "MOD2") == 0 && Mod2Mask != 0)
+		return Mod2Mask;
+	else if (strcasecmp(key, "MOD3") == 0 && Mod3Mask != 0)
+		return Mod3Mask;
+	else if (strcasecmp(key, "MOD4") == 0 && Mod4Mask != 0)
+		return Mod4Mask;
+	else if (strcasecmp(key, "MOD5") == 0 && Mod5Mask != 0)
+		return Mod5Mask;
 	else
 		return -1;
 }

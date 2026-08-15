@@ -11,8 +11,11 @@
 #ifndef _XMODIFIER_H_INCLUDED
 #define _XMODIFIER_H_INCLUDED
 
+#include <X11/Xlib.h>
+
 void wXModifierInitialize(void);
 int  wXModifierFromKey(const char *key);
 char *wXModifierToShortcutLabel(int mask);
+int ModifierFromKey(Display *dpy, const char *key);
 
 #endif /* _XMODIFIER_H_INCLUDED */
