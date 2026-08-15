@@ -120,7 +120,7 @@ static const char *index_to_name(int indice)
 	}
 }
 
-static void x_reset_modifier_mapping(Display * display)
+static void x_reset_modifier_mapping(Display *display)
 {
 	int modifier_index, modifier_key, column, mkpm;
 	int meta_bit = 0;
@@ -291,21 +291,21 @@ char *wXModifierToShortcutLabel(int mask)
 
 	if (mask == ShiftMask)
 		return "Sh+";
-	if (mask ==  ControlMask)
+	if (mask == ControlMask)
 		return "^";
-	if (mask ==  AltMask)
+	if (mask == AltMask)
 		return "A+";
-	if (mask ==  Mod1Mask)
+	if (mask == Mod1Mask)
 		return "M1+";
-	if (mask ==  Mod2Mask)
+	if (mask == Mod2Mask)
 		return "M2+";
-	if (mask ==  Mod3Mask)
+	if (mask == Mod3Mask)
 		return "M3+";
-	if (mask ==  Mod4Mask)
+	if (mask == Mod4Mask)
 		return "M4+";
-	if (mask ==  Mod5Mask)
+	if (mask == Mod5Mask)
 		return "M5+";
-	if (mask ==  MetaMask)
+	if (mask == MetaMask)
 		return "M+";
 
 	wwarning(_("Can't convert keymask 0x%04X to a shortcut label"), mask);

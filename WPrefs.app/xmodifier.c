@@ -121,7 +121,7 @@ static const char *index_to_name(int indice)
 	}
 }
 
-static void x_reset_modifier_mapping(Display * display)
+static void x_reset_modifier_mapping(Display *display)
 {
 	int modifier_index, modifier_key, column, mkpm;
 	int meta_bit = 0;
@@ -289,7 +289,7 @@ static void x_reset_modifier_mapping(Display * display)
 	XFreeModifiermap(x_modifier_keymap);
 }
 
-int ModifierFromKey(Display * dpy, const char *key)
+int ModifierFromKey(Display *dpy, const char *key)
 {
 	static int eqw = 0;
 
