@@ -9,6 +9,7 @@ awmaker_SOURCES = 	\
 	WindowMaker.h \
 	$(top_srcdir)/awmcommon/keybinds_meta.c \
 	$(top_srcdir)/awmcommon/xmodifier.c \
+	shortcut_parse.c \
 	actions.c \
 	actions.h \
 	animations.c \
