@@ -42,7 +42,7 @@
 #include "framewin.h"
 #include "session.h"
 #include "shutdown.h"
-#include "xmodifier.h"
+#include "shortcut_parse.h"
 #include "rootmenu.h"
 #include "switchmenu.h"
 #include "screen.h"
@@ -367,50 +367,8 @@ static Bool decodeShortcutAction(const char *command, const char *params,
 	return True;
 }
 
-/* Parse a single "Mod1+Mod2+Key" token into modifier/keycode.
- * Returns True on success. */
-static Bool parseShortcutToken(const char *file, const char *token,
-			       unsigned int *modifier, KeyCode *keycode)
-{
-	char buf[MAX_SHORTCUT_LENGTH];
-	char *b;
-	char *k;
-	KeySym ksym;
-
-	wstrlcpy(buf, token, MAX_SHORTCUT_LENGTH);
-	b = buf;
-
-	/* get modifiers */
-	while ((k = strchr(b, '+')) != NULL) {
-		int mod;
-
-		*k = 0;
-		mod = wXModifierFromKey(b);
-		if (mod < 0) {
-			wwarning(_("%s: invalid key modifier \"%s\""), file, b);
-			return False;
-		}
-		*modifier |= mod;
-
-		b = k + 1;
-	}
-
-	/* get key */
-	ksym = XStringToKeysym(b);
-
-	if (ksym == NoSymbol) {
-		wwarning(_("%s: invalid kbd shortcut specification \"%s\""), file, token);
-		return False;
-	}
-
-	*keycode = XKeysymToKeycode(dpy, ksym);
-	if (*keycode == 0) {
-		wwarning(_("%s: invalid key in shortcut \"%s\""), file, token);
-		return False;
-	}
-
-	return True;
-}
+/* Parse a single "Mod1+Mod2+Key" token into modifier/keycode. Lives in
+ * src/shortcut_parse.c (shared with usermenu.c). */
 
 static Bool addShortcut(const char *file, const char *shortcutDefinition, WMenu *menu,
 			WMenuEntry *entry, const char *command, const char *params)
@@ -463,7 +421,7 @@ static Bool addShortcut(const char *file, const char *shortcutDefinition, WMenu 
 		sb->cmd = scmd;
 		sb->quick = squick;
 
-		if (!parseShortcutToken(file, tokens[0], &sb->modifier, &sb->keycode)) {
+		if (!parseShortcutToken(dpy, file, tokens[0], &sb->modifier, &sb->keycode)) {
 			wfree(scmd);
 			wfree(sb);
 			return False;
@@ -472,8 +430,8 @@ static Bool addShortcut(const char *file, const char *shortcutDefinition, WMenu 
 			sb->chain_modifiers = wmalloc((nchain - 1) * sizeof(unsigned int));
 			sb->chain_keycodes = wmalloc((nchain - 1) * sizeof(KeyCode));
 			for (i = 1; i < nchain; i++) {
-				if (!parseShortcutToken(file, tokens[i], &sb->chain_modifiers[i - 1],
-							 &sb->chain_keycodes[i - 1])) {
+				if (!parseShortcutToken(dpy, file, tokens[i], &sb->chain_modifiers[i - 1],
+						 &sb->chain_keycodes[i - 1])) {
 					wfree(sb->chain_modifiers);
 					wfree(sb->chain_keycodes);
 					wfree(scmd);

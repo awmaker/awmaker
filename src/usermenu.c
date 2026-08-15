@@ -25,7 +25,7 @@
 #include "menu.h"
 #include "actions.h"
 #include "keybind.h"
-#include "xmodifier.h"
+#include "shortcut_parse.h"
 #include "misc.h"
 #include "appmenu.h"
 
@@ -88,9 +88,8 @@ static void removeUserMenudata(void *menudata)
 static WUserMenuData *convertShortcuts(virtual_screen *vscr, WMPropList *shortcut)
 {
 	WUserMenuData *data;
-	KeySym ksym;
-	char *k, buf[MAX_SHORTCUT_LENGTH], *b;
-	int keycount, i, j, mod;
+	char buf[MAX_SHORTCUT_LENGTH];
+	int keycount, i, j;
 
 	if (WMIsPLString(shortcut))
 		keycount = 1;
@@ -116,25 +115,11 @@ static WUserMenuData *convertShortcuts(virtual_screen *vscr, WMPropList *shortcu
 		else
 			wstrlcpy(buf, WMGetFromPLString(shortcut), MAX_SHORTCUT_LENGTH);
 
-		b = (char *) buf;
-
-		while ((k = strchr(b, '+')) != NULL) {
-			*k = 0;
-			mod = wXModifierFromKey(b);
-			if (mod < 0)
-				break;
-
-			data->key[j].modifier |= mod;
-			b = k + 1;
-		}
-
-		ksym = XStringToKeysym(b);
-		if (ksym == NoSymbol)
+		if (!parseShortcutToken(dpy, "user menu", buf, &data->key[j].modifier,
+					&data->key[j].keycode))
 			continue;
 
-		data->key[j].keycode = XKeysymToKeycode(dpy, ksym);
-		if (data->key[j].keycode)
-			j++;
+		j++;
 	}
 
 	/* get key */
