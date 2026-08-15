@@ -13,6 +13,8 @@
 #include <X11/Xutil.h>
 #include <X11/XKBlib.h>
 
+#include <xmodifier.h>
+
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>

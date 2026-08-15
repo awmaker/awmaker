@@ -645,7 +645,7 @@ static int real_main(int argc, char **argv)
 	DisplayName = XDisplayName(DisplayName);
 	setenv("DISPLAY", DisplayName, 1);
 
-	wXModifierInitialize();
+	wXModifierInitialize(dpy);
 
 	startup_virtual();
 	StartUp(!multiHead);

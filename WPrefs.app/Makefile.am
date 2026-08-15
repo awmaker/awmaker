@@ -17,6 +17,7 @@ EXTRA_DIST = $(wpdata_DATA) \
 WPrefs_SOURCES = \
 	main.c \
 	$(top_srcdir)/awmcommon/keybinds_meta.c \
+	$(top_srcdir)/awmcommon/xmodifier.c \
 	WPrefs.c \
 	WPrefs.h \
 	Appearance.c \
@@ -39,8 +40,7 @@ WPrefs_SOURCES = \
 	Workspace.c \
 	double.c \
 	editmenu.c \
-	editmenu.h \
-	xmodifier.c
+	editmenu.h
 
 # not_yet_fully_implemented
 #WPrefs_SOURCES += \

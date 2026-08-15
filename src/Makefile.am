@@ -8,6 +8,7 @@ awmaker_SOURCES = 	\
 	GNUstep.h \
 	WindowMaker.h \
 	$(top_srcdir)/awmcommon/keybinds_meta.c \
+	$(top_srcdir)/awmcommon/xmodifier.c \
 	actions.c \
 	actions.h \
 	animations.c \
@@ -111,7 +112,6 @@ awmaker_SOURCES = 	\
 	xdnd.h \
 	xinerama.h \
 	xinerama.c \
-	xmodifier.h \
 	xutil.c \
 	xutil.h \
 	wcore.c \
@@ -152,11 +152,9 @@ awmaker_SOURCES += osdep_stub.c
 endif
 
 if USE_NESTED_FUNC
-awmaker_SOURCES += misc.c \
-	xmodifier.c
+awmaker_SOURCES += misc.c
 else
-nodist_awmaker_SOURCES = misc.hack_nf.c \
-	xmodifier.hack_nf.c
+nodist_awmaker_SOURCES = misc.hack_nf.c
 
 CLEANFILES = $(nodist_awmaker_SOURCES)
 
@@ -164,11 +162,6 @@ misc.hack_nf.c: misc.c $(top_srcdir)/script/nested-func-to-macro.sh
 	$(top_srcdir)/script/nested-func-to-macro.sh \
 		$(srcdir)/misc.c -o $(builddir)/misc.hack_nf.c \
 		-f "append_string" -f "append_modifier"
-
-xmodifier.hack_nf.c: xmodifier.c $(top_srcdir)/script/nested-func-to-macro.sh
-	$(AM_V_GEN)$(top_srcdir)/script/nested-func-to-macro.sh \
-		$(srcdir)/xmodifier.c -o $(builddir)/xmodifier.hack_nf.c \
-		-f "modwarn" -f "modbarf" -f "check_modifier" -f "store_modifier"
 endif
 
 

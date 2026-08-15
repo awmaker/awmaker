@@ -130,13 +130,6 @@ DoubleTest *CreateDoubleTest(WMWidget *parent, const char *text);
 void AddDeadChildHandler(pid_t pid, void (*handler)(void*), void *data);
 
 
-/* ---[ xmodifier.c ] ---------------------------------------------------- */
-void wXModifierInitialize(Display *display);
-int  wXModifierFromKey(const char *key);
-char *wXModifierToShortcutLabel(int mask);
-int ModifierFromKey(Display *dpy, const char *key);
-
-
 /* ---[ Panel Initializers ]---------------------------------------------- */
 
 void Initialize(WMScreen *scr);
