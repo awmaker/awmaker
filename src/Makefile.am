@@ -113,7 +113,6 @@ awmaker_SOURCES = 	\
 	xmodifier.h \
 	xutil.c \
 	xutil.h \
-	wconfig.h \
 	wcore.c \
 	wcore.h \
 	wdefaults.c \

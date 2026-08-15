@@ -1,5 +1,5 @@
 /*
- * wconfig.h- default configuration and definitions + compile time options
+ * awconfig.h- default configuration and definitions + compile time options
  *
  *  WindowMaker window manager
  *
@@ -26,7 +26,7 @@
 
 #include "config.h"
 
-/*** Change this file (wconfig.h) *after* you ran configure ***/
+/*** Change this file (awconfig.h) *after* you ran configure ***/
 
 /*
  * Comment out the following #defines if you want to disable a feature.

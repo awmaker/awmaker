@@ -16,7 +16,7 @@
  * dialog.c as an autonomous panel; the CrashPanel type is private to this file.
  */
 
-#include "wconfig.h"
+#include "awconfig.h"
 
 #include <X11/Xlib.h>
 #include <X11/keysym.h>

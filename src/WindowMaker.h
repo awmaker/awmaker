@@ -11,7 +11,7 @@
 #ifndef WINDOWMAKER_H_
 #define WINDOWMAKER_H_
 
-#include "wconfig.h"
+#include "awconfig.h"
 #include <assert.h>
 #include <limits.h>
 #include <WINGs/WINGs.h>

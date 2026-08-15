@@ -17,7 +17,7 @@
  * return to be Success is not enough. -Dan
  */
 
-#include "wconfig.h"
+#include "awconfig.h"
 
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>

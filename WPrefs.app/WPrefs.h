@@ -24,8 +24,8 @@
 #include <WINGs/WINGs.h>
 
 /* Needed for HAVE_LIBINTL_H and EXTENDED_WINDOWSHORTCUT.
- * wconfig.h moved to awmcommon/. */
-#include <wconfig.h>
+ * wconfig.h moved to awmcommon/ */
+#include <awconfig.h>
 
 /*
  * The macro 'wlengthof' should be used as much as possible, this macro

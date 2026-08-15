@@ -21,7 +21,7 @@
  * and the key combination on the right.
  */
 
-#include "wconfig.h"
+#include "awconfig.h"
 
 #include <X11/Xlib.h>
 #include <X11/keysym.h>

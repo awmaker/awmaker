@@ -11,7 +11,7 @@
 #ifndef _WM_INPUT_H_
 #define _WM_INPUT_H_
 
-#include "wconfig.h"
+#include "awconfig.h"
 
 /* Keyboard definitions */
 extern unsigned int _NumLockMask;

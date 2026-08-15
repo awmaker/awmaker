@@ -12,7 +12,7 @@
 
 #include <WINGs/WUtil.h>
 
-#include "wconfig.h"
+#include "awconfig.h"
 #include "osdep.h"
 
 Bool GetCommandForPid(int pid, char ***argv, int *argc)

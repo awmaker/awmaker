@@ -38,7 +38,7 @@
 #include <stdnoreturn.h>
 #endif
 
-#include <wconfig.h>
+#include <awconfig.h>
 
 
 #include <WINGs/WINGs.h>

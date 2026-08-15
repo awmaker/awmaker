@@ -11,7 +11,7 @@
 #ifndef _WM_SHELL_H_
 #define _WM_SHELL_H_
 
-#include "wconfig.h"
+#include "awconfig.h"
 
 void ExecuteShellCommand(virtual_screen *vscr, const char *command);
 int execute_command(virtual_screen *vscr, char **argv, int argc);

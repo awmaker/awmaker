@@ -37,7 +37,7 @@ Perpetrator: Sudish Joseph <sj@eng.mindspring.net>, Sept. 1997. */
  Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  Boston, MA 02110-1301 USA. */
 
-#include "wconfig.h"
+#include "awconfig.h"
 
 #include <string.h>
 #include <strings.h>

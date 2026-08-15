@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 
-#include "wconfig.h"
+#include "awconfig.h"
 
 static char *PRED_XKBGROUP1_XPM[] = {
     "    10    10        2            1",

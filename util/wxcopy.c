@@ -16,7 +16,7 @@
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 
-#include <wconfig.h>
+#include <awconfig.h>
 
 #define LINESIZE	(4*1024)
 #define MAXDATA		(64*1024)

@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 
-#include "wconfig.h"
+#include "awconfig.h"
 
 #include <stdio.h>
 #include <stdint.h>

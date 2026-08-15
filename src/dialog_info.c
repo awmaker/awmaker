@@ -18,7 +18,7 @@
  * already up it is raised and focused instead of recreated.
  */
 
-#include "wconfig.h"
+#include "awconfig.h"
 
 #include <X11/Xlib.h>
 

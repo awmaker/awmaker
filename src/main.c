@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 
-#include "wconfig.h"
+#include "awconfig.h"
 
 #ifdef HAVE_INOTIFY
 #include <sys/inotify.h>
@@ -25,7 +25,7 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 
-/* Xlocale.h and locale.h are the same if X_LOCALE is undefind in wconfig.h,
+/* Xlocale.h and locale.h are the same if X_LOCALE is undefind in awconfig.h,
  * and if X_LOCALE is defined, X's locale emulating functions will be used.
  * See Xlocale.h for more information.
  */

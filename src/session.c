@@ -45,7 +45,7 @@
  * if the Die message is received, exit.
  */
 
-#include "wconfig.h"
+#include "awconfig.h"
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>

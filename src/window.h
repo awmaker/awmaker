@@ -13,7 +13,7 @@
 
 #include <wraster.h>
 
-#include "wconfig.h"
+#include "awconfig.h"
 #include "GNUstep.h"
 #include "menu.h"
 #include "application.h"

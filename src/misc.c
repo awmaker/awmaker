@@ -7,7 +7,7 @@
  * Fork modifications: Copyright (C) Rodolfo Garcia Penas (kix) <kix@kix.es>.
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
-#include "wconfig.h"
+#include "awconfig.h"
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>

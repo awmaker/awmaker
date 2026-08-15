@@ -20,7 +20,7 @@
 
 #include <WINGs/WUtil.h>
 
-#include "wconfig.h"
+#include "awconfig.h"
 #include "osdep.h"
 
 

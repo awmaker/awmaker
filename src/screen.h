@@ -11,7 +11,7 @@
 #ifndef WMSCREEN_H_
 #define WMSCREEN_H_
 
-#include "wconfig.h"
+#include "awconfig.h"
 #include "WindowMaker.h"
 #include <sys/types.h>
 

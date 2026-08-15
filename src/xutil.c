@@ -15,7 +15,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "wconfig.h"
+#include "awconfig.h"
 
 #include "xutil.h"
 

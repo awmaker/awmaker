@@ -13,7 +13,7 @@
 
 #include <WINGs/WUtil.h>
 
-#include <wconfig.h>
+#include <awconfig.h>
 
 /* flags attached to a particular WMMenuEntry */
 #define F_TERMINAL		(1 << 0)
