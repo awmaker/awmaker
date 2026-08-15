@@ -13,6 +13,8 @@
 #include "WPrefs.h"
 #include <ctype.h>
 
+#include <keybinds_meta.h>
+
 #include <X11/keysym.h>
 #include <X11/XKBlib.h>
 
@@ -49,122 +51,6 @@ typedef struct _Panel {
 } _Panel;
 
 #define ICON_FILE	"keyshortcuts"
-
-/*
- * List of user definable shortcut keys
- * First parameter is the internal keyword known by WMaker
- * Second is the text displayed to the user
- */
-static const struct {
-	const char *key;
-	const char *title;
-} keyOptions[] = {
-	{ "RootMenuKey",    N_("Open applications menu") },
-	{ "WindowListKey",  N_("Open window list menu") },
-	{ "WorkspaceMenuKey", N_("Open workspace menu") },
-	{ "WindowMenuKey",  N_("Open window commands menu") },
-	{ "HideKey",        N_("Hide active application") },
-	{ "HideOthersKey",  N_("Hide other applications") },
-	{ "MiniaturizeKey", N_("Miniaturize active window") },
-	{ "MinimizeAllKey", N_("Miniaturize all windows") },
-	{ "CloseKey",       N_("Close active window") },
-	{ "MaximizeKey",    N_("Maximize active window") },
-	{ "VMaximizeKey",   N_("Maximize active window vertically") },
-	{ "HMaximizeKey",   N_("Maximize active window horizontally") },
-	{ "LHMaximizeKey",  N_("Maximize active window left half") },
-	{ "RHMaximizeKey",  N_("Maximize active window right half") },
-	{ "THMaximizeKey",  N_("Maximize active window top half") },
-	{ "BHMaximizeKey",  N_("Maximize active window bottom half") },
-	{ "LTCMaximizeKey", N_("Maximize active window left top corner") },
-	{ "RTCMaximizeKey", N_("Maximize active window right top corner") },
-	{ "LBCMaximizeKey", N_("Maximize active window left bottom corner") },
-	{ "RBCMaximizeKey", N_("Maximize active window right bottom corner") },
-	{ "MaximusKey",     N_("Maximus: Tiled maximization ") },
-	{ "CenterKey",      N_("Maximize active window central") },
-	{ "KeepOnTopKey",   N_("Toggle window on top status") },
-	{ "KeepAtBottomKey",N_("Toggle window at bottom status") },
-	{ "OmnipresentKey", N_("Toggle window omnipresent status") },
-	{ "RaiseKey",       N_("Raise active window") },
-	{ "LowerKey",       N_("Lower active window") },
-	{ "RaiseLowerKey",  N_("Raise/Lower window under mouse pointer") },
-	{ "ShadeKey",       N_("Shade active window") },
-	{ "MoveResizeKey",  N_("Move/Resize active window") },
-	{ "SelectKey",      N_("Select active window") },
-	{ "FocusNextKey",   N_("Focus next window") },
-	{ "FocusPrevKey",   N_("Focus previous window") },
-	{ "FocusWindowLeftKey",  N_("Focus window to the left") },
-	{ "FocusWindowRightKey", N_("Focus window to the right") },
-	{ "FocusWindowUpKey",    N_("Focus window above") },
-	{ "FocusWindowDownKey",  N_("Focus window below") },
-	{ "GroupNextKey",   N_("Focus next group window") },
-	{ "GroupPrevKey",   N_("Focus previous group window") },
-
-	/* Vim-like Window Marking */
-	{ "MarkSetKey",   N_("Mark window: set mark") },
-	{ "MarkUnsetKey", N_("Mark window: unset mark") },
-	{ "MarkBringKey", N_("Mark window: bring marked window here") },
-	{ "MarkJumpKey",  N_("Mark window: jump to marked window") },
-	{ "MarkSwapKey",  N_("Mark window: swap with marked window") },
-
-	/* Workspace Related */
-	{ "WorkspaceMapKey",  N_("Open workspace pager") },
-	{ "NextWorkspaceKey", N_("Switch to next workspace") },
-	{ "PrevWorkspaceKey", N_("Switch to previous workspace") },
-	{ "LastWorkspaceKey", N_("Switch to last used workspace") },
-	{ "NextWorkspaceLayerKey", N_("Switch to next ten workspaces") },
-	{ "PrevWorkspaceLayerKey", N_("Switch to previous ten workspaces") },
-	{ "Workspace1Key",  N_("Switch to workspace 1") },
-	{ "Workspace2Key",  N_("Switch to workspace 2") },
-	{ "Workspace3Key",  N_("Switch to workspace 3") },
-	{ "Workspace4Key",  N_("Switch to workspace 4") },
-	{ "Workspace5Key",  N_("Switch to workspace 5") },
-	{ "Workspace6Key",  N_("Switch to workspace 6") },
-	{ "Workspace7Key",  N_("Switch to workspace 7") },
-	{ "Workspace8Key",  N_("Switch to workspace 8") },
-	{ "Workspace9Key",  N_("Switch to workspace 9") },
-	{ "Workspace10Key", N_("Switch to workspace 10") },
-	{ "MoveToNextWorkspaceKey",      N_("Move window to next workspace") },
-	{ "MoveToPrevWorkspaceKey",      N_("Move window to previous workspace") },
-	{ "MoveToLastWorkspaceKey",      N_("Move window to last used workspace") },
-	{ "MoveToNextWorkspaceLayerKey", N_("Move window to next ten workspaces") },
-	{ "MoveToPrevWorkspaceLayerKey", N_("Move window to previous ten workspaces") },
-	{ "MoveToWorkspace1Key",  N_("Move window to workspace 1") },
-	{ "MoveToWorkspace2Key",  N_("Move window to workspace 2") },
-	{ "MoveToWorkspace3Key",  N_("Move window to workspace 3") },
-	{ "MoveToWorkspace4Key",  N_("Move window to workspace 4") },
-	{ "MoveToWorkspace5Key",  N_("Move window to workspace 5") },
-	{ "MoveToWorkspace6Key",  N_("Move window to workspace 6") },
-	{ "MoveToWorkspace7Key",  N_("Move window to workspace 7") },
-	{ "MoveToWorkspace8Key",  N_("Move window to workspace 8") },
-	{ "MoveToWorkspace9Key",  N_("Move window to workspace 9") },
-	{ "MoveToWorkspace10Key", N_("Move window to workspace 10") },
-
-	/* Window Selection */
-	{ "WindowShortcut1Key",  N_("Shortcut for window 1") },
-	{ "WindowShortcut2Key",  N_("Shortcut for window 2") },
-	{ "WindowShortcut3Key",  N_("Shortcut for window 3") },
-	{ "WindowShortcut4Key",  N_("Shortcut for window 4") },
-	{ "WindowShortcut5Key",  N_("Shortcut for window 5") },
-	{ "WindowShortcut6Key",  N_("Shortcut for window 6") },
-	{ "WindowShortcut7Key",  N_("Shortcut for window 7") },
-	{ "WindowShortcut8Key",  N_("Shortcut for window 8") },
-	{ "WindowShortcut9Key",  N_("Shortcut for window 9") },
-	{ "WindowShortcut10Key", N_("Shortcut for window 10") },
-
-	/* Head Selection */
-	{ "MoveTo12to6Head",     N_("Move to right/bottom/left/top head") },
-	{ "MoveTo6to12Head",    N_("Move to left/top/right/bottom head") },
-
-	/* Misc. */
-	{ "WindowRelaunchKey", N_("Launch new instance of application") },
-	{ "ScreenSwitchKey",   N_("Switch to Next Screen/Monitor") },
-	{ "RunKey",            N_("Run application") },
-	{ "DockRaiseLowerKey", N_("Raise/Lower Dock") },
-	{ "ClipRaiseLowerKey", N_("Raise/Lower Clip") }
-#ifdef XKB_MODELOCK
-	,{ "ToggleKbdModeKey", N_("Toggle keyboard language") }
-#endif				/* XKB_MODELOCK */
-};
 
 #ifndef HAVE_XCONVERTCASE
 /* from Xlib */
@@ -459,7 +345,7 @@ static void showData(_Panel * panel)
 
 	for (i = 0; i < panel->actionCount; i++) {
 
-		str = GetStringForKey(keyOptions[i].key);
+		str = GetStringForKey(keybinds_meta[i].key);
 		/* Remember what was actually stored in the DB (NULL if absent) so
 		 * storeData can avoid clobbering awmaker's built-in defaults. */
 		if (panel->db_value[i])
@@ -550,8 +436,8 @@ static void createPanel(Panel * p)
 	WMSetListUserDrawProc(panel->actLs, paintItem);
 	WMHangData(panel->actLs, panel);
 
-	for (i = 0; i < wlengthof(keyOptions); i++) {
-		WMAddListItem(panel->actLs, _(keyOptions[i].title));
+	for (i = 0; i < nb_keybindings; i++) {
+		WMAddListItem(panel->actLs, _(keybinds_meta[i].title));
 	}
 	WMSetListAction(panel->actLs, listClick, panel);
 
@@ -631,10 +517,10 @@ static void storeData(_Panel * panel)
 		}
 
 		if (str) {
-			SetStringForKey(str, keyOptions[i].key);
+			SetStringForKey(str, keybinds_meta[i].key);
 			wfree(str);
 		} else {
-			SetStringForKey("None", keyOptions[i].key);
+			SetStringForKey("None", keybinds_meta[i].key);
 		}
 	}
 }
