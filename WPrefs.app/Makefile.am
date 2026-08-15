@@ -50,6 +50,7 @@ AM_CFLAGS = @PANGO_CFLAGS@
 
 AM_CPPFLAGS = -DRESOURCE_PATH=\"$(wpdatadir)\" -DWMAKER_RESOURCE_PATH=\"$(pkgdatadir)\" \
 	 -I$(top_srcdir)/awmcommon \
+	 -I$(top_builddir) \
 	 $(WINGs_CFLAGS) $(WRASTER_CFLAGS) \
 	 @HEADER_SEARCH_PATH@
 

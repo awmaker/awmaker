@@ -14,6 +14,7 @@ EXTRA_DIST = bughint wm-oldmenu2new wkdemenu.pl
 AM_CPPFLAGS = \
 	 $(DFLAGS) $(WINGs_CFLAGS) $(WRASTER_CFLAGS) \
 	 -I$(top_srcdir)/awmcommon \
+	 -I$(top_builddir) \
 	@HEADER_SEARCH_PATH@ \
 	-DETCDIR=\"sysconfdir\" -DDATADIR=\"pkgdatadir\"
 

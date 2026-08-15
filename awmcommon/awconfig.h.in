@@ -11,7 +11,7 @@
 #ifndef AWCONFIG_H_
 #define AWCONFIG_H_
 
-#include "config.h"
+#include <config.h>
 
 /*** Change this file (awconfig.h) *after* you ran configure ***/
 
