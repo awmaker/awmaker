@@ -43,6 +43,8 @@
 #include "keybind.h"
 #include "shbinding.h"
 
+#include <keybinds_meta.h>
+
 #include <WINGs/WINGs.h>
 
 #define KEYBINDS_WIDTH 380
@@ -60,109 +62,6 @@ typedef struct KeybindsPanel {
 } KeybindsPanel;
 
 static KeybindsPanel *keybindsPanel = NULL;
-
-/*
- * Human-readable name for each built-in keybinding (WKBD_*). Designated
- * initializers so the table stays robust to enum reordering; unlisted indices
- * fall back to NULL and are skipped.
- */
-static const char *wkbd_name[WKBD_LAST] = {
-	[WKBD_ROOTMENU] = N_("Open applications menu"),
-	[WKBD_WINDOWMENU] = N_("Open window commands menu"),
-	[WKBD_WINDOWLIST] = N_("Open window list menu"),
-	[WKBD_WORKSPACEMENU] = N_("Open workspace menu"),
-	[WKBD_MINIATURIZE] = N_("Miniaturize active window"),
-	[WKBD_MINIMIZEALL] = N_("Miniaturize all windows"),
-	[WKBD_HIDE] = N_("Hide active application"),
-	[WKBD_HIDE_OTHERS] = N_("Hide other applications"),
-	[WKBD_MAXIMIZE] = N_("Maximize active window"),
-	[WKBD_VMAXIMIZE] = N_("Maximize active window vertically"),
-	[WKBD_HMAXIMIZE] = N_("Maximize active window horizontally"),
-	[WKBD_CENTRAL] = N_("Maximize active window central"),
-	[WKBD_LHMAXIMIZE] = N_("Maximize active window left half"),
-	[WKBD_RHMAXIMIZE] = N_("Maximize active window right half"),
-	[WKBD_THMAXIMIZE] = N_("Maximize active window top half"),
-	[WKBD_BHMAXIMIZE] = N_("Maximize active window bottom half"),
-	[WKBD_LTCMAXIMIZE] = N_("Maximize active window left top corner"),
-	[WKBD_RTCMAXIMIZE] = N_("Maximize active window right top corner"),
-	[WKBD_LBCMAXIMIZE] = N_("Maximize active window left bottom corner"),
-	[WKBD_RBCMAXIMIZE] = N_("Maximize active window right bottom corner"),
-	[WKBD_MAXIMUS] = N_("Tiled maximization"),
-	[WKBD_SELECT] = N_("Select active window"),
-	[WKBD_KEEP_ON_TOP] = N_("Toggle window on top status"),
-	[WKBD_KEEP_AT_BOTTOM] = N_("Toggle window at bottom status"),
-	[WKBD_OMNIPRESENT] = N_("Toggle window omnipresent status"),
-	[WKBD_RAISE] = N_("Raise active window"),
-	[WKBD_LOWER] = N_("Lower active window"),
-	[WKBD_RAISELOWER] = N_("Raise/Lower window under mouse pointer"),
-	[WKBD_MOVERESIZE] = N_("Move/Resize active window"),
-	[WKBD_SHADE] = N_("Shade active window"),
-	[WKBD_WORKSPACEMAP] = N_("Open workspace pager"),
-	[WKBD_FOCUSNEXT] = N_("Focus next window"),
-	[WKBD_FOCUSPREV] = N_("Focus previous window"),
-	[WKBD_FOCUSLEFT] = N_("Focus window to the left"),
-	[WKBD_FOCUSRIGHT] = N_("Focus window to the right"),
-	[WKBD_FOCUSUP] = N_("Focus window above"),
-	[WKBD_FOCUSDOWN] = N_("Focus window below"),
-	[WKBD_GROUPNEXT] = N_("Focus next group window"),
-	[WKBD_GROUPPREV] = N_("Focus previous group window"),
-	[WKBD_MARK_SET] = N_("Mark window: set mark"),
-	[WKBD_MARK_UNSET] = N_("Mark window: unset mark"),
-	[WKBD_MARK_BRING] = N_("Mark window: bring marked window here"),
-	[WKBD_MARK_JUMP] = N_("Mark window: jump to marked window"),
-	[WKBD_MARK_SWAP] = N_("Mark window: swap with marked window"),
-	[WKBD_CLOSE] = N_("Close active window"),
-	[WKBD_DOCKRAISELOWER] = N_("Raise/Lower Dock"),
-	[WKBD_CLIPRAISELOWER] = N_("Raise/Lower Clip"),
-	[WKBD_WORKSPACE1] = N_("Switch to workspace 1"),
-	[WKBD_WORKSPACE2] = N_("Switch to workspace 2"),
-	[WKBD_WORKSPACE3] = N_("Switch to workspace 3"),
-	[WKBD_WORKSPACE4] = N_("Switch to workspace 4"),
-	[WKBD_WORKSPACE5] = N_("Switch to workspace 5"),
-	[WKBD_WORKSPACE6] = N_("Switch to workspace 6"),
-	[WKBD_WORKSPACE7] = N_("Switch to workspace 7"),
-	[WKBD_WORKSPACE8] = N_("Switch to workspace 8"),
-	[WKBD_WORKSPACE9] = N_("Switch to workspace 9"),
-	[WKBD_WORKSPACE10] = N_("Switch to workspace 10"),
-	[WKBD_NEXTWORKSPACE] = N_("Switch to next workspace"),
-	[WKBD_PREVWORKSPACE] = N_("Switch to previous workspace"),
-	[WKBD_LASTWORKSPACE] = N_("Switch to last used workspace"),
-	[WKBD_NEXTWSLAYER] = N_("Switch to next ten workspaces"),
-	[WKBD_PREVWSLAYER] = N_("Switch to previous ten workspaces"),
-	[WKBD_MOVE_WORKSPACE1] = N_("Move window to workspace 1"),
-	[WKBD_MOVE_WORKSPACE2] = N_("Move window to workspace 2"),
-	[WKBD_MOVE_WORKSPACE3] = N_("Move window to workspace 3"),
-	[WKBD_MOVE_WORKSPACE4] = N_("Move window to workspace 4"),
-	[WKBD_MOVE_WORKSPACE5] = N_("Move window to workspace 5"),
-	[WKBD_MOVE_WORKSPACE6] = N_("Move window to workspace 6"),
-	[WKBD_MOVE_WORKSPACE7] = N_("Move window to workspace 7"),
-	[WKBD_MOVE_WORKSPACE8] = N_("Move window to workspace 8"),
-	[WKBD_MOVE_WORKSPACE9] = N_("Move window to workspace 9"),
-	[WKBD_MOVE_WORKSPACE10] = N_("Move window to workspace 10"),
-	[WKBD_MOVE_NEXTWORKSPACE] = N_("Move window to next workspace"),
-	[WKBD_MOVE_PREVWORKSPACE] = N_("Move window to previous workspace"),
-	[WKBD_MOVE_LASTWORKSPACE] = N_("Move window to last used workspace"),
-	[WKBD_MOVE_NEXTWSLAYER] = N_("Move window to next ten workspaces"),
-	[WKBD_MOVE_PREVWSLAYER] = N_("Move window to previous ten workspaces"),
-	[WKBD_WINDOW1] = N_("Shortcut for window 1"),
-	[WKBD_WINDOW2] = N_("Shortcut for window 2"),
-	[WKBD_WINDOW3] = N_("Shortcut for window 3"),
-	[WKBD_WINDOW4] = N_("Shortcut for window 4"),
-	[WKBD_WINDOW5] = N_("Shortcut for window 5"),
-	[WKBD_WINDOW6] = N_("Shortcut for window 6"),
-	[WKBD_WINDOW7] = N_("Shortcut for window 7"),
-	[WKBD_WINDOW8] = N_("Shortcut for window 8"),
-	[WKBD_WINDOW9] = N_("Shortcut for window 9"),
-	[WKBD_WINDOW10] = N_("Shortcut for window 10"),
-	[WKBD_MOVE_12_TO_6_HEAD] = N_("Move to right/bottom/left/top head"),
-	[WKBD_MOVE_6_TO_12_HEAD] = N_("Move to left/top/right/bottom head"),
-	[WKBD_RELAUNCH] = N_("Launch new instance of application"),
-	[WKBD_SWITCH_SCREEN] = N_("Switch to Next Screen/Monitor"),
-	[WKBD_RUN] = N_("Run application"),
-#ifdef KEEP_XKB_LOCK_STATUS
-	[WKBD_TOGGLE] = N_("Toggle keyboard language"),
-#endif
-};
 
 /*
  * Human-readable label for a root-menu SHORTCUT (an SHBinding that is not one
@@ -329,7 +228,7 @@ static int collect_rows(Row *rows, int capacity)
 
 		if (wKeyBindings[i].keycode == 0)
 			continue;
-		if (!wkbd_name[i])
+		if (!KeyBindingTitle(i))
 			continue;
 
 		key = GetShortcutKey(&wKeyBindings[i]);
@@ -338,7 +237,7 @@ static int collect_rows(Row *rows, int capacity)
 
 		if (count >= capacity)
 			break;
-		rows[count].name = wstrdup(_(wkbd_name[i]));
+		rows[count].name = wstrdup(_(KeyBindingTitle(i)));
 		rows[count].key = key;
 		count++;
 	}
