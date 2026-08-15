@@ -16,6 +16,7 @@ EXTRA_DIST = $(wpdata_DATA) \
 
 WPrefs_SOURCES = \
 	main.c \
+	$(top_srcdir)/awmcommon/keybinds_meta.c \
 	WPrefs.c \
 	WPrefs.h \
 	Appearance.c \

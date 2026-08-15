@@ -7,6 +7,7 @@ EXTRA_DIST =
 awmaker_SOURCES = 	\
 	GNUstep.h \
 	WindowMaker.h \
+	$(top_srcdir)/awmcommon/keybinds_meta.c \
 	actions.c \
 	actions.h \
 	animations.c \
