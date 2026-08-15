@@ -899,8 +899,12 @@ dnl ==========================
 AC_CONFIG_FILES(
     Makefile
 
+    dnl Shared code between src/ and WPrefs.app/ (and util/)
+    dnl awmcommon/wconfig.h moved here from src/
+    awmcommon/Makefile awmcommon/wconfig.h
+
     dnl Window Maker's core
-    src/Makefile src/wconfig.h po/Makefile
+    src/Makefile po/Makefile
     doc/Makefile doc/build/Makefile
     doc/sk/Makefile doc/cs/Makefile doc/ru/Makefile
     WindowMaker/Makefile WindowMaker/Backgrounds/Makefile

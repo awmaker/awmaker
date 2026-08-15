@@ -30,7 +30,7 @@
 
 #include <WINGs/WUtil.h>
 
-#include "../src/wconfig.h"
+#include <wconfig.h>
 
 static const char *prog_name;
 

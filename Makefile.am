@@ -39,7 +39,7 @@ ACLOCAL_AMFLAGS = -I m4
 AM_DISTCHECK_CONFIGURE_FLAGS = --enable-silent-rules LINGUAS='*'
 
 
-SUBDIRS = src util po WindowMaker WPrefs.app doc
+SUBDIRS = awmcommon src util po WindowMaker WPrefs.app doc
 DIST_SUBDIRS = $(SUBDIRS) test
 
 EXTRA_DIST = TODO BUGS BUGFORM FAQ INSTALL \

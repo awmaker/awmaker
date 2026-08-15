@@ -41,7 +41,7 @@
 #define PATH_MAX  1024
 #endif
 
-#include "../src/wconfig.h"
+#include <wconfig.h>
 
 
 #define THEME_SUBPATH "/" PACKAGE_TARNAME "/Themes/"

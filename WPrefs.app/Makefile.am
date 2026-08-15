@@ -49,6 +49,7 @@ WPrefs_SOURCES = \
 AM_CFLAGS = @PANGO_CFLAGS@
 
 AM_CPPFLAGS = -DRESOURCE_PATH=\"$(wpdatadir)\" -DWMAKER_RESOURCE_PATH=\"$(pkgdatadir)\" \
+	 -I$(top_srcdir)/awmcommon \
 	 $(WINGs_CFLAGS) $(WRASTER_CFLAGS) \
 	 @HEADER_SEARCH_PATH@
 

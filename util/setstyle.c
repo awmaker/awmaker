@@ -31,7 +31,7 @@
 
 #include <WINGs/WUtil.h>
 
-#include "../src/wconfig.h"
+#include <wconfig.h>
 
 #include "common.h"
 

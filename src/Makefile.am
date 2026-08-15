@@ -1,7 +1,5 @@
 AUTOMAKE_OPTIONS =
 
-BUILT_SOURCES = wconfig.h
-
 bin_PROGRAMS = awmaker
 
 EXTRA_DIST =
@@ -179,6 +177,7 @@ AM_CFLAGS = @PANGO_CFLAGS@
 AM_CPPFLAGS = $(DFLAGS) \
 	$(WINGs_CFLAGS) \
 	$(WRASTER_CFLAGS) \
+	-I$(top_srcdir)/awmcommon \
 	@HEADER_SEARCH_PATH@
 
 
