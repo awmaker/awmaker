@@ -546,14 +546,8 @@ git format-patch HEAD^
 
 This will generate a file named like @file{0001-@emph{updated-translations-for-XX}.patch}
 which contains your changes, ready for sending.
-The goal will now be to email this file to @value{emailsupport}.
-If you feel confident in having @command{git} send it for you, you may want to read the file
-@file{The-perfect-Window-Maker-patch.txt} to see how to configure @command{git} for mailing, so you
-can run:
-
-@example
-git send-email 0001-@emph{updated-translations-for-XX}.patch
-@end example
+The goal will now be to submit this file to @value{emailsupport}, or to open a
+pull request with the generated patch against the upstream repository
 
 
 @c ------------------------------------------------------------------------------------- The End ---

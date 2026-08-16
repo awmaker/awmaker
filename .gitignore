@@ -152,3 +152,6 @@ wmlib/wmlib.pc
 /build-libs/
 
 .pc
+
+# Local AI-agent working notes (kept out of version control)
+AGENTS.md

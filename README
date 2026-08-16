@@ -1,114 +1,230 @@
 
-                        awmaker - Abstracting Window Maker
-                             A Window Maker Fork
-                        Rodolfo García Peñas (kix) - 2014
+awmaker — Abstracting Window Maker
+==================================
+A Window Maker fork
+Rodolfo García Peñas (kix) — 2014
 
-This is a small project to break the Window Maker dependency with
-the screen.
+awmaker is a fork of the GNU Window Maker window manager whose long-term
+goal is to abstract itself away from X11 as much as possible, removing
+hard dependencies on the X server so that screens/monitors can be added
+and removed without restarting the window manager.
 
-WHY?
+The shared libraries (WINGs, WUtil, WRaster/wrlib, wmlib) and the WPrefs
+application are shared with upstream. awmaker's own `src/` core and its
+configuration behaviour evolve independently.
+
+
+Why?
 ====
-Window Maker is a nice window manager, but is screen dependent. We cannot
-run Window Maker without a screen, and this is a problem.
+Window Maker is a nice window manager, but it is screen dependent: we
+cannot run it without a screen, and — more importantly — every item it
+creates (icons, windows, the Dock, menus...) is bound to the screen it
+was created on. If you connect another screen, Window Maker has to be
+restarted to repaint everything on the new screen.
 
-Probably you think that I am crazy, because Window Maker is a window manager,
-so it needs a screen. Probably I am crazy, yes, I will try to show the idea.
+awmaker changes that model. When an item is created, it is not mapped
+to a screen; it is only created. When the user needs it, it is mapped to
+the current screen. When the user is done, it is unmapped (not destroyed,
+only unmapped). Screen-related state is built on the fly, so a new screen
+can be used without restarting.
 
-When Window Maker creates an icon, a window, the Dock,... is not only setting
-some variables, images,... is setting and *painting* them on the screen. All
-items created in Window Maker are bind to the current screen. Now, if we
-connect other screen to the computer, Window Maker is unable to unbind
-them from the screen and paint the items to the new screen. Window Maker
-needs to be restarted to start again with the new screen.
+That is the "Abstraction" in awmaker: decouple the item lifecycle from
+any particular screen, as preparation for hot-pluggable monitors.
 
-All items in Window Maker are created and mapped to the current screen.
-You cannot see the items because they are hidden, and Window Maker only
-show and hide them.
 
-AND?
-====
-awmaker includes different steps. When an item is created, is not mapped
-in the screen. Is only created. When the user needs the item, then is mapped
-to the current screen. When the user finish with the item, the item is
-unmapped (not destroyed, only unmapped).
+User-facing features
+====================
+Beyond the upstream Window Maker behaviour, awmaker bundles the
+following improvements. These are the interesting changes from the
+point of view of an everyday user.
 
-For example. With Window Maker, menus are created (yes, the menu, buttons,
-framewin, background,...) when Window Maker starts. When the user needs a
-menu, Window Maker paint the menu on the screen. With awmaker, the menu is
-created when Window Maker starts (awmaker is a fork of Window Maker ;-))
-the items are created but they don't know nothing about the user screen.
-When the user needs the menu, then awmaker set the screen options and paint
-the menu. When the user finish, awmaker destroy all the screen related stuff.
-If we attach a new screen, awmaker can paint the menu again in the new screen,
-because the screen related stuff is created on live.
+Configuration is created automatically
+--------------------------------------
+awmaker creates its own configuration files **in code** when they are
+missing on disk, on first launch. There is no need to run a separate
+installer. The following files are written only when absent, under
+`~/GNUstep/Defaults/`:
 
-WINDOW MAKER AND awmaker
+- `WindowMaker`   — the window manager defaults domain (small, editable
+  subset; anything not listed falls back to the binary's built-ins)
+- `WMGLOBAL`      — global WINGs/font/mouse domain
+- `WMRootMenu`    — the full root menu
+- `WMState`       — the Dock, a Clip, empty Drawers and the `Main` workspace
+- `WMWindowAttributes`
+
+It also creates two user-editable scripts under
+`~/GNUstep/Library/WindowMaker/`:
+
+- `autostart`   — run automatically when awmaker starts
+- `exitscript`  — run automatically when awmaker exits
+
+A complete root menu
+--------------------
+The default root menu is a full property-list menu with these submenus:
+**Info**, **Applications**, **Utils**, **Selection**, **Commands**,
+**Appearance** (solid / gradient / image backgrounds, plus Styles,
+Themes and IconSets) and **Session**. It is fully editable.
+
+Unified keybindings with multi-key chains
+-----------------------------------------
+Every keybinding — the built-in window-manager shortcuts *and* the
+root-menu command shortcuts — is handled through one unified model.
+
+You can bind a **key chain** (a sequence of key combinations) to a single
+action. For example:
+
+    RootMenuKey = Control+Alt+a Control+Alt+b
+
+pressed in sequence, launches the action bound to that key. Each binding
+accepts up to 8 tokens (1 leader + 7 followers). An in-progress chain can
+be cancelled (`KeychainCancelKey`) and expires after a delay
+(`KeychainTimeoutDelay`).
+
+Key Bindings panel
+------------------
+awmaker exposes a **Key Bindings** panel that lists the assigned
+keybindings (sorted by key). It can be launched directly from the root
+menu and can itself be bound to a keyboard shortcut.
+
+Configuring with WPrefs
+-----------------------
+The `WPrefs` configurator offers two complementary editors:
+
+- the **Keyboard Shortcuts** tab — for the built-in window-manager
+  keybindings;
+- the **menu editor** — for the shortcuts of the commands in the root
+  menu (it serialises multi-key chains such as
+  `Control+Alt+a Control+Alt+b`).
+
+The menu editor also provides **internal commands** (**Info**, **Legal**,
+and the new **Open Key Bindings Panel**), so a generated root menu can be
+round-tripped through WPrefs without discarding entries. Dropped internal
+commands get a descriptive title.
+
+Dock / Clip / Drawer
+--------------------
+Because screens can be hot-plugged, the Dock, Clip and Drawer — the three
+"container" elements — were split into a shared core (`dock-core`) and
+per-type modules, so the common logic is separated from each type's
+behaviour. This is groundwork for the X11-abstraction work described
+below.
+
+Shared libraries via the wmaker-crm submodule
+---------------------------------------------
+The common libraries (WINGs, WUtil, WRaster) are no longer maintained
+inside awmaker; their source of truth is the `wmaker-crm` git submodule
+(`third_party/wmaker-crm`). This keeps the two projects in sync and lets
+awmaker's own `src/` core evolve independently. See "Building
+dependencies" below for how they are consumed at build time.
+
+
+
+Compiling and installing
 ========================
-awmaker is not Window Maker, is a fork. awmaker code comes from Window
-Maker and many functions are the same. Low level functions, like
-X11 code, file management,... are/will be the same, but in the future
-many code will be different.
+awmaker is built and installed with the standard GNU autotools workflow
+(autoconf / automake / configure / make), both when compiling from
+sources and when packaging for a distribution:
 
-Patches for Window Maker probably could be included in awmaker without
-changes, but other patches could need some tweaks. Don't work twice, if your
-patch is common for Window Maker and awmaker, sent it to Window Maker, we
-will include it in awmaker.
+```sh
+./autogen.sh      # generates the configure script (only needed from a git checkout)
+./configure       # configures the build for your system
+make              # builds the binaries
+make install      # installs awmaker system-wide (as root, when packaging)
+```
 
-On the other hand, some bugs or problems could be solved in awmaker. Feel
-free to include them in Window Maker.
+Alternatively, install awmaker from a pre-built package provided by your
+distribution (e.g. an `.rpm` or `.deb`), which is the normal way to deploy
+it on a production system. See `INSTALL-WMAKER` for the detailed upstream
+options and `./configure --help` for the full list of configure options.
 
-awmaker is a different project created to include abstraction. Probably
-in the future this ideas could be integrated in Window Maker. Window Maker
-is a mature window manager and include this new ideas could break their
-stability, for this reason, hold different projects is good for Window Maker.
+> awmaker is a window manager and must be the *only* WM on the display,
+> so you start it yourself (e.g. from your X session) after install.
 
-Window Maker and awmaker share some things, like the libraries (WINGs, WUtil
-and wraster) and the WPrefs application. awmaker should not include in the
-future this libraries in their code, and use the libraries included in the
-Window Maker development tree. WPrefs shouldn't be a problem, because the
-look&feel should be the same between Window Maker and awmaker.
+Building dependencies
+---------------------
+The common libraries (WINGs, WUtil, WRaster) come from the
+`third_party/wmaker-crm` git submodule and are compiled out-of-tree into a
+local `build-libs/` prefix; awmaker consumes them via pkg-config. When
+building awmaker, set `PKG_CONFIG_PATH` accordingly, or let your
+distribution package handle the dependencies.
 
-Please, read the README.WMAKER file for more info about Window Maker.
+Development only: Docker
+------------------------
+The `make docker` / `make docker-run` targets (top-level `GNUmakefile`)
+build and run awmaker inside a container with a read-write mount of the
+source tree. They exist to **develop** on systems where the X11/autotools
+toolchain is impractical (notably macOS), and reproduce the autotools
+build above.
 
-SOME THINGS
-===========
+> The Docker targets are **for development only** — not for executing
+> awmaker in production. For production, install with `make install`
+> or with a distribution package as described above.
+>
+> The containerised build still runs `./autogen.sh`, `./configure` and
+> `make`; it just does so inside the container (see
+> `script/docker-build.sh`).
 
-1. awmaker is unstable. Don't use awmaker in production environments.
-2. awmaker is under development. Is not a final product. Probably only
-   a 20% of awmaker is done. Is a long way. We are playing.
+```sh
+# one-time setup (on the host)
+git submodule update --init third_party/wmaker-crm
 
-NEXT STEPS
-==========
-The next steps are:
+make docker                # build shared libs + awmaker inside a container
+make docker-clean          # clean generated outputs
 
-1. There are six main blocks (windows, icons, framewin, workspaces, main
-   icons [Dock, Clip, Drawer] and menus). Include create, map and unmap
-   functions for all of them. There are functions created for wcore, framewin
-   and menus, this code could be improved, but is a way to understand the
-   main idea for other blocks.
-2. Break the icon screen dependency. When the icon is created, is created
-   for the current screen. Probably the better way is read the file name and
-   create the icon in the "_map" function.
-3. Change the start up steps. The start up should create the workspaces and
-   include the Clip, Dock, Drawers in the workspaces. Then load the screen
-   and map the workspace in the screen/s.
-4. Include shutdown steps. The shutdown step should unmap all the items
-   (workspaces,...) without destroy the items.
-5. Join steps 3 and 4. We can change the screen without restart awmaker.
+# run inside the container, drawing on the macOS XQuartz server
+make docker-run            # build + run awmaker on XQuartz
+make docker-run --no-build # run only (assumes already built)
+```
 
-CAN I PLAY?
-===========
-Yes! You are very welcome to help in the project. Fork it. We are in
+Notes for the Docker development workflow:
+- `make docker` regenerates the generated files (`Makefile.in`,
+  `README.i18n`, `INSTALL-WMAKER`, ...) via `./autogen.sh`. These are
+  written back into the host tree (they are not committed).
+- To run the binary from a terminal, set `LD_LIBRARY_PATH` to the local
+  lib prefix (`build-libs/lib`).
+- On macOS, switch XQuartz to **Full Screen** (`View -> Full Screen`,
+  `Cmd-Option-A`) before expecting a faithful WM layout; `make docker-run`
+  handles the XQuartz display setup and assets for you.
+
+
+The whole-screen abstraction (current work)
+===========================================
+The active work is the abstraction of screens: removing the X11 coupling
+so screens/monitors can be added and removed **without restarting the
+WM**. All functional and robustness bugs are resolved; the abstraction is
+the current focus.
+
+Today screen enumeration happens once at startup and there is no runtime
+add/remove path (a screen change triggers a full WM restart). The planned
+phases introduce a configurable virtual-screen count, a teardown path,
+RandR hot-plug refresh, per-element presentation backends (root menu
+first, then dock/clip/drawer) and, finally, a per-screen display handle.
+Reported as WB-05, CFG-02 and ABST-01..03.
+
+
+Contributing
+============
+Fork it and send a pull request: we are at
 https://github.com/awmaker/awmaker
 
-LICENSE & COPYRIGHT
+- Please read `TODO.md` for the open work and operational notes if you
+  are working on the tree.
+- Follow the repo's commit style: a short imperative subject prefixed by
+  the touched area (e.g. `src/clip.c:`, `TODO.md:`).
+- Do not `git push` unless asked; leave pushing to the maintainer.
+
+
+License & copyright
 ===================
 awmaker is a fork of GNU Window Maker. It is free software, distributed
 under the terms of the GNU General Public License, version 2 or (at your
-option) any later version; see `COPYING`. Some artwork is distributed under
-the WTFPL; see `COPYING.WTFPL`.
+option) any later version; see `COPYING`. Some artwork is distributed
+under the WTFPL; see `COPYING.WTFPL`.
 
 The exhaustive copyright attribution of both the original Window Maker
 sources and the fork modifications is consolidated in `LICENSE`. Every
 C/H source file in this tree carries a standard short header that points
 to it. The fork is maintained by Rodolfo García Peñas (kix) <kix@kix.es>.
+
+Please read `README.WMAKER` for more information about the original
+Window Maker project.

@@ -42,11 +42,9 @@ AM_DISTCHECK_CONFIGURE_FLAGS = --enable-silent-rules LINGUAS='*'
 SUBDIRS = awmcommon src util po WindowMaker WPrefs.app doc
 DIST_SUBDIRS = $(SUBDIRS) test
 
-EXTRA_DIST = TODO BUGS BUGFORM FAQ INSTALL \
+EXTRA_DIST = TODO.md BUGS BUGFORM FAQ INSTALL \
 	INSTALL-WMAKER README.i18n README.definable-cursor \
-	The-perfect-Window-Maker-patch.txt \
 	README COPYING.WTFPL autogen.sh \
-	email-clients.txt checkpatch.pl update-changelog.pl \
 	script/check-cmdline-options-doc.sh \
 	script/check-translation-sources.sh \
 	script/check-wmaker-loaddef-callbacks.sh \
