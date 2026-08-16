@@ -151,6 +151,25 @@ static char *commandNames[] = {
 	"KEYBINDS_PANEL"
 };
 
+/* Display names for the internal-command list (icommandL), indexed by cmd.
+ * Kept in sync with the WMInsertListItem calls in createPanel() so a generic
+ * "Internal Command" item gets a descriptive title once the command is picked. */
+static const char *internalCommandTitles[] = {
+	N_("Arrange Icons"),
+	N_("Hide All Windows Except For The Focused One"),
+	N_("Show All Windows"),
+	N_("Exit Window Maker"),
+	N_("Exit X Session"),
+	N_("Restart Window Maker"),
+	N_("Start Another Window Manager"),
+	N_("Save Current Session"),
+	N_("Clear Saved Session"),
+	N_("Refresh Screen"),
+	N_("Open Info Panel"),
+	N_("Open Copyright Panel"),
+	N_("Open Key Bindings Panel")
+};
+
 #define ICON_FILE	"menus"
 
 static void showData(_Panel * panel);
@@ -1161,7 +1180,25 @@ static void updateMenuItem(_Panel * panel, WEditMenuItem * item, WMWidget * chan
 
 	case CommandInfo:
 		if (changedWidget == panel->icommandL) {
-			data->param.command.command = WMGetListSelectedItemRow(panel->icommandL);
+			int cmd = WMGetListSelectedItemRow(panel->icommandL);
+			char *title = WGetEditMenuItemTitle(item);
+			Bool isDefault = title && strcmp(title, _("Internal Command")) == 0;
+			int i;
+
+			data->param.command.command = cmd;
+			/* Give a generic "Internal Command" item a descriptive title as soon
+			   as its command is picked, and keep refreshing it whenever the user
+			   picks a command from the list — but never clobber a title the user
+			   set via double-click (a title that is not one of ours). */
+			if (cmd >= 0 && cmd < (int)wlengthof(internalCommandTitles)) {
+				for (i = 0; i < (int)wlengthof(internalCommandTitles); i++) {
+					if (strcmp(title, _(internalCommandTitles[i])) == 0)
+						isDefault = True;
+				}
+			}
+			if (isDefault) {
+				WSetEditMenuItemTitle(item, _(internalCommandTitles[cmd]));
+			}
 		}
 		switch (data->param.command.command) {
 		case 3:

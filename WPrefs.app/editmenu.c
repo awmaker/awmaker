@@ -146,6 +146,14 @@ char *WGetEditMenuItemTitle(WEditMenuItem * item)
 	return item->label;
 }
 
+void WSetEditMenuItemTitle(WEditMenuItem * item, const char *title)
+{
+	wfree(item->label);
+	item->label = wstrdup(title);
+
+	WMRedisplayWidget(item);
+}
+
 void *WGetEditMenuItemData(WEditMenuItem * item)
 {
 	return item->data;

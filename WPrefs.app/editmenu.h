@@ -40,6 +40,8 @@ WEditMenuItem *WCreateEditMenuItem(WMWidget *parent, const char *title,
 
 char *WGetEditMenuItemTitle(WEditMenuItem *item);
 
+void WSetEditMenuItemTitle(WEditMenuItem *item, const char *title);
+
 void *WGetEditMenuItemData(WEditMenuItem *item);
 
 void WSetEditMenuItemData(WEditMenuItem *item, void *data,
