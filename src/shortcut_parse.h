@@ -19,7 +19,7 @@
  * The token is split on '+' and each modifier token is fed to
  * wXModifierFromKey(); the trailing token must resolve to a keycode via
  * XStringToKeysym/XKeysymToKeycode. On any failure it issues a wwarning
- * naming `file` and returns False, leaving *modifier/*keycode unchanged.
+ * naming `file` and returns False, leaving the modifier/keycode unchanged.
  *
  * Shared by src/rootmenu.c and src/usermenu.c.
  * Display is passed in (rather than the global `dpy`) so the shared file

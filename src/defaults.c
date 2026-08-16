@@ -42,6 +42,7 @@
 #include "defaults.h"
 #include "keybind.h"
 #include "shbinding.h"
+#include "shortcut_parse.h"
 
 #include <keybinds_meta.h>
 #include "xmodifier.h"
@@ -3458,49 +3459,80 @@ static int setMenuTextBack(virtual_screen *vscr)
 
 static void set_keygrab(SHBinding *shortcut, char *value)
 {
-	char buf[MAX_SHORTCUT_LENGTH];
-	KeySym ksym;
-	char *k, *b;
-	int mod, error = 0;
+	char buf[MAX_SHORTCUT_LENGTH], *tokens[8];
+	char *b;
+	int nchain = 0, i;
 
-	wstrlcpy(buf, value, MAX_SHORTCUT_LENGTH);
+	/* Clear any previously-parsed chain state (a binding may be re-set on
+	 * config reload, and "None"/a shortening run must not leak old followers). */
+	wfree(shortcut->chain_modifiers);
+	wfree(shortcut->chain_keycodes);
+	shortcut->chain_modifiers = NULL;
+	shortcut->chain_keycodes = NULL;
+	shortcut->chain_length = 1;
 
 	if ((strlen(value) == 0) || (strcasecmp(value, "NONE") == 0)) {
 		shortcut->keycode = 0;
 		shortcut->modifier = 0;
-	} else {
+		return;
+	}
 
-		b = buf;
+	/* Split the definition on spaces: first token = leader, the rest are the
+	 * chain's followers (each token is "Mod1+Mod2+Key"), mirroring the root
+	 * menu's addShortcut() (F5). A built-in is thus a SHBinding chain and
+	 * flows through the same runtime key trie as a menu command. */
+	wstrlcpy(buf, value, MAX_SHORTCUT_LENGTH);
 
-		/* get modifiers */
-		shortcut->modifier = 0;
-		while ((!error) && ((k = strchr(b, '+')) != NULL)) {
-			*k = 0;
-			mod = wXModifierFromKey(b);
-			if (mod < 0) {
-				wwarning(_("Invalid key modifier \"%s\""), b);
-				error = 1;
-			} else
-				shortcut->modifier |= mod;
+	b = buf;
+	for (;;) {
+		char *space;
 
-			b = k + 1;
+		while (*b == ' ')
+			b++;
+		if (!*b)
+			break;
+		space = strpbrk(b, " \t");
+		if (space)
+			*space = 0;
+		if (nchain >= (int)(sizeof(tokens) / sizeof(tokens[0]))) {
+			wwarning(_("too many keys in shortcut \"%s\""), value);
+			break;
 		}
+		tokens[nchain++] = b;
+		if (!space)
+			break;
+		b = space + 1;
+	}
 
-		if (!error) {
-			/* get key */
-			ksym = XStringToKeysym(b);
+	if (nchain == 0)
+		return;
 
-			if (ksym == NoSymbol) {
-				wwarning(_("Invalid kbd shortcut specification \"%s\""), value);
-				error = 1;
-			}
+	/* Leader key (directly bound, and the first key of any chain). */
+	shortcut->modifier = 0;
+	if (!parseShortcutToken(dpy, "defaults", tokens[0],
+				&shortcut->modifier, &shortcut->keycode)) {
+		shortcut->modifier = 0;
+		shortcut->keycode = 0;
+		return;
+	}
 
-			if (!error) {
-				shortcut->keycode = XKeysymToKeycode(dpy, ksym);
-				if (shortcut->keycode == 0) {
-					wwarning(_("Invalid key in shortcut \"%s\""), value);
-					error = 1;
-				}
+	/* Followers, if any, form the chain (chain_length remains 1 when simple). */
+	if (nchain > 1) {
+		shortcut->chain_length = nchain;
+		shortcut->chain_modifiers = wmalloc((nchain - 1) * sizeof(unsigned int));
+		shortcut->chain_keycodes = wmalloc((nchain - 1) * sizeof(KeyCode));
+		for (i = 1; i < nchain; i++) {
+			if (!parseShortcutToken(dpy, "defaults", tokens[i],
+						&shortcut->chain_modifiers[i - 1],
+						&shortcut->chain_keycodes[i - 1])) {
+				wfree(shortcut->chain_modifiers);
+				wfree(shortcut->chain_keycodes);
+				shortcut->chain_modifiers = NULL;
+				shortcut->chain_keycodes = NULL;
+				shortcut->chain_length = 1;
+				shortcut->keycode = 0;
+				shortcut->modifier = 0;
+				return;
 			}
 		}
 	}
@@ -3536,6 +3568,7 @@ static int setKeyGrab_rootmenu(virtual_screen *vscr)
 static int setKeyGrab_keychaincancel(virtual_screen *vscr)
 {
 	SHBinding shortcut;
+	memset(&shortcut, 0, sizeof(shortcut));
 
 	(void)vscr;
 
